@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LER 565 · Week 4 — Coordination Games in HR</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+.pg .ink{fill:var(--ink)} .pg .red{fill:var(--red)} .pg .fv{fill:var(--f)}
+.pg .ring{fill:none;stroke:var(--ink);stroke-width:4}
+.pg .branch{stroke:var(--ink);stroke-width:3;fill:none}
+.pg .knock{fill:var(--paper)}
+.pg .redstroke2{fill:none;stroke:var(--red);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.pg .ballot{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+.pg .inkstroke{fill:none;stroke:var(--ink);stroke-width:3}
+.pg .armink{fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.pg .knockstroke{fill:none;stroke:var(--paper);stroke-width:2;stroke-linecap:round}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--stage-bg);font-family:var(--sans);color:var(--ink);overflow:hidden}
+.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center;
+  transform:scale(var(--scale,1));}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;
+  transition:opacity .40s ease, visibility 0s linear .40s;}
+.slide.active{opacity:1;visibility:visible;transition:opacity .40s ease;}
+@media (prefers-reduced-motion: reduce){.slide{transition:none}.slide.active{transition:none}}
+
+/* ---------- COVER ---------- */
+.cover{background:var(--ink);color:var(--paper);position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;padding:80px 96px;overflow:hidden;position:relative}
+.cover .ghost{position:absolute;right:-30px;bottom:-150px;font-family:var(--display);font-weight:900;
+  font-size:560px;line-height:.7;color:var(--red);opacity:.13;pointer-events:none}
+.cover .tag{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.26em;
+  font-size:17px;margin-bottom:26px;position:relative}
+.cover .tag i{display:inline-block;width:12px;height:12px;background:var(--red);margin-right:14px;vertical-align:middle}
+.cover h1{font-family:var(--display);font-weight:900;font-size:196px;line-height:.84;letter-spacing:-.03em;position:relative}
+.cover h1 .r{color:var(--red)}
+.cover .sub{font-family:var(--sans);font-weight:500;font-size:29px;margin-top:30px;max-width:18ch;line-height:1.18;position:relative}
+.cover .strip{display:flex;gap:12px;margin-top:48px;position:relative}
+.cchip{width:58px;height:58px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.cchip .pg{height:54%;width:auto;max-width:80%}
+.cover .byline{position:absolute;bottom:80px;right:96px;font-family:var(--sans);font-weight:500;
+  text-transform:uppercase;letter-spacing:.18em;font-size:15px;color:var(--paper);opacity:.85}
+
+/* ---------- CONTENT ---------- */
+.content{background:var(--paper);color:var(--ink);position:absolute;inset:0;padding:72px 96px;overflow:hidden}
+.content .kicker{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.2em;
+  font-size:17px;color:var(--muted);text-align:center}
+.content .kicker i{display:inline-block;width:11px;height:11px;background:var(--red);margin-right:13px;vertical-align:middle}
+.content h2{font-family:var(--sans);font-weight:700;color:var(--red);font-size:58px;line-height:1.05;
+  letter-spacing:-.015em;margin-top:16px;text-align:center}
+.content .mark{position:absolute;top:72px;right:96px;width:128px;height:128px;display:flex;align-items:center;justify-content:center}
+.content .mark .pg{max-width:100%;max-height:100%}
+.content ul.body{list-style:none;margin-top:40px;max-width:640px}
+.content ul.body li{position:relative;padding-left:32px;font-family:var(--sans);font-weight:500;
+  font-size:24px;line-height:1.35;color:var(--ink);margin-top:18px}
+.content ul.body li:first-child{margin-top:0}
+.content ul.body li::before{content:"";position:absolute;left:0;top:.55em;width:12px;height:12px;background:var(--red)}
+.content ul.body li.sub{padding-left:58px;font-size:21px;color:var(--muted);font-weight:400;margin-top:11px}
+.content ul.body li.sub::before{left:34px;top:.5em;width:8px;height:8px;background:var(--ink)}
+.content .ghostnum{position:absolute;right:0;bottom:-80px;font-family:var(--display);font-weight:900;
+  font-size:300px;line-height:.7;color:var(--red);opacity:.07;pointer-events:none}
+.content .footer{position:absolute;bottom:56px;left:96px;font-family:var(--sans);font-weight:500;
+  text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--muted)}
+
+/* progress ticks */
+.ticks{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.tick{width:14px;height:4px;background:var(--rule)}
+.tick.on{background:var(--red);width:26px}
+.ticks.lightticks .tick{background:color-mix(in srgb, var(--paper) 30%, transparent)}
+.ticks.lightticks .tick.on{background:var(--red)}
+
+/* nav + map button */
+.ui{position:fixed;z-index:30;font-family:var(--sans)}
+.nav{bottom:22px;right:26px;display:flex;gap:10px}
+.nav button,.mapbtn{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;
+  font-size:12px;background:color-mix(in srgb, var(--paper) 10%, transparent);color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.nav button:hover,.mapbtn:hover{background:color-mix(in srgb, var(--red) 90%, transparent);border-color:var(--red)}
+.nav button:focus-visible,.mapbtn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mapbtn{position:fixed;top:22px;right:26px}
+
+/* MAP overlay */
+.map{position:fixed;inset:0;background:var(--stage-bg);z-index:50;display:none;
+  flex-direction:column;padding:54px 64px;overflow:auto}
+.map.open{display:flex}
+.map h3{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.24em;
+  font-size:14px;color:var(--paper);opacity:.7;margin-bottom:8px}
+.map .mtitle{font-family:var(--display);font-weight:900;font-size:46px;color:var(--paper);margin-bottom:30px;letter-spacing:-.02em}
+.map .mtitle .r{color:var(--red)}
+.branch{margin-bottom:30px}
+.branch .blabel{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;
+  font-size:12px;color:var(--red);margin-bottom:14px}
+.branch .blabel i{display:inline-block;width:9px;height:9px;background:var(--red);margin-right:9px;vertical-align:middle}
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.thumb{aspect-ratio:16/9;background:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 25%, transparent);cursor:pointer;
+  position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;overflow:hidden;
+  transition:border-color .2s,transform .15s}
+.thumb.cov{background:var(--ink)}
+.thumb:hover{border-color:var(--red);transform:translateY(-2px)}
+.thumb .tn{position:absolute;top:8px;left:9px;font-family:var(--display);font-weight:900;font-size:22px;color:var(--rule)}
+.thumb.cov .tn{color:color-mix(in srgb, var(--paper) 40%, transparent)}
+.thumb .tt{font-family:var(--sans);font-weight:700;font-size:11px;line-height:1.15;color:var(--red)}
+.thumb.cov .tt{color:var(--paper)}
+.thumb.todo{opacity:.4;cursor:default}
+.thumb.todo:hover{border-color:color-mix(in srgb, var(--paper) 25%, transparent);transform:none}
+.thumb.todo .tt{color:var(--muted)}
+.map .close{position:fixed;top:22px;right:26px;background:transparent;border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  color:var(--paper);font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;
+  font-size:12px;padding:9px 14px;cursor:pointer}
+.map .close:hover{background:var(--red);border-color:var(--red)}
+
+/* ---- image-led: pictogram tiles ---- */
+.tiles{position:absolute;left:96px;right:96px;top:280px;display:flex;justify-content:space-between;gap:24px}
+.tile{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:28px}
+.tile .pgwrap{height:120px;display:flex;align-items:flex-end;justify-content:center}
+.tile .pgwrap .pg{height:118px;width:auto;display:block}
+.tile .lbl{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  font-size:18px;line-height:1.25;color:var(--ink);max-width:18ch}
+/* ---- image-led: venn hero ---- */
+.venn{position:absolute;left:0;right:0;top:236px;display:flex;justify-content:center}
+.venn svg{height:392px;width:auto;overflow:visible}
+.venn .vlabel{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  font-size:20px;fill:var(--ink)}
+.venn .vcore{font-family:var(--sans);font-weight:700;font-size:21px;fill:var(--paper);text-transform:none;letter-spacing:0}
+/* ---- generic figure stage (slides 4-12) ---- */
+.fig{position:absolute;left:96px;right:96px;top:226px;bottom:116px;display:flex;align-items:center;justify-content:center}
+.fig .cap{font-family:var(--sans);font-weight:500;font-size:21px;line-height:1.4;color:var(--muted);text-align:center;max-width:42ch}
+/* S4 before/after */
+.ba{display:flex;align-items:center;justify-content:center;gap:64px}
+.ba .station{display:flex;flex-direction:column;align-items:center;gap:24px;width:280px;text-align:center}
+.ba .station .pg{height:152px;width:auto}
+.ba .station.then{opacity:.4}
+.ba .station .slbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:21px;color:var(--ink)}
+.ba .station.now .slbl{color:var(--red)}
+.ba .arrow{font-size:80px;color:var(--red);line-height:1}
+.s4stack{display:flex;flex-direction:column;align-items:center;gap:42px}
+.s4note{font-family:var(--sans);font-weight:500;font-size:21px;color:var(--muted);text-align:center;max-width:42ch}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:normal;border:0}
+/* generic two-column compare */
+.cols{display:flex;align-items:flex-start;justify-content:center;gap:96px}
+.col{display:flex;flex-direction:column;align-items:center;gap:26px;text-align:center;width:340px}
+.col .pg{height:140px;width:auto}
+.col .ctitle{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:22px;color:var(--ink)}
+.col.accent .ctitle{color:var(--red)}
+.s5stack{display:flex;flex-direction:column;align-items:center;gap:44px}
+.stopnote{font-family:var(--sans);font-weight:500;font-size:23px;color:var(--muted);display:flex;align-items:center;gap:14px}
+.stopnote i{width:13px;height:13px;background:var(--red);display:inline-block}
+.stopnote b{color:var(--red);font-weight:700}
+.col .csub{font-family:var(--sans);font-weight:500;font-size:18px;color:var(--muted);max-width:22ch;line-height:1.35}
+/* game-tree hero */
+.hero{display:flex;flex-direction:column;align-items:center;gap:34px}
+.hero .pg{height:296px;width:auto}
+/* twin matrices */
+.matrices{display:flex;gap:120px;justify-content:center}
+.matwrap{display:flex;flex-direction:column;align-items:center;gap:20px}
+.matwrap .mlabel{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:20px;color:var(--ink)}
+.matwrap .msub{font-family:var(--sans);font-weight:500;font-size:16px;color:var(--muted);margin-top:-10px}
+.mat{display:grid;grid-template-columns:repeat(2,78px);grid-template-rows:repeat(2,78px);gap:8px}
+.mat .cell{background:var(--card);border:2px solid var(--ink)}
+.mat .cell.hot{background:var(--red);border-color:var(--red)}
+.s7stack{display:flex;flex-direction:column;align-items:center;gap:36px;width:100%}
+.s7cols{display:flex;gap:96px;justify-content:center;align-items:flex-start}
+.s7col{display:flex;flex-direction:column;align-items:center;gap:18px;width:340px;text-align:center}
+.s7col .claim{font-family:var(--sans);font-weight:700;font-size:23px;line-height:1.22;color:var(--ink);min-height:2.7em;display:flex;align-items:center}
+.s7col .term{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.06em;font-size:16px;color:var(--red)}
+.s7note{font-family:var(--sans);font-weight:500;font-size:21px;color:var(--muted);text-align:center;max-width:56ch;line-height:1.4}
+.s7note b{color:var(--red);font-weight:700}
+/* scales pros/cons */
+.scales{display:flex;flex-direction:column;align-items:center;gap:30px}
+.scales .pg{height:188px;width:auto}
+.proscons{display:flex;gap:140px}
+.pcside{display:flex;flex-direction:column;align-items:center;gap:12px}
+.pcside .pchead{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:20px;color:var(--ink)}
+.pcside .pcitem{font-family:var(--sans);font-weight:500;font-size:17px;color:var(--muted)}
+/* common knowledge */
+.cklbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;fill:var(--ink)}
+.cklbl.red{fill:var(--red)}
+/* opposed pairs */
+.pairs{display:flex;flex-direction:column;gap:18px;width:100%;max-width:860px}
+.pair{display:grid;grid-template-columns:1fr 64px 1fr;align-items:center}
+.pair .term{background:var(--card);border:2px solid var(--ink);padding:15px 20px;font-family:var(--sans);font-weight:500;font-size:21px;color:var(--ink);text-align:center}
+.pair .swap{font-size:30px;color:var(--red);text-align:center}
+/* paradox tiles */
+.paradox{display:grid;grid-template-columns:repeat(3,1fr);gap:30px 46px;width:100%}
+.ptile{display:flex;flex-direction:column;gap:12px}
+.ptile .phead{display:flex;align-items:center;gap:16px}
+.ptile .phead .pg{height:48px;width:auto}
+.ptile .pn{font-family:var(--display);font-weight:900;font-size:40px;color:var(--red);line-height:.85}
+.ptile .pt{font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);line-height:1.3}
+
+
+/* ===== WEEK 4 — new components (layout only; colour/type from tokens) ===== */
+
+/* ===== house payoff matrix (payoff-matrix-spec.md) — identical across all decks ===== */
+.pdstack{display:flex;flex-direction:column;align-items:center;gap:30px}
+.pd{display:grid;grid-template-columns:46px 132px 210px 210px;grid-template-rows:36px 42px 122px 122px}
+.pd.compact{grid-template-rows:32px 38px 100px 100px}
+.pd.compact .pcell{font-size:25px}
+.pd .ch{grid-column:3/5;grid-row:1;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--terracotta)}
+.pd .cl{display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;
+  font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:15px;color:var(--ink)}
+.pd .cl1{grid-column:3;grid-row:2}.pd .cl2{grid-column:4;grid-row:2}
+.pd .rh{grid-column:1;grid-row:3/5;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--teal);
+  writing-mode:vertical-rl;transform:rotate(180deg)}
+.pd .rl{display:flex;align-items:center;justify-content:flex-end;text-align:right;padding-right:16px;
+  font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:15px;color:var(--ink)}
+.pd .rl1{grid-column:2;grid-row:3}.pd .rl2{grid-column:2;grid-row:4}
+.pd .pdgrid{grid-column:3/5;grid-row:3/5;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  gap:3px;background:var(--ink);border:3px solid var(--ink)}
+.pd .pcell{background:var(--card);display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;font-size:29px}
+.pd .pa{color:var(--teal)}.pd .pb{color:var(--terracotta)}
+.pd .pcomma{color:var(--muted);font-weight:500;margin:0 .14em}
+.pd .pcell.hot{background:var(--red)}
+.pd .pcell.hot .pa,.pd .pcell.hot .pb,.pd .pcell.hot .pcomma{color:var(--paper)}
+.pd .pcell.ring{position:relative}
+.pd .pcell.ring::after{content:"";position:absolute;inset:5px;border:3.5px solid var(--red);pointer-events:none}
+.pd .pcell .phrase{font-family:var(--sans);font-weight:700;font-size:24px;color:var(--ink);text-align:center;line-height:1.15;padding:0 10px}
+
+/* focal-point convergence (slide 4) + collision (slide 10) share a centred hero */
+.conv{display:flex;flex-direction:column;align-items:center;gap:30px}
+.conv .pg{height:248px;width:auto}
+.eqkey{display:flex;gap:30px;flex-wrap:wrap;justify-content:center}
+.eqkey .k{display:flex;align-items:center;gap:10px;font-family:var(--sans);font-weight:500;
+  font-size:17px;color:var(--muted)}
+.eqkey .sw{width:22px;height:22px;border:2px solid var(--ink);background:var(--card)}
+.eqkey .sw.eq{box-shadow:inset 0 0 0 3px var(--red)}
+.eqkey .sw.crash{background:var(--red);border-color:var(--red)}
+
+/* related-media line (slides 7,9,11,12) */
+.media{position:absolute;left:96px;right:96px;bottom:96px;display:flex;align-items:center;
+  justify-content:center;gap:12px;font-family:var(--sans);font-weight:500;font-size:16px;color:var(--muted)}
+.media i{display:inline-block;width:9px;height:9px;background:var(--red);flex:none}
+.media .ml{text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--red);font-weight:700}
+.media .mt{font-style:italic}
+
+/* rising-difficulty staircase (slide 13) */
+.stairs{display:flex;align-items:flex-end;justify-content:center;gap:40px}
+.step{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;width:200px}
+.step .pg{width:auto}
+.step .sname{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  font-size:18px;color:var(--ink)}
+.step .ssub{font-family:var(--sans);font-weight:500;font-size:15px;color:var(--muted);line-height:1.3;max-width:20ch}
+.step.s1 .pg{height:84px} .step.s2 .pg{height:128px} .step.s3 .pg{height:176px}
+.step.s3 .sname{color:var(--red)}
+
+/* ===== full-deck additions ===== */
+.cover h1{font-size:168px}
+.content .fig.matfig{top:196px;bottom:84px}
+.content .fig.matclip{top:172px;bottom:164px}
+.content .fig.withclip{top:198px;bottom:162px}
+.medialink{display:flex;align-items:center;gap:14px;text-decoration:none;border:1.5px solid var(--rule);background:var(--card);padding:11px 16px;max-width:760px;margin:0 auto;transition:border-color .2s}
+a.medialink:hover{border-color:var(--red)}
+.medialink .play{flex:none;width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.medialink .play svg{width:12px;height:12px;display:block}
+.medialink .mlk{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--red);flex:none}
+.medialink .mlt{font-family:var(--sans);font-weight:500;font-size:16px;color:var(--ink);line-height:1.3;text-align:left}
+.medialink .go{margin-left:auto;flex:none;font-family:var(--sans);font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.medialink.pinned{position:absolute;left:96px;right:96px;bottom:84px;max-width:760px;margin:0 auto}
+.col .csub{max-width:24ch}
+.conv{gap:26px}
+.conv .pg{height:196px}
+.content .fig.withclip .conv .pg{height:166px}
+.pd .pcell{position:relative}
+.pd .pcell .pdring{position:absolute;inset:5px;border:3.5px solid var(--red);pointer-events:none}
+/* step reveal */
+[data-step]{opacity:0;transition:opacity .32s ease}
+[data-step].shown{opacity:1}
+@media (prefers-reduced-motion: reduce){[data-step]{transition:none}}
+/* abstract 3x3 best-response matrix (S3) */
+.m3{display:grid;grid-template-columns:42px repeat(3,112px);grid-template-rows:40px repeat(3,84px)}
+.m3 .clab{display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:15px;color:var(--terracotta)}
+.m3 .clab.c1{grid-column:2;grid-row:1}.m3 .clab.c2{grid-column:3;grid-row:1}.m3 .clab.c3{grid-column:4;grid-row:1}
+.m3 .rlab{display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:15px;color:var(--teal)}
+.m3 .rlab.r1{grid-column:1;grid-row:2}.m3 .rlab.r2{grid-column:1;grid-row:3}.m3 .rlab.r3{grid-column:1;grid-row:4}
+.m3 .m3grid{grid-column:2/5;grid-row:2/5;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:3px;background:var(--ink);border:3px solid var(--ink)}
+.m3 .pcell{background:var(--card);display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:21px;position:relative}
+.m3 .pcell .pa{color:var(--teal)}.m3 .pcell .pb{color:var(--terracotta)}.m3 .pcell .pcomma{color:var(--muted);margin:0 .1em}
+.m3 .pdring{position:absolute;inset:5px;border:3.5px solid var(--red);pointer-events:none}
+/* HR example tiles (S10) */
+.exrow{display:flex;justify-content:center;gap:34px;width:100%}
+.extile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+.extile .ic{height:124px;display:flex;align-items:flex-end;justify-content:center;gap:6px}
+.extile .ic .pg{height:118px;width:auto}
+.extile .ic .pg.dual{height:92px}
+.extile .xl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:18px;color:var(--ink);line-height:1.2}
+.extile .xs{font-family:var(--sans);font-weight:500;font-size:16px;color:var(--muted);line-height:1.3;max-width:22ch}
+</style>
+</head>
+<body>
+<section class="sr-only" aria-label="Full text of all slides"><h1>LER 565, Week 4 — Coordination Games in HR</h1><p>Accessible text version. Each heading below is one slide, in order.</p><section aria-label="Slide 1"><h2>Slide 1 of 13: Title slide</h2><p>LER 565, Week 4: Coordination Games in HR. Instructor: Ryan Lamare.</p></section><section aria-label="Slide 2"><h2>Slide 2 of 13: This Week</h2><p>Recall Week 3: in a prisoner's dilemma each side's rational move leaves everyone worse off — one bad trap. This week we shift to games with several equilibria, where the trick is agreeing on one. Best-response analysis finds every equilibrium, not just dominant strategies. We cover three coordination games in HR — stag hunt, battle of the sexes, and chicken — and the focal points that resolve them.</p></section><section aria-label="Slide 3"><h2>Slide 3 of 13: Best Response and Nash</h2><p>With no dominant strategy, each player picks the best response to whatever the other might do. A Nash equilibrium is a cell where both are best-responding at once, so neither wants to move. This abstract three-by-three coordination game uses payoffs of 2,2 when the players match and 0,0 when they miss. Matching is always the best response, so there are three equilibria — the cells A-A, B-B, and C-C — each ringed in turn. A game can have one equilibrium, several, or none; coordination games have more than one. Rows are Player A (teal); columns are Player B (terracotta).</p></section><section aria-label="Slide 4"><h2>Slide 4 of 13: The Coordination Problem and Focal Points</h2><p>When several equilibria exist, players want to coordinate on the same one. A focal point is the equilibrium expectations converge on — chosen by context and common knowledge rather than payoffs. Schelling's example: strangers told to meet in New York with no time or place tend to pick noon at a landmark. In HR, benchmarking pay to 'above average' is a focal point that ratchets salaries upward.</p></section><section aria-label="Slide 5"><h2>Slide 5 of 13: Stag Hunt</h2><p>The stag hunt payoff matrix. Hunter 1 chooses a row (Player A), Hunter 2 a column (Player B). Payoffs (Hunter 1, Hunter 2): both Hunt Stag gives 3, 3; Stag against Hare gives 0, 1; Hare against Stag gives 1, 0; both Hunt Hare gives 1, 1. Two Nash equilibria are ringed: Stag-Stag and Hare-Hare. Stag-Stag is best but needs trust; the barrier is assurance.</p></section><section aria-label="Slide 6"><h2>Slide 6 of 13: Stag Hunts in HR</h2><p>Workers and firms face a stag hunt. Workers can invest firm-specific skills, loyalty and effort; firms can invest training, security and voice. Both do best when both invest, but each fears being the only one to commit, which can lock in a low-trust equilibrium. HR's job is assurance: credible leadership signals and complementary 'HR bundles' that make mutual investment the expected outcome.</p></section><section aria-label="Slide 7"><h2>Slide 7 of 13: Battle of the Sexes</h2><p>A battle-of-the-sexes matrix. Partner A picks a row, Partner B a column, each choosing Plan A or Plan B. Payoffs (A, B): Plan A together gives 2, 1; mismatches give 0, 0; Plan B together gives 1, 2. The two equilibria are both Plan A and both Plan B — both beat no deal, but A prefers one and B prefers the other. Related media: 'The Gift of the Magi' on Sesame Street, where Bert and Ernie miscoordinate gifts.</p></section><section aria-label="Slide 8"><h2>Slide 8 of 13: Battle of the Sexes in HR</h2><p>Union and management both prefer a contract to a strike, but pull toward different terms — each its own wage and benefit mix; similar tensions arise in post-merger HR integration. Resolution comes through bargaining power, commitment, and fair focal points. Repeated play helps: parties can alternate who wins or trade across issues so each gets its priority.</p></section><section aria-label="Slide 9"><h2>Slide 9 of 13: Chicken</h2><p>A game of chicken. Side A picks a row, Side B a column, each choosing Swerve or Hold Firm. Payoffs (A, B): both Swerve gives 0, 0; if A swerves and B holds, minus 10 and plus 10; if A holds and B swerves, plus 10 and minus 10; if both Hold Firm they crash at minus 100, minus 100. The two equilibria, where exactly one side yields, are ringed; the both-hold crash is the single solid-red trap cell. Related media: Footloose, where a stuck boot becomes a commitment device in a tractor standoff.</p></section><section aria-label="Slide 10"><h2>Slide 10 of 13: Chicken in HR</h2><p>Chicken is a contest of nerve: hold firm and hope the other side blinks. Two HR examples. First, a relocation threat, where a firm warns it will move jobs or operations elsewhere unless its demands are met. Second, deadline brinkmanship, bargaining right up to the buzzer to see who concedes first. The danger is the edge: if neither side swerves, both crash. The way out is a credible, irreversible commitment, covered in the coming weeks.</p></section><section aria-label="Slide 11"><h2>Slide 11 of 13: Focal Points in HR — Cultural Fit and Discrimination</h2><p>Hiring is itself a coordination problem: the 'good' candidate is whoever the panel converges on. 'Cultural fit' (Rivera) acts as a focal point. Its cost is narrower diversity and groupthink; at the extreme it shades into discrimination, the 'good old boy' network. The fix is to shift the focal point to structured, skills-based criteria. Related media: Moneyball (2011), where Billy Beane moves the focal point from scouts' instinct to objective data.</p></section><section aria-label="Slide 12"><h2>Slide 12 of 13: When Coordination Locks In Bad Equilibria</h2><p>A bad focal point can be devastating. Before the Challenger disaster, O-ring risk was gradually normalized (Pasternack), and conformity and silence kept the bad equilibrium in place. Break it deliberately: invite dissent, protect the people who raise it, and run premortems. Related media: the Freakonomics episode 'Failure Is Your Friend.'</p></section><section aria-label="Slide 13"><h2>Slide 13 of 13: Where We Land and What's Next</h2><p>Many HR problems have several equilibria; the task is to coordinate on one. The three games rise in difficulty: the stag hunt has aligned interests, the battle of the sexes has different preferences, and chicken has opposed interests where miscoordination is disastrous. Where you land turns on focal points. The tools are communication and assurance, fair focal points, and credible commitment. The final two weeks turn to information, strategic moves, and commitment devices.</p></section></section>
+<button class="mapbtn ui" onclick="openMap()" tabindex="-1">Map &nbsp;&#9783;</button>
+<div class="viewport" aria-hidden="true"><div class="stage">
+<section class="slide cover active" data-i="0">
+  <div class="ghost">4</div>
+  <div class="tag"><i></i>WEEK 4 &nbsp;&middot;&nbsp; LER 565</div>
+  <h1>HRM&nbsp;&amp;<br><span class="r">STRATEGY</span></h1>
+  <div class="sub">Coordination Games in HR</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 110 95"><g fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3"><line x1="55" y1="12" x2="32" y2="46"/><line x1="55" y1="12" x2="78" y2="46"/><line x1="32" y1="46" x2="16" y2="82"/><line x1="32" y1="46" x2="46" y2="82"/><line x1="78" y1="46" x2="64" y2="82"/><line x1="78" y1="46" x2="94" y2="82"/></g><circle fill="var(--ink,#1B1C19)" cx="32" cy="46" r="6"/><circle fill="var(--ink,#1B1C19)" cx="78" cy="46" r="6"/><circle fill="var(--ink,#1B1C19)" cx="16" cy="82" r="5"/><circle fill="var(--ink,#1B1C19)" cx="46" cy="82" r="5"/><circle fill="var(--ink,#1B1C19)" cx="64" cy="82" r="5"/><circle fill="var(--ink,#1B1C19)" cx="94" cy="82" r="5"/><circle fill="var(--red,#CE1E32)" cx="55" cy="12" r="7"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="11"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="6" y="32" width="46" height="26"/><rect fill="var(--ink,#1B1C19)" x="13" y="20" width="4" height="12"/><rect fill="var(--ink,#1B1C19)" x="22" y="14" width="4" height="18"/><rect fill="var(--ink,#1B1C19)" x="31" y="22" width="4" height="10"/><rect fill="var(--paper,#E9E2D2)" x="12" y="40" width="7" height="9"/><rect fill="var(--red,#CE1E32)" x="24" y="40" width="7" height="9"/><rect fill="var(--paper,#E9E2D2)" x="36" y="40" width="7" height="9"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"/><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"/><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"/><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"/><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"/><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"/><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,42 22,29 Z"/><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"/><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,42 59,29 Z"/><circle fill="var(--red,#CE1E32)" cx="32" cy="18.2" r="4.2"/></svg></span>
+  </div>
+  <div class="byline">Ryan Lamare</div>
+</section><section class="slide content" data-i="1">
+  <div class="kicker"><i></i>WEEK 4 &middot; THE SHIFT</div>
+  <h2>This Week</h2>
+  <div class="fig"><div class="s4stack"><div class="ba">
+    <div class="station then"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.2"/></svg><div class="slbl">Prisoner&rsquo;s dilemma<br>one equilibrium</div></div>
+    <div class="arrow" data-step="1">&rarr;</div>
+    <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.2"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.2"/></svg><div class="slbl">Coordination<br>several equilibria</div></div>
+  </div><div class="s4note">Best-response analysis finds them all &mdash; the real problem is agreeing on <b>which one</b>.</div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 02 / 13</div><div class="ghostnum">2</div>
+</section><section class="slide content" data-i="2">
+  <div class="kicker"><i></i>WEEK 4 &middot; THE TOOL</div>
+  <h2>Best Response &amp; Nash</h2>
+  <div class="fig matfig"><div class="conv" style="gap:22px">
+    <div class="m3">
+      <div class="clab c1">A</div><div class="clab c2">B</div><div class="clab c3">C</div>
+      <div class="rlab r1">A</div><div class="rlab r2">B</div><div class="rlab r3">C</div>
+      <div class="m3grid">
+        <div class="pcell"><span class="pa">2</span><span class="pcomma">,</span><span class="pb">2</span><span class="pdring" data-step="1"></span></div>
+        <div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div>
+        <div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div>
+        <div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div>
+        <div class="pcell"><span class="pa">2</span><span class="pcomma">,</span><span class="pb">2</span><span class="pdring" data-step="2"></span></div>
+        <div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div>
+        <div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div>
+        <div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div>
+        <div class="pcell"><span class="pa">2</span><span class="pcomma">,</span><span class="pb">2</span><span class="pdring" data-step="3"></span></div>
+      </div>
+    </div>
+    <div class="cap">Best-respond to each column; where both do at once &mdash; the ringed cells &mdash; is a <b style="color:var(--red)">Nash equilibrium</b>. Three here. Rows = <span style="color:var(--teal);font-weight:700">A</span>, columns = <span style="color:var(--terracotta);font-weight:700">B</span>.</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 03 / 13</div><div class="ghostnum">3</div>
+</section><section class="slide content" data-i="3">
+  <div class="kicker"><i></i>WEEK 4 &middot; FOCAL POINTS</div>
+  <h2>The Coordination Problem</h2>
+  <div class="fig"><div class="conv"><svg class="pg" viewBox="0 0 240 150"><g data-step="1"><rect fill="var(--ink)" x="100" y="108" width="40" height="22"/><rect fill="var(--ink)" x="105" y="86" width="30" height="22"/><rect fill="var(--ink)" x="111" y="42" width="18" height="44"/><rect fill="var(--ink)" x="114" y="34" width="12" height="8"/><rect fill="var(--ink)" x="119" y="16" width="2" height="18"/><circle fill="var(--ink)" cx="120" cy="16" r="3"/><rect fill="var(--paper)" x="113" y="50" width="14" height="2"/><rect fill="var(--paper)" x="113" y="58" width="14" height="2"/><rect fill="var(--paper)" x="113" y="66" width="14" height="2"/><rect fill="var(--paper)" x="113" y="74" width="14" height="2"/><rect fill="var(--paper)" x="108" y="94" width="24" height="2"/><rect fill="var(--paper)" x="104" y="116" width="32" height="2"/></g><g transform="translate(94,102) rotate(28)"><line x1="-62" y1="0" x2="-6" y2="0" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"/><path d="M0 0 l-12 -6 m12 6 l-12 6" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(146,102) rotate(152)"><line x1="-62" y1="0" x2="-6" y2="0" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"/><path d="M0 0 l-12 -6 m12 6 l-12 6" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+    <div class="cap" style="font-size:25px;color:var(--ink);max-width:32ch">Where do you meet in New York? The spot everyone guesses is the <b style="color:var(--red);white-space:nowrap">focal point</b>.</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 04 / 13</div><div class="ghostnum">4</div>
+</section><section class="slide content" data-i="4">
+  <div class="kicker"><i></i>WEEK 4 &middot; COORDINATION GAME 1</div>
+  <h2>Stag Hunt</h2>
+  <div class="fig matfig"><div class="pdstack">
+    <div class="pd"><div class="ch">Hunter 2 &middot; column player</div><div class="cl cl1">Hunt Stag</div><div class="cl cl2">Hunt Hare</div><div class="rh">Hunter 1 &middot; row player</div><div class="rl rl1">Hunt<br>Stag</div><div class="rl rl2">Hunt<br>Hare</div><div class="pdgrid"><div class="pcell"><span class="pa">3</span><span class="pcomma">,</span><span class="pb">3</span><span class="pdring" data-step="1"></span></div><div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">1</span></div><div class="pcell"><span class="pa">1</span><span class="pcomma">,</span><span class="pb">0</span></div><div class="pcell"><span class="pa">1</span><span class="pcomma">,</span><span class="pb">1</span><span class="pdring" data-step="1"></span></div></div></div>
+    <div class="cap">Each cell = (<span style="color:var(--teal);font-weight:700">A</span>, <span style="color:var(--terracotta);font-weight:700">B</span>).</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 05 / 13</div><div class="ghostnum">5</div>
+</section><section class="slide content" data-i="5">
+  <div class="kicker"><i></i>WEEK 4 &middot; IN HR</div>
+  <h2>Stag Hunts in HR</h2>
+  <div class="fig"><div class="s5stack"><div class="cols">
+    <div class="col"><div class="ctitle" style="color:var(--teal)">Workers</div><svg class="pg" viewBox="0 0 90 132" style="--ink:var(--teal)"><circle fill="var(--ink,#1B1C19)" cx="45" cy="20" r="14"/><path fill="var(--ink,#1B1C19)" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect fill="var(--ink,#1B1C19)" x="31" y="92" width="12" height="36"/><rect fill="var(--ink,#1B1C19)" x="47" y="92" width="12" height="36"/></svg><div class="csub">Invest firm-specific skills, loyalty, effort</div></div>
+    <div class="col"><div class="ctitle" style="color:var(--terracotta)">Firms</div><svg class="pg" viewBox="0 0 64 64" style="--ink:var(--terracotta)"><rect fill="var(--ink,#1B1C19)" x="6" y="32" width="46" height="26"/><rect fill="var(--ink,#1B1C19)" x="13" y="20" width="4" height="12"/><rect fill="var(--ink,#1B1C19)" x="22" y="14" width="4" height="18"/><rect fill="var(--ink,#1B1C19)" x="31" y="22" width="4" height="10"/><rect fill="var(--paper,#E9E2D2)" x="12" y="40" width="7" height="9"/><rect fill="var(--red,#CE1E32)" x="24" y="40" width="7" height="9"/><rect fill="var(--paper,#E9E2D2)" x="36" y="40" width="7" height="9"/></svg><div class="csub">Invest training, security, voice</div></div>
+  </div><div class="cap">Both win if both invest &mdash; but each fears going first. HR&rsquo;s job is <b style="color:var(--red)">assurance</b>.</div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 06 / 13</div><div class="ghostnum">6</div>
+</section><section class="slide content" data-i="6">
+  <div class="kicker"><i></i>WEEK 4 &middot; COORDINATION GAME 2</div>
+  <h2>Battle of the Sexes</h2>
+  <div class="fig matclip"><div class="pdstack">
+    <div class="pd compact"><div class="ch">Partner B &middot; column player</div><div class="cl cl1">Plan A</div><div class="cl cl2">Plan B</div><div class="rh">Partner A &middot; row player</div><div class="rl rl1">Plan A</div><div class="rl rl2">Plan B</div><div class="pdgrid"><div class="pcell"><span class="pa">2</span><span class="pcomma">,</span><span class="pb">1</span><span class="pdring" data-step="1"></span></div><div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div><div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div><div class="pcell"><span class="pa">1</span><span class="pcomma">,</span><span class="pb">2</span><span class="pdring" data-step="1"></span></div></div></div>
+    <div class="cap">Each cell = (<span style="color:var(--teal);font-weight:700">A</span>, <span style="color:var(--terracotta);font-weight:700">B</span>).</div>
+  </div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">&ldquo;The Gift of the Magi,&rdquo; Sesame Street &mdash; Bert &amp; Ernie miscoordinate on gifts</span></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 07 / 13</div><div class="ghostnum">7</div>
+</section><section class="slide content" data-i="7">
+  <div class="kicker"><i></i>WEEK 4 &middot; IN HR</div>
+  <h2>Battle of the Sexes in HR</h2>
+  <div class="fig"><div class="s5stack"><div class="cols">
+    <div class="col"><div class="ctitle">Union</div><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"/><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"/><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"/></svg><div class="csub">Prefers its wage&ndash;benefit mix</div></div>
+    <div class="col"><div class="ctitle">Management</div><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M16,10 Q16,3 25,3 Q34,3 34,10 Z"/><rect fill="var(--ink,#1B1C19)" x="13" y="9" width="24" height="3.5" rx="1.5"/><circle fill="var(--ink,#1B1C19)" cx="25" cy="17" r="5.5"/><path fill="var(--ink,#1B1C19)" d="M15,25 L35,25 L32,52 L18,52 Z"/><rect fill="var(--ink,#1B1C19)" x="18" y="52" width="6" height="9"/><rect fill="var(--ink,#1B1C19)" x="26" y="52" width="6" height="9"/><path fill="var(--paper,#E9E2D2)" d="M25,25 L19,25 L25,36 Z"/><path fill="var(--paper,#E9E2D2)" d="M25,25 L31,25 L25,36 Z"/><path fill="var(--red,#CE1E32)" d="M25,26 l-2,4 l2,9 l2,-9 z"/></svg><div class="csub">Prefers its own terms</div></div>
+  </div><div class="cap">Both prefer a deal to a strike &mdash; the fight is over <b style="color:var(--red)">whose terms</b>. Repeated bargaining helps: alternate who wins, or trade across&nbsp;issues.</div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 08 / 13</div><div class="ghostnum">8</div>
+</section><section class="slide content" data-i="8">
+  <div class="kicker"><i></i>WEEK 4 &middot; COORDINATION GAME 3</div>
+  <h2>Chicken</h2>
+  <div class="fig matclip"><div class="pdstack">
+    <div class="pd compact"><div class="ch">Side B &middot; column player</div><div class="cl cl1">Swerve</div><div class="cl cl2">Hold Firm</div><div class="rh">Side A &middot; row player</div><div class="rl rl1">Swerve</div><div class="rl rl2">Hold<br>Firm</div><div class="pdgrid"><div class="pcell"><span class="pa">0</span><span class="pcomma">,</span><span class="pb">0</span></div><div class="pcell"><span class="pa">&minus;10</span><span class="pcomma">,</span><span class="pb">+10</span><span class="pdring" data-step="1"></span></div><div class="pcell"><span class="pa">+10</span><span class="pcomma">,</span><span class="pb">&minus;10</span><span class="pdring" data-step="1"></span></div><div class="pcell hot"><span class="pa">&minus;100</span><span class="pcomma">,</span><span class="pb">&minus;100</span></div></div></div>
+    <div class="cap">Each cell = (<span style="color:var(--teal);font-weight:700">A</span>, <span style="color:var(--terracotta);font-weight:700">B</span>).</div>
+  </div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">Footloose &mdash; a tractor game of chicken; a stuck boot becomes a commitment device</span></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 09 / 13</div><div class="ghostnum">9</div>
+</section><section class="slide content" data-i="9">
+  <div class="kicker"><i></i>WEEK 4 &middot; IN HR</div>
+  <h2>Chicken in HR</h2>
+  <div class="fig"><div class="s4stack">
+    <div class="exrow">
+      <div class="extile"><div class="ic"><svg class="pg" viewBox="0 0 112 64"><rect fill="var(--ink)" x="6" y="30" width="46" height="28"/><rect fill="var(--ink)" x="13" y="18" width="4" height="12"/><rect fill="var(--ink)" x="22" y="12" width="4" height="18"/><rect fill="var(--ink)" x="31" y="20" width="4" height="10"/><rect fill="var(--paper)" x="12" y="39" width="7" height="9"/><rect fill="var(--paper)" x="24" y="39" width="7" height="9"/><rect fill="var(--paper)" x="36" y="39" width="7" height="9"/><line x1="62" y1="44" x2="104" y2="44" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/><path d="M104 44 l-11 -7 m11 7 l-11 7" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="xl">Relocation threat</div><div class="xs">&ldquo;Concede, or we move the jobs elsewhere&rdquo;</div></div>
+      <div class="extile"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="var(--ink)" stroke-width="4"/><line x1="32" y1="11" x2="32" y2="15" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/><line x1="53" y1="32" x2="49" y2="32" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/><line x1="32" y1="53" x2="32" y2="49" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/><line x1="11" y1="32" x2="15" y2="32" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/><line x1="32" y1="32" x2="32" y2="19" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><line x1="32" y1="32" x2="43" y2="37" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="32" r="3" fill="var(--ink)"/></svg></div><div class="xl">Deadline brinkmanship</div><div class="xs">Bargain to the buzzer &mdash; who blinks first?</div></div>
+    </div>
+    <div class="s4note">Hold firm and hope the other side swerves &mdash; if neither does, <b>both crash</b>.</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 10 / 13</div><div class="ghostnum">10</div>
+</section><section class="slide content" data-i="10">
+  <div class="kicker"><i></i>WEEK 4 &middot; IN HR</div>
+  <h2>Focal Points: Cultural Fit</h2>
+  <div class="fig withclip"><div class="s4stack"><div class="ba">
+    <div class="station then"><svg class="pg" viewBox="0 0 132 96"><g fill="var(--ink)"><circle cx="22" cy="16" r="11"/><path d="M5 40 Q22 31 39 40 L33 76 L11 76 Z"/><rect x="13" y="76" width="8" height="18"/><rect x="23" y="76" width="8" height="18"/><circle cx="66" cy="16" r="11"/><path d="M49 40 Q66 31 83 40 L77 76 L55 76 Z"/><rect x="57" y="76" width="8" height="18"/><rect x="67" y="76" width="8" height="18"/><circle cx="110" cy="16" r="11"/><path d="M93 40 Q110 31 127 40 L121 76 L99 76 Z"/><rect x="101" y="76" width="8" height="18"/><rect x="111" y="76" width="8" height="18"/></g></svg><div class="slbl">&ldquo;Cultural fit&rdquo;</div></div>
+    <div class="arrow" data-step="1">&rarr;</div>
+    <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="10" y="50" width="12" height="6"/><rect fill="var(--ink,#1B1C19)" x="10" y="42" width="12" height="6"/><rect fill="var(--red,#CE1E32)" x="26" y="50" width="12" height="6"/><rect fill="var(--red,#CE1E32)" x="26" y="42" width="12" height="6"/><rect fill="var(--red,#CE1E32)" x="26" y="34" width="12" height="6"/><rect fill="var(--red,#CE1E32)" x="26" y="26" width="12" height="6"/><rect fill="var(--ink,#1B1C19)" x="42" y="50" width="12" height="6"/><rect fill="var(--ink,#1B1C19)" x="42" y="42" width="12" height="6"/><rect fill="var(--ink,#1B1C19)" x="42" y="34" width="12" height="6"/><rect fill="var(--ink,#1B1C19)" x="6" y="57" width="52" height="2"/></svg><div class="slbl">Skills-based</div></div>
+  </div><div class="s4note">Hiring on &ldquo;fit&rdquo; reinforces sameness &mdash; and can tip into <b>discriminatory hiring</b>.<br>Move the focal point to <b style="color:var(--red)">skills</b>.</div></div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">Moneyball (2011) &mdash; Beane moves the focal point from scouts&rsquo; instinct to objective data</span></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 11 / 13</div><div class="ghostnum">11</div>
+</section><section class="slide content" data-i="11">
+  <div class="kicker"><i></i>WEEK 4 &middot; WHEN IT GOES WRONG</div>
+  <h2>When Coordination Locks In</h2>
+  <div class="fig withclip"><div class="s4stack"><div class="ba">
+    <div class="station then"><svg class="pg" viewBox="0 0 116 132"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"/><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink,#1B1C19)" cx="52" cy="12" r="5"/><path fill="var(--ink,#1B1C19)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--ink,#1B1C19)" cx="92" cy="12" r="5"/><path fill="var(--ink,#1B1C19)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--ink,#1B1C19)" cx="12" cy="52" r="5"/><path fill="var(--ink,#1B1C19)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--red,#CE1E32)" cx="52" cy="52" r="5"/><path fill="var(--red,#CE1E32)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--ink,#1B1C19)" cx="92" cy="52" r="5"/><path fill="var(--ink,#1B1C19)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--ink,#1B1C19)" cx="12" cy="92" r="5"/><path fill="var(--ink,#1B1C19)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--ink,#1B1C19)" cx="52" cy="92" r="5"/><path fill="var(--ink,#1B1C19)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink,#1B1C19)" cx="92" cy="92" r="5"/><path fill="var(--ink,#1B1C19)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="slbl">Conformity &amp; silence</div></div>
+    <div class="arrow" data-step="1">&rarr;</div>
+    <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="24" cy="13" r="7"/><path fill="var(--ink,#1B1C19)" d="M16,23 L32,23 L29,46 L19,46 Z"/><rect fill="var(--ink,#1B1C19)" x="19" y="46" width="5" height="14"/><rect fill="var(--ink,#1B1C19)" x="25" y="46" width="5" height="14"/><line fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" stroke-linecap="round" x1="30" y1="26" x2="46" y2="12"/><circle fill="var(--ink,#1B1C19)" cx="47" cy="11" r="2.6"/><line fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" stroke-linecap="round" x1="18" y1="26" x2="14" y2="40"/><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M52,9 q3,4 0,9"/><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M56,5 q5,8 0,17"/></svg><div class="slbl">Invite &amp; protect dissent</div></div>
+  </div><div class="s4note">A bad focal point locks in (Challenger). Break it: dissent &amp; <b>premortems</b>.</div></div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">Freakonomics, &ldquo;Failure Is Your Friend&rdquo; &mdash; premortems and learning from failure</span></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 12 / 13</div><div class="ghostnum">12</div>
+</section><section class="slide content" data-i="12">
+  <div class="kicker"><i></i>WEEK 4 &middot; WRAP-UP</div>
+  <h2>Where We Land</h2>
+  <div class="fig"><div class="s5stack"><div class="stairs">
+    <div class="step s1" data-step="1"><svg class="pg" viewBox="0 0 100 100" style="height:84px"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"/></svg><div class="sname">Stag Hunt</div><div class="ssub">Aligned &mdash; trust unlocks the best one</div></div>
+    <div class="step s2" data-step="2"><svg class="pg" viewBox="0 0 100 100" style="height:128px"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"/></svg><div class="sname">Battle of the Sexes</div><div class="ssub">Different preferences over which one</div></div>
+    <div class="step s3" data-step="3"><svg class="pg" viewBox="0 0 100 100" style="height:176px"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--red)" x="54" y="54" width="40" height="40"/></svg><div class="sname">Chicken</div><div class="ssub">Opposed &mdash; miscoordination is disaster</div></div>
+  </div><div class="stopnote"><i></i><span>Where you land turns on <b>focal points</b>. Next &rarr; information, strategic moves &amp; commitment devices.</span></div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 13 / 13</div><div class="ghostnum">13</div>
+</section>
+</div></div>
+<div class="ticks"><span class="tick" data-t="0"></span><span class="tick" data-t="1"></span><span class="tick" data-t="2"></span><span class="tick" data-t="3"></span><span class="tick" data-t="4"></span><span class="tick" data-t="5"></span><span class="tick" data-t="6"></span><span class="tick" data-t="7"></span><span class="tick" data-t="8"></span><span class="tick" data-t="9"></span><span class="tick" data-t="10"></span><span class="tick" data-t="11"></span><span class="tick" data-t="12"></span></div>
+<div class="nav ui" aria-hidden="true"><button onclick="prev()" tabindex="-1">&lsaquo; Prev</button><button onclick="next()" tabindex="-1">Next &rsaquo;</button></div>
+<div class="map" id="map" aria-hidden="true"><button class="close" tabindex="-1" onclick="closeMap()">Close &nbsp;&#10005;</button><div class="mtitle">LER <span class="r">565</span> · Week 4</div><h3>Press a slide to jump</h3><div class="branch"><div class="blabel"><i></i>Opening</div><div class="thumbs"><div class="thumb cov" onclick="goto(0);closeMap()"><span class="tn">1</span><span class="tt">Coordination Games in HR</span></div><div class="thumb" onclick="goto(1);closeMap()"><span class="tn">2</span><span class="tt">This Week</span></div></div></div><div class="branch"><div class="blabel"><i></i>Foundations</div><div class="thumbs"><div class="thumb" onclick="goto(2);closeMap()"><span class="tn">3</span><span class="tt">Best Response &amp; Nash</span></div><div class="thumb" onclick="goto(3);closeMap()"><span class="tn">4</span><span class="tt">The Coordination Problem</span></div></div></div><div class="branch"><div class="blabel"><i></i>The three games</div><div class="thumbs"><div class="thumb" onclick="goto(4);closeMap()"><span class="tn">5</span><span class="tt">Stag Hunt</span></div><div class="thumb" onclick="goto(5);closeMap()"><span class="tn">6</span><span class="tt">Stag Hunts in HR</span></div><div class="thumb" onclick="goto(6);closeMap()"><span class="tn">7</span><span class="tt">Battle of the Sexes</span></div><div class="thumb" onclick="goto(7);closeMap()"><span class="tn">8</span><span class="tt">Battle of the Sexes in HR</span></div><div class="thumb" onclick="goto(8);closeMap()"><span class="tn">9</span><span class="tt">Chicken</span></div><div class="thumb" onclick="goto(9);closeMap()"><span class="tn">10</span><span class="tt">Chicken in HR</span></div></div></div><div class="branch"><div class="blabel"><i></i>Focal points at work</div><div class="thumbs"><div class="thumb" onclick="goto(10);closeMap()"><span class="tn">11</span><span class="tt">Focal Points: Cultural Fit</span></div><div class="thumb" onclick="goto(11);closeMap()"><span class="tn">12</span><span class="tt">When Coordination Locks In</span></div></div></div><div class="branch"><div class="blabel"><i></i>Wrap-up</div><div class="thumbs"><div class="thumb" onclick="goto(12);closeMap()"><span class="tn">13</span><span class="tt">Where We Land</span></div></div></div></div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const ticksEl=document.querySelector('.ticks');
+const built=slides.length;
+let cur=0, step=0;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--scale',s);}
+addEventListener('resize',fit);fit();
+function maxStep(i){const ds=[...slides[i].querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0);return ds.length?Math.max(...ds):0;}
+function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));}
+function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));[...ticksEl.children].forEach((t,i)=>{t.classList.toggle('on',i===cur);});ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();}
+function goto(i){if(i<0||i>=built)return;cur=i;step=0;render();}
+function next(){if(step<maxStep(cur)){step++;applySteps();}else if(cur<built-1){cur++;step=0;render();}}
+function prev(){if(step>0){step--;applySteps();}else if(cur>0){cur--;step=maxStep(cur);render();}}
+addEventListener('keydown',e=>{const t=(document.activeElement||{}).tagName,onCtl=(t==='BUTTON'||t==='A');
+if(e.key==='ArrowRight'||e.key==='PageDown'||e.key==='ArrowDown'){next();e.preventDefault();}
+else if(e.key===' '||e.key==='Spacebar'){if(!onCtl){next();e.preventDefault();}}
+else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){prev();e.preventDefault();}
+else if(e.key.toLowerCase()==='o'){toggleMap();}
+else if(e.key==='Escape'){closeMap();}});
+const mapEl=document.getElementById('map');
+function toggleMap(){mapEl.classList.toggle('open');}
+function openMap(){mapEl.classList.add('open');}
+function closeMap(){mapEl.classList.remove('open');}
+render();
+</script>
+</body>
+</html>
