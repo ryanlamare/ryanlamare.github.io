@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LER 565 · Week 3 — Cooperation, Defection &amp; the Prisoner&rsquo;s Dilemma</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+.pg .ink{fill:var(--ink)} .pg .red{fill:var(--red)} .pg .fv{fill:var(--f)}
+.pg .ring{fill:none;stroke:var(--ink);stroke-width:4}
+.pg .branch{stroke:var(--ink);stroke-width:3;fill:none}
+.pg .knock{fill:var(--paper)}
+.pg .inkstroke{fill:none;stroke:var(--ink);stroke-width:3}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--stage-bg);font-family:var(--sans);color:var(--ink);overflow:hidden}
+.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center;
+  transform:scale(var(--scale,1));}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;
+  transition:opacity .40s ease, visibility 0s linear .40s;}
+.slide.active{opacity:1;visibility:visible;transition:opacity .40s ease;}
+@media (prefers-reduced-motion: reduce){.slide{transition:none}.slide.active{transition:none}}
+
+/* ---------- COVER ---------- */
+.cover{background:var(--ink);color:var(--paper);position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;padding:80px 96px;overflow:hidden;position:relative}
+.cover .ghost{position:absolute;right:-30px;bottom:-150px;font-family:var(--display);font-weight:900;
+  font-size:560px;line-height:.7;color:var(--red);opacity:.13;pointer-events:none}
+.cover .tag{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.26em;
+  font-size:17px;margin-bottom:26px;position:relative}
+.cover .tag i{display:inline-block;width:12px;height:12px;background:var(--red);margin-right:14px;vertical-align:middle}
+.cover h1{font-family:var(--display);font-weight:900;font-size:196px;line-height:.84;letter-spacing:-.03em;position:relative}
+.cover h1 .r{color:var(--red)}
+.cover .sub{font-family:var(--sans);font-weight:500;font-size:29px;margin-top:30px;max-width:20ch;line-height:1.18;position:relative}
+.cover .strip{display:flex;gap:12px;margin-top:48px;position:relative}
+.cchip{width:58px;height:58px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.cchip .pg{height:54%;width:auto;max-width:80%}
+.cover .byline{position:absolute;bottom:80px;right:96px;font-family:var(--sans);font-weight:500;
+  text-transform:uppercase;letter-spacing:.18em;font-size:15px;color:var(--paper);opacity:.85}
+
+/* ---------- CONTENT ---------- */
+.content{background:var(--paper);color:var(--ink);position:absolute;inset:0;padding:72px 96px;overflow:hidden}
+.content .kicker{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.2em;
+  font-size:17px;color:var(--muted);text-align:center}
+.content .kicker i{display:inline-block;width:11px;height:11px;background:var(--red);margin-right:13px;vertical-align:middle}
+.content h2{font-family:var(--sans);font-weight:700;color:var(--red);font-size:58px;line-height:1.05;
+  letter-spacing:-.015em;margin-top:16px;text-align:center}
+.content .ghostnum{position:absolute;right:0;bottom:-80px;font-family:var(--display);font-weight:900;
+  font-size:300px;line-height:.7;color:var(--red);opacity:.07;pointer-events:none}
+.content .footer{position:absolute;bottom:56px;left:96px;font-family:var(--sans);font-weight:500;
+  text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--muted)}
+
+/* progress ticks */
+.ticks{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.tick{width:14px;height:4px;background:var(--rule)}
+.tick.on{background:var(--red);width:26px}
+.ticks.lightticks .tick{background:color-mix(in srgb, var(--paper) 30%, transparent)}
+.ticks.lightticks .tick.on{background:var(--red)}
+
+/* nav + map button */
+.ui{position:fixed;z-index:30;font-family:var(--sans)}
+.nav{bottom:22px;right:26px;display:flex;gap:10px}
+.nav button,.mapbtn{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;
+  font-size:12px;background:color-mix(in srgb, var(--paper) 10%, transparent);color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.nav button:hover,.mapbtn:hover{background:color-mix(in srgb, var(--red) 90%, transparent);border-color:var(--red)}
+.nav button:focus-visible,.mapbtn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mapbtn{position:fixed;top:22px;right:26px}
+
+/* MAP overlay */
+.map{position:fixed;inset:0;background:var(--stage-bg);z-index:50;display:none;
+  flex-direction:column;padding:54px 64px;overflow:auto}
+.map.open{display:flex}
+.map h3{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.24em;
+  font-size:14px;color:var(--paper);opacity:.7;margin-bottom:8px}
+.map .mtitle{font-family:var(--display);font-weight:900;font-size:46px;color:var(--paper);margin-bottom:30px;letter-spacing:-.02em}
+.map .mtitle .r{color:var(--red)}
+.branch{margin-bottom:30px}
+.branch .blabel{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;
+  font-size:12px;color:var(--red);margin-bottom:14px}
+.branch .blabel i{display:inline-block;width:9px;height:9px;background:var(--red);margin-right:9px;vertical-align:middle}
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.thumb{aspect-ratio:16/9;background:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 25%, transparent);cursor:pointer;
+  position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;overflow:hidden;
+  transition:border-color .2s,transform .15s}
+.thumb.cov{background:var(--ink)}
+.thumb:hover{border-color:var(--red);transform:translateY(-2px)}
+.thumb .tn{position:absolute;top:8px;left:9px;font-family:var(--display);font-weight:900;font-size:22px;color:var(--rule)}
+.thumb.cov .tn{color:color-mix(in srgb, var(--paper) 40%, transparent)}
+.thumb .tt{font-family:var(--sans);font-weight:700;font-size:11px;line-height:1.15;color:var(--red)}
+.thumb.cov .tt{color:var(--paper)}
+.thumb.todo{opacity:.4;cursor:default}
+.thumb.todo:hover{border-color:color-mix(in srgb, var(--paper) 25%, transparent);transform:none}
+.thumb.todo .tt{color:var(--muted)}
+.map .close{position:fixed;top:22px;right:26px;background:transparent;border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  color:var(--paper);font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;
+  font-size:12px;padding:9px 14px;cursor:pointer}
+.map .close:hover{background:var(--red);border-color:var(--red)}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:normal;border:0}
+
+/* ---- generic figure stage ---- */
+.fig{position:absolute;left:96px;right:96px;top:226px;bottom:116px;display:flex;align-items:center;justify-content:center}
+.fig .cap{font-family:var(--sans);font-weight:500;font-size:21px;line-height:1.4;color:var(--muted);text-align:center;max-width:46ch}
+
+/* before / after (slide 2) */
+.ba{display:flex;align-items:center;justify-content:center;gap:60px}
+.ba .station{display:flex;flex-direction:column;align-items:center;gap:22px;width:300px;text-align:center}
+.ba .station .pg{height:150px;width:auto}
+.ba .station.then{opacity:.4}
+.ba .station .slbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:22px;color:var(--ink)}
+.ba .station.now .slbl{color:var(--red)}
+.ba .station .ssub{font-family:var(--sans);font-weight:500;font-size:17px;color:var(--muted);max-width:22ch;line-height:1.3}
+.ba .arrow{font-size:80px;color:var(--red);line-height:1}
+.bastack{display:flex;flex-direction:column;align-items:center;gap:40px}
+.banote{font-family:var(--sans);font-weight:500;font-size:21px;color:var(--muted);text-align:center;max-width:52ch;line-height:1.4}
+.banote b{color:var(--red);font-weight:700}
+
+/* scenario two rooms (slide 3) */
+.scene{display:flex;flex-direction:column;align-items:center;gap:26px}
+.scene .pg{height:300px;width:auto;overflow:visible}
+.scene .slbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:16px;fill:var(--ink)}
+
+/* payoff matrix (slides 4-6) */
+.pdstack{display:flex;flex-direction:column;align-items:center;gap:30px}
+.pd{display:grid;grid-template-columns:46px 132px 210px 210px;grid-template-rows:36px 42px 122px 122px}
+.pd .ch{grid-column:3/5;grid-row:1;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--terracotta)}
+.pd .cl{display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;
+  font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:15px;color:var(--ink)}
+.pd .cl1{grid-column:3;grid-row:2}.pd .cl2{grid-column:4;grid-row:2}
+.pd .rh{grid-column:1;grid-row:3/5;display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--teal);
+  writing-mode:vertical-rl;transform:rotate(180deg)}
+.pd .rl{display:flex;align-items:center;justify-content:flex-end;text-align:right;padding-right:16px;
+  font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:15px;color:var(--ink)}
+.pd .rl1{grid-column:2;grid-row:3}.pd .rl2{grid-column:2;grid-row:4}
+.pd .pdgrid{grid-column:3/5;grid-row:3/5;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  gap:3px;background:var(--ink);border:3px solid var(--ink)}
+.pd .pcell{background:var(--card);display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;font-size:29px}
+.pd .pcell.hot{background:var(--red)}
+.pd .pa{color:var(--teal)}.pd .pb{color:var(--terracotta)}
+.pd .pcomma{color:var(--muted);font-weight:500;margin:0 .14em}
+.pd .pcell.hot .pa,.pd .pcell.hot .pb,.pd .pcell.hot .pcomma{color:var(--paper)}
+/* equilibrium ring (scales to 1+ cells; keeps coded payoffs legible) */
+.pd .pcell.ring{position:relative}
+.pd .pcell.ring::after{content:"";position:absolute;inset:5px;border:3.5px solid var(--red);pointer-events:none}
+.pd .pcell .phrase{font-family:var(--sans);font-weight:700;font-size:24px;color:var(--ink);text-align:center;line-height:1.15;padding:0 10px}
+.pd .pcell.ring .phrase{color:var(--ink)}
+.pd .dom{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:var(--red)}
+.pd.compact{grid-template-rows:32px 38px 100px 100px}
+.pd.compact .pcell{font-size:25px}
+
+/* media link (matched to Week 2) */
+.medialink{display:flex;align-items:center;gap:14px;text-decoration:none;border:1.5px solid var(--rule);background:var(--card);padding:11px 16px;max-width:760px;margin:0 auto;transition:border-color .2s}
+.medialink .play{flex:none;width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.medialink .play svg{width:12px;height:12px;display:block}
+.medialink .mlk{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--red);flex:none}
+.medialink .mlt{font-family:var(--sans);font-weight:500;font-size:16px;color:var(--ink);line-height:1.3;text-align:left}
+.medialink.pinned{position:absolute;left:96px;right:96px;bottom:92px;max-width:760px;margin:0 auto}
+
+/* pictogram tiles (slides 7, 10) */
+.tiles{position:absolute;left:96px;right:96px;top:286px;display:flex;justify-content:space-between;gap:24px}
+.tile{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:26px}
+.tile .pgwrap{height:118px;display:flex;align-items:flex-end;justify-content:center}
+.tile .pgwrap .pg{height:116px;width:auto;display:block}
+.tile .lbl{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  font-size:18px;line-height:1.25;color:var(--ink);max-width:18ch}
+.tiles.four{top:300px}
+
+/* numbered tiles (slide 11) */
+.numtiles{display:grid;grid-template-columns:repeat(4,1fr);gap:30px 40px;width:100%}
+.numtile{display:flex;flex-direction:column;gap:10px}
+.numtile .nn{font-family:var(--display);font-weight:900;font-size:54px;color:var(--red);line-height:.8}
+.numtile .nt{font-family:var(--sans);font-weight:500;font-size:19px;color:var(--ink);line-height:1.3}
+.numtile .nt b{color:var(--red);font-weight:700}
+.numnote{font-family:var(--sans);font-weight:500;font-size:20px;color:var(--muted);text-align:center;max-width:60ch;line-height:1.4;margin-top:6px}
+.numnote b{color:var(--red);font-weight:700}
+.numstack{display:flex;flex-direction:column;align-items:center;gap:34px;width:100%}
+
+/* regime-shopping hero (slide 8) */
+.regime{display:flex;flex-direction:column;align-items:center;gap:26px}
+.regime .pg{height:286px;width:auto;overflow:visible}
+.regime .blbl{font-family:var(--sans);font-weight:700;font-size:15px;fill:var(--ink)}
+.regime .bamt{font-family:var(--sans);font-weight:700;font-size:17px;fill:var(--red)}
+
+/* mobile / rooted contrast (slide 9) */
+.contrast{display:flex;align-items:flex-start;justify-content:center;gap:56px}
+.cstation{display:flex;flex-direction:column;align-items:center;gap:20px;width:280px;text-align:center}
+.cstation .pg{height:140px;width:auto}
+.cstation .clbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:21px;color:var(--ink)}
+.cstation .csub{font-family:var(--sans);font-weight:500;font-size:17px;color:var(--muted);max-width:20ch;line-height:1.3}
+/* opening-slide-spec.md: two-line HRM & STRATEGY headline */
+.cover h1{font-size:168px}
+/* slide 7 — high-text workplace cards (Week 2 excard idiom) */
+.wkcards{position:absolute;left:96px;right:96px;top:248px;bottom:92px;display:flex;gap:30px;justify-content:center;align-items:stretch}
+.wkcard{flex:1;max-width:336px;border:1.5px solid var(--rule);background:var(--card);padding:22px 22px 18px;display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center}
+.wkcard .ic{height:80px;display:flex;align-items:flex-end;justify-content:center}
+.wkcard .ic .pg{height:78px;width:auto}
+.wkcard .ct{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:18px;color:var(--ink)}
+.wkcard .cb{font-family:var(--sans);font-weight:500;font-size:16px;line-height:1.4;color:var(--ink)}
+.wkcard .cb b{color:var(--red);font-weight:700}
+.wkcard .ctag{margin-top:auto;font-family:var(--sans);font-weight:600;font-size:13.5px;color:var(--muted);border-top:1.5px solid var(--rule);padding-top:11px;width:100%;text-decoration:none;display:block;transition:color .2s}
+a.ctag:hover{color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:2px}
+.ctag .arr{color:var(--red);font-weight:700;margin-left:5px}
+/* slide 8 — single-case subsidy bidding map (3 states only) */
+.mapfig{position:absolute;left:40px;right:40px;top:170px;bottom:78px;display:flex;align-items:center;justify-content:center}
+.usmap{height:100%;width:auto;max-width:100%;overflow:visible}
+.usmap .land{fill:var(--paper-soft);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.usmap .arr{fill:none;stroke:var(--red);stroke-width:6;stroke-linecap:round}
+.usmap .arrhead{fill:var(--red);stroke:none}
+.usmap .fk{fill:var(--ink)} .usmap .fr{fill:var(--red)} .usmap .fkk{fill:var(--paper-soft)}
+.usmap .co{font-family:var(--sans);font-weight:700;font-size:25px;fill:var(--ink)}
+.usmap .cs{font-family:var(--sans);font-weight:700;font-size:23px;fill:var(--ink)}
+.usmap .ca{font-family:var(--sans);font-weight:700;font-size:23px;fill:var(--red)}
+.usmap .coin{fill:var(--red)}
+.usmap .coinghost{fill:none;stroke:var(--rule);stroke-width:1.5}
+.usmap .cn{font-family:var(--sans);font-weight:700;font-size:15px;fill:var(--paper-soft)}
+.usmap .key{font-family:var(--sans);font-weight:500;font-size:17px;fill:var(--muted)}
+.usmap .bignum{font-family:var(--display);font-weight:900;font-size:48px;fill:var(--ink)}
+.usmap .bigcap{font-family:var(--sans);font-weight:600;font-size:17px;fill:var(--muted)}
+/* slide 9 — no-poach externality */
+.s9stack{display:flex;flex-direction:column;align-items:center;gap:24px;width:100%}
+.s9row{display:flex;align-items:center;justify-content:center;gap:22px}
+.pd.s9pd{grid-template-columns:36px 92px 126px 126px}
+.pd.s9pd .phrase{font-size:18px}
+.s9arrow{display:flex;flex-direction:column;align-items:center;gap:5px}
+.s9arrow svg{width:92px;height:42px}
+.s9arrow span{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--red)}
+.s9workers{display:flex;flex-direction:column;align-items:center;gap:9px;width:172px;text-align:center}
+.s9workers .pg{height:100px;width:auto}
+.s9pic{height:300px;width:auto}
+.s9workers .clbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:19px;color:var(--ink)}
+.s9workers .csub{font-family:var(--sans);font-weight:700;font-size:15px;color:var(--red);line-height:1.25}
+/* slide 10 — tit for tat hero */
+.s10stack{display:flex;flex-direction:column;align-items:center;gap:24px;width:100%}
+.t4thead{display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center}
+.t4thead .pg{height:50px;width:auto;flex:none}
+.t4tlabel{font-family:var(--display);font-weight:900;font-size:40px;color:var(--red);line-height:.9}
+.t4tsub{font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);max-width:40ch;line-height:1.3}
+.t4tsub b{color:var(--red);font-weight:700}
+.props{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;width:100%}
+.prop{border:1.5px solid var(--rule);background:var(--card);padding:15px 14px;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.prop .pw{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:17px;color:var(--ink)}
+.prop .pgl{font-family:var(--sans);font-weight:500;font-size:14px;color:var(--muted);line-height:1.3}
+.s10result{display:flex;align-items:center;gap:16px;max-width:680px;border-top:1.5px solid var(--rule);padding-top:18px}
+.s10result .pg{height:48px;width:auto;flex:none}
+.s10rtext{font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);line-height:1.35;text-align:left}
+.s10rtext b{color:var(--red);font-weight:700}
+.medal1{font-family:var(--display);font-weight:900;font-size:20px;fill:var(--paper)}
+.s10reg{display:flex;align-items:center;gap:14px;border-top:1.5px solid var(--rule);padding-top:18px;max-width:660px}
+.s10reg .pg{height:40px;width:auto;flex:none}
+.s10reg .rt{font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink)}
+.s10reg .rt b{color:var(--red);font-weight:700}
+/* slide 11 — Week 1 numbered tiles (icon + numeral + text) */
+.plist{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;width:100%}
+.pitem{display:flex;flex-direction:column;gap:12px}
+.pitem .ph{display:flex;align-items:center;gap:12px}
+.pitem .ph .pg{height:38px;width:auto;flex:none}
+.pitem .pn{font-family:var(--display);font-weight:900;font-size:46px;color:var(--red);line-height:.8}
+.pitem .ptx{font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);line-height:1.3}
+.pitem .ptx b{color:var(--red);font-weight:700}
+.cswap{font-size:40px;color:var(--red);line-height:1;align-self:center;margin-top:40px}
+.cstack{display:flex;flex-direction:column;align-items:center;gap:34px}
+/* slide 9 — two-up PD: cooperation vs forced defection */
+.s9two{display:flex;justify-content:center;gap:60px;align-items:flex-start}
+.pd2col{display:flex;flex-direction:column;align-items:center;gap:15px}
+.pd2title{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--ink)}
+.pd2note{font-family:var(--sans);font-weight:500;font-size:16px;color:var(--muted);text-align:center;max-width:26ch;line-height:1.35}
+.pd2note b{font-weight:700;color:var(--ink)}
+.pd.mini{grid-template-columns:40px 96px 150px 150px;grid-template-rows:28px 34px 94px 94px}
+.pd.mini .ch{font-size:14px}
+.pd.mini .cl{font-size:13px;padding-bottom:5px}
+.pd.mini .rh{font-size:14px}
+.pd.mini .rl{font-size:13px;padding-right:9px}
+.pd.mini .pcell .phrase{font-size:18px;padding:0 6px;line-height:1.12}
+.pd .pcell.hot .phrase{color:var(--paper)}
+.pd .pcell{position:relative}
+.pd .pcell .pdring{position:absolute;inset:5px;border:3.5px solid var(--red);pointer-events:none}
+.pd .pcell .pdring.coop{border-color:var(--green)}
+.pd.mini .pcell .pdring{inset:4px;border-width:3px}
+[data-step]{opacity:0;transition:opacity .32s ease}
+[data-step].shown{opacity:1}
+@media (prefers-reduced-motion: reduce){[data-step]{transition:none}}
+/* slide 12 — next-week as its own line */
+.bawrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.banext{display:flex;align-items:center;gap:13px;font-family:var(--sans);font-weight:500;font-size:21px;color:var(--ink)}
+.banext i{width:13px;height:13px;background:var(--red);display:inline-block;flex:none}
+.banext b{color:var(--red);font-weight:700}
+</style>
+</head>
+<body>
+<section class="sr-only" aria-label="Full text of all slides"><h1>LER 565, Week 3 — Cooperation, Defection and the Prisoner&rsquo;s Dilemma</h1><p>Accessible text version of a twelve-slide presentation. Each heading below is one slide, in order.</p><section aria-label="Slide 1 of 12"><h2>Slide 1 of 12: Title slide</h2><p>LER 565, Week 3: Cooperation, Defection and the Prisoner&rsquo;s Dilemma. Part of HRM and Strategy. Instructor: Ryan Lamare.</p></section><section aria-label="Slide 2 of 12"><h2>Slide 2 of 12: This Week</h2><p>Recall from Week 2: when the pie is fixed, that is zero-sum, you find your dominant strategy and use it. This week we go non-zero-sum: the pie can grow or shrink, and cooperation can pay. Our focus all week is the prisoner&rsquo;s dilemma, the most famous game in the social sciences. We will read the prisoner&rsquo;s dilemma matrix, see why &ldquo;rational&rdquo; play backfires, and how to escape it.</p></section><section aria-label="Slide 3 of 12"><h2>Slide 3 of 12: Two Suspects, Two Rooms</h2><p>Two suspects are arrested for a crime and interrogated in separate rooms, with no chance to coordinate. Each can confess, betraying the other, or stay silent, which in effect cooperates with the other. If you confess while your partner stays silent, you walk free and your partner gets about twenty-five years. If both confess, three years each. If both stay silent, just one year each. Each must choose at the same time, not knowing the other&rsquo;s choice. So what should each do? Related media: &ldquo;Coffee Wars&rdquo; from Curb Your Enthusiasm, a price war neither shop can stop.</p></section><section aria-label="Slide 4 of 12"><h2>Slide 4 of 12: Reading the Payoff Matrix</h2><p>Suspect B is the column player, choosing Stay Silent or Confess. Suspect A is the row player, choosing Stay Silent or Confess. Each cell shows the pair of outcomes as Suspect A, then Suspect B. If both stay silent: one year, one year. If A stays silent and B confesses: twenty-five years for A, free for B. If A confesses and B stays silent: free for A, twenty-five years for B. If both confess: three years, three years. Fewer years is the better payoff. Both choose simultaneously, blind to the other; rows are A&rsquo;s options, columns are B&rsquo;s.</p></section><section aria-label="Slide 5 of 12"><h2>Slide 5 of 12: Why It&rsquo;s a Dilemma</h2><p>Confess is a dominant strategy for both players, so they land on the outcome where both confess, getting three years each. That choice is individually rational but collectively worse than both staying silent, which would have been one year each.</p></section><section aria-label="Slide 6 of 12"><h2>Slide 6 of 12: The Generalized Prisoner&rsquo;s Dilemma</h2><p>Generalize the game. You and the other side each choose to Cooperate or Defect. If both cooperate, both win. If you cooperate and they defect, you lose big. If you defect and they cooperate, you win big. If both defect, both lose. Defecting always tempts you, and if you both give in you land on &ldquo;both lose,&rdquo; which is worse than if you had cooperated. Any situation with that set of incentives is a prisoner&rsquo;s dilemma.</p></section><section aria-label="Slide 7 of 12"><h2>Slide 7 of 12: Prisoner&rsquo;s Dilemmas at Work</h2><p>Three workplace examples. Contract standoffs: a team and a player each move to dodge their own worst case, so both defect and the deal collapses, even though cooperating was cheaper; see The Economist, &ldquo;How to Lose Quarterbacks and Alienate People: Contracts in American Football&rdquo; (2017). Because NFL contracts are a repeated game, reputation makes cooperation the smarter play. Train your own, or poach? Why build talent if rivals just poach it, so firms buy instead of build, and the talent pool grows scarce and expensive; see Peter Cappelli, &ldquo;Talent Management for the Twenty-First Century,&rdquo; Harvard Business Review. Workplace surveillance: &ldquo;see something, say something&rdquo; systems reward snitching until everyone informs on everyone; see the Workplace Spying reading.</p></section><section aria-label="Slide 8 of 12"><h2>Slide 8 of 12: States Bid Against Each Other</h2><p>States and cities compete to attract companies by offering subsidies &mdash; a prisoner&rsquo;s dilemma among governments, paid for by taxpayers. Example: when Amazon, headquartered in Seattle, Washington, sought a site for a second headquarters, cities and states across the country bid against each other. Among them, New York offered incentives of about 1.5 billion dollars and Virginia about 573 million dollars. Each state, fearing it will lose the jobs to a rival, offers more &mdash; so the company wins and taxpayers pay.</p></section><section aria-label="Slide 9 of 12"><h2>Slide 9 of 12: Are Prisoner&rsquo;s Dilemmas Always Bad?</h2><p>Prisoner&rsquo;s dilemmas are not always bad; it depends on who is outside the game. Two firms choose whether to poach each other&rsquo;s workers. Left to themselves, firms prefer the cooperative no-poach pact: wages stay suppressed, which is good for them but bad for workers. That pact is collusion. Regulation, through antitrust enforcement, forces firms off the pact and into competition: both poach, and wages get bid up. This is shown as two copies of the same payoff matrix &mdash; the first with the cooperative no-poach cell highlighted, the second with the mutual-poach cell highlighted in red to mark what regulation forces. So a cooperative outcome can harm society, and forcing players to defect can be the better result. Related media: Talent Wars in Silicon Valley, a no-poach pact that hurt workers.</p></section><section aria-label="Slide 10 of 12"><h2>Slide 10 of 12: Escaping the Dilemma Without Regulation</h2><p>The main route out is Tit for Tat: cooperate first, then mirror the other side, and only if the game repeats. It works because it is nice, never defecting first; forgiving, returning to cooperation; retaliatory, punishing defection at once; and clear, simple enough to trust. These four traits are why Tit for Tat won Robert Axelrod&rsquo;s 1980 prisoner&rsquo;s-dilemma tournaments, where the simplest strategy beat far more complex ones. Related media: How to Outsmart the Prisoner&rsquo;s Dilemma, on repeated play and tit for tat with the discount factor approaching one.</p></section><section aria-label="Slide 11 of 12"><h2>Slide 11 of 12: How Cooperation Sticks</h2><p>Conditions for cooperation to hold. Detect defection fast: cooperation holds only if cheating is spotted quickly. Repeat the game: a &ldquo;shadow of the future&rdquo; makes today&rsquo;s defection cost you tomorrow. Make punishment credible and clear: everyone knows what counts as cheating, and that it draws a response. Keep it proportionate: unbelievable threats don&rsquo;t deter, and forgiving the odd mistake stops a spiral. In practice, parties can try to incentivize cooperation, but it&rsquo;s always fragile.</p></section><section aria-label="Slide 12 of 12"><h2>Slide 12 of 12: Where We Land, and What&rsquo;s Next</h2><p>The prisoner&rsquo;s dilemma: each side&rsquo;s rational move, defect, leaves everyone in the game worse off. Escape routes: repetition and reciprocity through Tit for Tat, regulation, and enforceable agreements. Most workplace &ldquo;dilemmas&rdquo; have cooperative gains on the table, if you can detect defection and make cooperation stick. Next week: coordination games, when several strategies are equally viable and the trick is agreeing on one, using focal points.</p></section></section>
+<button class="mapbtn ui" aria-label="Open slide map" onclick="openMap()">Map ▦</button>
+<div class="viewport" aria-hidden="true"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="tag"><i></i>WEEK 3 &nbsp;·&nbsp; LER 565</div>
+  <h1>HRM&nbsp;&amp;<br><span class="r">STRATEGY</span></h1>
+  <div class="sub">Cooperation, Defection &amp; the Prisoner&rsquo;s Dilemma</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 110 95"><g class="branch"><line x1="55" y1="12" x2="32" y2="46"/><line x1="55" y1="12" x2="78" y2="46"/><line x1="32" y1="46" x2="16" y2="82"/><line x1="32" y1="46" x2="46" y2="82"/><line x1="78" y1="46" x2="64" y2="82"/><line x1="78" y1="46" x2="94" y2="82"/></g><circle class="ink" cx="32" cy="46" r="6"/><circle class="ink" cx="78" cy="46" r="6"/><circle class="ink" cx="16" cy="82" r="5"/><circle class="ink" cx="46" cy="82" r="5"/><circle class="ink" cx="64" cy="82" r="5"/><circle class="ink" cx="94" cy="82" r="5"/><circle class="red" cx="55" cy="12" r="7"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><rect class="ink" x="6" y="6" width="40" height="40"/><rect class="ink" x="54" y="6" width="40" height="40"/><rect class="ink" x="6" y="54" width="40" height="40"/><rect class="ink" x="54" y="54" width="40" height="40"/><rect x="59" y="59" width="30" height="30" fill="none" stroke="var(--red)" stroke-width="4"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect class="ink" x="6" y="32" width="46" height="26"/><rect class="ink" x="13" y="20" width="4" height="12"/><rect class="ink" x="22" y="14" width="4" height="18"/><rect class="ink" x="31" y="22" width="4" height="10"/><rect class="knock" x="12" y="40" width="7" height="9"/><rect class="red" x="24" y="40" width="7" height="9"/><rect class="knock" x="36" y="40" width="7" height="9"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect class="red" x="25" y="34" width="13" height="25" rx="2"/><rect class="red" x="21" y="19" width="21" height="18" rx="4"/><rect class="red" x="17" y="25" width="6" height="9" rx="3"/><line x1="26" y1="21" x2="26" y2="30" stroke="var(--paper)" stroke-width="2" stroke-linecap="round"/><line x1="31" y1="20" x2="31" y2="30" stroke="var(--paper)" stroke-width="2" stroke-linecap="round"/><line x1="37" y1="21" x2="37" y2="30" stroke="var(--paper)" stroke-width="2" stroke-linecap="round"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect class="ink" x="30" y="17" width="4" height="33"/><rect class="ink" x="8" y="16" width="48" height="4.4" rx="1"/><path class="ink" d="M21,50 L43,50 L48,59 L16,59 Z"/><rect class="ink" x="12.2" y="20" width="2.6" height="9"/><path class="ink" d="M5,29 Q13.5,42 22,29 Z"/><rect class="ink" x="49.2" y="20" width="2.6" height="9"/><path class="ink" d="M42,29 Q50.5,42 59,29 Z"/><circle class="red" cx="32" cy="18.2" r="4.2"/></svg></span>
+  </div>
+  <div class="byline">Ryan Lamare</div>
+  <div class="ghost">3</div>
+</section><section class="slide content" data-i="1">
+  <div class="kicker"><i></i>WEEK 3 · THE SHIFT</div>
+  <h2>This Week</h2>
+  <div class="fig"><div class="bastack"><div class="ba">
+    <div class="station then">
+      <svg class="pg" viewBox="0 0 64 64"><circle class="ink" cx="32" cy="32" r="23"/><path class="red" d="M32 32 L32 9 A23 23 0 0 1 49.6 46.8 Z"/><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper)" stroke-width="2.4"/><line x1="32" y1="32" x2="49.6" y2="46.8" stroke="var(--paper)" stroke-width="2.4"/></svg>
+      <div class="slbl">Zero-sum</div>
+      <div class="ssub">Fixed pie &mdash; find your dominant strategy</div>
+    </div>
+    <div class="arrow" data-step="1">&rarr;</div>
+    <div class="station now" data-step="1">
+      <svg class="pg" viewBox="0 0 64 64"><circle class="ink" cx="30" cy="34" r="15"/><path d="M30 13 A21 21 0 0 1 51 34" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"/><path d="M30 13 l8 1.5 m-8 -1.5 l1.5 8" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="slbl">Non-zero-sum</div>
+      <div class="ssub">The pie can grow &mdash; cooperation can pay</div>
+    </div>
+  </div><div class="banote">Our focus all week: the <b>prisoner&rsquo;s dilemma</b><br>&mdash; why &ldquo;rational&rdquo; play backfires, and how to escape it.</div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 02 / 12</div>
+  <div class="ghostnum">2</div>
+</section><section class="slide content" data-i="2">
+  <div class="kicker"><i></i>WEEK 3 · THE SETUP</div>
+  <h2>Two Suspects, Two Rooms</h2>
+  <div class="fig" style="bottom:150px"><div class="scene">
+    <svg class="pg" viewBox="0 0 720 330" style="height:250px">
+      <!-- left room -->
+      <rect x="70" y="64" width="244" height="236" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+      <g transform="translate(137,80) scale(1.38)" style="--ink:var(--teal)"><circle class="ink" cx="40" cy="20" r="14"/><path class="ink" d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect class="ink" x="26" y="92" width="12" height="36"/><rect class="ink" x="42" y="92" width="12" height="36"/></g>
+      <text class="slbl" x="192" y="289" text-anchor="middle" style="fill:var(--teal)">Suspect A</text>
+      <!-- right room -->
+      <rect x="406" y="64" width="244" height="236" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+      <g transform="translate(473,80) scale(1.38)" style="--ink:var(--terracotta)"><circle class="ink" cx="40" cy="20" r="14"/><path class="ink" d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect class="ink" x="26" y="92" width="12" height="36"/><rect class="ink" x="42" y="92" width="12" height="36"/></g>
+      <text class="slbl" x="528" y="289" text-anchor="middle" style="fill:var(--terracotta)">Suspect B</text>
+      <!-- dividing wall -->
+      <rect class="red" x="350" y="40" width="20" height="260"/>
+      <!-- no-communication badge -->
+      <g transform="translate(360,28)">
+        <rect x="-58" y="-22" width="46" height="30" rx="6" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.5"/>
+        <path d="M-44 8 l0 12 l12 -12 z" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.5"/>
+        <rect x="12" y="-22" width="46" height="30" rx="6" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.5"/>
+        <path d="M44 8 l0 12 l-12 -12 z" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.5"/>
+        <line x1="-66" y1="22" x2="66" y2="-30" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <div class="cap">Arrested, interrogated apart &mdash; no way to coordinate. Confess, or stay silent?</div>
+  </div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">&ldquo;Coffee Wars&rdquo; (Curb Your Enthusiasm) &mdash; a price war neither shop can stop</span></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 03 / 12</div>
+  <div class="ghostnum">3</div>
+</section><section class="slide content" data-i="3">
+  <div class="kicker"><i></i>WEEK 3 · THE GAME</div>
+  <h2>Reading the Payoff Matrix</h2>
+  <div class="fig"><div class="pdstack">
+    <div class="pd">
+      <div class="ch">Suspect B &middot; column player</div>
+      <div class="cl cl1">Stay Silent</div>
+      <div class="cl cl2">Confess</div>
+      <div class="rh">Suspect A &middot; row player</div>
+      <div class="rl rl1">Stay<br>Silent</div>
+      <div class="rl rl2">Confess</div>
+      <div class="pdgrid">
+        <div class="pcell"><span class="pa">1 yr</span><span class="pcomma">,</span><span class="pb">1 yr</span></div>
+        <div class="pcell"><span class="pa">25 yrs</span><span class="pcomma">,</span><span class="pb">free</span></div>
+        <div class="pcell"><span class="pa">free</span><span class="pcomma">,</span><span class="pb">25 yrs</span></div>
+        <div class="pcell"><span class="pa">3 yrs</span><span class="pcomma">,</span><span class="pb">3 yrs</span></div>
+      </div>
+    </div>
+    <div class="cap">Each cell = (<span style="color:var(--teal);font-weight:700">A</span>, <span style="color:var(--terracotta);font-weight:700">B</span>). Fewer years is better. Both choose blind, at the same time.</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 04 / 12</div>
+  <div class="ghostnum">4</div>
+</section><section class="slide content" data-i="4">
+  <div class="kicker"><i></i>WEEK 3 · DOMINANCE</div>
+  <h2>Why It&rsquo;s a Dilemma</h2>
+  <div class="fig"><div class="pdstack">
+    <div class="pd">
+      <div class="ch">Suspect B &middot; column player</div>
+      <div class="cl cl1">Stay Silent</div>
+      <div class="cl cl2" style="color:var(--red)">Confess</div>
+      <div class="rh">Suspect A &middot; row player</div>
+      <div class="rl rl1">Stay<br>Silent</div>
+      <div class="rl rl2" style="color:var(--red)">Confess</div>
+      <div class="pdgrid">
+        <div class="pcell"><span class="pa">1 yr</span><span class="pcomma">,</span><span class="pb">1 yr</span></div>
+        <div class="pcell"><span class="pa">25 yrs</span><span class="pcomma">,</span><span class="pb">free</span></div>
+        <div class="pcell"><span class="pa">free</span><span class="pcomma">,</span><span class="pb">25 yrs</span></div>
+        <div class="pcell"><span class="pa">3 yrs</span><span class="pcomma">,</span><span class="pb">3 yrs</span><span class="pdring" data-step="1"></span></div>
+      </div>
+    </div>
+    <div class="cap"><b style="color:var(--red)">Confess</b> dominates for both &rarr; (3,&nbsp;3)<br>&mdash; worse than the (1,&nbsp;1) they could have shared.</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 05 / 12</div>
+  <div class="ghostnum">5</div>
+</section><section class="slide content" data-i="5">
+  <div class="kicker"><i></i>WEEK 3 · THE PATTERN</div>
+  <h2>The Generalized PD</h2>
+  <div class="fig"><div class="pdstack">
+    <div class="pd">
+      <div class="ch" style="color:var(--terracotta)">The other side &middot; column</div>
+      <div class="cl cl1">Cooperate</div>
+      <div class="cl cl2">Defect</div>
+      <div class="rh" style="color:var(--teal)">You &middot; row</div>
+      <div class="rl rl1">Cooperate</div>
+      <div class="rl rl2">Defect</div>
+      <div class="pdgrid">
+        <div class="pcell"><span class="phrase">Both win</span></div>
+        <div class="pcell"><span class="phrase">You lose big</span></div>
+        <div class="pcell"><span class="phrase">You win big</span></div>
+        <div class="pcell"><span class="phrase">Both lose</span><span class="pdring" data-step="1"></span></div>
+      </div>
+    </div>
+    <div class="cap">Defect always tempts &mdash; so both land on &ldquo;Both&nbsp;lose.&rdquo;<br>Any payoffs with this shape are a PD.</div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 06 / 12</div>
+  <div class="ghostnum">6</div>
+</section><section class="slide content" data-i="6">
+  <div class="kicker"><i></i>WEEK 3 · IN THE WORKPLACE</div>
+  <h2>Prisoner&rsquo;s Dilemmas at Work</h2>
+  <div class="wkcards">
+    <div class="wkcard">
+      <div class="ic"><svg class="pg" viewBox="0 0 150 90"><g class="ink"><circle cx="20" cy="30" r="11"/><path d="M4 50 Q20 41 36 50 L32 74 L8 74 Z"/></g><g class="ink"><circle cx="130" cy="30" r="11"/><path d="M114 50 Q130 41 146 50 L142 74 L118 74 Z"/></g><rect class="ink" x="60" y="20" width="30" height="50" rx="2"/><rect class="knock" x="65" y="29" width="20" height="3"/><rect class="knock" x="65" y="38" width="20" height="3"/><rect class="knock" x="65" y="56" width="14" height="3"/><path d="M75 18 L70 33 L80 47 L70 61 L75 72" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="ct">Contract standoffs</div>
+      <div class="cb">Team and player each move to dodge their worst case &mdash; <b>both defect</b>, and the deal collapses.</div>
+      <a class="ctag" href="https://canvas.illinois.edu/courses/69341/files/23016521?module_item_id=5259790" target="_blank" rel="noopener" tabindex="-1">&ldquo;How to Lose QBs&rdquo; Reading <span class="arr">&nearr;</span></a>
+    </div>
+    <div class="wkcard">
+      <div class="ic"><svg class="pg" viewBox="0 0 150 90"><path class="ink" d="M14 28 L44 18 L74 28 L44 38 Z"/><circle class="ink" cx="44" cy="22" r="2.6"/><g class="ink"><circle cx="44" cy="54" r="12"/><path d="M24 80 Q44 70 64 80 L61 90 L27 90 Z"/></g><path d="M84 60 l50 0 m0 0 l-14 -10 m14 10 l-14 10" fill="none" stroke="var(--red)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="ct">Build, or buy talent?</div>
+      <div class="cb">&ldquo;Why build our own when rivals can do it for us?&rdquo; So firms <b>buy, not build</b> &mdash; talent grows scarce and pricey.</div>
+      <a class="ctag" href="https://canvas.illinois.edu/courses/69341/files/23016517?module_item_id=5259647" target="_blank" rel="noopener" tabindex="-1">&ldquo;Talent Wars&rdquo; Reading <span class="arr">&nearr;</span></a>
+    </div>
+    <div class="wkcard">
+      <div class="ic"><svg class="pg" viewBox="0 0 150 90"><path d="M18 45 Q75 9 132 45" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><path d="M18 45 Q75 81 132 45" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><circle class="ink" cx="75" cy="45" r="17"/><circle class="red" cx="75" cy="45" r="8"/></svg></div>
+      <div class="ct">Workplace surveillance</div>
+      <div class="cb">&ldquo;See something, say something&rdquo; rewards snitching &mdash; until <b>everyone informs on everyone</b>.</div>
+      <a class="ctag" href="https://canvas.illinois.edu/courses/69341/files/23037295?module_item_id=5259648" target="_blank" rel="noopener" tabindex="-1">&ldquo;Workplace Spying&rdquo; Reading <span class="arr">&nearr;</span></a>
+    </div>
+  </div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 07 / 12</div>
+  <div class="ghostnum">7</div>
+</section><section class="slide content" data-i="7">
+  <div class="kicker"><i></i>WEEK 3 · STATES IN A PD</div>
+  <h2>States Bid Against Each Other</h2>
+  <div class="mapfig"><svg class="usmap pg" viewBox="45 -6 895 372" xmlns="http://www.w3.org/2000/svg"><path class="land" d="M102 7.6L106.4 9L116.1 11.8L124.7 13.7L144.7 19.4L167.7 25L182.9 28.2L169.2 91.8L156.8 88.3L141.3 84.7L126.1 84.8L125.6 83.4L120 85.6L115.4 84.8L113.3 83.3L112 83.9L107.2 83.8L105.5 82.4L100.3 80.3L99.5 80.5L95.1 78.9L93.2 80.8L87 80.5L81 76.3L81.8 75.4L81.9 67.7L79.7 63.9L75.6 63.3L74.9 60.8L72.6 60.3L69 61.5L66.8 58.3L67.1 55.4L69.9 55.1L71.5 51L68.9 49.9L69 46.2L73.4 45.6L70.7 42.8L69.2 35.7L69.9 32.8L69.9 24.9L68.1 21.6L70.3 12.2L72.4 12.7L74.9 15.6L77.6 18.2L80.8 20.2L85.4 22.3L88.4 22.9L91.4 24.4L94.7 25.3L97 25.2L97 22.8L98.3 21.6L100.4 20.3L100.7 21.5L101.1 23.2L98.8 23.7L98.5 25.8L100.2 27.3L101.4 29.7L102 31.6L103.5 31.5L103.6 30.2L102.7 28.9L102.2 25.7L103 23.9L102.3 22.4L102.3 20.2L104.1 16.6L103 14L100.6 9.2L100.9 8.4L102 7.6zM92.6 13.5L94.6 13.4L95.1 14.8L96.6 13.1L99 13.1L99.8 14.7L98.2 16.4L98.9 17.2L98.1 19.2L96.8 19.6 C 96.8 19.6 95.9 19.7 95.9 19.4 C 95.9 19 97.3 16.8 97.3 16.8L95.6 16.2L95.3 17.7L94.6 18.3L93.1 16L92.6 13.5z"/><g transform="translate(809.7 154.7) scale(1.4) translate(-809.7 -154.7)"><path class="land" d="M830.3 188.7L829.2 187.7L826.6 187.6L824.3 185.6L822.7 179.5L819.3 179.6L816.8 176.9L797.4 181.3L754.4 190L746.9 191.2L746.2 184.7L747.6 183.6L748.9 182.5L749.9 180.9L751.6 179.7L753.6 178L754.1 176.3L756.2 173.6L757.3 172.6L757.1 171.7L755.8 168.6L754.1 168.4L752.1 162.3L755 160.5L759.4 159.1L763.4 157.8L766.7 157.3L773 157.1L774.9 158.4L776.5 158.6L778.6 157.3L781.2 156.1L786.4 155.7L788.5 153.9L790.3 150.6L791.9 148.7L794 148.7L795.9 147.6L796.1 145.3L794.6 143.2L794.3 141.8L795.4 139.7L795.4 138.2L793.7 138.2L791.9 137.4L791.1 136.3L790.9 133.7L796.7 128.2L797.4 127.4L798.8 124.5L801.7 119.9L804.5 116.2L806.6 113.8L809 112L812.1 110.7L817.6 109.4L820.8 109.6L825.3 108.1L832.9 106.1L833.4 111L835.9 117.5L836.7 122.7L835.7 126.6L838.3 131.1L839.1 133.2L838.3 136.1L841.2 137.4L841.8 137.7L844.9 148.7L844.4 153.8L843.9 164.6L844.7 170.1L845.5 173.6L847 180.9L847 189L845.8 191.3L847.7 193.3L848.5 194.9L846.5 196.7L846.8 198L848.1 197.7L849.6 196.4L851.9 193.8L853 193.2L854.6 193.8L856.9 194L864.8 190.1L867.7 187.3L869 185.9L873.2 187.5L869.8 191.1L865.9 194L858.8 199.3L856.2 200.3L850.4 202.2L846.4 203.3L845.2 202.8L844.9 199.1L845.4 196.4L845.3 194.3L842.5 192.6L837.9 191.6L834 190.5L830.3 188.7z"/></g><g transform="translate(770.6 279.2) scale(1.4) translate(-770.6 -279.2)"><path class="land" d="M831.6 266L831.4 264.1L837.9 261.5L837.1 264.7L834.2 268.5L833.8 273.1L834.3 276.5L832.4 281.5L830.3 283.4L828.8 278.7L829.2 273.3L830.8 269.1L831.6 266zM834.9 294.3L776.8 306.9L739.3 312.2L732.6 311.8L730.1 313.7L722.7 313.9L714.3 314.9L703.4 316.5L713.9 310.9L713.9 308.9L715.4 306.7L726 295.2L729.9 299.7L733.7 300.6L736.2 299.5L738.5 298.2L741 299.5L744.9 298.1L746.8 293.6L749.4 294.1L752.3 292L754.1 292.5L756.9 288.8L757.2 286.7L756.3 285.4L757.3 283.6L762.5 271.3L763.2 265.5L764.4 265L766.6 267.5L770.5 267.2L772.4 259.6L775.2 259L776.3 256.3L778.9 253.9L781.6 248.2L781.7 243.2L791.5 247 C 792.2 247.3 792.4 241.9 792.4 241.9L796 243.5L796.1 246.5L801.9 247.8L804 249L805.7 251L805 254.7L803.1 257.3L803.2 259.3L803.8 261.2L808.7 262.4L813.2 262.5L816.3 263.4L818.2 263.7L818.9 266.8L822.1 267.2L823 268.4L822.5 273.1L823.9 274.2L823.4 276.2L824.7 276.9L824.4 278.3L821.7 278.2L821.8 279.9L824.1 281.4L824.2 282.8L826 284.6L826.5 287.1L823.9 288.5L825.5 290L831.3 288.3L834.9 294.3z"/></g><path class="arr" d="M178 62 L733 133"/><path class="arrhead" d="M732.8 132.7 L710.0 137.4 L711.9 122.5 Z"/><path class="arr" d="M178 66 L711 281"/><path class="arrhead" d="M710.5 281.2 L687.3 279.9 L692.9 266.0 Z"/><g transform="translate(94.4 19.3) scale(0.95)"><rect class="fk" x="6" y="32" width="46" height="26"/><rect class="fk" x="13" y="20" width="4" height="12"/><rect class="fk" x="22" y="14" width="4" height="18"/><rect class="fk" x="31" y="22" width="4" height="10"/><rect class="fkk" x="12" y="40" width="7" height="9"/><rect class="fr" x="24" y="40" width="7" height="9"/><rect class="fkk" x="36" y="40" width="7" height="9"/></g><text class="co" x="125" y="126" text-anchor="middle">Amazon</text><circle class="coin" cx="782" cy="145" r="13"/><text class="cn" x="782" y="150" text-anchor="middle">$</text><circle class="coin" cx="814" cy="145" r="13"/><text class="cn" x="814" y="150" text-anchor="middle">$</text><circle class="coin" cx="846" cy="145" r="13"/><text class="cn" x="846" y="150" text-anchor="middle">$</text><circle class="coin" cx="782" cy="177" r="13"/><text class="cn" x="782" y="182" text-anchor="middle">$</text><circle class="coin" cx="814" cy="177" r="13"/><text class="cn" x="814" y="182" text-anchor="middle">$</text><circle class="coin" cx="846" cy="177" r="13"/><text class="cn" x="846" y="182" text-anchor="middle">$</text><circle class="coin" cx="731" cy="281" r="13"/><text class="cn" x="731" y="286" text-anchor="middle">$</text><circle class="coin" cx="763" cy="281" r="13"/><text class="cn" x="763" y="286" text-anchor="middle">$</text><clipPath id="vp1"><rect x="779.6" y="266.2" width="30" height="12.4"/></clipPath><g clip-path="url(#vp1)"><circle class="coin" cx="795" cy="281" r="13"/><text class="cn" x="795" y="280" text-anchor="middle">$</text></g><text class="cs" x="810" y="75" text-anchor="middle">New York</text><text class="cs" x="763" y="359" text-anchor="middle">Virginia</text><text class="bignum" x="402" y="292" text-anchor="middle">238</text><text class="bigcap" x="402" y="316" text-anchor="middle">cities bid for Amazon&rsquo;s HQ2</text><circle class="coin" cx="78" cy="345" r="13"/><text class="cn" x="78" y="350" text-anchor="middle">$</text><text class="key" x="102" y="351">= $250 million offered</text></svg></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 08 / 12</div>
+  <div class="ghostnum">8</div>
+</section><section class="slide content" data-i="8">
+  <div class="kicker"><i></i>WEEK 3 · A WRINKLE</div>
+  <h2>Are PDs Always Bad?</h2>
+  <div class="fig" style="top:194px;bottom:152px"><div class="s9two">
+    <div class="pd2col">
+      <div class="pd2title">Left to themselves</div>
+      <div class="pd mini">
+        <div class="ch">Firm B &middot; column</div>
+        <div class="cl cl1">No-poach</div>
+        <div class="cl cl2">Poach</div>
+        <div class="rh">Firm A &middot; row</div>
+        <div class="rl rl1">No-<br>poach</div>
+        <div class="rl rl2">Poach</div>
+        <div class="pdgrid">
+          <div class="pcell"><span class="phrase">Wages stay low</span><span class="pdring coop" data-step="1"></span></div>
+          <div class="pcell"><span class="phrase">B raids</span></div>
+          <div class="pcell"><span class="phrase">A raids</span></div>
+          <div class="pcell"><span class="phrase">Wages bid up</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="pd2col">
+      <div class="pd2title" style="color:var(--red)">What regulation forces</div>
+      <div class="pd mini">
+        <div class="ch">Firm B &middot; column</div>
+        <div class="cl cl1">No-poach</div>
+        <div class="cl cl2">Poach</div>
+        <div class="rh">Firm A &middot; row</div>
+        <div class="rl rl1">No-<br>poach</div>
+        <div class="rl rl2">Poach</div>
+        <div class="pdgrid">
+          <div class="pcell"><span class="phrase">Wages stay low</span></div>
+          <div class="pcell"><span class="phrase">B raids</span></div>
+          <div class="pcell"><span class="phrase">A raids</span></div>
+          <div class="pcell"><span class="phrase">Wages bid up</span><span class="pdring" data-step="2"></span></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">&ldquo;Talent Wars in Silicon Valley&rdquo; &mdash; a no-poach pact that hurt workers</span></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 09 / 12</div>
+  <div class="ghostnum">9</div>
+</section><section class="slide content" data-i="9">
+  <div class="kicker"><i></i>WEEK 3 · WAYS OUT</div>
+  <h2>Escaping Without Regulation</h2>
+  <div class="fig" style="top:200px;bottom:150px"><div class="s10stack">
+    <div class="t4thead">
+      <svg class="pg" viewBox="0 0 64 64"><line x1="10" y1="42" x2="50" y2="42" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/><path d="M50,42 l-9,-6 m9,6 l-9,6" stroke="var(--ink)" stroke-width="3.5" fill="none" stroke-linecap="round"/><line x1="54" y1="24" x2="14" y2="24" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/><path d="M14,24 l9,-6 m-9,6 l9,6" stroke="var(--red)" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>
+      <div class="t4tlabel">Tit for tat</div><div class="t4tsub">Cooperate first, then mirror &mdash;<br><b>only if the game repeats</b></div>
+    </div>
+    <div class="props">
+      <div class="prop"><div class="pw">Nice</div></div>
+      <div class="prop"><div class="pw">Forgiving</div></div>
+      <div class="prop"><div class="pw">Retaliatory</div></div>
+      <div class="prop"><div class="pw">Clear</div></div>
+    </div>
+    <div class="s10result"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--red)" d="M25 38 L31 38 L29 61 L27 56 L24 61 Z"/><path fill="var(--red)" d="M39 38 L33 38 L35 61 L37 56 L40 61 Z"/><circle fill="var(--ink)" cx="32" cy="25" r="17"/><text class="medal1" x="32" y="32.5" text-anchor="middle">1</text></svg><div class="s10rtext">Tit-for-tat won <b>Axelrod&rsquo;s tournament</b> &mdash; simplest beats smartest.</div></div>
+  </div></div>
+  <div class="medialink pinned"><span class="play"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></span><span class="mlk">Related media</span><span class="mlt">&ldquo;How to Outsmart the Prisoner&rsquo;s Dilemma&rdquo; &mdash; repeated play and tit for tat</span></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 10 / 12</div>
+  <div class="ghostnum">10</div>
+</section><section class="slide content" data-i="10">
+  <div class="kicker"><i></i>WEEK 3 · CONDITIONS</div>
+  <h2>How Cooperation Sticks</h2>
+  <div class="fig"><div class="numstack"><div class="plist">
+    <div class="pitem"><div class="ph"><svg class="pg" viewBox="0 0 64 44"><path d="M6 22 Q32 2 58 22" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><path d="M6 22 Q32 42 58 22" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><circle class="ink" cx="32" cy="22" r="9"/><circle class="red" cx="32" cy="22" r="4.5"/></svg><div class="pn">01</div></div><div class="ptx">Detect defection <b>fast</b></div></div>
+    <div class="pitem"><div class="ph"><svg class="pg" viewBox="0 0 64 64"><path d="M32 12 A20 20 0 0 1 52 32" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><path d="M52 32 l-9 -1 m9 1 l-2 9" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 52 A20 20 0 0 1 12 32" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><path d="M12 32 l9 1 m-9 -1 l2 -9" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="pn">02</div></div><div class="ptx">Repeat the game</div></div>
+    <div class="pitem"><div class="ph"><svg class="pg" viewBox="0 0 64 64"><line x1="10" y1="42" x2="50" y2="42" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/><path d="M50,42 l-9,-6 m9,6 l-9,6" stroke="var(--ink)" stroke-width="3.5" fill="none" stroke-linecap="round"/><line x1="54" y1="24" x2="14" y2="24" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/><path d="M14,24 l9,-6 m-9,6 l9,6" stroke="var(--red)" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg><div class="pn">03</div></div><div class="ptx"><b>Credible, clear</b> punishment</div></div>
+    <div class="pitem"><div class="ph"><svg class="pg" viewBox="0 0 64 64"><rect class="ink" x="30" y="17" width="4" height="33"/><rect class="ink" x="8" y="16" width="48" height="4.4" rx="1"/><path class="ink" d="M21,50 L43,50 L48,59 L16,59 Z"/><rect class="ink" x="12.2" y="20" width="2.6" height="9"/><path class="ink" d="M5,29 Q13.5,42 22,29 Z"/><rect class="ink" x="49.2" y="20" width="2.6" height="9"/><path class="ink" d="M42,29 Q50.5,42 59,29 Z"/><circle class="red" cx="32" cy="18.2" r="4.2"/></svg><div class="pn">04</div></div><div class="ptx">Keep it <b>proportionate</b></div></div>
+  </div><div class="numnote">You can engineer cooperation &mdash; but it stays <b>fragile</b>.</div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 11 / 12</div>
+  <div class="ghostnum">11</div>
+</section><section class="slide content" data-i="11">
+  <div class="kicker"><i></i>WEEK 3 · WRAP-UP</div>
+  <h2>Where We Land &mdash; and What&rsquo;s Next</h2>
+  <div class="fig"><div class="bastack"><div class="ba">
+    <div class="station then">
+      <svg class="pg" viewBox="0 0 100 100"><rect class="ink" x="6" y="6" width="40" height="40"/><rect class="ink" x="54" y="6" width="40" height="40"/><rect class="ink" x="6" y="54" width="40" height="40"/><rect class="ink" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.3"/></svg>
+      <div class="slbl">Prisoner&rsquo;s dilemma</div>
+      <div class="ssub">Defection dominates &mdash; everyone worse off</div>
+    </div>
+    <div class="arrow" data-step="1">&rarr;</div>
+    <div class="station now" data-step="1">
+      <svg class="pg" viewBox="0 0 100 100"><rect class="ink" x="6" y="6" width="40" height="40"/><rect class="ink" x="54" y="6" width="40" height="40"/><rect class="ink" x="6" y="54" width="40" height="40"/><rect class="ink" x="54" y="54" width="40" height="40"/><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.3"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.3"/></svg>
+      <div class="slbl">Coordination games</div>
+      <div class="ssub">Many viable outcomes &mdash; how to agree on one</div>
+    </div>
+  </div><div class="bawrap"><div class="banote">Most workplace &ldquo;dilemmas&rdquo; have cooperative gains on the table &mdash; if you detect defection and make it stick.</div><div class="banext"><i></i>Next week &rarr; <b>coordination games</b> &mdash; agreeing on one of many viable outcomes</div></div></div></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 12 / 12</div>
+  <div class="ghostnum">12</div>
+</section>
+</div></div>
+<div class="ticks"><span class="tick" data-t="0"></span><span class="tick" data-t="1"></span><span class="tick" data-t="2"></span><span class="tick" data-t="3"></span><span class="tick" data-t="4"></span><span class="tick" data-t="5"></span><span class="tick" data-t="6"></span><span class="tick" data-t="7"></span><span class="tick" data-t="8"></span><span class="tick" data-t="9"></span><span class="tick" data-t="10"></span><span class="tick" data-t="11"></span></div>
+<div class="nav ui" role="navigation" aria-label="Slide navigation">
+  <button onclick="prev()" aria-label="Previous slide">‹ Prev</button>
+  <button onclick="next()" aria-label="Next slide">Next ›</button>
+</div>
+<div class="map" id="map" aria-hidden="true">
+  <button class="close" tabindex="-1" onclick="closeMap()">Close &nbsp;✕</button>
+  <div class="mtitle">LER <span class="r">565</span> · Week 3</div>
+  <h3>Deck map — press a slide to jump</h3>
+  <div class="branch"><div class="blabel"><i></i>Opening</div><div class="thumbs">
+    <div class="thumb cov" onclick="goto(0);closeMap()"><span class="tn">1</span><span class="tt">LER 565 — Week 3</span></div>
+    <div class="thumb" onclick="goto(1);closeMap()"><span class="tn">2</span><span class="tt">This Week</span></div>
+    <div class="thumb" onclick="goto(2);closeMap()"><span class="tn">3</span><span class="tt">Two Suspects, Two Rooms</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>The dilemma</div><div class="thumbs">
+    <div class="thumb" onclick="goto(3);closeMap()"><span class="tn">4</span><span class="tt">Reading the Payoff Matrix</span></div>
+    <div class="thumb" onclick="goto(4);closeMap()"><span class="tn">5</span><span class="tt">Why It&rsquo;s a Dilemma</span></div>
+    <div class="thumb" onclick="goto(5);closeMap()"><span class="tn">6</span><span class="tt">The Generalized PD</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>At work</div><div class="thumbs">
+    <div class="thumb" onclick="goto(6);closeMap()"><span class="tn">7</span><span class="tt">PDs at Work</span></div>
+    <div class="thumb" onclick="goto(7);closeMap()"><span class="tn">8</span><span class="tt">States Bid Against Each Other</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Nuance</div><div class="thumbs">
+    <div class="thumb" onclick="goto(8);closeMap()"><span class="tn">9</span><span class="tt">Are PDs Always Bad?</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Escaping &amp; close</div><div class="thumbs">
+    <div class="thumb" onclick="goto(9);closeMap()"><span class="tn">10</span><span class="tt">Escaping Without Regulation</span></div>
+    <div class="thumb" onclick="goto(10);closeMap()"><span class="tn">11</span><span class="tt">How Cooperation Sticks</span></div>
+    <div class="thumb" onclick="goto(11);closeMap()"><span class="tn">12</span><span class="tt">Where We Land &amp; What&rsquo;s Next</span></div>
+  </div></div>
+</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const ticksEl=document.querySelector('.ticks');
+const built=slides.length;
+let cur=0, step=0;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);
+  document.documentElement.style.setProperty('--scale',s);}
+addEventListener('resize',fit);fit();
+function maxStep(i){const ds=[...slides[i].querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0);return ds.length?Math.max(...ds):0;}
+function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));}
+function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
+  [...ticksEl.children].forEach((t,i)=>{t.classList.toggle('on',i===cur);});
+  ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));
+  applySteps();
+}
+function goto(i){if(i<0||i>=built)return;cur=i;step=0;render();}
+function next(){if(step<maxStep(cur)){step++;applySteps();}else if(cur<built-1){cur++;step=0;render();}}
+function prev(){if(step>0){step--;applySteps();}else if(cur>0){cur--;step=maxStep(cur);render();}}
+addEventListener('keydown',e=>{const t=(document.activeElement||{}).tagName,onCtl=(t==='BUTTON'||t==='A');
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key==='ArrowDown'){next();e.preventDefault();}
+  else if(e.key===' '||e.key==='Spacebar'){if(!onCtl){next();e.preventDefault();}}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){prev();e.preventDefault();}
+  else if(e.key.toLowerCase()==='o'){toggleMap();}
+  else if(e.key==='Escape'){closeMap();}
+});
+const mapEl=document.getElementById('map');
+function toggleMap(){mapEl.classList.toggle('open');}
+function openMap(){mapEl.classList.add('open');}
+function closeMap(){mapEl.classList.remove('open');}
+render();
+</script>
+</body>
+</html>
