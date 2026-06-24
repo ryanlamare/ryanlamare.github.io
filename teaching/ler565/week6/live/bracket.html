@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LER 565 · Azee Tournament · Bracket Board</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper-soft);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 28px;background:var(--ink);color:var(--paper);flex-wrap:wrap}
+.bar .brand{display:flex;align-items:baseline;gap:14px}
+.bar .wm{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.01em}
+.bar .wm .r{color:var(--red)}
+.bar .sub{font-weight:600;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--peach)}
+.bar .ctrls{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.02em;border:0;padding:10px 18px;cursor:pointer;background:var(--red);color:var(--paper)}
+.btn.ghost{background:transparent;color:var(--paper);border:2px solid var(--paper);padding:8px 16px}
+.btn.dark{background:var(--paper);color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.wrap{padding:30px 28px 80px}
+
+/* setup */
+.setup{max-width:640px;margin:24px auto;background:var(--paper);border:1px solid var(--rule);padding:34px 36px}
+.setup h1{font-family:var(--display);font-weight:900;font-size:40px;color:var(--red);line-height:1}
+.setup p{font-size:15px;color:var(--muted);margin:10px 0 18px;line-height:1.55}
+.setup textarea{width:100%;height:280px;resize:vertical;font-family:var(--sans);font-size:16px;line-height:1.5;color:var(--ink);background:var(--paper-soft);border:2px solid var(--rule);padding:14px 16px}
+.setup textarea:focus{outline:none;border-color:var(--ink)}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px;flex-wrap:wrap}
+.opt{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);cursor:pointer;user-select:none}
+.opt input{width:17px;height:17px;accent-color:var(--red)}
+.count{font-size:13px;color:var(--muted)}
+.count b{color:var(--ink)}
+
+/* bracket */
+.board{display:flex;gap:34px;overflow-x:auto;padding:8px 4px 20px;align-items:stretch}
+.col{display:flex;flex-direction:column;justify-content:space-around;min-width:206px;gap:14px}
+.col .rh{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);text-align:center;padding-bottom:4px;flex:none}
+.col .rh.fin{color:var(--red)}
+.matches{display:flex;flex-direction:column;justify-content:space-around;gap:16px;flex:1}
+.match{background:var(--paper);border:1.5px solid var(--rule)}
+.slot{display:flex;align-items:center;gap:10px;padding:11px 13px;font-size:15.5px;color:var(--ink);cursor:pointer;border-bottom:1px solid var(--rule)}
+.slot:last-child{border-bottom:0}
+.slot .sd{width:22px;font-size:11px;font-weight:700;color:var(--muted);flex:none;text-align:center}
+.slot .nm{font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot.win{background:color-mix(in srgb, var(--red) 10%, var(--paper))}
+.slot.win .nm{font-weight:800;color:var(--red)}
+.slot.win::after{content:"✓";color:var(--red);font-weight:800;font-size:15px}
+.slot.bye{cursor:default}
+.slot.bye .nm{color:var(--muted);font-style:italic;font-weight:500}
+.slot.tbd{cursor:default}
+.slot.tbd .nm{color:var(--rule);font-style:italic}
+.slot.pick:hover{background:var(--card)}
+.champ{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:230px;gap:12px}
+.champ svg{width:78px;height:78px}
+.champ .lbl{font-weight:700;text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--muted)}
+.champ .who{font-family:var(--display);font-weight:900;font-size:34px;line-height:1.05;color:var(--red)}
+.champ .who.tbd{color:var(--rule);font-size:24px}
+.hint{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+@media print{.bar .ctrls{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="brand"><span class="wm">LER <span class="r">565</span></span><span class="sub">Azee Tournament &middot; Bracket Board</span></div>
+  <div class="ctrls" id="ctrls"></div>
+</div>
+<div class="wrap"><div id="app"></div></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="trophy" viewBox="0 0 64 64"><path fill="var(--red,#CE1E32)" d="M18 9 h28 v11 a14 14 0 0 1 -28 0 z"/><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.6" d="M18 13 h-7 a6 6 0 0 0 0 12 h4"/><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.6" d="M46 13 h7 a6 6 0 0 1 0 12 h-4"/><rect fill="var(--ink,#1B1C19)" x="29" y="34" width="6" height="11"/><rect fill="var(--ink,#1B1C19)" x="19" y="45" width="26" height="5"/><rect fill="var(--ink,#1B1C19)" x="23" y="50" width="18" height="7"/></symbol></svg>
+
+<script>
+let state = null;   // { slots:[names|"BYE"], picks:{ "r-m":0|1 } }
+
+/* ---------- seeding ---------- */
+function seedOrder(size){
+  let seeds=[1,2];
+  while(seeds.length<size){
+    const sum=seeds.length*2+1, next=[];
+    for(const s of seeds){ next.push(s); next.push(sum-s); }
+    seeds=next;
+  }
+  return seeds;
+}
+function buildBracket(names, shuffle){
+  names=names.map(n=>n.trim()).filter(Boolean);
+  if(shuffle){ for(let i=names.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[names[i],names[j]]=[names[j],names[i]];} }
+  const N=names.length;
+  if(N<2){ alert("Enter at least 2 players (one name per line)."); return; }
+  const size=Math.pow(2,Math.ceil(Math.log2(N)));
+  const order=seedOrder(size);
+  const slots=order.map(s=> s<=N ? names[s-1] : "BYE");
+  state={slots, picks:{}};
+  save(); render();
+}
+
+/* ---------- bracket logic ---------- */
+const nRounds=()=>Math.log2(state.slots.length);
+function participant(r,m,side){
+  if(r===0) return state.slots[2*m+side];
+  return winner(r-1, 2*m+side);
+}
+function winner(r,m){
+  const a=participant(r,m,0), b=participant(r,m,1);
+  if(a==="BYE"&&b==="BYE") return "BYE";
+  if(a==="BYE") return b;
+  if(b==="BYE") return a;
+  if(!a||!b) return null;
+  const p=state.picks[r+"-"+m];
+  return p===0?a : p===1?b : null;
+}
+function pick(r,m,side){
+  const a=participant(r,m,0), b=participant(r,m,1);
+  if(!a||!b||a==="BYE"||b==="BYE") return;
+  state.picks[r+"-"+m]=side;
+  let rr=r+1, mm=m>>1;            // clear now-invalid ancestors
+  while(rr<nRounds()){ delete state.picks[rr+"-"+mm]; rr++; mm=mm>>1; }
+  save(); render();
+}
+function roundLabel(r){
+  const entering=state.slots.length/Math.pow(2,r);
+  if(entering===2) return "Final";
+  if(entering===4) return "Semi-finals";
+  if(entering===8) return "Quarter-finals";
+  return "Round of "+entering;
+}
+
+/* ---------- persistence (URL hash; no storage APIs) ---------- */
+function save(){
+  try{ location.hash = state ? btoa(unescape(encodeURIComponent(JSON.stringify(state)))) : ""; }catch(e){}
+}
+function load(){
+  if(location.hash.length>1){
+    try{ const s=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1))))); if(s&&s.slots){ state=s; } }catch(e){ state=null; }
+  }
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  const ctrls=document.getElementById('ctrls'), app=document.getElementById('app');
+  if(!state){
+    ctrls.innerHTML="";
+    app.innerHTML=`<div class="setup">
+      <h1>Set up the bracket</h1>
+      <p>Paste your players from the Google Sheet &mdash; <b>one name per line</b>. Any number works; odd counts get first-round byes automatically.</p>
+      <textarea id="names" placeholder="Avery Tan&#10;Jordan Lee&#10;Sam Okafor&#10;Priya Nair&#10;..."></textarea>
+      <div class="setrow">
+        <label class="opt"><input type="checkbox" id="shuffle" checked> Randomize seeding</label>
+        <span class="count" id="cnt"></span>
+        <button class="btn" onclick="go()">Build bracket &rsaquo;</button>
+      </div>
+    </div>`;
+    const ta=document.getElementById('names'), cnt=document.getElementById('cnt');
+    const upd=()=>{const n=ta.value.split(String.fromCharCode(10)).map(x=>x.trim()).filter(Boolean).length;
+      const size=n<2?0:Math.pow(2,Math.ceil(Math.log2(n)));
+      cnt.innerHTML=n<2?'&nbsp;':`<b>${n}</b> players &rarr; ${size}-bracket, <b>${size-n}</b> bye${size-n===1?'':'s'}`;};
+    ta.addEventListener('input',upd); upd(); ta.focus();
+    return;
+  }
+  // controls
+  ctrls.innerHTML=`<button class="btn ghost" onclick="editPlayers()">Edit players</button>
+    <button class="btn ghost" onclick="reseed()">Re-seed</button>
+    <button class="btn ghost" onclick="clearWins()">Clear winners</button>
+    <button class="btn dark" onclick="reset()">New tournament</button>`;
+  // board
+  const R=nRounds(); let cols="";
+  for(let r=0;r<R;r++){
+    const fin = (state.slots.length/Math.pow(2,r))===2;
+    let matches="";
+    const count=state.slots.length/Math.pow(2,r+1);
+    for(let m=0;m<count;m++){
+      const w=winner(r,m);
+      matches+=`<div class="match">${slotHTML(r,m,0,w)}${slotHTML(r,m,1,w)}</div>`;
+    }
+    cols+=`<div class="col"><div class="rh${fin?' fin':''}">${roundLabel(r)}</div><div class="matches">${matches}</div></div>`;
+  }
+  const champ=winner(R-1,0);
+  const cdone = champ && champ!=="BYE";
+  cols+=`<div class="col champ"><svg><use href="#trophy"/></svg><div class="lbl">Champion</div><div class="who${cdone?'':' tbd'}">${cdone?esc(champ):'TBD'}</div></div>`;
+  app.innerHTML=`<div class="board">${cols}</div><div class="hint">Click a name to send them through. A pick can be changed any time &mdash; later rounds update automatically.</div>`;
+}
+function slotHTML(r,m,side,w){
+  const p=participant(r,m,side);
+  let cls="slot", label, sd="";
+  if(p==null){ cls+=" tbd"; label="TBD"; }
+  else if(p==="BYE"){ cls+=" bye"; label="Bye"; }
+  else { label=esc(p); sd=""; const a=participant(r,m,0),b=participant(r,m,1);
+    if(a&&b&&a!=="BYE"&&b!=="BYE") cls+=" pick";
+    if(w===p) cls+=" win"; }
+  const onclick=(p&&p!=="BYE")?` onclick="pick(${r},${m},${side})"`:"";
+  return `<div class="${cls}"${onclick}><span class="sd">${sd}</span><span class="nm">${label}</span></div>`;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ---------- control actions ---------- */
+function go(){ const v=document.getElementById('names').value; buildBracket(v.split(String.fromCharCode(10)), document.getElementById('shuffle').checked); }
+function currentNames(){ return state.slots.filter(x=>x!=="BYE"); }
+function editPlayers(){ const names=currentNames(); state=null; save(); render();
+  setTimeout(()=>{const ta=document.getElementById('names'); if(ta){ta.value=names.join(String.fromCharCode(10)); ta.dispatchEvent(new Event('input'));}},0); }
+function reseed(){ if(confirm("Re-shuffle the seeding? This clears current results.")) buildBracket(currentNames(), true); }
+function clearWins(){ if(confirm("Clear all winners? Players and seeding stay.")){ state.picks={}; save(); render(); } }
+function reset(){ if(confirm("Start a new tournament? This clears everything.")){ state=null; save(); render(); } }
+
+load(); render();
+</script>
+</body>
+</html>
