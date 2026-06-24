@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LER 565 · Week 6 Live Session — The Azee Tournament</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--stage-bg);font-family:var(--sans);color:var(--ink);overflow:hidden}
+.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center;transform:scale(var(--scale,1));}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .40s ease, visibility 0s linear .40s;}
+.slide.active{opacity:1;visibility:visible;transition:opacity .40s ease;}
+@media (prefers-reduced-motion:reduce){.slide,.slide.active{transition:none}}
+
+/* ---------- COVER ---------- */
+.cover{background:var(--ink);color:var(--paper);position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:80px 96px;overflow:hidden}
+.cover .ghost{position:absolute;right:-30px;bottom:-150px;font-family:var(--display);font-weight:900;font-size:560px;line-height:.7;color:var(--red);opacity:.13;pointer-events:none}
+.cover .tag{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.26em;font-size:17px;margin-bottom:26px;position:relative}
+.cover .tag i{display:inline-block;width:12px;height:12px;background:var(--red);margin-right:14px;vertical-align:middle}
+.cover h1{font-family:var(--display);font-weight:900;font-size:168px;line-height:.84;letter-spacing:-.03em;position:relative}
+.cover h1 .r{color:var(--red)}
+.cover .sub{font-family:var(--sans);font-weight:500;font-size:29px;margin-top:30px;max-width:38ch;line-height:1.18;position:relative}
+.cover .strip{display:flex;gap:12px;margin-top:48px;position:relative}
+.cchip{width:58px;height:58px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.cchip .pg{height:54%;width:auto;max-width:80%}
+.cover .byline{position:absolute;bottom:80px;right:96px;font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:15px;color:var(--paper);opacity:.85}
+
+/* ---------- CONTENT shell ---------- */
+.content{background:var(--paper);color:var(--ink);position:absolute;inset:0;padding:72px 96px;overflow:hidden}
+.content .kicker{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.2em;font-size:17px;color:var(--muted);text-align:center}
+.content .kicker i{display:inline-block;width:11px;height:11px;background:var(--red);margin-right:13px;vertical-align:middle}
+.content h2{font-family:var(--sans);font-weight:700;color:var(--red);font-size:58px;line-height:1.05;letter-spacing:-.015em;margin-top:16px;text-align:center}
+.content .mark{position:absolute;top:72px;right:96px;width:118px;height:118px;display:flex;align-items:center;justify-content:center}
+.content .mark .pg{max-width:100%;max-height:100%}
+.content .ghostnum{position:absolute;right:0;bottom:-80px;font-family:var(--display);font-weight:900;font-size:300px;line-height:.7;color:var(--red);opacity:.07;pointer-events:none}
+.content .footer{position:absolute;bottom:56px;left:96px;font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--muted)}
+
+/* bulleted body — lighter live-session default */
+.bodywrap{position:absolute;left:0;right:0;top:236px;bottom:116px;display:flex;align-items:center;justify-content:center}
+ul.body{list-style:none;max-width:780px}
+ul.body li{position:relative;padding-left:34px;font-family:var(--sans);font-weight:500;font-size:27px;line-height:1.4;color:var(--ink);margin-top:22px}
+ul.body li:first-child{margin-top:0}
+ul.body li::before{content:"";position:absolute;left:0;top:.5em;width:13px;height:13px;background:var(--red)}
+ul.body li b{font-weight:700}
+ul.body li .lead{font-weight:700;color:var(--ink)}
+ul.body a{color:var(--red);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+ul.body a:hover{text-decoration:none}
+
+/* numbered tiles (agenda, roadmap) */
+.ntiles{position:absolute;left:96px;right:96px;top:248px;bottom:130px;display:flex;justify-content:center;align-items:stretch;gap:24px}
+.ntile{flex:1;background:var(--card);border:2px solid var(--rule);padding:26px 22px;display:flex;flex-direction:column;gap:14px;justify-content:flex-start}
+.ntile .pn{font-family:var(--display);font-weight:900;font-size:58px;line-height:.78;color:var(--red)}
+.ntile .pl{font-family:var(--sans);font-weight:500;font-size:20px;line-height:1.28;color:var(--ink)}
+.ntiles.six .ntile{padding:22px 16px}
+.ntiles.six .ntile .pn{font-size:50px}
+.ntiles.six .ntile .pl{font-size:17px}
+.ntiles.grid3{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:24px;align-items:stretch}
+.ntiles.grid3 .ntile{padding:24px 26px}
+.ntiles.grid3 .ntile .pn{font-size:54px}
+.ntiles.grid3 .ntile .pl{font-size:21px;line-height:1.26}
+.ntile.now{border-color:var(--red)}
+.ntile.now .pl{color:var(--red);font-weight:700}
+.ntile .now-tag{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--red);margin-top:auto}
+
+/* roles / instruction card (slide 10) */
+.roles{position:absolute;left:96px;right:96px;top:236px;bottom:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px}
+.rolerow{display:flex;justify-content:center;gap:96px;align-items:flex-start}
+.role{display:flex;flex-direction:column;align-items:center;gap:22px;width:340px;text-align:center}
+.role .pg{height:128px;width:auto}
+.role .rt{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:23px;color:var(--ink)}
+.role.you .rt{color:var(--red)}
+.role .rd{font-family:var(--sans);font-weight:500;font-size:20px;color:var(--muted);max-width:24ch;line-height:1.35}
+.rnote{font-family:var(--sans);font-weight:500;font-size:22px;color:var(--muted)}
+.rnote b{color:var(--red);font-weight:700}
+
+/* rules card (slide 11) */
+.rules{position:absolute;left:96px;right:96px;top:236px;bottom:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:46px}
+.rulelist{display:flex;flex-direction:column;gap:20px}
+.ruleline{display:flex;align-items:baseline;gap:20px;font-family:var(--sans);font-weight:500;font-size:30px;color:var(--ink);line-height:1.2}
+.ruleline .rn{font-family:var(--display);font-weight:900;font-size:38px;color:var(--red);width:40px;flex:none;text-align:center}
+.ruleline b{font-weight:700}
+.miniline{width:760px;height:54px;overflow:visible}
+.miniline .axis{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.miniline .tick{stroke:var(--ink);stroke-width:2.5}
+.miniline .endlbl{font-family:var(--sans);font-weight:700;font-size:18px;fill:var(--muted)}
+
+/* number-line figures (12,13) + zoomed (14,15) */
+.fig{position:absolute;left:96px;right:96px;top:236px;bottom:116px;display:flex;align-items:center;justify-content:center}
+.numstack{display:flex;flex-direction:column;align-items:center;gap:38px;width:100%}
+.numline{width:100%;max-width:1000px;height:210px;overflow:visible}
+.numline .axis{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.numline .endlbl{font-family:var(--sans);font-weight:700;font-size:22px;fill:var(--muted)}
+.numline .tick{stroke:var(--ink);stroke-width:3}
+.numline .tick.red{stroke:var(--red);stroke-width:4}
+.numline .dot{fill:var(--ink)} .numline .dot.red{fill:var(--red)} .numline .dot.faint{fill:var(--grey)}
+.numline .val{font-family:var(--display);font-weight:900;font-size:40px;fill:var(--ink)}
+.numline .val.red{fill:var(--red)} .numline .val.faint{fill:var(--grey)}
+.numline .vbig{font-family:var(--display);font-weight:900;font-size:104px;fill:var(--red)}
+.numline .sub{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:16px;fill:var(--muted)}
+.numline .band{fill:var(--red);opacity:.16}
+.numline .brace{stroke:var(--red);stroke-width:3;fill:none;stroke-linecap:round}
+.numline .qmark{font-family:var(--display);font-weight:900;font-size:62px;fill:var(--red)}
+.numline .ilbl{font-family:var(--sans);font-weight:700;font-size:20px;fill:var(--ink)}
+.numline .ilbl.red{fill:var(--red)} .numline .ilbl.faint{fill:var(--grey)}
+.numline .ring{fill:none;stroke:var(--red);stroke-width:4}
+.caps{display:flex;flex-direction:column;align-items:center;gap:10px;min-height:64px}
+.capline{font-family:var(--sans);font-weight:500;font-size:23px;line-height:1.35;color:var(--muted);text-align:center;max-width:52ch}
+.capline b{color:var(--red);font-weight:700}
+.cap{font-family:var(--sans);font-weight:500;font-size:23px;line-height:1.4;color:var(--muted);text-align:center;max-width:48ch}
+.cap b{color:var(--red);font-weight:700}
+
+/* Azee figures (17,18) */
+.azee{width:100%;max-width:880px;height:300px;overflow:visible}
+.azee .lbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:17px;fill:var(--muted)}
+.azee .slot{fill:none;stroke:var(--ink);stroke-width:2.5}
+.azee .disc{fill:none;stroke:var(--ink);stroke-width:3}
+.azee .arrow{stroke:var(--red);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hero{display:flex;flex-direction:column;align-items:center;gap:30px}
+.hero .pg{height:230px;width:auto}
+.nextlist{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:6px}
+.nextlist .nl{font-family:var(--sans);font-weight:500;font-size:23px;color:var(--ink);text-align:center}
+.nextlist .nl b{color:var(--red);font-weight:700}
+
+/* pinned due-date note (18,19) */
+.duenote{position:absolute;left:96px;right:96px;bottom:84px;display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);max-width:700px;margin:0 auto;background:var(--card);border:1.5px solid var(--rule);padding:12px 18px}
+.duenote i{display:inline-block;width:11px;height:11px;background:var(--red);flex:none}
+.duenote b{color:var(--red);font-weight:700}
+
+/* progress ticks */
+.ticks{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:5}
+.tick{width:12px;height:4px;background:var(--rule)}
+.tick.on{background:var(--red);width:24px}
+.ticks.lightticks .tick{background:color-mix(in srgb,var(--paper) 30%,transparent)}
+.ticks.lightticks .tick.on{background:var(--red)}
+
+/* nav + map button */
+.ui{position:fixed;z-index:30;font-family:var(--sans)}
+.nav{bottom:22px;right:26px;display:flex;gap:10px}
+.nav button,.mapbtn{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:12px;background:color-mix(in srgb,var(--paper) 10%,transparent);color:var(--paper);border:1.5px solid color-mix(in srgb,var(--paper) 35%,transparent);padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.nav button:hover,.mapbtn:hover{background:color-mix(in srgb,var(--red) 90%,transparent);border-color:var(--red)}
+.nav button:focus-visible,.mapbtn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mapbtn{position:fixed;top:22px;right:26px}
+
+/* MAP overlay */
+.map{position:fixed;inset:0;background:var(--stage-bg);z-index:50;display:none;flex-direction:column;padding:54px 64px;overflow:auto}
+.map.open{display:flex}
+.map h3{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.24em;font-size:14px;color:var(--paper);opacity:.7;margin-bottom:8px}
+.map .mtitle{font-family:var(--display);font-weight:900;font-size:46px;color:var(--paper);margin-bottom:30px;letter-spacing:-.02em}
+.map .mtitle .r{color:var(--red)}
+.branch{margin-bottom:26px}
+.branch .blabel{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:12px;color:var(--red);margin-bottom:12px}
+.branch .blabel i{display:inline-block;width:9px;height:9px;background:var(--red);margin-right:9px;vertical-align:middle}
+.thumbs{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.thumb{aspect-ratio:16/9;background:var(--paper);border:1.5px solid color-mix(in srgb,var(--paper) 25%,transparent);cursor:pointer;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:9px;overflow:hidden;transition:border-color .2s,transform .15s}
+.thumb.cov{background:var(--ink)}
+.thumb:hover{border-color:var(--red);transform:translateY(-2px)}
+.thumb .tn{position:absolute;top:7px;left:8px;font-family:var(--display);font-weight:900;font-size:20px;color:var(--rule)}
+.thumb.cov .tn{color:color-mix(in srgb,var(--paper) 40%,transparent)}
+.thumb .tt{font-family:var(--sans);font-weight:700;font-size:10.5px;line-height:1.15;color:var(--red)}
+.thumb.cov .tt{color:var(--paper)}
+.map .close{position:fixed;top:22px;right:26px;background:transparent;border:1.5px solid color-mix(in srgb,var(--paper) 35%,transparent);color:var(--paper);font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:12px;padding:9px 14px;cursor:pointer}
+.map .close:hover{background:var(--red);border-color:var(--red)}
+
+/* step reveal */
+[data-step]{opacity:0;transition:opacity .32s ease}
+[data-step].shown{opacity:1}
+@media (prefers-reduced-motion:reduce){[data-step]{transition:none}}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:normal;border:0}
+
+/* ===== Week 6 live: tournament bits ===== */
+.brk{width:100%;max-width:1080px;height:auto}
+.brklabels{display:flex;justify-content:center;gap:0;width:100%;max-width:1080px;margin-top:2px}
+.brklabels span{flex:1;text-align:center;font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--muted)}
+.brklabels span.win{color:var(--red)}
+.gsheet{position:absolute;left:96px;right:96px;bottom:84px;display:flex;align-items:center;justify-content:center;gap:13px;font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);max-width:760px;margin:0 auto;background:var(--card);border:1.5px solid var(--rule);padding:13px 20px}
+.gsheet i{display:inline-block;width:11px;height:11px;background:var(--red);flex:none}
+.gsheet b{color:var(--red);font-weight:700}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="im-trophy" viewBox="0 0 64 64"><path fill="var(--red,#CE1E32)" d="M18 9 h28 v11 a14 14 0 0 1 -28 0 z"/><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.6" d="M18 13 h-7 a6 6 0 0 0 0 12 h4"/><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.6" d="M46 13 h7 a6 6 0 0 1 0 12 h-4"/><rect fill="var(--ink,#1B1C19)" x="29" y="34" width="6" height="11"/><rect fill="var(--ink,#1B1C19)" x="19" y="45" width="26" height="5"/><rect fill="var(--ink,#1B1C19)" x="23" y="50" width="18" height="7"/></symbol>
+  <symbol id="im-bracket" viewBox="0 0 64 64"><g fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.4" stroke-linecap="round"><path d="M6 11 H17 V24 H28"/><path d="M6 37 H17 V24"/><path d="M6 53 H28 V40"/><path d="M28 24 H39 V40 H28"/></g><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="3.4" stroke-linecap="round" d="M39 32 H54"/><circle fill="var(--red,#CE1E32)" cx="56" cy="32" r="4.5"/></symbol>
+  <symbol id="im-podium" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="24" y="16" width="16" height="42"/><rect fill="var(--ink,#1B1C19)" x="4" y="30" width="16" height="28"/><rect fill="var(--red,#CE1E32)" x="44" y="36" width="16" height="22"/><rect fill="var(--ink,#1B1C19)" x="2" y="58" width="60" height="3"/></symbol>
+  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></symbol>
+  <symbol id="im-fist" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"/><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"/><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"/><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"/></symbol>
+  <symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"/><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"/><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"/><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"/><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,42 22,29 Z"/><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"/><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,42 59,29 Z"/><circle fill="var(--red,#CE1E32)" cx="32" cy="18.2" r="4.2"/></symbol>
+</svg>
+
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>LER 565, Week 6 Live Session &mdash; Strategic Moves for Competitive Advantage in HR (Tournament Night)</h1>
+<p>Accessible text version. Each heading below is one slide, in order. Instructor: Ryan Lamare.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 6: Title slide</h2><p>LER 565, Week 6 live session: Strategic Moves for Competitive Advantage in HR. The course finale and the Azee tournament. Instructor: Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 6: Today's Agenda</h2><p>One: a quick recap of this week's content on strategic moves. Two: the main event, the Azee tournament, our course finale. Three: wrapping up LER 565, putting the whole game together.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 6: Brief Discussion of Week 6 Content</h2><p>A strategic move is a commitment, threat, or promise that changes the game in your favor. It lives on credibility: it only works if others believe you will follow through. The strongest moves are observable and irreversible, so you take your own options away on purpose. First-mover advantage, reputation, and burning bridges are all strategic moves.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 6: The Azee Tournament</h2><p>All games are played at azee dot mattle dot online; log in and grab your username. Enter your name and username in the Google Sheet, which is how we track the bracket. I will randomly assign groups and send you to breakout rooms; one person creates the game on a normal board at fast speed, five minutes. Record the winner in the sheet and come back to the main room. If you get knocked out, play the other eliminated players or observe; do not miss the final.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 6: The Bracket</h2><p>The path to champion: groups of two to three to start, then one-on-one battles. First round, then the Sweet 16, quarter-finals, semi-finals, and the final. No boss battle this time; the tournament is the finale.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 6: That's the Course</h2><p>Six weeks of games: prisoner's dilemmas, sequential games, coordination, information asymmetries, and strategic moves. You played every one, and saw where each shows up in real HR. Put it together and you can read, and shape, the games at work. Thanks for playing.</p></section>
+</section>
+
+<button class="mapbtn ui" onclick="openMap()" aria-label="Open slide map">Map &nbsp;&#9783;</button>
+
+<div class="viewport" aria-hidden="true"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">6</div>
+  <div class="tag"><i></i>WEEK 6 &nbsp;&middot;&nbsp; LER 565 &nbsp;&middot;&nbsp; LIVE SESSION</div>
+  <h1>HRM&nbsp;&amp;<br><span class="r">STRATEGY</span></h1>
+  <div class="sub" style="max-width:38ch">Strategic Moves for Competitive Advantage in HR<br><span style="opacity:.62">&mdash; the Azee tournament finale</span></div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-bracket"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-podium"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-scales"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-fist"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-trophy"/></svg></span>
+  </div>
+  <div class="byline">Ryan Lamare</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>WEEK 6 &middot; TODAY</div>
+  <h2>Today&rsquo;s Agenda</h2>
+  <div class="ntiles">
+    <div class="ntile"><div class="pn">1</div><div class="pl">A quick recap of this week&rsquo;s content: <b>strategic moves</b></div></div>
+    <div class="ntile"><div class="pn">2</div><div class="pl">The main event: the <b>Azee tournament</b> &mdash; our course finale</div></div>
+    <div class="ntile"><div class="pn">3</div><div class="pl">Wrapping up LER 565 &mdash; the whole game, together</div></div>
+  </div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 02 / 06</div><div class="ghostnum">2</div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>WEEK 6 &middot; THIS WEEK&rsquo;S IDEAS</div>
+  <h2>Brief Discussion of Week 6 Content</h2>
+  <div class="bodywrap"><ul class="body">
+    <li>A <b>strategic move</b> is a commitment, threat, or promise that changes the game in your favor</li>
+    <li>It lives on <b>credibility</b> &mdash; it only works if others believe you&rsquo;ll follow through</li>
+    <li>The strongest moves are <b>observable and irreversible</b>: you take your own options away</li>
+    <li>First-mover advantage, reputation, and <b>burning bridges</b> &mdash; all strategic moves</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 03 / 06</div><div class="ghostnum">3</div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>WEEK 6 &middot; THE MAIN EVENT</div>
+  <h2>The Azee Tournament</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>All games are played at <b>azee.mattle.online</b> &mdash; log in and grab your username</li>
+    <li>Enter your <b>name and username</b> in the Google Sheet &mdash; that&rsquo;s how we track the bracket</li>
+    <li>I&rsquo;ll randomly assign groups and send you to breakout rooms; one person creates the game (normal board, <b>fast / 5 min</b>)</li>
+    <li>Record the winner in the sheet and return to the main room; knocked out? Play other eliminated players or observe &mdash; <b>don&rsquo;t miss the final</b></li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 04 / 06</div><div class="ghostnum">4</div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>WEEK 6 &middot; THE PATH TO CHAMPION</div>
+  <h2>The Bracket</h2>
+  <div class="fig" style="top:188px;bottom:96px"><div style="display:flex;flex-direction:column;align-items:center;width:100%;gap:6px">
+    <svg class="brk" viewBox="0 0 1000 360" xmlns="http://www.w3.org/2000/svg"><rect x="16" y="10" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="54" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="100" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="144" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="190" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="234" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="280" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="16" y="324" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="236" y="32" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="236" y="122" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="236" y="212" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="236" y="302" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="456" y="77" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="456" y="257" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--rule,#CDBFA6)" stroke-width="2"/><rect x="676" y="167" width="150" height="26" rx="3" fill="var(--card,#DFD6C2)" stroke="var(--red,#CE1E32)" stroke-width="3"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M166 22 H201 V68 H166"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M201 45 H236"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M166 112 H201 V158 H166"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M201 135 H236"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M166 202 H201 V248 H166"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M201 225 H236"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M166 292 H201 V338 H166"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M201 315 H236"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M386 45 H421 V135 H386"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M421 90 H456"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M386 225 H421 V315 H386"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M421 270 H456"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M606 90 H641 V270 H606"/><path fill="none" stroke="var(--rule,#CDBFA6)" stroke-width="2.5" d="M641 180 H676"/><use href="#im-trophy" x="850" y="158" width="44" height="44"/></svg>
+    <div class="brklabels"><span>The field</span><span>Quarter-finals</span><span>Semi-finals</span><span class="win">Final &middot; Champion</span></div>
+  </div></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 05 / 06</div><div class="ghostnum">5</div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>WEEK 6 &middot; THAT&rsquo;S A WRAP</div>
+  <h2>That&rsquo;s the Course</h2>
+  <div class="fig" style="top:198px;bottom:150px"><div class="hero" style="gap:26px">
+    <svg class="pg" viewBox="0 0 64 64" style="height:140px"><use href="#im-trophy"/></svg>
+    <div class="nextlist">
+      <div class="nl">Six weeks of games: <b>PDs, sequential, coordination, information, strategic moves</b></div>
+      <div class="nl">You played every one &mdash; and saw where each shows up in real HR</div>
+      <div class="nl">Put it together and you can <b>read, and shape</b>, the games at work</div>
+    </div>
+  </div></div>
+  <div class="gsheet"><i></i><span>Thanks for playing. &mdash; <b>Ryan</b></span></div>
+  <div class="footer">Ryan Lamare &nbsp;&middot;&nbsp; 06 / 06</div><div class="ghostnum">6</div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick" data-t="0"></span><span class="tick" data-t="1"></span><span class="tick" data-t="2"></span><span class="tick" data-t="3"></span><span class="tick" data-t="4"></span><span class="tick" data-t="5"></span></div>
+<div class="nav ui"><button onclick="prev()" aria-label="Previous slide">&lsaquo; Prev</button><button onclick="next()" aria-label="Next slide">Next &rsaquo;</button></div>
+
+<div class="map" id="map" aria-hidden="true">
+  <button class="close" tabindex="-1" onclick="closeMap()">Close &nbsp;&#10005;</button>
+  <div class="mtitle">LER <span class="r">565</span> &middot; Week 6 Live Session</div>
+  <h3>Press a slide to jump</h3>
+  <div class="branch"><div class="blabel"><i></i>Opening</div><div class="thumbs">
+    <div class="thumb cov" onclick="goto(0);closeMap()"><span class="tn">1</span><span class="tt">Strategic Moves</span></div>
+    <div class="thumb" onclick="goto(1);closeMap()"><span class="tn">2</span><span class="tt">Today&rsquo;s Agenda</span></div>
+    <div class="thumb" onclick="goto(2);closeMap()"><span class="tn">3</span><span class="tt">Brief Discussion</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>The tournament</div><div class="thumbs">
+    <div class="thumb" onclick="goto(3);closeMap()"><span class="tn">4</span><span class="tt">How It Runs</span></div>
+    <div class="thumb" onclick="goto(4);closeMap()"><span class="tn">5</span><span class="tt">The Bracket</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Finale</div><div class="thumbs">
+    <div class="thumb" onclick="goto(5);closeMap()"><span class="tn">6</span><span class="tt">That&rsquo;s the Course</span></div>
+  </div></div>
+</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const ticksEl=document.querySelector('.ticks');
+const built=slides.length;
+let cur=0, step=0;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--scale',s);}
+addEventListener('resize',fit);fit();
+function maxStep(i){const ds=[...slides[i].querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0);return ds.length?Math.max(...ds):0;}
+function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));}
+function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));[...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();}
+function goto(i){if(i<0||i>=built)return;cur=i;step=0;render();}
+function next(){if(step<maxStep(cur)){step++;applySteps();}else if(cur<built-1){cur++;step=0;render();}}
+function prev(){if(step>0){step--;applySteps();}else if(cur>0){cur--;step=maxStep(cur);render();}}
+addEventListener('keydown',e=>{const t=(document.activeElement||{}).tagName,onCtl=(t==='BUTTON'||t==='A');
+if(e.key==='ArrowRight'||e.key==='PageDown'||e.key==='ArrowDown'){next();e.preventDefault();}
+else if(e.key===' '||e.key==='Spacebar'){if(!onCtl){next();e.preventDefault();}}
+else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){prev();e.preventDefault();}
+else if(e.key.toLowerCase()==='o'){toggleMap();}
+else if(e.key==='Escape'){closeMap();}});
+const mapEl=document.getElementById('map');
+function toggleMap(){mapEl.classList.toggle('open');}
+function openMap(){mapEl.classList.add('open');}
+function closeMap(){mapEl.classList.remove('open');}
+render();
+</script>
+</body>
+</html>
