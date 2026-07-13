@@ -78,6 +78,12 @@
     '.hword', '.hsub', '.hkick', '.hcard .ck',
     '.obox .ok', '.obox .ot', '.newrule .nrk', '.newrule .nrt',
     '.exnote', '.legend',
+    // --- homepage (ryanlamare.com index) — keyed to its own containers/classes,
+    //     so decks (.stage/.slide) and handouts (main.sheet) are untouched ---
+    '.hero-text h1', '.hero-text p', '.hero-eyebrow',
+    '.wrap p', '.wrap li', '.wrap h3', '.wrap h4',
+    '.pub-title', '.pub-authors', '.pub-venue',
+    '.crow .k', '.crow .v',
     '[data-edit]', '.editable'
   ].join(',');
 
@@ -109,6 +115,13 @@
     clone.querySelectorAll('.ticks .tick').forEach(function(x){ x.classList.remove('on'); });
     clone.querySelectorAll('.ticks').forEach(function(x){ x.classList.remove('lightticks'); });
     var mp = clone.querySelector('#map'); if(mp) mp.classList.remove('open');
+    // reset transient homepage UI state so a save starts clean (all no-ops on decks/handouts)
+    clone.querySelectorAll('.reveal.in').forEach(function(n){ n.classList.remove('in'); });
+    clone.querySelectorAll('.nav-links.open').forEach(function(n){ n.classList.remove('open'); });
+    clone.querySelectorAll('.nav-toggle[aria-expanded="true"]').forEach(function(n){ n.setAttribute('aria-expanded','false'); n.setAttribute('aria-label','Open menu'); });
+    clone.querySelectorAll('.pub-group.open').forEach(function(n){ n.classList.remove('open'); });
+    clone.querySelectorAll('.pub-toggle[aria-expanded="true"]').forEach(function(n){ n.setAttribute('aria-expanded','false'); });
+    clone.querySelectorAll('.pub-chevron').forEach(function(n){ n.textContent = '+'; });
     clone.removeAttribute('style');
     return '<!doctype html>' + String.fromCharCode(10) + clone.outerHTML + String.fromCharCode(10);
   }
