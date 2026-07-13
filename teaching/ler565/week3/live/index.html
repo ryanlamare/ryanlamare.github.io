@@ -191,6 +191,19 @@ ul.body a:hover{text-decoration:none}
 /* two-choice role marks sit a touch larger */
 .role .pg{height:96px}
 </style>
+<style id="lm-style">
+/* ===== Live edit mode (activates only with ?edit in the URL) ===== */
+body.lm-editing [contenteditable]{outline:1.5px dashed color-mix(in srgb,var(--red) 55%,transparent);outline-offset:3px;cursor:text;border-radius:2px}
+body.lm-editing [contenteditable]:hover{outline-style:solid;background:color-mix(in srgb,var(--red) 8%,transparent)}
+body.lm-editing [contenteditable]:focus{outline:2px solid var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+#lm-tools{position:fixed;top:14px;left:14px;z-index:60;display:flex;gap:8px;align-items:center;background:var(--ink);padding:8px 10px;border-radius:6px;font-family:var(--sans);box-shadow:0 6px 24px rgba(0,0,0,.35)}
+#lm-tools .lm-lab{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--red);padding:0 4px}
+#lm-tools button{font-family:var(--sans);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:11px;background:transparent;color:var(--paper);border:1.5px solid color-mix(in srgb,var(--paper) 40%,transparent);padding:7px 11px;border-radius:4px;cursor:pointer}
+#lm-tools button:hover{background:var(--red);border-color:var(--red)}
+#lm-tools button.lm-export{background:var(--red);border-color:var(--red)}
+#lm-tools .lm-hint{font-weight:500;font-size:11px;color:color-mix(in srgb,var(--paper) 65%,transparent);padding-left:2px}
+@media print{#lm-tools{display:none}}
+</style>
 </head>
 <body>
 
@@ -468,6 +481,91 @@ function toggleMap(){mapEl.classList.toggle('open');}
 function openMap(){mapEl.classList.add('open');}
 function closeMap(){mapEl.classList.remove('open');}
 render();
+</script>
+<script id="lm-script">
+/* ===== Live edit mode — dormant unless the URL contains ?edit ===== */
+(function(){
+  var EDITABLE = [
+    '.cover .tag','.cover .sub','.cover .byline',
+    '.content .kicker','.content h2',
+    '.ntile .pl','.now-tag',
+    'ul.body li',
+    '.cap','.capline','.lesson','.rnote',
+    '.role .rt','.role .rd',
+    '.ruleline span:not(.rn)',
+    '.nextlist .nl',
+    '.duenote span',
+    '.cs','.ct','.gl','.gs',
+    '.pd .ch','.pd .cl','.pd .rl',
+    '.pd .pcell .pa','.pd .pcell .pb'
+  ].join(',');
+
+  window.lmPrev = function(){ if(typeof prev==='function') prev(); };
+  window.lmNext = function(){ if(typeof next==='function') next(); };
+  window.lmExit = function(){ location.href = location.pathname; };
+
+  window.lmExport = function(){
+    var NL = String.fromCharCode(10);
+    var clone = document.documentElement.cloneNode(true);
+    var tb = clone.querySelector('#lm-tools'); if(tb) tb.remove();
+    clone.querySelectorAll('[contenteditable]').forEach(function(n){ n.removeAttribute('contenteditable'); n.removeAttribute('spellcheck'); });
+    var b = clone.querySelector('body'); if(b) b.classList.remove('lm-editing');
+    clone.querySelectorAll('.slide').forEach(function(s){ s.classList.toggle('active', s.getAttribute('data-i')==='0'); });
+    clone.querySelectorAll('[data-step]').forEach(function(n){ n.classList.remove('shown'); });
+    clone.querySelectorAll('.ticks .tick').forEach(function(x){ x.classList.remove('on'); });
+    clone.querySelectorAll('.ticks').forEach(function(x){ x.classList.remove('lightticks'); });
+    var mp = clone.querySelector('#map'); if(mp) mp.classList.remove('open');
+    clone.removeAttribute('style');
+    var out = '<!doctype html>' + NL + clone.outerHTML + NL;
+    var blob = new Blob([out], {type:'text/html'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'index.html';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  };
+
+  function activate(){
+    document.body.classList.add('lm-editing');
+    document.querySelectorAll(EDITABLE).forEach(function(el){
+      el.setAttribute('contenteditable','true');
+      el.setAttribute('spellcheck','false');
+    });
+    var tools = document.createElement('div');
+    tools.id = 'lm-tools';
+    tools.innerHTML =
+      '<span class="lm-lab">Edit mode</span>' +
+      '<button type="button" onclick="lmPrev()">&lsaquo; Prev</button>' +
+      '<button type="button" onclick="lmNext()">Next &rsaquo;</button>' +
+      '<button type="button" class="lm-export" onclick="lmExport()">&#8681; Export HTML</button>' +
+      '<button type="button" onclick="lmExit()">Exit</button>' +
+      '<span class="lm-hint">Click any text &middot; Ctrl/Cmd+B = bold &middot; Enter = done</span>';
+    document.body.appendChild(tools);
+
+    // Keep deck keyboard nav from firing while typing in a field
+    window.addEventListener('keydown', function(e){
+      var el = document.activeElement;
+      if(el && el.isContentEditable){
+        if(e.key==='Enter'){ e.preventDefault(); el.blur(); return; }
+        if(e.key==='Escape'){ e.preventDefault(); el.blur(); return; }
+        var nav = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','PageUp','PageDown',' ','Spacebar'];
+        if(nav.indexOf(e.key) > -1 || e.key.toLowerCase()==='o'){ e.stopPropagation(); }
+      }
+    }, true);
+
+    // Paste as plain text so no foreign formatting sneaks in
+    document.addEventListener('paste', function(e){
+      var el = document.activeElement;
+      if(!el || !el.isContentEditable) return;
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, text);
+    });
+  }
+
+  var isEdit = /(\?|&)edit\b/.test(location.search) || /edit/.test(location.hash);
+  if(isEdit) activate();
+})();
 </script>
 </body>
 </html>
