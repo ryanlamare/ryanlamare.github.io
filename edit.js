@@ -84,6 +84,12 @@
     ['#lm-tools', '#lm-modal', '#lm-css'].forEach(function(sel){
       var n = clone.querySelector(sel); if(n) n.remove();
     });
+    // strip browser-extension cruft (e.g. TopCashback) that gets injected into the
+    // live DOM — otherwise it is faithfully re-committed and bloats the file ~1MB.
+    clone.querySelectorAll('#tcb-extension-uk-wrapper, [id^="tcb-"]').forEach(function(n){ n.remove(); });
+    clone.querySelectorAll('style').forEach(function(n){
+      if(/topcashback|OpenSans|Montserrat/i.test(n.textContent || '')) n.remove();
+    });
     clone.querySelectorAll('[contenteditable]').forEach(function(n){
       n.removeAttribute('contenteditable'); n.removeAttribute('spellcheck');
     });
@@ -183,6 +189,149 @@
     setStatus('Copied ' + url);
   }
 
+  // ---------- whole-slide editing: add / duplicate / delete ----------
+  // The slides are the single source of truth. After any structural change we
+  // rebuild every derived surface (ticks, footer numbers, ghost numerals, the
+  // screen-reader block and the map) so numbering stays correct automatically.
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+  function escapeHTML(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function stageEl(){ return document.querySelector('.stage'); }
+  function slideEls(){ var st = stageEl(); return st ? [].slice.call(st.querySelectorAll(':scope > .slide')) : []; }
+  function srSections(){ var sr = document.querySelector('#sr-slides'); return sr ? [].slice.call(sr.querySelectorAll(':scope > section')) : []; }
+  function currentIndex(){
+    var a = document.querySelector('.stage > .slide.active');
+    var s = slideEls(); var i = a ? s.indexOf(a) : 0; return i < 0 ? 0 : i;
+  }
+
+  function rebuildChrome(){
+    var slides = slideEls(); var total = slides.length; if(!total) return;
+
+    // 1. reindex
+    slides.forEach(function(s, i){ s.setAttribute('data-i', i); });
+
+    // 2. progress ticks — one per slide
+    var ticks = document.querySelector('.ticks');
+    if(ticks){
+      ticks.innerHTML = '';
+      slides.forEach(function(_, i){ var t = document.createElement('span'); t.className = 'tick'; t.setAttribute('data-t', i); ticks.appendChild(t); });
+    }
+
+    // 3. footers + ghost numerals (content slides only; the cover has neither)
+    slides.forEach(function(s, i){
+      if(s.classList.contains('cover')) return;
+      var num = pad2(i + 1) + ' / ' + pad2(total);
+      var fn = s.querySelector('.footer .fnum');
+      if(fn){ fn.textContent = num; }
+      else {
+        var f = s.querySelector('.footer');
+        if(f){
+          if(/\d+\s*\/\s*\d+\s*$/.test(f.innerHTML)) f.innerHTML = f.innerHTML.replace(/\d+\s*\/\s*\d+\s*$/, '<span class="fnum">' + num + '</span>');
+          else f.insertAdjacentHTML('beforeend', ' <span class="fnum">' + num + '</span>');
+        }
+      }
+      var g = s.querySelector('.ghostnum'); if(g) g.textContent = (i + 1);
+    });
+
+    // 4. screen-reader block — keep 1:1 with slides, renumber "Slide N of TOTAL"
+    var secs = srSections();
+    if(secs.length){
+      if(secs.length !== total) setStatus('\u26a0 SR text is out of step with slides (' + secs.length + ' vs ' + total + ')', true);
+      secs.forEach(function(sec, i){
+        sec.setAttribute('aria-label', 'Slide ' + (i + 1));
+        var h2 = sec.querySelector('h2');
+        if(h2){ var txt = h2.textContent; var c = txt.indexOf(':'); var title = c > -1 ? txt.slice(c + 1).trim() : txt.trim(); h2.textContent = 'Slide ' + (i + 1) + ' of ' + total + ': ' + title; }
+      });
+    }
+
+    // 5. map — branch-grouped thumbnails, built from each slide's own metadata
+    var mb = document.querySelector('#map-branches');
+    if(mb){
+      mb.innerHTML = '';
+      var lastLabel = null, thumbsEl = null;
+      slides.forEach(function(s, i){
+        var label = (s.getAttribute('data-branch') || '').trim() || lastLabel || 'Slides';
+        if(label !== lastLabel){
+          var branch = document.createElement('div'); branch.className = 'branch';
+          var bl = document.createElement('div'); bl.className = 'blabel'; bl.innerHTML = '<i></i>' + escapeHTML(label);
+          thumbsEl = document.createElement('div'); thumbsEl.className = 'thumbs';
+          branch.appendChild(bl); branch.appendChild(thumbsEl); mb.appendChild(branch);
+          lastLabel = label;
+        }
+        var hdr = s.querySelector('h2, h1');
+        var title = (s.getAttribute('data-title') || '').trim() || (hdr ? hdr.textContent.trim() : 'Slide ' + (i + 1));
+        var th = document.createElement('div');
+        th.className = 'thumb' + (s.classList.contains('cover') ? ' cov' : '');
+        th.setAttribute('onclick', 'goto(' + i + ');closeMap()');
+        th.innerHTML = '<span class="tn">' + (i + 1) + '</span><span class="tt">' + escapeHTML(title) + '</span>';
+        thumbsEl.appendChild(th);
+      });
+    }
+  }
+
+  function afterStructural(target){
+    rebuildChrome();
+    if(typeof window.refreshDeck === 'function') window.refreshDeck(target);
+    else if(typeof goto === 'function') goto(target);   // old deck: nav may need a reload
+    reEnable(document);
+    snapshot();
+    setDirty(true);
+  }
+
+  function newSlideMarkup(ref){
+    var branch = ref ? (ref.getAttribute('data-branch') || '') : '';
+    var k = ref ? ref.querySelector('.kicker') : null;
+    var kicker = k ? k.innerHTML : '<i></i>NEW SECTION';
+    return '<section class="slide content" data-branch="' + escapeHTML(branch) + '" data-title="New slide">' +
+             '<div class="kicker">' + kicker + '</div>' +
+             '<h2>New slide</h2>' +
+             '<div class="bodywrap"><ul class="body"><li>New point</li></ul></div>' +
+             '<div class="footer">Ryan Lamare &nbsp;\u00b7&nbsp; <span class="fnum"></span></div><div class="ghostnum"></div>' +
+           '</section>';
+  }
+
+  function addSlide(){
+    var slides = slideEls(); if(!slides.length){ setStatus('No slides found'); return; }
+    var i = currentIndex(); var ref = slides[i];
+    var tmp = document.createElement('div'); tmp.innerHTML = newSlideMarkup(ref);
+    var ns = tmp.firstElementChild; ref.parentNode.insertBefore(ns, ref.nextSibling);
+    var secs = srSections();
+    if(secs.length === slides.length && secs[i]){
+      var nsec = document.createElement('section');
+      nsec.innerHTML = '<h2>Slide: New slide</h2><p>New slide. Add the accessible text for this slide here.</p>';
+      secs[i].parentNode.insertBefore(nsec, secs[i].nextSibling);
+    }
+    afterStructural(i + 1);
+    setStatus('Slide added \u2014 edit it, then Save');
+  }
+
+  function duplicateSlide(){
+    var slides = slideEls(); if(!slides.length) return;
+    var i = currentIndex(); var ref = slides[i];
+    if(ref.classList.contains('cover')){ setStatus('The cover can\u2019t be duplicated'); return; }
+    var clone = ref.cloneNode(true);
+    clone.classList.remove('active');
+    clone.querySelectorAll('[data-step]').forEach(function(n){ n.classList.remove('shown'); });
+    clone.querySelectorAll('[contenteditable]').forEach(function(n){ n.removeAttribute('contenteditable'); n.removeAttribute('spellcheck'); });
+    ref.parentNode.insertBefore(clone, ref.nextSibling);
+    var secs = srSections();
+    if(secs.length === slides.length && secs[i]){ var sc = secs[i].cloneNode(true); secs[i].parentNode.insertBefore(sc, secs[i].nextSibling); }
+    afterStructural(i + 1);
+    setStatus('Slide duplicated');
+  }
+
+  function deleteSlide(){
+    var slides = slideEls(); if(slides.length <= 1){ setStatus('Can\u2019t delete the only slide'); return; }
+    var i = currentIndex(); var ref = slides[i];
+    if(ref.classList.contains('cover')){ setStatus('The cover can\u2019t be deleted'); return; }
+    if(!confirm('Delete this slide? It\u2019s removed from the deck, map, ticks and screen-reader text.')) return;
+    var secs = srSections();
+    if(secs.length === slides.length && secs[i]) secs[i].parentNode.removeChild(secs[i]);
+    ref.parentNode.removeChild(ref);
+    var target = Math.min(i, slideEls().length - 1);
+    afterStructural(target);
+    setStatus('Slide deleted');
+  }
+
   // ---------- insert image (beta): commits the file to the repo, then drops an <img> in ----------
   function bytesToB64(bytes){ var bin='',CH=0x8000; for(var i=0;i<bytes.length;i+=CH){ bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH)); } return btoa(bin); }
   function insertImage(){
@@ -275,6 +424,10 @@
     t.appendChild(lab);
     t.appendChild(btn('\u2039', '', function(){ if(typeof prev==='function') prev(); }, 'Previous slide'));
     t.appendChild(btn('\u203a', '', function(){ if(typeof next==='function') next(); }, 'Next slide'));
+    t.appendChild(sep());
+    t.appendChild(btn('+ Slide', '', addSlide, 'Add a new slide after this one'));
+    t.appendChild(btn('Duplicate', '', duplicateSlide, 'Duplicate this slide'));
+    t.appendChild(btn('Delete', '', deleteSlide, 'Delete this slide'));
     t.appendChild(sep());
     t.appendChild(btn('<b>B</b>', '', function(){ fmt('bold'); }, 'Bold (Ctrl/Cmd+B)'));
     t.appendChild(btn('<i>I</i>', '', function(){ fmt('italic'); }, 'Italic'));
