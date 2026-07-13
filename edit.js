@@ -170,6 +170,77 @@
   // ---------- formatting helpers ----------
   function fmt(cmd){ document.execCommand('styleWithCSS', false, false); document.execCommand(cmd, false, null); setDirty(true); }
   function addLink(){ var u = prompt('Link URL:'); if(u){ document.execCommand('createLink', false, u); setDirty(true); } }
+  // Accent: wrap the selection in the one sanctioned emphasis (bold + brand red),
+  // or toggle it back off. Bold keeps red legible on cream (the house contrast rule).
+  function accent(){
+    var sel = window.getSelection();
+    if(!sel || !sel.rangeCount || sel.isCollapsed){ setStatus('Select some text first'); return; }
+    var node = sel.anchorNode, host = node && node.nodeType === 3 ? node.parentElement : node;
+    if(!host || !host.closest || !host.closest('[contenteditable]')){ setStatus('Select text in an editable area'); return; }
+    var existing = host.closest('[data-accent]');
+    if(existing){                                   // toggle OFF: unwrap
+      var parent = existing.parentNode;
+      while(existing.firstChild) parent.insertBefore(existing.firstChild, existing);
+      parent.removeChild(existing); parent.normalize();
+      setDirty(true); setStatus('Accent removed'); return;
+    }
+    var range = sel.getRangeAt(0);                  // toggle ON: wrap
+    var b = document.createElement('b');
+    b.setAttribute('data-accent', ''); b.style.color = 'var(--red)';
+    try { range.surroundContents(b); }
+    catch(e){ b.appendChild(range.extractContents()); range.insertNode(b); }
+    sel.removeAllRanges(); setDirty(true); setStatus('Accented');
+  }
+
+  // Slide info (decks): edit the map section + map title, and the screen-reader
+  // title + description, for the current slide — then rebuild the derived chrome.
+  function openSlideInfo(){
+    var slides = slideEls(); if(!slides.length){ setStatus('Slide info is for slide decks'); return; }
+    var i = currentIndex(), slide = slides[i], secs = srSections(), sec = secs[i] || null;
+    var hdr = slide.querySelector('h2, h1');
+    var branch = slide.getAttribute('data-branch') || '';
+    var mapTitle = slide.getAttribute('data-title') || (hdr ? hdr.textContent.trim() : '');
+    var srTitle = '', srProse = '';
+    if(sec){
+      var h2 = sec.querySelector('h2'), p = sec.querySelector('p');
+      if(h2){ var t = h2.textContent, c = t.indexOf(':'); srTitle = c > -1 ? t.slice(c + 1).trim() : t.trim(); }
+      if(p) srProse = p.textContent;
+    }
+    var m = document.getElementById('lm-modal'); if(m) m.remove();
+    m = document.createElement('div'); m.id = 'lm-modal';
+    m.innerHTML =
+      '<div class="lm-card">' +
+        '<h3>Slide ' + (i + 1) + ' info</h3>' +
+        '<p>Map section groups slides in the overview; the screen-reader text is what assistive tech reads instead of the visuals \u2014 write it as full sentences.</p>' +
+        '<div class="lm-row"><div><label>Map section</label><input id="lm-si-branch"></div><div><label>Map title</label><input id="lm-si-title"></div></div>' +
+        '<label>Screen-reader title</label><input id="lm-si-srtitle"' + (sec ? '' : ' disabled') + '>' +
+        '<label>Screen-reader description</label><textarea id="lm-si-srprose" rows="6"' + (sec ? '' : ' disabled placeholder="No screen-reader section found for this slide"') + '></textarea>' +
+        '<div class="lm-acts"><button type="button" class="cancel" id="lm-si-cancel">Cancel</button><button type="button" class="ok" id="lm-si-ok">Save</button></div>' +
+      '</div>';
+    document.body.appendChild(m);
+    m.querySelector('#lm-si-branch').value = branch;
+    m.querySelector('#lm-si-title').value = mapTitle;
+    if(sec){ m.querySelector('#lm-si-srtitle').value = srTitle; m.querySelector('#lm-si-srprose').value = srProse; }
+    m.addEventListener('click', function(e){ if(e.target === m) m.remove(); });
+    m.querySelector('#lm-si-cancel').addEventListener('click', function(){ m.remove(); });
+    m.querySelector('#lm-si-ok').addEventListener('click', function(){
+      slide.setAttribute('data-branch', m.querySelector('#lm-si-branch').value.trim());
+      slide.setAttribute('data-title', m.querySelector('#lm-si-title').value.trim());
+      if(sec){
+        var h2b = sec.querySelector('h2'); if(!h2b){ h2b = document.createElement('h2'); sec.insertBefore(h2b, sec.firstChild); }
+        var pb = sec.querySelector('p'); if(!pb){ pb = document.createElement('p'); sec.appendChild(pb); }
+        var total = slideEls().length;
+        h2b.textContent = 'Slide ' + (i + 1) + ' of ' + total + ': ' + m.querySelector('#lm-si-srtitle').value.trim();
+        pb.textContent = m.querySelector('#lm-si-srprose').value.trim();
+      }
+      m.remove();
+      rebuildChrome();
+      if(typeof window.refreshDeck === 'function') window.refreshDeck(i);
+      reEnable(document); snapshot(); setDirty(true);
+      setStatus('Slide info updated');
+    });
+    var f = m.querySelector('#lm-si-branch'); if(f) f.focus();
+  }
   function currentLI(){
     var n = window.getSelection().anchorNode;
     while(n && n !== document.body){ if(n.nodeType === 1 && n.matches && n.matches('li')) return n; n = n.parentNode; }
@@ -413,6 +484,8 @@
       '#lm-modal a{color:var(--red);font-weight:700}' +
       '#lm-modal label{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:11px;margin:12px 0 4px}' +
       '#lm-modal input{width:100%;padding:9px 10px;border:1.5px solid var(--rule);border-radius:4px;font-family:var(--sans);font-size:14px;background:var(--paper-soft,#F0EAD9)}' +
+      '#lm-modal textarea{width:100%;padding:9px 10px;border:1.5px solid var(--rule);border-radius:4px;font-family:var(--sans);font-size:14px;line-height:1.45;background:var(--paper-soft,#F0EAD9);resize:vertical}' +
+      '#lm-modal input:disabled,#lm-modal textarea:disabled{opacity:.5}' +
       '#lm-modal .lm-row{display:flex;gap:10px}#lm-modal .lm-row>div{flex:1}' +
       '#lm-modal .lm-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}' +
       '#lm-modal .lm-acts button{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px;padding:10px 16px;border-radius:4px;cursor:pointer;border:1.5px solid var(--ink)}' +
@@ -452,10 +525,12 @@
       t.appendChild(btn('+ Slide', '', addSlide, 'Add a new slide after this one'));
       t.appendChild(btn('Duplicate', '', duplicateSlide, 'Duplicate this slide'));
       t.appendChild(btn('Delete', '', deleteSlide, 'Delete this slide'));
+      t.appendChild(btn('Slide info', '', openSlideInfo, 'Edit this slide\u2019s map section, title & screen-reader text'));
       t.appendChild(sep());
     }
     t.appendChild(btn('<b>B</b>', '', function(){ fmt('bold'); }, 'Bold (Ctrl/Cmd+B)'));
     t.appendChild(btn('<i>I</i>', '', function(){ fmt('italic'); }, 'Italic'));
+    t.appendChild(btn('<b style="color:var(--red)">A</b>', '', accent, 'Accent selected text (brand red) \u2014 toggles on/off'));
     t.appendChild(btn('Link', '', addLink, 'Make selected text a link'));
     t.appendChild(btn('Image', '', insertImage, 'Upload an image into the current text area (beta)'));
     t.appendChild(btn('+ Bullet', '', addBullet, 'Add a bullet below the cursor'));
