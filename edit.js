@@ -16,6 +16,19 @@
    - Save to GitHub commits the page for you (~1 min to go live).
      Export downloads the file as a fallback.
    ============================================================= */
+
+/* Always-on: deep links. Opening a deck with #N in the URL jumps to slide N
+   (works for everyone, not just editors). */
+(function(){
+  function jump(){
+    var m = (location.hash || '').match(/^#(\d+)$/);
+    if(m && typeof goto === 'function'){ var n = parseInt(m[1], 10) - 1; if(n >= 0) goto(n); }
+  }
+  window.addEventListener('hashchange', jump);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', jump);
+  else jump();
+})();
+
 (function(){
   'use strict';
 
@@ -146,6 +159,62 @@
     if(li.parentNode.children.length <= 1){ setStatus('Keep at least one bullet'); return; }
     li.remove(); setDirty(true);
   }
+  function moveBullet(dir){
+    var li = currentLI(); if(!li){ setStatus('Put the cursor in a bullet first'); return; }
+    if(dir < 0 && li.previousElementSibling){ li.parentNode.insertBefore(li, li.previousElementSibling); setDirty(true); }
+    else if(dir > 0 && li.nextElementSibling){ li.parentNode.insertBefore(li.nextElementSibling, li); setDirty(true); }
+  }
+
+  var snapshots = {};
+  function snapshot(){ document.querySelectorAll('.slide').forEach(function(s){ snapshots[s.getAttribute('data-i')] = s.innerHTML; }); }
+  function activeSlide(){ return document.querySelector('.slide.active') || document.querySelector('.slide'); }
+  function reEnable(root){ root.querySelectorAll(EDITABLE).forEach(function(el){ el.setAttribute('contenteditable','true'); el.setAttribute('spellcheck','false'); }); }
+  function resetSlide(){
+    var s = activeSlide(); if(!s) return;
+    var k = s.getAttribute('data-i');
+    if(snapshots[k] == null){ setStatus('Nothing to reset'); return; }
+    if(!confirm('Reset this slide to how it was when you opened edit mode?')) return;
+    s.innerHTML = snapshots[k]; reEnable(s); setDirty(true); setStatus('Slide reset');
+  }
+  function copyLink(){
+    var s = activeSlide(); var n = s ? (parseInt(s.getAttribute('data-i'), 10) + 1) : 1;
+    var url = location.origin + location.pathname + '#' + n;
+    if(navigator.clipboard) navigator.clipboard.writeText(url);
+    setStatus('Copied ' + url);
+  }
+
+  // ---------- insert image (beta): commits the file to the repo, then drops an <img> in ----------
+  function bytesToB64(bytes){ var bin='',CH=0x8000; for(var i=0;i<bytes.length;i+=CH){ bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH)); } return btoa(bin); }
+  function insertImage(){
+    var target = document.activeElement;
+    if(!target || !target.isContentEditable){ setStatus('Click into a slide text area first'); return; }
+    var c = cfg(); if(!c.token){ openModal(true); return; }
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.addEventListener('change', function(){
+      var f = inp.files && inp.files[0]; if(!f) return;
+      var reader = new FileReader();
+      reader.onload = function(){
+        var bytes = new Uint8Array(reader.result);
+        var safe = f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        var name = Date.now() + '-' + safe;
+        var dir = repoPath().replace(/[^\/]*$/, '');
+        var imgPath = dir + 'img/' + name;
+        setStatus('Uploading image…');
+        var url = 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/' + imgPath.split('/').map(encodeURIComponent).join('/');
+        fetch(url, { method:'PUT',
+          headers:{ 'Authorization':'Bearer '+c.token, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' },
+          body: JSON.stringify({ message:'Add image '+name, content: bytesToB64(bytes), branch: c.branch }) })
+        .then(function(r){
+          if(r.status === 200 || r.status === 201){
+            target.insertAdjacentHTML('beforeend', '<img src="img/'+name+'" alt="" style="max-width:100%;height:auto">');
+            setDirty(true); setStatus('Image added \u2713 Save the deck to publish it');
+          } else return r.text().then(function(){ throw new Error('Image upload failed ('+r.status+')'); });
+        }).catch(function(err){ setStatus('\u26a0 '+err.message, true); });
+      };
+      reader.readAsArrayBuffer(f);
+    });
+    inp.click();
+  }
 
   // ---------- UI ----------
   function css(){
@@ -210,12 +279,17 @@
     t.appendChild(btn('<b>B</b>', '', function(){ fmt('bold'); }, 'Bold (Ctrl/Cmd+B)'));
     t.appendChild(btn('<i>I</i>', '', function(){ fmt('italic'); }, 'Italic'));
     t.appendChild(btn('Link', '', addLink, 'Make selected text a link'));
+    t.appendChild(btn('Image', '', insertImage, 'Upload an image into the current text area (beta)'));
     t.appendChild(btn('+ Bullet', '', addBullet, 'Add a bullet below the cursor'));
     t.appendChild(btn('\u2212 Bullet', '', removeBullet, 'Delete the current bullet'));
+    t.appendChild(btn('\u2191', '', function(){ moveBullet(-1); }, 'Move bullet up'));
+    t.appendChild(btn('\u2193', '', function(){ moveBullet(1); }, 'Move bullet down'));
     t.appendChild(sep());
     t.appendChild(btn('\u2601 Save', 'lm-primary', saveGitHub, 'Save to GitHub (Ctrl/Cmd+S)'));
     t.appendChild(btn('\u2681 Export', '', exportFile, 'Download the file instead'));
     t.appendChild(btn('\u2399 PDF', '', function(){ window.print(); }, 'Print or Save as PDF — all slides'));
+    t.appendChild(btn('Copy link', '', copyLink, 'Copy a link to this slide'));
+    t.appendChild(btn('Reset', '', resetSlide, 'Undo all edits to this slide'));
     t.appendChild(btn('Revert', '', function(){ if(!dirty || confirm('Discard unsaved edits and reload?')){ dirty=false; location.reload(); } }, 'Discard local edits'));
     t.appendChild(btn('Settings', '', function(){ openModal(false); }, 'GitHub connection'));
     t.appendChild(btn('Exit', '', function(){ if(!dirty || confirm('Exit without saving?')){ dirty=false; location.href = location.pathname; } }, 'Leave edit mode'));
@@ -265,6 +339,7 @@
     document.querySelectorAll(EDITABLE).forEach(function(el){
       el.setAttribute('contenteditable','true'); el.setAttribute('spellcheck','false');
     });
+    snapshot();
     buildToolbar();
 
     // stop deck nav keys while typing; keep formatting keys working
