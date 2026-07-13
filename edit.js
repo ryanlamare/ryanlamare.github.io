@@ -68,6 +68,16 @@
     '.pd .ch', '.pd .cl', '.pd .rl',
     '.pd .pcell .pa', '.pd .pcell .pb',
     '.fcard .fn', '.fcard .fmeta', '.fcard .farch',
+    // --- generic document / handout pages ---
+    // Scoped to <main> so deck slides (which live in .stage, not <main>) keep
+    // using the specific selectors above and are unaffected.
+    'main h1', 'main h2', 'main h3', 'main h4',
+    'main p', 'main li', 'main td', 'main th',
+    'main figcaption', 'main blockquote', 'main dt', 'main dd',
+    // handout label/caption blocks that are <div>s (not covered by the tags above)
+    '.hword', '.hsub', '.hkick', '.hcard .ck',
+    '.obox .ok', '.obox .ot', '.newrule .nrk', '.newrule .nrt',
+    '.exnote', '.legend',
     '[data-edit]', '.editable'
   ].join(',');
 
@@ -422,13 +432,15 @@
     dotEl = document.createElement('span'); dotEl.className='lm-dot';
     lab.appendChild(dotEl); lab.appendChild(document.createTextNode('Edit'));
     t.appendChild(lab);
-    t.appendChild(btn('\u2039', '', function(){ if(typeof prev==='function') prev(); }, 'Previous slide'));
-    t.appendChild(btn('\u203a', '', function(){ if(typeof next==='function') next(); }, 'Next slide'));
-    t.appendChild(sep());
-    t.appendChild(btn('+ Slide', '', addSlide, 'Add a new slide after this one'));
-    t.appendChild(btn('Duplicate', '', duplicateSlide, 'Duplicate this slide'));
-    t.appendChild(btn('Delete', '', deleteSlide, 'Delete this slide'));
-    t.appendChild(sep());
+    var isDeck = !!document.querySelector('.stage > .slide');
+    if(isDeck){
+      t.appendChild(btn('\u2039', '', function(){ if(typeof prev==='function') prev(); }, 'Previous slide'));
+      t.appendChild(btn('\u203a', '', function(){ if(typeof next==='function') next(); }, 'Next slide'));
+      t.appendChild(btn('+ Slide', '', addSlide, 'Add a new slide after this one'));
+      t.appendChild(btn('Duplicate', '', duplicateSlide, 'Duplicate this slide'));
+      t.appendChild(btn('Delete', '', deleteSlide, 'Delete this slide'));
+      t.appendChild(sep());
+    }
     t.appendChild(btn('<b>B</b>', '', function(){ fmt('bold'); }, 'Bold (Ctrl/Cmd+B)'));
     t.appendChild(btn('<i>I</i>', '', function(){ fmt('italic'); }, 'Italic'));
     t.appendChild(btn('Link', '', addLink, 'Make selected text a link'));
@@ -441,8 +453,10 @@
     t.appendChild(btn('\u2601 Save', 'lm-primary', saveGitHub, 'Save to GitHub (Ctrl/Cmd+S)'));
     t.appendChild(btn('\u2681 Export', '', exportFile, 'Download the file instead'));
     t.appendChild(btn('\u2399 PDF', '', function(){ window.print(); }, 'Print or Save as PDF — all slides'));
-    t.appendChild(btn('Copy link', '', copyLink, 'Copy a link to this slide'));
-    t.appendChild(btn('Reset', '', resetSlide, 'Undo all edits to this slide'));
+    if(isDeck){
+      t.appendChild(btn('Copy link', '', copyLink, 'Copy a link to this slide'));
+      t.appendChild(btn('Reset', '', resetSlide, 'Undo all edits to this slide'));
+    }
     t.appendChild(btn('Revert', '', function(){ if(!dirty || confirm('Discard unsaved edits and reload?')){ dirty=false; location.reload(); } }, 'Discard local edits'));
     t.appendChild(btn('Settings', '', function(){ openModal(false); }, 'GitHub connection'));
     t.appendChild(btn('Exit', '', function(){ if(!dirty || confirm('Exit without saving?')){ dirty=false; location.href = location.pathname; } }, 'Leave edit mode'));
