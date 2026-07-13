@@ -5,8 +5,8 @@
    VISIBILITY / SECURITY
    - The toolbar appears ONLY if a GitHub token is already saved in
      THIS browser. Visitors who add ?edit see nothing at all.
-   - First-time setup on a new browser: open the page with ?edit=setup
-     to reveal the connect panel and paste your token once.
+   - First-time setup on a new browser: open the page with ?edit — the
+     Connect panel appears so you can paste your token once.
    - The token lives only in this browser (localStorage); it is never
      written into any saved file.
 
@@ -35,9 +35,10 @@
     return c;
   }
 
-  var hasToken  = !!(loadCfg().token);
-  var setupMode = /(\?|&)edit=setup\b/.test(location.search) || /edit=setup/.test(location.hash);
-  if(!hasToken && !setupMode) return;   // <-- visitors with ?edit see nothing
+  var hasToken = !!(loadCfg().token);
+  // Plain ?edit always proceeds now: with a saved token you get the full
+  // toolbar; without one you just get the (harmless) Connect panel. Editing
+  // itself still requires a valid token, so visitors can't change anything.
 
   // Text elements editable across all house decks
   var EDITABLE = [
@@ -176,7 +177,16 @@
       '#lm-modal .lm-acts button{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px;padding:10px 16px;border-radius:4px;cursor:pointer;border:1.5px solid var(--ink)}' +
       '#lm-modal .lm-acts .ok{background:var(--red);color:var(--paper);border-color:var(--red)}' +
       '#lm-modal .lm-acts .cancel{background:transparent;color:var(--ink)}' +
-      '@media print{#lm-tools,#lm-modal{display:none}}';
+      '@page{size:1280px 720px;margin:0}' +
+      '@media print{' +
+        '#lm-tools,#lm-modal,.nav,.mapbtn,.map,.ticks{display:none!important}' +
+        'html,body{height:auto!important;overflow:visible!important;background:#fff!important}' +
+        '.viewport{position:static!important;display:block!important}' +
+        '.stage{transform:none!important;width:1280px!important;height:auto!important}' +
+        '.slide{position:relative!important;inset:auto!important;opacity:1!important;visibility:visible!important;width:1280px!important;height:720px!important;page-break-after:always;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+        'body.lm-editing [contenteditable]{outline:none!important;background:none!important}' +
+        '[data-step]{opacity:1!important}' +
+      '}';
     document.head.appendChild(s);
   }
 
@@ -205,6 +215,7 @@
     t.appendChild(sep());
     t.appendChild(btn('\u2601 Save', 'lm-primary', saveGitHub, 'Save to GitHub (Ctrl/Cmd+S)'));
     t.appendChild(btn('\u2681 Export', '', exportFile, 'Download the file instead'));
+    t.appendChild(btn('\u2399 PDF', '', function(){ window.print(); }, 'Print or Save as PDF — all slides'));
     t.appendChild(btn('Revert', '', function(){ if(!dirty || confirm('Discard unsaved edits and reload?')){ dirty=false; location.reload(); } }, 'Discard local edits'));
     t.appendChild(btn('Settings', '', function(){ openModal(false); }, 'GitHub connection'));
     t.appendChild(btn('Exit', '', function(){ if(!dirty || confirm('Exit without saving?')){ dirty=false; location.href = location.pathname; } }, 'Leave edit mode'));
