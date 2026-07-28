@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -84,8 +85,20 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
 /* ---- scene illustration ---- */
 .scene{margin:28px 0 6px;border:1px solid var(--rule);background:var(--paper)}
 .scene svg{width:100%;height:auto;display:block}
-.scene figcaption{font-size:14.5px;line-height:1.5;color:var(--muted);padding:12px 16px 14px;
-  border-top:1px solid var(--rule);background:var(--paper-soft)}
+.scene figcaption{font-size:14.5px;line-height:1.5;color:var(--muted);padding:11px 14px 12px;
+  border-top:1px solid var(--rule);background:var(--paper-soft);display:flex;align-items:center;gap:14px}
+.scene figcaption>span{flex:1}
+.theme{flex:none;display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:1.5px solid var(--rule);color:var(--ink);font-family:var(--sans);font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;padding:7px 12px;cursor:pointer;
+  transition:border-color .2s,background .2s}
+.theme:hover{border-color:var(--red)}
+.theme:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.theme .tri{width:0;height:0;border-left:9px solid var(--red);border-top:6px solid transparent;
+  border-bottom:6px solid transparent;transition:none}
+.theme.playing{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.theme.playing .tri{width:9px;height:12px;border:0;background:var(--peach);
+  clip-path:polygon(0 0,35% 0,35% 100%,0 100%,0 0,65% 0,100% 0,100% 100%,65% 100%,65% 0)}
 
 
 /* ---- footer ---- */
@@ -113,57 +126,67 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
 }
 </style>
 </head>
-<body class="">
+<body>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
-  <symbol id="im-factory" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="6" y="32" width="46" height="26"></rect><rect fill="var(--ink,#1B1C19)" x="13" y="20" width="4" height="12"></rect><rect fill="var(--ink,#1B1C19)" x="22" y="14" width="4" height="18"></rect><rect fill="var(--ink,#1B1C19)" x="31" y="22" width="4" height="10"></rect><rect fill="var(--paper,#E9E2D2)" x="12" y="40" width="7" height="9"></rect><rect fill="var(--red,#CE1E32)" x="24" y="40" width="7" height="9"></rect><rect fill="var(--paper,#E9E2D2)" x="36" y="40" width="7" height="9"></rect></symbol>
-  <symbol id="im-payoff-matrix" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.8"></rect></symbol>
-  <symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"></circle><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"></circle><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">$</text></symbol>
-  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"></circle><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"></path><rect x="26" y="92" width="12" height="36"></rect><rect x="42" y="92" width="12" height="36"></rect></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"></circle><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"></path><rect x="116" y="92" width="12" height="36"></rect><rect x="132" y="92" width="12" height="36"></rect></g></symbol>
-  <symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"></rect><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"></rect><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"></path><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,42 22,29 Z"></path><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,42 59,29 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="18.2" r="4.2"></circle></symbol>
+  <symbol id="im-factory" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="6" y="32" width="46" height="26"/><rect fill="var(--ink,#1B1C19)" x="13" y="20" width="4" height="12"/><rect fill="var(--ink,#1B1C19)" x="22" y="14" width="4" height="18"/><rect fill="var(--ink,#1B1C19)" x="31" y="22" width="4" height="10"/><rect fill="var(--paper,#E9E2D2)" x="12" y="40" width="7" height="9"/><rect fill="var(--red,#CE1E32)" x="24" y="40" width="7" height="9"/><rect fill="var(--paper,#E9E2D2)" x="36" y="40" width="7" height="9"/></symbol>
+  <symbol id="im-payoff-matrix" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.8"/></symbol>
+  <symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"/><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"/><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">$</text></symbol>
+  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></symbol>
+  <symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"/><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"/><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"/><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"/><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,42 22,29 Z"/><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"/><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,42 59,29 Z"/><circle fill="var(--red,#CE1E32)" cx="32" cy="18.2" r="4.2"/></symbol>
 </svg>
 
 <main class="sheet">
 
   <header class="hhead">
-    <div class="hkick">Applied Game Theory &nbsp;·&nbsp; Module 4</div>
-    <div class="hword" data-edit="">PRICE WARS</div>
-    <div class="hsub" data-edit="">Aura Fuels vs Buco's Service Station</div>
+    <div class="hkick">Applied Game Theory &nbsp;&middot;&nbsp; Module 4</div>
+    <div class="hword" data-edit>PRICE WARS</div>
+    <div class="hsub" data-edit>Aura Fuels vs Buco’s Service Station &middot; six trading weeks</div>
   </header>
 
   <hr class="hrule">
 
-  <p class="lead-p">You run one of two petrol stations on opposite corners of the same desert highway junction, on a busy road with nothing else for six miles in either direction. About four thousand cars pass by your stations every day and
+  <p class="lead-p">You run one of two petrol stations on opposite corners of the same junction, on a busy
+  A road with nothing else for four miles in either direction. About four thousand cars pass every day and
   every one of them can read both of your signs before deciding which side to pull into.</p>
 
-  <p class="lead-p">One of you is <b>Arua Fuels</b>, who has spent thirty years on this corner. You've seen other stations come and go, but you've held steady through the years, but you're facing some pressure from family members to retire the station and hang up your spurs in the next six weeks. The other is
-  <b>Buco's Service Station</b>, a fresh upstart, with a ruthless drive to stake a claim out in this desert wilderness, but a set of investors that expects to see a return on their investment by the end of the next six weeks.</p>
+  <p class="lead-p">One of you is <b>Aura Fuels</b>, thirty years on this corner, lower overheads and an older set of
+  regulars, but with family pressure building to hang up the spurs. The other is <b>Buco&rsquo;s Service
+  Station</b>, the newest upstart, six pumps to Aura&rsquo;s four and a car wash that brings people in, but
+  with investors who want returns. I will tell you which one you are.</p>
 
-  <p class="lead-p">Beyond any superficial differences, you sell identical fuel. Same supplier, same specification, same card
-  readers, same lukewarm coffee inside, same overall experience for all the drivers. The only meaningful difference to a potential customer is the number they see on the sign outside.</p>
+  <p class="lead-p">Beyond that you sell identical fuel. Same supplier, same specification, same card
+  readers, same overpriced sandwiches. The number on the sign is the only real difference between you.</p>
 
-  <p class="lead-p">Every Monday, you post your price for the week. Each station posts it without seeing
-  the other's. Due to a feud between the stations, they rarely interact and set their prices without discussion. Once both signs are up, they stay up until the following Monday, and everybody can see everything.
-  You will be doing this for six weeks, at which point you will need to report your total profits (or losses) for the month and a half to your family members (if Aura) or your investors (if Buco's).</p>
+  <p class="lead-p">Every Monday morning you post your price for the week. You post it without seeing
+  theirs. Once both signs are up, they stay up until the following Monday, and everybody can see everything.
+  You will be doing this for six weeks, and neither of you is going anywhere.</p>
 
   <figure class="scene"><svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two petrol stations facing each other across a desert crossroads">
-      <rect x="0" y="0" width="1000" height="252" fill="var(--tan-light)"></rect>
-      <circle cx="500" cy="208" r="70" fill="var(--red)"></circle>
-      <path d="M0 252 L0 196 L70 196 L96 168 L186 168 L214 252 Z" fill="var(--maroon)"></path>
-      <path d="M786 252 L812 158 L906 158 L930 190 L1000 190 L1000 252 Z" fill="var(--sienna)"></path>
-      <path d="M236 252 L262 214 L352 214 L372 252 Z" fill="var(--grey)"></path>
-      <path d="M628 252 L648 222 L742 222 L762 252 Z" fill="var(--grey)"></path>
-      <rect x="0" y="252" width="1000" height="148" fill="var(--tan)"></rect>
-      <rect x="0" y="252" width="1000" height="5" fill="var(--rule)"></rect>
-      <rect x="0" y="306" width="1000" height="58" fill="var(--grey)"></rect>
-      <rect x="452" y="252" width="96" height="148" fill="var(--grey)"></rect>
-      <g fill="var(--paper)"><rect x="30" y="333" width="46" height="6"></rect><rect x="112" y="333" width="46" height="6"></rect><rect x="194" y="333" width="46" height="6"></rect><rect x="276" y="333" width="46" height="6"></rect><rect x="358" y="333" width="46" height="6"></rect><rect x="596" y="333" width="46" height="6"></rect><rect x="678" y="333" width="46" height="6"></rect><rect x="760" y="333" width="46" height="6"></rect><rect x="842" y="333" width="46" height="6"></rect><rect x="924" y="333" width="46" height="6"></rect></g>
-      <rect x="0" y="364" width="1000" height="4" fill="var(--rule)"></rect>
-      <g><rect x="96" y="212" width="196" height="20" fill="var(--teal)"></rect><rect x="104" y="232" width="11" height="58" fill="var(--teal)"></rect><rect x="273" y="232" width="11" height="58" fill="var(--teal)"></rect><rect x="150" y="238" width="86" height="52" fill="var(--ink)"></rect><rect x="161" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="197" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="124" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="248" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="127" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="251" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="52" y="196" width="11" height="98" fill="var(--ink)"></rect><rect x="20" y="150" width="76" height="52" fill="var(--ink)"></rect><rect x="20" y="150" width="76" height="13" fill="var(--teal)"></rect><text x="58" y="192" text-anchor="middle" font-family="League Spartan, sans-serif" font-weight="900" font-size="26" fill="var(--paper)">1.50</text></g>
-      <g><rect x="708" y="212" width="196" height="20" fill="var(--terracotta)"></rect><rect x="716" y="232" width="11" height="58" fill="var(--terracotta)"></rect><rect x="885" y="232" width="11" height="58" fill="var(--terracotta)"></rect><rect x="762" y="238" width="86" height="52" fill="var(--ink)"></rect><rect x="773" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="809" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="736" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="860" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="739" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="863" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="937" y="196" width="11" height="98" fill="var(--ink)"></rect><rect x="904" y="150" width="76" height="52" fill="var(--ink)"></rect><rect x="904" y="150" width="76" height="13" fill="var(--terracotta)"></rect><text x="942" y="192" text-anchor="middle" font-family="League Spartan, sans-serif" font-weight="900" font-size="26" fill="var(--paper)">1.50</text></g>
-      <g fill="var(--green)"><rect x="406" y="266" width="15" height="60"></rect><rect x="392" y="284" width="14" height="9"></rect><rect x="392" y="284" width="9" height="30"></rect><rect x="421" y="276" width="14" height="9"></rect><rect x="426" y="276" width="9" height="34"></rect><rect x="580" y="284" width="12" height="44"></rect><rect x="592" y="296" width="11" height="8"></rect><rect x="595" y="296" width="8" height="24"></rect></g>
-      <g fill="var(--grey)"><rect x="330" y="374" width="34" height="7"></rect><rect x="640" y="382" width="42" height="7"></rect><rect x="80" y="380" width="28" height="6"></rect></g>
+      <rect x="0" y="0" width="1000" height="252" fill="var(--tan-light)"/>
+      <circle cx="500" cy="208" r="70" fill="var(--red)"/>
+      <path d="M0 252 L0 196 L70 196 L96 168 L186 168 L214 252 Z" fill="var(--maroon)"/>
+      <path d="M786 252 L812 158 L906 158 L930 190 L1000 190 L1000 252 Z" fill="var(--sienna)"/>
+      <path d="M236 252 L262 214 L352 214 L372 252 Z" fill="var(--grey)"/>
+      <path d="M628 252 L648 222 L742 222 L762 252 Z" fill="var(--grey)"/>
+      <rect x="0" y="252" width="1000" height="148" fill="var(--tan)"/>
+      <rect x="0" y="252" width="1000" height="5" fill="var(--rule)"/>
+      <rect x="0" y="306" width="1000" height="58" fill="var(--grey)"/>
+      <rect x="452" y="252" width="96" height="148" fill="var(--grey)"/>
+      <g fill="var(--paper)"><rect x="30" y="333" width="46" height="6"/><rect x="112" y="333" width="46" height="6"/><rect x="194" y="333" width="46" height="6"/><rect x="276" y="333" width="46" height="6"/><rect x="358" y="333" width="46" height="6"/><rect x="596" y="333" width="46" height="6"/><rect x="678" y="333" width="46" height="6"/><rect x="760" y="333" width="46" height="6"/><rect x="842" y="333" width="46" height="6"/><rect x="924" y="333" width="46" height="6"/></g>
+      <rect x="0" y="364" width="1000" height="4" fill="var(--rule)"/>
+      <g><rect x="96" y="212" width="196" height="20" fill="var(--teal)"/><rect x="104" y="232" width="11" height="58" fill="var(--teal)"/><rect x="273" y="232" width="11" height="58" fill="var(--teal)"/><rect x="150" y="238" width="86" height="52" fill="var(--ink)"/><rect x="161" y="248" width="28" height="22" fill="var(--paper)"/><rect x="197" y="248" width="28" height="22" fill="var(--paper)"/><rect x="124" y="258" width="16" height="32" fill="var(--ink)"/><rect x="248" y="258" width="16" height="32" fill="var(--ink)"/><rect x="127" y="264" width="10" height="8" fill="var(--red)"/><rect x="251" y="264" width="10" height="8" fill="var(--red)"/><rect x="52" y="196" width="11" height="98" fill="var(--ink)"/><rect x="20" y="150" width="76" height="52" fill="var(--ink)"/><rect x="20" y="150" width="76" height="13" fill="var(--teal)"/><text x="58" y="192" text-anchor="middle" font-family="League Spartan, sans-serif" font-weight="900" font-size="26" fill="var(--paper)">1.50</text></g>
+      <g><rect x="708" y="212" width="196" height="20" fill="var(--terracotta)"/><rect x="716" y="232" width="11" height="58" fill="var(--terracotta)"/><rect x="885" y="232" width="11" height="58" fill="var(--terracotta)"/><rect x="762" y="238" width="86" height="52" fill="var(--ink)"/><rect x="773" y="248" width="28" height="22" fill="var(--paper)"/><rect x="809" y="248" width="28" height="22" fill="var(--paper)"/><rect x="736" y="258" width="16" height="32" fill="var(--ink)"/><rect x="860" y="258" width="16" height="32" fill="var(--ink)"/><rect x="739" y="264" width="10" height="8" fill="var(--red)"/><rect x="863" y="264" width="10" height="8" fill="var(--red)"/><rect x="937" y="196" width="11" height="98" fill="var(--ink)"/><rect x="904" y="150" width="76" height="52" fill="var(--ink)"/><rect x="904" y="150" width="76" height="13" fill="var(--terracotta)"/><text x="942" y="192" text-anchor="middle" font-family="League Spartan, sans-serif" font-weight="900" font-size="26" fill="var(--paper)">1.50</text></g>
+      <g fill="var(--green)"><rect x="396" y="258" width="13" height="44"/><rect x="384" y="272" width="13" height="8"/><rect x="384" y="272" width="8" height="22"/><rect x="409" y="266" width="13" height="8"/><rect x="414" y="266" width="8" height="26"/><rect x="592" y="270" width="11" height="32"/><rect x="603" y="280" width="10" height="7"/><rect x="605" y="280" width="8" height="20"/></g>
+      
     </svg>
-    <figcaption data-edit="">Aura on the left, Buco's on the right, and every car driving by reads both signs before it chooses where to stop.</figcaption>
+    <figcaption>
+      <span data-edit>Aura on the left, Buco&rsquo;s on the right, and every car on that road reads both
+      signs before it chooses a side.</span>
+      <button type="button" class="theme" onclick="toggleTheme(this)" aria-label="Play the theme">
+        <span class="tri" aria-hidden="true"></span><span class="tl">Theme</span>
+      </button>
+      <audio id="themeAudio" preload="none" src="showdown.mp3"></audio>
+    </figcaption>
   </figure>
 
   <div class="shead"><span class="sq"></span><h2>Your two choices</h2></div>
@@ -171,15 +194,16 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
 
   <div class="cards2">
     <div class="hcard teal">
-      <div class="ck" data-edit="">Option one</div>
-      <h3>Post £1.50 for gas</h3>
-      <p>This is your "standard" price. You earn 30p a litre at this price. If the other side posts the same price, traffic splits roughly as it always does and you both have a good week.</p>
+      <div class="ck" data-edit>Option one</div>
+      <h3>Post &pound;1.50</h3>
+      <p>Your standard price. You earn 30p a litre. If they post the same, the traffic splits between you
+      roughly as it always does and you both have a good week.</p>
     </div>
     <div class="hcard">
-      <div class="ck" data-edit="">Option two</div>
-      <h3>Post £1.40 for gas</h3>
-      <p>You undercut and earn 20p a litre instead of 30p, but if their sign still says £1.50 then almost every car
-      on that road turns into your station instead of theirs.</p>
+      <div class="ck" data-edit>Option two</div>
+      <h3>Post &pound;1.40</h3>
+      <p>You earn 20p a litre instead of 30p, but if their sign still says &pound;1.50 then almost every car
+      on that road turns into your forecourt instead of theirs.</p>
     </div>
   </div>
 
@@ -188,10 +212,10 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
 
   <div class="matwrap">
     <div class="pd">
-      <div class="ch">buco's · column</div>
-      <div class="cl cl1">£1.50</div><div class="cl cl2">£1.40</div>
-      <div class="rh" data-edit="">Aura · row</div>
-      <div class="rl rl1">£1.50</div><div class="rl rl2">£1.40</div>
+      <div class="ch">Buco’s &middot; column</div>
+      <div class="cl cl1">&pound;1.50</div><div class="cl cl2">&pound;1.40</div>
+      <div class="rh" data-edit>Aura &middot; row</div>
+      <div class="rl rl1">&pound;1.50</div><div class="rl rl2">&pound;1.40</div>
       <div class="pdgrid">
         <div class="pcell"><span class="pa">12</span><span class="pcomma">,</span><span class="pb">12</span></div>
         <div class="pcell"><span class="pa">2</span><span class="pcomma">,</span><span class="pb">18</span></div>
@@ -200,47 +224,55 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
       </div>
     </div>
   </div>
-  <div class="cap">Each cell reads (<b class="pa">Aura</b>, <b class="pb">Buco's</b>), in <b>£000s of margin</b> for that week.</div>
+  <div class="cap">Each cell reads (<b class="pa">Aura</b>, <b class="pb">Buco’s</b>), in <b>&pound;000s of margin</b> for that week.</div>
 
   <div class="shead"><span class="sq"></span><h2>Reading the payoffs</h2></div>
   <hr class="srule">
 
   <ul class="hbul">
-    <li><b>Both post £1.50</b> <span class="pa">(12</span>, <span class="pb">12)</span>. Around 40,000
-    litres each at 30p, so <b>£12,000</b> apiece. Nobody wins a driver and nobody loses one to the other.</li>
-    <li><b>You post £1.40 and they hold at £1.50.</b> Your margin drops to 20p, but volume more than doubles to
-    about 90,000 litres, so you take <span class="gain">£18,000</span>. They keep the handful of
-    regulars who never look at the sign: <span class="loss">£2,000</span>.</li>
-    <li><b>Both post £1.40</b> <span class="flat">(9, 9)</span>. Cheap fuel does pull a few extra cars into your stations, so about 45,000 litres each, but only at 20p. <b>£9,000</b> each. You have handed
-    £3,000 to the desert motorists and gained nothing from each other.</li>
+    <li><b>Both post &pound;1.50</b> <span class="pa">(12</span>, <span class="pb">12)</span>. Around 40,000
+    litres each at 30p, so <b>&pound;12,000</b> apiece. Nobody wins a driver and nobody loses one.</li>
+    <li><b>You post &pound;1.40 and they hold.</b> Your margin drops to 20p, but volume more than doubles to
+    about 90,000 litres, so you take <span class="gain">&pound;18,000</span>. They keep the handful of
+    regulars who never look at the sign: <span class="loss">&pound;2,000</span>.</li>
+    <li><b>Both post &pound;1.40</b> <span class="flat">(9, 9)</span>. Cheap fuel does pull a few extra cars
+    onto the road, so about 45,000 litres each, but only at 20p. <b>&pound;9,000</b> each. You have handed
+    &pound;3,000 to the motorists of the district and gained nothing from each other.</li>
   </ul>
 
-  <div class="shead"><span class="sq"></span><h2>Weeks 3 and 5: a chance to talk</h2></div>
+  <div class="shead"><span class="sq"></span><h2>Weeks 3 and 6: double, and a chance to talk</h2></div>
   <hr class="srule">
 
-  <p class="lead-p">Weeks 3 and 6 are high-profile dates within your local desert community, where tourists will flock to the desert for a solar eclipse (Week 3) and a hipster music festival (Week 5). Since you can anticipate high demand those weeks, you have agreed to a one-off "breaking of the silence" between the stations for these weeks to set a strategy together. You may send one person to meet one person
+  <p class="lead-p">Two of your weeks are worth twice as much. In <b>week three</b> and <b>week six</b>, every
+  figure in the table above doubles. A quiet week at &pound;1.50 pays &pound;24,000 instead of &pound;12,000,
+  and being the only one holding costs you &pound;4,000 instead of &pound;2,000.</p>
+
+  <p class="lead-p">Before each of those two weeks, and only then, you may send one person to meet one person
   from the other station for two minutes. The meeting happens only if both stations ask for it. If either
   declines, there is no meeting.</p>
 
-  <p class="lead-p">Due to the high-profile nature of the events those weeks, you are both stocking up on fuel, and all profits will be doubled those weeks only.</p>
+  <p class="lead-p">Nothing agreed in that meeting is written down, and nothing said in it binds you when you
+  set your price.</p>
 
   <div class="shead"><span class="sq"></span><h2>Rules</h2></div>
   <hr class="srule">
 
   <ul class="hbul">
-    <li><b>Six weeks</b>, and one price decision each week.</li>
+    <li><b>Six weeks</b>, and one price decision each week: &pound;1.50 or &pound;1.40.</li>
+    <li><b>Weeks 3 and 6 pay double.</b> Everything else about them is the same.</li>
     <li><b>Three minutes</b> with your own team before each week. Decide one week at a time rather than
     planning all six now.</li>
-    <li><b>Give your price to me privately.</b> Both signs then go up together, and the scores
-    get recorded.</li>
-    <li><b>No contact with the other station</b> at any point, except the two-minute meeting before weeks 3 and 6, and only if both stations have asked for it.</li>
-    <li><b>You are trying to finish with the largest total.</b> Not to beat the other station, and not to be
-    liked by them. The largest total profit is all that matters to you!</li>
+    <li><b>Give your price to the facilitator privately.</b> Both signs then go up together, and the scores
+    go on the board at the front.</li>
+    <li><b>No contact with the other station</b> at any point, except the two-minute meetings before weeks
+    three and six, and only if both stations have asked for one.</li>
+    <li><b>Your goal is to make as much money as you can across the six weeks.</b> Not to beat the other
+    station, and not to be liked by them.</li>
   </ul>
 
   <div class="obox">
     <div class="ok">Your objective</div>
-    <div class="ot">Make as much money as you can over the six weeks!</div>
+    <div class="ot">Make as much money as you can across the six weeks.</div>
   </div>
 
   <div class="shead"><span class="sq"></span><h2>Your team ledger</h2></div>
@@ -253,26 +285,89 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
     <tbody>
       <tr><td class="rnum">1</td><td></td><td></td><td></td><td></td></tr>
       <tr><td class="rnum">2</td><td></td><td></td><td></td><td></td></tr>
-      <tr><td class="rnum">3</td><td></td><td></td><td></td><td></td></tr>
+      <tr class="x2"><td class="rnum">3<span class="tag blue">&times;2</span></td><td></td><td></td><td></td><td></td></tr>
       <tr><td class="rnum">4</td><td></td><td></td><td></td><td></td></tr>
       <tr><td class="rnum">5</td><td></td><td></td><td></td><td></td></tr>
-      <tr><td class="rnum">6</td><td></td><td></td><td></td><td></td></tr>
+      <tr class="x2"><td class="rnum">6<span class="tag blue">&times;2</span></td><td></td><td></td><td></td><td></td></tr>
       <tr class="fin"><td class="rnum">Final<span class="tag amber">total</span></td><td></td><td></td><td></td><td></td></tr>
     </tbody>
   </table>
 
-  <div class="legend" data-edit=""><br></div>
+  <div class="legend" data-edit><b class="blue">Blue weeks</b> pay double. <b class="amber">Amber</b> is your final figure, which is what goes on the board at the front.</div>
 
-  <div class="exnote" data-edit=""><br></div>
+  <div class="exnote" data-edit>Keep the ledger honestly, including the weeks you would rather forget. The debrief works from what actually happened rather than from what anyone intended, and the most useful part of the session is comparing the four ledgers in the room.</div>
 
   <div class="hfoot">
-    <span data-edit="">Price Wars &nbsp;·&nbsp; Module 4</span>
-    <span data-edit="">Ryan Lamare</span>
+    <span data-edit>Price Wars &nbsp;&middot;&nbsp; Module 4</span>
+    <span data-edit>Ryan Lamare</span>
   </div>
 
 </main>
-<script defer="" src="/edit.js"></script>
+<script defer src="/edit.js"></script>
+<script>
+/* The Theme button plays showdown.mp3 if it is sitting next to this file.
+   Browsers block sound until the user acts, which is why this is a button rather
+   than page load. If the file is missing or the format is unsupported, a short
+   synthesised motif plays instead, so the button is never dead. */
+function toggleTheme(btn){
+  var a = document.getElementById('themeAudio');
+  if(!a){ playSynth(btn); return; }
+  if(!a.paused){ a.pause(); a.currentTime = 0; setBtn(btn,false); return; }
+  a.volume = 0.55;
+  a.onended = function(){ setBtn(btn,false); };
+  a.onerror = function(){ setBtn(btn,false); playSynth(btn); };
+  var p = a.play();
+  if(p && p.catch){ p.then(function(){ setBtn(btn,true); })
+                     .catch(function(){ setBtn(btn,false); playSynth(btn); }); }
+  else { setBtn(btn,true); }
+}
+function setBtn(btn,on){
+  if(!btn) return;
+  btn.classList.toggle('playing', !!on);
+  btn.setAttribute('aria-label', on ? 'Stop the theme' : 'Play the theme');
+  var l = btn.querySelector('.tl'); if(l) l.textContent = on ? 'Stop' : 'Theme';
+}
 
-
-
-</body></html>
+/* fallback: a short western motif synthesised with the Web Audio API */
+var __ac;
+function playSynth(btn){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    __ac = __ac || new AC();
+    if(__ac.state === 'suspended') __ac.resume();
+    var t0 = __ac.currentTime + 0.06;
+    var master = __ac.createGain(); master.gain.value = 0.20;
+    master.connect(__ac.destination);
+    var line = [[440,0,0.30],[523.25,0.30,0.26],[587.33,0.56,0.62],
+                [587.33,1.34,0.24],[523.25,1.58,0.24],[440,1.82,1.00]];
+    line.forEach(function(n){
+      var f=n[0], at=n[1], dur=n[2];
+      var o=__ac.createOscillator(); o.type='sine'; o.frequency.value=f;
+      var lfo=__ac.createOscillator(); lfo.type='sine'; lfo.frequency.value=5.4;
+      var lg=__ac.createGain(); lg.gain.value=f*0.009;
+      lfo.connect(lg); lg.connect(o.frequency);
+      var g=__ac.createGain();
+      g.gain.setValueAtTime(0, t0+at);
+      g.gain.linearRampToValueAtTime(0.85, t0+at+0.05);
+      g.gain.setValueAtTime(0.85, t0+at+dur*0.68);
+      g.gain.linearRampToValueAtTime(0, t0+at+dur);
+      o.connect(g); g.connect(master);
+      o.start(t0+at); lfo.start(t0+at);
+      o.stop(t0+at+dur+0.03); lfo.stop(t0+at+dur+0.03);
+    });
+    [0,0.56,1.34,1.82].forEach(function(at){
+      var o=__ac.createOscillator(); o.type='triangle'; o.frequency.value=110;
+      var g=__ac.createGain();
+      g.gain.setValueAtTime(0.0001, t0+at);
+      g.gain.exponentialRampToValueAtTime(0.45, t0+at+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+at+0.52);
+      o.connect(g); g.connect(master);
+      o.start(t0+at); o.stop(t0+at+0.56);
+    });
+    if(btn){ setBtn(btn,true); setTimeout(function(){ setBtn(btn,false); }, 3000); }
+  }catch(e){ /* audio unavailable; the page is unaffected */ }
+}
+</script>
+</body>
+</html>
