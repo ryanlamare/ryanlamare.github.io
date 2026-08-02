@@ -92,6 +92,66 @@ date, and writes nothing — useful before committing.
 
 After a push, confirm the Action went green; it commits the rebuilt PDF itself.
 
+## Teaching decks
+
+Slides are hand-written HTML, one self-contained file per deck, under
+`teaching/<course>/<week>/<lecture|live>/index.html`. There is no framework and
+no build step. **Start a new deck by copying `teaching/_template/`** — it carries
+the real engine and house styles, lifted from the week 6 lecture.
+
+### Preview while editing
+
+```bash
+./serve.sh            # http://localhost:8000
+```
+
+Always preview through the server, never by opening the file directly: the decks
+use root-absolute paths (`/brand.css`, `/edit.js`) which only resolve when served
+from the site root. In VS Code, the Live Preview extension (`ms-vscode.live-server`)
+renders a deck in a side panel and reloads on save. `serve.sh` also prints a LAN
+address so you can check a deck on your phone or the lecture-room machine.
+
+### Deck anatomy
+
+The engine is ~1.8 KB of inline JS at the bottom of every deck. It expects:
+
+- **`<section class="slide" data-i="N">`** — one per slide, `data-i` zero-based and
+  matching document order. Add `cover` for a title slide (flips the tick bar to
+  light). Exactly one slide carries `active` at load.
+- **`<div class="ticks">`** — the progress bar, with **one `<span class="tick">` per
+  slide**. These are static markup, not generated: add a slide, add a tick.
+- **`[data-step="N"]`** — progressive reveal. Items with no attribute (or `0`) show
+  immediately; `1, 2, 3 …` appear on successive presses. Arrow/space advances the
+  step first, then moves to the next slide once the highest step has shown.
+- **`<section class="sr-only">`** — **required accessible transcript**: one nested
+  `<section>` per slide, in order, describing the slide *including what any figure
+  shows*. Screen readers cannot follow the visual deck. Keep it in sync when
+  slides are added or reordered; a deck without it is not finished.
+- Slides are laid out on a fixed 1280×720 canvas and scaled to the viewport via
+  the `--scale` custom property. Design to that canvas, not to a screen size.
+
+House idioms: `.kicker` / `.tag` for the small label (with an empty `<i></i>` for
+the red square), `<span class="r">` for the red word in a cover `h1`, `.sub` for
+the cover subtitle, `.cap` for the caption under a figure, `.fig` for the figure
+area. Icons come from an inline `<svg style="display:none">` sprite referenced by
+`<use href="#id">` — copy symbols from an existing deck rather than redrawing.
+
+### Known wrinkle: the CSS is duplicated
+
+Each deck inlines its own ~20 KB of CSS, and the decks have drifted (week 1 and
+week 6 are only ~79% identical). There is deliberately no shared `deck.css` yet:
+extracting one means deciding, per rule, whether a difference is drift or intent.
+New decks inherit the template's copy. If you restyle, **you are editing one deck,
+not all of them** — say so rather than implying a global change.
+
+### Games
+
+`teaching/*/games/`, plus the in-lecture ones (Titan Wars, the alarm-clock and
+chicken games). Plain HTML/JS, no dependencies, no build. They work offline and on
+any student device, which is the point — keep it that way. State lives in the page;
+GitHub Pages is static hosting and cannot run a backend, so anything genuinely
+multiplayer-across-devices needs an external realtime service.
+
 ## Everything else
 
 - `index.html` outside the two marked regions (About, Media, Teaching, Contact)
