@@ -1,0 +1,67 @@
+name: Build CV
+
+# Regenerates cv/index.html, the publication blocks in index.html, and the
+# downloadable PDF whenever the CV data changes. This is why weasyprint does
+# not need to be installed locally.
+#
+# The commit this job makes uses GITHUB_TOKEN, and GitHub deliberately does not
+# re-trigger workflows for such pushes, so this cannot loop.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cv_data.py"
+      - "build_cv.py"
+      - "cv_template.html"
+      - ".github/workflows/build-cv.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install WeasyPrint system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
+            libfribidi0 libcairo2 libgdk-pixbuf-2.0-0
+
+      - name: Install WeasyPrint
+        run: pip install "weasyprint>=62"
+
+      - name: Regenerate CV and site publication lists
+        run: python3 build_cv.py
+
+      - name: Render PDF
+        run: weasyprint --base-url . cv/index.html Lamare-CV.pdf
+
+      - name: Sanity-check the PDF
+        run: |
+          test -s Lamare-CV.pdf || { echo "PDF is empty"; exit 1; }
+          bytes=$(wc -c < Lamare-CV.pdf)
+          echo "PDF size: $bytes bytes"
+          # A real CV renders to tens of KB; anything tiny means the build broke.
+          if [ "$bytes" -lt 20000 ]; then echo "PDF suspiciously small"; exit 1; fi
+
+      - name: Commit regenerated files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cv/index.html index.html Lamare-CV.pdf
+          if git diff --staged --quiet; then
+            echo "Nothing to commit — already up to date."
+          else
+            git commit -m "Rebuild CV, publication lists, and PDF"
+            git push
+          fi
