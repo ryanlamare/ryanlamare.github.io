@@ -95,11 +95,12 @@ After a push, confirm the Action went green; it commits the rebuilt PDF itself.
 ## Everything else
 
 - `index.html` outside the two marked regions (About, Media, Teaching, Contact)
-  is hand-written. The Media and Teaching sections **duplicate** content that
-  also lives in the CV — if you change one, check the other.
+  is hand-written.
+- The Media and Teaching sections overlap with the CV's, but **this is
+  deliberate, not drift** — the CV entries and the homepage entries serve
+  different purposes and audiences, and are meant to read differently. Do not
+  unify them into `cv_data.py` without being asked. Only publications are
+  single-source.
 - `teaching/` holds self-contained lecture decks and in-class games.
 - `edit.js` is an in-browser editor for those teaching decks, authenticated with
   a GitHub token kept in the browser's localStorage. Unrelated to the CV.
-- `gen_cv.py` is the **superseded** CV generator from before this pipeline
-  existed. Kept only for reference; do not run it — it writes to a path that no
-  longer exists and uses the old Archivo styling.
