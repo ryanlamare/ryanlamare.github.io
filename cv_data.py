@@ -7,7 +7,7 @@ Never edit those generated regions by hand — they will be overwritten.
 """
 
 ME = "J. Ryan Lamare"
-UPDATED = "July 2026"
+UPDATED = "August 2026"
 
 PROFILE = dict(
   name="J. Ryan Lamare",
@@ -35,6 +35,7 @@ PUB_GROUPS = [
     dict(y="2023", authors=["Ariel C. Avgar", "Deborah Hann", "J. Ryan Lamare", "David Nash"], t="The Evolution of Workplace Dispute Resolution: International Perspectives", u="https://www.cornellpress.cornell.edu/book/9780913447277/the-evolution-of-workplace-dispute-resolution/", venue_cv="LERA Annual Research Volume.", venue_home="LERA Annual Research Volume.", icon="ic-scales", eds=True, book=True),
   ]),
   ("Journal Articles", [
+    dict(y="2026", authors=["J. Ryan Lamare", "Margaret Huizinga", "Jeffrey Thomas"], t="Employment Experience Effects on Socio-Politically Extreme Beliefs: Empirical Evidence from Europe", u=None, venue_cv="<i>ILR Review</i> (conditionally accepted).", venue_home=None, icon="ic-ballot", featured=True),
     dict(y="2026", authors=["Kwon Hee Han", "Tingting Zhang", "J. Ryan Lamare"], t="Methods for Studying Union Effects: A Review and Comparative Analysis of Empirical Industrial Relations Literature", u="https://doi.org/10.1111/irj.70028", venue_cv="<i>Industrial Relations Journal</i> 57(3): 205–231.", venue_home="Industrial Relations Journal, 57(3), 205–231.", icon="ic-chart"),
     dict(y="2025", authors=["John W. Budd", "J. Ryan Lamare"], t="Organizational Governance and Trade-Offs Between Pay and Subjective Employee Well-Being: A Comparative Analysis", u="https://doi.org/10.1111/bjir.12860", venue_cv="<i>British Journal of Industrial Relations</i> 63(2): 305–322.", venue_home="British Journal of Industrial Relations, 63(2), 305–322.", icon="ic-factory", featured=True),
     dict(y="2024", authors=["J. Ryan Lamare", "Richard A. Benton", "Patricia Michel Tabarani"], t="An Empirical Analysis of Race and Political Partisanship Effects on Workplace Mobility Outcomes during Lockdown, Reopening, and Endemic COVID-19", u="https://doi.org/10.1177/00197939241246510", venue_cv="<i>ILR Review</i> 77(4): 475–505.", venue_home="ILR Review, 77(4), 475–505.", icon="ic-factory", featured=True),
@@ -43,7 +44,7 @@ PUB_GROUPS = [
     dict(y="2023", authors=["Hye Jin Rho", "Christine A. Riordan", "Christian Lyhne Ibsen", "J. Ryan Lamare", "Maite Tapia"], t="Do Workers Speak Up When Feeling Job Insecure? Examining Workers’ Response to Precarity during the COVID-19 Pandemic", u="https://doi.org/10.1177/07308884221128481", venue_cv="<i>Work and Occupations</i> 50(1): 97–129.", venue_home="Work and Occupations, 50(1), 97–129.", icon="ic-megaphone"),
     dict(y="2022", authors=["Weihao Li", "J. Ryan Lamare", "Robert Bruno"], t="Does Union Canvassing Affect Voter Turnout in Times of Political Duress? Empirical Evidence from Illinois", u="https://doi.org/10.1177/0160449X221074153", venue_cv="<i>Labor Studies Journal</i> 47(3): 213–240.", venue_home="Labor Studies Journal, 47(3), 213–240.", icon="ic-ballot"),
     dict(y="2022", authors=["J. Ryan Lamare", "John W. Budd"], t="The Relative Importance of Industrial Relations Ideas in Politics: A Quantitative Analysis of Political Party Manifestos across 54 Countries", u="https://doi.org/10.1111/irel.12296", venue_cv="<i>Industrial Relations</i> 61(1): 22–49.", venue_home="Industrial Relations, 61(1), 22–49.", icon="ic-ballot", award="LERA 2023 Scoville Award", featured=True),
-    dict(y="2021", authors=["John W. Budd", "J. Ryan Lamare"], t="The Importance of Political Systems for Trade Union Membership, Coverage, and Influence: Theory and Comparative Evidence", u="https://doi.org/10.1111/bjir.12575", venue_cv="<i>British Journal of Industrial Relations</i> 59(3): 757–787.", venue_home="British Journal of Industrial Relations, 59(3), 757–787.", icon="ic-protest", featured=True),
+    dict(y="2021", authors=["John W. Budd", "J. Ryan Lamare"], t="The Importance of Political Systems for Trade Union Membership, Coverage, and Influence: Theory and Comparative Evidence", u="https://doi.org/10.1111/bjir.12575", venue_cv="<i>British Journal of Industrial Relations</i> 59(3): 757–787.", venue_home="British Journal of Industrial Relations, 59(3), 757–787.", icon="ic-protest"),
     dict(y="2021", authors=["Aibak Hafeez", "J. Ryan Lamare"], t="An Empirical Examination of How Third-Party Neutral Sourcing and Qualification Differences Affect Employment ADR Practice Usage: Evidence from the Fortune 1000", u="https://doi.org/10.1108/s0742-618620210000026005", venue_cv="<i>Advances in Industrial and Labor Relations</i> 26: 125–144.", venue_home="Advances in Industrial and Labor Relations, 26, 125–144.", icon="ic-scales"),
     dict(y="2020", authors=["J. Ryan Lamare"], t="The Devil Is in the Details: Attorney Effects on Employment Arbitration Outcomes", u="https://doi.org/10.1177/0019793919877404", venue_cv="<i>ILR Review</i> 73(2): 456–478.", venue_home="ILR Review, 73(2), 456–478.", icon="ic-scales", featured=True),
     dict(y="2020", authors=["David B. Lipsky", "Ariel C. Avgar", "J. Ryan Lamare"], t="Organizational Conflict Resolution and Strategic Choice: Evidence from a Survey of Fortune 1000 Firms", u="https://doi.org/10.1177/0019793919870169", venue_cv="<i>ILR Review</i> 73(2): 431–455.", venue_home="ILR Review, 73(2), 431–455.", icon="ic-scales"),
@@ -73,7 +74,6 @@ PUB_GROUPS = [
     dict(y="2010", authors=["Anthony McDonnell", "J. Ryan Lamare", "Patrick Gunnigle", "Jonathan Lavelle"], t="Developing Tomorrow’s Leaders — Evidence of Global Talent Management in Multinational Enterprises", u="https://doi.org/10.1016/j.jwb.2009.09.015", venue_cv="<i>Journal of World Business</i> 45(2): 150–160.", venue_home="Journal of World Business, 45(2), 150–160.", icon="ic-briefcase"),
   ]),
   ("Articles Under Review", [
-    dict(raw="J. Ryan Lamare, Margaret Huizinga, and Jeffrey Thomas. “Employment Experience Effects on Socio-Politically Extreme Beliefs: Empirical Evidence from Europe.” 2nd R&R, <i>ILR Review</i>.", y="", u=None),
     dict(raw="J. Ryan Lamare and John W. Budd. “The Role of Political Parties in Shaping Women’s Labor Market Policies and Outcomes: A Longitudinal Analysis of Party Characteristics, Positions, and Effects.” R&R, <i>Industrial Relations</i>.", y="", u=None),
   ]),
   ("Working Papers", [
