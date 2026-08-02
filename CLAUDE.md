@@ -4,6 +4,11 @@ Personal academic site for J. Ryan Lamare (LSE), served by GitHub Pages from thi
 repo at the domain in `CNAME`. Pushing to `main` publishes; the site is live
 roughly 30 seconds later.
 
+`.nojekyll` at the repo root turns Jekyll off — the site is plain hand-written
+HTML and used no Jekyll features, while Jekyll *silently* refused to publish any
+path beginning with an underscore (which 404'd `teaching/_template/`). Don't
+delete it. Anything that works locally but 404s live is worth checking here first.
+
 ## The one rule
 
 **Publications live in exactly one place: `cv_data.py`.** Edit that, run
