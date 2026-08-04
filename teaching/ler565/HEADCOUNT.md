@@ -1,7 +1,7 @@
-# Our own Azee — working memo
+# Headcount — working memo
 
 **Status: parked, nothing built.** This memo is the brief; pick it up here.
-Scoped 2026-08-04. Working title only — see *Open questions* on naming.
+Scoped 2026-08-04. The game is called **Headcount** — see *Theme* below.
 
 Goal: replace `azee.mattle.online` with our own version, hosted here, so students
 never create an account. LER 565 leans on Azee in every live session, weeks 1–6,
@@ -186,6 +186,65 @@ This is all for teaching and for fun — nothing here is a research project.
 
 ---
 
+## Theme
+
+**Headcount.** Competing firms hire from a shared talent market, slot people into
+teams, and pay for the ones they can't deploy. Chosen over *Shopfloor* and
+*Piecework* because the course is HRM and strategy — corporate staffing, not
+bargaining and ER — so the register is consulting-and-corporate throughout.
+
+It also settles the naming problem: not Azul (Plan B Games' name and art; the
+mechanics themselves aren't copyrightable), and not Azee, which is
+mattle.online's name rather than ours.
+
+Every mechanic carries meaning — this is a reskin, not a coat of paint:
+
+| Azul | Headcount | Why it works |
+|---|---|---|
+| Factory display | **Agency** | Take all of one role and **the rest spill into the open market** — your hire hands the leftovers to a competitor |
+| Centre pool | **Open market** | Accumulates everyone's leftovers |
+| First-player marker | **First Mover** token | Initiative next round, *at a cost* — a timing commitment you pay for, which is week 6's content exactly |
+| Pattern lines | **Teams** | One role type each, and a **partly staffed team delivers nothing** until complete |
+| The wall | **Org chart** | Placement scores by adjacency — complementarity between filled roles |
+| Floor line | **The bench** | People you couldn't deploy, at escalating cost |
+| Tile colours | **Five functions** | Engineering, Sales, Operations, Finance, Analytics |
+
+The wall is a Latin square, so the bonuses land cleanly:
+
+- **Row** (+2) — a department with one of every function: a balanced team.
+- **Column** (+7) — one function staffed across every department.
+- **All five of a colour** (+10) — you've cornered the market on a role.
+
+The bench is the mechanic that sings. In Azul it's an abstract penalty; here
+it's overstaffing — you took four people to deny a rival and now you're paying
+for the two you can't place. That's a real staffing tradeoff, and students feel
+it immediately.
+
+**Theme the names and the art, never the rules.** Base Azul mechanics stay
+exactly as they are — same tile counts, same scoring, same 5/7/9 agencies. The
+rules are correct because thousands of people have debugged them, and Azee stays
+a usable fallback only while the games are identical. A themed rule tweak
+quietly costs both.
+
+Worth knowing rather than smoothing over: tiles-as-workers means the game has
+you hoarding people to block a rival and discarding the surplus at a penalty.
+For an HRM course that's the most discussable thing on the board, and a
+reflection prompt writes itself.
+
+### Award names
+
+Corporate-metric names, which the theme earns:
+
+- **Employer of the Year** — league winner
+- **The Cup** — week 6 knockout
+- **The Double** — both, by one person
+- **Best Quarter** — highest single game
+- **Turnaround** — best comeback from behind
+- **Most Improved** — first half to second
+- **Restructuring** — wooden spoon, if the class culture takes it
+
+---
+
 ## Mobile and devices
 
 Assume a player or two is on a phone or iPad every session. Verdicts:
@@ -254,17 +313,13 @@ the design can fix it.
 
 ## Open questions
 
-1. **What is it called?** Not Azul (name and art are Plan B Games'; mechanics
-   aren't copyrightable, which is why mattle.online is "Azee"). Not Azee either —
-   that's their name, not ours. Reskinning around bargaining or HR themes fits
-   the course and solves this at the same time.
-2. **Where does the backend live?** Free tiers are all wildly oversized for
+1. **Where does the backend live?** Free tiers are all wildly oversized for
    fourteen students once a week. Check whichever host against the actual
    roster's geography — students behind national firewalls may not reach it.
-3. **Do repeat matchups in one week both count** for the league?
-4. **Late joiners.** Someone starting in week 3 can't catch a total-points table;
+2. **Do repeat matchups in one week both count** for the league?
+3. **Late joiners.** Someone starting in week 3 can't catch a total-points table;
    showing points-per-game alongside handles it.
-5. **Three-player head-to-head.** Simplest rule: it counts if you finished above
+4. **Three-player head-to-head.** Simplest rule: it counts if you finished above
    them.
 
 ---
