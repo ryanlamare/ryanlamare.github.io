@@ -276,9 +276,18 @@ Final bonuses, added once, per player:
 **Tiebreak.** 📕 Most complete horizontal rows wins. If still level, the
 rulebook declares a shared victory.
 
-⚖️ A league needs a definite result. Record a genuine tie as a **draw**, worth 2
-league points each (against 3 for a win, 1 for playing). Do not invent further
+⚖️ **In a league game**, record a genuine tie as a **draw**, worth 2 league
+points each (against 3 for a win, 1 for playing). Don't invent further
 tiebreaks — draws are rare and a shared result is honest.
+
+⚖️ **In a cup game a draw is not available** — somebody has to advance. Apply
+the rulebook tiebreak, and if still level, **coin-flip on camera**. The run
+sheet already treats that as a good answer that the room enjoys, so this needs
+no new machinery. The engine should return `draw` and let the tournament layer
+resolve it, rather than deciding on its own.
+
+⚖️ **Repeat matchups in the same week both count** for the league. Simplest
+rule, and it needs no bookkeeping.
 
 ## 9. Determinism
 
@@ -393,3 +402,18 @@ paths a competent player avoids.
 📕 Player count changes **nothing** but the agency count. Tiles, board, scoring
 and end condition are identical. Treat it as a constant, never a code path —
 three-player support is a UI layout question, not an engine question.
+
+### ⚖️ Three-player games distort cup seeding — rotate the slot
+
+Only one player wins a three-player game, so being in one means roughly a
+1-in-3 round instead of 1-in-2. Across a term that washes out, which is why flat
+league scoring is fine. Across the **cup's three rounds** it doesn't: the top
+four are seeded off three results.
+
+It only bites on odd attendance — 14 students is seven clean pairs. When it does:
+**rotate the three-player slot so nobody lands in it twice**, exactly as the bye
+tables in `week6/live/RULES.md` already rotate the bye. Then fall back to that
+file's existing tiebreaks, including "your call" — it's a game, not a ranking
+exercise.
+
+Worth a line in the run sheet so it isn't discovered on the night.

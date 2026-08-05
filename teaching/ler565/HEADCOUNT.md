@@ -207,7 +207,7 @@ Every mechanic carries meaning — this is a reskin, not a coat of paint:
 | Pattern lines | **Teams** | One role type each, and a **partly staffed team delivers nothing** until complete |
 | The wall | **Org chart** | Placement scores by adjacency — complementarity between filled roles |
 | Floor line | **The bench** | People you couldn't deploy, at escalating cost |
-| Tile colours | **Five functions** | Engineering, Sales, Operations, Finance, Analytics |
+| Tile colours | **Five functions** | Engineering, Sales, Operations, Finance, Analytics — see *Tiles* below |
 
 The wall is a Latin square, so the bonuses land cleanly:
 
@@ -230,6 +230,47 @@ Worth knowing rather than smoothing over: tiles-as-workers means the game has
 you hoarding people to block a rival and discarding the surplus at a penalty.
 For an HRM course that's the most discussable thing on the board, and a
 reflection prompt writes itself.
+
+### Tiles — colour plus isotype, never text
+
+**No words on tiles.** Each function is a flat background colour carrying a
+single isotype-style pictogram: solid silhouette, no outline, no interior
+detail, no strokes. Squares of text would read as a spreadsheet; this reads as a
+game, and it stays abstract enough that the mechanics feel like a game rather
+than an HR exercise.
+
+| Function | Colour | Isotype | Silhouette |
+|---|---|---|---|
+| Engineering | **Blue** | Cog | Round, toothed — spiky outline |
+| Sales | **Red** | Headset | Arc with mic boom — open, asymmetric |
+| Operations | **Yellow** | Crate | Solid square with bands |
+| Finance | **Ink** | Coin stack | Stacked discs — horizontal rhythm |
+| Analytics | **Teal** | Bar chart | Three bars — vertical rhythm |
+
+Two decisions inside that table worth keeping:
+
+**The five silhouettes are deliberately different in *shape*, not just subject** —
+spiky-round, open-asymmetric, solid-square, horizontal-rhythm, vertical-rhythm.
+At tile size on a phone, subject matter is invisible and only the silhouette
+reads. Two round icons (a cog and a magnifier, say) would be a recurring
+misread across a 5×5 grid.
+
+**Teal rather than green.** Red against green is the one pair a colourblind
+player genuinely cannot separate, and roughly one man in twelve has some red-
+green deficiency. In a graded activity that's a fairness problem, not a polish
+problem.
+
+Which is the real argument for the isotypes: **the pictogram is the
+accessibility layer, not decoration.** Colour alone would fail those students
+outright. Colour *and* shape means a tile is identifiable either way, and the
+board still works in greyscale. The aesthetic call and the correct engineering
+call are the same one here.
+
+Practically: an inline `<svg style="display:none">` sprite referenced by
+`<use href="#id">`, exactly the pattern the decks already use. Flat solid fills
+survive being scaled down; anything with strokes or interior detail turns to
+mush at 40px. A light-coloured tile needs a border against the paper background;
+the ink tile doesn't.
 
 ### Award names
 
@@ -319,14 +360,25 @@ reader can tell a quotation from a choice.
 
 ## Open questions
 
-1. **Where does the backend live?** Free tiers are all wildly oversized for
-   fourteen students once a week. Check whichever host against the actual
-   roster's geography — students behind national firewalls may not reach it.
-2. **Do repeat matchups in one week both count** for the league?
-3. **Late joiners.** Someone starting in week 3 can't catch a total-points table;
-   showing points-per-game alongside handles it.
-4. **Three-player head-to-head.** Simplest rule: it counts if you finished above
-   them.
+Only two left, and neither blocks a build.
+
+1. **Where does the backend live?** The one decision that needs information we
+   don't have. Free tiers are all wildly oversized for fourteen students once a
+   week, so the real constraint is reachability — check the host against the
+   actual roster's geography before picking, since students behind national
+   firewalls may not reach it.
+2. **The wooden spoon** ("Restructuring"). Funny with the right group, wrong with
+   another. A read on the class, not a design question.
+
+Settled since first draft, recorded so they aren't reopened by accident:
+
+- **Repeat matchups in a week both count.** Simplest, no bookkeeping.
+- **Late joiners** — show points-per-game beside the total, so someone starting
+  in week 3 isn't looking at a table they cannot catch.
+- **Three-player head-to-head** counts if you finished above the other player.
+- **Draws** are worth 2 league points; cup games coin-flip instead
+  (`HEADCOUNT-RULES.md` §8).
+- **Top five, not the full table.**
 
 ---
 
