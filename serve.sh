@@ -22,4 +22,18 @@ echo "  CV        → http://localhost:${PORT}/cv/"
 [ -n "$ip" ] && echo "  this LAN  → http://${ip}:${PORT}   (phone / projector)"
 echo "  Ctrl-C to stop"
 echo
-exec python3 -m http.server "$PORT" --bind 0.0.0.0
+# Cache-Control: no-store, so an edited deck or game never shows stale from
+# the browser cache — plain `python3 -m http.server` doesn't send it, and a
+# reload after a change could silently serve the previous version.
+exec python3 - "$PORT" <<'PY'
+import http.server, socketserver, sys
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store')
+        super().end_headers()
+
+socketserver.ThreadingTCPServer.allow_reuse_address = True
+with socketserver.ThreadingTCPServer(('0.0.0.0', int(sys.argv[1])), Handler) as httpd:
+    httpd.serve_forever()
+PY
