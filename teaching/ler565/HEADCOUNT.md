@@ -137,11 +137,18 @@ gives the lower half something live to chase.
 The sports-broadcast framing, and nearly free once the archive exists — it's all
 just queries over stored games.
 
-**Pre-game splash:** head-to-head record, each player's league position, average
+**Pre-game splash:** head-to-head record, each player's personal best, average
 score, recent form (`W L W W L`), last meeting's score. Must degrade gracefully
 in week 1 when there are no stats — "first meeting" is a fine thing to show. Keep
 it brief and click-to-start; it sits inside a limited breakout window and must
 not eat the clock. Needs a three-way layout too.
+
+**No league position on the splash** — that lives on the leaderboard, which
+shows a top five. Head-to-head stays, because repeated play against a known
+opponent is the course's own material and the whole reason the screen is
+interesting. But telling someone they're 11th, nine times a term, immediately
+before they play, is the wooden spoon by another route. Personal bests and form
+carry the same weight without the ranking.
 
 **Post-game screen** — likely the bigger win, since the moment a game ends is
 when students care most. Final scores, what it did to the head-to-head, and league
@@ -282,7 +289,14 @@ Corporate-metric names, which the theme earns:
 - **Best Quarter** — highest single game
 - **Turnaround** — best comeback from behind
 - **Most Improved** — first half to second
-- **Restructuring** — wooden spoon, if the class culture takes it
+**No wooden spoon, and no award for finishing last** — considered and rejected.
+Joke contests about low finishers are mean-spirited, and the goal is uplifting.
+
+Treat that as the **rule for any award added later: every award celebrates
+something achieved, none marks a failure.** It's a checkable test, and it's also
+why the table shows a top five rather than a full ranking — not to hide
+information, but because a permanent public bottom is the same idea wearing a
+different hat.
 
 ---
 
@@ -360,17 +374,15 @@ reader can tell a quotation from a choice.
 
 ## Open questions
 
-Only two left, and neither blocks a build.
+None blocking. Everything below is settled; recorded so it isn't reopened by
+accident.
 
-1. **Where does the backend live?** The one decision that needs information we
-   don't have. Free tiers are all wildly oversized for fourteen students once a
-   week, so the real constraint is reachability — check the host against the
-   actual roster's geography before picking, since students behind national
-   firewalls may not reach it.
-2. **The wooden spoon** ("Restructuring"). Funny with the right group, wrong with
-   another. A read on the class, not a design question.
-
-Settled since first draft, recorded so they aren't reopened by accident:
+- **Backend host: pick any mainstream provider.** The cohort is mostly US-based
+  and every student has reached `azee.mattle.online`, an ordinary web host, so
+  reachability is not the constraint it would be with a different roster. Free
+  tiers are wildly oversized for fourteen students once a week. Revisit only if a
+  future cohort's geography changes.
+- **No wooden spoon**, and no award for finishing last — see *Award names*.
 
 - **Repeat matchups in a week both count.** Simplest, no bookkeeping.
 - **Late joiners** — show points-per-game beside the total, so someone starting
