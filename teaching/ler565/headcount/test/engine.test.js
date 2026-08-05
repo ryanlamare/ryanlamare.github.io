@@ -23,6 +23,7 @@ import {
   newGame,
   legalMoves,
   apply,
+  applyTake,
   scorePlacement,
   completeRows,
   completeColumns,
@@ -452,7 +453,31 @@ section('§10 — illegal moves rejected');
 }
 
 // ---------------------------------------------------------------------------
-section('§9 — purity and move.t');
+section('applyTake — the UI staging step');
+
+{
+  const s = newGame('stage', 2);
+  const move = legalMoves(s)[0];
+  eq(
+    serialize(applyTake(s, move)),
+    serialize(apply(s, move)),
+    'mid-round: applyTake and apply agree exactly'
+  );
+}
+{
+  // Last move of a round: applyTake stops at the end of Phase A; apply
+  // resolves. The difference between the two is the Phase B/C theatre.
+  const s = bareState(2);
+  s.agencies[0] = [1, 0, 0, 0, 0];
+  s.bag = [2, 2, 2, 2]; // enough to deal the next round
+  const move = { source: { type: 'agency', index: 0 }, fn: 0, dest: { type: 'bench' } };
+  const interim = applyTake(s, move);
+  const full = apply(s, move);
+  eq(interim.round, 1, 'applyTake does not resolve the round');
+  eq(interim.boards[0].bench.length, 1, 'interim keeps the benched tile visible');
+  eq(full.round, 2, 'apply resolves through to the next round');
+  eq(full.boards[0].bench.length, 0, 'apply cleared the bench');
+}
 
 {
   const s = newGame('purity', 2);

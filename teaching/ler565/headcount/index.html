@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Headcount</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- Tile isotypes (HEADCOUNT.md — colour plus isotype, never text).
+     Solid silhouettes, deliberately different in SHAPE: spiky-round cog,
+     open-asymmetric headset, solid-square crate, horizontal-rhythm coins,
+     vertical-rhythm bars. Knockouts (the cog's hole, the crate's bands) are
+     painted in var(--t-bg), the tile's own background colour. -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="ic-eng" viewBox="0 0 24 24">
+    <rect x="10" y="1.5" width="4" height="21" rx="1" fill="currentColor"/>
+    <rect x="1.5" y="10" width="21" height="4" rx="1" fill="currentColor"/>
+    <rect x="10" y="1.5" width="4" height="21" rx="1" fill="currentColor" transform="rotate(45 12 12)"/>
+    <rect x="10" y="1.5" width="4" height="21" rx="1" fill="currentColor" transform="rotate(-45 12 12)"/>
+    <circle cx="12" cy="12" r="8" fill="currentColor"/>
+    <circle cx="12" cy="12" r="3.4" fill="var(--t-bg, transparent)"/>
+  </symbol>
+  <symbol id="ic-sal" viewBox="0 0 24 24">
+    <path d="M4 13.5 v-1 a8 8 0 0 1 16 0 v1 h-3 v-1 a5 5 0 0 0 -10 0 v1 Z" fill="currentColor"/>
+    <rect x="2.6" y="12" width="4.6" height="7.6" rx="2" fill="currentColor"/>
+    <rect x="16.8" y="12" width="4.6" height="7.6" rx="2" fill="currentColor"/>
+    <path d="M19 19 q-1.2 2.6 -5.4 2.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="13" cy="21.7" r="1.7" fill="currentColor"/>
+  </symbol>
+  <symbol id="ic-ops" viewBox="0 0 24 24">
+    <rect x="3.5" y="4" width="17" height="16" rx="1.5" fill="currentColor"/>
+    <rect x="3.5" y="8.6" width="17" height="1.7" fill="var(--t-bg, transparent)"/>
+    <rect x="3.5" y="13.6" width="17" height="1.7" fill="var(--t-bg, transparent)"/>
+  </symbol>
+  <symbol id="ic-fin" viewBox="0 0 24 24">
+    <rect x="5" y="15.4" width="14" height="4.2" rx="2.1" fill="currentColor"/>
+    <rect x="6.5" y="10.2" width="14" height="4.2" rx="2.1" fill="currentColor"/>
+    <rect x="4" y="5" width="14" height="4.2" rx="2.1" fill="currentColor"/>
+  </symbol>
+  <symbol id="ic-ana" viewBox="0 0 24 24">
+    <rect x="3.6" y="12" width="4.6" height="8.5" rx="1" fill="currentColor"/>
+    <rect x="9.7" y="4" width="4.6" height="16.5" rx="1" fill="currentColor"/>
+    <rect x="15.8" y="8.5" width="4.6" height="12" rx="1" fill="currentColor"/>
+  </symbol>
+  <symbol id="ic-first" viewBox="0 0 24 24">
+    <rect x="6.4" y="3" width="2.4" height="18" rx="1.2" fill="currentColor"/>
+    <path d="M9.5 4.5 L20.5 7.8 L9.5 11.1 Z" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- Setup -->
+<section id="setup" class="screen">
+  <div class="setup-card">
+    <p class="kicker"><i></i>LER 565 · The Talent Market</p>
+    <h1>Head<span class="r">count</span></h1>
+    <p class="sub">Competing firms hire from a shared talent market. Staff complete
+    teams, build the org chart, and pay for everyone left on the bench.</p>
+
+    <form id="setup-form">
+      <fieldset>
+        <legend>Firms at the table</legend>
+        <div class="seg" role="radiogroup" aria-label="Number of players">
+          <button type="button" class="seg-btn on" data-players="2">2</button>
+          <button type="button" class="seg-btn" data-players="3">3</button>
+          <button type="button" class="seg-btn" data-players="4">4</button>
+        </div>
+        <div id="name-inputs"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Clock</legend>
+        <select id="clock-select" aria-label="Clock per player">
+          <option value="0">No clock</option>
+          <option value="180000">3:00 each</option>
+          <option value="300000" selected>5:00 each</option>
+          <option value="600000">10:00 each</option>
+        </select>
+      </fieldset>
+      <fieldset>
+        <legend>Seed <span class="hint">(blank for a fresh market)</span></legend>
+        <input id="seed-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="e.g. SYNERGY-BISON-47">
+      </fieldset>
+      <button type="submit" class="cta">Open the market</button>
+    </form>
+  </div>
+</section>
+
+<!-- Game -->
+<section id="game" class="screen hidden">
+  <header id="topbar">
+    <div class="q-badge" id="q-badge">Q1</div>
+    <div id="phase-label">Hiring</div>
+    <div id="turn-label"></div>
+    <div class="supply" title="Tiles in the bag and the lid">
+      <span class="chip" id="bag-chip">Bag <b id="bag-count">80</b></span>
+      <span class="chip" id="lid-chip">Lid <b id="lid-count">0</b></span>
+    </div>
+    <div class="menu">
+      <button id="btn-export" class="ghost-btn" title="Download the game record (seed + moves)">Record</button>
+      <button id="btn-new" class="ghost-btn" title="Abandon and start over">New</button>
+    </div>
+  </header>
+
+  <main id="table">
+    <section id="market" aria-label="The talent market">
+      <div id="agencies"></div>
+      <div id="centre-wrap">
+        <p class="area-label"><i></i>Open market</p>
+        <div id="centre"></div>
+      </div>
+    </section>
+    <section id="boards" aria-label="Player boards"></section>
+  </main>
+
+  <div id="banner" aria-hidden="true"></div>
+  <div id="fx" aria-hidden="true"></div>
+  <div id="live" class="sr-only" role="status" aria-live="polite"></div>
+</section>
+
+<dialog id="end-modal">
+  <div id="end-body"></div>
+  <div class="end-actions">
+    <button id="btn-record" class="ghost-btn">Download record</button>
+    <button id="btn-rematch" class="cta">Rematch</button>
+    <button id="btn-setup" class="ghost-btn">New setup</button>
+  </div>
+</dialog>
+
+<script type="module" src="./ui.js"></script>
+</body>
+</html>

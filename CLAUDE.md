@@ -162,7 +162,11 @@ mid-build. Its specs are `teaching/ler565/HEADCOUNT.md` (design, why) and
 `HEADCOUNT-RULES.md` (engine spec, what) — read both before touching it. The
 engine is a pure seeded ES module; run its headless suite with
 `node teaching/ler565/headcount/test/engine.test.js` before committing engine
-changes.
+changes. The board UI (`index.html`/`style.css`/`ui.js`) previews through
+`./serve.sh`; `?smoke=1` on the game URL plays a full game headlessly and
+stamps `SMOKE OK` into the DOM — check it in headless Chrome after UI changes.
+The UI stages animations from engine state-diffs (`applyTake` vs `apply`) and
+must never re-implement rules; legality always comes from `legalMoves`.
 
 ## Everything else
 

@@ -1,9 +1,15 @@
 # Headcount — working memo
 
-**Status: active — engine built and tested (2026-08-05), board UI next (build
-step 2).** The engine lives at `headcount/engine.js`; its headless suite is
+**Status: active — engine and hot-seat board UI built and tested (2026-08-05),
+greedy bot + Training Ground next (build step 3).** Everything lives in
+`headcount/`: `engine.js` (pure rules module), `index.html` + `style.css` +
+`ui.js` (the playable board — two-tap input, chess clocks, animation layer
+driven by engine state-diffs via `applyTake`). Preview with `./serve.sh` at
+`/teaching/ler565/headcount/`. Tests: the headless suite is
 `node teaching/ler565/headcount/test/engine.test.js` (soak size as an optional
-argument). Scoped 2026-08-04; reviewed and extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
+argument), and `?smoke=1` on the game URL plays a full deterministic game
+through the real UI pipeline in a headless browser. Scoped 2026-08-04;
+reviewed and extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 **14 to 36** across years, so sizes (board top-N, pairing tables, instructor
 board) are settings, not constants. The game is called **Headcount** — see
 *Theme* below; the name checked clear on 2026-08-05, no existing board game

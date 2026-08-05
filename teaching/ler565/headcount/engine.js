@@ -239,7 +239,12 @@ function moveError(msg, move) {
   );
 }
 
-export function apply(state, move) {
+// The Phase A step on its own: take + place + advance the seat, WITHOUT the
+// automatic Phase B/C resolution. apply() composes it with resolution below.
+// The UI uses this to stage animations — the difference between applyTake and
+// apply is exactly the closing-the-books theatre — and for nothing else.
+// Records, replays and the server always go through apply().
+export function applyTake(state, move) {
   if (state.over) throw new Error('illegal move: game is over');
   const mover = state.boards[state.seatToMove];
 
@@ -306,6 +311,11 @@ export function apply(state, move) {
   }
 
   s.seatToMove = (s.seatToMove + 1) % s.players;
+  return s;
+}
+
+export function apply(state, move) {
+  const s = applyTake(state, move);
 
   // Phases B and C contain no decisions, so they are not moves (§4B):
   // resolve automatically once the agencies and the centre are empty.
