@@ -126,9 +126,25 @@ Byes, if they ever happen anyway, earn the participation point only.
 planning needed: highest single game, most completed columns, best comeback from
 behind, most improved first-half to second.
 
-**Show the top five, not the full table.** A permanent public bottom in a class
-where everyone knows each other is a real risk. "Most improved" alongside it
-gives the lower half something live to chase.
+### Public board vs private rank — they are different things
+
+- **Public leaderboard: a top N, never a full ranking.** A permanent, visible
+  bottom in a class where everyone knows each other is the thing to avoid. "Most
+  improved" alongside it gives the lower half something live to chase.
+- **Private stats page: always show the student their exact position.** Visible
+  only to them. Withholding it is not kindness — in a class of 30 it would leave
+  25 people unable to tell 6th from 30th, unable to see they're close to
+  breaking in, and unable to see themselves climbing. The harm in a public
+  bottom is *social*; telling someone privately where they stand is neither
+  public nor mocking, and it's information they're entitled to.
+
+Pair the private rank with **distance to the next rung** — "4 points off 5th."
+That turns a position into a target rather than a verdict, and it's only
+possible once a student can see where they actually are.
+
+**Size N to the class.** Five of fourteen is a third of the room; five of thirty
+is a sixth, and thin enough that most people have nothing visible to chase. Make
+the board length a setting rather than a constant.
 
 ---
 
@@ -143,12 +159,15 @@ in week 1 when there are no stats — "first meeting" is a fine thing to show. K
 it brief and click-to-start; it sits inside a limited breakout window and must
 not eat the clock. Needs a three-way layout too.
 
-**No league position on the splash** — that lives on the leaderboard, which
-shows a top five. Head-to-head stays, because repeated play against a known
-opponent is the course's own material and the whole reason the screen is
-interesting. But telling someone they're 11th, nine times a term, immediately
-before they play, is the wooden spoon by another route. Personal bests and form
-carry the same weight without the ranking.
+**No league position on the splash** — but for a narrow reason, not because rank
+is shameful. The splash is **mutually visible and shown involuntarily**: it
+appears before every game with an opponent looking at the same screen. That's
+the wrong place to surface someone's standing. Head-to-head stays, because
+repeated play against a known opponent is the course's own material and the
+whole reason the screen is interesting.
+
+Each student's own position belongs on **their private stats page**, where it is
+always available and visible only to them (see below).
 
 **Post-game screen** — likely the bigger win, since the moment a game ends is
 when students care most. Final scores, what it did to the head-to-head, and league
@@ -390,7 +409,8 @@ accident.
 - **Three-player head-to-head** counts if you finished above the other player.
 - **Draws** are worth 2 league points; cup games coin-flip instead
   (`HEADCOUNT-RULES.md` §8).
-- **Top five, not the full table.**
+- **Public board is a top N sized to the class; private rank is always shown to
+  the student it belongs to.**
 
 ---
 
