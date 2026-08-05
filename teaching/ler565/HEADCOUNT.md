@@ -1,7 +1,9 @@
 # Headcount — working memo
 
-**Status: active — spec settled, engine next.** Scoped 2026-08-04; reviewed and
-extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
+**Status: active — engine built and tested (2026-08-05), board UI next (build
+step 2).** The engine lives at `headcount/engine.js`; its headless suite is
+`node teaching/ler565/headcount/test/engine.test.js` (soak size as an optional
+argument). Scoped 2026-08-04; reviewed and extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 **14 to 36** across years, so sizes (board top-N, pairing tables, instructor
 board) are settings, not constants. The game is called **Headcount** — see
 *Theme* below; the name checked clear on 2026-08-05, no existing board game

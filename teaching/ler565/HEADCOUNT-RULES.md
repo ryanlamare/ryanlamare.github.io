@@ -216,7 +216,7 @@ simply empty.
 ### 6.6 Partially filled team row
 
 Legal to add the same function, up to capacity. The remainder overflows to the
-bench. A row holding 1 of 3 that receives 4 tiles keeps 2 and benches 3.
+bench. A row holding 1 of 3 that receives 4 tiles keeps 2 and benches 2.
 
 ### 6.7 Simultaneous game end
 

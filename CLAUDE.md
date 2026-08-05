@@ -157,6 +157,13 @@ any student device, which is the point — keep it that way. State lives in the 
 GitHub Pages is static hosting and cannot run a backend, so anything genuinely
 multiplayer-across-devices needs an external realtime service.
 
+**Headcount** (`teaching/ler565/headcount/`) is the in-house Azul-style game,
+mid-build. Its specs are `teaching/ler565/HEADCOUNT.md` (design, why) and
+`HEADCOUNT-RULES.md` (engine spec, what) — read both before touching it. The
+engine is a pure seeded ES module; run its headless suite with
+`node teaching/ler565/headcount/test/engine.test.js` before committing engine
+changes.
+
 ## Everything else
 
 - `index.html` outside the two marked regions (About, Media, Teaching, Contact)
