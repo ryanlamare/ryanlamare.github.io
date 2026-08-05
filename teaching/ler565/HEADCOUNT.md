@@ -286,6 +286,12 @@ the design can fix it.
 
 ## Build order
 
+**`HEADCOUNT-RULES.md` is the engine spec** — the complete rules stated
+precisely enough to implement without guessing, plus the edge cases and a test
+checklist. Build step 1 from that file, not from this one. It marks which rules
+are Azul's and which are our resolution of a genuine ambiguity, so a future
+reader can tell a quotation from a choice.
+
 1. **Engine + headless tests.** No UI. Random-vs-random, thousands of games.
 2. **Board UI + hot-seat.** Clickable solo.
 3. **Relay + two-device play.** Moved up from last — a real Zoom playtest can't
