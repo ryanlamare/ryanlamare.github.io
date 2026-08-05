@@ -83,8 +83,9 @@ Every round is three phases, in order.
 
 ### Phase A — Hiring [Factory Offer]
 
-Starting with the start player and proceeding in seat order, each player takes
-exactly one turn until the phase ends. On your turn you **must** do one of:
+Starting with the start player and proceeding in seat order, players take turns
+one at a time — cycling round repeatedly, not once each — until the phase ends.
+On your turn you **must** do one of:
 
 **(a) Take from an agency.** Choose one agency and one function present in it.
 Take **every** tile of that function from it. **All remaining tiles in that
@@ -106,6 +107,10 @@ Phase A ends when **all agencies and the centre are empty**.
 > option to take fewer.
 
 ### Phase B — Wall Tiling
+
+⚖️ Phases B and C contain no decisions, so they are **not moves**: `apply()`
+resolves both automatically when the last Phase A move empties the agencies and
+the centre. A game's move list contains only Phase A choices.
 
 Player boards are independent, so resolution order across players doesn't affect
 any result. Within a single board, order **matters**:
@@ -164,12 +169,20 @@ Everything here is a real situation that occurs in ordinary play.
 
 ⚖️ Shuffle with the seeded generator (§9), so the refill is reproducible.
 
-> **This is a main path, not an exotic one.** A round deals 4 tiles per agency:
-> **20** tiles at 2 players, **28** at 3, **36** at 4, out of 100 total. So the
-> bag empties around round 5 at two players and round 4 at three — in
-> essentially every game that runs to a natural finish. An implementation that
-> treats the refill as a rare edge case will ship a bug that appears in the
-> second half of *every* match. Test it as a normal path.
+> **When it actually fires** (corrected in review — an earlier draft overstated
+> this). A round deals 4 tiles per agency: **20** at 2 players, **28** at 3,
+> **36** at 4, from 100 total. At **2 players** the round-5 deal empties the bag
+> *exactly* (5 × 20 = 100) and needs no refill — the refill fires only in games
+> that reach a **round-6** deal, which novice games often do and efficient games
+> often don't. At **3 players** it fires mid-deal in **round 4** (3 × 28 = 84),
+> and at **4 players** in **round 3** — i.e. in every 3- or 4-player game that
+> gets that far. So it is a main path, just not a universal one at 2 players:
+> test it as normal, and don't be surprised when a crisp 5-round pair game never
+> triggers it.
+
+⚖️ Theme note: the UI marks this refill as the **alumni wave** — boomerang hires
+re-entering the talent pool. Flavour only, no rules effect; it also makes the
+engine's most bug-prone path visible on screen instead of silent.
 
 If the bag **and** the lid are both empty and agencies remain unfilled: 📕 play
 the round with what's there. Agencies may be partially filled or empty. This one
@@ -276,9 +289,12 @@ Final bonuses, added once, per player:
 **Tiebreak.** 📕 Most complete horizontal rows wins. If still level, the
 rulebook declares a shared victory.
 
-⚖️ **In a league game**, record a genuine tie as a **draw**, worth 2 league
-points each (against 3 for a win, 1 for playing). Don't invent further
-tiebreaks — draws are rare and a shared result is honest.
+⚖️ **In a league game**, record a genuine tie as a **draw**. League points are
+**inclusive totals, not bonuses**: win **3**, draw **2**, loss **1** — the
+"point for playing" is the loser's point, not something added on top of a win.
+In a **three-player game**: winner 3, the other two 1 each; a two-way tie for
+top scores 2 each, 1 for third. Don't invent further tiebreaks — draws are rare
+and a shared result is honest.
 
 ⚖️ **In a cup game a draw is not available** — somebody has to advance. Apply
 the rulebook tiebreak, and if still level, **coin-flip on camera**. The run
@@ -308,22 +324,59 @@ Draw order must be fully specified, not incidental: draw tiles **one at a time**
 from the shuffled bag, filling agency 0 to 4 (or 6, or 8), each agency's four
 slots in index order.
 
+⚖️ **Seat order is join order**, fixed when the game starts and recorded in the
+game header — data, never re-derived.
+
+⚖️ **The state hash needs a canonical serialization**: one `serialize(state)`
+function in the engine defines the byte layout — fixed field order, integers
+only (scores, counts, indices; nothing that can float), no locale-dependent
+strings. Clients and server hash the same bytes or the guarantee is theatre.
+
 ## 10. Move representation
 
 One move is one complete turn — take and place together, never two half-moves:
 
 ```js
 {
-  source: { type: 'agency', index: 0 }   // or { type: 'centre' }
+  source: { type: 'agency', index: 0 },  // or { type: 'centre' }
   fn:     2,                             // function index 0-4
-  dest:   { type: 'team', row: 3 }       // or { type: 'bench' }
+  dest:   { type: 'team', row: 3 },      // or { type: 'bench' }
+  t:      12840                          // mover's clock consumed so far, ms
 }
 ```
+
+⚖️ `t` is the mover's own elapsed clock at submit. It never affects `apply()` —
+determinism comes from the seed and the first three fields — but without it a
+game that ends on time cannot be audited or honestly archived, and it powers
+think-time stats and the phone-fairness question for free.
 
 `apply(state, move) -> newState`, pure. The engine must expose
 `legalMoves(state)` — the UI highlights from it, the random test bot draws from
 it, and the server validates against it. One source of truth for legality; never
 a second copy in the UI.
+
+### The game record
+
+What the archive stores — one object per game, kilobytes:
+
+```js
+{
+  v:      1,                    // engine/rules version; replays use the matching engine
+  term:   '2027-fall',          // cohort key — powers the all-time Record Book
+  mode:   'league',             // 'league' | 'cup' | 'exhibition' | 'practice'
+  seed:   'a3f9c2…',
+  seats:  ['sam', 'alex'],      // join order; seat 0 per §3
+  config: { clockMs: 300000, splashHistory: true },
+  device: ['laptop', 'phone'],  // per seat, for the clock-fairness question
+  moves:  [ /* Phase A moves only, in order */ ],
+  result: { scores: [61, 58], winner: 0, ending: 'natural' }
+                                // ending: 'natural' | 'timeout' | 'void'
+}
+```
+
+⚖️ `mode` matters: **exhibition** (instructor demo) and **practice** (vs the
+bot) games are archived but excluded from the league, records and awards by
+default.
 
 ## 11. Clocks
 
@@ -339,6 +392,12 @@ Our addition, not Azul's.
 - **Timeout loses**, as in chess. Record it as won-on-time and **exclude it from
   score-based awards** — a timeout leaves an artificially low score that would
   corrupt "Best Quarter".
+- ⚖️ **Disconnection is not a loss and not a void — reconnect first.** A whole
+  game is `seed + move list`, so a returning client resumes from the exact
+  position in one fetch. The dropped player's clock **keeps running** while
+  they're gone, as in chess; if it expires before they return, that's a timeout.
+  The instructor can void instead when the wifi, not the player, was the
+  problem. Void is the last resort, never the default.
 
 ## 12. Test checklist
 
@@ -366,9 +425,10 @@ paths a competent player avoids.
 
 **Edge cases:**
 
-- [ ] Bag empties mid-refill → refills from lid and continues. **Assert this
-      fires in most full games**, not just a contrived one — if it never
-      triggers, the test games aren't reaching a natural end.
+- [ ] Bag empties mid-deal → refills from lid and continues. Random-bot games
+      run long, so **assert this fires routinely across the soak**. Assert the
+      other side too: a 2-player game ending after round 5 refills **zero**
+      times — the round-5 deal uses the bag's last 20 tiles exactly (§6.1).
 - [ ] Tile conservation still holds across a lid-to-bag refill.
 - [ ] Bag *and* lid empty → partially filled agencies, no throw.
 - [ ] Centre holding only the First Mover token is not a legal source.

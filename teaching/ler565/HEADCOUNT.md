@@ -1,7 +1,11 @@
 # Headcount — working memo
 
-**Status: parked, nothing built.** This memo is the brief; pick it up here.
-Scoped 2026-08-04. The game is called **Headcount** — see *Theme* below.
+**Status: active — spec settled, engine next.** Scoped 2026-08-04; reviewed and
+extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
+**14 to 36** across years, so sizes (board top-N, pairing tables, instructor
+board) are settings, not constants. The game is called **Headcount** — see
+*Theme* below; the name checked clear on 2026-08-05, no existing board game
+uses it.
 
 Goal: replace `azee.mattle.online` with our own version, hosted here, so students
 never create an account. LER 565 leans on Azee in every live session, weeks 1–6,
@@ -81,7 +85,23 @@ Out of scope, deliberately: **matchmaking** (Zoom already pairs them) and
 - **QR codes are for session entry, not identity.** A QR encodes the same token,
   so it doesn't fix a lost link. It *is* a good way to get everyone into a
   session fast: screen-share one, everyone scans, everyone lands on the join
-  screen with the session pre-selected.
+  screen with the session pre-selected. Scan with the phone **camera**, not from
+  Zoom's chat — Zoom's in-app webview may have ephemeral storage (breaking
+  "Welcome back, Sam") and dies when the app backgrounds. Test this on a real
+  phone in a real Zoom call before week 1; the fix is a run-sheet line, not code.
+- **The instructor is on the roster too.** Week 1 opens with a live demo match
+  against a student, so the instructor is a playable name like any other.
+  Instructor games record as **exhibitions** — archived, excluded from the
+  league, records and awards by default.
+- **Room codes are two corporate words, not hex** — `SYNERGY-BISON`,
+  `PIVOT-MERLOT` — from a curated list with no ambiguous characters. The code's
+  real transport is Zoom audio: "synergy bison" survives a bad mic, "X7K2QF"
+  doesn't. The format is part of the protocol, so it's decided now.
+- **Real names, not firm names.** Pseudonymous company names were considered
+  (2026-08-05) and rejected: a small six-week online class of HR professionals
+  bonds through real interactions under real names, and inventing a company
+  name is a social hazard of its own. The cohort is small and US-based; there is
+  no privacy problem real names need to solve here.
 - **Results record themselves.** No submit button. The engine knows the game
   ended; both clients send their logs.
 - **The server replays the move log and derives the winner itself.** Nobody
@@ -114,7 +134,9 @@ The football structure, which gives the term a shape:
 - **Champion of Champions** — league winner vs cup winner. One person taking
   both is *the Double*, which is a good way to end a course.
 
-**League scoring: 3 points a win, 1 for playing.** The participation point is
+**League scoring: win 3, draw 2, loss 1 — inclusive totals; the "point for
+playing" *is* the loser's point, not a bonus on top** (three-player split in the
+rules spec §8). The participation point is
 load-bearing — on pure win-count a student who's 0–6 by week 4 is mathematically
 out and stops caring, in a course where participation is 20% of the grade. Keep
 the same scoring for three-player games rather than weighting them; odd/even
@@ -125,6 +147,18 @@ Byes, if they ever happen anyway, earn the participation point only.
 **Retroactive awards** — all computed from the archive at term end, no advance
 planning needed: highest single game, most completed columns, best comeback from
 behind, most improved first-half to second.
+
+### The Record Book — the archive outlives the term
+
+Every game record carries a `term` key from day one, so records accrue across
+*years*, not just weeks: all-time **Best Quarter**, all-time biggest comeback,
+longest win streak — plus a **Hall of Champions** listing every year's Employer
+of the Year, Cup winner, and any Doubles. Future cohorts play against history:
+"the all-time record is 94, set in 2026" is the cheapest motivation the league
+will ever buy, and the splash screen gets it for free. One field now;
+reconstructing term boundaries from timestamps later is exactly the archaeology
+this project exists to avoid. Records pages obey the uplifting rule like
+everything else — halls and highs, never lows.
 
 ### Public board vs private rank — they are different things
 
@@ -173,26 +207,65 @@ always available and visible only to them (see below).
 when students care most. Final scores, what it did to the head-to-head, and league
 movement: *"Sam ↑2 to 4th."*
 
+**Presentation: this deserves theatre — and animation is the default experience,
+not garnish** (Ryan, 2026-08-05: full creative licence here; do not import the
+slide decks' restraint). The splash is a *splash* — a big animated card, the
+head-to-head numbers landing with a pop, records sliding in. Moves animate
+Azee-style and then some: tiles fly from agency to team, leftovers spill and
+scatter into the open market, and at the quarter close the books-balancing
+sweep — completed teams' lead tiles glide onto the org chart one row at a time
+while the score ticks up with each placement, surplus tiles clearing to the lid.
+Beats worth staging: bench tiles landing with a heavier, reluctant thud (the
+penalty should *feel* like overstaffing); the First Mover token's flip when
+someone bites; the **alumni wave** as a visible cascade back into the bag; a
+completed column lighting up cell by cell; a game-ending row sweeping across;
+final whistle with the winner's board taking the spotlight. Two engineering
+rules keep all this cheap rather than a retrofit: animations are **driven by
+engine state-diffs** (the pure engine produces before/after; the UI animates
+the difference — never animation logic inside the engine), and one
+`prefers-reduced-motion` media query provides an instant-move fallback. That
+query is an OS accessibility setting for vestibular disorders, not a design
+constraint — it costs one line, silently serves the rare student who needs it,
+and places zero limits on how far the animations go for everyone else.
+
 ---
 
 ## Other things worth building
 
 - **Instructor live board.** Every breakout room's game and score updating on
   your screen at once — who's about to finish, who hasn't started, who dropped.
-  Not a toy: it's what makes seven simultaneous games manageable, and it falls
-  out of the server almost free. It also tells you what games *actually* take,
+  Not a toy: it's what makes seven — or, at 36 students, eighteen —
+  simultaneous games manageable, and it falls out of the server almost free. It also tells you what games *actually* take,
   which is how the run-sheet timings get fixed.
 - **Spectator mode for the final.** The run sheet already screen-shares it; let
   the class watch on their own screens at full size instead of through Zoom
   compression.
-- **Replay viewer.** Watch any archived game back, move by move. Play the
-  decisive turn of the final in the last session.
+- ~~Replay viewer~~ — **cut** (Ryan, 2026-08-05): the class won't re-watch
+  moves; this is one activity among many. The archive keeps full move lists
+  regardless — it powers records and stats — so a viewer could return later at
+  zero data cost. It just isn't in the build.
+- **The Training Ground.** Practice against a bot, linked from orientation week,
+  so students arrive at week 1 already knowing the rules. This deliberately
+  **reverses the earlier "bots are out" ruling** (reopened by Ryan, 2026-08-05):
+  a bot is now a *practice* feature — and still never plays a league game except
+  as the emergency stand-in. The practice opponent is a **greedy heuristic bot**
+  (best immediate placement, avoids the bench), not the random test bot, whose
+  play is too absurd to teach anyone anything. Practice games record with
+  `mode: 'practice'` and count for nothing.
+- **Talent Weekly — the auto-generated round-up.** A page that rebuilds itself
+  from the archive after each session: the league table plus two or three
+  canned-template blurbs — *"Sam stunned the market from 19 down"* — picked by
+  simple rules (biggest comeback, streak extended, all-time record threatened).
+  **Zero instructor work is the constraint, not a preference**: it generates and
+  publishes itself, Canvas gets a link once in week 1 and never again. Any
+  template that needs weekly hand-tuning is out of spec.
 - **Per-student stats feeding the reflections.** *"9 games, average 62, floor
   penalties 40% above class average."* Students reflecting on their own play
   data rather than their memory of it — the strongest pedagogical argument here,
   and it only exists because results are automatic.
-- **Auto-generated weekly table** to paste into Canvas, keeping the league alive
-  between sessions.
+- **Per-student data export.** The private stats page's numbers, downloadable,
+  so a reflection can cite *"my 9 games, average 62"* directly. Nearly free once
+  the stats page exists.
 
 ### The archive is course content, not just plumbing
 
@@ -206,7 +279,9 @@ a genuine dataset about it from the students' own behaviour:
   test of a prediction the class has already been taught.
 - **The pre-game splash is an intervention, not just decoration.** Showing head-
   to-head history makes the shadow of the future explicit. Showing it to some
-  pairs and not others is a clean in-class demonstration.
+  pairs and not others is a clean in-class demonstration — which is why room
+  creation carries a **show-history flag** from day one; without a per-room
+  toggle the comparison is never clean.
 
 This is all for teaching and for fun — nothing here is a research project.
 
@@ -240,6 +315,14 @@ The wall is a Latin square, so the bonuses land cleanly:
 - **Row** (+2) — a department with one of every function: a balanced team.
 - **Column** (+7) — one function staffed across every department.
 - **All five of a colour** (+10) — you've cornered the market on a role.
+
+**Rounds are Quarters.** The round counter reads Q1, Q2, Q3…, and Phase B is
+**closing the books**. Naming only — a game can run to Q6 or Q7 and nobody's
+fiscal calendar minds — but it gives the clock pause a voice ("books closing"),
+makes the round structure read corporate, and retroactively earns the *Best
+Quarter* award name. When the bag refills from the lid, that's the **alumni
+wave** — boomerang hires re-entering the market. (See rules spec §6.1 for when
+it actually fires: every 3-player game, but 2-player games only past Q5.)
 
 The bench is the mechanic that sings. In Azul it's an abstract penalty; here
 it's overstaffing — you took four people to deny a rival and now you're paying
@@ -367,19 +450,23 @@ are Azul's and which are our resolution of a genuine ambiguity, so a future
 reader can tell a quotation from a choice.
 
 1. **Engine + headless tests.** No UI. Random-vs-random, thousands of games.
-2. **Board UI + hot-seat.** Clickable solo.
-3. **Relay + two-device play.** Moved up from last — a real Zoom playtest can't
-   happen hot-seat.
-4. **Backend, identity, results, leaderboard.**
-5. **Stats screens, replay, instructor board.**
+2. **Board UI + hot-seat.** Clickable solo. The animation layer and the two-tap
+   interaction are designed here, not bolted on afterwards.
+3. **Greedy bot + Training Ground.** Falls straight out of step 2 and gives
+   orientation week something to link.
+4. **Relay + two-device play.** A real Zoom playtest can't happen hot-seat.
+5. **Backend, identity, results, leaderboard, admin.** Instructor auth is one
+   secret; roster and term setup is a one-page admin screen.
+6. **Stats screens, Record Book, Hall of Champions, Talent Weekly, instructor
+   board.**
 
 ### Testing
 
-- A **random-move bot is a test fixture, not a feature.** Students never see it.
-  It exists because a *good* bot avoids floor penalties by construction and so
-  never exercises the overflow and negative-scoring paths — which is exactly
-  where Azul implementations go wrong. It doubles as an emergency stand-in if
-  someone doesn't show for a three-player game.
+- **Two bots, two jobs.** The **random** bot is the test fixture: it benches
+  constantly and so exercises the overflow and negative-scoring paths a
+  competent player avoids — exactly where Azul implementations go wrong. The
+  **greedy** bot is the Training Ground opponent (see above) and the emergency
+  stand-in for a no-show. Neither ever plays a league game.
 - **Playtest with a human over Zoom**, replicating the class setup. Bots don't
   click, so nothing about input handling gets tested any other way.
 - Deliberately don't coach the other player through the first game. Where they
@@ -396,11 +483,14 @@ reader can tell a quotation from a choice.
 None blocking. Everything below is settled; recorded so it isn't reopened by
 accident.
 
-- **Backend host: pick any mainstream provider.** The cohort is mostly US-based
-  and every student has reached `azee.mattle.online`, an ordinary web host, so
-  reachability is not the constraint it would be with a different roster. Free
-  tiers are wildly oversized for fourteen students once a week. Revisit only if a
-  future cohort's geography changes.
+- **Backend: Cloudflare Workers + Durable Objects — decided 2026-08-05.** Two
+  constraints narrowed it: the server must run **the same JS engine module** as
+  the clients (it replays games to derive winners; a second engine in another
+  language would be madness), and it must not cold-start at class time (free
+  Node hosts sleep). One Durable Object per room provides the WebSocket relay
+  and room state; DO storage holds the kilobyte-scale archive. Free-plan limits
+  verified (≈3M requests/month, DOs and WebSockets included) — oversized even at
+  36 students. Needs a Cloudflare account under Ryan's control at step 5.
 - **No wooden spoon**, and no award for finishing last — see *Award names*.
 
 - **Repeat matchups in a week both count.** Simplest, no bookkeeping.
@@ -411,6 +501,13 @@ accident.
   (`HEADCOUNT-RULES.md` §8).
 - **Public board is a top N sized to the class; private rank is always shown to
   the student it belongs to.**
+- **Firm names — considered and rejected** (2026-08-05); see *Identity* above.
+  Real names everywhere.
+- **Disconnects reconnect first, void last** — rules spec §11. The dropped
+  player's clock runs while they're gone; the instructor voids only when the
+  wifi, not the player, was the problem.
+- **Every move carries a clock timestamp** (rules spec §10), so timeouts are
+  auditable and think-time and device-fairness stats come free.
 
 ---
 
