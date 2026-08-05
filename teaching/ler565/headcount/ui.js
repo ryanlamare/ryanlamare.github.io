@@ -1016,9 +1016,41 @@ renderNameInputs();
 // real UI pipeline with animations skipped, then stamps the outcome into the
 // DOM for a headless browser to read. Not a player feature.
 
+// ?uitest=setup drives the setup form the way a human would — real clicks
+// on the real buttons — and stamps the outcome into the DOM.
+const smokeParams = new URLSearchParams(location.search);
+if (smokeParams.get('uitest') === 'setup') {
+  window.__instant = true;
+  (() => {
+    const out = document.createElement('div');
+    out.id = 'smoke';
+    const fails = [];
+    const expect = (cond, what) => cond || fails.push(what);
+    try {
+      $('#mode-seg [data-mode="practice"]').click();
+      expect($('#players-seg').classList.contains('hidden'), 'players seg hides');
+      expect($$('#name-inputs input').length === 1, 'one name input');
+      expect($('#mode-hint').textContent.includes(BOT_NAME), 'hint names the bot');
+      $('#name-inputs input').value = 'Ryan';
+      $('#seed-input').value = 'uitest-seed';
+      $('#setup-form').requestSubmit();
+      expect(!!G && G.cfg.bot === true, 'game starts in practice mode');
+      expect(G && G.names[0] === 'Ryan' && G.names[1] === BOT_NAME, 'seats are you vs the bot');
+      // And back: hot-seat still works after toggling.
+      $('#btn-new').click();
+      $('#mode-seg [data-mode="hotseat"]').click();
+      expect(!$('#players-seg').classList.contains('hidden'), 'players seg returns');
+      expect($$('#name-inputs input').length === 2, 'two name inputs again');
+      out.textContent = fails.length ? 'UITEST FAIL: ' + fails.join('; ') : 'UITEST OK';
+    } catch (err) {
+      out.textContent = 'UITEST FAIL: ' + (err && err.stack ? err.stack : err);
+    }
+    document.body.appendChild(out);
+  })();
+}
+
 // ?smoke=1 plays to the end; ?smoke=N&stop=1 stops after N moves (for
 // layout screenshots).
-const smokeParams = new URLSearchParams(location.search);
 if (smokeParams.has('smoke')) {
   window.__instant = true;
   (async () => {
