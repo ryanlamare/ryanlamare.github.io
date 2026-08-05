@@ -1,15 +1,19 @@
 # Headcount — working memo
 
-**Status: active — engine and hot-seat board UI built and tested (2026-08-05),
-greedy bot + Training Ground next (build step 3).** Everything lives in
-`headcount/`: `engine.js` (pure rules module), `index.html` + `style.css` +
-`ui.js` (the playable board — two-tap input, chess clocks, animation layer
-driven by engine state-diffs via `applyTake`). Preview with `./serve.sh` at
-`/teaching/ler565/headcount/`. Tests: the headless suite is
-`node teaching/ler565/headcount/test/engine.test.js` (soak size as an optional
-argument), and `?smoke=1` on the game URL plays a full deterministic game
-through the real UI pipeline in a headless browser. Scoped 2026-08-04;
-reviewed and extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
+**Status: active — build steps 1–3 done (2026-08-06): engine, hot-seat board
+UI, greedy bot + Training Ground. Next: the design/refinement pass (punch
+list below), then step 4, relay + two-device play.** Everything lives in
+`headcount/`: `engine.js` (pure rules module), `bot.js` (greedy practice
+opponent, "The Consultant"), `index.html` + `style.css` + `ui.js` (the
+playable board — two-tap input, chess clocks, animation layer driven by
+engine state-diffs via `applyTake`; the setup screen's Training Ground mode
+plays you against the bot, recorded as `mode: 'practice'`). Preview with
+`./serve.sh` at `/teaching/ler565/headcount/`. Tests:
+`node teaching/ler565/headcount/test/engine.test.js` (soak size as an
+optional argument) and `test/bot.test.js`; `?smoke=1` on the game URL plays
+a full deterministic game through the real UI pipeline in a headless
+browser (`&bot=1` for a practice game). Scoped 2026-08-04; reviewed and
+extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 **14 to 36** across years, so sizes (board top-N, pairing tables, instructor
 board) are settings, not constants. The game is called **Headcount** — see
 *Theme* below; the name checked clear on 2026-08-05, no existing board game
@@ -448,6 +452,31 @@ through a breakout room. Worth saying so in the run sheet rather than pretending
 the design can fix it.
 
 ---
+
+## Design punch list — from playthroughs, applied at the refinement pass
+
+Compiled from Ryan's first hot-seat playthrough (2026-08-05). These are
+deliberate deferrals, not oversights: the refinement pass runs after build
+step 3 so the changes react to real play rather than guesses.
+
+1. **Slow everything down, a lot** — especially the end-of-round
+   books-closing sequence. Use a central timing scale so pacing is one knob,
+   not fifty edits.
+2. **Team rows must align with the org chart**: identical cell size and
+   row-for-row alignment, so you can see exactly which wall row each team
+   tiles into at the close.
+3. **Colour and tile-design pass.** Unfilled org-chart cells should be
+   *exactly* the same colour as the real tiles, made obviously unfilled by
+   opacity — while claimable tiles in the market carry a large border. Colour
+   becomes the primary way you read what's filled, what's claimable, and
+   what's still open.
+4. **First Mover token needs to be unmistakably not a tile**: a black "1" on
+   a white background, borderless. (The no-words rule is for tiles; the
+   token is the one legitimate glyph, as in Azul itself.)
+5. **Desktop boards bigger** — there's plenty of blank space; use it.
+6. **Phone: one screen, no sideways scrolling.** Agencies wrap (roughly
+   3 + 2), then the open market, then your board — all visible together —
+   with the opponent's collapsed board below the fold.
 
 ## Build order
 

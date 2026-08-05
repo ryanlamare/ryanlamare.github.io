@@ -16,6 +16,10 @@
 // which skips them wholesale — one code path, instant moves, same game.
 
 import * as E from './engine.js';
+import { greedyMove } from './bot.js';
+
+const BOT_NAME = 'The Consultant';
+const BOT_SEAT = 1; // practice games are always you (seat 0) vs the bot
 
 const FN = E.FUNCTION_NAMES;
 const ICONS = ['ic-eng', 'ic-sal', 'ic-ops', 'ic-fin', 'ic-ana'];
@@ -631,7 +635,23 @@ async function submitMove(dest) {
           `. ${G.names[final.startPlayer]} starts.`
       );
     }
+    scheduleBot();
   }
+}
+
+// In a practice game the bot takes its turns through the exact same
+// submitMove path as a click — same animations, same clock, same record.
+function scheduleBot() {
+  if (!G || G.dead || !G.cfg.bot || G.cur.over || G.cur.seatToMove !== BOT_SEAT) return;
+  const game = G; // if the game is abandoned mid-think, stay quiet
+  (async () => {
+    $('#turn-label').innerHTML = `<b>${esc(BOT_NAME)}</b> is weighing options…`;
+    await beat(750);
+    if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
+    const m = greedyMove(G.cur);
+    sel = { source: m.source, fn: m.fn };
+    await submitMove(m.dest);
+  })();
 }
 
 function describeMove(before, interim, move) {
@@ -733,6 +753,7 @@ function startGame(cfg) {
     await dealAnimation();
     animating = false;
     startClock(s.seatToMove);
+    scheduleBot(); // the seed may hand the bot the opening move
   })();
 }
 
@@ -809,17 +830,17 @@ function endGame(ending, flaggedSeat = null) {
   $('#end-modal').showModal?.();
 }
 
-// The game record (§10). Hot-seat games are exhibitions: archived, never
-// counted toward a league.
+// The game record (§10). Hot-seat games are exhibitions, bot games are
+// practice: archived either way, never counted toward a league.
 function gameRecord() {
   return {
     v: E.ENGINE_VERSION,
     term: 'dev',
-    mode: 'exhibition',
+    mode: G.cfg.bot ? 'practice' : 'exhibition',
     seed: G.seed,
     seats: G.names,
     config: { clockMs: G.clockMs, splashHistory: false },
-    device: G.names.map(() => 'hotseat'),
+    device: G.names.map((_, i) => (G.cfg.bot && i === BOT_SEAT ? 'bot' : 'hotseat')),
     moves: G.moves,
     result: G.result || null,
   };
@@ -839,6 +860,8 @@ function downloadRecord() {
 
 document.addEventListener('click', (e) => {
   if (!G || animating || G.cur.over) return;
+  // The bot's turn is the bot's: taps select nothing while it thinks.
+  if (G.cfg.bot && G.cur.seatToMove === BOT_SEAT && !e.target.closest('.board-head')) return;
 
   const tile = e.target.closest('button.tile');
   if (tile) {
@@ -906,39 +929,58 @@ document.addEventListener('keydown', (e) => {
 // Setup screen.
 
 let setupPlayers = 2;
+let setupMode = 'hotseat'; // 'hotseat' | 'practice'
 
 function renderNameInputs() {
   const wrap = $('#name-inputs');
   const existing = $$('input', wrap).map((i) => i.value);
   wrap.innerHTML = '';
-  for (let i = 0; i < setupPlayers; i++) {
+  const count = setupMode === 'practice' ? 1 : setupPlayers;
+  for (let i = 0; i < count; i++) {
     const input = document.createElement('input');
     input.type = 'text';
     input.maxLength = 20;
-    input.placeholder = `Player ${i + 1}`;
+    input.placeholder = setupMode === 'practice' ? 'Your name' : `Player ${i + 1}`;
     input.value = existing[i] || '';
     input.setAttribute('aria-label', `Player ${i + 1} name`);
     wrap.appendChild(input);
   }
 }
 
-$$('.seg-btn').forEach((btn) => {
+$$('#players-seg .seg-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    $$('.seg-btn').forEach((b) => b.classList.remove('on'));
+    $$('#players-seg .seg-btn').forEach((b) => b.classList.remove('on'));
     btn.classList.add('on');
     setupPlayers = Number(btn.dataset.players);
     renderNameInputs();
   });
 });
 
+$$('#mode-seg .seg-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    $$('#mode-seg .seg-btn').forEach((b) => b.classList.remove('on'));
+    btn.classList.add('on');
+    setupMode = btn.dataset.mode;
+    const practice = setupMode === 'practice';
+    $('#players-seg').classList.toggle('hidden', practice);
+    $('#mode-hint').textContent = practice
+      ? `A practice match against ${BOT_NAME} — our in-house recruiter. ` +
+        'Practice games count for nothing; play until the rules feel obvious.'
+      : 'Everyone plays on this device, passing turns.';
+    // Novices should learn the rules before they learn the clock.
+    if (practice) $('#clock-select').value = '0';
+    renderNameInputs();
+  });
+});
+
 $('#setup-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  const names = $$('#name-inputs input').map(
-    (i, k) => i.value.trim() || `Player ${k + 1}`
-  );
+  const typed = $$('#name-inputs input').map((i, k) => i.value.trim() || `Player ${k + 1}`);
+  const practice = setupMode === 'practice';
   startGame({
-    players: setupPlayers,
-    names,
+    players: practice ? 2 : setupPlayers,
+    names: practice ? [typed[0], BOT_NAME] : typed,
+    bot: practice,
     clockMs: Number($('#clock-select').value),
     seed: $('#seed-input').value,
   });
@@ -946,7 +988,10 @@ $('#setup-form').addEventListener('submit', (e) => {
 
 $('#btn-new').addEventListener('click', () => {
   if (G && !G.cur.over && G.moves.length > 0 && !confirm('Abandon this game?')) return;
-  if (G && G.clockTimer) clearInterval(G.clockTimer);
+  if (G) {
+    G.dead = true;
+    if (G.clockTimer) clearInterval(G.clockTimer);
+  }
   $('#end-modal').close?.();
   $('#game').classList.add('hidden');
   $('#setup').classList.remove('hidden');
@@ -958,6 +1003,7 @@ $('#btn-rematch').addEventListener('click', () => {
   startGame({ ...G.cfg, seed: '' }); // fresh market, same table
 });
 $('#btn-setup').addEventListener('click', () => {
+  if (G) G.dead = true;
   $('#end-modal').close();
   $('#game').classList.add('hidden');
   $('#setup').classList.remove('hidden');
@@ -980,14 +1026,25 @@ if (smokeParams.has('smoke')) {
     out.id = 'smoke';
     const limit = smokeParams.get('stop') ? Number(smokeParams.get('smoke')) : 500;
     try {
+      const asBot = smokeParams.has('bot');
       startGame({
-        players: Number(smokeParams.get('players')) || 2,
-        names: ['Sam', 'Alex', 'Jordan', 'Riley'].slice(0, Number(smokeParams.get('players')) || 2),
+        players: asBot ? 2 : Number(smokeParams.get('players')) || 2,
+        names: asBot
+          ? ['Sam', BOT_NAME]
+          : ['Sam', 'Alex', 'Jordan', 'Riley'].slice(0, Number(smokeParams.get('players')) || 2),
+        bot: asBot,
         clockMs: smokeParams.get('stop') ? 300000 : 0,
         seed: 'smoke-seed',
       });
       let guard = 0;
-      while (!G.cur.over && guard++ < limit) {
+      let waits = 0;
+      while (!G.cur.over && guard < limit && waits < 20000) {
+        if (G.cfg.bot && G.cur.seatToMove === BOT_SEAT) {
+          waits++;
+          await sleep(5); // the bot plays itself via scheduleBot
+          continue;
+        }
+        guard++;
         const moves = E.legalMoves(G.cur);
         const m = moves[(guard * 7) % moves.length];
         sel = { source: m.source, fn: m.fn };
