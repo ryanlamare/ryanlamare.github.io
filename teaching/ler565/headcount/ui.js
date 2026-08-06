@@ -42,7 +42,12 @@ const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)');
 const instant = () => REDUCED.matches || window.__instant === true;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const beat = (ms) => (instant() ? Promise.resolve() : sleep(ms));
+// The one pacing knob (punch list #1): --tempo in style.css scales every
+// theatre duration, CSS keyframes and the JS timings below alike.
+const TEMPO =
+  parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tempo')) || 1;
+const T = (ms) => Math.round(ms * TEMPO);
+const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
 let G = null; // the running game
@@ -52,8 +57,8 @@ let animating = false;
 // ---------------------------------------------------------------------------
 // Markup helpers.
 
-function tileHTML(fn) {
-  return `<div class="tile f${fn}"><svg class="ic" aria-hidden="true"><use href="#${ICONS[fn]}"/></svg></div>`;
+function tileHTML(fn, cls = '') {
+  return `<div class="tile f${fn}${cls ? ' ' + cls : ''}"><svg class="ic" aria-hidden="true"><use href="#${ICONS[fn]}"/></svg></div>`;
 }
 function tokenHTML() {
   return `<div class="token" title="First Mover token"><svg class="ic" aria-hidden="true"><use href="#ic-first"/></svg></div>`;
@@ -69,12 +74,11 @@ function sameSource(a, b) {
 
 function renderAll(st = G.view) {
   $('#q-badge').textContent = 'Q' + st.round;
-  $('#bag-count').textContent = st.bag.length;
-  $('#lid-count').textContent = st.lid.reduce((a, b) => a + b, 0);
+  $('#pool-count').textContent = st.bag.length;
   const turn = $('#turn-label');
   if (st.over) {
-    turn.textContent = 'Full time';
-    setPhase('Full time');
+    turn.textContent = '';
+    setPhase('Recruitment cycle complete');
   } else {
     turn.innerHTML = `<b>${esc(G.names[st.seatToMove])}</b> is hiring`;
   }
@@ -103,8 +107,10 @@ function renderAgencies(st) {
         );
       }
     }
-    a.innerHTML = `<div class="agency-name">${AGENCY_NAMES[i]}</div>
-                   <div class="slots">${slots.join('')}</div>`;
+    // Agencies carry no visible name (Ryan, 2026-08-06) — AGENCY_NAMES
+    // survives in the aria-labels and move announcements, where telling
+    // one agency from another still matters.
+    a.innerHTML = `<div class="slots">${slots.join('')}</div>`;
     wrap.appendChild(a);
   });
 }
@@ -152,6 +158,10 @@ function renderBoards(st) {
       el.classList.add('collapsible');
       if (!G.expand[seat]) el.classList.add('collapsed');
     }
+    // Phones (punch #6): the board you're playing sits right under the
+    // market. In a practice game that's always the human seat — the bot's
+    // board shouldn't leapfrog yours while it thinks.
+    if (narrow) el.style.order = (G.cfg.bot ? seat === 0 : active) ? -1 : 0;
 
     const teams = [];
     for (let r = 0; r < 5; r++) {
@@ -176,11 +186,11 @@ function renderBoards(st) {
       for (let c = 0; c < 5; c++) {
         const fn = (c - r + 5) % 5; // inverse of wallColumn
         const filled = b.wall[r][c] === 1;
+        // An unfilled cell is the real tile, faded by the .open class —
+        // colour is how you read filled vs still-open (punch #3).
         cells.push(
-          `<span class="wcell g${fn}${filled ? ' filled' : ''}" data-rc="${r}-${c}">` +
-            (filled
-              ? tileHTML(fn)
-              : `<svg class="ghost" aria-hidden="true"><use href="#${ICONS[fn]}"/></svg>`) +
+          `<span class="wcell${filled ? ' filled' : ''}" data-rc="${r}-${c}">` +
+            tileHTML(fn, filled ? '' : 'open') +
             `</span>`
         );
       }
@@ -294,7 +304,9 @@ function esc(s) {
 // Flights and theatre.
 
 function fly(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26 } = {}) {
-  if (instant()) return Promise.resolve();
+  // A collapsed board's cells measure 0×0; flying "to" them smears a tile
+  // across the screen. Skip the flight, keep the state change.
+  if (instant() || fromRect.width < 2 || toRect.width < 2) return Promise.resolve();
   const el = document.createElement('div');
   el.className = 'fx-tile';
   el.style.width = fromRect.width + 'px';
@@ -313,20 +325,20 @@ function fly(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26 } = {}) {
       },
       { transform: `translate(${toRect.left}px, ${toRect.top}px) scale(${scale})` },
     ],
-    { duration: dur, delay, easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'both' }
+    { duration: T(dur), delay: T(delay), easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'both' }
   );
   return anim.finished.then(() => el.remove()).catch(() => el.remove());
 }
 
 function popup(text, rect, cls = '') {
-  if (instant()) return;
+  if (instant() || rect.width < 2) return;
   const el = document.createElement('div');
   el.className = 'popup ' + cls;
   el.textContent = text;
   el.style.left = rect.left + rect.width / 2 - 12 + 'px';
   el.style.top = rect.top - 8 + 'px';
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 950);
+  setTimeout(() => el.remove(), T(950));
 }
 
 let bannerTimer = null;
@@ -339,13 +351,8 @@ function banner(html) {
   void el.offsetWidth;
   el.innerHTML = html;
   el.classList.add('show');
-  bannerTimer = setTimeout(() => el.classList.remove('show'), 1600);
-  return sleep(650);
-}
-
-function tickChip(id, delta) {
-  const el = $(id);
-  el.textContent = Number(el.textContent) + delta;
+  bannerTimer = setTimeout(() => el.classList.remove('show'), T(1600));
+  return sleep(T(650));
 }
 
 // The Phase A beat: taken tiles fly to their destination, leftovers spill
@@ -376,7 +383,7 @@ async function animatePhaseA(before, interim, move) {
   // Show the interim state with arrivals hidden, then fly into them.
   G.view = snap(interim);
   renderAll();
-  setPhase('Hiring');
+  setPhase('');
 
   const boardEl = $(`.board[data-seat="${mover}"]`);
   const iBoard = interim.boards[mover];
@@ -445,18 +452,22 @@ async function animatePhaseA(before, interim, move) {
   await beat(120);
 }
 
-// The closing-the-books beat: completed teams' lead tiles glide onto the org
-// chart row by row while the score ticks, the bench takes its toll, then
-// either the final whistle or the next quarter's deal.
+// The performance-review beat: completed teams' lead tiles glide onto the
+// org chart row by row while the score ticks, the bench takes its toll, then
+// either the end of the recruitment cycle or the next quarter's deal.
 async function animateResolution(interim, final) {
-  setPhase('Closing the books');
-  await banner(`Q${interim.round} · <span class="r">closing the books</span>`);
+  setPhase('Performance review');
+  await banner(`Q${interim.round} · <span class="r">performance review</span>`);
 
   for (let seat = 0; seat < interim.players; seat++) {
     const boardEl = $(`.board[data-seat="${seat}"]`);
     const b = interim.boards[seat];
     const wallCopy = b.wall.map((r) => r.slice());
     let score = b.score;
+
+    // A beat before each board with anything to settle, so the eye can
+    // travel there before its tiles start moving.
+    if (b.bench.length > 0 || b.teams.some((t, r) => t.count === r + 1)) await beat(180);
 
     for (let r = 0; r < 5; r++) {
       const t = b.teams[r];
@@ -468,7 +479,7 @@ async function animateResolution(interim, final) {
       const target = $(`.wcell[data-rc="${r}-${c}"]`, boardEl);
 
       await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.fn), {
-        dur: 380,
+        dur: 460,
       });
       target.innerHTML = tileHTML(t.fn);
       target.classList.add('filled', 'landed');
@@ -479,13 +490,12 @@ async function animateResolution(interim, final) {
       popup('+' + d, target.getBoundingClientRect(), 'pos');
       setScore(seat, score);
 
-      // Surplus tiles clear to the lid.
-      const surplus = r; // capacity r+1, one placed
-      if (surplus > 0 && !instant()) {
-        const lidRect = $('#lid-chip').getBoundingClientRect();
+      // Surplus tiles clear off the table (engine: to the lid).
+      if (r > 0 && !instant()) {
+        const drainRect = $('#drain').getBoundingClientRect();
         cells.slice(0, -1).forEach((cell, k) => {
           if (cell.classList.contains('occ')) {
-            fly(cell.getBoundingClientRect(), lidRect, tileHTML(t.fn), {
+            fly(cell.getBoundingClientRect(), drainRect, tileHTML(t.fn), {
               dur: 380,
               delay: k * 40,
               lift: 10,
@@ -497,8 +507,7 @@ async function animateResolution(interim, final) {
         cell.classList.remove('occ');
         cell.innerHTML = '';
       });
-      tickChip('#lid-count', surplus);
-      await beat(140);
+      await beat(300);
     }
 
     // Bench penalties — the overstaffing bill.
@@ -510,12 +519,12 @@ async function animateResolution(interim, final) {
       score = Math.max(0, score - pen);
       setScore(seat, score);
       if (!instant()) {
-        const lidRect = $('#lid-chip').getBoundingClientRect();
+        const drainRect = $('#drain').getBoundingClientRect();
         $$('.bcell .bslot', benchEl).forEach((slot, i) => {
           const inner = slot.firstElementChild;
           if (!inner) return;
           if (!inner.classList.contains('token')) {
-            fly(slot.getBoundingClientRect(), lidRect, tileHTML(b.bench[i]), {
+            fly(slot.getBoundingClientRect(), drainRect, tileHTML(b.bench[i]), {
               dur: 380,
               delay: i * 40,
               lift: 8,
@@ -524,68 +533,93 @@ async function animateResolution(interim, final) {
           slot.innerHTML = '';
         });
       }
-      tickChip('#lid-count', b.bench.filter((e) => e !== E.FIRST_MOVER).length);
-      await beat(200);
+      await beat(400);
     }
   }
 
   if (final.over) {
-    // Game-ending rows sweep across, then the whistle.
+    // The finale: every completed row (+2), column (+7) and cornered
+    // function (+10) sweeps cell by cell while its bonus lands and the
+    // score ticks. The engine already booked these (§8) — final scores
+    // include them — so start from score-minus-bonuses and replay the
+    // arithmetic on screen.
     for (let seat = 0; seat < final.players; seat++) {
       const boardEl = $(`.board[data-seat="${seat}"]`);
-      for (let r = 0; r < 5; r++) {
-        if (final.boards[seat].wall[r].every((x) => x === 1)) {
-          $$('.wcell', boardEl)
-            .slice(r * 5, r * 5 + 5)
-            .forEach((cell, k) => setTimeout(() => cell.classList.add('sweep'), k * 70));
+      const wall = final.boards[seat].wall;
+      const cells = $$('.wcell', boardEl);
+      let score = final.boards[seat].score - E.bonuses(wall);
+
+      const groups = [];
+      for (let r = 0; r < 5; r++)
+        if (wall[r].every((x) => x === 1))
+          groups.push({ idx: wall[r].map((_, c) => r * 5 + c), pts: 2 });
+      for (let c = 0; c < 5; c++)
+        if (wall.every((row) => row[c] === 1))
+          groups.push({ idx: wall.map((_, r) => r * 5 + c), pts: 7 });
+      for (let fn = 0; fn < 5; fn++) {
+        const idx = wall.map((_, r) => r * 5 + E.wallColumn(fn, r));
+        if (idx.every((i) => wall[(i / 5) | 0][i % 5] === 1)) groups.push({ idx, pts: 10 });
+      }
+
+      for (const g of groups) {
+        if (!instant()) {
+          g.idx.forEach((i, k) =>
+            setTimeout(() => {
+              cells[i].classList.remove('sweep');
+              void cells[i].offsetWidth; // restart when a cell repeats across groups
+              cells[i].classList.add('sweep');
+            }, T(k * 90))
+          );
         }
+        await beat(5 * 90 + 60);
+        score += g.pts;
+        popup('+' + g.pts, cells[g.idx[4]].getBoundingClientRect(), 'pos');
+        setScore(seat, score);
+        await beat(280);
       }
     }
-    await beat(600);
-    await banner('<span class="r">Full time</span>');
+    await banner('Recruitment cycle <span class="r">complete</span>');
     await beat(700);
     return;
   }
 
-  // Alumni wave — the lid refills the bag, visibly.
+  // Alumni wave — departed recruits visibly restock the pool.
   if (final.refills > interim.refills && !instant()) {
-    const lidRect = $('#lid-chip').getBoundingClientRect();
-    const bagRect = $('#bag-chip').getBoundingClientRect();
-    $('#bag-chip').classList.add('wave');
-    $('#lid-chip').classList.add('wave');
+    const drainRect = $('#drain').getBoundingClientRect();
+    const poolRect = $('#pool-chip').getBoundingClientRect();
+    $('#pool-chip').classList.add('wave');
     banner('<span class="r">Alumni wave</span> — the market restocks');
     const waves = [];
     for (let i = 0; i < 7; i++) {
-      waves.push(fly(lidRect, bagRect, tileHTML(i % 5), { dur: 420, delay: i * 55, lift: 30 }));
+      waves.push(fly(drainRect, poolRect, tileHTML(i % 5), { dur: 420, delay: i * 55, lift: 30 }));
     }
     await Promise.all(waves);
-    setTimeout(() => {
-      $('#bag-chip').classList.remove('wave');
-      $('#lid-chip').classList.remove('wave');
-    }, 1600);
+    setTimeout(() => $('#pool-chip').classList.remove('wave'), T(1600));
   }
 
   // The next quarter's deal.
   G.view = snap(final);
   renderAll();
-  setPhase('Hiring');
+  setPhase('');
   await banner(
     `Q${final.round} · <b>${esc(G.names[final.startPlayer])}</b> has the <span class="r">First&nbsp;Mover</span>`
   );
   await dealAnimation();
 }
 
+// New recruits arrive one by one — unhurried (Ryan, 2026-08-06): the deal
+// opens each quarter and deserves to read as an event, not a shuffle.
 async function dealAnimation() {
   if (instant()) return;
-  const bagRect = $('#bag-chip').getBoundingClientRect();
+  const poolRect = $('#pool-chip').getBoundingClientRect();
   const tiles = $$('#agencies .tile');
   tiles.forEach((t) => t.classList.add('pre'));
   await Promise.all(
     tiles.map((t, i) =>
-      fly(bagRect, t.getBoundingClientRect(), tileHTML(Number(t.dataset.fn)), {
-        dur: 330,
-        delay: i * 24,
-        lift: 18,
+      fly(poolRect, t.getBoundingClientRect(), tileHTML(Number(t.dataset.fn)), {
+        dur: 420,
+        delay: i * 55,
+        lift: 22,
       })
     )
   );
@@ -763,7 +797,7 @@ function endGame(ending, flaggedSeat = null) {
     G.clockTimer = null;
   }
   G.clockSeat = null;
-  setPhase('Full time');
+  setPhase('Recruitment cycle complete');
 
   let result;
   if (ending === 'natural') {
@@ -795,7 +829,7 @@ function endGame(ending, flaggedSeat = null) {
       ? `${esc(G.names[flaggedSeat])}'s clock ran out. Scores are recorded but sit out the score-based awards.`
       : draw
         ? 'Level on points and completed rows — the rulebook calls it a shared win.'
-        : `Final whistle after Q${G.cur.round}.`;
+        : `Recruitment cycle complete after Q${G.cur.round}.`;
 
   const rows = G.names
     .map((name, seat) => {
@@ -819,7 +853,7 @@ function endGame(ending, flaggedSeat = null) {
     .join('');
 
   body.innerHTML = `
-    <p class="whistle">${ending === 'timeout' ? 'Flag falls' : 'Final whistle'}</p>
+    <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Recruitment cycle complete'}</p>
     <p class="champion spot">${title}</p>
     <p class="end-sub">${sub}</p>
     <table class="final-table">
@@ -1089,7 +1123,7 @@ if (smokeParams.has('smoke')) {
         const odd = [];
         $$('.tile').forEach((t) => {
           const r = t.getBoundingClientRect();
-          if (r.height > 50 || r.width > 50) {
+          if (r.height > 64 || r.width > 64) {
             odd.push(`${t.className}@${t.parentElement.className}:${Math.round(r.width)}x${Math.round(r.height)}`);
           }
         });

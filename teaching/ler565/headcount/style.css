@@ -24,6 +24,11 @@
   --tile: 46px;
   --mini: 34px;
   --radius: 10px;
+
+  /* Punch list #1 — the one pacing knob. Every theatre duration, CSS and JS
+     alike, multiplies by this; ui.js reads it once at startup. 1 is the
+     original (too fast) pace. */
+  --tempo: 2;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -169,15 +174,10 @@ legend {
 .agency {
   background: var(--card); border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 8px 10px 10px;
+  padding: 9px;
   box-shadow: 0 4px 14px rgba(35, 32, 40, .07);
 }
 .agency.empty { opacity: .45; }
-.agency-name {
-  font-size: 10px; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--muted);
-  margin-bottom: 6px; text-align: center;
-}
 .slots {
   display: grid; grid-template-columns: repeat(2, var(--tile));
   grid-auto-rows: var(--tile); gap: 6px; justify-content: center;
@@ -211,11 +211,16 @@ legend {
 }
 .tile .ic { width: 62%; height: 62%; color: var(--t-ic); }
 
-.tile.f0 { --t-bg: var(--eng); --t-ic: #f2f6ff; }
-.tile.f1 { --t-bg: var(--sal); --t-ic: #fdf1ef; }
-.tile.f2 { --t-bg: var(--ops); --t-ic: #33270b; box-shadow: inset 0 -3px 0 rgba(0,0,0,.22), inset 0 0 0 1px #d79f1e, 0 2px 5px rgba(35,32,40,.18); }
-.tile.f3 { --t-bg: var(--fin); --t-ic: #f4efe4; }
-.tile.f4 { --t-bg: var(--ana); --t-ic: #eafaf7; }
+.tile.f0 { --t-bg: var(--eng); --t-ic: #f2f6ff; --t-bd: #1c4da6; }
+.tile.f1 { --t-bg: var(--sal); --t-ic: #fdf1ef; --t-bd: #a52c22; }
+.tile.f2 { --t-bg: var(--ops); --t-ic: #33270b; --t-bd: #c48d10; box-shadow: inset 0 -3px 0 rgba(0,0,0,.22), inset 0 0 0 1px #d79f1e, 0 2px 5px rgba(35,32,40,.18); }
+.tile.f3 { --t-bg: var(--fin); --t-ic: #f4efe4; --t-bd: #59525f; }
+.tile.f4 { --t-bg: var(--ana); --t-ic: #eafaf7; --t-bd: #0b6d5f; }
+
+/* Punch #3 — bordered means claimable. Only market tiles are buttons, and
+   only they carry the heavy frame; tiles already placed on a board are
+   frameless divs. */
+button.tile { border: 3px solid var(--t-bd); }
 
 button.tile:hover { transform: translateY(-3px); }
 .tile.sel {
@@ -225,15 +230,18 @@ button.tile:hover { transform: translateY(-3px); }
 .tile.dim { opacity: .55; }
 .tile.pre { visibility: hidden; }
 
+/* Punch #4 — the First Mover token is unmistakably not a tile: a black "1"
+   on a white disc, borderless. The soft shadow lifts it off the paper; it
+   is not a frame. */
 .token {
   width: var(--tile); height: var(--tile);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #f3c85e, var(--gold));
-  color: #4a3407;
+  background: #fff;
+  color: var(--ink);
   display: grid; place-items: center;
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .2), 0 2px 5px rgba(35, 32, 40, .2);
+  box-shadow: 0 1px 4px rgba(35, 32, 40, .28);
 }
-.token .ic { width: 58%; height: 58%; }
+.token .ic { width: 62%; height: 62%; }
 .token.pre { visibility: hidden; }
 
 /* ----------------------------------------------------------------- boards */
@@ -258,12 +266,11 @@ button.tile:hover { transform: translateY(-3px); }
   display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;
 }
 .board-name { font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
-.board.active .board-name::after {
-  content: "hiring"; color: var(--red);
-  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  margin-left: 8px; vertical-align: middle;
+.board-fm {
+  color: var(--ink); width: 16px; height: 16px;
+  background: #fff; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(35, 32, 40, .3);
 }
-.board-fm { color: var(--gold); width: 15px; height: 15px; }
 .board-spacer { flex: 1; }
 
 .clock {
@@ -278,12 +285,14 @@ button.tile:hover { transform: translateY(-3px); }
   font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums;
   min-width: 44px; text-align: right;
 }
-.score.bump { animation: score-bump .35s ease; }
+.score.bump { animation: score-bump calc(.35s * var(--tempo, 1)) ease; }
 @keyframes score-bump { 40% { transform: scale(1.35); color: var(--red); } }
 
 .play-area { display: grid; grid-template-columns: auto auto; gap: 12px; align-items: start; }
 
-/* Teams — right-aligned rows against the org chart. */
+/* Teams — right-aligned rows against the org chart. Punch #2: .trow and
+   .wrow are the identical box (cell size, gap, padding, border), so team
+   row r sits exactly level with the wall row it tiles into. */
 .teams { display: grid; gap: 5px; justify-items: end; }
 .trow {
   display: flex; gap: 4px;
@@ -298,8 +307,8 @@ button.tile:hover { transform: translateY(-3px); }
 }
 .tcell .tile { width: var(--mini); height: var(--mini); pointer-events: none; }
 
-.wall { display: grid; gap: 3px; }
-.wrow { display: flex; gap: 4px; padding: 2px; }
+.wall { display: grid; gap: 5px; }
+.wrow { display: flex; gap: 4px; padding: 2px; border: 2px solid transparent; border-radius: 8px; }
 .wcell {
   width: var(--mini); height: var(--mini);
   border-radius: 6px;
@@ -307,17 +316,16 @@ button.tile:hover { transform: translateY(-3px); }
   display: grid; place-items: center;
   position: relative;
 }
-.wcell .ghost { width: 60%; height: 60%; opacity: .18; }
-.wcell.g0 .ghost { color: var(--eng); } .wcell.g1 .ghost { color: var(--sal); }
-.wcell.g2 .ghost { color: #a67908; } .wcell.g3 .ghost { color: var(--fin); }
-.wcell.g4 .ghost { color: var(--ana); }
 /* Absolute against the cell: a percentage height here falls into a cyclic
    auto-track resolution and the inner SVG's 150px default intrinsic size
    takes over. inset:0 sidesteps the whole question. */
 .wcell .tile { position: absolute; inset: 0; width: auto; height: auto; border-radius: 6px; }
-.wcell.landed .tile { animation: land .3s cubic-bezier(.2, 1.6, .4, 1); }
+/* Punch #3 — an unfilled org-chart cell is the real tile at low opacity:
+   exactly the tile's colour, obviously not yet placed. */
+.wcell .tile.open { opacity: .3; box-shadow: none; }
+.wcell.landed .tile { animation: land calc(.3s * var(--tempo, 1)) cubic-bezier(.2, 1.6, .4, 1); }
 @keyframes land { 0% { transform: scale(1.4); } }
-.wcell.sweep { animation: sweep .5s ease; }
+.wcell.sweep { animation: sweep calc(.5s * var(--tempo, 1)) ease; }
 @keyframes sweep {
   40% { box-shadow: 0 0 0 4px var(--gold), 0 0 18px 6px rgba(217, 154, 27, .5); transform: scale(1.12); }
 }
@@ -342,7 +350,7 @@ button.tile:hover { transform: translateY(-3px); }
 }
 .bcell .pen { font-size: 10px; font-weight: 700; color: var(--muted); }
 .bcell .tile, .bcell .token { width: var(--mini); height: var(--mini); }
-.bcell .thud { animation: thud .45s cubic-bezier(.3, 1.8, .5, 1); }
+.bcell .thud { animation: thud calc(.45s * var(--tempo, 1)) cubic-bezier(.3, 1.8, .5, 1); }
 @keyframes thud {
   0% { transform: translateY(-16px) scale(1.05); }
   60% { transform: translateY(2px) scaleY(.88) scaleX(1.08); }
@@ -365,6 +373,13 @@ button.tile:hover { transform: translateY(-3px); }
 /* ------------------------------------------------------------------- fx */
 
 #fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+
+/* Off-screen destination for discarded tiles (a hidden box keeps a real
+   rect for the flights, so the theatre needs no visible Lid chip). */
+#drain {
+  position: fixed; top: 10px; right: 18px; width: 10px; height: 10px;
+  visibility: hidden; pointer-events: none;
+}
 .fx-tile { position: fixed; left: 0; top: 0; will-change: transform; }
 .fx-tile .tile, .fx-tile .token { width: 100%; height: 100%; }
 
@@ -372,7 +387,7 @@ button.tile:hover { transform: translateY(-3px); }
   position: fixed; z-index: 70; pointer-events: none;
   font-weight: 800; font-size: 20px;
   color: var(--ink); text-shadow: 0 1px 0 var(--card);
-  animation: popup-rise .9s ease forwards;
+  animation: popup-rise calc(.9s * var(--tempo, 1)) ease forwards;
 }
 .popup.neg { color: var(--red); }
 .popup.pos { color: #1a7a3c; }
@@ -393,7 +408,7 @@ button.tile:hover { transform: translateY(-3px); }
   box-shadow: 0 20px 50px rgba(35, 32, 40, .35);
   opacity: 0; visibility: hidden;
 }
-#banner.show { visibility: visible; animation: banner-in 1.5s ease forwards; }
+#banner.show { visibility: visible; animation: banner-in calc(1.5s * var(--tempo, 1)) ease forwards; }
 @keyframes banner-in {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.85); }
   12% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
@@ -441,16 +456,25 @@ button.tile:hover { transform: translateY(-3px); }
 }
 .end-actions .cta { width: auto; padding: 10px 22px; font-size: 15px; }
 
+/* ------------------------------------------------------------- desktop */
+
+/* Punch #5 — boards claim the blank space on big screens. */
+@media (min-width: 1200px) {
+  :root { --tile: 50px; --mini: 42px; }
+}
+@media (min-width: 1500px) {
+  :root { --tile: 54px; --mini: 48px; }
+}
+
 /* -------------------------------------------------------------- phones */
 
+/* Punch #6 — one screen, no sideways scrolling: agencies wrap (roughly
+   3 + 2), then the open market, then the mover's board (ordered first from
+   renderBoards), with opponents collapsed below the fold. */
 @media (max-width: 940px) {
   :root { --tile: 44px; --mini: 30px; }
-  #market { flex-direction: column; align-items: stretch; }
-  #agencies {
-    flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
-    padding-bottom: 6px; -webkit-overflow-scrolling: touch;
-  }
-  .agency { flex: 0 0 auto; }
+  #market { flex-direction: column; align-items: stretch; margin-bottom: 14px; }
+  #agencies { flex-wrap: wrap; justify-content: center; gap: 10px; }
   #centre-wrap { max-width: none; }
   #boards { flex-direction: column; align-items: stretch; }
   .board { width: 100%; }
@@ -465,8 +489,10 @@ button.tile:hover { transform: translateY(-3px); }
 }
 
 @media (max-width: 480px) {
-  :root { --tile: 42px; --mini: 26px; }
+  :root { --tile: 40px; --mini: 24px; }
   #table { padding: 12px 8px 32px; }
+  #agencies { gap: 8px; }
+  .agency { padding: 6px 8px 8px; }
   .board { padding: 10px 8px 12px; }
   .play-area { gap: 8px; }
   .board-name { font-size: 15px; }

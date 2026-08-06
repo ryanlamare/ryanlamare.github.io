@@ -1,8 +1,8 @@
 # Headcount — working memo
 
 **Status: active — build steps 1–3 done (2026-08-06): engine, hot-seat board
-UI, greedy bot + Training Ground. Next: the design/refinement pass (punch
-list below), then step 4, relay + two-device play.** Everything lives in
+UI, greedy bot + Training Ground. The design/refinement pass (punch list
+below) is applied, same day. Next: step 4, relay + two-device play.** Everything lives in
 `headcount/`: `engine.js` (pure rules module), `bot.js` (greedy practice
 opponent, "The Consultant"), `index.html` + `style.css` + `ui.js` (the
 playable board — two-tap input, chess clocks, animation layer driven by
@@ -224,14 +224,14 @@ not garnish** (Ryan, 2026-08-05: full creative licence here; do not import the
 slide decks' restraint). The splash is a *splash* — a big animated card, the
 head-to-head numbers landing with a pop, records sliding in. Moves animate
 Azee-style and then some: tiles fly from agency to team, leftovers spill and
-scatter into the open market, and at the quarter close the books-balancing
+scatter into the open market, and at the quarter close the performance-review
 sweep — completed teams' lead tiles glide onto the org chart one row at a time
-while the score ticks up with each placement, surplus tiles clearing to the lid.
-Beats worth staging: bench tiles landing with a heavier, reluctant thud (the
-penalty should *feel* like overstaffing); the First Mover token's flip when
-someone bites; the **alumni wave** as a visible cascade back into the bag; a
+while the score ticks up with each placement, surplus tiles clearing off the
+table. Beats worth staging: bench tiles landing with a heavier, reluctant thud
+(the penalty should *feel* like overstaffing); the First Mover token's flip when
+someone bites; the **alumni wave** as a visible cascade back into the market; a
 completed column lighting up cell by cell; a game-ending row sweeping across;
-final whistle with the winner's board taking the spotlight. Two engineering
+the cycle-complete finale with the winner's board taking the spotlight. Two engineering
 rules keep all this cheap rather than a retrofit: animations are **driven by
 engine state-diffs** (the pure engine produces before/after; the UI animates
 the difference — never animation logic inside the engine), and one
@@ -329,10 +329,16 @@ The wall is a Latin square, so the bonuses land cleanly:
 - **All five of a colour** (+10) — you've cornered the market on a role.
 
 **Rounds are Quarters.** The round counter reads Q1, Q2, Q3…, and Phase B is
-**closing the books**. Naming only — a game can run to Q6 or Q7 and nobody's
-fiscal calendar minds — but it gives the clock pause a voice ("books closing"),
-makes the round structure read corporate, and retroactively earns the *Best
-Quarter* award name. When the bag refills from the lid, that's the **alumni
+the **performance review** (renamed from "closing the books" — Ryan,
+2026-08-06 — the accounting phrase never quite sang; the HR one is also
+literally what the phase does to your teams). Naming only — a game can run to
+Q6 or Q7 and nobody's fiscal calendar minds — but it gives the clock pause a
+voice, makes the round structure read corporate, and retroactively earns the
+*Best Quarter* award name. The game's end is **recruitment cycle complete**
+(was "final whistle / full time", briefly "closing bell" — Ryan, 2026-08-06;
+the football register belongs to the league framing, not the in-game
+theatre, and the cycle phrasing closes the loop the theme opens: a game is
+one recruitment cycle). A timeout still reads "out of time". When the bag refills from the lid, that's the **alumni
 wave** — boomerang hires re-entering the market. (See rules spec §6.1 for when
 it actually fires: every 3-player game, but 2-player games only past Q5.)
 
@@ -364,7 +370,7 @@ than an HR exercise.
 |---|---|---|---|
 | Engineering | **Blue** | Cog | Round, toothed — spiky outline |
 | Sales | **Red** | Headset | Arc with mic boom — open, asymmetric |
-| Operations | **Yellow** | Crate | Solid square with bands |
+| Operations | **Yellow** | Crate | Solid square, diagonal straps |
 | Finance | **Ink** | Coin stack | Stacked discs — horizontal rhythm |
 | Analytics | **Teal** | Bar chart | Three bars — vertical rhythm |
 
@@ -374,7 +380,10 @@ Two decisions inside that table worth keeping:
 spiky-round, open-asymmetric, solid-square, horizontal-rhythm, vertical-rhythm.
 At tile size on a phone, subject matter is invisible and only the silhouette
 reads. Two round icons (a cog and a magnifier, say) would be a recurring
-misread across a 5×5 grid.
+misread across a 5×5 grid. This bit once already: the crate's bands began
+horizontal and collided with the coin stack in real play (Ryan, 2026-08-06)
+— hence the diagonal straps. Diagonal was the only free direction: vertical
+would collide with the bar chart.
 
 **Teal rather than green.** Red against green is the one pair a colourblind
 player genuinely cannot separate, and roughly one man in twelve has some red-
@@ -459,6 +468,12 @@ Compiled from Ryan's first hot-seat playthrough (2026-08-05). These are
 deliberate deferrals, not oversights: the refinement pass runs after build
 step 3 so the changes react to real play rather than guesses.
 
+**All six applied 2026-08-06.** The pacing knob from item 1 is `--tempo` in
+`style.css` (currently 2 — double the original durations); it scales every
+theatre duration, the CSS keyframes and the JS flights/beats alike, so pace
+stays one edit. Ambient loops (clock blink, drop-hint pulse) deliberately
+don't scale. Kept for the record:
+
 1. **Slow everything down, a lot** — especially the end-of-round
    books-closing sequence. Use a central timing scale so pacing is one knob,
    not fifty edits.
@@ -477,6 +492,16 @@ step 3 so the changes react to real play rather than guesses.
 6. **Phone: one screen, no sideways scrolling.** Agencies wrap (roughly
    3 + 2), then the open market, then your board — all visible together —
    with the opponent's collapsed board below the fold.
+
+Ryan's second look (2026-08-06), also applied: agencies carry **no visible
+name** (the names survive in screen-reader labels and move announcements);
+the Bag/Lid chips became a single **Recruit pool** chip, with discards
+flying to an invisible off-screen drain and the alumni wave restocking the
+pool chip; the start-of-quarter deal slowed further (it should read as an
+event, not a shuffle); the red HIRING tag came off the active board (the
+border and topbar already say it); and the football/accounting register
+left the in-game copy — *performance review* and *recruitment cycle
+complete* (see *Theme*).
 
 ## Build order
 

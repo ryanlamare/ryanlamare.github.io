@@ -6,15 +6,15 @@
 <title>Headcount</title>
 <!-- ?v= is a cache-buster: bump it when shipping UI changes so browsers
      holding older copies pick up the new files on a plain reload. -->
-<link rel="stylesheet" href="./style.css?v=3">
+<link rel="stylesheet" href="./style.css?v=5">
 </head>
 <body>
 
 <!-- Tile isotypes (HEADCOUNT.md — colour plus isotype, never text).
      Solid silhouettes, deliberately different in SHAPE: spiky-round cog,
-     open-asymmetric headset, solid-square crate, horizontal-rhythm coins,
-     vertical-rhythm bars. Knockouts (the cog's hole, the crate's bands) are
-     painted in var(--t-bg), the tile's own background colour. -->
+     open-asymmetric headset, diagonal-strapped crate, horizontal-rhythm
+     coins, vertical-rhythm bars. Knockouts (the cog's hole, the crate's
+     straps) are painted in var(--t-bg), the tile's own background colour. -->
 <svg style="display:none" aria-hidden="true">
   <symbol id="ic-eng" viewBox="0 0 24 24">
     <rect x="10" y="1.5" width="4" height="21" rx="1" fill="currentColor"/>
@@ -31,10 +31,13 @@
     <path d="M19 19 q-1.2 2.6 -5.4 2.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     <circle cx="13" cy="21.7" r="1.7" fill="currentColor"/>
   </symbol>
+  <!-- The crate's straps run diagonal, not horizontal: at tile size,
+       horizontal bands read the same as the coin stack (Ryan, 2026-08-06) —
+       the exact silhouette collision the shape rule exists to prevent. -->
   <symbol id="ic-ops" viewBox="0 0 24 24">
     <rect x="3.5" y="4" width="17" height="16" rx="1.5" fill="currentColor"/>
-    <rect x="3.5" y="8.6" width="17" height="1.7" fill="var(--t-bg, transparent)"/>
-    <rect x="3.5" y="13.6" width="17" height="1.7" fill="var(--t-bg, transparent)"/>
+    <rect x="-3" y="8.5" width="30" height="1.9" fill="var(--t-bg, transparent)" transform="rotate(-45 12 12)"/>
+    <rect x="-3" y="13.6" width="30" height="1.9" fill="var(--t-bg, transparent)" transform="rotate(-45 12 12)"/>
   </symbol>
   <symbol id="ic-fin" viewBox="0 0 24 24">
     <rect x="5" y="15.4" width="14" height="4.2" rx="2.1" fill="currentColor"/>
@@ -46,9 +49,12 @@
     <rect x="9.7" y="4" width="4.6" height="16.5" rx="1" fill="currentColor"/>
     <rect x="15.8" y="8.5" width="4.6" height="12" rx="1" fill="currentColor"/>
   </symbol>
+  <!-- The First Mover token: a numeral 1, as in Azul itself. The no-words
+       rule is for tiles; the token is the one legitimate glyph, and it must
+       read as unmistakably not a tile (black on white, borderless). -->
   <symbol id="ic-first" viewBox="0 0 24 24">
-    <rect x="6.4" y="3" width="2.4" height="18" rx="1.2" fill="currentColor"/>
-    <path d="M9.5 4.5 L20.5 7.8 L9.5 11.1 Z" fill="currentColor"/>
+    <path d="M8.2 8.4 L12.9 4.6 V19.4 M8.4 19.4 H17.4" fill="none" stroke="currentColor"
+          stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
 </svg>
 
@@ -101,11 +107,10 @@
 <section id="game" class="screen hidden">
   <header id="topbar">
     <div class="q-badge" id="q-badge">Q1</div>
-    <div id="phase-label">Hiring</div>
+    <div id="phase-label"></div>
     <div id="turn-label"></div>
-    <div class="supply" title="Tiles in the bag and the lid">
-      <span class="chip" id="bag-chip">Bag <b id="bag-count">80</b></span>
-      <span class="chip" id="lid-chip">Lid <b id="lid-count">0</b></span>
+    <div class="supply" title="Recruits waiting to enter the market">
+      <span class="chip" id="pool-chip">Recruit pool <b id="pool-count">80</b></span>
     </div>
     <div class="menu">
       <button id="btn-export" class="ghost-btn" title="Download the game record (seed + moves)">Record</button>
@@ -126,6 +131,9 @@
 
   <div id="banner" aria-hidden="true"></div>
   <div id="fx" aria-hidden="true"></div>
+  <!-- Invisible flight target: discarded tiles (surplus, bench) drain here
+       instead of to a visible Lid chip; the alumni wave flies back out of it. -->
+  <span id="drain" aria-hidden="true"></span>
   <div id="live" class="sr-only" role="status" aria-live="polite"></div>
 </section>
 
@@ -138,6 +146,6 @@
   </div>
 </dialog>
 
-<script type="module" src="./ui.js?v=3"></script>
+<script type="module" src="./ui.js?v=5"></script>
 </body>
 </html>
