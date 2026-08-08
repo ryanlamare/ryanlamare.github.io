@@ -210,7 +210,7 @@ function renderBoards(st) {
     el.innerHTML = `
       <div class="board-head">
         <span class="board-name">${esc(G.names[seat])}</span>
-        ${b.firstMover ? '<svg class="board-fm" title="First Mover next quarter"><use href="#ic-first"/></svg>' : ''}
+        ${b.firstMover ? '<svg class="board-fm" role="img" aria-label="First Mover next quarter" title="First Mover next quarter"><use href="#ic-first"/></svg>' : ''}
         <span class="expand-hint">tap to expand</span>
         <span class="board-spacer"></span>
         <span class="clock" data-seat="${seat}"></span>
@@ -642,6 +642,7 @@ async function submitMove(dest) {
   } catch (err) {
     console.error(err);
     announce('That move is not legal.');
+    startClock(before.seatToMove); // the turn continues — don't leave the clock stopped
     return;
   }
   G.moves.push(move);

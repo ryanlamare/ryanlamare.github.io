@@ -454,6 +454,14 @@ awards attached. Record the device with each game: the archive can then answer
 whether phone players actually lose on time more often, rather than leaving it a
 guess. Steer league games toward laptops if it turns out to matter.
 
+**The game is installable as a PWA** (added 2026-08-08): `manifest.webmanifest`
+plus icons in `headcount/` let a student "Add to Home Screen", where the game
+opens full-screen under its own icon — a 2×2 of the real tiles. It is still
+just the website: no store, no separate codebase, and deliberately **no service
+worker** — the `?v=` cache-buster convention stays the whole update story, and
+a cache-first worker would quietly serve stale files against it. Optional and
+purely additive; the plain URL behaves exactly as before.
+
 **The best phone setup is second-screen**: Zoom on the laptop, game on the
 phone, which makes the phone a dedicated controller and is genuinely pleasant.
 Zoom *and* game on one phone is poor no matter what we build — app-switching

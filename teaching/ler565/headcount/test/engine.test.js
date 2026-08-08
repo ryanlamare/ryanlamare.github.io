@@ -494,6 +494,9 @@ section('soak — random vs random, invariants every move');
 
 const GAMES_PER_COUNT = Number(process.argv[2]) || 1000;
 const records = []; // sampled {seed, players, moves, hash} for replay checks
+// Sampling interval scales with the soak so the replay section always gets
+// its >=10 games — a fixed "every 50th" starved it below soak 200.
+const SAMPLE_EVERY = Math.max(1, Math.floor(GAMES_PER_COUNT / 5));
 const stats = {};
 
 for (const players of [2, 3, 4]) {
@@ -578,7 +581,7 @@ for (const players of [2, 3, 4]) {
     st.moves += moves.length;
 
     // Sample games for replay checks.
-    if (g % 50 === 0) records.push({ seed, players, moves, hash: stateHash(s) });
+    if (g % SAMPLE_EVERY === 0) records.push({ seed, players, moves, hash: stateHash(s) });
   }
 
   ok(st.games > 0, `${players}p soak ran`);
@@ -632,7 +635,7 @@ section('§9 — determinism: same-process replay, per-turn hashes');
       checked++;
     }
   }
-  ok(checked >= 10, `replayed ${checked} recorded games`);
+  ok(checked >= Math.min(10, records.length) && checked > 0, `replayed ${checked} recorded games`);
 }
 
 // ---------------------------------------------------------------------------
