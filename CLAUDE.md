@@ -168,6 +168,16 @@ stamps `SMOKE OK` into the DOM — check it in headless Chrome after UI changes.
 The UI stages animations from engine state-diffs (`applyTake` vs `apply`) and
 must never re-implement rules; legality always comes from `legalMoves`.
 
+Two-device play goes through `net.js` (transport) and `relay/`
+(`PROTOCOL.md` is the wire format, `README.md` is how to run it). The relay
+**never runs the engine** — a game is `seed + move list`, so clients decide
+every rule question identically and the server only orders messages and stamps
+who sent them. `relay/room.js` is one state machine shared by the laptop relay
+and the Cloudflare Worker; change the protocol there, not twice. After touching
+any of it run `test/relay.test.js` (headless clients over real WebSockets) and
+`test/online.test.js` (the real UI in headless Chrome, including a mid-game
+disconnect). Both start their own relay, so nothing needs to be running first.
+
 ## Everything else
 
 - `index.html` outside the two marked regions (About, Media, Teaching, Contact)

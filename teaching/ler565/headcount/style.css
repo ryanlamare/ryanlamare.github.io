@@ -101,7 +101,9 @@ legend {
 .seg-btn.on { background: var(--ink); color: var(--card); }
 
 #name-inputs { display: grid; gap: 8px; }
-#name-inputs input, #seed-input, #clock-select {
+.seg-btn:disabled { opacity: .4; }
+#code-input { text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+#name-inputs input, #seed-input, #code-input, #clock-select {
   width: 100%; padding: 10px 12px; font: inherit;
   border: 1px solid var(--line); border-radius: 8px; background: #fff;
 }
@@ -120,6 +122,67 @@ legend {
   padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--muted);
 }
 .ghost-btn:hover { color: var(--ink); border-color: var(--muted); }
+
+.link-btn {
+  border: 0; background: transparent; padding: 0; font: inherit;
+  color: var(--red); font-weight: 700; text-decoration: underline;
+}
+.rejoin {
+  font-size: 13px; color: var(--muted);
+  background: #fff; border: 1px dashed var(--line); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 22px;
+}
+.rejoin b { color: var(--ink); letter-spacing: .04em; }
+
+/* ------------------------------------------------------------------ lobby */
+
+#lobby {
+  min-height: 100%;
+  display: grid; place-items: center;
+  padding: 24px;
+}
+
+.room-label {
+  font-size: 12px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); margin-top: 22px;
+}
+/* The code is read aloud across a Zoom breakout room, so it is the largest
+   thing on the screen and the words break rather than shrink. */
+.room-code {
+  font-size: clamp(30px, 7vw, 50px); letter-spacing: -.01em;
+  line-height: 1.05; margin: 2px 0 10px; word-break: break-word;
+  color: var(--red);
+}
+
+.seat-list { list-style: none; display: grid; gap: 8px; margin-bottom: 18px; }
+.seat-list li {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: #fff; padding: 10px 12px; font-weight: 700;
+}
+.seat-list .dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--ana);
+  box-shadow: 0 0 0 3px rgba(18, 144, 127, .18);
+}
+.seat-list li.away { color: var(--muted); }
+.seat-list li.away .dot { background: var(--muted); box-shadow: none; }
+.seat-list .lname { flex: 1; }
+.seat-list .dev,
+.seat-list .waiting { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.you {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--ink); color: var(--card); border-radius: 999px; padding: 2px 7px;
+}
+
+.net-status { font-size: 12.5px; color: var(--muted); min-height: 18px; }
+.lobby-error {
+  font-size: 13px; color: var(--red); font-weight: 600;
+  border: 1px solid rgba(200, 54, 43, .3); border-radius: 8px; padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.lobby-actions { display: flex; gap: 10px; align-items: center; }
+.lobby-actions .cta { flex: 1; }
+.cta:disabled { opacity: .45; box-shadow: none; }
 
 /* ----------------------------------------------------------------- topbar */
 
@@ -151,6 +214,15 @@ legend {
 }
 .chip b { color: var(--ink); }
 .chip.wave { animation: chip-pulse .5s ease 3; }
+/* The room chip doubles as the connection light: the code while all is well,
+   the trouble otherwise. */
+.chip.net { font-weight: 700; letter-spacing: .04em; color: var(--ink); }
+.chip.net[data-state="retrying"], .chip.net[data-state="connecting"] {
+  color: var(--gold); border-color: var(--gold); animation: chip-pulse 1.4s ease infinite;
+}
+.chip.net[data-state="halted"], .chip.net[data-state="failed"], .chip.net[data-state="closed"] {
+  color: #fff; background: var(--red); border-color: var(--red);
+}
 @keyframes chip-pulse {
   50% { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(217, 154, 27, .25); }
 }
@@ -266,6 +338,14 @@ button.tile:hover { transform: translateY(-3px); }
   display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px;
 }
 .board-name { font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
+/* Online: which board is yours, and whether the other player is still there.
+   A dropped player is not a result — their clock is simply still running. */
+.board-head .you { align-self: center; }
+.board-head .away {
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  animation: chip-pulse 1.4s ease infinite;
+  border: 1px solid var(--gold); border-radius: 999px; padding: 1px 8px;
+}
 .board-fm {
   color: var(--ink); width: 16px; height: 16px;
   background: #fff; border-radius: 50%;
@@ -449,6 +529,11 @@ button.tile:hover { transform: translateY(-3px); }
 .final-table .num { text-align: right; }
 .final-table .win td { font-weight: 800; }
 .final-table .total { font-size: 18px; }
+
+.end-net {
+  padding: 0 36px; font-size: 13px; color: var(--muted); font-style: italic;
+}
+.end-net:empty { display: none; }
 
 .end-actions {
   display: flex; gap: 10px; justify-content: flex-end;

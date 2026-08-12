@@ -17,6 +17,8 @@
 
 import * as E from './engine.js';
 import { greedyMove } from './bot.js';
+import { freshSeed } from './words.js';
+import { Relay, defaultRelayUrl, deviceKind } from './net.js';
 
 const BOT_NAME = 'The Consultant';
 const BOT_SEAT = 1; // practice games are always you (seat 0) vs the bot
@@ -27,16 +29,7 @@ const AGENCY_NAMES = [
   'Halcyon', 'Meridian', 'Vantage', 'Beacon', 'Summit',
   'Crestline', 'Northstar', 'Pinnacle', 'Cornerstone',
 ];
-const SEED_A = [
-  'SYNERGY', 'PIVOT', 'LEVERAGE', 'CASCADE', 'QUANTUM', 'VERTICAL',
-  'AGILE', 'HOLISTIC', 'DYNAMIC', 'STRATEGIC', 'ROBUST', 'SCALABLE',
-];
-const SEED_B = [
-  'BISON', 'MERLOT', 'FALCON', 'WALNUT', 'GLACIER', 'MARMOT',
-  'JUNIPER', 'BOBCAT', 'SEQUOIA', 'PELICAN', 'GRANITE', 'OTTER',
-];
-
-const $ = (sel, el = document) => el.querySelector(sel);
+const $ =(sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)');
@@ -160,8 +153,10 @@ function renderBoards(st) {
     }
     // Phones (punch #6): the board you're playing sits right under the
     // market. In a practice game that's always the human seat — the bot's
-    // board shouldn't leapfrog yours while it thinks.
-    if (narrow) el.style.order = (G.cfg.bot ? seat === 0 : active) ? -1 : 0;
+    // board shouldn't leapfrog yours while it thinks — and online it's your
+    // own seat, which doesn't move while your opponent thinks either.
+    const mine = G.cfg.bot ? seat === 0 : G.online ? seat === G.mySeat : active;
+    if (narrow) el.style.order = mine ? -1 : 0;
 
     const teams = [];
     for (let r = 0; r < 5; r++) {
@@ -210,7 +205,9 @@ function renderBoards(st) {
     el.innerHTML = `
       <div class="board-head">
         <span class="board-name">${esc(G.names[seat])}</span>
-        ${b.firstMover ? '<svg class="board-fm" role="img" aria-label="First Mover next quarter" title="First Mover next quarter"><use href="#ic-first"/></svg>' : ''}
+        ${G.online && seat === G.mySeat ? '<span class="you">you</span>' : ''}
+        ${G.online && G.presence[seat] === false ? '<span class="away" role="status">reconnecting…</span>' : ''}
+        ${b.firstMover ?'<svg class="board-fm" role="img" aria-label="First Mover next quarter" title="First Mover next quarter"><use href="#ic-first"/></svg>' : ''}
         <span class="expand-hint">tap to expand</span>
         <span class="board-spacer"></span>
         <span class="clock" data-seat="${seat}"></span>
@@ -629,26 +626,69 @@ async function dealAnimation() {
 // ---------------------------------------------------------------------------
 // Moves.
 
+// A tap on a legal destination. Everything after the clock arithmetic is
+// shared with a move that arrived over the wire — see playMove.
 async function submitMove(dest) {
   if (!G || animating || G.cur.over || !sel) return;
+  if (G.online && G.cur.seatToMove !== G.mySeat) return; // not your turn
   stopClock();
   const move = { source: sel.source, fn: sel.fn, dest, t: Math.round(G.spent[G.cur.seatToMove]) };
+  sel = null;
+  await playMove(move, true);
+}
 
+// One move, from whichever source: a tap, the bot, or the relay. The memo's
+// third layer rule — "the bot and the network connection are both just move
+// sources" — is this function having exactly one body.
+async function playMove(move, local) {
   const before = G.cur;
+  const seat = before.seatToMove;
   let interim, final;
   try {
     interim = E.applyTake(before, move);
     final = E.apply(before, move);
   } catch (err) {
     console.error(err);
-    announce('That move is not legal.');
-    startClock(before.seatToMove); // the turn continues — don't leave the clock stopped
+    if (local) {
+      announce('That move is not legal.');
+      startClock(seat); // the turn continues — don't leave the clock stopped
+      return;
+    }
+    // A move the opponent's engine allowed and ours refused is divergence, and
+    // §9 says divergence fails loudly rather than drifting.
+    netFail('Your opponent played a move this board says is illegal. The game has stopped.');
     return;
   }
+
+  if (!local) {
+    // The mover's own clock at submit is authoritative (§10's `t`); the local
+    // estimate that has been ticking since we saw their turn start is only a
+    // display, and latency is charged to nobody.
+    stopClock();
+    if (G.clockMs && Number.isFinite(move.t)) {
+      G.spent[seat] = move.t;
+      G.remaining[seat] = Math.max(0, G.clockMs - move.t);
+    }
+  }
+
+  const ply = G.moves.length;
   G.moves.push(move);
   G.cur = final;
   sel = null;
   animating = true;
+
+  if (local && G.net && !G.net.move(ply, move)) {
+    // The board moved but the relay didn't hear it. Resync on reconnect is
+    // authoritative and will take the move back, so say so now rather than
+    // let it disappear silently a few seconds later.
+    banner('<span class="r">Not sent</span> — the connection dropped. This move will come back when it returns.');
+  }
+  if (G.net) {
+    const h = E.stateHash(final);
+    G.hashes.set(ply, h);
+    G.net.hash(ply, h);
+    checkHash(ply);
+  }
 
   announce(describeMove(before, interim, move));
   await animatePhaseA(before, interim, move);
@@ -660,6 +700,7 @@ async function submitMove(dest) {
   animating = false;
 
   if (final.over) {
+    if (G.net) G.net.over(final.result);
     endGame('natural');
   } else {
     startClock(final.seatToMove);
@@ -671,6 +712,7 @@ async function submitMove(dest) {
       );
     }
     scheduleBot();
+    drainRemote();
   }
 }
 
@@ -739,18 +781,17 @@ function clockTick() {
   if (ms <= 0) {
     const flagged = G.clockSeat;
     stopClock();
+    // Online, the flag goes through the relay so both boards end on the same
+    // ruling — whoever notices first wins the race, and it doesn't matter
+    // which (PROTOCOL.md). If the relay is unreachable, rule locally rather
+    // than let a dead connection keep a finished game open.
+    if (G.online && G.net && G.net.flag(flagged)) return;
     endGame('timeout', flagged);
   }
 }
 
 // ---------------------------------------------------------------------------
 // Game lifecycle.
-
-function freshSeed() {
-  const buf = new Uint32Array(3);
-  crypto.getRandomValues(buf);
-  return `${SEED_A[buf[0] % SEED_A.length]}-${SEED_B[buf[1] % SEED_B.length]}-${buf[2] % 90 + 10}`;
-}
 
 function startGame(cfg) {
   const seed = cfg.seed && cfg.seed.trim() ? cfg.seed.trim() : freshSeed();
@@ -770,16 +811,29 @@ function startGame(cfg) {
     clockTs: 0,
     clockTimer: null,
     expand: {},
+    // Online play (build step 4). Offline games leave all of this inert.
+    online: !!cfg.online,
+    net: cfg.net || null,
+    mySeat: cfg.mySeat ?? null,
+    hashes: new Map(), // ply -> our state hash
+    theirHashes: new Map(), // ply -> what the other client got
+    remote: new Map(), // ply -> a broadcast move not yet applied
+    presence: {},
+    ended: null,
   };
   sel = null;
   animating = false;
   $('#setup').classList.add('hidden');
+  $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   $('#end-modal').close?.();
   renderAll();
   announce(
     `New game, seed ${seed}. ${G.names[s.startPlayer]} opens the hiring in Q1.`
   );
+  // Resuming a game already in progress: the caller is about to replay the
+  // move list onto this state, so there is no opening to play.
+  if (cfg.resume) return;
   (async () => {
     animating = true;
     await banner(
@@ -793,6 +847,8 @@ function startGame(cfg) {
 }
 
 function endGame(ending, flaggedSeat = null) {
+  if (!G || G.ended) return; // both clients may reach the same ending
+  G.ended = ending;
   if (G.clockTimer) {
     clearInterval(G.clockTimer);
     G.clockTimer = null;
@@ -862,20 +918,37 @@ function endGame(ending, flaggedSeat = null) {
       ${rows}
     </table>`;
   announce(`${title}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
+
+  // Online, only the host can call a rematch, and "New setup" means leaving
+  // the room rather than clearing a table.
+  const host = !G.online || !!net?.host;
+  $('#btn-rematch').classList.toggle('hidden', !host);
+  $('#btn-setup').textContent = G.online ? 'Leave the room' : 'New setup';
+  $('#end-net').textContent =
+    G.online && !host ? `Waiting for ${G.names[0]} to start a rematch — same room, fresh market.` : '';
+
   $('#end-modal').showModal?.();
 }
 
 // The game record (§10). Hot-seat games are exhibitions, bot games are
-// practice: archived either way, never counted toward a league.
+// practice: archived either way, never counted toward a league. Online games
+// are exhibitions too until there is a roster and a term to count them
+// against — that is build step 5, and it is the server that will write the
+// record then, by replaying this same move list.
 function gameRecord() {
   return {
     v: E.ENGINE_VERSION,
     term: 'dev',
     mode: G.cfg.bot ? 'practice' : 'exhibition',
     seed: G.seed,
+    room: G.code || null,
     seats: G.names,
     config: { clockMs: G.clockMs, splashHistory: false },
-    device: G.names.map((_, i) => (G.cfg.bot && i === BOT_SEAT ? 'bot' : 'hotseat')),
+    // Per seat, for the phone-fairness question — self-reported by each
+    // client and carried on the roster.
+    device: G.names.map((_, i) =>
+      G.cfg.bot && i === BOT_SEAT ? 'bot' : G.devices?.[i] || (G.online ? 'unknown' : 'hotseat')
+    ),
     moves: G.moves,
     result: G.result || null,
   };
@@ -891,12 +964,321 @@ function downloadRecord() {
 }
 
 // ---------------------------------------------------------------------------
+// Two-device play (build step 4, relay/PROTOCOL.md).
+//
+// The relay outlives any one game: it carries the lobby, the game, and a
+// rematch in the same room. So it hangs here rather than on G.
+
+const params = new URLSearchParams(location.search);
+const RELAY_URL = defaultRelayUrl(location, params.get('relay'));
+const SESSION_KEY = 'headcount.session';
+
+let net = null;
+let netRoom = null; // last known room state from welcome/roster/started
+
+// A phone that locks mid-game kills the tab. The resume token is what turns
+// that from a lost game into a five-second interruption (§11).
+function saveSession(patch) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ at: Date.now(), ...patch }));
+  } catch {
+    /* private browsing: reconnecting after a full reload just won't work */
+  }
+}
+
+function loadSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (!s || Date.now() - s.at > 3 * 3600 * 1000) return null; // a stale term
+    return s;
+  } catch {
+    return null;
+  }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* nothing to clear */
+  }
+}
+
+// --- connecting -------------------------------------------------------------
+
+function connectRoom({ code, name, players, clockMs, id }) {
+  if (net) net.leave();
+  net = new Relay(RELAY_URL);
+  net.id = id || null;
+  netRoom = null;
+
+  net.on('welcome', onWelcome);
+  net.on('roster', (m) => {
+    if (netRoom) netRoom.seats = m.seats;
+    if (G && G.online) {
+      m.seats.forEach((s) => (G.presence[s.seat] = s.connected));
+      if (!animating) renderBoards(G.view);
+    }
+    renderLobby();
+  });
+  net.on('started', (m) => beginOnlineGame(m));
+  net.on('move', onRemoteMove);
+  net.on('hash', onRemoteHash);
+  net.on('presence', (m) => {
+    if (netRoom) {
+      const seat = netRoom.seats?.find((s) => s.seat === m.seat);
+      if (seat) seat.connected = m.connected;
+    }
+    if (G && G.online) {
+      G.presence[m.seat] = m.connected;
+      if (!animating) renderBoards(G.view);
+      announce(`${G.names[m.seat]} ${m.connected ? 'is back' : 'has dropped out — their clock keeps running'}.`);
+    }
+    renderLobby();
+  });
+  net.on('ended', onRemoteEnded);
+  net.on('status', renderNetChip);
+  net.on('error', onNetError);
+
+  net.connect({ code, hello: { name, device: deviceKind(), players, clockMs } });
+  showLobby();
+}
+
+function onWelcome(w) {
+  netRoom = w.room;
+  saveSession({ code: w.code, id: w.you.id, name: lastTypedName });
+  if (w.room.started) {
+    // Rebuild rather than resume a half-remembered position: the game is
+    // seed + move list, so replaying is both simpler and exactly right.
+    beginOnlineGame(
+      {
+        seats: w.room.seats,
+        seed: w.room.seed,
+        players: w.room.players,
+        clockMs: w.room.clockMs,
+      },
+      true
+    );
+    resync(w.room, w.serverNow);
+  } else {
+    showLobby();
+  }
+  renderNetChip();
+}
+
+function beginOnlineGame(info, resume = false) {
+  netRoom = { ...(netRoom || {}), ...info };
+  startGame({
+    online: true,
+    net,
+    mySeat: net.seat,
+    players: info.players,
+    names: info.seats.map((s) => s.name),
+    clockMs: info.clockMs,
+    seed: info.seed,
+    bot: false,
+    resume,
+  });
+  G.code = net.code;
+  G.devices = info.seats.map((s) => s.device);
+  info.seats.forEach((s) => (G.presence[s.seat] = s.connected));
+  renderNetChip();
+  renderBoards(G.view);
+}
+
+// Replay the room's move list onto a fresh game, then put the clocks back
+// where the record says they were (PROTOCOL.md, "Clocks over the wire").
+function resync(room, serverNow) {
+  let s = E.newGame(room.seed, room.players);
+  const moves = [];
+  for (const rec of room.moves) {
+    s = E.apply(s, rec.move);
+    moves.push(rec.move);
+  }
+  G.cur = s;
+  G.view = snap(s);
+  G.moves = moves;
+  G.remote.clear();
+  G.hashes.clear();
+  G.theirHashes.clear();
+  sel = null;
+  animating = false;
+
+  G.spent = G.names.map(() => 0);
+  for (const rec of room.moves) {
+    if (Number.isFinite(rec.move.t)) G.spent[rec.seat] = rec.move.t;
+  }
+  G.remaining = G.spent.map((sp) => Math.max(0, G.clockMs - sp));
+  const last = room.moves[room.moves.length - 1];
+  if (last && G.clockMs && !s.over) {
+    // The one place a returning client pays for transit: it cannot know when
+    // it *would* have received the last move, so it uses the server's stamp.
+    const away = Math.max(0, serverNow - last.at);
+    G.spent[s.seatToMove] += away;
+    G.remaining[s.seatToMove] = Math.max(0, G.remaining[s.seatToMove] - away);
+  }
+
+  renderAll();
+  if (room.ended) {
+    endGame(room.ended.ending, room.ended.flagged ?? null);
+  } else if (!s.over) {
+    startClock(s.seatToMove);
+    announce(`Back in the game. Q${s.round}, ${G.names[s.seatToMove]} to hire.`);
+  }
+}
+
+// --- moves off the wire -----------------------------------------------------
+
+function onRemoteMove(msg) {
+  if (!G || !G.online || G.halted) return;
+  if (msg.ply < G.moves.length) return; // our own echo, or a duplicate on resume
+  G.remote.set(msg.ply, msg);
+  drainRemote();
+}
+
+let draining = false;
+async function drainRemote() {
+  if (draining || !G || !G.online) return;
+  draining = true;
+  try {
+    while (G && !G.halted && !animating && !G.cur.over) {
+      const next = G.remote.get(G.moves.length);
+      if (!next) break;
+      G.remote.delete(next.ply);
+      // The server stamps the seat, so this is the check that a client cannot
+      // play someone else's turn — apply() would happily let it.
+      if (next.seat !== G.cur.seatToMove) {
+        netFail(`A move arrived for ${G.names[next.seat]} out of turn. The game has stopped.`);
+        break;
+      }
+      await playMove(next.move, false);
+    }
+  } finally {
+    draining = false;
+  }
+}
+
+function onRemoteHash(msg) {
+  if (!G || !G.online || msg.seat === G.mySeat) return;
+  G.theirHashes.set(msg.ply, msg.h);
+  checkHash(msg.ply);
+}
+
+// §9: two clients running the same seed and the same moves are bit-identical
+// forever. If they aren't, stop — a drift discovered at the final scores is
+// the failure this check exists to make impossible.
+function checkHash(ply) {
+  const mine = G.hashes.get(ply);
+  const theirs = G.theirHashes.get(ply);
+  if (!mine || !theirs || mine === theirs) return;
+  console.error(`[headcount] hash divergence at ply ${ply}: ${mine} vs ${theirs}`);
+  netFail('This board and your opponent’s have diverged. Stopping rather than playing on.');
+}
+
+function onRemoteEnded(msg) {
+  if (!G || !G.online) return;
+  if (msg.ending === 'timeout') endGame('timeout', msg.flagged);
+  else if (msg.ending === 'natural' && !G.ended && G.cur.over) endGame('natural');
+}
+
+function onNetError(msg) {
+  if (msg.code === 'bad-ply') {
+    // We were behind; the broadcast we are about to receive is the truth.
+    announce('That move crossed with your opponent’s. Try again.');
+    return;
+  }
+  if (['no-room', 'room-full', 'started'].includes(msg.code)) {
+    clearSession();
+    $('#lobby-error').textContent = msg.msg;
+    $('#lobby-error').classList.remove('hidden');
+    return;
+  }
+  announce(msg.msg || 'The relay refused that.');
+}
+
+// A protocol-level failure is not a game result: it is a bug, and it says so
+// rather than inventing a winner.
+function netFail(text) {
+  if (!G) return;
+  G.halted = true;
+  stopClock();
+  if (G.clockTimer) {
+    clearInterval(G.clockTimer);
+    G.clockTimer = null;
+  }
+  banner(`<span class="r">Stopped</span> — ${esc(text)}`);
+  announce(text);
+  renderNetChip();
+}
+
+// --- chrome -----------------------------------------------------------------
+
+function renderNetChip() {
+  const chip = $('#net-chip');
+  if (!chip) return;
+  if (!net || !(G?.online || !$('#lobby').classList.contains('hidden'))) {
+    chip.classList.add('hidden');
+    return;
+  }
+  chip.classList.remove('hidden');
+  const state = G?.halted ? 'halted' : net.status;
+  chip.dataset.state = state;
+  chip.textContent =
+    state === 'halted'
+      ? 'Stopped'
+      : state === 'open'
+        ? net.code || 'connected'
+        : state === 'retrying' || state === 'connecting'
+          ? 'Reconnecting…'
+          : 'Offline';
+  const status = $('#lobby-status');
+  if (status) status.textContent = net.status === 'open' ? '' : 'Reconnecting to the relay…';
+}
+
+function showLobby() {
+  $('#setup').classList.add('hidden');
+  $('#game').classList.add('hidden');
+  $('#lobby').classList.remove('hidden');
+  renderLobby();
+  renderNetChip();
+}
+
+function renderLobby() {
+  if ($('#lobby').classList.contains('hidden')) return;
+  $('#lobby-code').textContent = net?.code || '…';
+  const seats = netRoom?.seats || [];
+  $('#lobby-seats').innerHTML =
+    seats
+      .map(
+        (s) => `<li class="${s.connected ? '' : 'away'}">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="lname">${esc(s.name)}</span>
+        ${s.seat === net?.seat ? '<span class="you">you</span>' : ''}
+        <span class="dev">${esc(s.device)}</span>
+      </li>`
+      )
+      .join('') || '<li class="waiting">Opening the room…</li>';
+
+  const host = !!net?.host;
+  const btn = $('#btn-lobby-start');
+  btn.classList.toggle('hidden', !host);
+  btn.disabled = seats.length < 2;
+  $('#lobby-wait').textContent = host
+    ? seats.length < 2
+      ? 'Read the code out in your breakout room, then start when everyone is in.'
+      : 'Everyone is in — start when you are ready.'
+    : `Waiting for ${seats[0]?.name || 'the host'} to start the game.`;
+}
+
+// ---------------------------------------------------------------------------
 // Input — two-tap, keyboard-friendly (everything is a real button).
 
 document.addEventListener('click', (e) => {
-  if (!G || animating || G.cur.over) return;
+  if (!G || animating || G.cur.over || G.halted) return;
   // The bot's turn is the bot's: taps select nothing while it thinks.
   if (G.cfg.bot && G.cur.seatToMove === BOT_SEAT && !e.target.closest('.board-head')) return;
+  // Online, so is your opponent's — you can still expand their board.
+  if (G.online && G.cur.seatToMove !== G.mySeat && !e.target.closest('.board-head')) return;
 
   const tile = e.target.closest('button.tile');
   if (tile) {
@@ -964,20 +1346,23 @@ document.addEventListener('keydown', (e) => {
 // Setup screen.
 
 let setupPlayers = 2;
-let setupMode = 'hotseat'; // 'hotseat' | 'practice'
+let setupMode = 'hotseat'; // 'hotseat' | 'practice' | 'online'
+let setupJoin = false; // online: joining someone else's room rather than opening one
+let lastTypedName = '';
 
 function renderNameInputs() {
   const wrap = $('#name-inputs');
   const existing = $$('input', wrap).map((i) => i.value);
   wrap.innerHTML = '';
-  const count = setupMode === 'practice' ? 1 : setupPlayers;
+  const solo = setupMode !== 'hotseat'; // you only name yourself unless it's one device
+  const count = solo ? 1 : setupPlayers;
   for (let i = 0; i < count; i++) {
     const input = document.createElement('input');
     input.type = 'text';
     input.maxLength = 20;
-    input.placeholder = setupMode === 'practice' ? 'Your name' : `Player ${i + 1}`;
-    input.value = existing[i] || '';
-    input.setAttribute('aria-label', `Player ${i + 1} name`);
+    input.placeholder = solo ? 'Your name' : `Player ${i + 1}`;
+    input.value = existing[i] || (i === 0 ? lastTypedName : '');
+    input.setAttribute('aria-label', solo ? 'Your name' : `Player ${i + 1} name`);
     wrap.appendChild(input);
   }
 }
@@ -991,26 +1376,69 @@ $$('#players-seg .seg-btn').forEach((btn) => {
   });
 });
 
+function applySetupMode() {
+  const practice = setupMode === 'practice';
+  const online = setupMode === 'online';
+  $('#online-field').classList.toggle('hidden', !online);
+  $('#code-input').classList.toggle('hidden', !(online && setupJoin));
+  // Joining? The host already chose the table size, the clock and the seed.
+  $('#players-seg').classList.toggle('hidden', practice || (online && setupJoin));
+  $('#clock-field').classList.toggle('hidden', online && setupJoin);
+  $('#seed-field').classList.toggle('hidden', online); // the room's seed is the server's
+  $('#mode-hint').textContent = practice
+    ? `A practice match against ${BOT_NAME} — our in-house recruiter. ` +
+      'Practice games count for nothing; play until the rules feel obvious.'
+    : online
+      ? 'Each player on their own device, anywhere. One of you opens a room and reads the code out; the others join it.'
+      : 'Everyone plays on this device, passing turns.';
+  $('#setup-submit').textContent = online
+    ? setupJoin
+      ? 'Join the room'
+      : 'Open a room'
+    : 'Open the market';
+  // Novices should learn the rules before they learn the clock.
+  if (practice) $('#clock-select').value = '0';
+  renderNameInputs();
+}
+
 $$('#mode-seg .seg-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
+    if (btn.disabled) return;
     $$('#mode-seg .seg-btn').forEach((b) => b.classList.remove('on'));
     btn.classList.add('on');
     setupMode = btn.dataset.mode;
-    const practice = setupMode === 'practice';
-    $('#players-seg').classList.toggle('hidden', practice);
-    $('#mode-hint').textContent = practice
-      ? `A practice match against ${BOT_NAME} — our in-house recruiter. ` +
-        'Practice games count for nothing; play until the rules feel obvious.'
-      : 'Everyone plays on this device, passing turns.';
-    // Novices should learn the rules before they learn the clock.
-    if (practice) $('#clock-select').value = '0';
-    renderNameInputs();
+    applySetupMode();
+  });
+});
+
+$$('#online-seg .seg-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    $$('#online-seg .seg-btn').forEach((b) => b.classList.remove('on'));
+    btn.classList.add('on');
+    setupJoin = btn.dataset.online === 'join';
+    applySetupMode();
+    if (setupJoin) $('#code-input').focus();
   });
 });
 
 $('#setup-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const typed = $$('#name-inputs input').map((i, k) => i.value.trim() || `Player ${k + 1}`);
+
+  if (setupMode === 'online') {
+    lastTypedName = typed[0];
+    const code = setupJoin ? $('#code-input').value.trim().toUpperCase() : null;
+    if (setupJoin && !code) return $('#code-input').focus();
+    $('#lobby-error').classList.add('hidden');
+    connectRoom({
+      code,
+      name: typed[0],
+      players: setupPlayers,
+      clockMs: Number($('#clock-select').value),
+    });
+    return;
+  }
+
   const practice = setupMode === 'practice';
   startGame({
     players: practice ? 2 : setupPlayers,
@@ -1021,30 +1449,70 @@ $('#setup-form').addEventListener('submit', (e) => {
   });
 });
 
-$('#btn-new').addEventListener('click', () => {
-  if (G && !G.cur.over && G.moves.length > 0 && !confirm('Abandon this game?')) return;
+// Leaving a game means leaving the room it was played in — otherwise the seat
+// sits there "reconnecting…" on the other player's screen forever.
+function toSetup() {
   if (G) {
     G.dead = true;
     if (G.clockTimer) clearInterval(G.clockTimer);
   }
+  if (net) {
+    net.leave();
+    net = null;
+    netRoom = null;
+    clearSession();
+  }
   $('#end-modal').close?.();
   $('#game').classList.add('hidden');
+  $('#lobby').classList.add('hidden');
   $('#setup').classList.remove('hidden');
+  renderNetChip();
+}
+
+$('#btn-new').addEventListener('click', () => {
+  if (G && !G.cur.over && G.moves.length > 0 && !confirm('Abandon this game?')) return;
+  toSetup();
 });
 $('#btn-export').addEventListener('click', downloadRecord);
 $('#btn-record').addEventListener('click', downloadRecord);
 $('#btn-rematch').addEventListener('click', () => {
+  // Online, a rematch is the same room and the same seats with a fresh bag,
+  // so nobody has to read a code out twice. The new game arrives as another
+  // `started` — for everyone, including whoever clicked.
+  if (G.online) return void net?.rematch();
   $('#end-modal').close();
   startGame({ ...G.cfg, seed: '' }); // fresh market, same table
 });
-$('#btn-setup').addEventListener('click', () => {
-  if (G) G.dead = true;
-  $('#end-modal').close();
-  $('#game').classList.add('hidden');
-  $('#setup').classList.remove('hidden');
-});
+$('#btn-setup').addEventListener('click', toSetup);
 
-renderNameInputs();
+$('#btn-lobby-start').addEventListener('click', () => net?.start());
+$('#btn-lobby-leave').addEventListener('click', toSetup);
+
+// Two devices need a relay. On a laptop running serve.sh that's dev-relay.js
+// on the next port over; in production it's the Worker, which is build step 5
+// — until then, say so rather than offering a button that cannot work.
+if (!RELAY_URL) {
+  const btn = $('#mode-seg [data-mode="online"]');
+  btn.disabled = true;
+  btn.title = 'Two-device play needs the relay, which is not live yet.';
+}
+
+// A phone that locked, a tab that was closed, a browser that crashed: the seat
+// is still there and the game is still going (§11).
+{
+  const saved = loadSession();
+  if (saved && RELAY_URL) {
+    const el = $('#rejoin');
+    el.classList.remove('hidden');
+    $('#rejoin-code').textContent = saved.code;
+    $('#btn-rejoin').addEventListener('click', () => {
+      lastTypedName = saved.name || '';
+      connectRoom({ code: saved.code, name: saved.name, id: saved.id });
+    });
+  }
+}
+
+applySetupMode();
 
 // ---------------------------------------------------------------------------
 // Headless smoke test: ?smoke=1 plays a full deterministic game through the
@@ -1081,6 +1549,157 @@ if (smokeParams.get('uitest') === 'setup') {
       out.textContent = 'UITEST FAIL: ' + (err && err.stack ? err.stack : err);
     }
     document.body.appendChild(out);
+  })();
+}
+
+// ?uitest=online&relay=ws://… plays a whole two-device game through the real
+// UI against a real relay: this page is seat 0 and drives itself through the
+// setup form, the lobby and submitMove; the opponent is a bare net.js client
+// with an engine and no interface. It drops the socket mid-game to prove the
+// reconnect path, and finishes with a rematch. test/online.test.js drives it.
+if (smokeParams.get('uitest') === 'online') {
+  window.__instant = true;
+  (async () => {
+    const out = document.createElement('div');
+    out.id = 'smoke';
+    const fails = [];
+    const expect = (cond, what) => cond || fails.push(what);
+    const until = async (pred, what, ms = 8000) => {
+      const t0 = performance.now();
+      while (!pred()) {
+        if (performance.now() - t0 > ms) throw new Error('timed out waiting for ' + what);
+        await sleep(4);
+      }
+    };
+
+    // The other player: transport plus engine, nothing else.
+    const opp = new Relay(RELAY_URL);
+    opp.hashes = new Map();
+    opp.mismatch = 0;
+    opp.applied = 0;
+    opp.on('welcome', (w) => (opp.mySeat = w.you.seat));
+    opp.on('started', (m) => {
+      opp.state = E.newGame(m.seed, m.players);
+      opp.applied = 0;
+      opp.hashes.clear();
+    });
+    opp.on('move', (m) => {
+      if (!opp.state || m.ply < opp.applied) return;
+      opp.state = E.apply(opp.state, m.move);
+      opp.applied = m.ply + 1;
+      const h = E.stateHash(opp.state);
+      opp.hashes.set(m.ply, h);
+      opp.hash(m.ply, h);
+    });
+    opp.on('hash', (m) => {
+      if (m.seat !== opp.mySeat && opp.hashes.has(m.ply) && opp.hashes.get(m.ply) !== m.h) {
+        opp.mismatch++;
+      }
+    });
+
+    // Play until someone's engine says the game is over.
+    const playOut = async (label) => {
+      let guard = 0;
+      while (G && !G.cur.over && guard < 400) {
+        if (G.halted) throw new Error(`${label}: the board halted mid-game`);
+        if (animating || G.moves.length !== opp.applied) {
+          await sleep(3);
+          continue;
+        }
+        guard++;
+        if (G.cur.seatToMove === G.mySeat) {
+          const moves = E.legalMoves(G.cur);
+          const m = moves[(guard * 7) % moves.length];
+          sel = { source: m.source, fn: m.fn };
+          await submitMove(m.dest);
+        } else {
+          const moves = E.legalMoves(opp.state);
+          const m = moves[(guard * 7) % moves.length];
+          opp.move(opp.applied, { ...m, t: 800 + opp.applied * 90 });
+          await sleep(6);
+        }
+      }
+      return guard;
+    };
+
+    try {
+      // --- host a room, through the real form -----------------------------
+      $('#mode-seg [data-mode="online"]').click();
+      expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset appears');
+      expect($('#seed-field').classList.contains('hidden'), 'the seed field hides — the room owns it');
+      expect($$('#name-inputs input').length === 1, 'you name only yourself');
+      $('#name-inputs input').value = 'Sam';
+      $('#clock-select').value = '0';
+      $('#setup-form').requestSubmit();
+
+      await until(() => net && net.code, 'the room code');
+      expect(!$('#lobby').classList.contains('hidden'), 'the lobby shows');
+      expect($('#lobby-code').textContent === net.code, 'the lobby shows the room code');
+      expect(net.host === true, 'the opener is the host');
+
+      // --- the opponent joins ---------------------------------------------
+      opp.connect({ code: net.code, hello: { name: 'Alex', device: 'phone' } });
+      await until(() => netRoom?.seats?.length === 2, 'the second seat');
+      expect($$('#lobby-seats li').length === 2, 'both seats are listed');
+      expect($('#lobby-seats .you') !== null, 'your own seat is marked');
+
+      // --- start ------------------------------------------------------------
+      $('#btn-lobby-start').click();
+      await until(() => G && G.online && opp.state, 'the game to start');
+      expect(!$('#game').classList.contains('hidden'), 'the board shows');
+      expect(G.mySeat === 0 && opp.mySeat === 1, 'seats are join order');
+      expect(G.seed === netRoom.seed, 'the board uses the room seed');
+
+      // --- taps off-turn do nothing ---------------------------------------
+      await until(() => !animating, 'the deal');
+      if (G.cur.seatToMove !== G.mySeat) {
+        $('#agencies button.tile')?.click();
+        expect(sel === null, 'a tap on the opponent’s turn selects nothing');
+      }
+
+      // --- play, drop the connection halfway ------------------------------
+      let dropped = false;
+      const halfway = setInterval(() => {
+        if (!dropped && G && G.moves.length >= 6 && !animating) {
+          dropped = true;
+          net.ws.close(); // as a phone locking does
+        }
+      }, 20);
+      const moved = await playOut('first game');
+      clearInterval(halfway);
+      expect(dropped, 'the socket was dropped mid-game');
+      expect(net.status === 'open', 'the client reconnected by itself');
+      expect(G.cur.over, `the game finished (${moved} turns)`);
+      expect(!G.halted, 'no divergence, no out-of-turn move');
+      expect(opp.mismatch === 0, 'every state hash agreed');
+      expect(
+        E.stateHash(G.cur) === E.stateHash(opp.state),
+        'both clients ended byte-identical'
+      );
+      expect(G.ended === 'natural', 'the ending is recorded');
+      expect($('#end-modal').open === true, 'the result modal opened');
+
+      // --- rematch: same room, same seats, fresh bag -----------------------
+      const firstSeed = G.seed;
+      $('#btn-rematch').click();
+      await until(() => G && G.seed !== firstSeed && !G.cur.over, 'the rematch');
+      expect(G.mySeat === 0, 'seats survive the rematch');
+      expect(G.moves.length === 0, 'the rematch starts from an empty log');
+      expect($('#end-modal').open === false, 'the modal closed');
+      await until(() => !animating && opp.applied === 0, 'the new deal');
+      await playOut('rematch');
+      expect(G.cur.over, 'the rematch finished too');
+      expect(opp.mismatch === 0, 'and agreed hash for hash');
+
+      out.textContent = fails.length ? 'NETSMOKE FAIL: ' + fails.join('; ') : 'NETSMOKE OK';
+    } catch (err) {
+      out.textContent =
+        'NETSMOKE FAIL: ' + (err && err.stack ? err.stack : err) + (fails.length ? ' | ' + fails.join('; ') : '');
+    }
+    document.body.appendChild(out);
+    // The Node side is waiting on this, not on the DOM: headless Chrome has
+    // no way to tell it the page is finished otherwise.
+    fetch('/__done?r=' + encodeURIComponent(out.textContent)).catch(() => {});
   })();
 }
 

@@ -6,7 +6,7 @@
 <title>Headcount</title>
 <!-- ?v= is a cache-buster: bump it when shipping UI changes so browsers
      holding older copies pick up the new files on a plain reload. -->
-<link rel="stylesheet" href="./style.css?v=5">
+<link rel="stylesheet" href="./style.css?v=6">
 <!-- PWA dressing: the manifest lets a phone "Add to Home Screen", where the
      game opens full-screen under its own icon. Still just this website —
      no store, no service worker; updates arrive on next open as always. -->
@@ -75,14 +75,30 @@
     <p class="sub">Competing firms hire from a shared talent market. Staff complete
     teams, build the org chart, and pay for everyone left on the bench.</p>
 
+    <p class="rejoin hidden" id="rejoin">
+      You were in room <b id="rejoin-code"></b>.
+      <button type="button" id="btn-rejoin" class="link-btn">Rejoin it</button>
+    </p>
+
     <form id="setup-form">
       <fieldset>
         <legend>Table</legend>
         <div class="seg" id="mode-seg" role="radiogroup" aria-label="Game mode">
           <button type="button" class="seg-btn on" data-mode="hotseat">Hot-seat</button>
           <button type="button" class="seg-btn" data-mode="practice">Training Ground</button>
+          <button type="button" class="seg-btn" data-mode="online">Two devices</button>
         </div>
         <p class="mode-hint" id="mode-hint">Everyone plays on this device, passing turns.</p>
+      </fieldset>
+      <fieldset id="online-field" class="hidden">
+        <legend>Room</legend>
+        <div class="seg" id="online-seg" role="radiogroup" aria-label="Open or join a room">
+          <button type="button" class="seg-btn on" data-online="host">Open a room</button>
+          <button type="button" class="seg-btn" data-online="join">Join a room</button>
+        </div>
+        <input id="code-input" class="hidden" type="text" autocomplete="off" spellcheck="false"
+               autocapitalize="characters" maxlength="24" aria-label="Room code"
+               placeholder="SYNERGY-BISON">
       </fieldset>
       <fieldset id="players-field">
         <legend>Firms at the table</legend>
@@ -93,7 +109,7 @@
         </div>
         <div id="name-inputs"></div>
       </fieldset>
-      <fieldset>
+      <fieldset id="clock-field">
         <legend>Clock</legend>
         <select id="clock-select" aria-label="Clock per player">
           <option value="0">No clock</option>
@@ -102,13 +118,31 @@
           <option value="600000">10:00 each</option>
         </select>
       </fieldset>
-      <fieldset>
+      <fieldset id="seed-field">
         <legend>Seed <span class="hint">(blank for a fresh market)</span></legend>
         <input id="seed-input" type="text" autocomplete="off" spellcheck="false"
                placeholder="e.g. SYNERGY-BISON-47">
       </fieldset>
-      <button type="submit" class="cta">Open the market</button>
+      <button type="submit" class="cta" id="setup-submit">Open the market</button>
     </form>
+  </div>
+</section>
+
+<!-- Lobby — between opening a room and starting the game. The room code is
+     the point of this screen: it is read aloud, not copied. -->
+<section id="lobby" class="screen hidden">
+  <div class="setup-card">
+    <p class="kicker"><i></i>LER 565 · The Talent Market</p>
+    <p class="room-label">Room code</p>
+    <h1 class="room-code" id="lobby-code">…</h1>
+    <p class="sub" id="lobby-wait"></p>
+    <ul id="lobby-seats" class="seat-list"></ul>
+    <p class="net-status" id="lobby-status" role="status"></p>
+    <p class="lobby-error hidden" id="lobby-error" role="alert"></p>
+    <div class="lobby-actions">
+      <button type="button" id="btn-lobby-start" class="cta">Start the game</button>
+      <button type="button" id="btn-lobby-leave" class="ghost-btn">Leave</button>
+    </div>
   </div>
 </section>
 
@@ -120,6 +154,7 @@
     <div id="turn-label"></div>
     <div class="supply" title="Recruits waiting to enter the market">
       <span class="chip" id="pool-chip">Recruit pool <b id="pool-count">80</b></span>
+      <span class="chip net hidden" id="net-chip" role="status"></span>
     </div>
     <div class="menu">
       <button id="btn-export" class="ghost-btn" title="Download the game record (seed + moves)">Record</button>
@@ -148,6 +183,7 @@
 
 <dialog id="end-modal">
   <div id="end-body"></div>
+  <p class="end-net" id="end-net"></p>
   <div class="end-actions">
     <button id="btn-record" class="ghost-btn">Download record</button>
     <button id="btn-rematch" class="cta">Rematch</button>
@@ -155,6 +191,6 @@
   </div>
 </dialog>
 
-<script type="module" src="./ui.js?v=6"></script>
+<script type="module" src="./ui.js?v=7"></script>
 </body>
 </html>

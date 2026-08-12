@@ -1,0 +1,27 @@
+# Headcount relay — Cloudflare Worker + Durable Object (build step 4).
+#
+#   npx wrangler dev       local, ws://localhost:8787 — the same port dev-relay.js
+#                          uses, so net.js finds it with no configuration
+#   npx wrangler deploy    needs a Cloudflare account (HEADCOUNT.md, Open questions)
+#
+# After the first deploy, put the printed wss:// URL into PRODUCTION_RELAY in
+# ../net.js. Until then online play works on a LAN via dev-relay.js and the
+# "Two devices" button stays disabled in production, on purpose.
+
+name = "headcount-relay"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "HeadcountRoom"
+
+# SQLite-backed Durable Objects — this is what makes them available on the
+# free plan, which the whole hosting decision rests on. Not an optimisation:
+# `new_classes` here would be a paid-plan-only deployment.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["HeadcountRoom"]
+
+[observability]
+enabled = true

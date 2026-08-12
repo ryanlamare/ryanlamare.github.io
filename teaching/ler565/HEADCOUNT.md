@@ -1,18 +1,24 @@
 # Headcount — working memo
 
-**Status: active — build steps 1–3 done (2026-08-06): engine, hot-seat board
-UI, greedy bot + Training Ground. The design/refinement pass (punch list
-below) is applied, same day. Next: step 4, relay + two-device play.** Everything lives in
-`headcount/`: `engine.js` (pure rules module), `bot.js` (greedy practice
-opponent, "The Consultant"), `index.html` + `style.css` + `ui.js` (the
-playable board — two-tap input, chess clocks, animation layer driven by
-engine state-diffs via `applyTake`; the setup screen's Training Ground mode
-plays you against the bot, recorded as `mode: 'practice'`). Preview with
-`./serve.sh` at `/teaching/ler565/headcount/`. Tests:
+**Status: active — build steps 1–4 done: engine, hot-seat board UI, greedy bot
++ Training Ground (2026-08-06, with the punch list below applied the same day),
+and two-device play over a relay (2026-08-12). Next: step 5, backend, identity,
+results and the leaderboard — which needs the Cloudflare account.** Everything
+lives in `headcount/`: `engine.js` (pure rules module), `bot.js` (greedy
+practice opponent, "The Consultant"), `words.js` (room codes and seeds),
+`net.js` (the transport layer), `relay/` (the relay itself — see *Two devices*
+below), and `index.html` + `style.css` + `ui.js` (the playable board — two-tap
+input, chess clocks, animation layer driven by engine state-diffs via
+`applyTake`; the setup screen's Training Ground mode plays you against the bot,
+recorded as `mode: 'practice'`, and its Two devices mode opens or joins a room).
+Preview with `./serve.sh` at `/teaching/ler565/headcount/`. Tests:
 `node teaching/ler565/headcount/test/engine.test.js` (soak size as an
-optional argument) and `test/bot.test.js`; `?smoke=1` on the game URL plays
-a full deterministic game through the real UI pipeline in a headless
-browser (`&bot=1` for a practice game). Scoped 2026-08-04; reviewed and
+optional argument), `test/bot.test.js`, `test/relay.test.js` (the protocol,
+headless) and `test/online.test.js` (two-device play through the real UI in
+headless Chrome); `?smoke=1` on the game URL plays a full deterministic game
+through the real UI pipeline in a headless browser (`&bot=1` for a practice
+game — that one needs `--virtual-time-budget`, since `--dump-dom` fires long
+before the bot has finished thinking). Scoped 2026-08-04; reviewed and
 extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 **14 to 36** across years, so sizes (board top-N, pairing tables, instructor
 board) are settings, not constants. The game is called **Headcount** — see
@@ -470,6 +476,55 @@ the design can fix it.
 
 ---
 
+## Two devices — built 2026-08-12 (build step 4)
+
+Students on separate devices now play a real game against each other. The wire
+format is `headcount/relay/PROTOCOL.md`; how to run it is
+`headcount/relay/README.md`. Three things are worth having in this memo rather
+than only in those.
+
+**The relay never runs the engine.** A complete game is `seed + move list` and
+Azul is perfect information once the bag order is shared, so the room's whole
+job is to hand out a code and a seed, agree seat order, put each move in front
+of the other players in order exactly once, and remember the log. The one thing
+it *is* authoritative about is **who sent a message** — it stamps the seat from
+the connection, so a client cannot play its opponent's turn. Everything else —
+legality, scoring, whose turn it is — every client decides identically, from the
+engine. That is what makes the same protocol implementable in 200 lines of Node
+for the kitchen table and in a Durable Object for the class, and it is why
+`relay/room.js` is one file that both of them run.
+
+**Two relays, one implementation.** `relay/dev-relay.js` runs on a laptop with
+no dependencies (the WebSocket framing is hand-rolled RFC 6455, which is cheaper
+than a `node_modules` in a repo that has none) — run it beside `./serve.sh` and
+two devices on the same wifi can play today, no account anywhere. `relay/worker.js`
+is the same `room.js` inside a Cloudflare Durable Object for the class. The
+Worker is written, and waits only on the account.
+
+**Reconnect is the interesting case, and it's cheap.** Because a game is
+`seed + move list`, a returning client rebuilds the exact position from one
+`welcome` message — there is no delta protocol and no snapshot. A resume token
+in `localStorage` returns you to *your* seat, so a phone that locked mid-game is
+a five-second interruption rather than a lost game. The dropped player's clock
+keeps running while they are gone, as §11 requires and as chess does.
+
+Two additions the spec didn't have, both from thinking about a breakout room
+rather than a protocol:
+
+- **Rematch is a message.** Same room, same seats, fresh bag. Pairs play several
+  games in a session and making them read the code aloud again each time is
+  friction for nothing.
+- **The room code is the largest thing on the lobby screen**, because its real
+  transport is Zoom audio.
+
+Tested at three levels: `test/relay.test.js` plays a full game between two
+headless clients over real WebSockets and compares state hashes at every ply;
+`test/online.test.js` opens the actual game page in headless Chrome, hosts a
+room, plays a full game against a bare opponent, **drops the socket mid-game**
+and finishes with a rematch. What is still untested is a human: the memo's own
+testing rules — a real Zoom playtest, separate networks, don't coach the other
+player — are the next thing, and they are what step 4 existed to make possible.
+
 ## Design punch list — from playthroughs, applied at the refinement pass
 
 Compiled from Ryan's first hot-seat playthrough (2026-08-05). These are
@@ -525,6 +580,7 @@ reader can tell a quotation from a choice.
 3. **Greedy bot + Training Ground.** Falls straight out of step 2 and gives
    orientation week something to link.
 4. **Relay + two-device play.** A real Zoom playtest can't happen hot-seat.
+   Done 2026-08-12 — see *Two devices* above.
 5. **Backend, identity, results, leaderboard, admin.** Instructor auth is one
    secret; roster and term setup is a one-page admin screen.
 6. **Stats screens, Record Book, Hall of Champions, Talent Weekly, instructor
@@ -560,7 +616,12 @@ accident.
   Node hosts sleep). One Durable Object per room provides the WebSocket relay
   and room state; DO storage holds the kilobyte-scale archive. Free-plan limits
   verified (≈3M requests/month, DOs and WebSockets included) — oversized even at
-  36 students. Needs a Cloudflare account under Ryan's control at step 5.
+  36 students. Needs a Cloudflare account under Ryan's control at step 5. The
+  Worker and the Durable Object are **written and waiting** (2026-08-12):
+  `npx wrangler deploy` from `headcount/relay/`, then the printed `wss://` URL
+  goes into `PRODUCTION_RELAY` in `headcount/net.js`. Until that constant is
+  filled in, the "Two devices" button is deliberately disabled outside a LAN —
+  better than a button that cannot work.
 - **No wooden spoon**, and no award for finishing last — see *Award names*.
 
 - **Repeat matchups in a week both count.** Simplest, no bookkeeping.
