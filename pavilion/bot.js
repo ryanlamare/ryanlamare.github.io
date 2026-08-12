@@ -1,8 +1,8 @@
-// Headcount — the greedy practice bot (build step 3).
+// Pavilion — the greedy practice bot (build step 3).
 //
 // The Training Ground opponent and the emergency stand-in for a no-show.
 // It never plays a league game. Per the memo it is a greedy heuristic —
-// best immediate placement, avoids the bench — deliberately one ply deep:
+// best immediate placement, avoids idling tiles — deliberately one ply deep:
 // good enough to teach the rules, beatable once a student understands them.
 //
 // It is a MOVE SOURCE, exactly like a network message or a click: it reads
@@ -18,48 +18,49 @@ import {
   applyTake,
   wallColumn,
   scorePlacement,
-  BENCH_PENALTIES,
+  FLOOR_PENALTIES,
 } from './engine.js';
 
 export const BOT_VERSION = 1;
 
-function benchPenalty(n) {
+function floorPenalty(n) {
   let p = 0;
-  for (let i = 0; i < Math.min(n, BENCH_PENALTIES.length); i++) p += BENCH_PENALTIES[i];
+  for (let i = 0; i < Math.min(n, FLOOR_PENALTIES.length); i++) p += FLOOR_PENALTIES[i];
   return p;
 }
 
 // Weigh one legal move for the player to move. applyTake gives the exact
-// post-move board — overflow, token, forced-bench cases all included — so
+// post-move board — overflow, token, forced-floor cases all included — so
 // the weights never disagree with the rules.
 function evaluate(state, move) {
   const seat = state.seatToMove;
   const before = state.boards[seat];
   const after = applyTake(state, move).boards[seat];
 
-  // The bench bill this move actually adds (token space included).
-  const benchCost = benchPenalty(after.bench.length) - benchPenalty(before.bench.length);
-  let value = -benchCost;
+  // The idling bill this move actually adds (token space included).
+  const floorCost = floorPenalty(after.floor.length) - floorPenalty(before.floor.length);
+  let value = -floorCost;
 
-  if (move.dest.type === 'team') {
+  if (move.dest.type === 'line') {
     const r = move.dest.row;
-    const gained = after.teams[r].count - before.teams[r].count;
-    if (after.teams[r].count === r + 1) {
-      // Completing a team: worth the real placement score next Phase B,
+    const gained = after.lines[r].count - before.lines[r].count;
+    if (after.lines[r].count === r + 1) {
+      // Completing a line: worth the real placement score next Phase B,
       // plus a little for the wall tile's pull toward end-game bonuses.
-      const c = wallColumn(move.fn, r);
+      const c = wallColumn(move.kind, r);
       const wall = before.wall.map((row) => row.slice());
       wall[r][c] = 1;
       value += scorePlacement(wall, r, c) + 1.5;
     } else {
       // Partial progress is worth less than points in hand, and a barely
-      // started long row is a liability it should feel slightly.
-      value += gained * 0.8 - (r + 1 - after.teams[r].count) * 0.1;
+      // started long line is a liability it should feel slightly.
+      value += gained * 0.8 - (r + 1 - after.lines[r].count) * 0.1;
     }
   }
 
-  // First Mover: initiative next quarter, at the bench cost already counted.
-  if (move.source.type === 'centre' && state.firstMoverInCentre) value += 0.25;
+  // The first-player token: initiative next round, at the idling cost
+  // already counted above.
+  if (move.source.type === 'pool' && state.firstTokenInPool) value += 0.25;
 
   return value;
 }

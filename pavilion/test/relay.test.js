@@ -1,4 +1,4 @@
-// Headcount relay — headless test suite (relay/PROTOCOL.md).
+// Pavilion relay — headless test suite (relay/PROTOCOL.md).
 //
 //   node pavilion/test/relay.test.js
 //
@@ -15,7 +15,7 @@
 import { start, server, rooms } from '../relay/dev-relay.js';
 import { Room } from '../relay/room.js';
 import { Relay } from '../net.js';
-import { newGame, legalMoves, apply, stateHash, TOTAL_TILES, FUNCTIONS, FIRST_MOVER } from '../engine.js';
+import { newGame, legalMoves, apply, stateHash, TOTAL_TILES, KINDS, FIRST_TOKEN } from '../engine.js';
 
 // ---------------------------------------------------------------------------
 // Tiny harness — the same one engine.test.js uses.
@@ -50,13 +50,13 @@ function waitFor(relay, type, predicate = () => true, ms = 4000) {
       () => reject(new Error(`timed out waiting for "${type}" after ${ms}ms`)),
       ms
     );
-    const fn = (payload) => {
+    const CB = (payload) => {
       if (!predicate(payload)) return;
       clearTimeout(timer);
-      relay.listeners.get(type).delete(fn);
+      relay.listeners.get(type).delete(CB);
       resolve(payload);
     };
-    relay.on(type, fn);
+    relay.on(type, CB);
   });
 }
 
@@ -151,12 +151,12 @@ class Player {
 // exactly why it is worth asserting on a state that arrived over the wire.
 function countTiles(s) {
   let n = s.bag.length;
-  for (let f = 0; f < FUNCTIONS; f++) n += s.lid[f] + s.centre[f];
-  for (const a of s.agencies) for (let f = 0; f < FUNCTIONS; f++) n += a[f];
+  for (let f = 0; f < KINDS; f++) n += s.lid[f] + s.pool[f];
+  for (const a of s.sources) for (let f = 0; f < KINDS; f++) n += a[f];
   for (const b of s.boards) {
-    for (const t of b.teams) n += t.count;
+    for (const t of b.lines) n += t.count;
     for (const row of b.wall) for (const c of row) n += c;
-    for (const e of b.bench) if (e !== FIRST_MOVER) n++;
+    for (const e of b.floor) if (e !== FIRST_TOKEN) n++;
   }
   return n;
 }
@@ -201,7 +201,7 @@ eq(roster.seats[1].device, 'phone', 'the device is recorded per seat');
 {
   const c = new Player(URL, 'Nobody');
   const err = waitFor(c.relay, 'error');
-  c.relay.connect({ code: 'SYNERGY-NOWHERE', hello: { name: 'Nobody', device: 'laptop' } });
+  c.relay.connect({ code: 'FERRIS-NOWHERE', hello: { name: 'Nobody', device: 'laptop' } });
   eq((await err).code, 'no-room', 'an unknown room code is refused');
   c.relay.leave();
 }
@@ -247,7 +247,7 @@ eq(sa.clockMs, 300000, 'the room carries the clock the host chose');
   eq(b.mismatches.length, 0, 'no hash mismatch at any ply, the other way');
   eq(a.outOfTurn, 0, 'no move ever arrived out of turn');
   eq(countTiles(a.state), TOTAL_TILES, 'tiles are conserved across the wire');
-  ok(a.state.round >= 5, `the game ran a full ${a.state.round} quarters`);
+  ok(a.state.round >= 5, `the game ran a full ${a.state.round} weeks`);
 }
 
 // ---------------------------------------------------------------------------
@@ -403,7 +403,7 @@ section('Timeout — whoever notices first flags, once');
   eq(rooms.get(w.code).ended.flagged, 1, 'the first flag stands');
 
   const err = waitFor(h.relay, 'error', () => true, 300).catch(() => null);
-  h.relay.move(0, { source: { type: 'centre' }, fn: 0, dest: { type: 'bench' }, t: 0 });
+  h.relay.move(0, { source: { type: 'pool' }, kind: 0, dest: { type: 'floor' }, t: 0 });
   await sleep(30);
   eq(rooms.get(w.code).moves.length, 0, 'no move is accepted after the game ended');
   await err;
@@ -426,11 +426,11 @@ section('Malformed input is refused, not relayed');
 
   const mover = h.myTurn() ? h : g;
   for (const bad of [
-    { source: { type: 'agency', index: 99 }, fn: 0, dest: { type: 'bench' } },
-    { source: { type: 'nowhere' }, fn: 0, dest: { type: 'bench' } },
-    { source: { type: 'centre' }, fn: 12, dest: { type: 'bench' } },
-    { source: { type: 'centre' }, fn: 0, dest: { type: 'team', row: 9 } },
-    { source: { type: 'centre' }, fn: 0 },
+    { source: { type: 'source', index: 99 }, kind: 0, dest: { type: 'floor' } },
+    { source: { type: 'nowhere' }, kind: 0, dest: { type: 'floor' } },
+    { source: { type: 'pool' }, kind: 12, dest: { type: 'floor' } },
+    { source: { type: 'pool' }, kind: 0, dest: { type: 'line', row: 9 } },
+    { source: { type: 'pool' }, kind: 0 },
     null,
   ]) {
     const err = waitFor(mover.relay, 'error');
@@ -478,7 +478,7 @@ section('Rematch — same room, same seats, fresh bag');
 
   // --- and the room survives being written down and rebuilt ---------------
   const live = rooms.get(w.code);
-  live.moves.push({ seat: 0, move: { source: { type: 'centre' }, fn: 0, dest: { type: 'bench' } }, at: 1 });
+  live.moves.push({ seat: 0, move: { source: { type: 'pool' }, kind: 0, dest: { type: 'floor' } }, at: 1 });
   const rebuilt = Room.from(JSON.parse(JSON.stringify(live.snapshot())));
   eq(rebuilt.code, live.code, 'a restored room keeps its code');
   eq(rebuilt.seed, live.seed, 'and its seed');

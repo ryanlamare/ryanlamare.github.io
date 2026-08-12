@@ -1,4 +1,4 @@
-# The Headcount relay
+# The Pavilion relay
 
 Two devices, one game. `PROTOCOL.md` is the wire format; this is how to run it.
 
@@ -25,7 +25,7 @@ Both print a LAN address. Open the game on two devices at the **LAN** one — no
 http://192.168.x.x:8000/pavilion/
 ```
 
-Pick **Two devices → Open a room** on one, read the code out, **Join a room** on
+Pick **Live game → Open a room** on one, read the code out, **Join a room** on
 the other. `net.js` works the relay's address out from the page's own address,
 so there is nothing to configure as long as both run on the same machine.
 
@@ -37,6 +37,12 @@ they are.
 `wss://headcount-relay.rlamare.workers.dev`, deployed 2026-08-12 and already in
 `PRODUCTION_RELAY` in `../net.js`. `https://headcount-relay.rlamare.workers.dev/`
 answers with a small JSON health object.
+
+That host name is the **deployment's**, not the game's — it went up under the
+first theme and there are rooms behind it. Renaming the Worker mints a second
+one at a second URL, and renaming the `HeadcountRoom` Durable Object class needs
+a `renamed_classes` migration; neither buys anything, because the theme lives in
+the copy layer and never on the wire (`PROTOCOL.md`).
 
 To ship a change to the relay: `npx wrangler deploy` from this directory. The
 URL doesn't change, so nothing else needs touching. Note that this deploys

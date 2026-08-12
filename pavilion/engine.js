@@ -1,8 +1,15 @@
-// Headcount — rules engine.
+// Pavilion — rules engine.
 //
-// Implements ../HEADCOUNT-RULES.md, the complete spec. Section references (§)
+// Implements ../PAVILION-RULES.md, the complete spec. Section references (§)
 // below point there. Mechanically this is base Azul, unchanged — theme the
 // names and the art, never the rules.
+//
+// Deliberately theme-NEUTRAL (§10, Identifiers): nothing in this file knows
+// the game is set at a world's fair. A tile has a `kind`, not a discipline;
+// tiles come from a `source` or the `pool` and go to a `line` or the `floor`.
+// The theme has moved three times and the archived game record is meant to
+// outlive the term, so the copy layer (ui.js) owns every player-facing word
+// and the fourth theme change touches no stored game.
 //
 // Pure and dependency-free: runs unchanged in the browser, in Node (the
 // headless test suite), and in a Cloudflare Worker (server-side replay).
@@ -11,23 +18,22 @@
 // game is `seed + move list` (§9).
 
 export const ENGINE_VERSION = 1;
-export const FUNCTIONS = 5; // Engineering 0, Sales 1, Operations 2, Finance 3, Analytics 4
-export const FUNCTION_NAMES = ['Engineering', 'Sales', 'Operations', 'Finance', 'Analytics'];
-export const TILES_PER_FUNCTION = 20;
+export const KINDS = 5; // tile kinds 0–4; ui.js names them
+export const TILES_PER_KIND = 20;
 export const TOTAL_TILES = 100;
-export const AGENCY_SIZE = 4;
-export const TEAM_ROWS = 5;
-export const BENCH_SIZE = 7;
-export const BENCH_PENALTIES = [1, 1, 2, 2, 2, 3, 3]; // stored positive, subtracted (§7.3)
-export const FIRST_MOVER = 5; // bench entry marking the First Mover token (§6.3)
+export const SOURCE_SIZE = 4;
+export const LINE_ROWS = 5;
+export const FLOOR_SIZE = 7;
+export const FLOOR_PENALTIES = [1, 1, 2, 2, 2, 3, 3]; // stored positive, subtracted (§7.3)
+export const FIRST_TOKEN = 5; // floor entry marking the first-player token (§6.3)
 
-export function agencyCount(players) {
+export function sourceCount(players) {
   return 2 * players + 1; // §1: 5 at 2 players, 7 at 3, 9 at 4
 }
 
-// §2 — the org chart is a cyclic Latin square. Derived, never hardcoded.
-export function wallColumn(fn, row) {
-  return (fn + row) % FUNCTIONS;
+// §2 — the wall is a cyclic Latin square. Derived, never hardcoded.
+export function wallColumn(kind, row) {
+  return (kind + row) % KINDS;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,15 +82,15 @@ function shuffle(s, arr) {
 // State construction (§3).
 //
 // Shapes, all integers:
-//   bag       — array of function indices; the END of the array is the top of
+//   bag       — array of kind indices; the END of the array is the top of
 //               the bag (draw = pop). Order is the seeded shuffle.
-//   lid       — counts per function (unordered by rule; order is imposed
+//   lid       — counts per kind (unordered by rule; order is imposed
 //               canonically when the lid refills the bag).
-//   agencies  — one counts-per-function array each.
-//   centre    — counts per function. The First Mover token is tracked
-//               separately in firstMoverInCentre.
-//   boards[p] — score; firstMover flag; teams (fn, count) ×5 where row r has
-//               capacity r+1 and fn is -1 when empty; wall 5×5 of 0/1; bench
+//   sources   — one counts-per-kind array each.
+//   pool      — counts per kind. The first-player token is tracked
+//               separately in firstTokenInPool.
+//   boards[p] — score; firstToken flag; lines (kind, count) ×5 where row r has
+//               capacity r+1 and kind is -1 when empty; wall 5×5 of 0/1; floor
 //               as an ordered array of entries (0–4 tile, 5 = token).
 
 function zeros() {
@@ -94,10 +100,10 @@ function zeros() {
 function newBoard() {
   return {
     score: 0,
-    firstMover: 0,
-    teams: Array.from({ length: TEAM_ROWS }, () => ({ fn: -1, count: 0 })),
-    wall: Array.from({ length: TEAM_ROWS }, () => [0, 0, 0, 0, 0]),
-    bench: [],
+    firstToken: 0,
+    lines: Array.from({ length: LINE_ROWS }, () => ({ kind: -1, count: 0 })),
+    wall: Array.from({ length: LINE_ROWS }, () => [0, 0, 0, 0, 0]),
+    floor: [],
   };
 }
 
@@ -107,51 +113,51 @@ export function newGame(seed, players) {
   }
   const s = {
     players,
-    round: 1, // reads as Q1, Q2… in the UI
+    round: 1, // reads as W1, W2… in the UI
     seatToMove: 0,
     startPlayer: 0,
-    firstMoverInCentre: true,
+    firstTokenInPool: true,
     over: false,
     rng: xmur3(String(seed)),
-    refills: 0, // lid-to-bag refills so far — the alumni wave (§6.1)
+    refills: 0, // lid-to-bag refills so far — new arrivals (§6.1)
     bag: [],
     lid: zeros(),
-    agencies: Array.from({ length: agencyCount(players) }, () => zeros()),
-    centre: zeros(),
+    sources: Array.from({ length: sourceCount(players) }, () => zeros()),
+    pool: zeros(),
     boards: Array.from({ length: players }, () => newBoard()),
     result: null,
   };
-  for (let f = 0; f < FUNCTIONS; f++) {
-    for (let i = 0; i < TILES_PER_FUNCTION; i++) s.bag.push(f);
+  for (let k = 0; k < KINDS; k++) {
+    for (let i = 0; i < TILES_PER_KIND; i++) s.bag.push(k);
   }
   // Canonical rng consumption order: (1) bag shuffle, (2) round-1 start player.
   shuffle(s, s.bag);
-  dealAgencies(s); // consumes no rng here: a full bag covers the setup deal
+  dealSources(s); // consumes no rng here: a full bag covers the setup deal
   s.startPlayer = randBelow(s, players); // §3.4 — derived from the seed
   s.seatToMove = s.startPlayer;
   return s;
 }
 
-// §6.1 — draw one tile at a time, agency 0 upward, each agency's four slots in
+// §6.1 — draw one tile at a time, source 0 upward, each source's four slots in
 // index order. When the bag empties mid-deal, refill it from the lid and
 // continue; when bag and lid are both empty, play with what's there.
-function dealAgencies(s) {
-  for (let a = 0; a < s.agencies.length; a++) {
-    for (let slot = 0; slot < AGENCY_SIZE; slot++) {
+function dealSources(s) {
+  for (let a = 0; a < s.sources.length; a++) {
+    for (let slot = 0; slot < SOURCE_SIZE; slot++) {
       if (s.bag.length === 0) refillBagFromLid(s);
       if (s.bag.length === 0) return; // partial deal is legal, never a throw
-      s.agencies[a][s.bag.pop()]++;
+      s.sources[a][s.bag.pop()]++;
     }
   }
 }
 
 function refillBagFromLid(s) {
   let total = 0;
-  for (let f = 0; f < FUNCTIONS; f++) total += s.lid[f];
+  for (let k = 0; k < KINDS; k++) total += s.lid[k];
   if (total === 0) return;
-  for (let f = 0; f < FUNCTIONS; f++) {
-    for (let i = 0; i < s.lid[f]; i++) s.bag.push(f);
-    s.lid[f] = 0;
+  for (let k = 0; k < KINDS; k++) {
+    for (let i = 0; i < s.lid[k]; i++) s.bag.push(k);
+    s.lid[k] = 0;
   }
   shuffle(s, s.bag); // seeded, so the refill is reproducible (§6.1)
   s.refills++;
@@ -161,11 +167,11 @@ function refillBagFromLid(s) {
 // Legality (§5). One source of truth: the UI highlights from legalMoves, the
 // bots draw from it, the server validates against it.
 
-function teamRowLegal(board, row, fn) {
-  const team = board.teams[row];
-  if (team.count >= row + 1) return false; // §5.1 row full
-  if (team.count > 0 && team.fn !== fn) return false; // §5.2 different function
-  if (board.wall[row][wallColumn(fn, row)]) return false; // §5.3 cell taken
+function lineLegal(board, row, kind) {
+  const line = board.lines[row];
+  if (line.count >= row + 1) return false; // §5.1 line full
+  if (line.count > 0 && line.kind !== kind) return false; // §5.2 different kind
+  if (board.wall[row][wallColumn(kind, row)]) return false; // §5.3 cell taken
   return true;
 }
 
@@ -174,25 +180,25 @@ export function legalMoves(state) {
   const board = state.boards[state.seatToMove];
   const moves = [];
   const sources = [];
-  for (let i = 0; i < state.agencies.length; i++) {
-    if (state.agencies[i].some((c) => c > 0)) {
-      sources.push([{ type: 'agency', index: i }, state.agencies[i]]);
+  for (let i = 0; i < state.sources.length; i++) {
+    if (state.sources[i].some((c) => c > 0)) {
+      sources.push([{ type: 'source', index: i }, state.sources[i]]);
     }
   }
-  // §6.4 — a centre holding only the First Mover token is not a legal source,
-  // which falls out of requiring an actual tile of some function.
-  if (state.centre.some((c) => c > 0)) {
-    sources.push([{ type: 'centre' }, state.centre]);
+  // §6.4 — a pool holding only the first-player token is not a legal source,
+  // which falls out of requiring an actual tile of some kind.
+  if (state.pool.some((c) => c > 0)) {
+    sources.push([{ type: 'pool' }, state.pool]);
   }
   for (const [source, counts] of sources) {
-    for (let fn = 0; fn < FUNCTIONS; fn++) {
-      if (counts[fn] === 0) continue;
-      for (let r = 0; r < TEAM_ROWS; r++) {
-        if (teamRowLegal(board, r, fn)) {
-          moves.push({ source, fn, dest: { type: 'team', row: r } });
+    for (let kind = 0; kind < KINDS; kind++) {
+      if (counts[kind] === 0) continue;
+      for (let r = 0; r < LINE_ROWS; r++) {
+        if (lineLegal(board, r, kind)) {
+          moves.push({ source, kind, dest: { type: 'line', row: r } });
         }
       }
-      moves.push({ source, fn, dest: { type: 'bench' } }); // §5.4 always legal
+      moves.push({ source, kind, dest: { type: 'floor' } }); // §5.4 always legal
     }
   }
   return moves;
@@ -201,7 +207,7 @@ export function legalMoves(state) {
 // ---------------------------------------------------------------------------
 // apply (§4, §10). One move is one complete turn — take and place together.
 // The optional clock field move.t is recorded by the archive layer and
-// deliberately ignored here: determinism comes from seed + source/fn/dest.
+// deliberately ignored here: determinism comes from seed + source/kind/dest.
 
 function cloneState(s) {
   return {
@@ -209,20 +215,20 @@ function cloneState(s) {
     round: s.round,
     seatToMove: s.seatToMove,
     startPlayer: s.startPlayer,
-    firstMoverInCentre: s.firstMoverInCentre,
+    firstTokenInPool: s.firstTokenInPool,
     over: s.over,
     rng: s.rng,
     refills: s.refills,
     bag: s.bag.slice(),
     lid: s.lid.slice(),
-    agencies: s.agencies.map((a) => a.slice()),
-    centre: s.centre.slice(),
+    sources: s.sources.map((a) => a.slice()),
+    pool: s.pool.slice(),
     boards: s.boards.map((b) => ({
       score: b.score,
-      firstMover: b.firstMover,
-      teams: b.teams.map((t) => ({ fn: t.fn, count: t.count })),
+      firstToken: b.firstToken,
+      lines: b.lines.map((t) => ({ kind: t.kind, count: t.count })),
       wall: b.wall.map((r) => r.slice()),
-      bench: b.bench.slice(),
+      floor: b.floor.slice(),
     })),
     result: s.result
       ? { scores: s.result.scores.slice(), winner: s.result.winner, leaders: s.result.leaders.slice() }
@@ -235,14 +241,14 @@ function moveError(msg, move) {
     'illegal move: ' +
       msg +
       ' — ' +
-      JSON.stringify({ source: move.source, fn: move.fn, dest: move.dest })
+      JSON.stringify({ source: move.source, kind: move.kind, dest: move.dest })
   );
 }
 
 // The Phase A step on its own: take + place + advance the seat, WITHOUT the
 // automatic Phase B/C resolution. apply() composes it with resolution below.
 // The UI uses this to stage animations — the difference between applyTake and
-// apply is exactly the closing-the-books theatre — and for nothing else.
+// apply is exactly the end-of-week theatre — and for nothing else.
 // Records, replays and the server always go through apply().
 export function applyTake(state, move) {
   if (state.over) throw new Error('illegal move: game is over');
@@ -250,25 +256,25 @@ export function applyTake(state, move) {
 
   // Validate against the same predicates legalMoves enumerates from.
   let srcCounts;
-  if (move.source && move.source.type === 'agency') {
+  if (move.source && move.source.type === 'source') {
     const i = move.source.index;
-    if (!Number.isInteger(i) || i < 0 || i >= state.agencies.length) {
-      throw moveError('no such agency', move);
+    if (!Number.isInteger(i) || i < 0 || i >= state.sources.length) {
+      throw moveError('no such source', move);
     }
-    srcCounts = state.agencies[i];
-  } else if (move.source && move.source.type === 'centre') {
-    srcCounts = state.centre;
+    srcCounts = state.sources[i];
+  } else if (move.source && move.source.type === 'pool') {
+    srcCounts = state.pool;
   } else {
     throw moveError('bad source', move);
   }
-  if (!Number.isInteger(move.fn) || move.fn < 0 || move.fn >= FUNCTIONS || srcCounts[move.fn] === 0) {
-    throw moveError('function not present at source', move);
+  if (!Number.isInteger(move.kind) || move.kind < 0 || move.kind >= KINDS || srcCounts[move.kind] === 0) {
+    throw moveError('kind not present at source', move);
   }
-  if (move.dest && move.dest.type === 'team') {
+  if (move.dest && move.dest.type === 'line') {
     const r = move.dest.row;
-    if (!Number.isInteger(r) || r < 0 || r >= TEAM_ROWS) throw moveError('no such team row', move);
-    if (!teamRowLegal(mover, r, move.fn)) throw moveError('team row not a legal destination (§5)', move);
-  } else if (!(move.dest && move.dest.type === 'bench')) {
+    if (!Number.isInteger(r) || r < 0 || r >= LINE_ROWS) throw moveError('no such line', move);
+    if (!lineLegal(mover, r, move.kind)) throw moveError('line not a legal destination (§5)', move);
+  } else if (!(move.dest && move.dest.type === 'floor')) {
     throw moveError('bad destination', move);
   }
 
@@ -277,37 +283,37 @@ export function applyTake(state, move) {
 
   // Take (§4A).
   let taken;
-  if (move.source.type === 'agency') {
-    const agency = s.agencies[move.source.index];
-    taken = agency[move.fn];
-    agency[move.fn] = 0;
-    for (let f = 0; f < FUNCTIONS; f++) {
-      s.centre[f] += agency[f]; // the rest spill into the open market
-      agency[f] = 0;
+  if (move.source.type === 'source') {
+    const src = s.sources[move.source.index];
+    taken = src[move.kind];
+    src[move.kind] = 0;
+    for (let k = 0; k < KINDS; k++) {
+      s.pool[k] += src[k]; // the rest spill into the pool
+      src[k] = 0;
     }
   } else {
-    taken = s.centre[move.fn];
-    s.centre[move.fn] = 0;
-    if (s.firstMoverInCentre) {
-      s.firstMoverInCentre = false;
-      board.firstMover = 1; // next round's start player either way (§6.3)
-      if (board.bench.length < BENCH_SIZE) board.bench.push(FIRST_MOVER);
-      // bench already full: token set aside, no penalty (§6.3)
+    taken = s.pool[move.kind];
+    s.pool[move.kind] = 0;
+    if (s.firstTokenInPool) {
+      s.firstTokenInPool = false;
+      board.firstToken = 1; // next round's start player either way (§6.3)
+      if (board.floor.length < FLOOR_SIZE) board.floor.push(FIRST_TOKEN);
+      // floor already full: token set aside, no penalty (§6.3)
     }
   }
 
-  // Place (§4A), overflow to the bench, bench overflow to the lid (§6.2).
+  // Place (§4A), overflow to the floor, floor overflow to the lid (§6.2).
   let overflow = taken;
-  if (move.dest.type === 'team') {
-    const team = board.teams[move.dest.row];
-    const put = Math.min(taken, move.dest.row + 1 - team.count);
-    team.fn = move.fn;
-    team.count += put;
+  if (move.dest.type === 'line') {
+    const line = board.lines[move.dest.row];
+    const put = Math.min(taken, move.dest.row + 1 - line.count);
+    line.kind = move.kind;
+    line.count += put;
     overflow -= put;
   }
   for (let i = 0; i < overflow; i++) {
-    if (board.bench.length < BENCH_SIZE) board.bench.push(move.fn);
-    else s.lid[move.fn]++;
+    if (board.floor.length < FLOOR_SIZE) board.floor.push(move.kind);
+    else s.lid[move.kind]++;
   }
 
   s.seatToMove = (s.seatToMove + 1) % s.players;
@@ -318,49 +324,49 @@ export function apply(state, move) {
   const s = applyTake(state, move);
 
   // Phases B and C contain no decisions, so they are not moves (§4B):
-  // resolve automatically once the agencies and the centre are empty.
+  // resolve automatically once the sources and the pool are empty.
   if (phaseAOver(s)) {
     let guard = 0;
     do {
       resolveRound(s);
       // The loop re-fires only in the theoretical state where bag, lid,
-      // agencies and centre are all empty (§6.1's rare case taken to its
+      // sources and pool are all empty (§6.1's rare case taken to its
       // limit). Provably unreachable at 2–3 players; guarded, not silent.
-      if (++guard > 30) throw new Error('engine stalled: empty supply and no rows completing');
+      if (++guard > 30) throw new Error('engine stalled: empty supply and no lines completing');
     } while (!s.over && phaseAOver(s));
   }
   return s;
 }
 
 function phaseAOver(s) {
-  if (s.centre.some((c) => c > 0)) return false;
-  return s.agencies.every((a) => a.every((c) => c === 0));
+  if (s.pool.some((c) => c > 0)) return false;
+  return s.sources.every((a) => a.every((c) => c === 0));
 }
 
 // Phase B + end check + Phase C (§4B, §4C, §8).
 function resolveRound(s) {
   for (const board of s.boards) {
-    // Rows resolve 1→5, scoring after each placement — a row-1 tile can
+    // Lines resolve 1→5, scoring after each placement — a row-1 tile can
     // extend a run a row-2 tile then scores. Never batch (§7.2).
-    for (let r = 0; r < TEAM_ROWS; r++) {
-      const team = board.teams[r];
-      if (team.count === r + 1) {
-        const c = wallColumn(team.fn, r);
+    for (let r = 0; r < LINE_ROWS; r++) {
+      const line = board.lines[r];
+      if (line.count === r + 1) {
+        const c = wallColumn(line.kind, r);
         board.wall[r][c] = 1;
         board.score += scorePlacement(board.wall, r, c);
-        s.lid[team.fn] += r; // capacity r+1: one to the wall, r to the lid
-        team.fn = -1;
-        team.count = 0;
+        s.lid[line.kind] += r; // capacity r+1: one to the wall, r to the lid
+        line.kind = -1;
+        line.count = 0;
       }
     }
-    // Bench penalties (§7.3), clamped at zero (§6.8).
+    // Floor penalties (§7.3), clamped at zero (§6.8).
     let penalty = 0;
-    for (let i = 0; i < board.bench.length; i++) penalty += BENCH_PENALTIES[i];
+    for (let i = 0; i < board.floor.length; i++) penalty += FLOOR_PENALTIES[i];
     board.score = Math.max(0, board.score - penalty);
-    for (const entry of board.bench) {
-      if (entry !== FIRST_MOVER) s.lid[entry]++; // token never goes to the lid
+    for (const entry of board.floor) {
+      if (entry !== FIRST_TOKEN) s.lid[entry]++; // token never goes to the lid
     }
-    board.bench = [];
+    board.floor = [];
   }
 
   // §8 — game ends immediately after the Phase B that completes a wall row.
@@ -370,13 +376,13 @@ function resolveRound(s) {
   }
 
   // Phase C.
-  const holder = s.boards.findIndex((b) => b.firstMover === 1);
+  const holder = s.boards.findIndex((b) => b.firstToken === 1);
   if (holder >= 0) s.startPlayer = holder; // untaken token: start player unchanged
-  for (const b of s.boards) b.firstMover = 0;
-  s.firstMoverInCentre = true;
+  for (const b of s.boards) b.firstToken = 0;
+  s.firstTokenInPool = true;
   s.seatToMove = s.startPlayer;
   s.round++;
-  dealAgencies(s);
+  dealSources(s);
 }
 
 function finishGame(s) {
@@ -406,17 +412,17 @@ function finishGame(s) {
 export function scorePlacement(wall, row, col) {
   let h = 1;
   for (let c = col - 1; c >= 0 && wall[row][c]; c--) h++;
-  for (let c = col + 1; c < FUNCTIONS && wall[row][c]; c++) h++;
+  for (let c = col + 1; c < KINDS && wall[row][c]; c++) h++;
   let v = 1;
   for (let r = row - 1; r >= 0 && wall[r][col]; r--) v++;
-  for (let r = row + 1; r < TEAM_ROWS && wall[r][col]; r++) v++;
+  for (let r = row + 1; r < LINE_ROWS && wall[r][col]; r++) v++;
   if (h === 1 && v === 1) return 1; // isolated tile scores 1, not 0
   return (h > 1 ? h : 0) + (v > 1 ? v : 0); // part of both runs scores both
 }
 
 export function completeRows(wall) {
   let n = 0;
-  for (let r = 0; r < TEAM_ROWS; r++) {
+  for (let r = 0; r < LINE_ROWS; r++) {
     if (wall[r].every((c) => c === 1)) n++;
   }
   return n;
@@ -424,27 +430,27 @@ export function completeRows(wall) {
 
 export function completeColumns(wall) {
   let n = 0;
-  for (let c = 0; c < FUNCTIONS; c++) {
+  for (let c = 0; c < KINDS; c++) {
     let full = true;
-    for (let r = 0; r < TEAM_ROWS; r++) if (!wall[r][c]) full = false;
+    for (let r = 0; r < LINE_ROWS; r++) if (!wall[r][c]) full = false;
     if (full) n++;
   }
   return n;
 }
 
-export function completeFunctions(wall) {
+export function completeKinds(wall) {
   let n = 0;
-  for (let f = 0; f < FUNCTIONS; f++) {
+  for (let k = 0; k < KINDS; k++) {
     let full = true;
-    for (let r = 0; r < TEAM_ROWS; r++) if (!wall[r][wallColumn(f, r)]) full = false;
+    for (let r = 0; r < LINE_ROWS; r++) if (!wall[r][wallColumn(k, r)]) full = false;
     if (full) n++;
   }
   return n;
 }
 
-// §8 final bonuses: +2 per row, +7 per column, +10 per function placed 5 times.
+// §8 final bonuses: +2 per row, +7 per column, +10 per kind placed 5 times.
 export function bonuses(wall) {
-  return 2 * completeRows(wall) + 7 * completeColumns(wall) + 10 * completeFunctions(wall);
+  return 2 * completeRows(wall) + 7 * completeColumns(wall) + 10 * completeKinds(wall);
 }
 
 // ---------------------------------------------------------------------------
@@ -459,7 +465,7 @@ export function serialize(s) {
     s.round,
     s.seatToMove,
     s.startPlayer,
-    s.firstMoverInCentre ? 1 : 0,
+    s.firstTokenInPool ? 1 : 0,
     s.over ? 1 : 0,
     s.rng >>> 0,
     s.refills,
@@ -469,13 +475,13 @@ export function serialize(s) {
     ...s.lid,
     -1,
   ];
-  for (const agency of s.agencies) parts.push(...agency);
-  parts.push(-1, ...s.centre, -1);
+  for (const src of s.sources) parts.push(...src);
+  parts.push(-1, ...s.pool, -1);
   for (const b of s.boards) {
-    parts.push(b.score, b.firstMover);
-    for (const t of b.teams) parts.push(t.fn, t.count);
+    parts.push(b.score, b.firstToken);
+    for (const t of b.lines) parts.push(t.kind, t.count);
     for (const row of b.wall) parts.push(...row);
-    parts.push(b.bench.length, ...b.bench, -2);
+    parts.push(b.floor.length, ...b.floor, -2);
   }
   return parts.join(',');
 }

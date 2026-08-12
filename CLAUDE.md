@@ -164,11 +164,17 @@ under `teaching/ler565/` so students get a short URL — it is still an LER 565
 activity. Its specs are `pavilion/PAVILION.md` (design, why) and
 `pavilion/PAVILION-RULES.md` (engine spec, what) — read both before touching it.
 
-⚠️ **The specs are ahead of the code.** The game was *Headcount* under a
-different theme until 2026-08-12; the engine, wire protocol and UI still carry
-that theme's vocabulary (`agency`, `team`, `bench`, quarters, org chart). Read
-*Theme* in `PAVILION.md` before writing any player-facing string, and don't take
-an identifier in the code as evidence of what a thing is called.
+⚠️ **The code below the copy layer is deliberately theme-neutral, and that is
+not drift.** A tile has a `kind`, it comes from a `source` or the `pool`, and it
+goes to a `line` or the `floor` — through `engine.js`, `bot.js`, `relay/`, the
+wire format and the tests. The game is *called* Pavilion and the player sees
+disciplines, agencies, the gate, crews and idle, but **every one of those words
+lives in `ui.js` and nowhere else**, so a fourth theme is an edit to one file
+rather than a migration of the archive (rules spec §10). Read *Theme* in
+`PAVILION.md` before writing any player-facing string, and don't rename an
+identifier to match the theme — that is the thing this arrangement exists to
+prevent. Two exceptions, both commented: the deployed Worker's host name and its
+`HeadcountRoom` class are the *deployment's* names, with live rooms behind them.
 
 ⚠️ **Theme changes are expensive and this one has moved three times.** The rule
 Ryan set: **every proposed term gets a paragraph, read aloud — if the paragraph

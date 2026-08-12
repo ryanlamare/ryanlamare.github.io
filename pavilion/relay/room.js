@@ -1,4 +1,4 @@
-// Headcount relay — the room state machine (PROTOCOL.md).
+// Pavilion relay — the room state machine (PROTOCOL.md).
 //
 // One file, two hosts: `dev-relay.js` runs it on a laptop for LAN playtests,
 // `worker.js` runs it inside a Cloudflare Durable Object for the class. Both
@@ -137,7 +137,7 @@ export class Room {
           return this.fail(conn, 'not-host', 'Nobody has joined yet.');
         }
         // Seat order is join order, frozen here and recorded — never
-        // re-derived (HEADCOUNT-RULES.md §9).
+        // re-derived (PAVILION-RULES.md §9).
         this.started = true;
         this.startedAt = Date.now();
         this.players = this.seats.length;
@@ -333,17 +333,17 @@ function plausibleMove(m) {
   if (!m || typeof m !== 'object') return false;
   const src = m.source;
   if (!src || typeof src !== 'object') return false;
-  if (src.type === 'agency') {
+  if (src.type === 'source') {
     if (!Number.isInteger(src.index) || src.index < 0 || src.index > 8) return false;
-  } else if (src.type !== 'centre') {
+  } else if (src.type !== 'pool') {
     return false;
   }
-  if (!Number.isInteger(m.fn) || m.fn < 0 || m.fn > 4) return false;
+  if (!Number.isInteger(m.kind) || m.kind < 0 || m.kind > 4) return false;
   const d = m.dest;
   if (!d || typeof d !== 'object') return false;
-  if (d.type === 'team') {
+  if (d.type === 'line') {
     if (!Number.isInteger(d.row) || d.row < 0 || d.row > 4) return false;
-  } else if (d.type !== 'bench') {
+  } else if (d.type !== 'floor') {
     return false;
   }
   if (m.t != null && !(Number.isFinite(m.t) && m.t >= 0)) return false;

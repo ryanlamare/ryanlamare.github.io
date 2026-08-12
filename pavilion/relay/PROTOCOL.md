@@ -1,12 +1,18 @@
-# Headcount relay protocol — v1
+# Pavilion relay protocol — v1
 
-The wire format between two (or three, or four) Headcount clients and the room
+The wire format between two (or three, or four) Pavilion clients and the room
 they share. Build step 4. Written before the code so the dev relay and the
 Cloudflare Worker are two implementations of one spec rather than two dialects.
 
-Read `../../HEADCOUNT.md` (*Architecture*) and `../../HEADCOUNT-RULES.md`
+Read `../PAVILION.md` (*Architecture*) and `../PAVILION-RULES.md`
 (§9 determinism, §10 move representation, §11 clocks) first — this file assumes
 both and does not restate them.
+
+**Everything on the wire is theme-neutral** (rules spec §10): a tile has a
+`kind`, it comes from a `source` or the `pool`, and it goes to a `line` or the
+`floor`. Nothing here knows the game is set at a world's fair, so the theme can
+move a fourth time without touching a stored game or a deployed relay. The
+Pavilion words for all of it live in `../ui.js` and nowhere else.
 
 ## The one idea
 
@@ -47,13 +53,13 @@ treat the connection as broken.
 
 ## Room codes and seeds
 
-Room codes are **two corporate words** — `SYNERGY-BISON` — from the curated
-lists in `../words.js`, chosen so the code survives being read aloud over a bad
-Zoom mic (`HEADCOUNT.md`, *Identity*). The **server** generates them, because
-only the server can see collisions.
+Room codes are **two Fair words** — a landmark plus a national pavilion,
+`FERRIS-NORWAY` — from the curated lists in `../words.js`, chosen so the code
+survives being read aloud over a bad Zoom mic (`PAVILION.md`, *Identity*). The
+**server** generates them, because only the server can see collisions.
 
 The **seed is fixed at room creation** (§9) and is a third word plus a number:
-`LEVERAGE-MARMOT-42`. It is separate from the room code so that a code can be
+`TESLA-CEYLON-47`. It is separate from the room code so that a code can be
 recycled next week without replaying last week's bag.
 
 ## Message catalogue
@@ -102,21 +108,21 @@ viewport. It exists to answer the phone-fairness question the memo raises
 ```text
 C→S  open wss://host/new
 C→S  {t:'hello', name:'Sam', device:'laptop', players:2, clockMs:300000}
-S→C  {t:'welcome', code:'SYNERGY-BISON', you:{id:'…', seat:0},
-      room:{seed:'LEVERAGE-MARMOT-42', players:2, clockMs:300000,
+S→C  {t:'welcome', code:'FERRIS-NORWAY', you:{id:'…', seat:0},
+      room:{seed:'TESLA-CEYLON-47', players:2, clockMs:300000,
             seats:[…], started:false, moves:[]}, serverNow:1786…}
      … the joiner arrives …
 S→C  {t:'roster', seats:[{seat:0,…},{seat:1,…}]}
 C→S  {t:'start'}
-S→*  {t:'started', seats:[…], seed:'LEVERAGE-MARMOT-42', players:2,
+S→*  {t:'started', seats:[…], seed:'TESLA-CEYLON-47', players:2,
       clockMs:300000, at:1786…}
 ```
 
 ### A turn
 
 ```text
-C→S  {t:'move', ply:0, move:{source:{type:'agency',index:2}, fn:1,
-                             dest:{type:'team',row:3}, t:4210}}
+C→S  {t:'move', ply:0, move:{source:{type:'source',index:2}, kind:1,
+                             dest:{type:'line',row:3}, t:4210}}
 S→*  {t:'move', ply:0, seat:0, move:{…}, at:1786…}
 C→S  {t:'hash', ply:0, h:'9f3c…'}      (both clients)
 S→*  {t:'hash', ply:0, seat:0, h:'9f3c…'}
@@ -134,7 +140,7 @@ replaying it from the seed; there is no delta protocol and no snapshot,
 because a full game is a few hundred bytes.
 
 ```text
-C→S  open wss://host/room/SYNERGY-BISON
+C→S  open wss://host/room/FERRIS-NORWAY
 C→S  {t:'hello', name:'Sam', device:'phone', id:'<the token from last time>'}
 S→C  {t:'welcome', …, room:{…, started:true, moves:[…41 moves…]}, serverNow:…}
 S→*  {t:'presence', seat:0, connected:true}
@@ -143,7 +149,7 @@ S→*  {t:'presence', seat:0, connected:true}
 The resume token is minted by the server in `welcome.you.id` and kept in the
 client's `localStorage`. It is a capability, not a login: whoever holds it is
 that seat. That is the same security model as the roster name-picker — *the
-security is that you can see them* (`HEADCOUNT.md`, *Identity*) — and it is
+security is that you can see them* (`PAVILION.md`, *Identity*) — and it is
 adequate for fourteen people in a Zoom room playing for a leaderboard.
 
 ## Rules the clients enforce, not the server

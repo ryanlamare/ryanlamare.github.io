@@ -1,25 +1,44 @@
-/* Headcount — board UI. Real responsive layout, never the decks' fixed
-   canvas: tiles are touch targets, not artwork to scale (HEADCOUNT.md,
+/* Pavilion — board UI. Real responsive layout, never the decks' fixed
+   canvas: tiles are touch targets, not artwork to scale (PAVILION.md,
    Mobile and devices). Animation is the default experience; the
    prefers-reduced-motion fallback lives in ui.js, which skips the flights
    entirely rather than easing them. */
 
 :root {
-  --paper: #f4efe4;
-  --card: #fdfbf4;
-  --ink: #232028;
-  --muted: #7d766b;
-  --line: #e3dcc9;
-  --red: #c8362b;
-  --gold: #d99a1b;
+  /* Surfaces and ink are the site's own Arntz/Isotype palette, copied from
+     /brand.css rather than linked: brand.css also pulls two webfonts, and a
+     phone in a breakout room shouldn't wait on Google Fonts to see a board.
+     Values only — keep them in step with brand.css by hand. */
+  --paper: #E9E2D2;   /* Isotype textbook cream */
+  --card:  #F0EAD9;
+  --ink:   #1B1C19;   /* true Arntz black, sampled from his pictograms */
+  --muted: #6A5F59;
+  --line:  #CDBFA6;
+  --red:   #CE1E32;   /* Arntz vermilion */
+  --gold:  #C9A227;
+  --well:  #DFD5BC;   /* empty crew / pavilion / idle cells */
+  --well-deep: #D8CBAE;
 
-  /* The five functions. Teal, not green: red/green is the one pair a
-     colourblind player can't separate. */
-  --eng: #2f6bd8;
-  --sal: #d24034;
-  --ops: #efb52b;
-  --fin: #29242c;
-  --ana: #12907f;
+  /* The five disciplines (PAVILION.md, Tiles). Straight off brand.css —
+     sienna, water blue, Arntz black, mustard ochre — so the game and the
+     decks share one system and the period is inherited, not invented.
+     Nature is the one adjustment: Arntz's own #26713D sits at almost exactly
+     the sienna's lightness, and red against green at the same lightness is
+     the one pair red-green deficiency cannot separate. Lifting it to #3C8B51
+     keeps the family and opens the gap to roughly 2:1. (Which is also why
+     every tile carries an isotype: the pictogram is the accessibility layer,
+     not decoration — the board reads in greyscale.) */
+  --art: #8E3E28;
+  --sci: #37658A;
+  --mac: #1B1C19;
+  --ele: #C9A227;
+  --nat: #3C8B51;
+
+  /* One tiled noise field, painted *under* the isotype, so it ages the ground
+     without touching the silhouette. A single repeated image on purpose: a
+     live CSS filter would be paid for on every frame of every animation, and
+     this board animates constantly. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='72' height='72' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
 
   --tile: 46px;
   --mini: 34px;
@@ -40,7 +59,7 @@ html, body { height: 100%; max-width: 100%; overflow-x: hidden; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: radial-gradient(1200px 800px at 20% -10%, #faf6ec, var(--paper));
+  background: radial-gradient(1200px 800px at 20% -10%, #F4EEE0, var(--paper));
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
@@ -54,7 +73,7 @@ body {
 
 button { font: inherit; color: inherit; cursor: pointer; }
 
-:focus-visible { outline: 3px solid var(--eng); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 3px solid var(--sci); outline-offset: 2px; border-radius: 4px; }
 
 /* ------------------------------------------------------------------ setup */
 
@@ -70,7 +89,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 36px 40px 32px;
-  box-shadow: 0 24px 60px rgba(35, 32, 40, .12);
+  box-shadow: 0 24px 60px rgba(27, 28, 25, .12);
 }
 
 .kicker {
@@ -114,14 +133,14 @@ legend {
 #code-input { text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
 #name-inputs input, #seed-input, #code-input, #clock-select {
   width: 100%; padding: 10px 12px; font: inherit;
-  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  border: 1px solid var(--line); border-radius: 8px; background: #FBF7EC;
 }
 
 .cta {
   width: 100%; border: 0; border-radius: 10px;
   background: var(--red); color: #fff;
   font-size: 17px; font-weight: 700; padding: 13px;
-  box-shadow: 0 6px 18px rgba(200, 54, 43, .35);
+  box-shadow: 0 6px 18px rgba(206, 30, 50, .32);
   transition: transform .12s ease;
 }
 .cta:hover { transform: translateY(-1px); }
@@ -136,9 +155,22 @@ legend {
   border: 0; background: transparent; padding: 0; font: inherit;
   color: var(--red); font-weight: 700; text-decoration: underline;
 }
+/* The five disciplines on the way in — the legend for a board that carries
+   no words at all. */
+.disciplines {
+  list-style: none; display: flex; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 22px;
+}
+.disciplines li {
+  display: grid; justify-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+.disciplines .tile { width: 34px; height: 34px; border-radius: 7px; }
+
 .rejoin {
   font-size: 13px; color: var(--muted);
-  background: #fff; border: 1px dashed var(--line); border-radius: 10px;
+  background: #FBF7EC; border: 1px dashed var(--line); border-radius: 10px;
   padding: 10px 12px; margin-bottom: 22px;
 }
 .rejoin b { color: var(--ink); letter-spacing: .04em; }
@@ -167,11 +199,11 @@ legend {
 .seat-list li {
   display: flex; align-items: center; gap: 10px;
   border: 1px solid var(--line); border-radius: 10px;
-  background: #fff; padding: 10px 12px; font-weight: 700;
+  background: #FBF7EC; padding: 10px 12px; font-weight: 700;
 }
 .seat-list .dot {
-  width: 9px; height: 9px; border-radius: 50%; background: var(--ana);
-  box-shadow: 0 0 0 3px rgba(18, 144, 127, .18);
+  width: 9px; height: 9px; border-radius: 50%; background: var(--nat);
+  box-shadow: 0 0 0 3px rgba(60, 139, 81, .18);
 }
 .seat-list li.away { color: var(--muted); }
 .seat-list li.away .dot { background: var(--muted); box-shadow: none; }
@@ -186,7 +218,7 @@ legend {
 .net-status { font-size: 12.5px; color: var(--muted); min-height: 18px; }
 .lobby-error {
   font-size: 13px; color: var(--red); font-weight: 600;
-  border: 1px solid rgba(200, 54, 43, .3); border-radius: 8px; padding: 10px 12px;
+  border: 1px solid rgba(206, 30, 50, .3); border-radius: 8px; padding: 10px 12px;
   margin-bottom: 12px;
 }
 .lobby-actions { display: flex; gap: 10px; align-items: center; }
@@ -205,7 +237,7 @@ legend {
   position: sticky; top: 0; z-index: 30;
 }
 
-.q-badge {
+.wk-badge {
   background: var(--ink); color: var(--card);
   font-weight: 800; font-size: 15px; letter-spacing: .02em;
   border-radius: 8px; padding: 5px 11px;
@@ -219,7 +251,7 @@ legend {
 .chip {
   font-size: 12px; color: var(--muted);
   border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
-  background: #fff; white-space: nowrap;
+  background: #FBF7EC; white-space: nowrap;
 }
 .chip b { color: var(--ink); }
 .chip.wave { animation: chip-pulse .5s ease 3; }
@@ -233,12 +265,12 @@ legend {
   color: #fff; background: var(--red); border-color: var(--red);
 }
 @keyframes chip-pulse {
-  50% { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(217, 154, 27, .25); }
+  50% { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(201, 162, 39, .25); }
 }
 
 .menu { display: flex; gap: 6px; }
 
-/* ----------------------------------------------------------------- market */
+/* -------------------------------------------------- agencies and the gate */
 
 #table { flex: 1; padding: 18px clamp(10px, 3vw, 32px) 40px; }
 
@@ -248,29 +280,29 @@ legend {
   margin-bottom: 22px;
 }
 
-#agencies {
+#sources {
   display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
 }
 
-.agency {
+.source {
   background: var(--card); border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 9px;
-  box-shadow: 0 4px 14px rgba(35, 32, 40, .07);
+  box-shadow: 0 4px 14px rgba(27, 28, 25, .07);
 }
-.agency.empty { opacity: .45; }
+.source.empty { opacity: .45; }
 .slots {
   display: grid; grid-template-columns: repeat(2, var(--tile));
   grid-auto-rows: var(--tile); gap: 6px; justify-content: center;
   min-height: calc(var(--tile) * 2 + 6px);
 }
 
-/* The open market fills and empties every round. Its *box* must not: sized to
-   its contents, it changes the market's flex layout, which re-wraps the
-   agencies and shunts every board on the page a few pixels each time a tile
-   is drawn (Ryan, playtest 2026-08-12). Fixed width, and height reserved for
-   three rows, which covers a full round's leftovers. */
-#centre-wrap {
+/* The gate fills and empties every week. Its *box* must not: sized to its
+   contents, it changes the market's flex layout, which re-wraps the agencies
+   and shunts every board on the page a few pixels each time a craftsperson is
+   drawn (Ryan, playtest 2026-08-12). Fixed width, and height reserved for
+   three rows, which covers a full week's leftovers. */
+#pool-wrap {
   background: var(--card); border: 1px dashed var(--line);
   border-radius: var(--radius);
   padding: 8px 12px 12px;
@@ -281,12 +313,12 @@ legend {
   text-transform: uppercase; color: var(--muted);
   display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
 }
-#centre {
+#pool {
   display: flex; flex-wrap: wrap; gap: 6px;
   align-items: flex-start; align-content: flex-start;
   min-height: calc(var(--tile) * 3 + 12px);
 }
-#centre .none { font-size: 12px; color: var(--muted); font-style: italic; }
+#pool .none { font-size: 12px; color: var(--muted); font-style: italic; }
 
 /* ------------------------------------------------------------------ tiles */
 
@@ -294,44 +326,52 @@ legend {
   width: var(--tile); height: var(--tile);
   border: 0; border-radius: 9px;
   display: grid; place-items: center;
-  background: var(--t-bg);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18), 0 2px 5px rgba(35, 32, 40, .18);
+  background-color: var(--t-bg);
+  background-image: var(--grain);
+  background-blend-mode: soft-light;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .2), 0 2px 5px rgba(27, 28, 25, .2);
   transition: transform .12s ease, box-shadow .12s ease;
   touch-action: manipulation;
 }
 .tile .ic { width: 62%; height: 62%; color: var(--t-ic); }
 
-.tile.f0 { --t-bg: var(--eng); --t-ic: #f2f6ff; --t-bd: #1c4da6; }
-.tile.f1 { --t-bg: var(--sal); --t-ic: #fdf1ef; --t-bd: #a52c22; }
-.tile.f2 { --t-bg: var(--ops); --t-ic: #33270b; --t-bd: #c48d10; box-shadow: inset 0 -3px 0 rgba(0,0,0,.22), inset 0 0 0 1px #d79f1e, 0 2px 5px rgba(35,32,40,.18); }
-.tile.f3 { --t-bg: var(--fin); --t-ic: #f4efe4; --t-bd: #59525f; }
-.tile.f4 { --t-bg: var(--ana); --t-ic: #eafaf7; --t-bd: #0b6d5f; }
+/* Kind 0-4, in engine order. The engine never learns which discipline is
+   which — that mapping lives in ui.js and here (PAVILION-RULES.md §10). */
+.tile.k0 { --t-bg: var(--art); --t-ic: #F2ECDC; --t-bd: #6B2C1B; }  /* Art */
+.tile.k1 { --t-bg: var(--sci); --t-ic: #EFF3F7; --t-bd: #24486A; }  /* Science */
+.tile.k2 { --t-bg: var(--mac); --t-ic: #E4DDCB; --t-bd: #000000; }  /* Machinery */
+/* The two cogs sit on the viewBox diagonal, so the same 62% box gives a
+   visibly smaller mark than the other four. Nudged, not redrawn — the
+   double-lobe silhouette is what earns the icon its place. */
+.tile.k2 .ic { width: 72%; height: 72%; }
+.tile.k3 { --t-bg: var(--ele); --t-ic: #2A2206; --t-bd: #9E7C13; }  /* Electricity */
+.tile.k4 { --t-bg: var(--nat); --t-ic: #F0EAD9; --t-bd: #2A6A3A; }  /* Nature */
 
-/* Punch #3 — bordered means claimable. Only market tiles are buttons, and
-   only they carry the heavy frame; tiles already placed on a board are
-   frameless divs. */
+/* Punch #3 — bordered means hireable. Only craftspeople still to be engaged
+   are buttons, and only they carry the heavy frame; a display already raised,
+   or a crew already gathered, is a frameless div. */
 button.tile { border: 3px solid var(--t-bd); }
 
 button.tile:hover { transform: translateY(-3px); }
 .tile.sel {
   transform: translateY(-4px) scale(1.06);
-  box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--red), 0 8px 16px rgba(35, 32, 40, .3);
+  box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--red), 0 8px 16px rgba(27, 28, 25, .3);
 }
 .tile.dim { opacity: .55; }
 .tile.pre { visibility: hidden; }
 
-/* Punch #4 — the First Mover token is unmistakably not a tile: a black "1"
-   on a white disc, borderless. The soft shadow lifts it off the paper; it
-   is not a frame. */
+/* Punch #4, restated for this theme — the First Call token is unmistakably
+   not a tile. The whole object is the symbol: a chamfered plate, a double
+   keyline and a slab-serif 1, ink on cream. Every tile is a rounded square,
+   so the chamfer settles it before anything has been read. No border and no
+   coloured ground: a filled shape on a coloured ground is what a tile *is*. */
 .token {
+  --tok-bg: var(--card);
   width: var(--tile); height: var(--tile);
-  border-radius: 50%;
-  background: #fff;
   color: var(--ink);
   display: grid; place-items: center;
-  box-shadow: 0 1px 4px rgba(35, 32, 40, .28);
 }
-.token .ic { width: 62%; height: 62%; }
+.token .ic { width: 100%; height: 100%; }
 .token.pre { visibility: hidden; }
 
 /* ----------------------------------------------------------------- boards */
@@ -344,12 +384,12 @@ button.tile:hover { transform: translateY(-3px); }
   background: var(--card); border: 2px solid var(--line);
   border-radius: 14px;
   padding: 12px 14px 14px;
-  box-shadow: 0 6px 20px rgba(35, 32, 40, .08);
+  box-shadow: 0 6px 20px rgba(27, 28, 25, .08);
   transition: border-color .2s ease, box-shadow .2s ease;
 }
 .board.active {
   border-color: var(--red);
-  box-shadow: 0 6px 26px rgba(200, 54, 43, .18);
+  box-shadow: 0 6px 26px rgba(206, 30, 50, .18);
 }
 
 .board-head {
@@ -365,9 +405,8 @@ button.tile:hover { transform: translateY(-3px); }
   border: 1px solid var(--gold); border-radius: 999px; padding: 1px 8px;
 }
 .board-fm {
-  color: var(--ink); width: 16px; height: 16px;
-  background: #fff; border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(35, 32, 40, .3);
+  --tok-bg: var(--card);
+  color: var(--ink); width: 19px; height: 19px;
 }
 .board-spacer { flex: 1; }
 
@@ -388,29 +427,29 @@ button.tile:hover { transform: translateY(-3px); }
 
 .play-area { display: grid; grid-template-columns: auto auto; gap: 12px; align-items: start; }
 
-/* Teams — right-aligned rows against the org chart. Punch #2: .trow and
-   .wrow are the identical box (cell size, gap, padding, border), so team
-   row r sits exactly level with the wall row it tiles into. */
-.teams { display: grid; gap: 5px; justify-items: end; }
-.trow {
+/* Crew lines — right-aligned against the pavilion. Punch #2: .crew and
+   .wrow are the identical box (cell size, gap, padding, border), so the crew
+   for gallery r sits exactly level with the gallery it fills. */
+.crews { display: grid; gap: 5px; justify-items: end; }
+.crew {
   display: flex; gap: 4px;
   border: 2px solid transparent; border-radius: 8px;
   background: transparent; padding: 2px;
 }
-.tcell {
+.ccell {
   width: var(--mini); height: var(--mini);
   border-radius: 6px;
-  background: #efe9da; box-shadow: inset 0 1px 3px rgba(35, 32, 40, .12);
+  background: var(--well); box-shadow: inset 0 1px 3px rgba(27, 28, 25, .14);
   display: grid; place-items: center;
 }
-.tcell .tile { width: var(--mini); height: var(--mini); pointer-events: none; }
+.ccell .tile { width: var(--mini); height: var(--mini); pointer-events: none; }
 
 .wall { display: grid; gap: 5px; }
 .wrow { display: flex; gap: 4px; padding: 2px; border: 2px solid transparent; border-radius: 8px; }
 .wcell {
   width: var(--mini); height: var(--mini);
   border-radius: 6px;
-  background: #efe9da; box-shadow: inset 0 1px 3px rgba(35, 32, 40, .1);
+  background: var(--well); box-shadow: inset 0 1px 3px rgba(27, 28, 25, .12);
   display: grid; place-items: center;
   position: relative;
 }
@@ -418,50 +457,54 @@ button.tile:hover { transform: translateY(-3px); }
    auto-track resolution and the inner SVG's 150px default intrinsic size
    takes over. inset:0 sidesteps the whole question. */
 .wcell .tile { position: absolute; inset: 0; width: auto; height: auto; border-radius: 6px; }
-/* Punch #3 — an unfilled org-chart cell is the real tile at low opacity:
-   exactly the tile's colour, obviously not yet placed. */
+/* Punch #3 — an unbuilt pavilion cell is the real tile at low opacity:
+   exactly the display's colour, obviously not yet raised. This is why the
+   filled set won over the inverted one: drop opacity on a colour field and
+   you still have colour, paler; drop it on an outline and there was never a
+   field to fade. Twenty-five cells start unbuilt, so the ghost is this
+   board's default appearance, not its exception (PAVILION.md, Tiles). */
 .wcell .tile.open { opacity: .3; box-shadow: none; }
 .wcell.landed .tile { animation: land calc(.3s * var(--tempo, 1)) cubic-bezier(.2, 1.6, .4, 1); }
 @keyframes land { 0% { transform: scale(1.4); } }
 .wcell.sweep { animation: sweep calc(.5s * var(--tempo, 1)) ease; }
 @keyframes sweep {
-  40% { box-shadow: 0 0 0 4px var(--gold), 0 0 18px 6px rgba(217, 154, 27, .5); transform: scale(1.12); }
+  40% { box-shadow: 0 0 0 4px var(--gold), 0 0 18px 6px rgba(201, 162, 39, .5); transform: scale(1.12); }
 }
 
-/* The bench — escalating penalties printed under each space. */
-.bench-wrap { grid-column: 1 / -1; }
-.bench {
+/* The idle row — escalating penalties printed under each space. */
+.idle-wrap { grid-column: 1 / -1; }
+.idle {
   display: flex; gap: 4px;
   border: 2px solid transparent; border-radius: 8px;
   background: transparent; padding: 2px;
   width: max-content;
 }
-.bcell {
+.icell {
   width: var(--mini); height: calc(var(--mini) + 14px);
   display: grid; grid-template-rows: var(--mini) 14px; place-items: center;
   border-radius: 6px;
 }
-.bslot {
+.islot {
   width: var(--mini); height: var(--mini); border-radius: 6px;
-  background: #ece2cc; box-shadow: inset 0 1px 3px rgba(35, 32, 40, .15);
+  background: var(--well-deep); box-shadow: inset 0 1px 3px rgba(27, 28, 25, .17);
   display: grid; place-items: center;
 }
-.bcell .pen { font-size: 10px; font-weight: 700; color: var(--muted); }
-.bcell .tile, .bcell .token { width: var(--mini); height: var(--mini); }
-.bcell .thud { animation: thud calc(.45s * var(--tempo, 1)) cubic-bezier(.3, 1.8, .5, 1); }
+.icell .pen { font-size: 10px; font-weight: 700; color: var(--muted); }
+.icell .tile, .icell .token { width: var(--mini); height: var(--mini); }
+.icell .thud { animation: thud calc(.45s * var(--tempo, 1)) cubic-bezier(.3, 1.8, .5, 1); }
 @keyframes thud {
   0% { transform: translateY(-16px) scale(1.05); }
   60% { transform: translateY(2px) scaleY(.88) scaleX(1.08); }
 }
 
 /* Two-tap: legal destinations light up from legalMoves. */
-.trow.can-drop, .bench.can-drop {
+.crew.can-drop, .idle.can-drop {
   border-color: var(--red); cursor: pointer;
   animation: drop-hint 1.2s ease infinite;
-  background: rgba(200, 54, 43, .06);
+  background: rgba(206, 30, 50, .07);
 }
-@keyframes drop-hint { 50% { border-color: rgba(200, 54, 43, .35); } }
-.trow.can-drop:hover, .bench.can-drop:hover { background: rgba(200, 54, 43, .14); }
+@keyframes drop-hint { 50% { border-color: rgba(206, 30, 50, .35); } }
+.crew.can-drop:hover, .idle.can-drop:hover { background: rgba(206, 30, 50, .15); }
 
 /* Collapsed opponents on small screens. */
 .board.collapsed .play-area { display: none; }
@@ -472,8 +515,8 @@ button.tile:hover { transform: translateY(-3px); }
 
 #fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
 
-/* Off-screen destination for discarded tiles (a hidden box keeps a real
-   rect for the flights, so the theatre needs no visible Lid chip). */
+/* Off-screen destination for craftspeople who move on (a hidden box keeps a
+   real rect for the flights, so the theatre needs no visible lid chip). */
 #drain {
   position: fixed; top: 10px; right: 18px; width: 10px; height: 10px;
   visibility: hidden; pointer-events: none;
@@ -488,7 +531,7 @@ button.tile:hover { transform: translateY(-3px); }
   animation: popup-rise calc(.9s * var(--tempo, 1)) ease forwards;
 }
 .popup.neg { color: var(--red); }
-.popup.pos { color: #1a7a3c; }
+.popup.pos { color: #2E6F3E; }
 @keyframes popup-rise {
   0% { opacity: 0; transform: translateY(6px) scale(.7); }
   20% { opacity: 1; transform: translateY(0) scale(1.15); }
@@ -503,7 +546,7 @@ button.tile:hover { transform: translateY(-3px); }
   background: var(--ink); color: var(--card);
   font-size: clamp(20px, 4vw, 34px); font-weight: 800; letter-spacing: -.01em;
   padding: 14px 30px; border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(35, 32, 40, .35);
+  box-shadow: 0 20px 50px rgba(27, 28, 25, .35);
   opacity: 0; visibility: hidden;
 }
 #banner.show { visibility: visible; animation: banner-in calc(1.5s * var(--tempo, 1)) ease forwards; }
@@ -514,17 +557,21 @@ button.tile:hover { transform: translateY(-3px); }
   80% { opacity: 1; }
   100% { opacity: 0; transform: translate(-50%, -55%); }
 }
-#banner .r { color: #f3c85e; }
+#banner .r { color: #E8B84B; }
 
 /* ------------------------------------------------------------- end modal */
 
 #end-modal {
+  /* The reset at the top of this file zeroes every margin, which includes the
+     `margin: auto` a <dialog> centres itself with — without this it opens in
+     the top-left corner. */
+  margin: auto;
   border: 0; border-radius: 18px;
   padding: 0; background: var(--card); color: var(--ink);
   width: min(560px, 92vw);
-  box-shadow: 0 40px 120px rgba(35, 32, 40, .45);
+  box-shadow: 0 40px 120px rgba(27, 28, 25, .45);
 }
-#end-modal::backdrop { background: rgba(35, 32, 40, .55); backdrop-filter: blur(3px); }
+#end-modal::backdrop { background: rgba(27, 28, 25, .55); backdrop-filter: blur(3px); }
 
 #end-body { padding: 34px 36px 10px; }
 .whistle {
@@ -572,13 +619,13 @@ button.tile:hover { transform: translateY(-3px); }
 /* -------------------------------------------------------------- phones */
 
 /* Punch #6 — one screen, no sideways scrolling: agencies wrap (roughly
-   3 + 2), then the open market, then the mover's board (ordered first from
+   3 + 2), then the gate, then the mover's board (ordered first from
    renderBoards), with opponents collapsed below the fold. */
 @media (max-width: 940px) {
   :root { --tile: 44px; --mini: 30px; }
   #market { flex-direction: column; align-items: stretch; margin-bottom: 14px; }
-  #agencies { flex-wrap: wrap; justify-content: center; gap: 10px; }
-  #centre-wrap { max-width: none; }
+  #sources { flex-wrap: wrap; justify-content: center; gap: 10px; }
+  #pool-wrap { max-width: none; }
   #boards { flex-direction: column; align-items: stretch; }
   .board { width: 100%; }
   .board .play-area { justify-content: center; }
@@ -587,8 +634,8 @@ button.tile:hover { transform: translateY(-3px); }
     display: inline; font-size: 11px; color: var(--muted); margin-left: 8px;
   }
   #turn-label { display: none; }
-  #centre-wrap { width: auto; }
-  #centre { min-height: calc(var(--tile) * 2 + 6px); }
+  #pool-wrap { width: auto; }
+  #pool { min-height: calc(var(--tile) * 2 + 6px); }
   /* One line, always. Letting the topbar wrap meant that a longer phase label
      tipped it onto a second row and pushed every board 34px down the page
      mid-game — the same unsteadiness as the market resizing. So it never
@@ -599,7 +646,7 @@ button.tile:hover { transform: translateY(-3px); }
     flex: 1 1 auto; min-width: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .q-badge, .supply, .menu { flex: none; }
+  .wk-badge, .supply, .menu { flex: none; }
   .setup-card { padding: 26px 22px; }
   .setup-card h1 { font-size: 42px; }
 }
@@ -607,16 +654,16 @@ button.tile:hover { transform: translateY(-3px); }
 @media (max-width: 480px) {
   :root { --tile: 40px; --mini: 24px; }
   #table { padding: 12px 8px 32px; }
-  #agencies { gap: 8px; }
-  .agency { padding: 6px 8px 8px; }
+  #sources { gap: 8px; }
+  .source { padding: 6px 8px 8px; }
   .board { padding: 10px 8px 12px; }
   .play-area { gap: 8px; }
   .board-name { font-size: 15px; }
   .score { font-size: 22px; min-width: 34px; }
   .clock { font-size: 13px; }
-  .bcell .pen { font-size: 9px; }
+  .icell .pen { font-size: 9px; }
   #topbar { padding: 7px 9px; gap: 5px 7px; }
-  .q-badge { font-size: 12px; }
+  .wk-badge { font-size: 12px; }
   #phase-label { font-size: 12px; }
   .chip { font-size: 11px; padding: 2px 8px; }
   .ghost-btn { padding: 4px 8px; font-size: 12px; }

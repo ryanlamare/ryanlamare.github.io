@@ -1,4 +1,4 @@
-// Headcount — two-device play, end to end in a real browser.
+// Pavilion — two-device play, end to end in a real browser.
 //
 //   node pavilion/test/online.test.js
 //
@@ -81,7 +81,7 @@ const filePort = files.address().port;
 
 // --- drive the browser ------------------------------------------------------
 
-const profile = await mkdtemp(join(tmpdir(), 'headcount-'));
+const profile = await mkdtemp(join(tmpdir(), 'pavilion-'));
 const pageUrl =
   `http://127.0.0.1:${filePort}/?uitest=online` +
   `&relay=${encodeURIComponent(`ws://127.0.0.1:${relayPort}`)}`;

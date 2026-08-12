@@ -1,22 +1,32 @@
-// Headcount — the corporate word lists, and the two things built from them.
+// Pavilion — the Fair word lists, and the two things built from them.
 //
 // Room codes and seeds are two (or three) words because their real transport
-// is Zoom audio: "synergy bison" survives a bad mic, "X7K2QF" doesn't
-// (HEADCOUNT.md, Identity). Shared by the browser (ui.js, net.js) and the
+// is Zoom audio: "ferris norway" survives a bad mic, "X7K2QF" doesn't
+// (PAVILION.md, Identity). Shared by the browser (ui.js, net.js) and the
 // relay (relay/room.js) so a code minted by the server and a seed typed by a
 // player are the same shape.
 //
-// No ambiguous characters, nothing that reads as an instruction, and no word
-// that could land badly in a class transcript.
+// Icon plus national pavilion, both from the 1893 World's Columbian
+// Exposition: FERRIS-NORWAY, MIDWAY-BRAZIL, TESLA-CEYLON. No ambiguous
+// characters, nothing that needs spelling out, and A–Z only — the Worker
+// checks incoming codes against /^[A-Z]+-[A-Z]+$/.
+//
+// ⚠️ Two deliberate exclusions (PAVILION.md, Naming). **Nothing from the
+// Midway's ethnographic villages** — that part of the Fair's history is real
+// and explicitly out of scope here. And **none of the five discipline names**:
+// a room called MACHINERY-something sitting beside a Machinery tile is a
+// needless collision.
 
-export const ADJECTIVES = [
-  'SYNERGY', 'PIVOT', 'LEVERAGE', 'CASCADE', 'QUANTUM', 'VERTICAL',
-  'AGILE', 'HOLISTIC', 'DYNAMIC', 'STRATEGIC', 'ROBUST', 'SCALABLE',
+export const ICONS = [
+  'FERRIS', 'MIDWAY', 'WHITECITY', 'PERISTYLE', 'LAGOON', 'REPUBLIC',
+  'GOLDENDOOR', 'WOODEDISLE', 'JACKSONPARK', 'BURNHAM', 'OLMSTED', 'TESLA',
+  'EDISON', 'CRACKERJACK', 'BLUERIBBON', 'SHREDDEDWHEAT',
 ];
 
-export const NOUNS = [
-  'BISON', 'MERLOT', 'FALCON', 'WALNUT', 'GLACIER', 'MARMOT',
-  'JUNIPER', 'BOBCAT', 'SEQUOIA', 'PELICAN', 'GRANITE', 'OTTER',
+export const PAVILIONS = [
+  'JAPAN', 'NORWAY', 'GERMANY', 'FRANCE', 'BRAZIL', 'SWEDEN', 'SPAIN',
+  'CEYLON', 'TURKEY', 'IRELAND', 'CANADA', 'ITALY', 'GREECE', 'DENMARK',
+  'SIAM', 'MEXICO',
 ];
 
 // crypto.getRandomValues, not Math.random — the engine's ban on Math.random is
@@ -28,18 +38,18 @@ function pick(list, n) {
   return [...buf].map((v) => list[v % list.length]);
 }
 
-// SYNERGY-BISON — said aloud in a breakout room.
+// FERRIS-NORWAY — said aloud in a breakout room.
 export function roomCode() {
-  const [a] = pick(ADJECTIVES, 1);
-  const [b] = pick(NOUNS, 1);
+  const [a] = pick(ICONS, 1);
+  const [b] = pick(PAVILIONS, 1);
   return `${a}-${b}`;
 }
 
-// LEVERAGE-MARMOT-42 — a third element, so a recycled room code next week
+// TESLA-CEYLON-47 — a third element, so a recycled room code next week
 // doesn't replay last week's bag.
 export function freshSeed() {
-  const [a] = pick(ADJECTIVES, 1);
-  const [b] = pick(NOUNS, 1);
+  const [a] = pick(ICONS, 1);
+  const [b] = pick(PAVILIONS, 1);
   const n = new Uint32Array(1);
   crypto.getRandomValues(n);
   return `${a}-${b}-${(n[0] % 90) + 10}`;

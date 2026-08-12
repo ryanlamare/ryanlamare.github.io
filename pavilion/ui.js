@@ -1,6 +1,14 @@
-// Headcount — board UI and hot-seat play (build step 2).
+// Pavilion — the board UI (build step 2), and the game's copy layer.
 //
-// Three rules from the memo govern this file:
+// This file is the ONLY place the theme lives. The engine, the wire protocol
+// and the archived game record are deliberately theme-neutral (kind / source /
+// pool / line / floor, PAVILION-RULES.md §10) because the theme has moved
+// three times and a stored game is meant to outlive the term. So the mapping
+// from those words to Pavilion's — a kind is a discipline, a source is an
+// agency, the pool is the gate, a line is a crew, the floor is idle — is made
+// here, once, and a fourth theme change is an edit to this file.
+//
+// Three rules from the memo govern the rest of it:
 //   - The engine is the only rules authority. The UI highlights from
 //     legalMoves(), submits moves through apply(), and never re-implements
 //     legality or scoring. Per-step score deltas for the theatre are computed
@@ -20,14 +28,23 @@ import { greedyMove } from './bot.js';
 import { freshSeed } from './words.js';
 import { Relay, defaultRelayUrl, deviceKind } from './net.js';
 
-const BOT_NAME = 'The Consultant';
+// Every nation sent a commissioner to Chicago to see its pavilion built.
+// Yours is across the way, hiring from the same crowd, and they have done
+// this before.
+const BOT_NAME = 'The Commissioner';
 const BOT_SEAT = 1; // practice games are always you (seat 0) vs the bot
 
-const FN = E.FUNCTION_NAMES;
-const ICONS = ['ic-eng', 'ic-sal', 'ic-ops', 'ic-fin', 'ic-ana'];
+// Engine kind 0-4 → the five disciplines. The engine knows neither the names
+// nor the order matters to anything but this line and style.css's .k0-.k4.
+const DISC = ['Art', 'Science', 'Machinery', 'Electricity', 'Nature'];
+const ICONS = ['ic-art', 'ic-sci', 'ic-mac', 'ic-ele', 'ic-nat'];
+// Agencies carry no visible name (Ryan, 2026-08-06) — these survive only in
+// screen-reader labels and move announcements, where telling one agency from
+// another still matters. Chicago streets, so nothing collides with a room
+// code (icon + national pavilion) or a discipline.
 const AGENCY_NAMES = [
-  'Halcyon', 'Meridian', 'Vantage', 'Beacon', 'Summit',
-  'Crestline', 'Northstar', 'Pinnacle', 'Cornerstone',
+  'Clark Street', 'Halsted Street', 'Canal Street', 'State Street', 'Wabash Avenue',
+  'Archer Avenue', 'Milwaukee Avenue', 'Blue Island', 'Ashland Avenue',
 ];
 const $ =(sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
@@ -44,21 +61,27 @@ const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
 let G = null; // the running game
-let sel = null; // {source, fn} — first tap of the two-tap
+let sel = null; // {source, kind} — first tap of the two-tap
 let animating = false;
 
 // ---------------------------------------------------------------------------
 // Markup helpers.
 
-function tileHTML(fn, cls = '') {
-  return `<div class="tile f${fn}${cls ? ' ' + cls : ''}"><svg class="ic" aria-hidden="true"><use href="#${ICONS[fn]}"/></svg></div>`;
+function tileHTML(kind, cls = '') {
+  return `<div class="tile k${kind}${cls ? ' ' + cls : ''}"><svg class="ic" aria-hidden="true"><use href="#${ICONS[kind]}"/></svg></div>`;
 }
 function tokenHTML() {
-  return `<div class="token" title="First Mover token"><svg class="ic" aria-hidden="true"><use href="#ic-first"/></svg></div>`;
+  return `<div class="token" title="First Call token"><svg class="ic" aria-hidden="true"><use href="#ic-first"/></svg></div>`;
+}
+
+// "3 galleries", "1 aisle" — the end screen counts things and a bare plural
+// reads as a typo when the count is one.
+function count(n, one, many) {
+  return `${n} ${n === 1 ? one : many}`;
 }
 
 function sameSource(a, b) {
-  return a.type === b.type && (a.type !== 'agency' || a.index === b.index);
+  return a.type === b.type && (a.type !== 'source' || a.index === b.index);
 }
 
 // ---------------------------------------------------------------------------
@@ -66,75 +89,72 @@ function sameSource(a, b) {
 // snapshot lags G.cur deliberately.
 
 function renderAll(st = G.view) {
-  $('#q-badge').textContent = 'Q' + st.round;
+  $('#week-badge').textContent = 'W' + st.round;
   $('#pool-count').textContent = st.bag.length;
   const turn = $('#turn-label');
   if (st.over) {
     turn.textContent = '';
-    setPhase('Recruitment cycle complete');
+    setPhase('Opening day');
   } else {
     turn.innerHTML = `<b>${esc(G.names[st.seatToMove])}</b> is hiring`;
   }
-  renderAgencies(st);
-  renderCentre(st);
+  renderSources(st);
+  renderPool(st);
   renderBoards(st);
   applySelection(st);
 }
 
-function renderAgencies(st) {
-  const wrap = $('#agencies');
+function renderSources(st) {
+  const wrap = $('#sources');
   wrap.innerHTML = '';
-  st.agencies.forEach((counts, i) => {
+  st.sources.forEach((counts, i) => {
     const total = counts.reduce((a, b) => a + b, 0);
     const a = document.createElement('div');
-    a.className = 'agency' + (total === 0 ? ' empty' : '');
-    a.dataset.agency = i;
+    a.className = 'source' + (total === 0 ? ' empty' : '');
+    a.dataset.source = i;
     const slots = [];
-    for (let fn = 0; fn < 5; fn++) {
-      for (let k = 0; k < counts[fn]; k++) {
+    for (let kind = 0; kind < 5; kind++) {
+      for (let n = 0; n < counts[kind]; n++) {
         slots.push(
-          `<button class="tile f${fn}" data-fn="${fn}"
-             aria-label="Take ${counts[fn]} ${FN[fn]} from ${AGENCY_NAMES[i]}">
-             <svg class="ic" aria-hidden="true"><use href="#${ICONS[fn]}"/></svg>
+          `<button class="tile k${kind}" data-kind="${kind}"
+             aria-label="Engage ${counts[kind]} ${DISC[kind]} from the ${AGENCY_NAMES[i]} agency; the rest go to the gate">
+             <svg class="ic" aria-hidden="true"><use href="#${ICONS[kind]}"/></svg>
            </button>`
         );
       }
     }
-    // Agencies carry no visible name (Ryan, 2026-08-06) — AGENCY_NAMES
-    // survives in the aria-labels and move announcements, where telling
-    // one agency from another still matters.
     a.innerHTML = `<div class="slots">${slots.join('')}</div>`;
     wrap.appendChild(a);
   });
 }
 
-function renderCentre(st) {
-  const c = $('#centre');
+function renderPool(st) {
+  const c = $('#pool');
   c.innerHTML = '';
-  if (st.firstMoverInCentre) {
+  if (st.firstTokenInPool) {
     const t = document.createElement('div');
     t.innerHTML = tokenHTML();
     t.firstChild.id = 'fm-token';
     c.appendChild(t.firstChild);
   }
   let any = false;
-  for (let fn = 0; fn < 5; fn++) {
-    for (let k = 0; k < st.centre[fn]; k++) {
+  for (let kind = 0; kind < 5; kind++) {
+    for (let n = 0; n < st.pool[kind]; n++) {
       any = true;
       const b = document.createElement('button');
-      b.className = `tile f${fn}`;
-      b.dataset.fn = fn;
+      b.className = `tile k${kind}`;
+      b.dataset.kind = kind;
       b.setAttribute(
         'aria-label',
-        `Take ${st.centre[fn]} ${FN[fn]} from the open market` +
-          (st.firstMoverInCentre ? ' (comes with the First Mover token)' : '')
+        `Engage ${st.pool[kind]} ${DISC[kind]} from the gate` +
+          (st.firstTokenInPool ? ' (comes with the First Call token)' : '')
       );
-      b.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${ICONS[fn]}"/></svg>`;
+      b.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${ICONS[kind]}"/></svg>`;
       c.appendChild(b);
     }
   }
-  if (!any && !st.firstMoverInCentre) {
-    c.innerHTML = '<span class="none">empty — leftovers land here</span>';
+  if (!any && !st.firstTokenInPool) {
+    c.innerHTML = '<span class="none">empty — whoever a rival passes over waits here</span>';
   }
 }
 
@@ -158,20 +178,22 @@ function renderBoards(st) {
     const mine = G.cfg.bot ? seat === 0 : G.online ? seat === G.mySeat : active;
     if (narrow) el.style.order = mine ? -1 : 0;
 
-    const teams = [];
+    // One crew per gallery, gathered right to left: the rightmost space sits
+    // against the pavilion, which is the display it will become.
+    const crews = [];
     for (let r = 0; r < 5; r++) {
       const cap = r + 1;
-      const t = b.teams[r];
+      const t = b.lines[r];
       const cells = [];
       for (let i = 0; i < cap; i++) {
         const occ = i >= cap - t.count;
-        cells.push(`<span class="tcell${occ ? ' occ' : ''}">${occ ? tileHTML(t.fn) : ''}</span>`);
+        cells.push(`<span class="ccell${occ ? ' occ' : ''}">${occ ? tileHTML(t.kind) : ''}</span>`);
       }
       const label = t.count
-        ? `Team row ${cap}: ${t.count} of ${cap} ${FN[t.fn]}`
-        : `Team row ${cap}: empty`;
-      teams.push(
-        `<button class="trow" data-row="${r}" aria-label="${label}">${cells.join('')}</button>`
+        ? `Gallery ${cap} crew: ${t.count} of ${cap} ${DISC[t.kind]}`
+        : `Gallery ${cap} crew: empty, room for ${cap}`;
+      crews.push(
+        `<button class="crew" data-row="${r}" aria-label="${label}">${cells.join('')}</button>`
       );
     }
 
@@ -179,26 +201,26 @@ function renderBoards(st) {
     for (let r = 0; r < 5; r++) {
       const cells = [];
       for (let c = 0; c < 5; c++) {
-        const fn = (c - r + 5) % 5; // inverse of wallColumn
+        const kind = (c - r + 5) % 5; // inverse of wallColumn
         const filled = b.wall[r][c] === 1;
-        // An unfilled cell is the real tile, faded by the .open class —
-        // colour is how you read filled vs still-open (punch #3).
+        // An unbuilt cell is the real tile, faded by the .open class — colour
+        // is how you read raised vs still-open (punch #3).
         cells.push(
           `<span class="wcell${filled ? ' filled' : ''}" data-rc="${r}-${c}">` +
-            tileHTML(fn, filled ? '' : 'open') +
+            tileHTML(kind, filled ? '' : 'open') +
             `</span>`
         );
       }
       wall.push(`<div class="wrow">${cells.join('')}</div>`);
     }
 
-    const bcells = [];
-    for (let i = 0; i < E.BENCH_SIZE; i++) {
-      const entry = b.bench[i];
+    const icells = [];
+    for (let i = 0; i < E.FLOOR_SIZE; i++) {
+      const entry = b.floor[i];
       const inner =
-        entry === undefined ? '' : entry === E.FIRST_MOVER ? tokenHTML() : tileHTML(entry);
-      bcells.push(
-        `<span class="bcell"><span class="bslot">${inner}</span><span class="pen">−${E.BENCH_PENALTIES[i]}</span></span>`
+        entry === undefined ? '' : entry === E.FIRST_TOKEN ? tokenHTML() : tileHTML(entry);
+      icells.push(
+        `<span class="icell"><span class="islot">${inner}</span><span class="pen">−${E.FLOOR_PENALTIES[i]}</span></span>`
       );
     }
 
@@ -207,17 +229,17 @@ function renderBoards(st) {
         <span class="board-name">${esc(G.names[seat])}</span>
         ${G.online && seat === G.mySeat ? '<span class="you">you</span>' : ''}
         ${G.online && G.presence[seat] === false ? '<span class="away" role="status">reconnecting…</span>' : ''}
-        ${b.firstMover ?'<svg class="board-fm" role="img" aria-label="First Mover next quarter" title="First Mover next quarter"><use href="#ic-first"/></svg>' : ''}
+        ${b.firstToken ?'<svg class="board-fm" role="img" aria-label="Has First Call next week" title="First Call next week"><use href="#ic-first"/></svg>' : ''}
         <span class="expand-hint">tap to expand</span>
         <span class="board-spacer"></span>
         <span class="clock" data-seat="${seat}"></span>
         <span class="score" data-seat="${seat}">${b.score}</span>
       </div>
       <div class="play-area">
-        <div class="teams">${teams.join('')}</div>
+        <div class="crews">${crews.join('')}</div>
         <div class="wall">${wall.join('')}</div>
-        <div class="bench-wrap">
-          <button class="bench" aria-label="The bench: ${b.bench.length} of 7 occupied">${bcells.join('')}</button>
+        <div class="idle-wrap">
+          <button class="idle" aria-label="Idle: ${b.floor.length} of 7 spaces taken">${icells.join('')}</button>
         </div>
       </div>`;
     wrap.appendChild(el);
@@ -227,32 +249,32 @@ function renderBoards(st) {
 
 function applySelection() {
   $$('.tile.sel, .tile.dim').forEach((t) => t.classList.remove('sel', 'dim'));
-  $$('.trow.can-drop, .bench.can-drop').forEach((t) => t.classList.remove('can-drop'));
+  $$('.crew.can-drop, .idle.can-drop').forEach((t) => t.classList.remove('can-drop'));
   if (!sel || !G || G.cur.over) return;
 
   const srcEl =
-    sel.source.type === 'agency'
-      ? $(`.agency[data-agency="${sel.source.index}"]`)
-      : $('#centre');
+    sel.source.type === 'source'
+      ? $(`.source[data-source="${sel.source.index}"]`)
+      : $('#pool');
   if (srcEl) {
     $$('.tile', srcEl).forEach((t) => {
-      t.classList.add(Number(t.dataset.fn) === sel.fn ? 'sel' : 'dim');
+      t.classList.add(Number(t.dataset.kind) === sel.kind ? 'sel' : 'dim');
     });
   }
 
   const dests = E.legalMoves(G.cur).filter(
-    (m) => sameSource(m.source, sel.source) && m.fn === sel.fn
+    (m) => sameSource(m.source, sel.source) && m.kind === sel.kind
   );
   const boardEl = $(`.board[data-seat="${G.cur.seatToMove}"]`);
   if (!boardEl) return;
   for (const m of dests) {
-    if (m.dest.type === 'team') {
-      const row = $(`.trow[data-row="${m.dest.row}"]`, boardEl);
+    if (m.dest.type === 'line') {
+      const row = $(`.crew[data-row="${m.dest.row}"]`, boardEl);
       row.classList.add('can-drop');
       row.setAttribute('aria-label', row.getAttribute('aria-label') + ' — legal destination');
     } else {
-      const bench = $('.bench', boardEl);
-      bench.classList.add('can-drop');
+      const idle = $('.idle', boardEl);
+      idle.classList.add('can-drop');
     }
   }
 }
@@ -352,29 +374,29 @@ function banner(html) {
   return sleep(T(650));
 }
 
-// The Phase A beat: taken tiles fly to their destination, leftovers spill
-// into the open market, the token flips onto the bench.
+// The Phase A beat: the craftspeople you engage fly to their crew, the ones
+// you passed over spill to the gate, the token flips onto your idle row.
 async function animatePhaseA(before, interim, move) {
   const mover = before.seatToMove;
-  const takenFn = move.fn;
+  const takenKind = move.kind;
 
   // Capture source rects before re-rendering.
   const srcEl =
-    move.source.type === 'agency'
-      ? $(`.agency[data-agency="${move.source.index}"]`)
-      : $('#centre');
-  const takenRects = $$(`.tile[data-fn="${takenFn}"]`, srcEl).map((t) =>
+    move.source.type === 'source'
+      ? $(`.source[data-source="${move.source.index}"]`)
+      : $('#pool');
+  const takenRects = $$(`.tile[data-kind="${takenKind}"]`, srcEl).map((t) =>
     t.getBoundingClientRect()
   );
   const leftoverRects = {};
-  if (move.source.type === 'agency') {
-    for (let fn = 0; fn < 5; fn++) {
-      if (fn === takenFn) continue;
-      const els = $$(`.tile[data-fn="${fn}"]`, srcEl);
-      if (els.length) leftoverRects[fn] = els.map((t) => t.getBoundingClientRect());
+  if (move.source.type === 'source') {
+    for (let kind = 0; kind < 5; kind++) {
+      if (kind === takenKind) continue;
+      const els = $$(`.tile[data-kind="${kind}"]`, srcEl);
+      if (els.length) leftoverRects[kind] = els.map((t) => t.getBoundingClientRect());
     }
   }
-  const tokenEl = move.source.type === 'centre' ? $('#fm-token') : null;
+  const tokenEl = move.source.type === 'pool' ? $('#fm-token') : null;
   const tokenRect = tokenEl ? tokenEl.getBoundingClientRect() : null;
 
   // Show the interim state with arrivals hidden, then fly into them.
@@ -389,30 +411,31 @@ async function animatePhaseA(before, interim, move) {
   let flightNo = 0;
   const stag = () => ({ delay: flightNo++ * 45 });
 
-  // Team-row arrivals: rows fill right to left, so new tiles are the
+  // Crew arrivals: crews gather right to left, so the new hands are the
   // leftmost of the occupied block.
   const arrivals = [];
-  if (move.dest.type === 'team') {
+  if (move.dest.type === 'line') {
     const r = move.dest.row;
     const cap = r + 1;
-    const cells = $$(`.trow[data-row="${r}"] .tcell`, boardEl);
-    for (let i = cap - iBoard.teams[r].count; i < cap - bBoard.teams[r].count; i++) {
-      arrivals.push({ el: cells[i], html: tileHTML(takenFn) });
+    const cells = $$(`.crew[data-row="${r}"] .ccell`, boardEl);
+    for (let i = cap - iBoard.lines[r].count; i < cap - bBoard.lines[r].count; i++) {
+      arrivals.push({ el: cells[i], html: tileHTML(takenKind) });
     }
   }
-  // Bench arrivals (overflow, voluntary dumps, and the token).
-  const bcells = $$('.bcell .bslot', boardEl);
-  for (let i = bBoard.bench.length; i < iBoard.bench.length; i++) {
-    const entry = iBoard.bench[i];
+  // Idle arrivals (overflow, deliberate hoarding, and the token). They land
+  // with a heavier thud than a hire: the penalty should feel like payroll.
+  const icells = $$('.icell .islot', boardEl);
+  for (let i = bBoard.floor.length; i < iBoard.floor.length; i++) {
+    const entry = iBoard.floor[i];
     arrivals.push({
-      el: bcells[i],
-      html: entry === E.FIRST_MOVER ? tokenHTML() : tileHTML(takenFn),
+      el: icells[i],
+      html: entry === E.FIRST_TOKEN ? tokenHTML() : tileHTML(takenKind),
       thud: true,
-      token: entry === E.FIRST_MOVER,
+      token: entry === E.FIRST_TOKEN,
     });
   }
-  // Token set aside on a full bench: it still flips to the mover.
-  if (tokenRect && !arrivals.some((a) => a.token) && iBoard.firstMover) {
+  // Token set aside on a full idle row: it still flips to the mover.
+  if (tokenRect && !arrivals.some((a) => a.token) && iBoard.firstToken) {
     const fmEl = $('.board-fm', boardEl) || $('.board-name', boardEl);
     arrivals.push({ el: fmEl, html: tokenHTML(), token: true });
   }
@@ -427,14 +450,15 @@ async function animatePhaseA(before, interim, move) {
     );
   }
 
-  // Leftovers spill and scatter into the open market.
-  for (const [fn, rects] of Object.entries(leftoverRects)) {
-    const targets = $$(`#centre .tile[data-fn="${fn}"]`);
-    const delta = interim.centre[fn] - before.centre[fn];
+  // Whoever wasn't hired spills and scatters out to the gate, where a rival
+  // can take them.
+  for (const [kind, rects] of Object.entries(leftoverRects)) {
+    const targets = $$(`#pool .tile[data-kind="${kind}"]`);
+    const delta = interim.pool[kind] - before.pool[kind];
     const newOnes = targets.slice(targets.length - delta);
     newOnes.forEach((t, k) => {
       t.classList.add('pre');
-      flights.push(fly(rects[k] || rects[0], t.getBoundingClientRect(), tileHTML(Number(fn)), stag()));
+      flights.push(fly(rects[k] || rects[0], t.getBoundingClientRect(), tileHTML(Number(kind)), stag()));
     });
   }
 
@@ -449,12 +473,13 @@ async function animatePhaseA(before, interim, move) {
   await beat(120);
 }
 
-// The performance-review beat: completed teams' lead tiles glide onto the
-// org chart row by row while the score ticks, the bench takes its toll, then
-// either the end of the recruitment cycle or the next quarter's deal.
+// The installation sweep: each completed crew's lead hand glides into the
+// pavilion, one gallery at a time, while the score ticks with every
+// placement and the rest of the crew moves on to another pavilion. Then the
+// idle row's bill, and either opening day or next week's arrivals.
 async function animateResolution(interim, final) {
-  setPhase('Performance review');
-  await banner(`Q${interim.round} · <span class="r">performance review</span>`);
+  setPhase('The displays go up');
+  await banner(`W${interim.round} · <span class="r">the displays go up</span>`);
 
   for (let seat = 0; seat < interim.players; seat++) {
     const boardEl = $(`.board[data-seat="${seat}"]`);
@@ -464,21 +489,21 @@ async function animateResolution(interim, final) {
 
     // A beat before each board with anything to settle, so the eye can
     // travel there before its tiles start moving.
-    if (b.bench.length > 0 || b.teams.some((t, r) => t.count === r + 1)) await beat(180);
+    if (b.floor.length > 0 || b.lines.some((t, r) => t.count === r + 1)) await beat(180);
 
     for (let r = 0; r < 5; r++) {
-      const t = b.teams[r];
+      const t = b.lines[r];
       if (t.count !== r + 1) continue;
-      const c = E.wallColumn(t.fn, r);
-      const rowEl = $(`.trow[data-row="${r}"]`, boardEl);
-      const cells = $$('.tcell', rowEl);
+      const c = E.wallColumn(t.kind, r);
+      const rowEl = $(`.crew[data-row="${r}"]`, boardEl);
+      const cells = $$('.ccell', rowEl);
       const lead = cells[cells.length - 1];
       const target = $(`.wcell[data-rc="${r}-${c}"]`, boardEl);
 
-      await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.fn), {
+      await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.kind), {
         dur: 460,
       });
-      target.innerHTML = tileHTML(t.fn);
+      target.innerHTML = tileHTML(t.kind);
       target.classList.add('filled', 'landed');
 
       wallCopy[r][c] = 1;
@@ -487,12 +512,13 @@ async function animateResolution(interim, final) {
       popup('+' + d, target.getBoundingClientRect(), 'pos');
       setScore(seat, score);
 
-      // Surplus tiles clear off the table (engine: to the lid).
+      // The display stands; the rest of the crew moves on to another
+      // pavilion (engine: to the lid).
       if (r > 0 && !instant()) {
         const drainRect = $('#drain').getBoundingClientRect();
         cells.slice(0, -1).forEach((cell, k) => {
           if (cell.classList.contains('occ')) {
-            fly(cell.getBoundingClientRect(), drainRect, tileHTML(t.fn), {
+            fly(cell.getBoundingClientRect(), drainRect, tileHTML(t.kind), {
               dur: 380,
               delay: k * 40,
               lift: 10,
@@ -507,21 +533,21 @@ async function animateResolution(interim, final) {
       await beat(300);
     }
 
-    // Bench penalties — the overstaffing bill.
-    if (b.bench.length > 0) {
-      const benchEl = $('.bench', boardEl);
+    // The idle row's bill — everyone you engaged and had nowhere to put.
+    if (b.floor.length > 0) {
+      const idleEl = $('.idle', boardEl);
       let pen = 0;
-      for (let i = 0; i < b.bench.length; i++) pen += E.BENCH_PENALTIES[i];
-      popup('−' + pen, benchEl.getBoundingClientRect(), 'neg');
+      for (let i = 0; i < b.floor.length; i++) pen += E.FLOOR_PENALTIES[i];
+      popup('−' + pen, idleEl.getBoundingClientRect(), 'neg');
       score = Math.max(0, score - pen);
       setScore(seat, score);
       if (!instant()) {
         const drainRect = $('#drain').getBoundingClientRect();
-        $$('.bcell .bslot', benchEl).forEach((slot, i) => {
+        $$('.icell .islot', idleEl).forEach((slot, i) => {
           const inner = slot.firstElementChild;
           if (!inner) return;
           if (!inner.classList.contains('token')) {
-            fly(slot.getBoundingClientRect(), drainRect, tileHTML(b.bench[i]), {
+            fly(slot.getBoundingClientRect(), drainRect, tileHTML(b.floor[i]), {
               dur: 380,
               delay: i * 40,
               lift: 8,
@@ -535,11 +561,11 @@ async function animateResolution(interim, final) {
   }
 
   if (final.over) {
-    // The finale: every completed row (+2), column (+7) and cornered
-    // function (+10) sweeps cell by cell while its bonus lands and the
-    // score ticks. The engine already booked these (§8) — final scores
-    // include them — so start from score-minus-bonuses and replay the
-    // arithmetic on screen.
+    // The judges make their round: every complete gallery (+2), aisle (+7)
+    // and discipline shown all five times (+10) lights up cell by cell while
+    // its bonus lands and the score ticks. The engine already booked these
+    // (§8) — final scores include them — so start from score-minus-bonuses
+    // and replay the arithmetic on screen.
     for (let seat = 0; seat < final.players; seat++) {
       const boardEl = $(`.board[data-seat="${seat}"]`);
       const wall = final.boards[seat].wall;
@@ -553,8 +579,8 @@ async function animateResolution(interim, final) {
       for (let c = 0; c < 5; c++)
         if (wall.every((row) => row[c] === 1))
           groups.push({ idx: wall.map((_, r) => r * 5 + c), pts: 7 });
-      for (let fn = 0; fn < 5; fn++) {
-        const idx = wall.map((_, r) => r * 5 + E.wallColumn(fn, r));
+      for (let kind = 0; kind < 5; kind++) {
+        const idx = wall.map((_, r) => r * 5 + E.wallColumn(kind, r));
         if (idx.every((i) => wall[(i / 5) | 0][i % 5] === 1)) groups.push({ idx, pts: 10 });
       }
 
@@ -575,17 +601,18 @@ async function animateResolution(interim, final) {
         await beat(280);
       }
     }
-    await banner('Recruitment cycle <span class="r">complete</span>');
+    await banner('<span class="r">Opening day</span> — the Fair is open');
     await beat(700);
     return;
   }
 
-  // Alumni wave — departed recruits visibly restock the pool.
+  // New arrivals — crews who moved on, and more hands still reaching the
+  // city, visibly restock the crowd (§6.1: the lid refills the bag).
   if (final.refills > interim.refills && !instant()) {
     const drainRect = $('#drain').getBoundingClientRect();
     const poolRect = $('#pool-chip').getBoundingClientRect();
     $('#pool-chip').classList.add('wave');
-    banner('<span class="r">Alumni wave</span> — the market restocks');
+    banner('<span class="r">New arrivals</span> — more hands reach the city');
     const waves = [];
     for (let i = 0; i < 7; i++) {
       waves.push(fly(drainRect, poolRect, tileHTML(i % 5), { dur: 420, delay: i * 55, lift: 30 }));
@@ -594,26 +621,27 @@ async function animateResolution(interim, final) {
     setTimeout(() => $('#pool-chip').classList.remove('wave'), T(1600));
   }
 
-  // The next quarter's deal.
+  // Next week's agencies fill.
   G.view = snap(final);
   renderAll();
   setPhase('');
   await banner(
-    `Q${final.round} · <span class="r">First&nbsp;Mover</span>: <b>${esc(G.names[final.startPlayer])}</b>`
+    `W${final.round} · <span class="r">First&nbsp;Call</span>: <b>${esc(G.names[final.startPlayer])}</b>`
   );
   await dealAnimation();
 }
 
-// New recruits arrive one by one — unhurried (Ryan, 2026-08-06): the deal
-// opens each quarter and deserves to read as an event, not a shuffle.
+// The agencies send their people over one by one — unhurried (Ryan,
+// 2026-08-06): the week opens with this and it deserves to read as an event,
+// not a shuffle.
 async function dealAnimation() {
   if (instant()) return;
   const poolRect = $('#pool-chip').getBoundingClientRect();
-  const tiles = $$('#agencies .tile');
+  const tiles = $$('#sources .tile');
   tiles.forEach((t) => t.classList.add('pre'));
   await Promise.all(
     tiles.map((t, i) =>
-      fly(poolRect, t.getBoundingClientRect(), tileHTML(Number(t.dataset.fn)), {
+      fly(poolRect, t.getBoundingClientRect(), tileHTML(Number(t.dataset.kind)), {
         dur: 420,
         delay: i * 55,
         lift: 22,
@@ -632,7 +660,7 @@ async function submitMove(dest) {
   if (!G || animating || G.cur.over || !sel) return;
   if (G.online && G.cur.seatToMove !== G.mySeat) return; // not your turn
   stopClock();
-  const move = { source: sel.source, fn: sel.fn, dest, t: Math.round(G.spent[G.cur.seatToMove]) };
+  const move = { source: sel.source, kind: sel.kind, dest, t: Math.round(G.spent[G.cur.seatToMove]) };
   sel = null;
   await playMove(move, true);
 }
@@ -706,7 +734,7 @@ async function playMove(move, local) {
     startClock(final.seatToMove);
     if (resolved) {
       announce(
-        `Q${final.round} begins. ` +
+        `Week ${final.round} begins. ` +
           G.names.map((n, i) => `${n} ${final.boards[i].score}`).join(', ') +
           `. ${G.names[final.startPlayer]} starts.`
       );
@@ -726,31 +754,34 @@ function scheduleBot() {
     await beat(750);
     if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
     const m = greedyMove(G.cur);
-    sel = { source: m.source, fn: m.fn };
+    sel = { source: m.source, kind: m.kind };
     await submitMove(m.dest);
   })();
 }
 
 function describeMove(before, interim, move) {
   const name = G.names[before.seatToMove];
-  const k =
-    move.source.type === 'agency'
-      ? before.agencies[move.source.index][move.fn]
-      : before.centre[move.fn];
+  const n =
+    move.source.type === 'source'
+      ? before.sources[move.source.index][move.kind]
+      : before.pool[move.kind];
   const src =
-    move.source.type === 'agency' ? AGENCY_NAMES[move.source.index] : 'the open market';
-  let msg = `${name} takes ${k} ${FN[move.fn]} from ${src}`;
-  if (move.source.type === 'centre' && before.firstMoverInCentre) {
-    msg += ' and the First Mover token';
+    move.source.type === 'source' ? `the ${AGENCY_NAMES[move.source.index]} agency` : 'the gate';
+  let msg = `${name} engages ${n} ${DISC[move.kind]} from ${src}`;
+  if (move.source.type === 'pool' && before.firstTokenInPool) {
+    msg += ' and takes the First Call token';
   }
-  if (move.source.type === 'agency') {
-    const spilled = before.agencies[move.source.index].reduce((a, b) => a + b, 0) - k;
-    if (spilled > 0) msg += `; ${spilled} to the open market`;
+  if (move.source.type === 'source') {
+    const spilled = before.sources[move.source.index].reduce((a, b) => a + b, 0) - n;
+    if (spilled > 0) msg += `; ${spilled} go and wait at the gate`;
   }
-  msg += move.dest.type === 'team' ? `. Placed on team row ${move.dest.row + 1}.` : '. Sent to the bench.';
-  const benched =
-    interim.boards[before.seatToMove].bench.length - before.boards[before.seatToMove].bench.length;
-  if (move.dest.type === 'team' && benched > 0) msg += ` ${benched} to the bench.`;
+  msg +=
+    move.dest.type === 'line'
+      ? `. Put on the gallery ${move.dest.row + 1} crew.`
+      : '. Left idle.';
+  const idled =
+    interim.boards[before.seatToMove].floor.length - before.boards[before.seatToMove].floor.length;
+  if (move.dest.type === 'line' && idled > 0) msg += ` ${idled} idle.`;
   return msg;
 }
 
@@ -829,7 +860,7 @@ function startGame(cfg) {
   $('#end-modal').close?.();
   renderAll();
   announce(
-    `New game, seed ${seed}. ${G.names[s.startPlayer]} opens the hiring in Q1.`
+    `New game, seed ${seed}. ${G.names[s.startPlayer]} hires first in week 1.`
   );
   // Resuming a game already in progress: the caller is about to replay the
   // move list onto this state, so there is no opening to play.
@@ -837,7 +868,7 @@ function startGame(cfg) {
   (async () => {
     animating = true;
     await banner(
-      `Q1 · <span class="r">First&nbsp;Mover</span>: <b>${esc(G.names[s.startPlayer])}</b>`
+      `W1 · <span class="r">First&nbsp;Call</span>: <b>${esc(G.names[s.startPlayer])}</b>`
     );
     await dealAnimation();
     animating = false;
@@ -854,7 +885,7 @@ function endGame(ending, flaggedSeat = null) {
     G.clockTimer = null;
   }
   G.clockSeat = null;
-  setPhase('Recruitment cycle complete');
+  setPhase('Opening day');
 
   let result;
   if (ending === 'natural') {
@@ -885,8 +916,8 @@ function endGame(ending, flaggedSeat = null) {
     ending === 'timeout'
       ? `${esc(G.names[flaggedSeat])}'s clock ran out. Scores are recorded but sit out the score-based awards.`
       : draw
-        ? 'Level on points and completed rows — the rulebook calls it a shared win.'
-        : `Recruitment cycle complete after Q${G.cur.round}.`;
+        ? 'Level on points and on completed galleries — the rulebook calls it a shared win.'
+        : `A pavilion opened its doors in week ${G.cur.round}, so the Fair opened with it.`;
 
   const rows = G.names
     .map((name, seat) => {
@@ -894,7 +925,9 @@ function endGame(ending, flaggedSeat = null) {
       const bonus = ending === 'natural' ? E.bonuses(b.wall) : 0;
       const detail =
         ending === 'natural'
-          ? `${E.completeRows(b.wall)} rows · ${E.completeColumns(b.wall)} columns · ${E.completeFunctions(b.wall)} sets`
+          ? `${count(E.completeRows(b.wall), 'gallery', 'galleries')} · ` +
+            `${count(E.completeColumns(b.wall), 'aisle', 'aisles')} · ` +
+            `${count(E.completeKinds(b.wall), 'discipline', 'disciplines')}`
           : seat === flaggedSeat
             ? 'lost on time'
             : '—';
@@ -910,11 +943,11 @@ function endGame(ending, flaggedSeat = null) {
     .join('');
 
   body.innerHTML = `
-    <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Recruitment cycle complete'}</p>
+    <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Opening day'}</p>
     <p class="champion spot">${title}</p>
     <p class="end-sub">${sub}</p>
     <table class="final-table">
-      <tr><th>Firm</th><th>Org chart</th><th class="num">Play</th><th class="num">Bonus</th><th class="num">Total</th></tr>
+      <tr><th>Pavilion</th><th>Complete</th><th class="num">Play</th><th class="num">Bonus</th><th class="num">Total</th></tr>
       ${rows}
     </table>`;
   announce(`${title}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
@@ -925,7 +958,7 @@ function endGame(ending, flaggedSeat = null) {
   $('#btn-rematch').classList.toggle('hidden', !host);
   $('#btn-setup').textContent = G.online ? 'Leave the room' : 'New setup';
   $('#end-net').textContent =
-    G.online && !host ? `Waiting for ${G.names[0]} to start a rematch — same room, fresh market.` : '';
+    G.online && !host ? `Waiting for ${G.names[0]} to start a rematch — same room, a new crowd.` : '';
 
   $('#end-modal').showModal?.();
 }
@@ -958,7 +991,7 @@ function downloadRecord() {
   const blob = new Blob([JSON.stringify(gameRecord(), null, 1)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `headcount-${G.seed}.json`;
+  a.download = `pavilion-${G.seed}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -971,7 +1004,7 @@ function downloadRecord() {
 
 const params = new URLSearchParams(location.search);
 const RELAY_URL = defaultRelayUrl(location, params.get('relay'));
-const SESSION_KEY = 'headcount.session';
+const SESSION_KEY = 'pavilion.session';
 
 let net = null;
 let netRoom = null; // last known room state from welcome/roster/started
@@ -1123,7 +1156,7 @@ function resync(room, serverNow) {
     endGame(room.ended.ending, room.ended.flagged ?? null);
   } else if (!s.over) {
     startClock(s.seatToMove);
-    announce(`Back in the game. Q${s.round}, ${G.names[s.seatToMove]} to hire.`);
+    announce(`Back in the game. Week ${s.round}, ${G.names[s.seatToMove]} to hire.`);
   }
 }
 
@@ -1171,7 +1204,7 @@ function checkHash(ply) {
   const mine = G.hashes.get(ply);
   const theirs = G.theirHashes.get(ply);
   if (!mine || !theirs || mine === theirs) return;
-  console.error(`[headcount] hash divergence at ply ${ply}: ${mine} vs ${theirs}`);
+  console.error(`[pavilion] hash divergence at ply ${ply}: ${mine} vs ${theirs}`);
   netFail('This board and your opponent’s have diverged. Stopping rather than playing on.');
 }
 
@@ -1282,23 +1315,23 @@ document.addEventListener('click', (e) => {
 
   const tile = e.target.closest('button.tile');
   if (tile) {
-    const agencyEl = tile.closest('.agency');
-    const inCentre = !!tile.closest('#centre');
-    if (agencyEl || inCentre) {
-      const source = agencyEl
-        ? { type: 'agency', index: Number(agencyEl.dataset.agency) }
-        : { type: 'centre' };
-      const fn = Number(tile.dataset.fn);
-      if (sel && sameSource(sel.source, source) && sel.fn === fn) {
+    const sourceEl = tile.closest('.source');
+    const atGate = !!tile.closest('#pool');
+    if (sourceEl || atGate) {
+      const source = sourceEl
+        ? { type: 'source', index: Number(sourceEl.dataset.source) }
+        : { type: 'pool' };
+      const kind = Number(tile.dataset.kind);
+      if (sel && sameSource(sel.source, source) && sel.kind === kind) {
         sel = null; // second tap on the same pick cancels
       } else {
-        sel = { source, fn };
-        const k =
-          source.type === 'agency' ? G.cur.agencies[source.index][fn] : G.cur.centre[fn];
+        sel = { source, kind };
+        const n =
+          source.type === 'source' ? G.cur.sources[source.index][kind] : G.cur.pool[kind];
         announce(
-          `Selected ${k} ${FN[fn]} from ${
-            source.type === 'agency' ? AGENCY_NAMES[source.index] : 'the open market'
-          }. Choose a highlighted team row or the bench.`
+          `Engaging ${n} ${DISC[kind]} from ${
+            source.type === 'source' ? `the ${AGENCY_NAMES[source.index]} agency` : 'the gate'
+          }. Choose a highlighted crew, or leave them idle.`
         );
       }
       applySelection();
@@ -1306,14 +1339,14 @@ document.addEventListener('click', (e) => {
     }
   }
 
-  const row = e.target.closest('.trow.can-drop');
+  const row = e.target.closest('.crew.can-drop');
   if (row) {
-    submitMove({ type: 'team', row: Number(row.dataset.row) });
+    submitMove({ type: 'line', row: Number(row.dataset.row) });
     return;
   }
-  const bench = e.target.closest('.bench.can-drop');
-  if (bench) {
-    submitMove({ type: 'bench' });
+  const idle = e.target.closest('.idle.can-drop');
+  if (idle) {
+    submitMove({ type: 'floor' });
     return;
   }
 
@@ -1354,8 +1387,8 @@ let setupMode = 'online'; // 'online' | 'practice'
 let setupJoin = false; // online: joining someone else's room rather than opening one
 let lastTypedName = '';
 
-// You only ever name yourself: the other firms name themselves, on their own
-// devices, or are the bot.
+// You only ever name yourself: the other pavilions name themselves, on their
+// own devices, or are the bot.
 function renderNameInputs() {
   const wrap = $('#name-inputs');
   const existing = $$('input', wrap)[0]?.value;
@@ -1389,7 +1422,7 @@ function applySetupMode() {
   $('#seed-field').classList.toggle('hidden', online); // the room's seed is the server's
   $('#mode-hint').textContent = online
     ? 'Each player on their own device, anywhere. One of you opens a room and reads the code out; the others join it.'
-    : `A practice match against ${BOT_NAME} — our in-house recruiter. ` +
+    : `A practice match against ${BOT_NAME}, who has done this before. ` +
       'Practice games count for nothing; play until the rules feel obvious.';
   $('#setup-submit').textContent = online
     ? joining
@@ -1479,7 +1512,7 @@ $('#btn-rematch').addEventListener('click', () => {
   // `started` — for everyone, including whoever clicked.
   if (G.online) return void net?.rematch();
   $('#end-modal').close();
-  startGame({ ...G.cfg, seed: '' }); // fresh market, same table
+  startGame({ ...G.cfg, seed: '' }); // a new crowd, the same room
 });
 $('#btn-setup').addEventListener('click', toSetup);
 
@@ -1625,7 +1658,7 @@ if (smokeParams.get('uitest') === 'online') {
         if (G.cur.seatToMove === G.mySeat) {
           const moves = E.legalMoves(G.cur);
           const m = moves[(guard * 7) % moves.length];
-          sel = { source: m.source, fn: m.fn };
+          sel = { source: m.source, kind: m.kind };
           await submitMove(m.dest);
         } else {
           const moves = E.legalMoves(opp.state);
@@ -1672,7 +1705,7 @@ if (smokeParams.get('uitest') === 'online') {
       // --- taps off-turn do nothing ---------------------------------------
       await until(() => !animating, 'the deal');
       if (G.cur.seatToMove !== G.mySeat) {
-        $('#agencies button.tile')?.click();
+        $('#sources button.tile')?.click();
         expect(sel === null, 'a tap on the opponent’s turn selects nothing');
       }
 
@@ -1769,7 +1802,7 @@ if (smokeParams.has('smoke')) {
         guard++;
         const moves = E.legalMoves(G.cur);
         const m = moves[(guard * 7) % moves.length];
-        sel = { source: m.source, fn: m.fn };
+        sel = { source: m.source, kind: m.kind };
         await submitMove(m.dest);
         sample();
       }
@@ -1782,8 +1815,8 @@ if (smokeParams.has('smoke')) {
         return;
       }
       out.textContent = G.cur.over
-        ? `SMOKE OK moves=${G.moves.length} q=${G.cur.round} scores=${G.cur.result.scores.join('/')} winner=${G.cur.result.winner}`
-        : `SMOKE PARTIAL moves=${G.moves.length} q=${G.cur.round}`;
+        ? `SMOKE OK moves=${G.moves.length} w=${G.cur.round} scores=${G.cur.result.scores.join('/')} winner=${G.cur.result.winner}`
+        : `SMOKE PARTIAL moves=${G.moves.length} w=${G.cur.round}`;
       if (smokeParams.has('probe')) {
         const odd = [];
         $$('.tile').forEach((t) => {

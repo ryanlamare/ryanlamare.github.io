@@ -6,13 +6,14 @@ and two-device play over a relay (2026-08-12).**
 
 **The theme was rebuilt on 2026-08-12 and the game is now *Pavilion* — see
 *Theme* below, which is the part of this memo to read first, along with the
-record of the three themes that failed before it. The specs are ahead of the
-code: the engine and UI still carry the first theme's vocabulary, and the
-copy-and-art pass that reconciles them is the immediate next job.**
-Then step 5: backend, identity, results and the leaderboard.
+record of the three themes that failed before it. The copy-and-art pass landed
+the same day (see *The copy-and-art pass* below), so the code and these specs
+now agree: every player-facing word is Pavilion's, and every identifier
+underneath is theme-neutral.** Next is step 5: backend, identity, results and
+the leaderboard.
 
 Everything lives in `pavilion/`: `engine.js` (pure rules module), `bot.js` (greedy
-practice opponent, "The Superintendent"), `words.js` (room codes and seeds),
+practice opponent, "The Commissioner"), `words.js` (room codes and seeds),
 `net.js` (the transport layer), `relay/` (the relay itself — see *Two devices*
 below), and `index.html` + `style.css` + `ui.js` (the playable board — two-tap
 input, chess clocks, animation layer driven by engine state-diffs via
@@ -30,7 +31,7 @@ extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 **14 to 36** across years, so sizes (board top-N, pairing tables, instructor
 board) are settings, not constants.
 
-**The URL is `ryanlamare.com/rivet`, not a path under `teaching/ler565/`**
+**The URL is `ryanlamare.com/pavilion`, not a path under `teaching/ler565/`**
 (moved 2026-08-12). Students get a short link they can be told out loud; it is
 still an LER 565 activity and the setup screen still says so.
 
@@ -423,12 +424,12 @@ exactly as they are — same tile counts, same scoring, same 5/7/9 agencies. The
 rules are correct because thousands of people have debugged them, and Azee stays
 a usable fallback only while the games are identical.
 
-**Identifiers go theme-neutral, and now.** The theme has moved three times; the
-wire protocol and the archived game record still carry the first one's words.
-They become `source` / `pool` / `line` / `floor` / `kind` in the code pass — not
-Pavilion's words either, so the theme can move a fourth time without touching a
-stored game. Free while the archive is empty; a migration afterwards. Rules spec
-§10.
+**Identifiers are theme-neutral, and now they are — done 2026-08-12.** The
+theme has moved three times; the wire protocol and the archived game record
+carried the first one's words. They are `source` / `pool` / `line` / `floor` /
+`kind` — not Pavilion's words either, so the theme can move a fourth time
+without touching a stored game. Free while the archive was empty; a migration
+afterwards. Rules spec §10 has the table.
 
 ### The opening copy
 
@@ -800,6 +801,79 @@ survives in `startGame` because the smoke tests drive it, but has no way in from
 the interface. Put it back if an in-person class ever wants it — the
 pass-and-play fallback rule in `TEACHING_HUB.md` still stands for MG478, which
 *is* in person.
+
+## The copy-and-art pass — 2026-08-12
+
+The job the theme rebuild left behind: the specs were ahead of the code, and
+this closed the gap. Three separable things happened, and they are worth
+keeping apart because only the first is expensive to redo.
+
+**1. The identifiers went theme-neutral** (rules spec §10, which now carries the
+table). `kind` / `source` / `pool` / `line` / `floor` through the engine, the
+bot, `relay/room.js`'s shape check, the wire format and all four test suites.
+`engine.js` no longer knows the five disciplines are called anything —
+`FUNCTION_NAMES` is gone and `ui.js` holds the names. The state hash is
+unchanged, because `serialize()` writes values in a fixed order and never field
+names, so nothing about determinism moved.
+
+**Two identifiers deliberately did not move**: the deployed Worker's host name
+(`headcount-relay.rlamare.workers.dev`) and its `HeadcountRoom` Durable Object
+class. Renaming the Worker mints a second one at a second URL; renaming the DO
+class needs a `renamed_classes` migration against a relay with live rooms behind
+it. Both are plumbing, both are commented as such, and the theme was never
+supposed to reach them.
+
+**2. The copy.** Every player-facing string is Pavilion's now, in one file.
+Rounds read **W1, W2…**; Phase B is **the displays go up**; the centre is **the
+gate**; the floor line is **idle**; a pattern line is **the crew for gallery N**;
+the end screen is **opening day** and counts *galleries · aisles · disciplines*.
+The final table's columns are **Pavilion · Complete · Play · Bonus · Total**.
+
+Two names needed the paragraph test, so here they are:
+
+> **The Commissioner** (the practice bot). Every nation sent a commissioner to
+> Chicago to see its pavilion built. Yours is across the way, hiring from the
+> same crowd, and they have done this before.
+
+> **The agencies are Chicago streets** — Clark, Halsted, Canal, State, Wabash,
+> Archer, Milwaukee, Blue Island, Ashland. Agencies carry no visible name on the
+> board (2026-08-06), so this is only ever heard: "Sam engages 2 Machinery from
+> the Halsted Street agency." Streets keep it local and collide with nothing —
+> not a room code (landmark + national pavilion) and not a discipline.
+
+**3. The art**, which is the part that shows. All five isotypes were redrawn to
+the *Tiles* section above and judged on a specimen plate at 120 / 46 / 24 px and
+in greyscale, because every failure the theme rebuild found was invisible large
+and obvious small. Two things changed at that plate and nowhere else: the
+palette's bite was recut (the first knockout left a filled sliver at the top
+right, which read as a corner rather than a bite), and Machinery's two cogs sit
+on the viewBox diagonal, so the shared 62% icon box gave a visibly smaller mark
+than the other four — it is 72% now. Nudges, not redraws.
+
+Also shipped: the tiled grain, painted under the isotype as **one repeated
+image** and never a live filter; the First Call token as a single symbol
+(chamfered plate, double keyline, slab-serif 1, ink on cream), which replaces a
+white disc that was one CSS tweak away from looking like a tile; the PWA icons
+regenerated as a 2×2 of the real tiles; and a five-tile legend on the setup
+screen, naming the disciplines once on the way in — the one place naming them is
+a legend rather than a rule.
+
+**The palette is `brand.css`'s, copied rather than linked.** `brand.css` also
+`@import`s two webfonts, and a phone in a breakout room should not wait on
+Google Fonts to see a board. Values only, so they need keeping in step by hand.
+Period *type* stays deferred to the decoration pass along with the rest of the
+Fair imagery.
+
+**One bug found on the way**, unrelated to the theme and older than it: the
+CSS reset zeroes every margin, which includes the `margin: auto` a `<dialog>`
+centres itself with, so the end-of-game modal had been opening in the top-left
+corner. One line.
+
+**Checked**: all four suites (engine soak 3000 games, bot, relay protocol,
+and `online.test.js`'s real-browser two-device game with a mid-game disconnect),
+`?smoke=1`, `?uitest=setup`, and `?smoke=1&layout=1` at 1440 / 820 / 500.
+Headless Chrome clamps its window to 500px wide, so anything narrower than that
+is a screenshot crop rather than a layout — don't read a phone bug into it.
 
 ## Build order
 

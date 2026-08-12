@@ -1,4 +1,4 @@
-// Headcount relay — the local one, for playtesting on your own wifi.
+// Pavilion relay — the local one, for playtesting on your own wifi.
 //
 //   node pavilion/relay/dev-relay.js [port]     (default 8787)
 //
@@ -22,7 +22,7 @@ import { pathToFileURL } from 'node:url';
 import { Room, roomCode } from './room.js';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
-const MAX_FRAME = 1 << 20; // 1 MB — a Headcount message is a few hundred bytes
+const MAX_FRAME = 1 << 20; // 1 MB — a Pavilion message is a few hundred bytes
 
 const rooms = new Map();
 const PORT = Number(process.argv[2]) || 8787;
@@ -142,7 +142,7 @@ const server = createServer((req, res) => {
   if (req.url === '/health' || req.url === '/') {
     const body = JSON.stringify(
       {
-        relay: 'headcount dev-relay',
+        relay: 'pavilion dev-relay',
         rooms: [...rooms.values()].map((r) => ({
           code: r.code,
           started: r.started,
@@ -273,7 +273,7 @@ export function start(port = PORT, quiet = false) {
       if (!quiet) {
         const ip = lanAddress();
         const p = server.address().port;
-        console.log(`\n  Headcount relay listening on ws://localhost:${p}`);
+        console.log(`\n  Pavilion relay listening on ws://localhost:${p}`);
         if (ip) console.log(`  this LAN  → ws://${ip}:${p}   (phone / second laptop)`);
         console.log(`  status    → http://localhost:${p}/health`);
         console.log(

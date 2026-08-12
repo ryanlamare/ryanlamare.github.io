@@ -1,4 +1,4 @@
-// Headcount — the transport layer (build step 4, PROTOCOL.md).
+// Pavilion — the transport layer (build step 4, PROTOCOL.md).
 //
 // The memo's architecture has three layers: engine / UI / transport, and "the
 // bot and the network connection are both just move sources". So this file
@@ -212,9 +212,13 @@ export class Relay {
 // ---------------------------------------------------------------------------
 // Where the relay lives.
 
-// Production is a Cloudflare Worker (HEADCOUNT.md, Open questions), deployed
+// Production is a Cloudflare Worker (PAVILION.md, Open questions), deployed
 // 2026-08-12 from relay/. wss://, not https:// — this is a WebSocket endpoint.
 // Redeploy with `npx wrangler deploy` from relay/; this URL doesn't change.
+// ⚠️ The host name is the *deployment's*, not the game's: the Worker went up
+// under the first theme's name and there are live rooms behind it. Renaming it
+// would mint a second Worker at a second URL for no gain — the theme lives in
+// the copy layer (PAVILION.md, Theme), and this is plumbing.
 export const PRODUCTION_RELAY = 'wss://headcount-relay.rlamare.workers.dev';
 
 // Served from a laptop (serve.sh on :8000, relay on :8787) the relay is the
@@ -231,7 +235,7 @@ export function defaultRelayUrl(loc, override = null) {
 }
 
 // Self-reported, for the clock-fairness question the memo wants answered from
-// data rather than guessed (HEADCOUNT.md, Mobile and devices).
+// data rather than guessed (PAVILION.md, Mobile and devices).
 export function deviceKind() {
   if (typeof window === 'undefined') return 'laptop';
   const w = Math.min(window.screen?.width || 1280, window.screen?.height || 800);

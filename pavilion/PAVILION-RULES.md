@@ -20,10 +20,11 @@ Vocabulary: the Pavilion name first, the Azul name in brackets where they
 differ. Both appear because the rulebook and every online reference use the Azul
 terms.
 
-> ⚠️ **The code has not caught up yet.** The engine, the wire protocol and the
-> UI still use the first theme's identifiers (`agency`, `team`, `bench`) and an
-> older name. This file is the target; the copy-and-art pass that reconciles
-> them is the next build step. See *Identifiers* in §10.
+> ✅ **The code caught up on 2026-08-12** (the copy-and-art pass). The engine,
+> the bot, the wire protocol and the tests are theme-**neutral** — `kind`,
+> `source`, `pool`, `line`, `floor` — and every Pavilion word lives in `ui.js`,
+> the copy layer, and nowhere else. So this file's vocabulary is the *player's*,
+> not the code's, and the two are meant to differ. See *Identifiers* in §10.
 
 ---
 
@@ -359,9 +360,9 @@ half-moves:
 
 ```js
 {
-  source: { type: 'agency', index: 0 },  // or { type: 'centre' }
-  fn:     2,                             // discipline index 0-4
-  dest:   { type: 'team', row: 3 },      // or { type: 'bench' }
+  source: { type: 'source', index: 0 },  // or { type: 'pool' }
+  kind:   2,                             // tile kind 0-4 (a discipline, in the UI)
+  dest:   { type: 'line', row: 3 },      // or { type: 'floor' }
   t:      12840                          // mover's clock consumed so far, ms
 }
 ```
@@ -376,19 +377,35 @@ think-time stats and the phone-fairness question for free.
 it, and the server validates against it. One source of truth for legality; never
 a second copy in the UI.
 
-### ⚖️ Identifiers — theme-neutral, decided 2026-08-12
+### ⚖️ Identifiers — theme-neutral, decided and done 2026-08-12
 
-The identifiers above (`agency`, `centre`, `team`, `bench`, `fn`) are the
-**first theme's** words, and they are baked into the wire protocol and the
-archived game record. The record is meant to outlive the term, so a themed
-identifier is a migration waiting to happen the next time the theme moves — and
-it has now moved three times.
+The identifiers used to be the **first theme's** words (`agency`, `centre`,
+`team`, `bench`, `fn`), baked into the wire protocol and the archived game
+record. The record is meant to outlive the term, so a themed identifier is a
+migration waiting to happen the next time the theme moves — and it has now moved
+three times.
 
-**They become theme-neutral in the code pass**: `source`, `pool`, `line`,
-`floor`, `kind`. Not Pavilion's words either — the theme then lives only in the
-copy layer and can change again without touching a single stored game. This is
-free today because the archive is empty; it stops being free the moment a real
-league game is recorded.
+**They are now theme-neutral**, renamed in the copy-and-art pass the same day:
+
+| was | is | in the UI |
+|---|---|---|
+| `agency` | `source` | an agency |
+| `centre` | `pool` | the gate |
+| `team` | `line` | a crew |
+| `bench` | `floor` | idle |
+| `fn` | `kind` | a discipline |
+
+Not Pavilion's words either — the theme lives only in the copy layer and can
+change again without touching a single stored game. The same rename ran through
+the engine's own exports (`KINDS`, `LINE_ROWS`, `FLOOR_PENALTIES`,
+`FIRST_TOKEN`, `sourceCount`, `completeKinds`) and its state fields, so nothing
+in `engine.js`, `bot.js`, `relay/` or `test/` knows what a discipline is called.
+`engine.js` no longer exports the five names at all: `ui.js` holds them.
+
+This was free because the archive is empty; it stops being free the moment a
+real league game is recorded. Two things deliberately did **not** move: the
+deployed Worker's host name and its `HeadcountRoom` Durable Object class, which
+are deployment identifiers with live rooms behind them (`relay/README.md`).
 
 ### The game record
 

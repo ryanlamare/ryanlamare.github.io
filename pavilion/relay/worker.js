@@ -1,10 +1,10 @@
-// Headcount relay — the Cloudflare one, for the class.
+// Pavilion relay — the Cloudflare one, for the class.
 //
 // One Durable Object per room, holding the WebSockets and the move log; the
 // Worker in front only picks the room. Both run the same `room.js` as the
 // laptop relay, so this file is transport and storage, never protocol.
 //
-// Why this and not a free Node host (HEADCOUNT.md, Open questions): the server
+// Why this and not a free Node host (PAVILION.md, Open questions): the server
 // must eventually run the *same engine module* the clients do, and it must not
 // cold-start at class time. A Durable Object is warm, is addressed by name —
 // which a room code already is — and is a WebSocket endpoint on the free plan.
@@ -29,7 +29,7 @@ export default {
 
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response(
-        JSON.stringify({ relay: 'headcount', protocol: 1, ok: true }, null, 1),
+        JSON.stringify({ relay: 'pavilion', protocol: 1, ok: true }, null, 1),
         { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }
       );
     }
@@ -60,6 +60,12 @@ export default {
   },
 };
 
+// ⚠️ The class name and the Worker's name in wrangler.toml are **deployment
+// identifiers**, not the game's name. They stay `Headcount*` deliberately: the
+// relay is live at wss://headcount-relay.rlamare.workers.dev with games running
+// through it, and renaming a Durable Object class needs a `renamed_classes`
+// migration while renaming the Worker mints a second one at a second URL. The
+// theme lives in the copy layer; this is plumbing (PAVILION.md, Theme).
 export class HeadcountRoom {
   constructor(state) {
     this.state = state;
