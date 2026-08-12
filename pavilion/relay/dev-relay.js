@@ -1,9 +1,9 @@
 // Headcount relay — the local one, for playtesting on your own wifi.
 //
-//   node rivet/relay/dev-relay.js [port]     (default 8787)
+//   node pavilion/relay/dev-relay.js [port]     (default 8787)
 //
 // Run it beside ./serve.sh and two devices on the same network can play a real
-// game: laptop on http://<lan-ip>:8000/rivet/, phone on the
+// game: laptop on http://<lan-ip>:8000/pavilion/, phone on the
 // same URL, both pointed at ws://<lan-ip>:8787 (which net.js works out for
 // itself when the page is served from a LAN address).
 //
@@ -277,7 +277,7 @@ export function start(port = PORT, quiet = false) {
         if (ip) console.log(`  this LAN  → ws://${ip}:${p}   (phone / second laptop)`);
         console.log(`  status    → http://localhost:${p}/health`);
         console.log(
-          `  Run ./serve.sh too, then open the game${ip ? ` at http://${ip}:8000/rivet/` : ''}`
+          `  Run ./serve.sh too, then open the game${ip ? ` at http://${ip}:8000/pavilion/` : ''}`
         );
         console.log('  Ctrl-C to stop\n');
       }

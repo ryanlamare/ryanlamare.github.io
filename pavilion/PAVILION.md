@@ -1,24 +1,25 @@
-# Rivet — working memo
+# Pavilion — working memo
 
 **Status: active — build steps 1–4 done: engine, hot-seat board UI, greedy bot
 + Training Ground (2026-08-06, with the punch list below applied the same day),
 and two-device play over a relay (2026-08-12).**
 
-**The theme was rebuilt on 2026-08-12 and the game renamed *Headcount* →
-*Rivet* — see *Theme* below, which is the part of this memo to read first. The
-specs are ahead of the code: the engine and UI still carry the old vocabulary,
-and the copy-and-art pass that reconciles them is the immediate next job.**
+**The theme was rebuilt on 2026-08-12 and the game is now *Pavilion* — see
+*Theme* below, which is the part of this memo to read first, along with the
+record of the three themes that failed before it. The specs are ahead of the
+code: the engine and UI still carry the first theme's vocabulary, and the
+copy-and-art pass that reconciles them is the immediate next job.**
 Then step 5: backend, identity, results and the leaderboard.
 
-Everything lives in `rivet/`: `engine.js` (pure rules module), `bot.js` (greedy
-practice opponent, "The Foreman"), `words.js` (room codes and seeds),
+Everything lives in `pavilion/`: `engine.js` (pure rules module), `bot.js` (greedy
+practice opponent, "The Superintendent"), `words.js` (room codes and seeds),
 `net.js` (the transport layer), `relay/` (the relay itself — see *Two devices*
 below), and `index.html` + `style.css` + `ui.js` (the playable board — two-tap
 input, chess clocks, animation layer driven by engine state-diffs via
 `applyTake`; the setup screen's Training Ground mode plays you against the bot,
 recorded as `mode: 'practice'`, and its Two devices mode opens or joins a room).
-Preview with `./serve.sh` at `/rivet/`. Tests:
-`node rivet/test/engine.test.js` (soak size as an
+Preview with `./serve.sh` at `/pavilion/`. Tests:
+`node pavilion/test/engine.test.js` (soak size as an
 optional argument), `test/bot.test.js`, `test/relay.test.js` (the protocol,
 headless) and `test/online.test.js` (two-device play through the real UI in
 headless Chrome); `?smoke=1` on the game URL plays a full deterministic game
@@ -119,12 +120,11 @@ Out of scope, deliberately: **matchmaking** (Zoom already pairs them) and
   against a student, so the instructor is a playable name like any other.
   Instructor games record as **exhibitions** — archived, excluded from the
   league, records and awards by default.
-- **Room codes are two Chicago words, not hex** — `BLACKHAWKS-PILSEN`,
-  `DEEPDISH-BUCKTOWN` — from a curated list with no ambiguous characters. The
-  code's real transport is Zoom audio: "blackhawks pilsen" survives a bad mic,
+- **Room codes are two Fair words, not hex** — `FERRIS-NORWAY`,
+  `MIDWAY-BRAZIL` — from a curated list with no ambiguous characters. The
+  code's real transport is Zoom audio: "ferris norway" survives a bad mic,
   "X7K2QF" doesn't. The format is part of the protocol, so it's decided now.
-  (Was corporate two-word — `SYNERGY-BISON` — until the theme changed; see
-  *Naming* under *Theme*.)
+  The word lists, and the two deliberate exclusions, are under *Naming*.
 - **Real names, not firm names.** Pseudonymous company names were considered
   (2026-08-05) and rejected: a small six-week online class of HR professionals
   bonds through real interactions under real names, and inventing a company
@@ -179,9 +179,9 @@ behind, most improved first-half to second.
 ### The Record Book — the archive outlives the term
 
 Every game record carries a `term` key from day one, so records accrue across
-*years*, not just weeks: all-time **Tallest Tower**, all-time biggest comeback,
-longest win streak — plus a **Hall of Champions** listing every year's Employer
-of the Year, Cup winner, and any Doubles. Future cohorts play against history:
+*years*, not just weeks: all-time **Best in Show**, all-time biggest comeback,
+longest win streak — plus a **Hall of Champions** listing every year's Grand
+Prize winner, Cup winner, and any Doubles. Future cohorts play against history:
 "the all-time record is 94, set in 2026" is the cheapest motivation the league
 will ever buy, and the splash screen gets it for free. One field now;
 reconstructing term boundaries from timestamps later is exactly the archaeology
@@ -239,20 +239,22 @@ movement: *"Sam ↑2 to 4th."*
 not garnish** (Ryan, 2026-08-05: full creative licence here; do not import the
 slide decks' restraint). The splash is a *splash* — a big animated card, the
 head-to-head numbers landing with a pop, records sliding in. Moves animate
-Azee-style and then some: workers fly from agency to crew line, the passed-over
-spill and scatter into the hall, and at the week's close the build sweep —
-completed crews' lead workers glide onto the tower one floor at a time while the
-score ticks up with each placement, the excess clearing off the table. Beats
-worth staging: idle workers landing with a heavier, reluctant thud (the penalty
-should *feel* like payroll you're carrying); the First Call token's flip when
-someone bites; **new arrivals** as a visible cascade back into the hall; a
-completed riser lighting up cell by cell; a game-ending floor sweeping across;
-the topped-out finale with the winner's tower taking the spotlight.
+Azee-style and then some: craftspeople fly from agency to crew line, the
+passed-over spill and scatter to the gate, and at the week's close the
+installation sweep — completed crews' lead hands glide into the pavilion one
+gallery at a time while the score ticks up with each placement, the rest
+clearing off the table. Beats worth staging: idle craftspeople landing with a
+heavier, reluctant thud (the penalty should *feel* like payroll you're
+carrying); the First Call token's flip when someone bites; **new arrivals** as a
+visible cascade back to the gate; a completed aisle lighting up cell by cell; a
+game-ending gallery sweeping across; the opening-day finale with the winner's
+pavilion taking the spotlight.
 
-**Skyscraper imagery is the obvious next seam** (Ryan, 2026-08-12) and is
+**Fair imagery is the obvious next seam** (Ryan, 2026-08-12) and is
 deliberately deferred to the achievements-and-decoration pass, once the rules
-and structure are settled — a tower that visibly rises as the board fills, the
-period type, the skyline behind it. Recorded here so it isn't lost, not so it
+and structure are settled — a pavilion that visibly fills as the board does, the
+White City behind it, medals and ribbons on the awards screens, period type
+throughout. Recorded here so it isn't lost, not so it
 happens now. Two engineering
 rules keep all this cheap rather than a retrofit: animations are **driven by
 engine state-diffs** (the pure engine produces before/after; the UI animates
@@ -323,238 +325,293 @@ This is all for teaching and for fun — nothing here is a research project.
 
 ## Theme
 
-**Rivet. Chicago, 1927. Two firms, one labour market, and a skyline going up
-fast.** You each have a tower to build and no workforce. The agencies send over
-groups of workers every week; you hire, you crew jobs, and the jobs you build
-make your tower. The competition is not over the contract — you each have your
-own tower. **It is over the workforce**, which is the actual lesson.
+**Pavilion. Chicago, 1893.** The World's Columbian Exposition is months away and
+your country's pavilion is empty. Craftspeople have come from everywhere for the
+work, two nations are hiring from the same crowd, and every display you raise is
+one your rival didn't. The competition is not over the commission — you each
+have your own pavilion. **It is over the workforce**, which is the actual lesson,
+and at a world's fair it is also historically exact: fairs *were* national
+competitions, with judges and medals at the end.
 
 ### The test this theme had to pass
 
-Two earlier themes failed, and the reason is worth keeping because it is the
+Three earlier themes failed, and the reason is worth keeping because it is the
 standard any future change must meet.
 
-**The rule: every term gets a paragraph, read aloud. If the paragraph needs
-"because the rules say so", the term is wrong.**
+**The rule (Ryan, 2026-08-12): every term gets a paragraph, read aloud. If the
+paragraph needs "because the rules say so", the term is wrong.** Ryan will ask
+for the paragraph before agreeing to anything. Write it first.
 
 - **Headcount (staffing/consulting register)** — tiles were people you hire.
   Failed on the mechanic it never mentioned: completing a pattern line places
   **one** tile and discards **r−1**, so finishing a team meant firing
   three-quarters of it, every round, on your *successes*. Also called a cyclic
   Latin square an "org chart", and described the column bonus in terms that were
-  flatly false about its own board (see rules spec §2).
+  flatly false about its own board (rules spec §2).
 - **Roles-and-fit / candidates-and-shortlists** — fixed the discard, but could
-  not explain why the leftovers in an agency become available to *rivals*
-  (agencies don't work that way), and its floor-line story ("you paid for the
-  search anyway") failed to explain the move players actually make: taking
-  workers deliberately to deny an opponent.
+  not explain why the leftovers in an agency become available to *rivals*, and
+  its floor-line story ("you paid for the search anyway") failed to explain the
+  move players actually make: taking workers deliberately to deny an opponent.
+- **Rivet (1927 Chicago skyscraper)** — got everything above right and died on
+  scale: **a five-storey building is not a skyscraper**, and "the game ends when
+  someone finishes one floor" is nonsense for a building. A structure with an
+  expected size and an expected completion cannot be a 5×5 grid.
 
-**What unlocked it** (Ryan, 2026-08-12): Azul is a mosaic, and the tile that
-goes into the wall is *material*, which stays. Stop trying to put a person
-there. The thing that lands on your board is **a finished job**; the crew that
-built it moves on. Then pick a **specific structure**, the way Azul picks the
-Royal Palace of Évora — and a building is the one structure where both axes of
-a 5×5 grid are real to the people doing the work: floors run across, risers and
-stacks run up. The column bonus, which two themes had to invent a meaning for,
-names itself.
+**Two things unlocked it.** First (Ryan, 2026-08-12): Azul is a mosaic, and the
+tile that goes into the wall is *material*, which stays. Stop trying to put a
+person there — what lands on your board is a **finished display**; the crew that
+built it moves on. Second: pick a **specific structure**, the way Azul picks the
+Royal Palace of Évora — but one with no expected scale. A collection of 25
+displays is unremarkable where five floors is a joke, and "ready enough to open"
+is a real state a collection can be in.
 
 ### The mapping
 
 Every mechanic carries meaning — this is a reskin, not a coat of paint:
 
-| Azul | Rivet | Why it works |
+| Azul | Pavilion | Why it works |
 |---|---|---|
-| Tile | **A worker** — one of five trades | Ironwork, Masonry, Carpentry, Electrical, Plumbing — see *Tiles* below |
-| Bag | **The trades looking for work** | |
-| Factory display | **An agency** | Private employment agencies were everywhere in 1920s Chicago and sent out mixed groups. A union local could not: **a local is one trade**, and an agency here holds four workers of mixed trades |
-| Take all of one colour | **You hire the gang, not the man** | Gang hiring was standard in the building trades. This explains Azul's most arbitrary rule — why you can't take just one — with a period-correct sentence |
-| Centre pool | **The hall** | Everyone passed over waits there. Hiring off the hall first gets you the token |
-| First-player marker | **First Call** token | First call at the hall next week, *at a cost*. Keeps the first-mover concept week 2 already teaches |
-| Pattern lines | **The crew for a floor** | One trade each; a **half-crewed job doesn't get built** and waits. Said out loud as *"electricians into my top floor"* |
-| Line capacity 1…5 | **Job size** | A job on the top floor takes one worker; down at street level it takes five. The board is an elevation, so the ladder explains itself visually |
-| Phase B | **The jobs get built** | The crew builds it, the finished job goes on your tower, and the excess you no longer need goes back to the hall |
-| The wall | **Your tower** | 25 jobs. Placement scores by adjacency — work that joins up is worth more than work standing alone |
-| Floor line | **Idle** | Workers hired with no job to put them on, at escalating cost |
-| Bag refill from lid | **New arrivals** | A fresh crowd at the hall. Retires the old theme's "alumni wave", which existed only to excuse a mechanic that now needs no excuse |
+| Tile | **A craftsperson** — one of five disciplines | Art, Science, Machinery, Electricity, Nature — see *Tiles* below |
+| Bag | **The crowd** | Everyone who came to Chicago for the work |
+| Factory display | **An agency** | Sends over a mixed group; you get first pick of one discipline |
+| Take all of one colour | — | Engage every sculptor an agency sends. The rest weren't hired, so they're still looking — they go and wait with everyone else |
+| Centre pool | **The gate** | Whoever a rival passed over. (Not "the hall" — at a world's fair a hall is a building) |
+| First-player marker | **First Call** token | First pick at the gate next week, *at a cost*. Keeps the first-mover idea week 2 already teaches |
+| Pattern lines | **The crew for one display** | One discipline each; a half-crewed display doesn't go up and waits |
+| Line capacity 1…5 | **Display size** | Small cases near the door take one hand; the great set pieces at the back take five — which is how exhibitions were actually laid out, so the ladder explains itself |
+| Phase B | **The displays go up** | The crew finishes, the display stands, and the rest move on to another pavilion |
+| The wall | **Your pavilion** | 25 displays. Rows are **galleries**, columns are **aisles** |
+| Adjacency | **Exhibits that sit together** | A collection reads as one thing or as scattered pieces — which is genuinely what curation is |
+| Floor line | **Idle** | Engaged with nowhere to put them. Costs you, and more each one |
+| Bag refill from lid | **New arrivals** | More craftspeople still reaching the city |
+| Game end | **Opening day** | First pavilion with a gallery complete opens its doors; the Fair opens and the judges make their round |
 
-Two of those deserve calling out as the ones that pay for the whole theme:
+Two of those pay for the whole theme:
 
 - **The r−1 discard** stops being the worst-explained thing on the board. The
-  crew finished; you keep what you need and the rest go back to the hall. It
-  also makes the lid-to-bag refill automatic — the same faces turn up next week.
-- **Idle** is now the move players actually make. Hiring workers you can't use
-  purely to keep them off a rival's site is labour hoarding, it is a real
-  strategy, and it is the most discussable thing on the board.
+  crew finished; they go on to the next pavilion. It also makes the lid-to-bag
+  refill automatic, with no invented excuse.
+- **Idle** is the move players actually make. Engaging craftspeople you can't use
+  purely to keep them off a rival's site is labour hoarding, and it is the most
+  discussable thing on the board.
 
-The tower is a Latin square, so the bonuses land cleanly — **and, unlike the old
-theme, all three of these are true of the actual board:**
+The pavilion is a Latin square, so the bonuses land cleanly — **and all three of
+these are true of the actual board**, unlike the first theme's:
 
-- **Floor** (+2) — a row finished end to end.
-- **Riser** (+7) — a column, clean from the ground to the roof.
-- **All five of a trade** (+10) — that trade's work done all the way up.
+- **Gallery** (+2) — a row filled end to end.
+- **Aisle** (+7) — a clear sightline from the door to the back wall.
+- **All five of a discipline** (+10) — that discipline represented throughout.
 
-⚠️ Rows and columns **cannot** be distinguished by trade mix — every column
-holds all five trades, exactly as every row does (rules spec §2). Distinguish
-them *physically* or not at all. That is what the building buys.
-
-### Where the union earns its keep
-
-The instinct to tie in Chicago labour history is right, but it has to explain a
-rule rather than decorate one. Three places it does (all in the table above):
-**gang hiring** explains take-all-of-one-trade, **the hall** explains where the
-leftovers go and what First Call is for, and **idle** is the cost of holding
-labour you don't need.
-
-⚖️ **Idle stays "idle", not "show-up pay"** (Ryan, 2026-08-12). Show-up pay is
-the accurate contractual term and it is genuinely why the penalty escalates —
-but it needs a footnote, and the rule for the whole theme is that nothing needs
-one. The abstract word carries the idea of waste without teaching a term first.
+⚠️ Rows and columns **cannot** be distinguished by discipline mix — every column
+holds all five, exactly as every row does (rules spec §2). Distinguish them
+*physically* or not at all.
 
 ### The register
 
-**Chicago, 1927, and no grimness.** Racketeering and exclusion in the building
-trades are real history and explicitly **out of scope** (Ryan, 2026-08-12):
-this is a fun game. The period supplies the romance of the skyscraper race, the
-craft trades and the hiring hall, and nothing else.
+**1893 Chicago, and no grimness.** The Fair's uglier history — the Midway's
+ethnographic villages, the exclusion that prompted Wells and Douglass — is real
+and explicitly **out of scope** (Ryan, 2026-08-12): this is a fun game. The
+period supplies the White City, the electricity, the craft trades and the race
+to opening day, and nothing else. One practical consequence: room-code words come
+from the **national pavilions**, never the Midway villages.
 
-**Rounds are weeks.** The counter reads W1, W2, W3…, and Phase B is **the jobs
-get built**. The game's end is **topped out** — the ceremony when the last
-structural piece goes up. A timeout still reads "out of time". The end
-condition is a completed *floor*, and the fiction is that once a floor is
-finished end to end the tower's shape is settled and the rest goes up on rails;
-Azul doesn't explain its equivalent either, and this needs no more than a line.
+**Rounds are weeks.** The counter reads W1, W2, W3…, and Phase B is **the
+displays go up**. A timeout still reads "out of time".
 
 **Theme the names and the art, never the rules.** Base Azul mechanics stay
 exactly as they are — same tile counts, same scoring, same 5/7/9 agencies. The
 rules are correct because thousands of people have debugged them, and Azee stays
-a usable fallback only while the games are identical. A themed rule tweak
-quietly costs both.
+a usable fallback only while the games are identical.
 
-**Identifiers go theme-neutral, and now.** The theme has moved twice; the wire
-protocol and the archived game record still carry the first one's words. They
-become `source` / `pool` / `line` / `floor` / `trade` in the code pass — not
-Rivet's words either, so the theme can move a third time without touching a
-stored game. Free while the archive is empty; a migration afterwards. See rules
-spec §10.
+**Identifiers go theme-neutral, and now.** The theme has moved three times; the
+wire protocol and the archived game record still carry the first one's words.
+They become `source` / `pool` / `line` / `floor` / `kind` in the code pass — not
+Pavilion's words either, so the theme can move a fourth time without touching a
+stored game. Free while the archive is empty; a migration afterwards. Rules spec
+§10.
 
 ### The opening copy
 
 **The setup screen stays broad — two sentences, no rules** (Ryan, 2026-08-12).
-The rules belong in the ruleset and the tutorial; the front door sets a scene
-and gets out of the way:
+The rules belong in the ruleset and the tutorial; the front door sets a scene and
+gets out of the way:
 
-> # Ri**vet**
-> ### Build high. Hire fast. Own the skyline.
+> # Pa**vilion**
+> ### Build your exhibit. Hire your craftspeople. Win the Fair.
 >
-> Chicago, 1927. The city is going up — and there are only so many hands to
-> build it.
+> Chicago, 1893. The world is coming — and there are only so many hands to build
+> for it.
 
 The longer pitch below is **not** interface copy. It is the reference the
 tutorial and the rules are written against, and it is here because it is the
 paragraph the theme was tested on:
 
-> You've each got a tower to build and neither of you has a workforce. Each
-> morning the agencies send over groups of workers — hire every electrician from
-> one group and the carpenters and plumbers left behind stay on the open market,
-> where your rival can take them. Every job needs a crew of a single trade: a job
-> on the top floor takes one worker, down at street level it takes five. Crew it
-> and it gets built. Jobs that join up are worth more than jobs standing alone —
-> a floor finished end to end, a riser running clean from the ground to the roof.
-> Anyone you hire and don't need is idle on your payroll. First firm to finish a
-> floor settles it; after that the tower goes up on its own.
+> Chicago, 1893. The World's Fair is months away and your country's pavilion is
+> empty. Craftspeople have come from everywhere for the work — engage every
+> sculptor an agency sends and the rest wait with everyone else, where a rival
+> nation can take them. Each display needs a crew of a single discipline: a small
+> case near the door takes one hand, the great set pieces at the back take five.
+> Get the crew together and the display goes up. Exhibits that sit together are
+> worth more than exhibits standing alone — a gallery filled end to end, a clear
+> sightline from the door to the back wall. Anyone you engage and don't need is
+> idle on your payroll.
 
 ### Naming
 
-**Rivet** — one strong period noun, the way *Azul* is one word, and riveting is
-the signature image of a 1920s steel frame. It also settles the naming problem:
-not Azul (Plan B Games' name and art; the mechanics themselves aren't
-copyrightable), and not Azee, which is mattle.online's name rather than ours.
+**Pavilion** — one evocative noun for the thing you build, the way *Azul* is one
+word. It also settles the naming problem: not Azul (Plan B Games' name and art;
+the mechanics themselves aren't copyrightable), and not Azee, which is
+mattle.online's name rather than ours. URL: **ryanlamare.com/pavilion**.
 
-Considered and passed over: **High Steel** (more romantic, two words),
-**Topping Out** (kept — it is the end-of-game banner), **Local 1** (the most
-LER title, too inside-baseball as a front door), and **Best Fit / Bundle /
-Complement**, which belonged to the strategy-HRM register the theme left behind.
+Considered and passed over: **The Columbian** (the Fair's actual name),
+**Court of Honor** (prettiest, two words), **White City** (the most evocative
+name available and ambiguous read cold in a 2026 classroom), and — from the
+abandoned 1927 theme — *Rivet*, *High Steel*, *Topping Out*.
 
-**Room codes are two Chicago words**, not corporate ones — `BLACKHAWKS-PILSEN`,
-`DEEPDISH-BUCKTOWN`, `THEBEAN-GOLDCOAST`. Icon plus neighbourhood, from a
-curated list with no ambiguous characters. Deliberately **modern** Chicago
-rather than 1927: a code's only job is to survive a bad mic and be recognised
-instantly, and recognisability beats period accuracy there. Nothing from the
-building trades — the codes shouldn't read as part of the fiction. The format
-is part of the protocol, so it is decided now.
+**Room codes are two Fair words.** Icon plus national pavilion:
+`FERRIS-NORWAY`, `MIDWAY-BRAZIL`, `TESLA-CEYLON`. The code's real transport is
+Zoom audio, so everything on the list has to survive a bad mic and needs no
+spelling out.
+
+- **Icons** — FERRIS · MIDWAY · WHITECITY · PERISTYLE · LAGOON · REPUBLIC ·
+  GOLDENDOOR · WOODEDISLE · JACKSONPARK · BURNHAM · OLMSTED · TESLA · EDISON ·
+  CRACKERJACK · BLUERIBBON · SHREDDEDWHEAT
+- **Pavilions** — JAPAN · NORWAY · GERMANY · FRANCE · BRAZIL · SWEDEN · SPAIN ·
+  CEYLON · TURKEY · IRELAND · CANADA · ITALY · GREECE · DENMARK · SIAM · MEXICO
+
+⚠️ Two exclusions, both deliberate. **Nothing from the Midway villages** (see
+*The register*). And **none of the five discipline names** — a room called
+`MACHINERY-something` beside a Machinery tile is a needless collision.
 
 ### Tiles — colour plus isotype, never text
 
-**No words on tiles.** Each trade is a flat background colour carrying a single
-isotype-style pictogram: solid silhouette, no outline, no interior detail, no
-strokes. Squares of text would read as a spreadsheet; this reads as a game.
-Every pictogram is now an object off a 1927 site rather than a modern
-abstraction — the period is carried by the art, not by explanatory copy.
+**No words on tiles.** Each discipline is a flat background colour carrying a
+single isotype-style pictogram: solid silhouette, no outline, no interior detail,
+no strokes. Squares of text would read as a spreadsheet; this reads as a game.
 
-| Trade | Colour | Isotype | Silhouette | Was |
-|---|---|---|---|---|
-| Ironwork | **Blue** | I-beam, end-on | Vertical web with caps | Headset |
-| Masonry | **Yellow** | Brick | Solid square, banded | Crate — keep the diagonal banding |
-| Carpentry | **Ink** | Stacked timber | Horizontal rhythm | Coin stack — square off the ends |
-| Electrical | **Red** | Lightning bolt | Diagonal zigzag — open, asymmetric | Bar chart |
-| Plumbing | **Teal** | Valve handwheel | Round, spoked — spiky outline | Cog — near-identical, minor rework |
+The whole set was drawn and judged at true playing size on a specimen plate
+(2026-08-12) rather than argued about in prose — which is the right method here,
+because every failure below was invisible at large size and obvious at 40px.
 
-⚠️ **The pair to check on a real phone is I-beam against stacked timber**, which
-both read as horizontals at tile size; the I-beam's vertical web is what
-separates them and it needs to be heavy. This is exactly the failure the crate
-and the coin stack already had in live play, so it is a measurement, not a
-matter of taste.
+| Discipline | Colour | Isotype | Silhouette class |
+|---|---|---|---|
+| Art | **Sienna** `#8E3E28` | Palette | Round, with a bite |
+| Science | **Water blue** `#37658A` | Erlenmeyer flask | Narrow neck over a wide base |
+| Machinery | **Arntz black** `#1B1C19` | Two meshed cogs | Wide diagonal double-lobe |
+| Electricity | **Mustard ochre** `#C9A227` | Lightning bolt | Angular zigzag |
+| Nature | **Lifted green** `#3C8B51` | Tree | Bulbous canopy on a narrow trunk |
 
-Two decisions inside that table worth keeping:
+**Colours come from the site's own `brand.css`**, which is already an Arntz
+palette sampled off his pictograms — so the game and the decks share one system,
+and the period is inherited rather than invented. Only Nature is adjusted; see
+below.
 
-**The five silhouettes are deliberately different in *shape*, not just subject** —
-spiky-round, open-asymmetric, solid-square, horizontal-rhythm, vertical-rhythm.
-At tile size on a phone, subject matter is invisible and only the silhouette
-reads. Two round icons (a valve wheel and a rivet head, say) would be a
-recurring misread across a 5×5 grid. This bit once already: the crate's bands
-began horizontal and collided with the coin stack in real play (Ryan,
-2026-08-06) — hence the diagonal straps, which the brick inherits. Diagonal was
-the only free direction, and the same reasoning is why the period redraw kept
-one icon per shape class rather than picking the five best-looking tools.
+Decisions inside that table worth keeping:
 
-**Teal rather than green.** Red against green is the one pair a colourblind
-player genuinely cannot separate, and roughly one man in twelve has some red-
-green deficiency. In a graded activity that's a fairness problem, not a polish
-problem.
+**The five silhouettes are deliberately different in *shape*, not just subject.**
+At tile size the subject is invisible and only the outline reads. Rejected on
+that basis alone, each of them handsome at poster size: a **paintbrush** for Art
+(a thin diagonal stick — the bolt's shape class, and too fine to survive), a
+**bulb** for Electricity (a circle, next to a cog), an **atom** for Machinery
+(drawn almost entirely in line, which is the one form the rule exists against —
+three orbits blur to a grey disc), and a **bust** for Art (the flask's silhouette
+exactly).
 
-Which is the real argument for the isotypes: **the pictogram is the
-accessibility layer, not decoration.** Colour alone would fail those students
-outright. Colour *and* shape means a tile is identifiable either way, and the
-board still works in greyscale. The aesthetic call and the correct engineering
-call are the same one here.
+**Two cogs rather than one, and that is what lets the palette in.** A single cog
+is a circle and blocks every other round icon. Two meshed cogs make a wide
+diagonal double-lobe, which vacates the round class — so the palette becomes the
+only circle on the board. The two choices only work as a pair.
+
+**The tree is the strongest icon in the set** (Ryan's wife, 2026-08-12), because
+it is the exact *inversion* of the flask: bulbous top on a narrow stem against
+narrow top on a wide base. Two shapes cannot be further apart, and it holds even
+with colour removed entirely. It replaced a fern and Arntz's own corn, both of
+which were tapered verticals like the flask.
+
+**Arntz's corn taught the general lesson even though it wasn't used.** His sign
+GMDH02_00016 is an ear built from a grid of kernels between two long husk leaves.
+At 40px the kernels close up and the ear goes solid — and it *still reads*,
+because the leaves were carrying it. Detail nobody receives is detail not worth
+drawing. Going to Arntz at all is not borrowing a look: he is the Isotype system
+this spec's "isotype-style" language already referred to.
+
+**⚖️ The red–green rule, corrected.** This memo used to say flatly "teal, never
+green". That is the rule stated too bluntly, and it cost the theme its best
+Nature colour. The real problem is **red against green at the same lightness**;
+red–green deficiency leaves the blue–yellow axis intact, which is why sienna
+against blue is fine even though the two are close in tone. So green is available
+**provided it is clearly lighter than the sienna**. Arntz's own `#26713D` is not
+— it sits almost exactly on it. Lifting to `#3C8B51` keeps the family and opens
+the gap to roughly 2:1.
+
+Which is the real argument for the isotypes: **the pictogram is the accessibility
+layer, not decoration.** Colour alone would fail those students outright. Colour
+*and* shape means a tile is identifiable either way, and the board still works in
+greyscale.
+
+**Tiles are textured** (Ryan, 2026-08-12) — one tiled noise field painted *under*
+the isotype, so it ages the ground without touching the silhouette. Built as a
+single repeated image, never a per-tile filter: a live filter is paid for on
+every frame of every animation, and this board animates constantly.
 
 Practically: an inline `<svg style="display:none">` sprite referenced by
 `<use href="#id">`, exactly the pattern the decks already use. Flat solid fills
-survive being scaled down; anything with strokes or interior detail turns to
-mush at 40px. A light-coloured tile needs a border against the paper background;
-the ink tile doesn't.
+survive being scaled down; anything with strokes or interior detail turns to mush
+at 40px. Knockouts are painted in `var(--t-bg)`, the tile's own background.
+
+#### The inverted set — a documented alternate, not a discard
+
+Paper tiles carrying coloured pictograms, which is what Arntz actually drew
+(coloured figures on cream, never white figures on colour). Ryan's favourite of
+everything on the plate, and parked for a specific reason rather than a vague
+one.
+
+```
+--t-bg: #F0EAD9 for all five, with a 1.5px inset border in the discipline colour
+Art #8E3E28 · Science #37658A · Machinery #1B1C19 · Electricity #977712 · Nature #2E7A43
+```
+
+**Why it's parked: a filled tile ghosts to a tint; an inverted tile ghosts to
+nothing.** Unbuilt pavilion cells show the real colour dropped to ~30% opacity
+(punch-list item 3). Drop opacity on a colour *field* and you still have colour —
+paler, obviously unbuilt, still saying *Science goes here*. Drop it on an
+*outline* and there was never a field to fade. Twenty-five cells start unbuilt
+and fill over five or six weeks, so **the ghost is this board's default
+appearance, not its exception.** Electricity and Nature also have to be darkened
+to hold contrast on cream, which drifts the palette off `brand.css`.
+
+Switching is four CSS lines and no new art, so it stays live.
+
+### The First Call token
+
+⚖️ **A chamfered plate, a double keyline, and a Clarendon numeral 1**, ink on
+`--paper` cream. It must read as *unmistakably not a tile* — that requirement is
+older than this theme and survives it.
+
+- **The chamfer is doing the work, not the ornament.** Every tile is a rounded
+  square; an octagon is a different object before you've read anything on it.
+- **Clarendon rather than Didone.** Didone is the more elegant 1890s answer and
+  its whole character is a hairline foot serif — the first thing to go at the
+  ~22px the token shrinks to on an idle row. That is the atom's failure in a
+  different costume. Clarendon's slabs are thick strokes and hold all the way
+  down. Engine-turned guilloche behind the numeral is available and also holds;
+  at small size it stops being rings and becomes texture.
+- **A ribboned medal was considered and rejected** — the prettiest option and the
+  most on-theme, but it is a filled shape on a coloured ground, which is what a
+  tile *is*. Keep it for the awards screen, where that is exactly right.
+- Ornament earns its place here for the opposite reason it doesn't on the tiles:
+  the token is one object seen once a week, not twenty-five seen at a glance.
 
 ### Award names
 
-Building names, which the theme earns:
+Fair names, which the theme earns:
 
-- **Builder of the Year** — league winner
+- **Grand Prize** — league winner
 - **The Cup** — week 6 knockout
 - **The Double** — both, by one person
-- **Tallest Tower** — highest single game
+- **Best in Show** — highest single game
 - **Turnaround** — best comeback from behind
 - **Most Improved** — first half to second
-
-**No wooden spoon, and no award for finishing last** — considered and rejected.
-Joke contests about low finishers are mean-spirited, and the goal is uplifting.
-
-Treat that as the **rule for any award added later: every award celebrates
-something achieved, none marks a failure.** It's a checkable test, and it's also
-why the table shows a top five rather than a full ranking — not to hide
-information, but because a permanent public bottom is the same idea wearing a
-different hat.
-
----
 
 ## Mobile and devices
 
@@ -588,7 +645,7 @@ whether phone players actually lose on time more often, rather than leaving it a
 guess. Steer league games toward laptops if it turns out to matter.
 
 **The game is installable as a PWA** (added 2026-08-08): `manifest.webmanifest`
-plus icons in `rivet/` let a student "Add to Home Screen", where the game
+plus icons in `pavilion/` let a student "Add to Home Screen", where the game
 opens full-screen under its own icon — a 2×2 of the real tiles. It is still
 just the website: no store, no separate codebase, and deliberately **no service
 worker** — the `?v=` cache-buster convention stays the whole update story, and
@@ -606,8 +663,8 @@ the design can fix it.
 ## Two devices — built 2026-08-12 (build step 4)
 
 Students on separate devices now play a real game against each other. The wire
-format is `rivet/relay/PROTOCOL.md`; how to run it is
-`rivet/relay/README.md`. Three things are worth having in this memo rather
+format is `pavilion/relay/PROTOCOL.md`; how to run it is
+`pavilion/relay/README.md`. Three things are worth having in this memo rather
 than only in those.
 
 **The relay never runs the engine.** A complete game is `seed + move list` and
@@ -667,10 +724,10 @@ don't scale. Kept for the record:
 1. **Slow everything down, a lot** — especially the end-of-round
    books-closing sequence. Use a central timing scale so pacing is one knob,
    not fifty edits.
-2. **Crew lines must align with the tower**: identical cell size and
-   row-for-row alignment, so you can see exactly which floor each crew
-   builds into at the close.
-3. **Colour and tile-design pass.** Unbuilt tower cells should be
+2. **Crew lines must align with the pavilion**: identical cell size and
+   row-for-row alignment, so you can see exactly which gallery each crew
+   fills at the close.
+3. **Colour and tile-design pass.** Unbuilt pavilion cells should be
    *exactly* the same colour as the real tiles, made obviously unfilled by
    opacity — while claimable tiles in the market carry a large border. Colour
    becomes the primary way you read what's filled, what's claimable, and
@@ -746,7 +803,7 @@ pass-and-play fallback rule in `TEACHING_HUB.md` still stands for MG478, which
 
 ## Build order
 
-**`RIVET-RULES.md` is the engine spec** — the complete rules stated
+**`PAVILION-RULES.md` is the engine spec** — the complete rules stated
 precisely enough to implement without guessing, plus the edge cases and a test
 checklist. Build step 1 from that file, not from this one. It marks which rules
 are Azul's and which are our resolution of a genuine ambiguity, so a future
@@ -796,8 +853,8 @@ accident.
   verified (≈3M requests/month, DOs and WebSockets included) — oversized even at
   36 students. **Live since 2026-08-12** at
   `wss://headcount-relay.rlamare.workers.dev`, deployed with `npx wrangler
-  deploy` from `rivet/relay/` and wired into `PRODUCTION_RELAY` in
-  `rivet/net.js`. The free plan carried the Durable Object without
+  deploy` from `pavilion/relay/` and wired into `PRODUCTION_RELAY` in
+  `pavilion/net.js`. The free plan carried the Durable Object without
   complaint — the SQLite-backed migration in `wrangler.toml` is what makes that
   true, so don't change it to `new_classes`. Verified end to end the same day:
   two clients played a complete 99-move game through the deployed Worker,
@@ -810,7 +867,7 @@ accident.
   in week 3 isn't looking at a table they cannot catch.
 - **Three-player head-to-head** counts if you finished above the other player.
 - **Draws** are worth 2 league points; cup games coin-flip instead
-  (`RIVET-RULES.md` §8).
+  (`PAVILION-RULES.md` §8).
 - **Public board is a top N sized to the class; private rank is always shown to
   the student it belongs to.**
 - **Firm names — considered and rejected** (2026-08-05); see *Identity* above.

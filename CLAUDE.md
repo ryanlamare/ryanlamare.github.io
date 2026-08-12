@@ -157,20 +157,27 @@ any student device, which is the point — keep it that way. State lives in the 
 GitHub Pages is static hosting and cannot run a backend, so anything genuinely
 multiplayer-across-devices needs an external realtime service.
 
-**Rivet** (`rivet/`, live at `/rivet/`) is the in-house Azul-style
-game, mid-build. It lives at the site root rather than under `teaching/ler565/`
-so students get a short URL — it is still an LER 565 activity. Its specs are
-`rivet/RIVET.md` (design, why) and
-`rivet/RIVET-RULES.md` (engine spec, what) — read both before touching it.
+**Pavilion** (`pavilion/`, live at `/pavilion/`) is the in-house Azul-style
+game, mid-build — two nations hiring craftspeople from one crowd to build rival
+exhibits at the 1893 Chicago World's Fair. It lives at the site root rather than
+under `teaching/ler565/` so students get a short URL — it is still an LER 565
+activity. Its specs are `pavilion/PAVILION.md` (design, why) and
+`pavilion/PAVILION-RULES.md` (engine spec, what) — read both before touching it.
 
-⚠️ **The specs are ahead of the code.** The game was called *Headcount* under a
+⚠️ **The specs are ahead of the code.** The game was *Headcount* under a
 different theme until 2026-08-12; the engine, wire protocol and UI still carry
 that theme's vocabulary (`agency`, `team`, `bench`, quarters, org chart). Read
-*Theme* in `RIVET.md` before writing any player-facing string, and don't take
+*Theme* in `PAVILION.md` before writing any player-facing string, and don't take
 an identifier in the code as evidence of what a thing is called.
 
+⚠️ **Theme changes are expensive and this one has moved three times.** The rule
+Ryan set: **every proposed term gets a paragraph, read aloud — if the paragraph
+needs "because the rules say so", the term is wrong.** Write the paragraph
+before proposing the word. The three failed themes and the mechanic each one
+couldn't explain are recorded in `PAVILION.md`; don't reopen them.
+
 The engine is a pure seeded ES module; run the headless suites
-(`node rivet/test/engine.test.js` and `test/bot.test.js`)
+(`node pavilion/test/engine.test.js` and `test/bot.test.js`)
 before committing engine or bot changes. The board UI (`index.html`/`style.css`/`ui.js`) previews through
 `./serve.sh`; `?smoke=1` on the game URL plays a full game headlessly and
 stamps `SMOKE OK` into the DOM — check it in headless Chrome after UI changes.

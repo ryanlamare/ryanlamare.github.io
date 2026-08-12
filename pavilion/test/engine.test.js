@@ -1,6 +1,6 @@
 // Headcount engine — headless test suite (HEADCOUNT-RULES.md §12).
 //
-//   node rivet/test/engine.test.js [games-per-player-count]
+//   node pavilion/test/engine.test.js [games-per-player-count]
 //
 // No dependencies, no framework. The soak plays random-vs-random games — the
 // random bot benches constantly, so it exercises the overflow and
