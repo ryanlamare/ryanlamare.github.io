@@ -92,19 +92,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
   box-shadow: 0 24px 60px rgba(27, 28, 25, .12);
 }
 
-.kicker {
-  font-size: 12px; font-weight: 700; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--muted);
-  display: flex; align-items: center; gap: 8px;
-}
-.kicker i, .area-label i {
-  width: 9px; height: 9px; background: var(--red); display: inline-block;
-}
-
 .setup-card h1 {
   font-size: 54px; letter-spacing: -.02em; margin: 8px 0 6px;
 }
 h1 .r, .r { color: var(--red); }
+
+/* The logo — the tile palette, two letters at a time (Ryan, playtest
+   2026-08-13), and the same four colours carry the month splashes.
+   Machinery's black is deliberately skipped: against the card it reads as
+   plain ink, which visibly breaks the every-pair-coloured pattern. */
+.pv0 { color: var(--art); }
+.pv1 { color: var(--sci); }
+.pv2 { color: var(--ele); }
+.pv3 { color: var(--nat); }
+
+.sub b { color: var(--ink); }
 
 /* Back-of-the-box copy: the hook in the house red, the pitch underneath. */
 .tagline {
@@ -121,6 +123,7 @@ legend {
 }
 .hint { font-weight: 400; text-transform: none; letter-spacing: 0; }
 .mode-hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+.mode-hint:empty { display: none; }
 
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
 .seg-btn {
@@ -156,14 +159,17 @@ legend {
   color: var(--red); font-weight: 700; text-decoration: underline;
 }
 /* The five disciplines on the way in — the legend for a board that carries
-   no words at all. */
+   no words at all. Five equal columns, not flex (Ryan, playtest 2026-08-13):
+   under flex each item was as wide as its label, so ELECTRICITY pushed the
+   tiles off any even rhythm. */
 .disciplines {
-  list-style: none; display: flex; gap: 10px; flex-wrap: wrap;
+  list-style: none; display: grid;
+  grid-template-columns: repeat(5, 1fr); gap: 10px;
   margin: 0 0 22px;
 }
 .disciplines li {
   display: grid; justify-items: center; gap: 5px;
-  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .05em;
   text-transform: uppercase; color: var(--muted);
 }
 .disciplines .tile { width: 34px; height: 34px; border-radius: 7px; }
@@ -297,28 +303,22 @@ legend {
   min-height: calc(var(--tile) * 2 + 6px);
 }
 
-/* The gate fills and empties every week. Its *box* must not: sized to its
+/* The gate fills and empties every month. Its *box* must not: sized to its
    contents, it changes the market's flex layout, which re-wraps the agencies
    and shunts every board on the page a few pixels each time a craftsperson is
    drawn (Ryan, playtest 2026-08-12). Fixed width, and height reserved for
-   three rows, which covers a full week's leftovers. */
+   three rows, which covers a full month's leftovers. */
 #pool-wrap {
   background: var(--card); border: 1px dashed var(--line);
   border-radius: var(--radius);
-  padding: 8px 12px 12px;
+  padding: 12px;
   width: clamp(240px, 26vw, 420px); flex: none;
-}
-.area-label {
-  font-size: 10px; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--muted);
-  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
 }
 #pool {
   display: flex; flex-wrap: wrap; gap: 6px;
   align-items: flex-start; align-content: flex-start;
   min-height: calc(var(--tile) * 3 + 12px);
 }
-#pool .none { font-size: 12px; color: var(--muted); font-style: italic; }
 
 /* ------------------------------------------------------------------ tiles */
 
@@ -464,6 +464,12 @@ button.tile:hover { transform: translateY(-3px); }
    field to fade. Twenty-five cells start unbuilt, so the ghost is this
    board's default appearance, not its exception (PAVILION.md, Tiles). */
 .wcell .tile.open { opacity: .3; box-shadow: none; }
+/* A raised display carries an ink frame (Ryan, playtest 2026-08-13), so
+   built vs ghost reads at a glance even mid-sweep. A ring, not a border:
+   punch #3 reserves the heavy coloured border for hireable tiles. */
+.wcell.filled .tile {
+  box-shadow: 0 0 0 2px var(--ink), inset 0 -3px 0 rgba(0, 0, 0, .2);
+}
 .wcell.landed .tile { animation: land calc(.3s * var(--tempo, 1)) cubic-bezier(.2, 1.6, .4, 1); }
 @keyframes land { 0% { transform: scale(1.4); } }
 .wcell.sweep { animation: sweep calc(.5s * var(--tempo, 1)) ease; }
@@ -558,6 +564,17 @@ button.tile:hover { transform: translateY(-3px); }
   100% { opacity: 0; transform: translate(-50%, -55%); }
 }
 #banner .r { color: #E8B84B; }
+/* The big beats — "Construction Month N", "Craftspeople build the displays",
+   "The World's Fair is Open!" — mirror the logo: large type on the card
+   cream, words in the .pv0-.pv3 palette (Ryan, playtest 2026-08-13). */
+#banner.splash {
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line);
+  font-size: clamp(28px, 6vw, 56px);
+  letter-spacing: -.02em; text-align: center;
+  padding: 20px 40px;
+  max-width: min(92vw, 900px);
+}
 
 /* ------------------------------------------------------------- end modal */
 
@@ -581,6 +598,10 @@ button.tile:hover { transform: translateY(-3px); }
 .champion {
   font-size: 40px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 2px;
 }
+/* The winner's line is a whole sentence, so it steps down from the two-word
+   size — and the name is the one thing in colour. */
+.champion.story { font-size: clamp(22px, 4.5vw, 30px); line-height: 1.25; }
+.champion .champ-name { color: var(--red); }
 .champion.spot { animation: spotlight .8s cubic-bezier(.2, 1.4, .4, 1); }
 @keyframes spotlight { 0% { transform: scale(.6); opacity: 0; } }
 .end-sub { color: var(--muted); margin-bottom: 20px; }
@@ -664,6 +685,7 @@ button.tile:hover { transform: translateY(-3px); }
   .icell .pen { font-size: 9px; }
   #topbar { padding: 7px 9px; gap: 5px 7px; }
   .wk-badge { font-size: 12px; }
+  .disciplines li { font-size: 8px; }
   #phase-label { font-size: 12px; }
   .chip { font-size: 11px; padding: 2px 8px; }
   .ghost-btn { padding: 4px 8px; font-size: 12px; }

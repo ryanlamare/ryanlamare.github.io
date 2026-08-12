@@ -32,8 +32,10 @@ extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 board) are settings, not constants.
 
 **The URL is `ryanlamare.com/pavilion`, not a path under `teaching/ler565/`**
-(moved 2026-08-12). Students get a short link they can be told out loud; it is
-still an LER 565 activity and the setup screen still says so.
+(moved 2026-08-12). Students get a short link they can be told out loud. It is
+still an LER 565 activity, but the game carries **no course branding** — the
+LER 565 kicker came off the setup and lobby screens (Ryan, 2026-08-13) so the
+game stands alone and can be used in other contexts.
 
 Goal: replace `azee.mattle.online` with our own version, hosted here, so students
 never create an account. LER 565 leans on Azee in every live session, weeks 1–6,
@@ -416,8 +418,11 @@ period supplies the White City, the electricity, the craft trades and the race
 to opening day, and nothing else. One practical consequence: room-code words come
 from the **national pavilions**, never the Midway villages.
 
-**Rounds are weeks.** The counter reads W1, W2, W3…, and Phase B is **the
-displays go up**. A timeout still reads "out of time".
+**Rounds are construction months** (Ryan, playtest 2026-08-13 — they read as
+weeks, W1/W2/W3, before that). The counter reads Month 1, Month 2…, each month
+opens with a big **Construction Month N** splash in the logo colours, and
+Phase B's splash is **Craftspeople build the displays**. A timeout still reads
+"out of time".
 
 **Theme the names and the art, never the rules.** Base Azul mechanics stay
 exactly as they are — same tile counts, same scoring, same 5/7/9 agencies. The
@@ -433,15 +438,25 @@ afterwards. Rules spec §10 has the table.
 
 ### The opening copy
 
-**The setup screen stays broad — two sentences, no rules** (Ryan, 2026-08-12).
-The rules belong in the ruleset and the tutorial; the front door sets a scene and
-gets out of the way:
+**Rewritten at the second playtest (Ryan, 2026-08-13), superseding the earlier
+two-sentences-no-rules rule** — the front door now carries the full pitch, in
+Ryan's own copy:
 
-> # Pa**vilion**
-> ### Build your exhibit. Hire your craftspeople. Win the Fair.
+> # Pavilion — the logo in the tile palette, two letters per colour
+> ### Hire your craftspeople. Build your exhibit. Bring glory to your country!
 >
-> Chicago, 1893. The world is coming — and there are only so many hands to build
-> for it.
+> **Chicago. 1893.** Visitors flock from across the globe to witness the grand
+> opening of the pavilions of the World's Fair. Countries hire the finest
+> craftspeople in the city to build exhibits showcasing their country's
+> achievements in art, science, machinery, electricity, and agriculture. Will
+> your pavilion stand above the rest, etching itself into history as the finest
+> in the world, or will it be forgotten? Your chance at World's Fair glory
+> awaits!
+
+⚠️ One unresolved wrinkle, recorded rather than papered over: the pitch says
+**"agriculture"** where the fifth discipline on the tiles is **Nature**. Ryan's
+copy is live verbatim; if the tile is to be renamed to match, that is a theme
+change and gets the paragraph test like any other.
 
 The longer pitch below is **not** interface copy. It is the reference the
 tutorial and the rules are written against, and it is here because it is the
@@ -874,6 +889,48 @@ and `online.test.js`'s real-browser two-device game with a mid-game disconnect),
 `?smoke=1`, `?uitest=setup`, and `?smoke=1&layout=1` at 1440 / 820 / 500.
 Headless Chrome clamps its window to 500px wide, so anything narrower than that
 is a screenshot crop rather than a layout — don't read a phone bug into it.
+
+## From the second playtest (2026-08-13)
+
+Ryan's list of fifteen, all applied the same day, all in the copy layer
+(`ui.js` / `index.html` / `style.css`) — the engine, the wire format and the
+tests below the UI didn't move. The ones that changed standing decisions:
+
+- **The front door carries the full pitch now** — see *The opening copy*,
+  which this superseded. The logo is the tile palette two letters at a time
+  (Machinery's black skipped: it reads as plain ink and breaks the pattern),
+  the tagline is *Hire your craftspeople. Build your exhibit. Bring glory to
+  your country!*, and the discipline legend is five equal grid columns so
+  ELECTRICITY's label can't shove the tiles off an even rhythm.
+- **Training Ground is now "Rehearsal" on the setup screen** — "a rehearsal
+  match … before the Fair begins." The memo's older sections keep the old
+  name as history; the bot is still the Commissioner.
+- **Rounds are construction months** — see *The register*.
+- **The month splashes mirror the logo**: big type on the card cream, words
+  cycling the four logo colours — `Construction Month N`, `Craftspeople build
+  the displays`, and at the end `The World's Fair is Open!` in place of
+  "Opening day". The end modal's kicker is **Judging the Pavilions**, and the
+  winner's line is *"[name] has built the most prestigious pavilion in the
+  world!"* with the name in the house red.
+- **The scoring table de-themes on purpose**: the breakdown reads
+  *rows · columns · colors* (not galleries · aisles · disciplines) under
+  headers **Pavilion · Bonuses · Score · Bonus · Total**, and the button home
+  is just **Home**. At the moment of scoring Ryan wants plain board words;
+  gameplay copy keeps the themed ones.
+- **Less chrome**: the kicker is gone entirely — first "Chicago, 1893", then
+  in the same pass "LER 565" itself, so the game stands alone for use outside
+  the course. The online-mode explainer, the visible "The gate" label and its
+  empty-state line are gone too (the gate survives in aria labels and move
+  announcements). The pool chip says **Craftspeople**, and the turn line reads
+  "[name] is hiring craftspeople".
+- **Clocks are 5:00 (default) or unlimited** — the 3:00 and 10:00 options cut.
+- **Raised displays carry a 2px ink frame** in the pavilion, so built vs
+  ghost reads at a glance (a ring, not a border — punch #3 still reserves the
+  heavy coloured border for hireable tiles).
+- **One real bug**: at every month's start the agencies rendered filled,
+  *then* the deal animation hid and flew the tiles in — so you saw the spread
+  before it "arrived". `hideDealTiles()` now hides them before the month
+  splash, and the deal unhides them as they land.
 
 ## Build order
 

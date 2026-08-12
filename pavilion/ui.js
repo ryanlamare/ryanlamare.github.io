@@ -89,14 +89,14 @@ function sameSource(a, b) {
 // snapshot lags G.cur deliberately.
 
 function renderAll(st = G.view) {
-  $('#week-badge').textContent = 'W' + st.round;
+  $('#week-badge').textContent = 'Month ' + st.round;
   $('#pool-count').textContent = st.bag.length;
   const turn = $('#turn-label');
   if (st.over) {
     turn.textContent = '';
-    setPhase('Opening day');
+    setPhase("The World's Fair is open");
   } else {
-    turn.innerHTML = `<b>${esc(G.names[st.seatToMove])}</b> is hiring`;
+    turn.innerHTML = `<b>${esc(G.names[st.seatToMove])}</b> is hiring craftspeople`;
   }
   renderSources(st);
   renderPool(st);
@@ -153,9 +153,8 @@ function renderPool(st) {
       c.appendChild(b);
     }
   }
-  if (!any && !st.firstTokenInPool) {
-    c.innerHTML = '<span class="none">empty — whoever a rival passes over waits here</span>';
-  }
+  // An empty gate is simply empty (Ryan, playtest 2026-08-13): no label and
+  // no placeholder — the box's reserved height is what keeps the layout still.
 }
 
 function renderBoards(st) {
@@ -229,7 +228,7 @@ function renderBoards(st) {
         <span class="board-name">${esc(G.names[seat])}</span>
         ${G.online && seat === G.mySeat ? '<span class="you">you</span>' : ''}
         ${G.online && G.presence[seat] === false ? '<span class="away" role="status">reconnecting…</span>' : ''}
-        ${b.firstToken ?'<svg class="board-fm" role="img" aria-label="Has First Call next week" title="First Call next week"><use href="#ic-first"/></svg>' : ''}
+        ${b.firstToken ?'<svg class="board-fm" role="img" aria-label="Has First Call next month" title="First Call next month"><use href="#ic-first"/></svg>' : ''}
         <span class="expand-hint">tap to expand</span>
         <span class="board-spacer"></span>
         <span class="clock" data-seat="${seat}"></span>
@@ -361,17 +360,39 @@ function popup(text, rect, cls = '') {
 }
 
 let bannerTimer = null;
-function banner(html) {
+function banner(html, cls = '') {
   announce($('#live').textContent + ' ' + html.replace(/<[^>]+>/g, ''));
   if (instant()) return Promise.resolve();
   const el = $('#banner');
   clearTimeout(bannerTimer);
   el.classList.remove('show');
+  el.classList.toggle('splash', cls === 'splash');
   void el.offsetWidth;
   el.innerHTML = html;
   el.classList.add('show');
   bannerTimer = setTimeout(() => el.classList.remove('show'), T(1600));
   return sleep(T(650));
+}
+
+// The big beats — the month opening, the displays going up, the Fair opening
+// — mirror the logo (Ryan, playtest 2026-08-13): large type on the card
+// cream, words cycling the four logo colours. Machinery's black is skipped
+// there for the same reason it is skipped in the logo: it reads as plain ink.
+const PV_CLASSES = ['pv0', 'pv1', 'pv2', 'pv3'];
+function splashHTML(text) {
+  return text
+    .split(' ')
+    .map((w, i) => `<span class="${PV_CLASSES[i % 4]}">${esc(w)}</span>`)
+    .join(' ');
+}
+
+// Agencies are rendered filled, so before the start-of-month banner their
+// tiles must be hidden or the player sees next month's spread and *then*
+// watches it deal itself in (Ryan, playtest 2026-08-13). dealAnimation
+// unhides them as each one lands.
+function hideDealTiles() {
+  if (instant()) return;
+  $$('#sources .tile').forEach((t) => t.classList.add('pre'));
 }
 
 // The Phase A beat: the craftspeople you engage fly to their crew, the ones
@@ -479,7 +500,7 @@ async function animatePhaseA(before, interim, move) {
 // idle row's bill, and either opening day or next week's arrivals.
 async function animateResolution(interim, final) {
   setPhase('The displays go up');
-  await banner(`W${interim.round} · <span class="r">the displays go up</span>`);
+  await banner(splashHTML('Craftspeople build the displays'), 'splash');
 
   for (let seat = 0; seat < interim.players; seat++) {
     const boardEl = $(`.board[data-seat="${seat}"]`);
@@ -601,7 +622,7 @@ async function animateResolution(interim, final) {
         await beat(280);
       }
     }
-    await banner('<span class="r">Opening day</span> — the Fair is open');
+    await banner(splashHTML("The World's Fair is Open!"), 'splash');
     await beat(700);
     return;
   }
@@ -621,13 +642,14 @@ async function animateResolution(interim, final) {
     setTimeout(() => $('#pool-chip').classList.remove('wave'), T(1600));
   }
 
-  // Next week's agencies fill.
+  // Next month's agencies fill. Who holds First Call is announced to screen
+  // readers by the month-begins announce in playMove; the splash itself is
+  // just the month (Ryan, playtest 2026-08-13).
   G.view = snap(final);
   renderAll();
   setPhase('');
-  await banner(
-    `W${final.round} · <span class="r">First&nbsp;Call</span>: <b>${esc(G.names[final.startPlayer])}</b>`
-  );
+  hideDealTiles();
+  await banner(splashHTML(`Construction Month ${final.round}`), 'splash');
   await dealAnimation();
 }
 
@@ -734,7 +756,7 @@ async function playMove(move, local) {
     startClock(final.seatToMove);
     if (resolved) {
       announce(
-        `Week ${final.round} begins. ` +
+        `Month ${final.round} begins. ` +
           G.names.map((n, i) => `${n} ${final.boards[i].score}`).join(', ') +
           `. ${G.names[final.startPlayer]} starts.`
       );
@@ -860,16 +882,15 @@ function startGame(cfg) {
   $('#end-modal').close?.();
   renderAll();
   announce(
-    `New game, seed ${seed}. ${G.names[s.startPlayer]} hires first in week 1.`
+    `New game, seed ${seed}. ${G.names[s.startPlayer]} hires first in month 1.`
   );
   // Resuming a game already in progress: the caller is about to replay the
   // move list onto this state, so there is no opening to play.
   if (cfg.resume) return;
   (async () => {
     animating = true;
-    await banner(
-      `W1 · <span class="r">First&nbsp;Call</span>: <b>${esc(G.names[s.startPlayer])}</b>`
-    );
+    hideDealTiles();
+    await banner(splashHTML('Construction Month 1'), 'splash');
     await dealAnimation();
     animating = false;
     startClock(s.seatToMove);
@@ -885,7 +906,7 @@ function endGame(ending, flaggedSeat = null) {
     G.clockTimer = null;
   }
   G.clockSeat = null;
-  setPhase('Opening day');
+  setPhase("The World's Fair is open");
 
   let result;
   if (ending === 'natural') {
@@ -909,25 +930,39 @@ function endGame(ending, flaggedSeat = null) {
 
   const body = $('#end-body');
   const draw = result.winner === -1;
-  const title = draw
+  // The winner's line is a sentence with the name picked out in the house
+  // red (Ryan, playtest 2026-08-13); announce() needs the same line without
+  // the markup, so the two are built together.
+  const winName = draw ? null : G.names[result.winner];
+  const titleText = draw
     ? 'Shared victory'
-    : esc(G.names[result.winner]) + (ending === 'timeout' ? ' wins on time' : ' wins');
+    : ending === 'timeout'
+      ? `${winName} wins on time`
+      : `${winName} has built the most prestigious pavilion in the world!`;
+  const titleHTML = draw
+    ? 'Shared victory'
+    : ending === 'timeout'
+      ? `${esc(winName)} wins on time`
+      : `<span class="champ-name">${esc(winName)}</span> has built the most prestigious pavilion in the world!`;
   const sub =
     ending === 'timeout'
       ? `${esc(G.names[flaggedSeat])}'s clock ran out. Scores are recorded but sit out the score-based awards.`
       : draw
-        ? 'Level on points and on completed galleries — the rulebook calls it a shared win.'
-        : `A pavilion opened its doors in week ${G.cur.round}, so the Fair opened with it.`;
+        ? 'Level on points and on completed rows — the rulebook calls it a shared win.'
+        : `A pavilion opened its doors in month ${G.cur.round}, so the Fair opened with it.`;
 
+  // The scoring breakdown deliberately says rows / columns / colors rather
+  // than galleries / aisles / disciplines (Ryan, playtest 2026-08-13): at the
+  // moment of scoring, plain board words beat the theme's.
   const rows = G.names
     .map((name, seat) => {
       const b = G.cur.boards[seat];
       const bonus = ending === 'natural' ? E.bonuses(b.wall) : 0;
       const detail =
         ending === 'natural'
-          ? `${count(E.completeRows(b.wall), 'gallery', 'galleries')} · ` +
-            `${count(E.completeColumns(b.wall), 'aisle', 'aisles')} · ` +
-            `${count(E.completeKinds(b.wall), 'discipline', 'disciplines')}`
+          ? `${count(E.completeRows(b.wall), 'row', 'rows')} · ` +
+            `${count(E.completeColumns(b.wall), 'column', 'columns')} · ` +
+            `${count(E.completeKinds(b.wall), 'color', 'colors')}`
           : seat === flaggedSeat
             ? 'lost on time'
             : '—';
@@ -943,20 +978,20 @@ function endGame(ending, flaggedSeat = null) {
     .join('');
 
   body.innerHTML = `
-    <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Opening day'}</p>
-    <p class="champion spot">${title}</p>
+    <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Judging the Pavilions'}</p>
+    <p class="champion spot${draw || ending === 'timeout' ? '' : ' story'}">${titleHTML}</p>
     <p class="end-sub">${sub}</p>
     <table class="final-table">
-      <tr><th>Pavilion</th><th>Complete</th><th class="num">Play</th><th class="num">Bonus</th><th class="num">Total</th></tr>
+      <tr><th>Pavilion</th><th>Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
       ${rows}
     </table>`;
-  announce(`${title}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
+  announce(`${titleText}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
 
-  // Online, only the host can call a rematch, and "New setup" means leaving
-  // the room rather than clearing a table.
+  // Online, only the host can call a rematch, and "Home" means leaving the
+  // room rather than clearing a table.
   const host = !G.online || !!net?.host;
   $('#btn-rematch').classList.toggle('hidden', !host);
-  $('#btn-setup').textContent = G.online ? 'Leave the room' : 'New setup';
+  $('#btn-setup').textContent = G.online ? 'Leave the room' : 'Home';
   $('#end-net').textContent =
     G.online && !host ? `Waiting for ${G.names[0]} to start a rematch — same room, a new crowd.` : '';
 
@@ -1156,7 +1191,7 @@ function resync(room, serverNow) {
     endGame(room.ended.ending, room.ended.flagged ?? null);
   } else if (!s.over) {
     startClock(s.seatToMove);
-    announce(`Back in the game. Week ${s.round}, ${G.names[s.seatToMove]} to hire.`);
+    announce(`Back in the game. Month ${s.round}, ${G.names[s.seatToMove]} to hire.`);
   }
 }
 
@@ -1420,15 +1455,18 @@ function applySetupMode() {
   $('#players-field').classList.toggle('hidden', !online || joining);
   $('#clock-field').classList.toggle('hidden', joining);
   $('#seed-field').classList.toggle('hidden', online); // the room's seed is the server's
+  // A live game needs no explanation (Ryan, playtest 2026-08-13); the
+  // rehearsal hint is Ryan's copy verbatim. The opponent is still the
+  // Commissioner — the bot introduces itself on the board.
   $('#mode-hint').textContent = online
-    ? 'Each player on their own device, anywhere. One of you opens a room and reads the code out; the others join it.'
-    : `A practice match against ${BOT_NAME}, who has done this before. ` +
-      'Practice games count for nothing; play until the rules feel obvious.';
+    ? ''
+    : 'A rehearsal match where you can practice your skills hiring the right ' +
+      'craftspeople to build the best mock pavilion before the Fair begins.';
   $('#setup-submit').textContent = online
     ? joining
       ? 'Join the room'
       : 'Open a room'
-    : 'Start practising';
+    : 'Start the rehearsal';
   // Novices should learn the rules before they learn the clock.
   if (!online) $('#clock-select').value = '0';
   renderNameInputs();
@@ -1580,7 +1618,7 @@ if (smokeParams.get('uitest') === 'setup') {
       expect($('#online-field').classList.contains('hidden'), 'the room fieldset hides');
       expect(!$('#seed-field').classList.contains('hidden'), 'a practice game can be seeded');
       expect($('#clock-select').value === '0', 'practice drops the clock');
-      expect($('#mode-hint').textContent.includes(BOT_NAME), 'hint names the bot');
+      expect($('#mode-hint').textContent.includes('rehearsal'), 'hint pitches the rehearsal');
       $('#name-inputs input').value = 'Ryan';
       $('#seed-input').value = 'uitest-seed';
       $('#setup-form').requestSubmit();
