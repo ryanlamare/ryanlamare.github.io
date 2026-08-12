@@ -566,6 +566,53 @@ border and topbar already say it); and the football/accounting register
 left the in-game copy — *performance review* and *recruitment cycle
 complete* (see *Theme*).
 
+## From the first live two-device playtest (2026-08-12)
+
+Ryan played laptop against phone through the deployed relay, the night it went
+up. Everything below was applied the same session.
+
+**Two layout faults, both "the board won't sit still".**
+
+1. **The market resized as tiles were drawn**, which re-wrapped the agencies
+   and shunted every board a few pixels down the page, every turn. The open
+   market's *box* is now a fixed width with height reserved for three rows —
+   its contents churn constantly and none of that reaches the layout.
+2. **The phone could be dragged sideways** to reveal the Record and New
+   buttons. `overflow-x: hidden` now makes that impossible anywhere, and the
+   topbar never wraps: the phase label is the only thing allowed to shrink, and
+   it ellipsises rather than tipping onto a second line and pushing the boards
+   down 34px mid-game.
+
+Both are silent regressions if nobody measures them, so `?smoke=1&layout=1`
+now plays a whole game while sampling the market's height, the boards' top edge
+and the document's scroll width after every move, and fails unless each is a
+single value. Checked at 1440, 820 and 500 px.
+
+**Four wording faults.**
+
+3. **"Functions" for a completed set of five** read as jargon next to *rows* and
+   *columns*. The end screen now says **sets** — "3 rows · 2 columns · 1 set".
+   Display only: the engine, the rules spec and the move format still call the
+   five tile types *functions*, which is the right domain word for
+   Engineering/Sales/Operations/Finance/Analytics. Only the **bonus** is a set.
+4. **"Ryan has the First Mover"** was clunky. Both quarter banners now read
+   `Q3 · First Mover: Ryan`.
+5. **The setup screen was undersold.** It now opens with back-of-the-box copy —
+   *Hire fast. Staff smart. Outperform your rivals.* — over a pitch that says
+   what you actually do and what it costs you.
+6. **"Table"** meant nothing as a section heading; it is **Game type** now.
+
+**And one deletion.** The mode picker offered Hot-seat, Training Ground and Two
+devices. LER 565 is an **online** class — students are never in the same room —
+so pass-and-play has no purpose here, and the earlier reasoning that it was the
+wifi-failure fallback was simply wrong for this cohort: they cannot share a
+laptop. Two modes now, **Live game** and **Training Ground**, with the live one
+first and preselected because it is the point. The local multi-player code path
+survives in `startGame` because the smoke tests drive it, but has no way in from
+the interface. Put it back if an in-person class ever wants it — the
+pass-and-play fallback rule in `TEACHING_HUB.md` still stands for MG478, which
+*is* in person.
+
 ## Build order
 
 **`HEADCOUNT-RULES.md` is the engine spec** — the complete rules stated

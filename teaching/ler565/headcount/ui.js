@@ -599,7 +599,7 @@ async function animateResolution(interim, final) {
   renderAll();
   setPhase('');
   await banner(
-    `Q${final.round} · <b>${esc(G.names[final.startPlayer])}</b> has the <span class="r">First&nbsp;Mover</span>`
+    `Q${final.round} · <span class="r">First&nbsp;Mover</span>: <b>${esc(G.names[final.startPlayer])}</b>`
   );
   await dealAnimation();
 }
@@ -837,7 +837,7 @@ function startGame(cfg) {
   (async () => {
     animating = true;
     await banner(
-      `Q1 · <b>${esc(G.names[s.startPlayer])}</b> opens the <span class="r">hiring</span>`
+      `Q1 · <span class="r">First&nbsp;Mover</span>: <b>${esc(G.names[s.startPlayer])}</b>`
     );
     await dealAnimation();
     animating = false;
@@ -894,7 +894,7 @@ function endGame(ending, flaggedSeat = null) {
       const bonus = ending === 'natural' ? E.bonuses(b.wall) : 0;
       const detail =
         ending === 'natural'
-          ? `${E.completeRows(b.wall)} rows · ${E.completeColumns(b.wall)} cols · ${E.completeFunctions(b.wall)} functions`
+          ? `${E.completeRows(b.wall)} rows · ${E.completeColumns(b.wall)} columns · ${E.completeFunctions(b.wall)} sets`
           : seat === flaggedSeat
             ? 'lost on time'
             : '—';
@@ -1346,25 +1346,27 @@ document.addEventListener('keydown', (e) => {
 // Setup screen.
 
 let setupPlayers = 2;
-let setupMode = 'hotseat'; // 'hotseat' | 'practice' | 'online'
+// LER 565 is an online class — students are never in the same room, so there
+// is no pass-and-play mode to offer (Ryan, 2026-08-12). The local multi-player
+// path still exists in startGame because the smoke tests drive it; it just has
+// no way in from the interface, and would need one again for an in-person class.
+let setupMode = 'online'; // 'online' | 'practice'
 let setupJoin = false; // online: joining someone else's room rather than opening one
 let lastTypedName = '';
 
+// You only ever name yourself: the other firms name themselves, on their own
+// devices, or are the bot.
 function renderNameInputs() {
   const wrap = $('#name-inputs');
-  const existing = $$('input', wrap).map((i) => i.value);
+  const existing = $$('input', wrap)[0]?.value;
   wrap.innerHTML = '';
-  const solo = setupMode !== 'hotseat'; // you only name yourself unless it's one device
-  const count = solo ? 1 : setupPlayers;
-  for (let i = 0; i < count; i++) {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.maxLength = 20;
-    input.placeholder = solo ? 'Your name' : `Player ${i + 1}`;
-    input.value = existing[i] || (i === 0 ? lastTypedName : '');
-    input.setAttribute('aria-label', solo ? 'Your name' : `Player ${i + 1} name`);
-    wrap.appendChild(input);
-  }
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.maxLength = 20;
+  input.placeholder = 'Your name';
+  input.value = existing || lastTypedName;
+  input.setAttribute('aria-label', 'Your name');
+  wrap.appendChild(input);
 }
 
 $$('#players-seg .seg-btn').forEach((btn) => {
@@ -1377,27 +1379,25 @@ $$('#players-seg .seg-btn').forEach((btn) => {
 });
 
 function applySetupMode() {
-  const practice = setupMode === 'practice';
   const online = setupMode === 'online';
+  const joining = online && setupJoin;
   $('#online-field').classList.toggle('hidden', !online);
-  $('#code-input').classList.toggle('hidden', !(online && setupJoin));
+  $('#code-input').classList.toggle('hidden', !joining);
   // Joining? The host already chose the table size, the clock and the seed.
-  $('#players-seg').classList.toggle('hidden', practice || (online && setupJoin));
-  $('#clock-field').classList.toggle('hidden', online && setupJoin);
+  $('#players-field').classList.toggle('hidden', !online || joining);
+  $('#clock-field').classList.toggle('hidden', joining);
   $('#seed-field').classList.toggle('hidden', online); // the room's seed is the server's
-  $('#mode-hint').textContent = practice
-    ? `A practice match against ${BOT_NAME} — our in-house recruiter. ` +
-      'Practice games count for nothing; play until the rules feel obvious.'
-    : online
-      ? 'Each player on their own device, anywhere. One of you opens a room and reads the code out; the others join it.'
-      : 'Everyone plays on this device, passing turns.';
+  $('#mode-hint').textContent = online
+    ? 'Each player on their own device, anywhere. One of you opens a room and reads the code out; the others join it.'
+    : `A practice match against ${BOT_NAME} — our in-house recruiter. ` +
+      'Practice games count for nothing; play until the rules feel obvious.';
   $('#setup-submit').textContent = online
-    ? setupJoin
+    ? joining
       ? 'Join the room'
       : 'Open a room'
-    : 'Open the market';
+    : 'Start practising';
   // Novices should learn the rules before they learn the clock.
-  if (practice) $('#clock-select').value = '0';
+  if (!online) $('#clock-select').value = '0';
   renderNameInputs();
 }
 
@@ -1423,27 +1423,25 @@ $$('#online-seg .seg-btn').forEach((btn) => {
 
 $('#setup-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  const typed = $$('#name-inputs input').map((i, k) => i.value.trim() || `Player ${k + 1}`);
+  lastTypedName = $('#name-inputs input').value.trim() || 'You';
 
   if (setupMode === 'online') {
-    lastTypedName = typed[0];
     const code = setupJoin ? $('#code-input').value.trim().toUpperCase() : null;
     if (setupJoin && !code) return $('#code-input').focus();
     $('#lobby-error').classList.add('hidden');
     connectRoom({
       code,
-      name: typed[0],
+      name: lastTypedName,
       players: setupPlayers,
       clockMs: Number($('#clock-select').value),
     });
     return;
   }
 
-  const practice = setupMode === 'practice';
   startGame({
-    players: practice ? 2 : setupPlayers,
-    names: practice ? [typed[0], BOT_NAME] : typed,
-    bot: practice,
+    players: 2,
+    names: [lastTypedName, BOT_NAME],
+    bot: true,
     clockMs: Number($('#clock-select').value),
     seed: $('#seed-input').value,
   });
@@ -1530,20 +1528,37 @@ if (smokeParams.get('uitest') === 'setup') {
     const fails = [];
     const expect = (cond, what) => cond || fails.push(what);
     try {
+      // A live game is the default, and hosting one is the default within it.
+      expect($('#mode-seg [data-mode="online"]').classList.contains('on'), 'live game is preselected');
+      expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset shows');
+      expect(!$('#players-field').classList.contains('hidden'), 'the host picks the table size');
+      expect($('#seed-field').classList.contains('hidden'), 'the seed field hides — the room owns it');
+      expect($$('#name-inputs input').length === 1, 'you name only yourself');
+
+      $('#online-seg [data-online="join"]').click();
+      expect(!$('#code-input').classList.contains('hidden'), 'joining asks for a code');
+      expect($('#players-field').classList.contains('hidden'), 'a joiner inherits the table size');
+      expect($('#clock-field').classList.contains('hidden'), 'and the clock');
+      expect($('#setup-submit').textContent.includes('Join'), 'the button says join');
+      $('#setup-form').requestSubmit();
+      expect(!G, 'joining with no code starts nothing');
+
       $('#mode-seg [data-mode="practice"]').click();
-      expect($('#players-seg').classList.contains('hidden'), 'players seg hides');
-      expect($$('#name-inputs input').length === 1, 'one name input');
+      expect($('#online-field').classList.contains('hidden'), 'the room fieldset hides');
+      expect(!$('#seed-field').classList.contains('hidden'), 'a practice game can be seeded');
+      expect($('#clock-select').value === '0', 'practice drops the clock');
       expect($('#mode-hint').textContent.includes(BOT_NAME), 'hint names the bot');
       $('#name-inputs input').value = 'Ryan';
       $('#seed-input').value = 'uitest-seed';
       $('#setup-form').requestSubmit();
       expect(!!G && G.cfg.bot === true, 'game starts in practice mode');
       expect(G && G.names[0] === 'Ryan' && G.names[1] === BOT_NAME, 'seats are you vs the bot');
-      // And back: hot-seat still works after toggling.
+
+      // And back again.
       $('#btn-new').click();
-      $('#mode-seg [data-mode="hotseat"]').click();
-      expect(!$('#players-seg').classList.contains('hidden'), 'players seg returns');
-      expect($$('#name-inputs input').length === 2, 'two name inputs again');
+      $('#mode-seg [data-mode="online"]').click();
+      expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset returns');
+      expect($('#name-inputs input').value === 'Ryan', 'your name is remembered');
       out.textContent = fails.length ? 'UITEST FAIL: ' + fails.join('; ') : 'UITEST OK';
     } catch (err) {
       out.textContent = 'UITEST FAIL: ' + (err && err.stack ? err.stack : err);
@@ -1726,6 +1741,23 @@ if (smokeParams.has('smoke')) {
         clockMs: smokeParams.get('stop') ? 300000 : 0,
         seed: 'smoke-seed',
       });
+      // ?layout=1 watches the two things that made the board feel unsteady in
+      // the first live playtest (Ryan, 2026-08-12): the market resizing as
+      // tiles were drawn, which shunted every board down the page, and the
+      // page being draggable sideways on a phone. Both are silent regressions
+      // if nobody measures them, so this measures them every move.
+      const watch = smokeParams.has('layout');
+      const marketH = new Set();
+      const boardsTop = new Set();
+      let sideways = 0;
+      const sample = () => {
+        if (!watch) return;
+        marketH.add(Math.round($('#market').getBoundingClientRect().height));
+        boardsTop.add(Math.round($('#boards').getBoundingClientRect().top));
+        if (document.documentElement.scrollWidth > window.innerWidth + 1) sideways++;
+      };
+      sample();
+
       let guard = 0;
       let waits = 0;
       while (!G.cur.over && guard < limit && waits < 20000) {
@@ -1739,6 +1771,15 @@ if (smokeParams.has('smoke')) {
         const m = moves[(guard * 7) % moves.length];
         sel = { source: m.source, fn: m.fn };
         await submitMove(m.dest);
+        sample();
+      }
+      if (watch) {
+        out.textContent =
+          `LAYOUT ${marketH.size === 1 && boardsTop.size === 1 && sideways === 0 ? 'OK' : 'FAIL'} ` +
+          `market-heights=${[...marketH].join('/')} boards-top=${[...boardsTop].join('/')} ` +
+          `sideways=${sideways} width=${window.innerWidth}`;
+        document.body.appendChild(out);
+        return;
       }
       out.textContent = G.cur.over
         ? `SMOKE OK moves=${G.moves.length} q=${G.cur.round} scores=${G.cur.result.scores.join('/')} winner=${G.cur.result.winner}`
