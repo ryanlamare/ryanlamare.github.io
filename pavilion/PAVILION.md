@@ -374,7 +374,7 @@ Every mechanic carries meaning — this is a reskin, not a coat of paint:
 
 | Azul | Pavilion | Why it works |
 |---|---|---|
-| Tile | **A craftsperson** — one of five disciplines | Art, Science, Machinery, Electricity, Nature — see *Tiles* below |
+| Tile | **A craftsperson** — one of five disciplines | Art, Science, Machinery, Electricity, Agriculture — see *Tiles* below |
 | Bag | **The crowd** | Everyone who came to Chicago for the work |
 | Factory display | **An agency** | Sends over a mixed group; you get first pick of one discipline |
 | Take all of one colour | — | Engage every sculptor an agency sends. The rest weren't hired, so they're still looking — they go and wait with everyone else |
@@ -453,10 +453,11 @@ Ryan's own copy:
 > in the world, or will it be forgotten? Your chance at World's Fair glory
 > awaits!
 
-⚠️ One unresolved wrinkle, recorded rather than papered over: the pitch says
-**"agriculture"** where the fifth discipline on the tiles is **Nature**. Ryan's
-copy is live verbatim; if the tile is to be renamed to match, that is a theme
-change and gets the paragraph test like any other.
+The fifth discipline is **Agriculture** (Ryan, 2026-08-13, renamed from Nature
+to match this pitch; the paragraph test was explicitly waived — his call to
+make). Historically exact anyway: the Fair had an Agriculture Building, not a
+Nature one. The tree icon and the `--nat`/`ic-nat`/`k4` identifiers stay — the
+icon was chosen for its silhouette, and identifiers never chase the theme.
 
 The longer pitch below is **not** interface copy. It is the reference the
 tutorial and the rules are written against, and it is here because it is the
@@ -515,12 +516,14 @@ because every failure below was invisible at large size and obvious at 40px.
 | Science | **Water blue** `#37658A` | Erlenmeyer flask | Narrow neck over a wide base |
 | Machinery | **Arntz black** `#1B1C19` | Two meshed cogs | Wide diagonal double-lobe |
 | Electricity | **Mustard ochre** `#C9A227` | Lightning bolt | Angular zigzag |
-| Nature | **Lifted green** `#3C8B51` | Tree | Bulbous canopy on a narrow trunk |
+| Agriculture | **Lifted green** `#3C8B51` | Tree | Bulbous canopy on a narrow trunk |
 
 **Colours come from the site's own `brand.css`**, which is already an Arntz
 palette sampled off his pictograms — so the game and the decks share one system,
-and the period is inherited rather than invented. Only Nature is adjusted; see
-below.
+and the period is inherited rather than invented. Only Agriculture's green is
+adjusted; see below. (The discipline was called Nature until 2026-08-13 —
+older prose in this section keeps that name where it records the colour
+decisions as they were made.)
 
 Decisions inside that table worth keeping:
 

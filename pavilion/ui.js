@@ -36,7 +36,7 @@ const BOT_SEAT = 1; // practice games are always you (seat 0) vs the bot
 
 // Engine kind 0-4 → the five disciplines. The engine knows neither the names
 // nor the order matters to anything but this line and style.css's .k0-.k4.
-const DISC = ['Art', 'Science', 'Machinery', 'Electricity', 'Nature'];
+const DISC = ['Art', 'Science', 'Machinery', 'Electricity', 'Agriculture'];
 const ICONS = ['ic-art', 'ic-sci', 'ic-mac', 'ic-ele', 'ic-nat'];
 // Agencies carry no visible name (Ryan, 2026-08-06) — these survive only in
 // screen-reader labels and move announcements, where telling one agency from

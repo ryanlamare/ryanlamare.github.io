@@ -33,7 +33,7 @@ terms.
 | Thing | Count | Notes |
 |---|---|---|
 | Craftspeople [tiles] | **100** | 20 each of 5 disciplines |
-| Disciplines [colours] | 5 | Art, Science, Machinery, Electricity, Nature |
+| Disciplines [colours] | 5 | Art, Science, Machinery, Electricity, Agriculture |
 | Agencies [factory displays] | **2n+1** | 5 at 2 players, 7 at 3, 9 at 4 |
 | First Call token [first player marker] | 1 | |
 | Player board | 1 each | Crew lines, pavilion, idle row |
@@ -59,7 +59,7 @@ column = (f + r) mod 5
 ```
 
 Which gives, with disciplines indexed Art 0, Science 1, Machinery 2,
-Electricity 3, Nature 4:
+Electricity 3, Agriculture 4:
 
 | | c0 | c1 | c2 | c3 | c4 |
 |---|---|---|---|---|---|
