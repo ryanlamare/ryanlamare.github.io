@@ -1,6 +1,6 @@
 // Headcount relay — headless test suite (relay/PROTOCOL.md).
 //
-//   node teaching/ler565/headcount/test/relay.test.js
+//   node rivet/test/relay.test.js
 //
 // No dependencies, no browser. It starts the real dev relay on an ephemeral
 // port and drives real `net.js` Relay clients against it over real WebSockets,

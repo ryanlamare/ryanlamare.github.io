@@ -1,18 +1,24 @@
-# Headcount — working memo
+# Rivet — working memo
 
 **Status: active — build steps 1–4 done: engine, hot-seat board UI, greedy bot
 + Training Ground (2026-08-06, with the punch list below applied the same day),
-and two-device play over a relay (2026-08-12). Next: step 5, backend, identity,
-results and the leaderboard — which needs the Cloudflare account.** Everything
-lives in `headcount/`: `engine.js` (pure rules module), `bot.js` (greedy
-practice opponent, "The Consultant"), `words.js` (room codes and seeds),
+and two-device play over a relay (2026-08-12).**
+
+**The theme was rebuilt on 2026-08-12 and the game renamed *Headcount* →
+*Rivet* — see *Theme* below, which is the part of this memo to read first. The
+specs are ahead of the code: the engine and UI still carry the old vocabulary,
+and the copy-and-art pass that reconciles them is the immediate next job.**
+Then step 5: backend, identity, results and the leaderboard.
+
+Everything lives in `rivet/`: `engine.js` (pure rules module), `bot.js` (greedy
+practice opponent, "The Foreman"), `words.js` (room codes and seeds),
 `net.js` (the transport layer), `relay/` (the relay itself — see *Two devices*
 below), and `index.html` + `style.css` + `ui.js` (the playable board — two-tap
 input, chess clocks, animation layer driven by engine state-diffs via
 `applyTake`; the setup screen's Training Ground mode plays you against the bot,
 recorded as `mode: 'practice'`, and its Two devices mode opens or joins a room).
-Preview with `./serve.sh` at `/teaching/ler565/headcount/`. Tests:
-`node teaching/ler565/headcount/test/engine.test.js` (soak size as an
+Preview with `./serve.sh` at `/rivet/`. Tests:
+`node rivet/test/engine.test.js` (soak size as an
 optional argument), `test/bot.test.js`, `test/relay.test.js` (the protocol,
 headless) and `test/online.test.js` (two-device play through the real UI in
 headless Chrome); `?smoke=1` on the game URL plays a full deterministic game
@@ -21,9 +27,11 @@ game — that one needs `--virtual-time-budget`, since `--dump-dom` fires long
 before the bot has finished thinking). Scoped 2026-08-04; reviewed and
 extended 2026-08-05. The deadline is a year-plus out. Class size has ranged
 **14 to 36** across years, so sizes (board top-N, pairing tables, instructor
-board) are settings, not constants. The game is called **Headcount** — see
-*Theme* below; the name checked clear on 2026-08-05, no existing board game
-uses it.
+board) are settings, not constants.
+
+**The URL is `ryanlamare.com/rivet`, not a path under `teaching/ler565/`**
+(moved 2026-08-12). Students get a short link they can be told out loud; it is
+still an LER 565 activity and the setup screen still says so.
 
 Goal: replace `azee.mattle.online` with our own version, hosted here, so students
 never create an account. LER 565 leans on Azee in every live session, weeks 1–6,
@@ -77,7 +85,7 @@ Out of scope, deliberately: **matchmaking** (Zoom already pairs them) and
   and the only difference is the number of factory displays: 5 / 7 / 9. Three-
   player support is a UI layout problem, not an engine problem.
 - **No byes — ever.** Odd groups get one three-player game instead. This deletes
-  the whole bye-rotation apparatus in `week6/live/RULES.md`; the pairing tables
+  the whole bye-rotation apparatus in `teaching/ler565/week6/live/RULES.md`; the pairing tables
   get much shorter.
 - **Chess clock, 5 minutes per player, running only on your turn.** Configurable
   per room. Clocks pause during end-of-round wall-tiling, since base rules make
@@ -111,10 +119,12 @@ Out of scope, deliberately: **matchmaking** (Zoom already pairs them) and
   against a student, so the instructor is a playable name like any other.
   Instructor games record as **exhibitions** — archived, excluded from the
   league, records and awards by default.
-- **Room codes are two corporate words, not hex** — `SYNERGY-BISON`,
-  `PIVOT-MERLOT` — from a curated list with no ambiguous characters. The code's
-  real transport is Zoom audio: "synergy bison" survives a bad mic, "X7K2QF"
-  doesn't. The format is part of the protocol, so it's decided now.
+- **Room codes are two Chicago words, not hex** — `BLACKHAWKS-PILSEN`,
+  `DEEPDISH-BUCKTOWN` — from a curated list with no ambiguous characters. The
+  code's real transport is Zoom audio: "blackhawks pilsen" survives a bad mic,
+  "X7K2QF" doesn't. The format is part of the protocol, so it's decided now.
+  (Was corporate two-word — `SYNERGY-BISON` — until the theme changed; see
+  *Naming* under *Theme*.)
 - **Real names, not firm names.** Pseudonymous company names were considered
   (2026-08-05) and rejected: a small six-week online class of HR professionals
   bonds through real interactions under real names, and inventing a company
@@ -147,7 +157,7 @@ effectively nothing at this scale.
 The football structure, which gives the term a shape:
 
 - **League** — every weekly match, weeks 1–5. Running table, top five shown.
-- **Cup** — the week 6 knockout. Already built: `week6/live/bracket.html` needs
+- **Cup** — the week 6 knockout. Already built: `teaching/ler565/week6/live/bracket.html` needs
   no changes and is already game-agnostic.
 - **Champion of Champions** — league winner vs cup winner. One person taking
   both is *the Double*, which is a good way to end a course.
@@ -169,7 +179,7 @@ behind, most improved first-half to second.
 ### The Record Book — the archive outlives the term
 
 Every game record carries a `term` key from day one, so records accrue across
-*years*, not just weeks: all-time **Best Quarter**, all-time biggest comeback,
+*years*, not just weeks: all-time **Tallest Tower**, all-time biggest comeback,
 longest win streak — plus a **Hall of Champions** listing every year's Employer
 of the Year, Cup winner, and any Doubles. Future cohorts play against history:
 "the all-time record is 94, set in 2026" is the cheapest motivation the league
@@ -229,15 +239,21 @@ movement: *"Sam ↑2 to 4th."*
 not garnish** (Ryan, 2026-08-05: full creative licence here; do not import the
 slide decks' restraint). The splash is a *splash* — a big animated card, the
 head-to-head numbers landing with a pop, records sliding in. Moves animate
-Azee-style and then some: tiles fly from agency to team, leftovers spill and
-scatter into the open market, and at the quarter close the performance-review
-sweep — completed teams' lead tiles glide onto the org chart one row at a time
-while the score ticks up with each placement, surplus tiles clearing off the
-table. Beats worth staging: bench tiles landing with a heavier, reluctant thud
-(the penalty should *feel* like overstaffing); the First Mover token's flip when
-someone bites; the **alumni wave** as a visible cascade back into the market; a
-completed column lighting up cell by cell; a game-ending row sweeping across;
-the cycle-complete finale with the winner's board taking the spotlight. Two engineering
+Azee-style and then some: workers fly from agency to crew line, the passed-over
+spill and scatter into the hall, and at the week's close the build sweep —
+completed crews' lead workers glide onto the tower one floor at a time while the
+score ticks up with each placement, the excess clearing off the table. Beats
+worth staging: idle workers landing with a heavier, reluctant thud (the penalty
+should *feel* like payroll you're carrying); the First Call token's flip when
+someone bites; **new arrivals** as a visible cascade back into the hall; a
+completed riser lighting up cell by cell; a game-ending floor sweeping across;
+the topped-out finale with the winner's tower taking the spotlight.
+
+**Skyscraper imagery is the obvious next seam** (Ryan, 2026-08-12) and is
+deliberately deferred to the achievements-and-decoration pass, once the rules
+and structure are settled — a tower that visibly rises as the board fills, the
+period type, the skyline behind it. Recorded here so it isn't lost, not so it
+happens now. Two engineering
 rules keep all this cheap rather than a retrofit: animations are **driven by
 engine state-diffs** (the pure engine produces before/after; the UI animates
 the difference — never animation logic inside the engine), and one
@@ -267,10 +283,10 @@ and places zero limits on how far the animations go for everyone else.
   **reverses the earlier "bots are out" ruling** (reopened by Ryan, 2026-08-05):
   a bot is now a *practice* feature — and still never plays a league game except
   as the emergency stand-in. The practice opponent is a **greedy heuristic bot**
-  (best immediate placement, avoids the bench), not the random test bot, whose
+  (best immediate placement, avoids idling workers), not the random test bot, whose
   play is too absurd to teach anyone anything. Practice games record with
   `mode: 'practice'` and count for nothing.
-- **Talent Weekly — the auto-generated round-up.** A page that rebuilds itself
+- **The Bulletin — the auto-generated round-up.** A page that rebuilds itself
   from the archive after each session: the league table plus two or three
   canned-template blurbs — *"Sam stunned the market from 19 down"* — picked by
   simple rules (biggest comeback, streak extended, all-time record threatened).
@@ -307,51 +323,106 @@ This is all for teaching and for fun — nothing here is a research project.
 
 ## Theme
 
-**Headcount.** Competing firms hire from a shared talent market, slot people into
-teams, and pay for the ones they can't deploy. Chosen over *Shopfloor* and
-*Piecework* because the course is HRM and strategy — corporate staffing, not
-bargaining and ER — so the register is consulting-and-corporate throughout.
+**Rivet. Chicago, 1927. Two firms, one labour market, and a skyline going up
+fast.** You each have a tower to build and no workforce. The agencies send over
+groups of workers every week; you hire, you crew jobs, and the jobs you build
+make your tower. The competition is not over the contract — you each have your
+own tower. **It is over the workforce**, which is the actual lesson.
 
-It also settles the naming problem: not Azul (Plan B Games' name and art; the
-mechanics themselves aren't copyrightable), and not Azee, which is
-mattle.online's name rather than ours.
+### The test this theme had to pass
+
+Two earlier themes failed, and the reason is worth keeping because it is the
+standard any future change must meet.
+
+**The rule: every term gets a paragraph, read aloud. If the paragraph needs
+"because the rules say so", the term is wrong.**
+
+- **Headcount (staffing/consulting register)** — tiles were people you hire.
+  Failed on the mechanic it never mentioned: completing a pattern line places
+  **one** tile and discards **r−1**, so finishing a team meant firing
+  three-quarters of it, every round, on your *successes*. Also called a cyclic
+  Latin square an "org chart", and described the column bonus in terms that were
+  flatly false about its own board (see rules spec §2).
+- **Roles-and-fit / candidates-and-shortlists** — fixed the discard, but could
+  not explain why the leftovers in an agency become available to *rivals*
+  (agencies don't work that way), and its floor-line story ("you paid for the
+  search anyway") failed to explain the move players actually make: taking
+  workers deliberately to deny an opponent.
+
+**What unlocked it** (Ryan, 2026-08-12): Azul is a mosaic, and the tile that
+goes into the wall is *material*, which stays. Stop trying to put a person
+there. The thing that lands on your board is **a finished job**; the crew that
+built it moves on. Then pick a **specific structure**, the way Azul picks the
+Royal Palace of Évora — and a building is the one structure where both axes of
+a 5×5 grid are real to the people doing the work: floors run across, risers and
+stacks run up. The column bonus, which two themes had to invent a meaning for,
+names itself.
+
+### The mapping
 
 Every mechanic carries meaning — this is a reskin, not a coat of paint:
 
-| Azul | Headcount | Why it works |
+| Azul | Rivet | Why it works |
 |---|---|---|
-| Factory display | **Agency** | Take all of one role and **the rest spill into the open market** — your hire hands the leftovers to a competitor |
-| Centre pool | **Open market** | Accumulates everyone's leftovers |
-| First-player marker | **First Mover** token | Initiative next round, *at a cost* — a timing commitment you pay for, which is week 6's content exactly |
-| Pattern lines | **Teams** | One role type each, and a **partly staffed team delivers nothing** until complete |
-| The wall | **Org chart** | Placement scores by adjacency — complementarity between filled roles |
-| Floor line | **The bench** | People you couldn't deploy, at escalating cost |
-| Tile colours | **Five functions** | Engineering, Sales, Operations, Finance, Analytics — see *Tiles* below |
+| Tile | **A worker** — one of five trades | Ironwork, Masonry, Carpentry, Electrical, Plumbing — see *Tiles* below |
+| Bag | **The trades looking for work** | |
+| Factory display | **An agency** | Private employment agencies were everywhere in 1920s Chicago and sent out mixed groups. A union local could not: **a local is one trade**, and an agency here holds four workers of mixed trades |
+| Take all of one colour | **You hire the gang, not the man** | Gang hiring was standard in the building trades. This explains Azul's most arbitrary rule — why you can't take just one — with a period-correct sentence |
+| Centre pool | **The hall** | Everyone passed over waits there. Hiring off the hall first gets you the token |
+| First-player marker | **First Call** token | First call at the hall next week, *at a cost*. Keeps the first-mover concept week 2 already teaches |
+| Pattern lines | **The crew for a floor** | One trade each; a **half-crewed job doesn't get built** and waits. Said out loud as *"electricians into my top floor"* |
+| Line capacity 1…5 | **Job size** | A job on the top floor takes one worker; down at street level it takes five. The board is an elevation, so the ladder explains itself visually |
+| Phase B | **The jobs get built** | The crew builds it, the finished job goes on your tower, and the excess you no longer need goes back to the hall |
+| The wall | **Your tower** | 25 jobs. Placement scores by adjacency — work that joins up is worth more than work standing alone |
+| Floor line | **Idle** | Workers hired with no job to put them on, at escalating cost |
+| Bag refill from lid | **New arrivals** | A fresh crowd at the hall. Retires the old theme's "alumni wave", which existed only to excuse a mechanic that now needs no excuse |
 
-The wall is a Latin square, so the bonuses land cleanly:
+Two of those deserve calling out as the ones that pay for the whole theme:
 
-- **Row** (+2) — a department with one of every function: a balanced team.
-- **Column** (+7) — one function staffed across every department.
-- **All five of a colour** (+10) — you've cornered the market on a role.
+- **The r−1 discard** stops being the worst-explained thing on the board. The
+  crew finished; you keep what you need and the rest go back to the hall. It
+  also makes the lid-to-bag refill automatic — the same faces turn up next week.
+- **Idle** is now the move players actually make. Hiring workers you can't use
+  purely to keep them off a rival's site is labour hoarding, it is a real
+  strategy, and it is the most discussable thing on the board.
 
-**Rounds are Quarters.** The round counter reads Q1, Q2, Q3…, and Phase B is
-the **performance review** (renamed from "closing the books" — Ryan,
-2026-08-06 — the accounting phrase never quite sang; the HR one is also
-literally what the phase does to your teams). Naming only — a game can run to
-Q6 or Q7 and nobody's fiscal calendar minds — but it gives the clock pause a
-voice, makes the round structure read corporate, and retroactively earns the
-*Best Quarter* award name. The game's end is **recruitment cycle complete**
-(was "final whistle / full time", briefly "closing bell" — Ryan, 2026-08-06;
-the football register belongs to the league framing, not the in-game
-theatre, and the cycle phrasing closes the loop the theme opens: a game is
-one recruitment cycle). A timeout still reads "out of time". When the bag refills from the lid, that's the **alumni
-wave** — boomerang hires re-entering the market. (See rules spec §6.1 for when
-it actually fires: every 3-player game, but 2-player games only past Q5.)
+The tower is a Latin square, so the bonuses land cleanly — **and, unlike the old
+theme, all three of these are true of the actual board:**
 
-The bench is the mechanic that sings. In Azul it's an abstract penalty; here
-it's overstaffing — you took four people to deny a rival and now you're paying
-for the two you can't place. That's a real staffing tradeoff, and students feel
-it immediately.
+- **Floor** (+2) — a row finished end to end.
+- **Riser** (+7) — a column, clean from the ground to the roof.
+- **All five of a trade** (+10) — that trade's work done all the way up.
+
+⚠️ Rows and columns **cannot** be distinguished by trade mix — every column
+holds all five trades, exactly as every row does (rules spec §2). Distinguish
+them *physically* or not at all. That is what the building buys.
+
+### Where the union earns its keep
+
+The instinct to tie in Chicago labour history is right, but it has to explain a
+rule rather than decorate one. Three places it does (all in the table above):
+**gang hiring** explains take-all-of-one-trade, **the hall** explains where the
+leftovers go and what First Call is for, and **idle** is the cost of holding
+labour you don't need.
+
+⚖️ **Idle stays "idle", not "show-up pay"** (Ryan, 2026-08-12). Show-up pay is
+the accurate contractual term and it is genuinely why the penalty escalates —
+but it needs a footnote, and the rule for the whole theme is that nothing needs
+one. The abstract word carries the idea of waste without teaching a term first.
+
+### The register
+
+**Chicago, 1927, and no grimness.** Racketeering and exclusion in the building
+trades are real history and explicitly **out of scope** (Ryan, 2026-08-12):
+this is a fun game. The period supplies the romance of the skyscraper race, the
+craft trades and the hiring hall, and nothing else.
+
+**Rounds are weeks.** The counter reads W1, W2, W3…, and Phase B is **the jobs
+get built**. The game's end is **topped out** — the ceremony when the last
+structural piece goes up. A timeout still reads "out of time". The end
+condition is a completed *floor*, and the fiction is that once a floor is
+finished end to end the tower's shape is settled and the rest goes up on rails;
+Azul doesn't explain its equivalent either, and this needs no more than a line.
 
 **Theme the names and the art, never the rules.** Base Azul mechanics stay
 exactly as they are — same tile counts, same scoring, same 5/7/9 agencies. The
@@ -359,37 +430,92 @@ rules are correct because thousands of people have debugged them, and Azee stays
 a usable fallback only while the games are identical. A themed rule tweak
 quietly costs both.
 
-Worth knowing rather than smoothing over: tiles-as-workers means the game has
-you hoarding people to block a rival and discarding the surplus at a penalty.
-For an HRM course that's the most discussable thing on the board, and a
-reflection prompt writes itself.
+**Identifiers go theme-neutral, and now.** The theme has moved twice; the wire
+protocol and the archived game record still carry the first one's words. They
+become `source` / `pool` / `line` / `floor` / `trade` in the code pass — not
+Rivet's words either, so the theme can move a third time without touching a
+stored game. Free while the archive is empty; a migration afterwards. See rules
+spec §10.
+
+### The opening copy
+
+**The setup screen stays broad — two sentences, no rules** (Ryan, 2026-08-12).
+The rules belong in the ruleset and the tutorial; the front door sets a scene
+and gets out of the way:
+
+> # Ri**vet**
+> ### Build high. Hire fast. Own the skyline.
+>
+> Chicago, 1927. The city is going up — and there are only so many hands to
+> build it.
+
+The longer pitch below is **not** interface copy. It is the reference the
+tutorial and the rules are written against, and it is here because it is the
+paragraph the theme was tested on:
+
+> You've each got a tower to build and neither of you has a workforce. Each
+> morning the agencies send over groups of workers — hire every electrician from
+> one group and the carpenters and plumbers left behind stay on the open market,
+> where your rival can take them. Every job needs a crew of a single trade: a job
+> on the top floor takes one worker, down at street level it takes five. Crew it
+> and it gets built. Jobs that join up are worth more than jobs standing alone —
+> a floor finished end to end, a riser running clean from the ground to the roof.
+> Anyone you hire and don't need is idle on your payroll. First firm to finish a
+> floor settles it; after that the tower goes up on its own.
+
+### Naming
+
+**Rivet** — one strong period noun, the way *Azul* is one word, and riveting is
+the signature image of a 1920s steel frame. It also settles the naming problem:
+not Azul (Plan B Games' name and art; the mechanics themselves aren't
+copyrightable), and not Azee, which is mattle.online's name rather than ours.
+
+Considered and passed over: **High Steel** (more romantic, two words),
+**Topping Out** (kept — it is the end-of-game banner), **Local 1** (the most
+LER title, too inside-baseball as a front door), and **Best Fit / Bundle /
+Complement**, which belonged to the strategy-HRM register the theme left behind.
+
+**Room codes are two Chicago words**, not corporate ones — `BLACKHAWKS-PILSEN`,
+`DEEPDISH-BUCKTOWN`, `THEBEAN-GOLDCOAST`. Icon plus neighbourhood, from a
+curated list with no ambiguous characters. Deliberately **modern** Chicago
+rather than 1927: a code's only job is to survive a bad mic and be recognised
+instantly, and recognisability beats period accuracy there. Nothing from the
+building trades — the codes shouldn't read as part of the fiction. The format
+is part of the protocol, so it is decided now.
 
 ### Tiles — colour plus isotype, never text
 
-**No words on tiles.** Each function is a flat background colour carrying a
-single isotype-style pictogram: solid silhouette, no outline, no interior
-detail, no strokes. Squares of text would read as a spreadsheet; this reads as a
-game, and it stays abstract enough that the mechanics feel like a game rather
-than an HR exercise.
+**No words on tiles.** Each trade is a flat background colour carrying a single
+isotype-style pictogram: solid silhouette, no outline, no interior detail, no
+strokes. Squares of text would read as a spreadsheet; this reads as a game.
+Every pictogram is now an object off a 1927 site rather than a modern
+abstraction — the period is carried by the art, not by explanatory copy.
 
-| Function | Colour | Isotype | Silhouette |
-|---|---|---|---|
-| Engineering | **Blue** | Cog | Round, toothed — spiky outline |
-| Sales | **Red** | Headset | Arc with mic boom — open, asymmetric |
-| Operations | **Yellow** | Crate | Solid square, diagonal straps |
-| Finance | **Ink** | Coin stack | Stacked discs — horizontal rhythm |
-| Analytics | **Teal** | Bar chart | Three bars — vertical rhythm |
+| Trade | Colour | Isotype | Silhouette | Was |
+|---|---|---|---|---|
+| Ironwork | **Blue** | I-beam, end-on | Vertical web with caps | Headset |
+| Masonry | **Yellow** | Brick | Solid square, banded | Crate — keep the diagonal banding |
+| Carpentry | **Ink** | Stacked timber | Horizontal rhythm | Coin stack — square off the ends |
+| Electrical | **Red** | Lightning bolt | Diagonal zigzag — open, asymmetric | Bar chart |
+| Plumbing | **Teal** | Valve handwheel | Round, spoked — spiky outline | Cog — near-identical, minor rework |
+
+⚠️ **The pair to check on a real phone is I-beam against stacked timber**, which
+both read as horizontals at tile size; the I-beam's vertical web is what
+separates them and it needs to be heavy. This is exactly the failure the crate
+and the coin stack already had in live play, so it is a measurement, not a
+matter of taste.
 
 Two decisions inside that table worth keeping:
 
 **The five silhouettes are deliberately different in *shape*, not just subject** —
 spiky-round, open-asymmetric, solid-square, horizontal-rhythm, vertical-rhythm.
 At tile size on a phone, subject matter is invisible and only the silhouette
-reads. Two round icons (a cog and a magnifier, say) would be a recurring
-misread across a 5×5 grid. This bit once already: the crate's bands began
-horizontal and collided with the coin stack in real play (Ryan, 2026-08-06)
-— hence the diagonal straps. Diagonal was the only free direction: vertical
-would collide with the bar chart.
+reads. Two round icons (a valve wheel and a rivet head, say) would be a
+recurring misread across a 5×5 grid. This bit once already: the crate's bands
+began horizontal and collided with the coin stack in real play (Ryan,
+2026-08-06) — hence the diagonal straps, which the brick inherits. Diagonal was
+the only free direction, and the same reasoning is why the period redraw kept
+one icon per shape class rather than picking the five best-looking tools.
 
 **Teal rather than green.** Red against green is the one pair a colourblind
 player genuinely cannot separate, and roughly one man in twelve has some red-
@@ -410,14 +536,15 @@ the ink tile doesn't.
 
 ### Award names
 
-Corporate-metric names, which the theme earns:
+Building names, which the theme earns:
 
-- **Employer of the Year** — league winner
+- **Builder of the Year** — league winner
 - **The Cup** — week 6 knockout
 - **The Double** — both, by one person
-- **Best Quarter** — highest single game
+- **Tallest Tower** — highest single game
 - **Turnaround** — best comeback from behind
 - **Most Improved** — first half to second
+
 **No wooden spoon, and no award for finishing last** — considered and rejected.
 Joke contests about low finishers are mean-spirited, and the goal is uplifting.
 
@@ -461,7 +588,7 @@ whether phone players actually lose on time more often, rather than leaving it a
 guess. Steer league games toward laptops if it turns out to matter.
 
 **The game is installable as a PWA** (added 2026-08-08): `manifest.webmanifest`
-plus icons in `headcount/` let a student "Add to Home Screen", where the game
+plus icons in `rivet/` let a student "Add to Home Screen", where the game
 opens full-screen under its own icon — a 2×2 of the real tiles. It is still
 just the website: no store, no separate codebase, and deliberately **no service
 worker** — the `?v=` cache-buster convention stays the whole update story, and
@@ -479,8 +606,8 @@ the design can fix it.
 ## Two devices — built 2026-08-12 (build step 4)
 
 Students on separate devices now play a real game against each other. The wire
-format is `headcount/relay/PROTOCOL.md`; how to run it is
-`headcount/relay/README.md`. Three things are worth having in this memo rather
+format is `rivet/relay/PROTOCOL.md`; how to run it is
+`rivet/relay/README.md`. Three things are worth having in this memo rather
 than only in those.
 
 **The relay never runs the engine.** A complete game is `seed + move list` and
@@ -540,15 +667,15 @@ don't scale. Kept for the record:
 1. **Slow everything down, a lot** — especially the end-of-round
    books-closing sequence. Use a central timing scale so pacing is one knob,
    not fifty edits.
-2. **Team rows must align with the org chart**: identical cell size and
-   row-for-row alignment, so you can see exactly which wall row each team
-   tiles into at the close.
-3. **Colour and tile-design pass.** Unfilled org-chart cells should be
+2. **Crew lines must align with the tower**: identical cell size and
+   row-for-row alignment, so you can see exactly which floor each crew
+   builds into at the close.
+3. **Colour and tile-design pass.** Unbuilt tower cells should be
    *exactly* the same colour as the real tiles, made obviously unfilled by
    opacity — while claimable tiles in the market carry a large border. Colour
    becomes the primary way you read what's filled, what's claimable, and
    what's still open.
-4. **First Mover token needs to be unmistakably not a tile**: a black "1" on
+4. **First Call token needs to be unmistakably not a tile**: a black "1" on
    a white background, borderless. (The no-words rule is for tiles; the
    token is the one legitimate glyph, as in Azul itself.)
 5. **Desktop boards bigger** — there's plenty of blank space; use it.
@@ -558,13 +685,13 @@ don't scale. Kept for the record:
 
 Ryan's second look (2026-08-06), also applied: agencies carry **no visible
 name** (the names survive in screen-reader labels and move announcements);
-the Bag/Lid chips became a single **Recruit pool** chip, with discards
-flying to an invisible off-screen drain and the alumni wave restocking the
-pool chip; the start-of-quarter deal slowed further (it should read as an
-event, not a shuffle); the red HIRING tag came off the active board (the
-border and topbar already say it); and the football/accounting register
-left the in-game copy — *performance review* and *recruitment cycle
-complete* (see *Theme*).
+the Bag/Lid chips became a single pool chip, with discards flying to an
+invisible off-screen drain and the refill restocking the pool chip; the
+start-of-week deal slowed further (it should read as an event, not a
+shuffle); and the red HIRING tag came off the active board (the border and
+topbar already say it). The register decision in the same pass — *performance
+review*, *recruitment cycle complete* — belonged to the old theme and is
+superseded; see *Theme*.
 
 ## From the first live two-device playtest (2026-08-12)
 
@@ -588,7 +715,11 @@ now plays a whole game while sampling the market's height, the boards' top edge
 and the document's scroll width after every move, and fails unless each is a
 single value. Checked at 1440, 820 and 500 px.
 
-**Four wording faults.**
+**Four wording faults.** ⚠️ Items 3–5 are recorded as history: they fixed the
+*old* theme's copy, and the theme rebuild later the same day superseded all
+three. The reasoning still holds — jargon reads as jargon, and the setup screen
+carries the pitch — but the strings named below are not the current ones. See
+*Theme*.
 
 3. **"Functions" for a completed set of five** read as jargon next to *rows* and
    *columns*. The end screen now says **sets** — "3 rows · 2 columns · 1 set".
@@ -615,7 +746,7 @@ pass-and-play fallback rule in `TEACHING_HUB.md` still stands for MG478, which
 
 ## Build order
 
-**`HEADCOUNT-RULES.md` is the engine spec** — the complete rules stated
+**`RIVET-RULES.md` is the engine spec** — the complete rules stated
 precisely enough to implement without guessing, plus the edge cases and a test
 checklist. Build step 1 from that file, not from this one. It marks which rules
 are Azul's and which are our resolution of a genuine ambiguity, so a future
@@ -630,12 +761,12 @@ reader can tell a quotation from a choice.
    Done 2026-08-12 — see *Two devices* above.
 5. **Backend, identity, results, leaderboard, admin.** Instructor auth is one
    secret; roster and term setup is a one-page admin screen.
-6. **Stats screens, Record Book, Hall of Champions, Talent Weekly, instructor
+6. **Stats screens, Record Book, Hall of Champions, The Bulletin, instructor
    board.**
 
 ### Testing
 
-- **Two bots, two jobs.** The **random** bot is the test fixture: it benches
+- **Two bots, two jobs.** The **random** bot is the test fixture: it idles
   constantly and so exercises the overflow and negative-scoring paths a
   competent player avoids — exactly where Azul implementations go wrong. The
   **greedy** bot is the Training Ground opponent (see above) and the emergency
@@ -665,8 +796,8 @@ accident.
   verified (≈3M requests/month, DOs and WebSockets included) — oversized even at
   36 students. **Live since 2026-08-12** at
   `wss://headcount-relay.rlamare.workers.dev`, deployed with `npx wrangler
-  deploy` from `headcount/relay/` and wired into `PRODUCTION_RELAY` in
-  `headcount/net.js`. The free plan carried the Durable Object without
+  deploy` from `rivet/relay/` and wired into `PRODUCTION_RELAY` in
+  `rivet/net.js`. The free plan carried the Durable Object without
   complaint — the SQLite-backed migration in `wrangler.toml` is what makes that
   true, so don't change it to `new_classes`. Verified end to end the same day:
   two clients played a complete 99-move game through the deployed Worker,
@@ -679,7 +810,7 @@ accident.
   in week 3 isn't looking at a table they cannot catch.
 - **Three-player head-to-head** counts if you finished above the other player.
 - **Draws** are worth 2 league points; cup games coin-flip instead
-  (`HEADCOUNT-RULES.md` §8).
+  (`RIVET-RULES.md` §8).
 - **Public board is a top N sized to the class; private rank is always shown to
   the student it belongs to.**
 - **Firm names — considered and rejected** (2026-08-05); see *Identity* above.
@@ -694,7 +825,7 @@ accident.
 
 ## Keep Azee as the fallback for the first term
 
-`week6/live/RULES.md` already treats "Azee is down" as a scenario. If *ours*
+`teaching/ler565/week6/live/RULES.md` already treats "Azee is down" as a scenario. If *ours*
 breaks during a graded tournament that's our fault and we need somewhere to go.
 Don't burn the bridge until it has survived a term.
 

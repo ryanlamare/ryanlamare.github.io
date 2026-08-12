@@ -15,14 +15,14 @@ Two terminals:
 
 ```bash
 ./serve.sh                                          # the site, on :8000
-node teaching/ler565/headcount/relay/dev-relay.js   # the relay, on :8787
+node rivet/relay/dev-relay.js   # the relay, on :8787
 ```
 
 Both print a LAN address. Open the game on two devices at the **LAN** one — not
 `localhost`, which a phone cannot reach:
 
 ```text
-http://192.168.x.x:8000/teaching/ler565/headcount/
+http://192.168.x.x:8000/rivet/
 ```
 
 Pick **Two devices → Open a room** on one, read the code out, **Join a room** on
@@ -54,8 +54,8 @@ deploying it.
 ## Testing
 
 ```bash
-node teaching/ler565/headcount/test/relay.test.js    # protocol, headless, ~1s
-node teaching/ler565/headcount/test/online.test.js   # the real UI in headless Chrome
+node rivet/test/relay.test.js    # protocol, headless, ~1s
+node rivet/test/online.test.js   # the real UI in headless Chrome
 ```
 
 The first drives real `net.js` clients over real WebSockets against

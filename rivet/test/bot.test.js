@@ -1,6 +1,6 @@
 // Greedy-bot test suite.
 //
-//   node teaching/ler565/headcount/test/bot.test.js [games]
+//   node rivet/test/bot.test.js [games]
 //
 // The bar for the Training Ground opponent: always legal, deterministic,
 // clearly better than random (a bot that loses to noise teaches nothing),

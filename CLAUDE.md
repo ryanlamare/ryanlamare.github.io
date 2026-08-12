@@ -157,11 +157,20 @@ any student device, which is the point — keep it that way. State lives in the 
 GitHub Pages is static hosting and cannot run a backend, so anything genuinely
 multiplayer-across-devices needs an external realtime service.
 
-**Headcount** (`teaching/ler565/headcount/`) is the in-house Azul-style game,
-mid-build. Its specs are `teaching/ler565/HEADCOUNT.md` (design, why) and
-`HEADCOUNT-RULES.md` (engine spec, what) — read both before touching it. The
-engine is a pure seeded ES module; run the headless suites
-(`node teaching/ler565/headcount/test/engine.test.js` and `test/bot.test.js`)
+**Rivet** (`rivet/`, live at `/rivet/`) is the in-house Azul-style
+game, mid-build. It lives at the site root rather than under `teaching/ler565/`
+so students get a short URL — it is still an LER 565 activity. Its specs are
+`rivet/RIVET.md` (design, why) and
+`rivet/RIVET-RULES.md` (engine spec, what) — read both before touching it.
+
+⚠️ **The specs are ahead of the code.** The game was called *Headcount* under a
+different theme until 2026-08-12; the engine, wire protocol and UI still carry
+that theme's vocabulary (`agency`, `team`, `bench`, quarters, org chart). Read
+*Theme* in `RIVET.md` before writing any player-facing string, and don't take
+an identifier in the code as evidence of what a thing is called.
+
+The engine is a pure seeded ES module; run the headless suites
+(`node rivet/test/engine.test.js` and `test/bot.test.js`)
 before committing engine or bot changes. The board UI (`index.html`/`style.css`/`ui.js`) previews through
 `./serve.sh`; `?smoke=1` on the game URL plays a full game headlessly and
 stamps `SMOKE OK` into the DOM — check it in headless Chrome after UI changes.

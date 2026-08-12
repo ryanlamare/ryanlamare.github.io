@@ -1,6 +1,6 @@
 // Headcount — two-device play, end to end in a real browser.
 //
-//   node teaching/ler565/headcount/test/online.test.js
+//   node rivet/test/online.test.js
 //
 // relay.test.js proves the protocol with headless clients. This proves the
 // *UI*: it starts the dev relay and a static server, opens the real game page
