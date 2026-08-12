@@ -616,12 +616,15 @@ accident.
   Node hosts sleep). One Durable Object per room provides the WebSocket relay
   and room state; DO storage holds the kilobyte-scale archive. Free-plan limits
   verified (≈3M requests/month, DOs and WebSockets included) — oversized even at
-  36 students. Needs a Cloudflare account under Ryan's control at step 5. The
-  Worker and the Durable Object are **written and waiting** (2026-08-12):
-  `npx wrangler deploy` from `headcount/relay/`, then the printed `wss://` URL
-  goes into `PRODUCTION_RELAY` in `headcount/net.js`. Until that constant is
-  filled in, the "Two devices" button is deliberately disabled outside a LAN —
-  better than a button that cannot work.
+  36 students. **Live since 2026-08-12** at
+  `wss://headcount-relay.rlamare.workers.dev`, deployed with `npx wrangler
+  deploy` from `headcount/relay/` and wired into `PRODUCTION_RELAY` in
+  `headcount/net.js`. The free plan carried the Durable Object without
+  complaint — the SQLite-backed migration in `wrangler.toml` is what makes that
+  true, so don't change it to `new_classes`. Verified end to end the same day:
+  two clients played a complete 99-move game through the deployed Worker,
+  byte-identical at every ply, then reconnected into it from the stored move
+  log. Median round trip 102 ms.
 - **No wooden spoon**, and no award for finishing last — see *Award names*.
 
 - **Repeat matchups in a week both count.** Simplest, no bookkeeping.

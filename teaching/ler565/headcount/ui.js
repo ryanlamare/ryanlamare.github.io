@@ -1619,6 +1619,10 @@ if (smokeParams.get('uitest') === 'online') {
           await sleep(6);
         }
       }
+      // The loop exits the moment *our* engine says the game is over, which
+      // on our own final move is before the broadcast has reached the other
+      // client. Let them catch up, or the comparison races.
+      await until(() => opp.applied === G.moves.length, 'the opponent to catch up');
       return guard;
     };
 

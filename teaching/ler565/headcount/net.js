@@ -212,10 +212,10 @@ export class Relay {
 // ---------------------------------------------------------------------------
 // Where the relay lives.
 
-// Production is a Cloudflare Worker (HEADCOUNT.md, Open questions). Until the
-// account exists at build step 5 this is a placeholder: online play works on a
-// LAN today, and goes live the day this line is filled in.
-export const PRODUCTION_RELAY = ''; // e.g. 'wss://headcount-relay.<subdomain>.workers.dev'
+// Production is a Cloudflare Worker (HEADCOUNT.md, Open questions), deployed
+// 2026-08-12 from relay/. wss://, not https:// — this is a WebSocket endpoint.
+// Redeploy with `npx wrangler deploy` from relay/; this URL doesn't change.
+export const PRODUCTION_RELAY = 'wss://headcount-relay.rlamare.workers.dev';
 
 // Served from a laptop (serve.sh on :8000, relay on :8787) the relay is the
 // same host on the relay's port, which is what makes phone-vs-laptop work with

@@ -32,16 +32,20 @@ so there is nothing to configure as long as both run on the same machine.
 Check `http://localhost:8787/health` to see what rooms exist and how far along
 they are.
 
-## Going live, later
+## Live
 
-`npx wrangler deploy` from this directory, then put the printed `wss://` URL
-into `PRODUCTION_RELAY` in `../net.js`. Until that constant is filled in, the
-"Two devices" button is disabled outside a LAN — deliberately, so nobody meets
-a button that cannot work.
+`wss://headcount-relay.rlamare.workers.dev`, deployed 2026-08-12 and already in
+`PRODUCTION_RELAY` in `../net.js`. `https://headcount-relay.rlamare.workers.dev/`
+answers with a small JSON health object.
 
-It needs a Cloudflare account under Ryan's control, which the memo has always
-had as a build-step-5 prerequisite. Nothing else is waiting on it: the protocol,
-both relays and the whole client are done and tested without one.
+To ship a change to the relay: `npx wrangler deploy` from this directory. The
+URL doesn't change, so nothing else needs touching. Note that this deploys
+*independently of the site* — pushing to `main` publishes the game, but the
+relay only moves when you deploy it.
+
+The free plan carries the Durable Object because `wrangler.toml` asks for the
+SQLite-backed kind. Changing that line to `new_classes` would quietly make this
+a paid-plan-only deployment.
 
 `npx wrangler dev` runs the Worker locally on the same port as `dev-relay.js`,
 which is the way to check a change against the real Durable Object before
