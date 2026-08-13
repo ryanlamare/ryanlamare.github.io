@@ -943,12 +943,19 @@ bugs. The decisions worth keeping:
 
 - **The front door is quieter.** The five-tile discipline legend came off
   entirely — the disciplines are named in the aria labels and the move
-  announcements, and the board teaches them faster than a key does. The pitch
-  splits into two paragraphs at *"Will your pavilion stand above the rest"*,
-  the CTA reads **Start the competition**, and the logo is **PAVILION** in
-  caps with `LI` in Machinery's black. Four pairs, five disciplines, so
-  Electricity's ochre sits the logo out — it is the weakest of the five on
-  cream and still appears in the splash cycle.
+  announcements — and instead **the pitch names them in their own colours**,
+  which is the same legend for no space at all, since the words were already
+  in the sentence. They are bolded as well as coloured: the tiles' own rule
+  (never colour by itself) applies to the copy too.
+- **The logo is `PA·V·IL·I·ON`** — uneven on purpose, because that is the only
+  split of eight letters that carries all five disciplines in tile order:
+  sienna, blue, black, ochre, green. Electricity's ochre is a *field* colour
+  on a tile, not ink, and lands near 2:1 on cream — as a single narrow `I`
+  between a black pair and a green one it read as a gap in the word, so the
+  logo and the prose both take the inverted set's already-documented
+  `#977712`. The tile's own ochre is untouched.
+- The pitch splits into two paragraphs at *"Will your pavilion stand above
+  the rest"*, and the CTA reads **Start the competition**.
 - **The seed box is gone.** Nobody outside the tests ever wanted to type one,
   and "blank for a fresh crowd" was explaining a control that had no
   audience. `startGame` still takes a seed; the smoke tests and rematch pass
