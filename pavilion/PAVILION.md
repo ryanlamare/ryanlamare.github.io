@@ -230,10 +230,22 @@ and what line goes under it, and types both into the admin page.
   trophy. Pinned in `test/archive.test.js`.
 - **A champion with no card still gets a trophy**, unengraved. The cabinet
   records who won, and must never depend on anyone having filled in a form.
-- **Emblems are lifted, never drawn** (`records/isotypes.js`): the game's five
-  disciplines plus sixteen from the LER 565 decks, which is the house rule for
-  pictograms. One module, two consumers — the admin picker shows the same grid
-  the cabinet will render, so what Ryan clicks is what students see.
+- **Emblems come from `records/isotypes.js`**: twenty-one to start with — the
+  game's five disciplines plus sixteen from the LER 565 decks, since the house
+  rule is to copy a pictogram rather than redraw one. One module, two consumers:
+  the admin picker shows the same grid the cabinet renders, so what Ryan clicks
+  is what students see.
+- ⚖️ **A champion can ask for an emblem that doesn't exist yet** (Ryan,
+  2026-08-13) — *"what isotype would you like and we'll create it for you"*. At
+  one champion a cohort that is affordable, and it is the most personal thing on
+  the site. Draw it, add it to the module with an `em-` prefix, and it appears
+  in the picker; the recipe and the silhouette rules are at the top of that
+  file. The stored card is only an id, so a bespoke emblem is exactly as durable
+  as a built-in one.
+- ⚠️ **The cabinet falls back to a plain cup for an emblem it doesn't have**, so
+  a card saved before the drawing is deployed is unengraved rather than broken.
+  A `<use>` pointing at a missing symbol fails silently and would otherwise
+  leave an empty bowl with no clue why.
 - Seasons without a champion show a **ghosted plinth** — "To be won". Anticipation
   is free and an empty cabinet is not the same as a finished one.
 

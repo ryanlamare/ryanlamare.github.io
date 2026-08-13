@@ -11,6 +11,30 @@
 //
 // The symbols paint with `currentColor` and knock out with `--t-bg`, so the
 // colour is set by whatever encloses them (the trophy bowl, in practice).
+//
+// ---------------------------------------------------------------------------
+// **Drawing one for a champion who asks.** This is expected, not exceptional:
+// one champion a cohort, so a bespoke emblem is an afternoon's luxury the
+// project can easily afford, and it is the single most personal thing on the
+// site. Ask them what they want on their cup; draw it; add it here.
+//
+//   1. Add a `<symbol id="em-<thing>" viewBox="0 0 24 24">` to SPRITE below.
+//      The `em-` prefix marks it as drawn for this cabinet rather than lifted.
+//   2. Add `{ id: 'em-<thing>', label: '<Thing>' }` to EMBLEMS.
+//   3. Push, then set it on the card in the admin page — in that order. The
+//      cabinet falls back to a plain cup for an id it doesn't have, so a card
+//      saved first is not broken, just unengraved until the deploy lands.
+//
+// ⚠️ **It has to work as a silhouette.** These are isotypes, not illustrations:
+// one solid shape in `currentColor`, holes knocked out with
+// `fill="var(--t-bg, transparent)"`, no gradients, no strokes thinner than
+// about 1.5 units, no text. It is rendered at 36px inside a gold bowl and must
+// stay legible in greyscale — which is the same rule the tiles follow, and the
+// reason the board is readable to a colour-blind player at all.
+//
+// A request that cannot be a silhouette (a portrait, a logo, a word) is worth
+// pushing back on with a suggestion rather than accepting badly: "a lighthouse"
+// works, "my dog Biscuit" works as a dog, a signature does not.
 
 export const EMBLEMS = [
   { id: 'ic-art', label: 'Art' },

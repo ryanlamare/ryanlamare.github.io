@@ -20,7 +20,7 @@
 
 import { defaultRelayUrl, apiBase } from '../net.js';
 import { standings, byName, records, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
-import { SPRITE } from './isotypes.js';
+import { SPRITE, EMBLEMS } from './isotypes.js';
 
 const LEAGUE = document.body.dataset.league;
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
@@ -460,6 +460,16 @@ function trophy(c) {
 // rather than an isotype: the emblem sits in the bowl, and an unclaimed trophy
 // is the same cup with an empty one.
 function cup(emblem) {
+  // ⚠️ Render only an emblem this build actually has. A card can name one that
+  // isn't here — a bespoke emblem drawn for a champion is added to the repo,
+  // and the card can be saved before that lands (or the symbol renamed years
+  // later). A `<use>` pointing at nothing fails *silently*, which would leave
+  // an empty bowl and no clue why; a plain cup is the honest fallback.
+  const known = EMBLEMS.some((e) => e.id === emblem) ? emblem : null;
+  return cupSvg(known);
+}
+
+function cupSvg(emblem) {
   return `<svg class="cupfig" viewBox="0 0 100 116" role="img" aria-hidden="true">
     <path class="handle" d="M22 26 C6 26 6 54 24 56" />
     <path class="handle" d="M78 26 C94 26 94 54 76 56" />
