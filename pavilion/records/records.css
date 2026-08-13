@@ -23,6 +23,13 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* The same rule the board carries (style.css, playtest 2026-08-12): the page
+   itself never scrolls sideways, whatever a table does inside .scroller. Belt
+   and braces rather than a fix for anything observed — the layout measures
+   clean at 390px — but a long name in a nowrap cell is exactly the kind of
+   thing that turns a page into rails on a phone, and this costs one line. */
+html, body { max-width: 100%; overflow-x: hidden; }
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: var(--ink);
@@ -74,8 +81,11 @@ label.pick { font-size: 13px; color: var(--muted); margin-left: auto; display: f
 
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 18px; }
 
-.scroller { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+/* The min-width is for the small end of the range — below about 360px the
+   table would otherwise squash the score columns rather than scroll, and a
+   scrollable table is more readable than an unreadable one. */
+.scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; min-width: 320px; font-variant-numeric: tabular-nums; }
 th, td { text-align: right; padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 th:nth-child(2), td:nth-child(2) { text-align: left; width: 99%; white-space: normal; }
 th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
