@@ -40,6 +40,23 @@
      this board animates constantly. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='72' height='72' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
 
+  /* Display type for the big moments only — the logo, the room code, the
+     month splashes, the winner's line. Everything functional stays in the
+     UI sans, because a board is read at a glance and a serif costs you
+     that. Installed faces only, never an @import: brand.css pulls two
+     webfonts and a phone in a breakout room should not wait on Google
+     Fonts to see a board (memo, The copy-and-art pass). So this is a
+     *stack*, not a font — a Mac gets Didot, which is the 1890s poster
+     face; Windows falls to Georgia; everything else gets its own serif.
+     The look shifts a little device to device, which is fine for four
+     decorative moments and would not be for the board.
+
+     ⚠️ This front-runs the period-type decision the memo defers to the
+     decoration pass. It is one custom property and four rules — revert by
+     deleting them. */
+  --display: "Didot", "Bodoni 72", "Playfair Display", "Hoefler Text",
+             Georgia, "Times New Roman", serif;
+
   --tile: 46px;
   --mini: 34px;
   --radius: 10px;
@@ -59,7 +76,13 @@ html, body { height: 100%; max-width: 100%; overflow-x: hidden; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: radial-gradient(1200px 800px at 20% -10%, #F4EEE0, var(--paper));
+  /* The same grain the tiles carry, laid over the cream so the page reads
+     as stock rather than as a flat fill. Same single repeated image, so it
+     costs nothing beyond what the tiles already loaded, and soft-light
+     keeps it to a texture rather than a haze. */
+  background-color: var(--paper);
+  background-image: var(--grain), radial-gradient(1200px 800px at 20% -10%, #F4EEE0, var(--paper));
+  background-blend-mode: soft-light, normal;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
@@ -93,7 +116,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .setup-card h1 {
-  font-size: 54px; letter-spacing: -.02em; margin: 8px 0 6px;
+  font-family: var(--display);
+  font-size: 62px; letter-spacing: .02em; margin: 8px 0 6px;
 }
 h1 .r, .r { color: var(--red); }
 
@@ -214,7 +238,8 @@ legend {
 /* The code is read aloud across a Zoom breakout room, so it is the largest
    thing on the screen and the words break rather than shrink. */
 .room-code {
-  font-size: clamp(30px, 7vw, 50px); letter-spacing: -.01em;
+  font-family: var(--display);
+  font-size: clamp(32px, 7.4vw, 54px); letter-spacing: .01em;
   line-height: 1.05; margin: 2px 0 10px; word-break: break-word;
   color: var(--red);
 }
@@ -588,9 +613,10 @@ button.tile:hover { transform: translateY(-3px); }
 #banner.splash {
   background: var(--card); color: var(--ink);
   border: 1px solid var(--line);
-  font-size: clamp(28px, 6vw, 56px);
-  letter-spacing: -.02em; text-align: center;
-  padding: 20px 40px;
+  font-family: var(--display);
+  font-size: clamp(30px, 6.4vw, 60px);
+  letter-spacing: .01em; text-align: center;
+  padding: 22px 44px;
   max-width: min(92vw, 900px);
 }
 /* The month number on its own line, and bigger than the words above it. */
@@ -628,7 +654,8 @@ button.tile:hover { transform: translateY(-3px); }
   text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
 }
 .champion {
-  font-size: 40px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 2px;
+  font-family: var(--display);
+  font-size: 44px; font-weight: 700; letter-spacing: 0; margin-bottom: 2px;
 }
 /* The winner's line is a whole sentence, so it steps down from the two-word
    size — and the name is the one thing in colour. */

@@ -253,8 +253,20 @@ visible cascade back to the gate; a completed aisle lighting up cell by cell; a
 game-ending gallery sweeping across; the opening-day finale with the winner's
 pavilion taking the spotlight.
 
-**Fair imagery is the obvious next seam** (Ryan, 2026-08-12) and is
-deliberately deferred to the achievements-and-decoration pass, once the rules
+**Period type landed early** (2026-08-13, Ryan inviting stylistic play at the
+end of the third playtest) — the one piece of the decoration pass below that
+did *not* wait, because it costs nothing. `--display` in `style.css` is a
+**stack of installed faces, never an `@import`**: a Mac resolves it to Didot,
+the 1890s poster face; Windows falls to Georgia; everything else gets its own
+serif. It dresses exactly four moments — the logo, the room code, the month
+and Fair-opening splashes, and the winner's line — and nothing functional,
+because a board is read at a glance and a serif costs you that. The size floor
+is the same lesson the First Call token taught: a Didone's hairlines die small,
+so anything under ~30px stays in the UI sans. The page also picks up the tiles'
+own grain at `soft-light`, so the cream reads as stock rather than a fill.
+
+The rest of the **Fair imagery is the obvious next seam** (Ryan, 2026-08-12)
+and stays deferred to the achievements-and-decoration pass, once the rules
 and structure are settled — a pavilion that visibly fills as the board does, the
 White City behind it, medals and ribbons on the awards screens, period type
 throughout. Recorded here so it isn't lost, not so it
