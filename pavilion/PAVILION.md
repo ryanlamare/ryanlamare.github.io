@@ -184,11 +184,16 @@ the weeks qualify and the last session decides.
   four reach the semis. `teaching/ler565/week6/live/bracket.html` already runs a
   round-robin group stage with standings and a seeded knockout; it does not yet
   read the archive.
-- **Pairing scales with the class**: groups of four up to about sixteen students,
-  Swiss pairing above that (three rounds, seeded from qualifying, equal records
-  paired together). Same five rounds either way — only the pairing method
-  changes, and the tool should pick it from the class size rather than Ryan
-  deciding on the day.
+- ⚖️ **No seeding — cut by Ryan, 2026-08-13, and the reason is the good one.**
+  The design had the season's points decide week 6's pairings. He dropped it:
+  *"having a class list showing the standings is cool and zero stakes, which is
+  good bc even the lowest ranked student can still win the cup."* That is worth
+  more than a better-tested semi-final — **the table stops being a verdict the
+  moment it decides nothing**, which is exactly what lets it be published in
+  full (see *The class table*). Anyone in the room can win the Cup.
+- **Pairing is therefore just pairing**: three rounds, drawn rather than seeded.
+  The only rule it needs is *don't pair the same two people twice* — which is a
+  handful of lines, not a seeding system. Do not rebuild the seeding.
 - ⚠️ **Odd numbers need no byes** — Pavilion plays two, three or four, and a
   three-player game scores 3/1/1 for the same nine-point maximum as three
   two-player games. Nobody ever sits out a round, which a chess-style bracket
@@ -427,9 +432,10 @@ mailing list rather than a class.
 Still to build, all of it more queries over `stats.js`: the **pre-game splash**
 and **post-game screen** (`headToHead` and `movement` exist and are tested, and
 nothing renders them yet), the **instructor live board**, the **Bulletin**, the
-**challenge ladder**, and the two pieces the restructure added — **seeding the
-last session from qualifying** and **wiring the bracket to the archive** so
-results are not typed in while the same games are recording themselves.
+**challenge ladder**, and the piece the restructure left — **wiring the bracket
+to the archive**, so week 6's results are not typed into a page while the same
+games are recording themselves. (Seeding was the other one, and it is cut — see
+*League, cup, awards*.)
 
 ---
 
