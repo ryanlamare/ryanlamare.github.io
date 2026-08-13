@@ -192,13 +192,25 @@ must never re-implement rules; legality always comes from `legalMoves`.
 
 Two-device play goes through `net.js` (transport) and `relay/`
 (`PROTOCOL.md` is the wire format, `README.md` is how to run it). The relay
-**never runs the engine** — a game is `seed + move list`, so clients decide
-every rule question identically and the server only orders messages and stamps
-who sent them. `relay/room.js` is one state machine shared by the laptop relay
-and the Cloudflare Worker; change the protocol there, not twice. After touching
-any of it run `test/relay.test.js` (headless clients over real WebSockets) and
+**never runs the engine during play** — a game is `seed + move list`, so clients
+decide every rule question identically and the server only orders messages and
+stamps who sent them. `relay/room.js` is one state machine shared by the laptop
+relay and the Cloudflare Worker; change the protocol there, not twice.
+
+Once a game is **over**, `relay/result.js` replays it through the same
+`engine.js` and derives the winner — which is a different job, and the one that
+makes an archived result unforgeable. `relay/archive.js` holds the term, the
+roster, every stored game and the API's one route table (shared by both hosts
+the same way `room.js` is); `admin/` is the instructor's page, behind one
+`ADMIN_SECRET`. **Nobody reports a result, including the instructor**, and a
+game records only when a term is set and every seat picked their name off the
+roster — everything else plays identically and simply doesn't record.
+
+After touching any of it run `test/relay.test.js` (headless clients over real
+WebSockets), `test/archive.test.js` (results, roster, storage, the API) and
 `test/online.test.js` (the real UI in headless Chrome, including a mid-game
-disconnect). Both start their own relay, so nothing needs to be running first.
+disconnect). All three start their own relay, so nothing needs to be running
+first.
 
 ## Everything else
 

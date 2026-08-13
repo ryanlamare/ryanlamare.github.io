@@ -234,6 +234,32 @@ export function defaultRelayUrl(loc, override = null) {
   return PRODUCTION_RELAY;
 }
 
+// The archive's HTTP API sits on the same host as the relay, one scheme over
+// (relay/worker.js). `wss://…` is `https://…/api/…`; a laptop's `ws://` is
+// `http://`, which is what lets a LAN playtest use the same code path.
+export function apiBase(wsUrl) {
+  return String(wsUrl).replace(/^ws/, 'http').replace(/\/+$/, '') + '/api';
+}
+
+// Who is in the class, and is a term running? Public on purpose — a login here
+// would defeat the whole point (PAVILION.md, Identity: no accounts, ever).
+//
+// It fails soft. The game is also a public page with no course behind it, and a
+// relay that has never had a roster set is the normal case there: no session
+// means you type your name, exactly as before this existed.
+export async function fetchSession(wsUrl, { timeoutMs = 4000 } = {}) {
+  if (!wsUrl) return null;
+  try {
+    const stop = AbortSignal.timeout ? AbortSignal.timeout(timeoutMs) : undefined;
+    const res = await fetch(`${apiBase(wsUrl)}/session`, { signal: stop, cache: 'no-store' });
+    if (!res.ok) return null;
+    const s = await res.json();
+    return s && s.term && Array.isArray(s.roster) && s.roster.length ? s : null;
+  } catch {
+    return null; // offline, no relay, an old relay without the API — all fine
+  }
+}
+
 // Self-reported, for the clock-fairness question the memo wants answered from
 // data rather than guessed (PAVILION.md, Mobile and devices).
 export function deviceKind() {

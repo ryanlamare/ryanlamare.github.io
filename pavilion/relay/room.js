@@ -25,14 +25,31 @@ export class Room {
     this.seed = opts.seed || freshSeed();
     this.players = clampPlayers(opts.players);
     this.clockMs = clampClock(opts.clockMs);
-    this.seats = []; // {seat, name, device, connected, id}
+    // What this game is *for*. The archive decides the final answer — an
+    // instructor at the table makes it an exhibition whatever was asked for —
+    // but the room carries the request so the week 6 knockout can say `cup`
+    // without anybody retagging afterwards (relay/archive.js, classify).
+    this.mode = cleanMode(opts.mode);
+    // ⚖️ The pre-game splash is an intervention, not decoration (PAVILION.md):
+    // showing head-to-head history makes the shadow of the future explicit, and
+    // showing it to some pairs and not others is a clean in-class comparison.
+    // Without a per-room flag from day one that comparison is never clean.
+    this.splashHistory = opts.splashHistory !== false;
+    this.seats = []; // {seat, name, pid, device, connected, id}
     this.started = false;
     this.startedAt = null;
     this.moves = []; // {seat, move, at} — index is the ply
     this.ended = null; // {ending, flagged?, result?}
+    // undefined = not decided yet; null = decided not to archive; else the
+    // receipt (build step 5). Never the room's own opinion of the score.
+    this.recorded = undefined;
     this.hostId = null;
     this.conns = new Map(); // conn -> seat id (string) or null for a spectator
     this.lastTouched = Date.now();
+    // The room stays engine-free (PROTOCOL.md, "The one idea"). `onEnded` is
+    // how a *host* — the Durable Object, the dev relay — gets told a game
+    // finished, so it can replay and archive it somewhere else entirely.
+    this.hooks = opts.hooks || {};
   }
 
   // --- lifecycle ----------------------------------------------------------
@@ -44,12 +61,19 @@ export class Room {
     if (opts.players != null) this.players = clampPlayers(opts.players);
     if (opts.clockMs != null) this.clockMs = clampClock(opts.clockMs);
     if (opts.seed) this.seed = String(opts.seed).slice(0, 40);
+    if (opts.mode != null) this.mode = cleanMode(opts.mode);
+    if (opts.splashHistory != null) this.splashHistory = !!opts.splashHistory;
   }
 
   open(conn, hello = {}) {
     this.lastTouched = Date.now();
     const name = cleanName(hello.name);
     const device = cleanDevice(hello.device);
+    // Who this is on the roster, if there is a roster (PAVILION.md, Identity).
+    // The relay does not verify it — it cannot, and the security model is that
+    // you can see them — but the archive will only record a game whose seats
+    // all match a roster entry, so a made-up id records nothing.
+    const pid = cleanPid(hello.pid);
 
     // A resume token always wins: reconnecting is allowed into a full room and
     // into a started game, which is the whole point of §11's "reconnect first".
@@ -57,6 +81,7 @@ export class Room {
     if (known) {
       known.connected = true;
       if (name) known.name = name;
+      if (pid) known.pid = pid;
       known.device = device;
       this.conns.set(conn, known.id);
       this.sendWelcome(conn, known);
@@ -77,6 +102,7 @@ export class Room {
     const seat = {
       seat: this.seats.length,
       name: name || `Player ${this.seats.length + 1}`,
+      pid,
       device,
       connected: true,
       id: crypto.randomUUID(),
@@ -163,6 +189,9 @@ export class Room {
         this.seed = freshSeed();
         this.moves = [];
         this.ended = null;
+        // The previous game is already in the archive under its own id; this
+        // is a new one, and `startedAt` is what tells them apart.
+        this.recorded = undefined;
         this.startedAt = Date.now();
         this.broadcast({
           t: 'started',
@@ -204,21 +233,51 @@ export class Room {
         if (!seat || !this.started || this.ended) return;
         const flagged = Number(msg.seat);
         if (!(flagged >= 0 && flagged < this.seats.length)) return;
-        this.ended = { ending: 'timeout', flagged };
-        this.broadcast({ t: 'ended', ...this.ended });
+        this.finish({ ending: 'timeout', flagged });
         return;
       }
 
       case 'over': {
         if (!seat || !this.started || this.ended) return;
-        this.ended = { ending: 'natural', result: msg.result || null };
-        this.broadcast({ t: 'ended', ...this.ended });
+        // ⚠️ `msg.result` is the client's claim and is kept only so a bug
+        // report can show what it thought. It is **advisory** from build step
+        // 5 on: the archive replays the move list and derives its own.
+        this.finish({ ending: 'natural', result: msg.result || null });
         return;
       }
 
       default:
         return;
     }
+  }
+
+  // --- ending and archiving -------------------------------------------------
+
+  // One game, one ending: the first claim wins and later ones are ignored
+  // (PROTOCOL.md). The `ended` broadcast goes out immediately, because both
+  // clients already have their own engine's answer and are not waiting on us.
+  // The archive receipt follows separately, whenever storage catches up.
+  finish(ended) {
+    if (this.ended) return;
+    this.ended = ended;
+    this.broadcast({ t: 'ended', ...this.ended });
+    try {
+      this.hooks.onEnded?.(this);
+    } catch (err) {
+      // A storage failure must never take the game down with it — the players
+      // have finished and the move list is still in the room either way.
+      console.error('[room] onEnded', err);
+    }
+  }
+
+  // Called back by the host once the archive has decided. `recorded: false` is
+  // a normal outcome, not a failure — no term, or somebody typed their name
+  // rather than picking it off the roster — and it carries `why`, because a
+  // game that quietly didn't count is the worst version of this.
+  setRecorded(outcome) {
+    if (this.recorded) return;
+    this.recorded = outcome || { recorded: false };
+    this.broadcast({ t: 'recorded', ...this.recorded });
   }
 
   // --- helpers ------------------------------------------------------------
@@ -234,11 +293,14 @@ export class Room {
           seed: this.seed,
           players: this.players,
           clockMs: this.clockMs,
+          mode: this.mode,
+          splashHistory: this.splashHistory,
           seats: this.roster(),
           started: this.started,
           startedAt: this.startedAt,
           moves: this.moves,
           ended: this.ended,
+          recorded: this.recorded ?? null,
         },
         serverNow: Date.now(),
       })
@@ -246,7 +308,7 @@ export class Room {
   }
 
   roster() {
-    return this.seats.map(({ seat, name, device, connected }) => ({ seat, name, device, connected }));
+    return this.seats.map(({ seat, name, pid, device, connected }) => ({ seat, name, pid, device, connected }));
   }
 
   broadcast(obj) {
@@ -285,20 +347,27 @@ export class Room {
       seed: this.seed,
       players: this.players,
       clockMs: this.clockMs,
+      mode: this.mode,
+      splashHistory: this.splashHistory,
       seats: this.seats,
       started: this.started,
       startedAt: this.startedAt,
       moves: this.moves,
       ended: this.ended,
+      // Left undefined — and so absent from the JSON — while the archive has
+      // not answered, which is what lets a host that was evicted mid-write
+      // tell "not decided" from "decided not to record".
+      recorded: this.recorded,
       hostId: this.hostId,
       lastTouched: this.lastTouched,
     };
   }
 
-  static from(obj) {
+  static from(obj, opts = {}) {
     const r = new Room(obj.code, obj);
     Object.assign(r, obj);
     r.conns = new Map();
+    r.hooks = opts.hooks || {};
     // Nobody is connected to a room that has just been rebuilt from storage —
     // whatever the snapshot said, those sockets are gone.
     r.seats.forEach((s) => (s.connected = false));
@@ -324,6 +393,20 @@ function cleanName(s) {
 
 function cleanDevice(s) {
   return ['laptop', 'phone', 'tablet'].includes(s) ? s : 'laptop';
+}
+
+// A roster id, in the shape relay/archive.js mints them. Validated rather than
+// imported, because archive.js imports the engine and this file must not
+// (PROTOCOL.md, "The one idea") — the duplication is the price of that line.
+function cleanPid(s) {
+  return typeof s === 'string' && /^[a-z0-9][a-z0-9-]{0,40}$/.test(s) ? s : null;
+}
+
+// Only what a host may *ask* for. `exhibition` is never requested — it is
+// derived from the roster, because an instructor at the table is what makes a
+// game an exhibition (relay/archive.js, classify).
+function cleanMode(m) {
+  return ['league', 'cup'].includes(m) ? m : 'league';
 }
 
 // Shape only — not legality. The relay has no engine and this check exists so

@@ -1,4 +1,4 @@
-# Pavilion relay protocol — v1
+# Pavilion relay protocol — v1.1
 
 The wire format between two (or three, or four) Pavilion clients and the room
 they share. Build step 4. Written before the code so the dev relay and the
@@ -68,7 +68,7 @@ recycled next week without replaying last week's bag.
 
 | `t` | Fields | Meaning |
 |---|---|---|
-| `hello` | `name`, `device`, `id?`, `players?`, `clockMs?`, `seed?` | Sit down. On `/new` the creator's `players`/`clockMs`/`seed` configure the room; on `/room/<CODE>` they are ignored. `id` is a resume token (below). |
+| `hello` | `name`, `device`, `pid?`, `id?`, `players?`, `clockMs?`, `seed?`, `mode?`, `splashHistory?` | Sit down. On `/new` the creator's `players`/`clockMs`/`seed`/`mode`/`splashHistory` configure the room; on `/room/<CODE>` they are ignored. `id` is a resume token (below); `pid` is who you are on the roster (v1.1). |
 | `start` | — | Host only. Freeze the seats and begin. |
 | `rematch` | — | Host only, after a game. Same seats, same room, fresh seed and an empty log. Arrives as another `started`. |
 | `move` | `ply`, `move` | One complete turn (§10). `ply` must equal the number of moves already recorded; anything else is a race and is rejected. |
@@ -86,7 +86,8 @@ recycled next week without replaying last week's bag.
 | `started` | `seats`, `seed`, `players`, `clockMs`, `at` | The game is on. Seats are frozen and final. |
 | `move` | `ply`, `seat`, `move`, `at` | Broadcast to **everyone including the sender**. `seat` is stamped by the server, never taken from the client. |
 | `hash` | `ply`, `seat`, `h` | Relayed for cross-checking. |
-| `ended` | `ending`, `flagged?`, `result?` | `natural` \| `timeout` \| `void`. First one wins; later claims are ignored. |
+| `ended` | `ending`, `flagged?`, `result?` | `natural` \| `timeout` \| `void`. First one wins; later claims are ignored. `result` is the *client's* claim, kept for bug reports only. |
+| `recorded` | `recorded`, `why?`, `id?`, `term?`, `mode?`, `names?`, `result?` | The archive's receipt (v1.1), after `ended`. `result` here is the **server's**, derived by replay. `recorded: false` is normal — see below. |
 | `presence` | `seat`, `connected` | A player's socket opened or closed. Not a result — see §11, reconnect first. |
 | `error` | `code`, `msg` | `no-room`, `room-full`, `started`, `bad-ply`, `not-host`, `not-seated`. Fatal unless noted below. |
 | `pong` | — | Keepalive reply. |
@@ -94,12 +95,18 @@ recycled next week without replaying last week's bag.
 ### The seat object
 
 ```js
-{ seat: 0, name: 'Sam', device: 'laptop', connected: true }
+{ seat: 0, name: 'Sam', pid: 'sam-okafor', device: 'laptop', connected: true }
 ```
 
 `device` is `laptop` \| `phone` \| `tablet`, self-reported from the client's own
 viewport. It exists to answer the phone-fairness question the memo raises
 (*Mobile and devices*) — record it, decide later.
+
+`pid` is the player's **roster id** (v1.1), or `null` when they typed a name
+instead of picking one. The relay does not verify it and cannot: the security
+model is *that you can see them* (`PAVILION.md`, *Identity*). What it does
+instead is refuse to archive a game unless **every** seat's `pid` matches a
+roster entry, so a made-up id records nothing rather than recording a lie.
 
 ## Sequences
 
@@ -195,19 +202,52 @@ alone reconstructs both clocks. Nothing else about the clock is transmitted.
   `started`.
 - A `move` from a spectator — `error: not-seated`.
 
-## Not in v1, deliberately
+## The archive — v1.1, added at build step 5
 
-Everything on this list is build step 5's problem, and none of it changes the
-wire format above:
+Three additions, all backward compatible: an old client that sends no `pid` and
+ignores `recorded` still plays a complete game. That matters here because the
+site and the Worker deploy separately — pushing to `main` publishes the game,
+but the relay only moves when you deploy it.
 
-- **Persistence.** The dev relay forgets rooms when it exits and the Worker's
-  Durable Object holds them in memory; archiving the finished game record is
-  step 5.
-- **Identity.** No roster, no name-picker, no instructor auth. You type your
-  name.
-- **Replay-derived results.** The server records the `result` the clients agree
-  on rather than deriving it. Step 5 imports `engine.js` into the Worker and
-  derives it — the same module, per *Architecture* — at which point `over`
-  becomes advisory and the archive becomes unforgeable.
+**Nobody reports a result.** `over` carries the client's `result` and it is now
+**advisory**: when a game ends, the server replays `seed + move list` through
+the same `engine.js` the clients ran and reads the winner off the final state
+(`relay/result.js`). Faking a result would mean fabricating a legal move
+sequence your opponent's client independently corroborated — a two-person
+conspiracy, in a class of fourteen. A claim the moves do not support does not
+become a result: it is archived as `void`, with the reason kept, because a game
+that cannot be reproduced is a bug report.
+
+**`recorded` is a receipt, not a step in the game.** It arrives after `ended`,
+because storage is slower than a broadcast and the players are not waiting on
+it. `recorded: false` is a perfectly normal outcome and carries `why` — no term
+is running, or somebody typed their name rather than picking it off the roster.
+The game is a public page with no course branding, so most games that ever
+finish are not meant to be archived.
+
+```text
+C→S  {t:'over', result:{…}}
+S→*  {t:'ended', ending:'natural', result:{…}}       (the claim, as before)
+S→*  {t:'recorded', recorded:true, id:'ferris-norway-1786…-tesla-ceylon',
+      term:'2026-fall', mode:'league', names:['Sam','Alex'],
+      result:{scores:[61,58], winner:0, points:[3,1], …}}
+```
+
+**The room carries `mode` and `splashHistory`.** `mode` is `league` (the
+default) or `cup`, asked for by whoever opened the room; `exhibition` is never
+requested, because it is *derived* — an instructor on the roster at the table is
+what makes a game an exhibition. `splashHistory` is the per-room show-history
+flag the memo wants from day one, so that showing head-to-head history to some
+pairs and not others stays a clean in-class comparison.
+
+The archive itself is not on this wire at all. It is an HTTP API on the same
+host — `/api/session` for the roster, `/api/admin/*` behind the instructor's
+secret — and `relay/archive.js` holds its one route table, the way `room.js`
+holds the room's one state machine.
+
+## Not in v1.1, deliberately
+
 - **Spectating and the instructor board.** The protocol already broadcasts
   everything a spectator would need; nothing consumes it yet.
+- **The league table, the stats screens and the Record Book.** All queries over
+  the archive, and all build step 6. Nothing here changes for them.

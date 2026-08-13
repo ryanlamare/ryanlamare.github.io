@@ -409,26 +409,64 @@ are deployment identifiers with live rooms behind them (`relay/README.md`).
 
 ### The game record
 
-What the archive stores — one object per game, kilobytes:
+What the archive stores — one object per game, kilobytes. **Built and written by
+the server**, never by a client (build step 5, `relay/result.js`):
 
 ```js
 {
   v:      1,                    // engine/rules version; replays use the matching engine
+  id:     'ferris-norway-1786…-tesla-ceylon',
   term:   '2027-fall',          // cohort key — powers the all-time Record Book
-  mode:   'league',             // 'league' | 'cup' | 'exhibition' | 'practice'
+  mode:   'league',             // 'league' | 'cup' | 'exhibition' | 'practice' | 'casual'
+  room:   'FERRIS-NORWAY',
   seed:   'a3f9c2…',
-  seats:  ['sam', 'alex'],      // join order; seat 0 per §3
-  config: { clockMs: 300000, splashHistory: true },
+  players: 2,
+  seats:  ['sam', 'alex'],      // roster ids, join order; seat 0 per §3
+  names:  ['Sam', 'Alex'],      // kept so a record reads on its own
   device: ['laptop', 'phone'],  // per seat, for the clock-fairness question
-  moves:  [ /* Phase A moves only, in order */ ],
-  result: { scores: [61, 58], winner: 0, ending: 'natural' }
-                                // ending: 'natural' | 'timeout' | 'void'
+  config: { clockMs: 300000, splashHistory: true },
+  startedAt: 1786…, endedAt: 1786…,
+  moves:  [ { seat, move, at }, … ],   // Phase A moves only, in order
+  result: {
+    ending: 'natural',          // 'natural' | 'timeout' | 'void'
+    scores: [61, 58],
+    rows:   [2, 1],             // complete galleries, for §8's tiebreak
+    ranks:  [1, 2],             // 1-based, ties share a rank
+    leaders:[0],
+    winner: 0,                  // -1 = draw among leaders
+    flagged: null,              // which seat ran out of time, if any
+    points: [3, 1],             // §8 league points — null when void
+    plies:  99,
+    hash:   '9f3c1a02',         // the replay's own fingerprint (§9)
+  },
 }
 ```
 
 ⚖️ `mode` matters: **exhibition** (instructor demo) and **practice** (vs the
 bot) games are archived but excluded from the league, records and awards by
-default.
+default. **`casual`** was added at build step 5 — the game is a public page with
+no course branding, so a mode is needed for a record that should not count.
+`classify` never writes it (an unrostered game does not record at all); it
+exists so the instructor can retag a game out of the league by hand.
+
+⚖️ **A record is only ever written for a game whose every seat matches a roster
+entry**, and only while a term is configured. Everything else plays exactly the
+same and simply does not record. This is what keeps the archive equal to the
+course's record rather than to whoever found the URL.
+
+⚖️ **Nobody reports a result, including the instructor.** The server replays
+`seed + move list` and reads the winner off the final state; the `over` message
+a client sends is advisory and its claimed scores are discarded. A claim the
+move list does not support — a natural end the moves never reach, a timeout
+after the game had already finished, a move list that no longer replays — is
+archived as **void with the reason kept**, because a game that cannot be
+reproduced is a bug report, not a result. Un-voiding re-derives from the moves
+rather than restoring old numbers.
+
+⚖️ **A seat that flags is ranked last**, whatever the board says, and the others
+place on score and then §8's tiebreak. §11 says a timeout loses and the rulebook
+has nothing to say about three players one of whom ran out of time; this is the
+reading that matches chess and leaves the league points table unchanged.
 
 ## 11. Clocks
 

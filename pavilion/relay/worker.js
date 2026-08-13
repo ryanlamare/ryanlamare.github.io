@@ -1,37 +1,63 @@
 // Pavilion relay — the Cloudflare one, for the class.
 //
-// One Durable Object per room, holding the WebSockets and the move log; the
-// Worker in front only picks the room. Both run the same `room.js` as the
-// laptop relay, so this file is transport and storage, never protocol.
+// Two Durable Objects. One per **room**, holding the WebSockets and the move
+// log; and one **archive**, a singleton holding the term, the roster and every
+// game ever played. The Worker in front picks between them. Both rooms run the
+// same `room.js` as the laptop relay, so that half is transport and storage,
+// never protocol.
 //
 // Why this and not a free Node host (PAVILION.md, Open questions): the server
-// must eventually run the *same engine module* the clients do, and it must not
-// cold-start at class time. A Durable Object is warm, is addressed by name —
-// which a room code already is — and is a WebSocket endpoint on the free plan.
+// must run the *same engine module* the clients do, and it must not cold-start
+// at class time. A Durable Object is warm, is addressed by name — which a room
+// code already is — and is a WebSocket endpoint on the free plan.
 //
 //   npx wrangler dev      # local, at ws://localhost:8787 — same as dev-relay
 //   npx wrangler deploy   # then put the wss:// URL in ../net.js
+//   npx wrangler secret put ADMIN_SECRET    # once, before the admin page works
 //
-// Build step 4 does not import the engine here. Step 5 does: the DO replays
-// the move log to derive the winner itself, at which point a client's claimed
-// result stops being taken on trust.
+// Build step 5 is where the engine arrives (`result.js`, via the archive): a
+// finished game is replayed from `seed + move list` and the winner derived
+// here, so a client's claimed result stops being taken on trust.
 
 import { Room, roomCode } from './room.js';
+import { Archive, apiRoute } from './archive.js';
 
 // A room nobody has touched in this long is fair game for a new game to reuse
 // the code. A class runs for two hours; a term does not.
 const STALE_MS = 8 * 3600 * 1000;
+
+// One archive, addressed by a fixed name. Everything in it is a term away from
+// everything else, so there is never a reason for a second.
+const ARCHIVE_NAME = 'archive';
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/, '') || '/';
 
+    // The API is read from a page on another origin (ryanlamare.com) and the
+    // Worker is on workers.dev, so every answer needs CORS. Reads are public
+    // by design — a login on the roster would defeat the whole point
+    // (PAVILION.md, Identity) — and writes carry the instructor's secret.
+    if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }));
+
+    if (path.startsWith('/api/')) {
+      // ⚠️ An allow-list, not a prefix strip. The archive DO also answers
+      // `/record` — the route that writes a game — and that route must be
+      // reachable **only** from a room DO's stub fetch. Forwarding whatever
+      // arrives under /api/ would publish it and make the archive forgeable,
+      // which is the one property this whole design exists to have.
+      const route = path.slice('/api'.length);
+      const admin = route.startsWith('/admin/');
+      if (route !== '/session' && !admin) return cors(json({ error: 'not found' }, 404));
+      if (admin && !authorized(request, env)) return cors(json({ error: 'unauthorized' }, 401));
+
+      const stub = env.ARCHIVE.get(env.ARCHIVE.idFromName(ARCHIVE_NAME));
+      return cors(await stub.fetch(new Request(`https://archive${route}${url.search}`, request)));
+    }
+
     if (request.headers.get('Upgrade') !== 'websocket') {
-      return new Response(
-        JSON.stringify({ relay: 'pavilion', protocol: 1, ok: true }, null, 1),
-        { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } }
-      );
+      return cors(json({ relay: 'pavilion', protocol: 1, archive: true, ok: true }));
     }
 
     let code;
@@ -60,6 +86,68 @@ export default {
   },
 };
 
+// One shared secret, set with `wrangler secret put ADMIN_SECRET`. That is the
+// whole of instructor auth, and deliberately so: there is exactly one
+// instructor, and anything more is an account system for a class that was
+// promised it would never need one.
+function authorized(request, env) {
+  const secret = env.ADMIN_SECRET;
+  if (!secret) return false; // unset means the admin page is simply closed
+  const given = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  if (given.length !== secret.length) return false;
+  let diff = 0;
+  for (let i = 0; i < secret.length; i++) diff |= given.charCodeAt(i) ^ secret.charCodeAt(i);
+  return diff === 0;
+}
+
+function json(obj, status = 200) {
+  return new Response(JSON.stringify(obj, null, 1), {
+    status,
+    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+  });
+}
+
+function cors(res) {
+  const out = new Response(res.body, res);
+  out.headers.set('access-control-allow-origin', '*');
+  out.headers.set('access-control-allow-methods', 'GET, POST, OPTIONS');
+  out.headers.set('access-control-allow-headers', 'authorization, content-type');
+  out.headers.set('access-control-max-age', '86400');
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// The archive.
+
+// The class name is free to be a good one — unlike HeadcountRoom below, this
+// object has never been deployed, so there is nothing behind it to migrate.
+// Neutral rather than themed, for the reason rules spec §10 gives: the archive
+// outlives the theme, and the theme has already moved three times.
+export class GameArchive {
+  constructor(state) {
+    this.state = state;
+    this.archive = new Archive(state.storage);
+  }
+
+  // Transport only. Every route lives in `archive.js`'s one table, which
+  // dev-relay.js dispatches to as well — the same arrangement `room.js` has,
+  // and for the same reason. Who is *allowed* to reach a route was decided by
+  // the Worker above, before this object was ever addressed.
+  async fetch(request) {
+    const url = new URL(request.url);
+    const res = await apiRoute(this.archive, {
+      route: url.pathname.replace(/\/+$/, '') || '/',
+      method: request.method,
+      query: Object.fromEntries(url.searchParams),
+      body: request.method === 'POST' ? await request.json().catch(() => ({})) : {},
+    });
+    return json(res.body, res.status);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The rooms.
+
 // ⚠️ The class name and the Worker's name in wrangler.toml are **deployment
 // identifiers**, not the game's name. They stay `Headcount*` deliberately: the
 // relay is live at wss://headcount-relay.rlamare.workers.dev with games running
@@ -67,15 +155,40 @@ export default {
 // migration while renaming the Worker mints a second one at a second URL. The
 // theme lives in the copy layer; this is plumbing (PAVILION.md, Theme).
 export class HeadcountRoom {
-  constructor(state) {
+  constructor(state, env) {
     this.state = state;
+    this.env = env;
     this.room = null;
     // A deploy or an eviction must not lose a game in progress: the room comes
     // back from storage before any request is served.
     state.blockConcurrencyWhile(async () => {
       const saved = await state.storage.get('room');
-      if (saved) this.room = Room.from(saved);
+      if (saved) this.room = Room.from(saved, { hooks: this.hooks() });
     });
+  }
+
+  // The room stays engine-free and storage-free; this is the one thread back
+  // out to the archive (room.js, `finish`).
+  hooks() {
+    return { onEnded: (room) => this.state.waitUntil(this.archive(room)) };
+  }
+
+  async archive(room) {
+    try {
+      const stub = this.env.ARCHIVE.get(this.env.ARCHIVE.idFromName(ARCHIVE_NAME));
+      const res = await stub.fetch('https://archive/record', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(room.snapshot()),
+      });
+      room.setRecorded(await res.json());
+    } catch (err) {
+      console.error('[room] archive', err);
+      // The move list is still in the room and still in both clients. Say the
+      // truth rather than claim a record that isn't there.
+      room.setRecorded({ recorded: false, why: 'the archive could not be reached' });
+    }
+    this.persist();
   }
 
   async fetch(request) {
@@ -102,7 +215,7 @@ export class HeadcountRoom {
         server.close(1000, 'no room');
         return new Response(null, { status: 101, webSocket: client });
       }
-      this.room = new Room(code);
+      this.room = new Room(code, { hooks: this.hooks() });
     }
 
     let helloed = false;

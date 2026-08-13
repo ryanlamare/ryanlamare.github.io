@@ -20,12 +20,23 @@ import { createHash } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { Room, roomCode } from './room.js';
+import { Archive, MemoryStore, apiRoute } from './archive.js';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_FRAME = 1 << 20; // 1 MB — a Pavilion message is a few hundred bytes
 
 const rooms = new Map();
 const PORT = Number(process.argv[2]) || 8787;
+
+// The archive, in memory (build step 5). The Worker keeps it in a Durable
+// Object; here it lives for as long as the process does, which is right for a
+// playtest — set a term and a roster, play, read the record back, Ctrl-C.
+// Same `archive.js` either way, so a game that records here records there.
+const archive = new Archive(new MemoryStore());
+// One shared secret is the whole of instructor auth (worker.js). A dev tool
+// that demanded a real one would just get one typed into the source, so it has
+// a default and prints it.
+const ADMIN_SECRET = process.env.PAVILION_ADMIN_SECRET || 'dev';
 
 // ---------------------------------------------------------------------------
 // WebSocket framing.
@@ -138,8 +149,54 @@ function drain(conn, onText) {
 // ---------------------------------------------------------------------------
 // HTTP: a status page, and the upgrade.
 
+const CORS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, OPTIONS',
+  'access-control-allow-headers': 'authorization, content-type',
+};
+
 const server = createServer((req, res) => {
-  if (req.url === '/health' || req.url === '/') {
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, CORS).end();
+    return;
+  }
+
+  const url = new URL(req.url, 'http://localhost');
+  const path = url.pathname.replace(/\/+$/, '') || '/';
+
+  // The archive API, dispatched through the same route table the Worker uses
+  // (archive.js, apiRoute) so the admin page and the setup screen cannot tell
+  // a laptop relay from the class's.
+  if (path.startsWith('/api/')) {
+    const route = path.slice('/api'.length);
+    const admin = route.startsWith('/admin/');
+    // ⚠️ An allow-list, exactly as in worker.js: `/record` writes a game and
+    // must be reachable only from a finished room, never over HTTP.
+    if (route !== '/session' && !admin) {
+      res.writeHead(404, { ...CORS, 'content-type': 'application/json' });
+      res.end('{"error":"not found"}');
+      return;
+    }
+    const given = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    if (admin && given !== ADMIN_SECRET) {
+      res.writeHead(401, { ...CORS, 'content-type': 'application/json' });
+      res.end('{"error":"unauthorized"}');
+      return;
+    }
+    readBody(req).then(async (body) => {
+      const out = await apiRoute(archive, {
+        route,
+        method: req.method,
+        query: Object.fromEntries(url.searchParams),
+        body,
+      });
+      res.writeHead(out.status, { ...CORS, 'content-type': 'application/json', 'cache-control': 'no-store' });
+      res.end(JSON.stringify(out.body, null, 1));
+    });
+    return;
+  }
+
+  if (path === '/health' || path === '/') {
     const body = JSON.stringify(
       {
         relay: 'pavilion dev-relay',
@@ -150,6 +207,7 @@ const server = createServer((req, res) => {
           connected: r.conns.size,
           moves: r.moves.length,
           ended: r.ended?.ending || null,
+          recorded: r.recorded?.id || null,
         })),
       },
       null,
@@ -161,13 +219,32 @@ const server = createServer((req, res) => {
       // The game page is served from :8000 and this is :8787, so a fetch to
       // the health endpoint is cross-origin. WebSockets aren't, but the
       // status page is handy from the browser console.
-      'access-control-allow-origin': '*',
+      ...CORS,
     });
     res.end(body);
     return;
   }
   res.writeHead(404).end('not found');
 });
+
+function readBody(req) {
+  if (req.method !== 'POST') return Promise.resolve({});
+  return new Promise((resolve) => {
+    let text = '';
+    req.on('data', (c) => {
+      text += c;
+      if (text.length > MAX_FRAME) req.destroy(); // a roster, not an upload
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(text || '{}'));
+      } catch {
+        resolve({});
+      }
+    });
+    req.on('error', () => resolve({}));
+  });
+}
 
 server.on('upgrade', (req, socket) => {
   const key = req.headers['sec-websocket-key'];
@@ -193,7 +270,7 @@ server.on('upgrade', (req, socket) => {
   if (path === '/new') {
     let code = roomCode();
     while (rooms.has(code)) code = roomCode();
-    room = new Room(code, { seed: url.searchParams.get('seed') || null });
+    room = new Room(code, { seed: url.searchParams.get('seed') || null, hooks: { onEnded: archiveRoom } });
     rooms.set(code, room);
     log(`room ${code} opened`);
   } else if (path.startsWith('/room/')) {
@@ -248,6 +325,24 @@ server.on('upgrade', (req, socket) => {
   socket.on('error', bye);
 });
 
+// A game finished. Replay it, derive the winner, and store it — the same
+// `archive.record` the Durable Object calls (worker.js). Results record
+// themselves; there is no submit button anywhere in this project.
+async function archiveRoom(room) {
+  let outcome = { recorded: false, why: 'the archive failed' };
+  try {
+    outcome = await archive.record(room.snapshot());
+    log(
+      outcome.recorded
+        ? `${room.code}: recorded as ${outcome.id} (${outcome.mode})`
+        : `${room.code}: not recorded — ${outcome.why}`
+    );
+  } catch (err) {
+    log(`${room.code}: archive failed — ${err.message}`);
+  }
+  room.setRecorded(outcome);
+}
+
 function log(msg) {
   const d = new Date();
   const hh = String(d.getHours()).padStart(2, '0');
@@ -276,6 +371,7 @@ export function start(port = PORT, quiet = false) {
         console.log(`\n  Pavilion relay listening on ws://localhost:${p}`);
         if (ip) console.log(`  this LAN  → ws://${ip}:${p}   (phone / second laptop)`);
         console.log(`  status    → http://localhost:${p}/health`);
+        console.log(`  admin     → http://localhost:8000/pavilion/admin/  (secret: ${ADMIN_SECRET})`);
         console.log(
           `  Run ./serve.sh too, then open the game${ip ? ` at http://${ip}:8000/pavilion/` : ''}`
         );
@@ -286,6 +382,6 @@ export function start(port = PORT, quiet = false) {
   });
 }
 
-export { server, rooms };
+export { server, rooms, archive };
 
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) start(PORT);

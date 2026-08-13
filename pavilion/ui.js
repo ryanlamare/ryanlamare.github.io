@@ -26,7 +26,7 @@
 import * as E from './engine.js';
 import { greedyMove } from './bot.js';
 import { freshSeed } from './words.js';
-import { Relay, defaultRelayUrl, deviceKind } from './net.js';
+import { Relay, defaultRelayUrl, deviceKind, fetchSession } from './net.js';
 
 // Every nation sent a commissioner to Chicago to see its pavilion built.
 // Yours is across the way, hiring from the same crowd, and they have done
@@ -1015,20 +1015,69 @@ function endGame(ending, flaggedSeat = null) {
   $('#btn-setup').textContent = G.online ? 'Leave the room' : 'Home';
   $('#end-net').textContent =
     G.online && !host ? `Waiting for ${G.names[0]} to start a rematch — same room, a new crowd.` : '';
+  renderRecordLine();
 
   $('#end-modal').showModal?.();
 }
 
-// The game record (§10). Hot-seat games are exhibitions, bot games are
-// practice: archived either way, never counted toward a league. Online games
-// are exhibitions too until there is a roster and a term to count them
-// against — that is build step 5, and it is the server that will write the
-// record then, by replaying this same move list.
+// --- the archive's receipt --------------------------------------------------
+//
+// "Results record themselves. No submit button" (PAVILION.md). The server has
+// already replayed the move list and derived the winner itself by the time this
+// arrives — nobody, including the winner, reports anything. All the modal does
+// is say whether it landed, because a game that quietly didn't count is the
+// worst version of automatic results.
+
+function onRecorded(msg) {
+  if (!G || !G.online) return;
+  G.recorded = msg;
+  renderRecordLine();
+}
+
+function renderRecordLine() {
+  const el = $('#end-record');
+  if (!el) return;
+  const rec = G?.recorded;
+  // No term, no roster, nothing to say: the game is a public page and most of
+  // the people who ever open it are not in a class.
+  if (!rec || (!rec.recorded && !session)) {
+    el.textContent = '';
+    el.classList.add('hidden');
+    return;
+  }
+  el.classList.remove('hidden');
+  if (!rec.recorded) {
+    el.textContent = `Not recorded — ${rec.why}.`;
+    return;
+  }
+  if (rec.result?.ending === 'void') {
+    el.textContent = 'Recorded, but not counted — this game could not be verified.';
+    return;
+  }
+  if (rec.mode === 'exhibition') {
+    el.textContent = 'Recorded as an exhibition — exhibitions stay out of the league.';
+    return;
+  }
+  const pts = (rec.result?.points || []).map(
+    (p, i) => `${rec.names?.[i] || G.names[i]} ${p} ${p === 1 ? 'point' : 'points'}`
+  );
+  const where = rec.mode === 'cup' ? 'the Cup' : 'the league';
+  el.textContent = `Recorded to ${where}${pts.length ? ` — ${pts.join(', ')}` : ''}.`;
+}
+
+// The game record (§10) — for the Download-record button behind `?dev=1`, and
+// nothing else. ⚠️ **This is not what the archive stores.** A live game's real
+// record is written by the server, which replays this same move list and
+// derives the winner itself (relay/result.js); a client's copy is a bug report,
+// which is why `term` says so rather than naming a term it cannot know.
+//
+// Rehearsals against the bot never reach a relay, so they are never archived —
+// consistent with counting for nothing (PAVILION.md, The Training Ground).
 function gameRecord() {
   return {
     v: E.ENGINE_VERSION,
-    term: 'dev',
-    mode: G.cfg.bot ? 'practice' : 'exhibition',
+    term: 'client-export',
+    mode: G.cfg.bot ? 'practice' : G.online ? 'league' : 'exhibition',
     seed: G.seed,
     room: G.code || null,
     seats: G.names,
@@ -1095,7 +1144,7 @@ function clearSession() {
 
 // --- connecting -------------------------------------------------------------
 
-function connectRoom({ code, name, players, clockMs, id }) {
+function connectRoom({ code, name, pid = null, players, clockMs, id }) {
   if (net) net.leave();
   net = new Relay(RELAY_URL);
   net.id = id || null;
@@ -1126,16 +1175,19 @@ function connectRoom({ code, name, players, clockMs, id }) {
     renderLobby();
   });
   net.on('ended', onRemoteEnded);
+  // The archive's receipt, which arrives after the result because storage is
+  // slower than a broadcast and the players are not waiting on it.
+  net.on('recorded', onRecorded);
   net.on('status', renderNetChip);
   net.on('error', onNetError);
 
-  net.connect({ code, hello: { name, device: deviceKind(), players, clockMs } });
+  net.connect({ code, hello: { name, pid: pid || undefined, device: deviceKind(), players, clockMs } });
   showLobby();
 }
 
 function onWelcome(w) {
   netRoom = w.room;
-  saveSession({ code: w.code, id: w.you.id, name: lastTypedName });
+  saveSession({ code: w.code, id: w.you.id, name: lastTypedName, pid: me?.id || null });
   if (w.room.started) {
     // Rebuild rather than resume a half-remembered position: the game is
     // seed + move list, so replaying is both simpler and exactly right.
@@ -1148,6 +1200,9 @@ function onWelcome(w) {
       },
       true
     );
+    // A game that finished while we were away may already be in the archive;
+    // the receipt rides along in `welcome` so the modal is not blank.
+    G.recorded = w.room.recorded || null;
     resync(w.room, w.serverNow);
   } else {
     showLobby();
@@ -1443,19 +1498,124 @@ let setupMode = 'online'; // 'online' | 'practice'
 let setupJoin = false; // online: joining someone else's room rather than opening one
 let lastTypedName = '';
 
+// ---------------------------------------------------------------------------
+// Identity (build step 5, PAVILION.md — Identity, results, data).
+//
+// **The roster name-picker, not personal links.** If the relay has a term and a
+// class list, the join screen lists the class and you click your name; this
+// device then remembers you, so from week two it is *"Welcome back, Sam — not
+// Sam?"*. There is no password and no account, ever: the security model is
+// **that you can see them**. They are in your Zoom room, you assigned the
+// pairings, and two people cannot claim one name in a session without it
+// showing. That is adequate for fourteen students playing for a leaderboard.
+//
+// Rejected on the way here: personal join links (students lose them) and a
+// link repository on Canvas (every student can see everyone's link, so anyone
+// can play as anyone).
+//
+// With no roster — the game is a public page and carries no course branding —
+// this whole layer stays out of the way and you type your name, as before.
+
+const PLAYER_KEY = 'pavilion.player';
+
+let session = null; // {term, boardSize, roster:[{id,name,instructor}]} or null
+let me = null; // the roster entry this device belongs to
+
+function loadPlayer() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function savePlayer(entry) {
+  try {
+    if (entry) localStorage.setItem(PLAYER_KEY, JSON.stringify({ id: entry.id, name: entry.name }));
+    else localStorage.removeItem(PLAYER_KEY);
+  } catch {
+    /* private browsing: you pick your name again each week, and that is all */
+  }
+}
+
 // You only ever name yourself: the other pavilions name themselves, on their
 // own devices, or are the bot.
 function renderNameInputs() {
   const wrap = $('#name-inputs');
-  const existing = $$('input', wrap)[0]?.value;
+  if (!session) {
+    const existing = $$('input', wrap)[0]?.value;
+    wrap.innerHTML = '';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 20;
+    input.placeholder = 'Your name';
+    input.value = existing || lastTypedName;
+    input.setAttribute('aria-label', 'Your name');
+    wrap.appendChild(input);
+    return;
+  }
+
   wrap.innerHTML = '';
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.maxLength = 20;
-  input.placeholder = 'Your name';
-  input.value = existing || lastTypedName;
-  input.setAttribute('aria-label', 'Your name');
-  wrap.appendChild(input);
+  if (me) {
+    // The week-two case, and the reason the device remembers at all: a student
+    // in a breakout room should be two clicks from playing, not scrolling a
+    // class list every time.
+    const p = document.createElement('p');
+    p.className = 'whoami';
+    p.innerHTML = `Welcome back, <b>${esc(me.name)}</b>. `;
+    const not = document.createElement('button');
+    not.type = 'button';
+    not.className = 'link-btn';
+    not.textContent = `Not ${me.name}?`;
+    not.addEventListener('click', () => {
+      me = null;
+      savePlayer(null);
+      renderNameInputs();
+    });
+    p.appendChild(not);
+    wrap.appendChild(p);
+    return;
+  }
+
+  const list = document.createElement('div');
+  list.className = 'roster';
+  list.setAttribute('role', 'group');
+  list.setAttribute('aria-label', 'Who are you?');
+  for (const entry of session.roster) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'roster-btn';
+    btn.textContent = entry.name;
+    btn.addEventListener('click', () => {
+      me = entry;
+      savePlayer(entry);
+      $('#name-field').classList.remove('needed');
+      renderNameInputs();
+    });
+    list.appendChild(btn);
+  }
+  wrap.appendChild(list);
+}
+
+// The name and roster id this device plays under. `pid` is null when nobody
+// picked from a roster, which is what keeps a stranger's game out of the
+// archive (relay/archive.js, classify).
+function whoAmI() {
+  if (session && me) return { name: me.name, pid: me.id };
+  return { name: $('#name-inputs input')?.value.trim() || lastTypedName || 'You', pid: null };
+}
+
+// The roster arrives after the screen does, so the picker replaces the text box
+// rather than delaying the page. A relay with no term configured — a laptop
+// playtest, or anyone who found the URL — never gets one.
+async function loadRoster() {
+  const s = await fetchSession(RELAY_URL);
+  if (!s) return;
+  session = s;
+  const saved = loadPlayer();
+  me = saved ? s.roster.find((r) => r.id === saved.id) || null : null;
+  $('#name-field').classList.add('rostered');
+  renderNameInputs();
 }
 
 $$('#players-seg .seg-btn').forEach((btn) => {
@@ -1514,7 +1674,16 @@ $$('#online-seg .seg-btn').forEach((btn) => {
 
 $('#setup-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  lastTypedName = $('#name-inputs input').value.trim() || 'You';
+  // A roster with nobody picked is the one thing that stops here: a game that
+  // played anonymously would silently not record, which is the worst version
+  // of "results record themselves".
+  if (session && !me) {
+    $('#name-field').classList.add('needed');
+    $('#name-field .roster-btn')?.focus();
+    return;
+  }
+  const who = whoAmI();
+  lastTypedName = who.name;
 
   if (setupMode === 'online') {
     const code = setupJoin ? $('#code-input').value.trim().toUpperCase() : null;
@@ -1522,7 +1691,8 @@ $('#setup-form').addEventListener('submit', (e) => {
     $('#lobby-error').classList.add('hidden');
     connectRoom({
       code,
-      name: lastTypedName,
+      name: who.name,
+      pid: who.pid,
       players: setupPlayers,
       clockMs: Number($('#clock-select').value),
     });
@@ -1531,7 +1701,7 @@ $('#setup-form').addEventListener('submit', (e) => {
 
   startGame({
     players: 2,
-    names: [lastTypedName, BOT_NAME],
+    names: [who.name, BOT_NAME],
     bot: true,
     clockMs: Number($('#clock-select').value),
   });
@@ -1602,12 +1772,13 @@ if (!RELAY_URL) {
     $('#rejoin-code').textContent = saved.code;
     $('#btn-rejoin').addEventListener('click', () => {
       lastTypedName = saved.name || '';
-      connectRoom({ code: saved.code, name: saved.name, id: saved.id });
+      connectRoom({ code: saved.code, name: saved.name, pid: saved.pid, id: saved.id });
     });
   }
 }
 
 applySetupMode();
+loadRoster();
 
 // ---------------------------------------------------------------------------
 // Headless smoke test: ?smoke=1 plays a full deterministic game through the
@@ -1740,8 +1911,20 @@ if (smokeParams.get('uitest') === 'online') {
       // --- host a room, through the real form -----------------------------
       $('#mode-seg [data-mode="online"]').click();
       expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset appears');
-      expect($$('#name-inputs input').length === 1, 'you name only yourself');
-      $('#name-inputs input').value = 'Sam';
+
+      // Identity (build step 5). test/online.test.js sets a term and a roster
+      // on the relay first, so this exercises the picker rather than the text
+      // box — the class's path, not the passer-by's.
+      await until(() => session, 'the roster to arrive');
+      expect($$('#name-inputs input').length === 0, 'a roster replaces the name box');
+      const mine = $$('#name-inputs .roster-btn').find((b) => b.textContent === 'Sam');
+      expect(!!mine, 'the class is listed by name');
+      $('#setup-form').requestSubmit();
+      expect(!net, 'submitting without picking a name starts nothing');
+      expect($('#name-field').classList.contains('needed'), 'and says which field is wanted');
+      mine.click();
+      expect(!!me && me.id === 'sam', 'clicking your name is the whole of signing in');
+      expect($('.whoami') !== null, 'and the device says welcome back from then on');
       $('#clock-select').value = '0';
       $('#setup-form').requestSubmit();
 
@@ -1751,7 +1934,7 @@ if (smokeParams.get('uitest') === 'online') {
       expect(net.host === true, 'the opener is the host');
 
       // --- the opponent joins ---------------------------------------------
-      opp.connect({ code: net.code, hello: { name: 'Alex', device: 'phone' } });
+      opp.connect({ code: net.code, hello: { name: 'Alex', pid: 'alex', device: 'phone' } });
       await until(() => netRoom?.seats?.length === 2, 'the second seat');
       expect($$('#lobby-seats li').length === 2, 'both seats are listed');
       expect($('#lobby-seats .you') !== null, 'your own seat is marked');
@@ -1791,6 +1974,18 @@ if (smokeParams.get('uitest') === 'online') {
       );
       expect(G.ended === 'natural', 'the ending is recorded');
       expect($('#end-modal').open === true, 'the result modal opened');
+
+      // --- and the result recorded itself ----------------------------------
+      // No submit button anywhere: the server replayed the move list, derived
+      // the winner, and said so (PAVILION.md, Identity, results, data).
+      await until(() => G.recorded, 'the archive receipt');
+      expect(G.recorded.recorded === true, 'the game recorded itself');
+      expect(G.recorded.mode === 'league', 'as a league game');
+      expect(
+        JSON.stringify(G.recorded.result.scores) === JSON.stringify(G.cur.result.scores),
+        'and the server derived the same scores by replaying'
+      );
+      expect($('#end-record').textContent.includes('league'), 'the modal says so');
 
       // --- rematch: same room, same seats, fresh bag -----------------------
       const firstSeed = G.seed;

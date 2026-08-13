@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pavilion — instructor</title>
+<meta name="robots" content="noindex">
+<!-- The instructor's page (build step 5). Not a player screen and deliberately
+     not dressed like one: no logo, no theme, no theatre. It does the four
+     things the memo says need a human — set the term, set the roster, look at
+     what recorded, and correct the two things only a person can judge (a game
+     that should have been a cup game, a game the wifi ruined).
+
+     It is a page on a static host talking to the relay's API, so there is
+     nothing to deploy: `npx wrangler secret put ADMIN_SECRET` once, then this
+     page and that secret are the whole of instructor auth. One secret, one
+     instructor — anything more is the account system the class was promised it
+     would never need (PAVILION.md, Identity). -->
+<style>
+  :root {
+    --paper: #E9E2D2; --card: #F4EFE2; --ink: #1B1C19; --muted: #6C675C;
+    --line: #D6CDB8; --red: #CE1E32; --sci: #37658A; --gold: #C9A227;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 20px 64px; background: var(--paper); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 10px; }
+  .lede { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; margin-bottom: 18px;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; }
+  input, textarea, select {
+    width: 100%; padding: 9px 11px; font: inherit; background: #FBF7EC;
+    border: 1px solid var(--line); border-radius: 8px; color: var(--ink);
+  }
+  textarea { min-height: 190px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  button {
+    border: 1px solid var(--line); background: #FBF7EC; border-radius: 8px;
+    padding: 8px 14px; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer;
+  }
+  button:hover { border-color: var(--ink); }
+  button.primary { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  button.danger { color: var(--red); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .row > * { flex: 1 1 200px; }
+  .row > .fit { flex: 0 0 auto; }
+  .note { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+  .warn { color: var(--red); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border-top: 0; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.void td { opacity: .5; text-decoration: line-through; }
+  .tag {
+    display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    background: var(--line); color: var(--muted);
+  }
+  .tag.league { background: var(--sci); color: #fff; }
+  .tag.cup { background: var(--gold); color: var(--ink); }
+  .tag.exhibition { background: var(--line); color: var(--muted); }
+  .status { min-height: 20px; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .status.bad { color: var(--red); }
+  .hidden { display: none; }
+  .sm { font-size: 12.5px; padding: 5px 9px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pavilion — instructor</h1>
+  <p class="lede">The term, the class list, and what has recorded itself so far.
+    Nothing here is a player screen; students never see it.</p>
+
+  <!-- Sign in ---------------------------------------------------------- -->
+  <section id="auth">
+    <h2>Instructor secret</h2>
+    <div class="row">
+      <div>
+        <label for="secret">The secret set with <code>wrangler secret put ADMIN_SECRET</code></label>
+        <input id="secret" type="password" autocomplete="current-password" placeholder="…">
+      </div>
+      <div class="fit"><button class="primary" id="btn-auth">Open</button></div>
+    </div>
+    <label for="relay">Relay</label>
+    <input id="relay" type="text" spellcheck="false" autocapitalize="off">
+    <p class="note">Worked out from this page's address — the production Worker when
+      this is served from the site, a laptop relay on <code>:8787</code> when it isn't.
+      Change it only to point at a different one.</p>
+    <p class="status" id="auth-status" role="status"></p>
+  </section>
+
+  <div id="panels" class="hidden">
+    <!-- Term ----------------------------------------------------------- -->
+    <section>
+      <h2>Term</h2>
+      <div class="row">
+        <div>
+          <label for="term">Term key</label>
+          <input id="term" type="text" placeholder="2026-fall" spellcheck="false">
+        </div>
+        <div style="flex:0 1 160px">
+          <label for="board">Public board length</label>
+          <input id="board" type="number" min="3" max="20">
+        </div>
+        <div class="fit"><button class="primary" id="btn-term">Save</button></div>
+      </div>
+      <p class="note">Every game carries its term from the moment it is recorded, so records
+        accrue across <em>years</em> rather than weeks. <strong>Games only record while a term
+        is set</strong> and every player picked their name off the roster — with no term the
+        game still plays, it just does not count.</p>
+      <p class="note">The board length is how many names the public leaderboard shows. Five of
+        fourteen is a third of the room; five of thirty is a sixth, and thin enough that most
+        people have nothing to chase. There is never a full public ranking.</p>
+      <p class="status" id="term-status" role="status"></p>
+    </section>
+
+    <!-- Roster --------------------------------------------------------- -->
+    <section>
+      <h2>Roster</h2>
+      <label for="roster">One name per line. Start a line with <code>*</code> to mark the instructor.</label>
+      <textarea id="roster" spellcheck="false" placeholder="*J. Ryan Lamare&#10;Sam Okafor&#10;Alex Reed"></textarea>
+      <div class="row" style="margin-top:10px">
+        <div class="fit"><button class="primary" id="btn-roster">Save roster</button></div>
+        <div class="note" style="flex:1 1 auto">
+          Students pick their name off this list — no accounts, no passwords, no links to lose.
+          Games with the instructor in them record as <strong>exhibitions</strong> and stay out
+          of the league.
+        </div>
+      </div>
+      <p class="note warn">⚠️ A player's id comes from their name, so re-saving the same list is
+        safe but <em>renaming</em> somebody starts them a fresh history. Fix spellings before
+        week 1, not after.</p>
+      <p class="status" id="roster-status" role="status"></p>
+    </section>
+
+    <!-- Games ---------------------------------------------------------- -->
+    <section>
+      <h2>Games</h2>
+      <div class="row" style="margin-bottom:12px">
+        <div style="flex:0 1 220px">
+          <label for="pick-term">Showing</label>
+          <select id="pick-term"></select>
+        </div>
+        <div class="fit" style="align-self:flex-end"><button id="btn-refresh">Refresh</button></div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Played</th><th>Players</th><th class="num">Score</th><th class="num">Pts</th><th>Type</th><th>Ending</th><th></th></tr>
+        </thead>
+        <tbody id="games"><tr><td colspan="7" class="note">Nothing yet.</td></tr></tbody>
+      </table>
+      <p class="note">Results record themselves: the server replays the move list and derives the
+        winner, so nobody — including you — reports a score. The two things it cannot judge are
+        here. <strong>Cup</strong> retags a week 6 knockout game. <strong>Void</strong> is for
+        when the wifi, not the player, was the problem; void is the last resort, never the
+        default, and un-voiding re-derives from the moves rather than restoring old numbers.</p>
+      <p class="status" id="games-status" role="status"></p>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+import { defaultRelayUrl, apiBase } from '../net.js';
+
+const $ = (sel) => document.querySelector(sel);
+const KEY = 'pavilion.admin';
+
+let secret = '';
+let base = '';
+let state = null;
+
+// The relay's address is worked out exactly as the game works it out, so this
+// page follows the game rather than needing its own configuration.
+$('#relay').value = defaultRelayUrl(location);
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (saved) {
+    $('#secret').value = saved.secret || '';
+    if (saved.relay) $('#relay').value = saved.relay;
+  }
+} catch {
+  /* nothing remembered */
+}
+
+async function api(route, opts = {}) {
+  const res = await fetch(base + route, {
+    ...opts,
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${secret}`, ...(opts.headers || {}) },
+  });
+  if (res.status === 401) throw new Error('That secret was refused.');
+  if (!res.ok) throw new Error(`The relay answered ${res.status}.`);
+  return res.json();
+}
+
+function say(el, msg, bad = false) {
+  const p = $(el);
+  p.textContent = msg;
+  p.classList.toggle('bad', bad);
+}
+
+// --- opening ---------------------------------------------------------------
+
+async function open() {
+  secret = $('#secret').value.trim();
+  base = apiBase($('#relay').value.trim());
+  say('#auth-status', 'Checking…');
+  try {
+    state = await api('/admin/state');
+  } catch (err) {
+    say('#auth-status', err.message, true);
+    return;
+  }
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ secret, relay: $('#relay').value.trim() }));
+  } catch {
+    /* you will type it again next time */
+  }
+  say('#auth-status', 'Open.');
+  $('#panels').classList.remove('hidden');
+  fill();
+}
+
+function fill() {
+  $('#term').value = state.config.term || '';
+  $('#board').value = state.config.boardSize;
+  // `*` marks the instructor — one textarea rather than a row of checkboxes,
+  // because this is pasted from a class list once a term.
+  $('#roster').value = state.roster.map((r) => (r.instructor ? '*' : '') + r.name).join('\n');
+
+  const terms = [...new Set([state.config.term, ...state.terms].filter(Boolean))];
+  $('#pick-term').innerHTML = terms.map((t) => `<option${t === shownTerm() ? ' selected' : ''}>${t}</option>`).join('');
+  renderGames();
+}
+
+function shownTerm() {
+  return $('#pick-term').value || state?.config.term || '';
+}
+
+// --- the games table -------------------------------------------------------
+
+function renderGames() {
+  const body = $('#games');
+  const games = state.games || [];
+  if (!games.length) {
+    body.innerHTML = '<tr><td colspan="7" class="note">No games in this term yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = games
+    .map((g) => {
+      const r = g.result || {};
+      const voided = r.ending === 'void';
+      const when = g.endedAt ? new Date(g.endedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+      const names = (g.names || []).map((n, i) => (r.winner === i ? `<strong>${escape(n)}</strong>` : escape(n))).join(' v ');
+      return `<tr class="${voided ? 'void' : ''}">
+        <td>${when}</td>
+        <td>${names}</td>
+        <td class="num">${(r.scores || []).join(' – ') || '—'}</td>
+        <td class="num">${(r.points || []).join(' – ') || '—'}</td>
+        <td><span class="tag ${g.mode}">${g.mode}</span></td>
+        <td>${r.ending || '—'}${r.reason ? ` <span class="note">(${escape(r.reason)})</span>` : ''}</td>
+        <td>
+          <button class="sm" data-act="mode" data-id="${g.id}" data-to="${g.mode === 'cup' ? 'league' : 'cup'}">${g.mode === 'cup' ? 'League' : 'Cup'}</button>
+          <button class="sm ${voided ? '' : 'danger'}" data-act="ending" data-id="${g.id}" data-to="${voided ? 'natural' : 'void'}">${voided ? 'Restore' : 'Void'}</button>
+        </td>
+      </tr>`;
+    })
+    .join('');
+}
+
+function escape(s) {
+  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+}
+
+async function reload() {
+  state = await api(`/admin/state?term=${encodeURIComponent(shownTerm())}`);
+  renderGames();
+}
+
+// --- handlers --------------------------------------------------------------
+
+$('#btn-auth').addEventListener('click', open);
+$('#secret').addEventListener('keydown', (e) => e.key === 'Enter' && open());
+
+$('#btn-term').addEventListener('click', async () => {
+  try {
+    const cfg = await api('/admin/config', {
+      method: 'POST',
+      body: JSON.stringify({ term: $('#term').value.trim(), boardSize: Number($('#board').value) }),
+    });
+    state.config = cfg;
+    $('#term').value = cfg.term || '';
+    $('#board').value = cfg.boardSize;
+    say('#term-status', cfg.term ? `Recording to “${cfg.term}”, top ${cfg.boardSize} on the board.` : 'No term set — games will not record.');
+    await reload();
+  } catch (err) {
+    say('#term-status', err.message, true);
+  }
+});
+
+$('#btn-roster').addEventListener('click', async () => {
+  const roster = $('#roster')
+    .value.split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => (line.startsWith('*') ? { name: line.slice(1).trim(), instructor: true } : { name: line }));
+  try {
+    const out = await api('/admin/roster', { method: 'POST', body: JSON.stringify({ roster }) });
+    state.roster = out.roster;
+    const staff = out.roster.filter((r) => r.instructor).length;
+    say('#roster-status', `${out.roster.length} on the roster${staff ? `, ${staff} marked instructor` : ''}.`);
+  } catch (err) {
+    say('#roster-status', err.message, true);
+  }
+});
+
+$('#games').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  const { act, id, to } = btn.dataset;
+  if (act === 'ending' && to === 'void' && !confirm('Void this game? It stops counting toward the league.')) return;
+  try {
+    const body = act === 'mode' ? { id, mode: to } : { id, ending: to, reason: to === 'void' ? 'voided by the instructor' : '' };
+    await api('/admin/game', { method: 'POST', body: JSON.stringify(body) });
+    await reload();
+    say('#games-status', 'Saved.');
+  } catch (err) {
+    say('#games-status', err.message, true);
+  }
+});
+
+$('#btn-refresh').addEventListener('click', () => reload().catch((err) => say('#games-status', err.message, true)));
+$('#pick-term').addEventListener('change', () => reload().catch((err) => say('#games-status', err.message, true)));
+
+if ($('#secret').value) open();
+</script>
+</body>
+</html>

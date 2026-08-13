@@ -20,7 +20,7 @@ import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { start, server as relayServer } from '../relay/dev-relay.js';
+import { start, server as relayServer, archive as devArchive } from '../relay/dev-relay.js';
 
 const GAME_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
 const CHROMES = [
@@ -75,6 +75,12 @@ const files = createServer(async (req, res) => {
 });
 
 await start(0, true);
+// A term and a class list, so the page under test takes the *class's* path
+// through the setup screen — pick your name off a roster — rather than the
+// passer-by's. It also means the finished game archives itself, which is the
+// last link in build step 5's chain and only observable end to end.
+await devArchive.setConfig({ term: '2026-fall' });
+await devArchive.setRoster(['Sam', 'Alex']);
 await new Promise((r) => files.listen(0, '127.0.0.1', r));
 const relayPort = relayServer.address().port;
 const filePort = files.address().port;

@@ -1,28 +1,32 @@
 # Pavilion — working memo
 
-**Status: active — build steps 1–4 done: engine, hot-seat board UI, greedy bot
+**Status: active — build steps 1–5 done: engine, hot-seat board UI, greedy bot
 + Training Ground (2026-08-06, with the punch list below applied the same day),
-and two-device play over a relay (2026-08-12).**
+two-device play over a relay (2026-08-12), and the backend spine — archive,
+identity, replay-derived results, instructor admin (2026-08-13). Next is step 6:
+the league table, the stats screens, the Record Book and the instructor board,
+all of them queries over the archive step 5 just started filling.**
 
 **The theme was rebuilt on 2026-08-12 and the game is now *Pavilion* — see
 *Theme* below, which is the part of this memo to read first, along with the
 record of the three themes that failed before it. The copy-and-art pass landed
 the same day (see *The copy-and-art pass* below), so the code and these specs
 now agree: every player-facing word is Pavilion's, and every identifier
-underneath is theme-neutral.** Next is step 5: backend, identity, results and
-the leaderboard.
+underneath is theme-neutral.**
 
 Everything lives in `pavilion/`: `engine.js` (pure rules module), `bot.js` (greedy
 practice opponent, "The Commissioner"), `words.js` (room codes and seeds),
-`net.js` (the transport layer), `relay/` (the relay itself — see *Two devices*
-below), and `index.html` + `style.css` + `ui.js` (the playable board — two-tap
+`net.js` (the transport layer), `relay/` (the relay and the archive — see *Two
+devices* and *The backend spine* below), `admin/` (the instructor's page), and
+`index.html` + `style.css` + `ui.js` (the playable board — two-tap
 input, chess clocks, animation layer driven by engine state-diffs via
 `applyTake`; the setup screen's Training Ground mode plays you against the bot,
 recorded as `mode: 'practice'`, and its Two devices mode opens or joins a room).
 Preview with `./serve.sh` at `/pavilion/`. Tests:
 `node pavilion/test/engine.test.js` (soak size as an
 optional argument), `test/bot.test.js`, `test/relay.test.js` (the protocol,
-headless) and `test/online.test.js` (two-device play through the real UI in
+headless), `test/archive.test.js` (term, roster, replay-derived results and the
+API) and `test/online.test.js` (two-device play through the real UI in
 headless Chrome); `?smoke=1` on the game URL plays a full deterministic game
 through the real UI pipeline in a headless browser (`&bot=1` for a practice
 game — that one needs `--virtual-time-budget`, since `--dump-dom` fires long
@@ -740,6 +744,74 @@ and finishes with a rematch. What is still untested is a human: the memo's own
 testing rules — a real Zoom playtest, separate networks, don't coach the other
 player — are the next thing, and they are what step 4 existed to make possible.
 
+## The backend spine — built 2026-08-13 (build step 5)
+
+Results now record themselves. Everything below is in `relay/` and `admin/`, and
+the wire format grew three backward-compatible additions rather than changing
+(`relay/PROTOCOL.md`, v1.1). The parts worth having here rather than only in
+those files:
+
+**The relay still never runs the engine *during play*.** That line is intact and
+still the reason two relays can be one `room.js`. What changed is that once a
+game is *over*, the archive replays `seed + move list` through the same
+`engine.js` the clients ran and reads the winner off the final state
+(`relay/result.js`). Those are different jobs, and only the second one needs the
+engine.
+
+**Nobody reports a result, including the instructor.** A client's `over` message
+is advisory from here on and its claimed scores are discarded. Faking a result
+means fabricating a legal move sequence that your opponent's client
+independently corroborated — a two-person conspiracy, in a class of fourteen.
+Better still, the failure mode is honest: a claim the move list doesn't support
+is archived as **void with the reason kept**, because a game that can't be
+reproduced is a bug report and not a result.
+
+**Identity is one click and no account.** With a term and a class list
+configured, the setup screen replaces the name box with the roster and you tap
+your name; the device remembers, so from week two it is *"Welcome back, Sam —
+not Sam?"*. The security model is unchanged and unapologetic: **the security is
+that you can see them.** The one thing the form now refuses is submitting
+without picking, because a game played anonymously would silently not record —
+the worst possible version of automatic results.
+
+**Two rules decide what gets archived, and they are strict on purpose.** A game
+records only if a term is configured *and* every seat matches a roster entry.
+Everything else — a rehearsal against the bot, two strangers who found the URL,
+anyone who typed a name — plays identically and simply doesn't record. The game
+carries no course branding and is meant to be usable elsewhere, so the archive
+has to equal the course's record rather than the relay's traffic.
+
+**One thing is derived rather than asked for.** A room can request `league` or
+`cup`; **exhibition** is never requested, because an instructor on the roster
+sitting at the table is what makes a game an exhibition. That is one fewer thing
+to remember before a demo match, and forgetting it was the likeliest way for a
+week-1 demo to pollute the league.
+
+**The instructor page does four things and no more** (`/pavilion/admin/`, behind
+one secret): set the term, paste the class list, look at what recorded, and
+correct the two things only a person can judge — a week 6 game that should be
+tagged **cup**, and a game the wifi rather than the player ruined, which is
+**void**. Void is the last resort, never the default (§11), and un-voiding
+re-derives from the move list rather than restoring the old numbers.
+
+Two smaller decisions worth not rediscovering:
+
+- **A player's id is a slug of their name**, so re-pasting the same roster is
+  free and keeps every game attached. ⚠️ *Renaming* somebody starts them a fresh
+  history — fix spellings before week 1. The admin page says so in red.
+- **The archive's routes live in one table** (`relay/archive.js`), dispatched by
+  both the Worker and the laptop relay, exactly as `room.js` is one state
+  machine for both. The Worker allow-lists which of them are reachable from
+  outside, which is what keeps `/record` — the route that writes a game —
+  callable only by a finished room. A prefix strip there instead of an
+  allow-list would have published it and made the whole archive forgeable.
+
+⚠️ **The Worker needs two one-off commands before any of this is live**:
+`npx wrangler deploy` (ships the second Durable Object, migration v2) and
+`npx wrangler secret put ADMIN_SECRET`. Until the secret is set the admin page
+is closed and every game records nothing, which is a safe default rather than a
+broken one. `relay/README.md` has the sequence.
+
 ## Design punch list — from playthroughs, applied at the refinement pass
 
 Compiled from Ryan's first hot-seat playthrough (2026-08-05). These are
@@ -1024,10 +1096,13 @@ reader can tell a quotation from a choice.
    orientation week something to link.
 4. **Relay + two-device play.** A real Zoom playtest can't happen hot-seat.
    Done 2026-08-12 — see *Two devices* above.
-5. **Backend, identity, results, leaderboard, admin.** Instructor auth is one
-   secret; roster and term setup is a one-page admin screen.
-6. **Stats screens, Record Book, Hall of Champions, The Bulletin, instructor
-   board.**
+5. **Backend, identity, results, admin.** Instructor auth is one secret; roster
+   and term setup is a one-page admin screen. Done 2026-08-13 — see *The
+   backend spine* above. The leaderboard moved to step 6, where it belongs: it
+   is a query over the archive, and the archive had to exist first.
+6. **The league table, stats screens, Record Book, Hall of Champions, The
+   Bulletin, instructor board.** All queries over stored games; nothing about
+   the engine, the wire format or the archive has to change for any of them.
 
 ### Testing
 
