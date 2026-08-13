@@ -107,9 +107,15 @@ async function local() {
   }
 
   const a = await season('ler565-2027-summer', 5, CLASS.slice(0, 6), ['Nadia Haddad']);
-  // One cup final, retagged the way the instructor would in the admin page.
+  // One cup final, retagged the way the instructor would in the admin page —
+  // and then the champion's own trophy card, which is the only thing on this
+  // whole site a student chooses for themselves.
   const first = await archive.games('ler565-2027-summer');
   await archive.setMode(first[0].id, 'cup');
+  await archive.setChampion('ler565-2027-summer', {
+    emblem: 'ic-ele',
+    quote: 'Never once took the tile I wanted. Took the one she needed.',
+  });
   const b = await season('ler565-2028-summer', 3, CLASS.slice(2));
   const c = await season('kitchen', 4, ['J. Ryan Lamare'].concat(CLASS[0]));
 

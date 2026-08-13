@@ -19,7 +19,8 @@
 // survive as a highlight and for screens that still want a short board.
 
 import { defaultRelayUrl, apiBase } from '../net.js';
-import { standings, byName, records, honours, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
+import { standings, byName, records, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
+import { SPRITE } from './isotypes.js';
 
 const LEAGUE = document.body.dataset.league;
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
@@ -40,7 +41,7 @@ const RECORD_LABELS = {
   longestStreak: { name: 'Longest winning run', of: 'games in a row', unit: '' },
 };
 
-const state = { games: [], rosters: [], season: null, tab: 'table', boardSize: DEFAULT_BOARD, error: null };
+const state = { games: [], rosters: [], champions: [], season: null, tab: 'table', boardSize: DEFAULT_BOARD, error: null };
 
 // Tabs are linkable: /records/ler565/#class goes straight to the standings. The
 // hash is the reader's word ("class"), not the code's ("table") — a URL you can
@@ -48,8 +49,8 @@ const state = { games: [], rosters: [], season: null, tab: 'table', boardSize: D
 //
 // The standings come first: during term it is the page, and the records are the
 // thing you go looking for rather than the thing you check every week.
-const TABS = { table: 'The class', records: 'Records', honours: 'Honours' };
-const HASH = { records: 'records', table: 'class', honours: 'honours' };
+const TABS = { table: 'The class', records: 'Records', champions: 'Champions' };
+const HASH = { records: 'records', table: 'class', champions: 'champions' };
 const fromHash = (h) => Object.keys(HASH).find((k) => HASH[k] === String(h || '').replace(/^#/, ''));
 
 const app = document.getElementById('app');
@@ -87,6 +88,7 @@ async function load() {
     const body = await gamesRes.json();
     state.games = body.games || [];
     state.rosters = body.rosters || [];
+    state.champions = body.champions || [];
     if (sessionRes && sessionRes.ok) state.boardSize = (await sessionRes.json()).boardSize || DEFAULT_BOARD;
     // ⚖️ Open on the newest season, not all-time. During term almost every
     // visit is "how did we do this week", and all-time is one click away —
@@ -132,13 +134,13 @@ function render() {
     return;
   }
   if (!state.games.length && !state.rosters.some((r) => r.players.length)) {
-    app.innerHTML = `<p class="empty">No games yet. The table, the records and the honours all appear
-      the moment the first game is played — nobody has to file anything.</p>`;
+    app.innerHTML = `<p class="empty">No games yet. The standings, the records and the cabinet all
+      appear the moment the first game is played — nobody has to file anything.</p>`;
     return;
   }
 
   const seasonList = seasons();
-  const showPicker = seasonList.length > 1 || seasonList[0]?.season;
+  const showPicker = state.tab !== 'champions' && (seasonList.length > 1 || seasonList[0]?.season);
   if (!state.games.length) state.tab = 'table'; // week 0: the standings are all there is
 
   // ⚖️ **All time is a Records idea, not a standings one** (Ryan, 2026-08-13).
@@ -180,7 +182,7 @@ function render() {
     </div>
     ${panel('table', tablePanel())}
     ${panel('records', recordsPanel())}
-    ${panel('honours', honoursPanel())}`;
+    ${panel('champions', championsPanel())}`;
 
   app.querySelectorAll('[data-tab]').forEach((b) =>
     b.addEventListener('click', () => {
@@ -409,43 +411,65 @@ function recordsPanel() {
 
 // --- Honours ----------------------------------------------------------------
 
-function honoursPanel() {
-  // Deliberately ignores the season picker: a roll of honour that shows one
-  // season is a fact, not a roll.
-  //
-  // ⚖️ **The Cup is the only title** (2026-08-13). There was a Grand Prize for
-  // topping the league and a Double for taking both; the league stopped
-  // awarding anything when it became the seeding for week 6, so they went. What
-  // is left of the season is the top seed, printed as a fact rather than a
-  // prize — four or five games can say who qualified well, and cannot say who
-  // the best player was.
-  const rolls = honours(state.games).filter((h) => h.champion || h.cup);
-  if (!rolls.length) return `<p class="empty">No season has finished yet.</p>`;
+// The Hall of Champions — one trophy per cohort, and the only place on this
+// site where a student chose what it says. The name and the season are derived
+// from the archive; the emblem and the line under it are theirs.
+//
+// ⚠️ A champion with no card still gets a trophy, just an unengraved one. The
+// cabinet is a record of who won, and it must not depend on anybody having
+// filled in a form.
+function championsPanel() {
+  const cabinet = state.champions;
+  const pending = seasons().filter((s) => !cabinet.some((c) => (c.season ?? null) === s.season));
 
-  return `<div class="card">
-    <h2>Roll of honour</h2>
-    ${rolls
+  if (!cabinet.length) {
+    return `<p class="empty">The cabinet is empty. It fills when a Cup is won —
+      one trophy per cohort, kept for as long as this site exists.</p>`;
+  }
+
+  return `<div class="cabinet">
+    ${cabinet.map(trophy).join('')}
+    ${pending
       .map(
-        (h) => `<div class="roll" style="padding:12px 0;border-bottom:1px solid var(--line)">
-          <span class="season">${esc(seasonLabel(h.season) === 'All time' ? '—' : seasonLabel(h.season))}</span>
-          ${
-            h.cup
-              ? `<span><span class="prize">The Cup</span><br><span class="holder">${esc(h.cup.name)}</span></span>`
-              : `<span><span class="prize">The Cup</span><br><span class="when">not played yet</span></span>`
-          }
-          ${
-            h.champion
-              ? `<span><span class="prize">Top seed</span><br><span class="holder">${esc(h.champion.name)}</span>
-                  <span class="when">${h.champion.points} pts</span></span>`
-              : ''
-          }
-        </div>`
+        (s) => `<figure class="trophy waiting">
+          ${cup(null)}
+          <figcaption>
+            <b class="who">To be won</b>
+            <span class="season">${esc(seasonLabel(s.season))}</span>
+          </figcaption>
+        </figure>`
       )
       .join('')}
-    <p class="note">The Cup is the title, won in the last session: three games, then semi-finals and a
-      final. The weeks before it decide the seeding, and the top seed is recorded here because
-      qualifying well is worth remembering — not because it wins anything.</p>
-  </div>`;
+  </div>
+  <p class="note">The Cup is the only title: won in the last session, derived from the games
+    themselves. Champions pick their own emblem and the line beneath it.</p>`;
 }
 
+function trophy(c) {
+  return `<figure class="trophy">
+    ${cup(c.emblem)}
+    <figcaption>
+      <b class="who">${esc(c.name)}</b>
+      <span class="season">${esc(seasonLabel(c.season))}</span>
+      ${c.quote ? `<blockquote>“${esc(c.quote)}”</blockquote>` : ''}
+    </figcaption>
+  </figure>`;
+}
+
+// One loving cup, drawn here rather than in the sprite because it is furniture
+// rather than an isotype: the emblem sits in the bowl, and an unclaimed trophy
+// is the same cup with an empty one.
+function cup(emblem) {
+  return `<svg class="cupfig" viewBox="0 0 100 116" role="img" aria-hidden="true">
+    <path class="handle" d="M22 26 C6 26 6 54 24 56" />
+    <path class="handle" d="M78 26 C94 26 94 54 76 56" />
+    <path class="bowl" d="M18 20 H82 V44 C82 66 68 78 50 78 C32 78 18 66 18 44 Z" />
+    <rect class="stem" x="45" y="78" width="10" height="16" />
+    <rect class="foot" x="26" y="94" width="48" height="10" rx="2" />
+    <rect class="plinth" x="18" y="104" width="64" height="8" rx="2" />
+    ${emblem ? `<svg class="emblem" x="32" y="26" width="36" height="36"><use href="#${esc(emblem)}"/></svg>` : ''}
+  </svg>`;
+}
+
+document.body.insertAdjacentHTML('afterbegin', SPRITE);
 load();

@@ -17,6 +17,7 @@
 // migration of the archive.
 
 import { buildRecord, deriveResult, splitTerm, summarize } from './result.js';
+import { honours } from './stats.js';
 
 // Keys. `sum:` holds everything except the move list, so listing a term for a
 // league table stays cheap however many games have accumulated.
@@ -30,6 +31,8 @@ const sumKey = (term, id) => `sum:${term}|${id}`;
 // supposed to outlive the term. Free to change while the archive is empty,
 // a migration afterwards — the same reasoning as rules spec §10.
 const rosterKey = (term) => `roster:${term}`;
+// The champion's own emblem and quote, one card per term (build step 6).
+const championKey = (term) => `champion:${term}`;
 // What a global roster was stored under before that. Read-only, so nothing
 // pasted in on day one is lost; the first save per term writes the new shape.
 const K_LEGACY_ROSTER = 'roster';
@@ -278,6 +281,66 @@ export class Archive {
     return out.sort((a, b) => String(b.season ?? '').localeCompare(String(a.season ?? '')));
   }
 
+  // --- the Hall of Champions ------------------------------------------------
+  //
+  // The winner is *derived* — it is whoever won the last cup game of the term,
+  // replayed from the moves like everything else, and nobody reports it. What
+  // is stored here is only the decoration the champion chooses: an emblem and a
+  // line to be remembered by. Editorial content, not a result.
+  //
+  // ⚠️ The card carries the **player id it was written for**. If a game is
+  // later voided and the title moves, somebody else's emblem and quote must not
+  // silently transfer onto the new champion's trophy — the cabinet falls back
+  // to a plain trophy instead, and the admin page can write a new card.
+
+  async champion(term) {
+    const t = cleanTerm(term);
+    if (!t) return null;
+    const [roll] = honours(await this.games(t));
+    const won = roll?.cup || null;
+    const card = (await this.store.get(championKey(t))) || null;
+    if (!won) return null;
+    return {
+      term: t,
+      season: splitTerm(t).season,
+      ...won,
+      emblem: card && card.pid === won.id ? card.emblem : null,
+      quote: card && card.pid === won.id ? card.quote : '',
+      stale: !!card && card.pid !== won.id,
+    };
+  }
+
+  async setChampion(term, { emblem = null, quote = '' } = {}, now = Date.now()) {
+    const t = cleanTerm(term);
+    if (!t) return null;
+    const [roll] = honours(await this.games(t));
+    if (!roll?.cup) return null; // no champion yet, nothing to decorate
+    await this.store.put(championKey(t), {
+      pid: roll.cup.id,
+      emblem: emblem ? slug(emblem) : null,
+      // A cabinet card is a line, not an essay. The cap is the design.
+      quote: cleanQuote(quote),
+      updatedAt: now,
+    });
+    return this.champion(t);
+  }
+
+  // Every champion the league has ever had, newest first — the cabinet.
+  async champions(league, { season = null } = {}) {
+    const wanted = cleanTerm(league);
+    if (!wanted) return [];
+    const terms = (await this.terms()).filter((t) => {
+      const split = splitTerm(t);
+      return split.league === wanted && (season === null || split.season === season);
+    });
+    const out = [];
+    for (const term of terms) {
+      const champ = await this.champion(term);
+      if (champ) out.push(champ);
+    }
+    return out.sort((a, b) => String(b.season ?? '').localeCompare(String(a.season ?? '')));
+  }
+
   // --- deleting -------------------------------------------------------------
   //
   // ⚠️ Real deletion, not a flag. Voiding is the instructor's tool for a game
@@ -422,6 +485,10 @@ export async function apiRoute(archive, { route, method = 'GET', query = {}, bod
         // The class lists, one per season. Public like the rest of the roster,
         // and for the same reason: the class is not a secret to the class.
         rosters: await archive.leagueRosters(league, { season }),
+        // The trophy cabinet: every champion the league has had, with whatever
+        // emblem and line they chose. Deliberately not filtered by the season
+        // picker — a cabinet showing one year is a shelf.
+        champions: await archive.champions(league),
       });
     }
 
@@ -435,6 +502,9 @@ export async function apiRoute(archive, { route, method = 'GET', query = {}, bod
         roster: await archive.roster(),
         terms: await archive.terms(),
         games: term ? await archive.games(term, { limit: 200 }) : [],
+        // Who won the shown term's Cup, and the card they have (if any), so the
+        // admin page can write one without deriving the winner itself.
+        champion: term ? await archive.champion(term) : null,
       });
     }
 
@@ -443,6 +513,15 @@ export async function apiRoute(archive, { route, method = 'GET', query = {}, bod
 
     case '/admin/roster':
       return ok({ roster: await archive.setRoster(body.roster, body.term) });
+
+    // The champion's emblem and quote. The *winner* is never set here — it is
+    // derived from the cup game like every other result, and this route refuses
+    // when there isn't one yet.
+    case '/admin/champion': {
+      const term = body.term || (await archive.config()).term;
+      const champ = await archive.setChampion(term, body);
+      return champ ? ok(champ) : fail(400, 'no champion in that term yet');
+    }
 
     case '/admin/game': {
       if (method === 'GET') {
@@ -506,6 +585,11 @@ function cleanTerm(t) {
 function clampBoardSize(n) {
   const v = Math.floor(Number(n));
   return Number.isFinite(v) && v >= 3 && v <= 20 ? v : DEFAULT_BOARD_SIZE;
+}
+
+// A line under a trophy, not a paragraph beside it.
+function cleanQuote(s) {
+  return typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, 140) : '';
 }
 
 function cleanName(s) {

@@ -68,6 +68,15 @@
   .status { min-height: 20px; font-size: 13px; color: var(--muted); margin-top: 10px; }
   .status.bad { color: var(--red); }
   .hidden { display: none; }
+  /* The emblem picker shows exactly what the cabinet will show. */
+  .emblems { display: flex; flex-wrap: wrap; gap: 6px; }
+  .emblem-btn {
+    width: 44px; height: 44px; padding: 8px; border: 1px solid var(--line);
+    background: var(--card); border-radius: 8px; color: var(--muted); cursor: pointer;
+  }
+  .emblem-btn svg { width: 100%; height: 100%; }
+  .emblem-btn:hover { border-color: var(--muted); color: var(--ink); }
+  .emblem-btn.on { border-color: var(--ink); background: var(--gold); color: var(--ink); }
   .sm { font-size: 12.5px; padding: 5px 9px; }
   /* The one section that destroys things, marked so you know before you read. */
   #danger { border-color: var(--red); }
@@ -153,6 +162,25 @@
       <p class="status" id="roster-status" role="status"></p>
     </section>
 
+    <!-- Champion ------------------------------------------------------- -->
+    <section id="champ-panel">
+      <h2>Hall of Champions</h2>
+      <p class="note">The winner is worked out from the games — whoever won the last Cup game of the
+        term — so there is nothing to declare here. What you set is what goes on their trophy:
+        ask them which emblem they want and what line they want under it.</p>
+      <p class="status" id="champ-who" role="status"></p>
+      <div id="champ-form" class="hidden">
+        <label for="champ-quote">Their line (140 characters, shown under the cup)</label>
+        <input id="champ-quote" type="text" maxlength="140" placeholder="Built it one aisle at a time.">
+        <label style="margin-top:12px">Their emblem</label>
+        <div id="champ-emblems" class="emblems"></div>
+        <div class="row" style="margin-top:12px">
+          <div class="fit"><button class="primary" id="btn-champ">Save the trophy</button></div>
+        </div>
+      </div>
+      <p class="status" id="champ-status" role="status"></p>
+    </section>
+
     <!-- Games ---------------------------------------------------------- -->
     <section>
       <h2>Games</h2>
@@ -197,6 +225,9 @@
 </main>
 
 <script type="module">
+import { EMBLEMS, SPRITE } from '/pavilion/records/isotypes.js';
+document.body.insertAdjacentHTML('afterbegin', SPRITE);
+
 import { defaultRelayUrl, apiBase } from '../net.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -269,6 +300,7 @@ function fill() {
   $('#roster').value = state.roster.map((r) => (r.instructor ? '*' : '') + r.name).join('\n');
 
   const terms = [...new Set([state.config.term, ...state.terms].filter(Boolean))];
+  fillChampion();
   $('#pick-term').innerHTML = terms.map((t) => `<option${t === shownTerm() ? ' selected' : ''}>${t}</option>`).join('');
   renderGames();
 }
@@ -337,6 +369,7 @@ function escape(s) {
 async function reload() {
   state = await api(`/admin/state?term=${encodeURIComponent(shownTerm())}`);
   renderGames();
+  fillChampion();
 }
 
 // --- handlers --------------------------------------------------------------
@@ -412,6 +445,62 @@ $('#btn-del-term').addEventListener('click', async () => {
     fill();
   } catch (err) {
     say('#del-status', err.message, true);
+  }
+});
+
+// --- the champion's trophy --------------------------------------------------
+//
+// Nobody declares a winner here either: the server derives it from the Cup game
+// and this only writes the decoration. If the shown term has no Cup winner yet,
+// the form stays closed rather than inviting you to fill in a blank.
+
+let emblem = null;
+
+function fillChampion() {
+  const champ = state.champion;
+  const form = $('#champ-form');
+  if (!champ) {
+    form.classList.add('hidden');
+    say('#champ-who', `No Cup winner in “${shownTerm() || 'this term'}” yet — retag the final game as Cup and it appears here.`);
+    return;
+  }
+  form.classList.remove('hidden');
+  say('#champ-who', `Champion: ${champ.name}${champ.stale ? ' — the title moved, so the old trophy card no longer applies.' : ''}`);
+  $('#champ-quote').value = champ.quote || '';
+  emblem = champ.emblem || null;
+  $('#champ-emblems').innerHTML = EMBLEMS.map(
+    (e) => `<button type="button" class="emblem-btn${e.id === emblem ? ' on' : ''}" data-emblem="${e.id}"
+      title="${e.label}" aria-label="${e.label}" aria-pressed="${e.id === emblem}">
+      <svg viewBox="0 0 24 24"><use href="#${e.id}"/></svg></button>`
+  ).join('');
+  $('#champ-emblems').querySelectorAll('[data-emblem]').forEach((b) =>
+    b.addEventListener('click', () => {
+      // Clicking the chosen one again clears it — a champion is allowed to want
+      // a plain cup.
+      emblem = emblem === b.dataset.emblem ? null : b.dataset.emblem;
+      fillChampionButtons();
+    })
+  );
+}
+
+function fillChampionButtons() {
+  $('#champ-emblems').querySelectorAll('[data-emblem]').forEach((b) => {
+    const on = b.dataset.emblem === emblem;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+
+$('#btn-champ').addEventListener('click', async () => {
+  try {
+    const champ = await api('/admin/champion', {
+      method: 'POST',
+      body: JSON.stringify({ term: shownTerm(), emblem, quote: $('#champ-quote').value }),
+    });
+    state.champion = champ;
+    say('#champ-status', `Saved — ${champ.name}'s trophy is in the cabinet.`);
+  } catch (err) {
+    say('#champ-status', err.message, true);
   }
 });
 

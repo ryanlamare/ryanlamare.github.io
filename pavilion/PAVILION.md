@@ -215,6 +215,28 @@ Byes, if they ever happen anyway, earn the participation point only.
 planning needed: highest single game, most completed columns, best comeback from
 behind, most improved first-half to second.
 
+### The Hall of Champions — built 2026-08-13
+
+A trophy cabinet, one cup per cohort, and **the only place on the site where a
+student chooses what it says**: Ryan asks the champion which emblem they want
+and what line goes under it, and types both into the admin page.
+
+- **The winner is derived, the decoration is stored.** Whoever won the term's
+  last Cup game, replayed like every other result — nobody declares a champion,
+  including Ryan. The card holds only an emblem id and 140 characters.
+- ⚠️ **A card carries the player id it was written for.** If a final is later
+  voided and the title moves, somebody else's emblem and quote must not silently
+  transfer onto the new champion's cup; the cabinet falls back to a plain
+  trophy. Pinned in `test/archive.test.js`.
+- **A champion with no card still gets a trophy**, unengraved. The cabinet
+  records who won, and must never depend on anyone having filled in a form.
+- **Emblems are lifted, never drawn** (`records/isotypes.js`): the game's five
+  disciplines plus sixteen from the LER 565 decks, which is the house rule for
+  pictograms. One module, two consumers — the admin picker shows the same grid
+  the cabinet will render, so what Ryan clicks is what students see.
+- Seasons without a champion show a **ghosted plinth** — "To be won". Anticipation
+  is free and an empty cabinet is not the same as a finished one.
+
 ### The Record Book — the archive outlives the term
 
 Every game record carries a `term` key from day one, so records accrue across
@@ -382,6 +404,7 @@ records/records.js      the one engine every league page runs
 records/records.css     shared house style, the board's palette copied
 records/index.html      the hub — hand-written league list
 records/ler565/         a league page: a title, an id, and the engine
+records/isotypes.js     the emblems a champion can pick, lifted from the decks
 relay/seed.js           fill an archive, so there is something to look at
 test/stats.test.js      78 checks over the arithmetic
 ```
@@ -434,6 +457,10 @@ student who ever took the course, most of whom never met. So the standings
 picker lists seasons only, newest first, and arriving at the standings with
 all-time selected falls back to the newest season rather than showing a table of
 strangers.
+
+The **Honours** tab is gone, replaced by the **Hall of Champions** (above) —
+with seeding cut there is no top seed to record, and a roll of honour listing
+one prize was a list of one thing.
 
 Still to build, all of it more queries over `stats.js`: the **pre-game splash**
 and **post-game screen** (`headToHead` and `movement` exist and are tested, and

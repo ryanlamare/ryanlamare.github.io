@@ -481,10 +481,16 @@ section('The records site’s two public reads');
   const a = new Archive(new MemoryStore());
   const call = (route, opts = {}) => apiRoute(a, { route, ...opts });
 
+  // ⚠️ Each term needs its *own* game. A game id is room code + start time +
+  // seed, so re-recording an identical room in three terms writes one record
+  // three times and only the last one is readable by id — which is correct
+  // behaviour and a broken fixture.
+  let at = 1_700_000_000_000;
   const playIn = async (term) => {
     await call('/admin/config', { method: 'POST', body: { term } });
     await call('/admin/roster', { method: 'POST', body: { roster: ['Sam', 'Alex'] } });
-    const room = playedRoom();
+    const room = playedRoom({ seed: `seed-${term}` });
+    room.startedAt = at += 3600_000;
     room.ended = { ending: 'natural' };
     return (await call('/record', { method: 'POST', body: room })).body;
   };
@@ -518,6 +524,33 @@ section('The records site’s two public reads');
   const week0 = (await call('/records/games', { query: { league: 'ler565', season: '2029-summer' } })).body;
   eq(week0.games.length, 0, 'a term set up but not played has no games…');
   eq(week0.rosters[0].players.length, 1, '…and still knows who is in the class');
+
+  // The Hall of Champions. ⚠️ The *winner* is never written — it is derived
+  // from the Cup game like every other result. Only the decoration is stored.
+  eq((await call('/admin/champion', { method: 'POST', body: { term: 'ler565-2027-summer', emblem: 'im-trophy' } })).status,
+    400, 'a term with no Cup game has no champion to decorate');
+
+  const cupGame = (await call('/records/games', { query: { league: 'ler565', season: '2027-summer' } })).body.games[0];
+  await call('/admin/game', { method: 'POST', body: { id: cupGame.id, mode: 'cup' } });
+
+  const saved = (await call('/admin/champion', {
+    method: 'POST',
+    body: { term: 'ler565-2027-summer', emblem: 'im-trophy', quote: '  Built it   one aisle at a time.  ' },
+  })).body;
+  eq(saved.name, cupGame.names[cupGame.result.winner], 'the champion is whoever won the Cup game, not whoever was named');
+  eq(saved.quote, 'Built it one aisle at a time.', 'the quote is tidied and capped, not stored raw');
+  eq(saved.emblem, 'im-trophy', 'with the emblem they picked');
+
+  const cabinet = (await call('/records/games', { query: { league: 'ler565' } })).body.champions;
+  eq(cabinet.length, 1, 'and it reaches the public cabinet');
+  eq(cabinet[0].season, '2027-summer', 'filed under the season it was won in');
+
+  // ⚠️ If the title moves, the old champion's emblem and quote must not travel
+  // to the new one — somebody else's line under your name is worse than none.
+  await call('/admin/game', { method: 'POST', body: { id: cupGame.id, ending: 'void', reason: 'test' } });
+  await call('/admin/game', { method: 'POST', body: { id: cupGame.id, mode: 'league' } });
+  const gone = (await call('/records/games', { query: { league: 'ler565' } })).body.champions;
+  eq(gone.length, 0, 'voiding the final leaves no champion at all');
 
   eq((await call('/records/games')).status, 400, 'asking for no league in particular is a bad request');
   eq((await call('/records/games', { query: { league: 'nobody' } })).body.games.length, 0,
