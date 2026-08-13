@@ -182,23 +182,34 @@ async function live() {
   console.log(`Playing ${wanted} game(s) into "${session.term}" on ${ws}`);
   const people = session.roster.filter((r) => !r.instructor);
   let done = 0;
+  let lost = 0;
   for (let g = 0; g < wanted; g++) {
     const pair = [people[(g * 2) % people.length], people[(g * 2 + 1 + Math.floor(g / people.length)) % people.length]];
     if (pair[0].id === pair[1].id) continue;
-    const receipt = await playOnline(ws, pair, [TEMPERS[g % TEMPERS.length], TEMPERS[(g + 3) % TEMPERS.length]]);
+    // ⚠️ One game that stalls does not end the run. A real relay across a real
+    // network drops things, and a seeder that throws away eleven good games
+    // because the seventh timed out is useless exactly when you need it.
+    let receipt;
+    try {
+      receipt = await playOnline(ws, pair, [TEMPERS[g % TEMPERS.length], TEMPERS[(g + 3) % TEMPERS.length]]);
+    } catch (err) {
+      lost++;
+      console.log(`  ${pair[0].name} v ${pair[1].name} → skipped: ${err.message}`);
+      continue;
+    }
     done++;
     console.log(
       `  ${pair[0].name} v ${pair[1].name} → ${receipt.result.scores.join('–')}` +
         `  ${receipt.recorded ? `recorded as ${receipt.mode}` : `NOT recorded: ${receipt.why}`}`
     );
   }
+  if (lost) console.log(`\n${lost} game(s) stalled and were skipped — nothing partial is ever stored.`);
   console.log(`\n${done} game(s) played. They are real games: seed + move list, replayed by the server.`);
   console.log('Delete them any time from the admin page — "Delete a term" takes the lot.');
 }
 
 function playOnline(url, pair, tempers) {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('timed out playing a game')), 60000);
     const players = pair.map((p, i) => ({
       relay: new Relay(url),
       pid: p.id,
@@ -209,38 +220,105 @@ function playOnline(url, pair, tempers) {
       temper: tempers[i],
     }));
 
-    const nudge = () => {
-      const mover = players.find((p) => p.state && p.state.seatToMove === p.seat);
-      if (!mover || mover.state.over) return;
-      const move = chooseMove(mover.state, mover.temper, mover.applied);
-      mover.relay.move(mover.applied, { ...move, t: mover.applied * 950 });
+    // ⚠️ `leave()`, not `close()` — `Relay` has no `close`, so the optional call
+    // that used to be here silently did nothing and every seeded game left two
+    // live sockets behind with their keepalives running. Six games in, the
+    // seventh sat down at a Worker holding twelve open connections and never
+    // got started. It cannot show up in local mode, which opens no socket at
+    // all, so this only ever bites `--live`.
+    const hangUp = () => {
+      clearInterval(pump);
+      players.forEach((q) => q.relay.leave());
     };
+    const give = (why) => {
+      clearTimeout(timer);
+      hangUp();
+      reject(new Error(why));
+    };
+    const timer = setTimeout(() => give('timed out playing a game'), 60000);
+
+    // A stalled game is abandoned in twelve seconds rather than sixty. Nothing
+    // partial is ever stored either way (the server only records a finished
+    // room), so the only thing a long timeout buys is a slower run.
+    let progressed = Date.now();
+
+    // ⚠️ **A poll, not a chain of events**, and that is the whole point. This
+    // used to schedule one `nudge` per broadcast from seat 0, which then looked
+    // for whichever client's state said it was their turn. Across a real
+    // network seat 1 is often a hundred milliseconds behind, so no client
+    // matched, nothing rescheduled, and the game sat still until the 60s
+    // timeout — about a third of them. Polling cannot wedge: whoever is ready
+    // moves, and anyone who is not is simply asked again 50ms later.
+    let overSent = false;
+    const pump = setInterval(() => {
+      const lead = players[0];
+      if (lead.state?.over) {
+        // The client says the game ended; the server replays it and decides
+        // what actually happened. `over` is advisory (PROTOCOL.md).
+        if (!overSent) {
+          overSent = true;
+          lead.relay.over(lead.state.result);
+        }
+        return;
+      }
+      if (Date.now() - progressed > 12000) {
+        return give(`stalled at ply ${lead.applied}` + (lead.desynced || players[1].desynced ? ' (desynced)' : ''));
+      }
+      const mover = players.find((q) => q.state && !q.state.over && q.state.seatToMove === q.seat);
+      if (!mover) return;
+      // One send per ply while the echo is in flight — and a resend if it never
+      // arrives, which the room rejects harmlessly as a bad ply if the first
+      // one did land after all.
+      if (mover.sentPly === mover.applied && Date.now() - mover.sentAt < 2500) return;
+      const move = chooseMove(mover.state, mover.temper, mover.applied);
+      if (!move) return;
+      mover.sentPly = mover.applied;
+      mover.sentAt = Date.now();
+      mover.relay.move(mover.applied, { ...move, t: mover.applied * 950 });
+    }, 50);
 
     for (const p of players) {
       p.relay.on('started', (m) => {
         p.state = newGame(m.seed, m.players);
         p.seat = p.relay.seat;
-        if (p === players[0]) setTimeout(nudge, 40);
+        progressed = Date.now();
       });
       p.relay.on('move', ({ ply, move }) => {
         if (!p.state || ply < p.applied) return;
+        // ⚠️ **A gap is a desync, not a move to apply.** This used to apply any
+        // broadcast whose ply was not behind us, so a single missed message —
+        // which is what a reconnect is, and the socket does reconnect — put a
+        // move from ply N+2 onto a state at ply N, silently corrupted that
+        // client's board, and left the two of them each waiting for the other
+        // to take a turn neither believed was theirs.
+        //
+        // The real client recovers from exactly this by replaying the room's
+        // move list out of `welcome` (ui.js, resync). This is a seeder, so it
+        // says so and gives the game up instead — the cost is a skipped line in
+        // a dev tool, not a lost game in a class.
+        if (ply > p.applied) {
+          p.desynced = true;
+          return give(`missed ply ${p.applied} (${p.name} dropped a message)`);
+        }
         p.state = apply(p.state, move);
         p.applied = ply + 1;
-        if (p === players[0]) {
-          if (p.state.over) {
-            // The client says the game ended; the server replays it and decides
-            // what actually happened. `over` is advisory (PROTOCOL.md).
-            p.relay.over(p.state.result);
-          } else {
-            setTimeout(nudge, 12);
-          }
-        }
+        progressed = Date.now();
       });
+      // A protocol error never retries itself here, so it must not be swallowed
+      // — a silent refusal is what a sixty-second stall looked like.
+      p.relay.on('error', (m) => {
+        if (m.code === 'bad-ply') return; // a crossed resend; the echo settles it
+        give(`${p.name}: ${m.code || 'error'} — ${m.msg || 'refused'}`);
+      });
+      if (flag('verbose')) {
+        p.relay.on('status', (s) => console.log(`    [${p.name}] ${s.status || s}`));
+      }
       p.relay.on('recorded', (receipt) => {
         if (p !== players[0]) return;
         clearTimeout(timer);
-        players.forEach((q) => q.relay.close?.());
-        resolve({ ...receipt, result: receipt.result || { scores: p.state.result.scores } });
+        const scores = p.state.result?.scores;
+        hangUp();
+        resolve({ ...receipt, result: receipt.result || { scores } });
       });
     }
 

@@ -1174,15 +1174,25 @@ is closed and every game records nothing, which is a safe default rather than a
 broken one. `relay/README.md` has the sequence.
 
 **Both were done by 2026-08-13**, and the Worker was redeployed the same day
-with the league stamp and the records routes. The live archive is otherwise
-**empty**: the term reads `demo` with no roster, so nothing records and
-`/pavilion/records/` correctly says there is nothing yet.
+with the league stamp and the records routes.
 
-⚠️ **The next real step is Ryan's, not the code's**: set a term key and paste a
-class list in the live admin page. Until a term and a roster exist, no game can
-record, so nothing on the live records site can be seen working. For a throwaway
-run, `ler565-2026-demo` puts it on the LER 565 page as its own season and
-deletes in one click; then `node relay/seed.js --live` plays real games into it.
+**The live archive holds a demo season as of 2026-08-14**: term
+`ler565-2026-demo`, fifteen invented students plus Ryan as instructor, and 41
+real games played into it by `seed.js --live`. It shows up on the LER 565 page as
+season *"Demo 2026"* and **Delete a term** removes the lot in one click. It is
+there to be looked at, not kept.
+
+⚠️ **The real cohort's roster is still Ryan's to paste, before week 1**, and it
+cannot be invented: the roster **is** the login (*Identity*), a player's id is a
+slug of their name, and ids are unscoped so a fake person entered now is
+permanent. A demo term takes made-up names precisely because it gets deleted.
+
+⚠️ **Do not read a term key without a dash as harmless.** `demo` on its own is a
+*league* called demo with no season — games record, and both in-game stats
+screens work, but there is no page to see them on, because the records hub's
+hand-written list is the whole listed/unlisted mechanism. The league and season
+are stamped at write time, so games played under the wrong key stay there; fix
+the key before playing, not after.
 
 ## Design punch list — from playthroughs, applied at the refinement pass
 
