@@ -454,6 +454,21 @@ entry**, and only while a term is configured. Everything else plays exactly the
 same and simply does not record. This is what keeps the archive equal to the
 course's record rather than to whoever found the URL.
 
+⚖️ **The roster is stored per term; player ids are not.** A cohort keeps its own
+class list, so next year's does not overwrite it. But an id is a bare slug of
+the name, unscoped, so across years the same name is the same person — which is
+what makes an all-time Record Book possible and lets a returning student keep
+one history. Two different people sharing a name in different years would merge
+in all-time records; that never affects a term's own table, which reads one
+term's summaries where the roster made every id unique.
+
+⚖️ **Deleting is not voiding.** Void means the game happened and should not
+count (§11) — it stays in the archive and can be restored, which re-derives from
+the move list. Delete means the game should never have been archived at all: a
+demo, a test, an accidental room. It removes the record outright, and a whole
+term can go the same way, class list included. Deleting a term requires naming
+it twice, so a misclick cannot take a cohort with it.
+
 ⚖️ **Nobody reports a result, including the instructor.** The server replays
 `seed + move list` and reads the winner off the final state; the `over` message
 a client sends is advisory and its claimed scores are discarded. A claim the

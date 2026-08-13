@@ -21,9 +21,18 @@ import { buildRecord, deriveResult, summarize } from './result.js';
 // Keys. `sum:` holds everything except the move list, so listing a term for a
 // league table stays cheap however many games have accumulated.
 const K_CONFIG = 'config';
-const K_ROSTER = 'roster';
 const gameKey = (id) => `game:${id}`;
 const sumKey = (term, id) => `sum:${term}|${id}`;
+// ⚖️ **The roster is per term**, so a cohort's class list survives the next
+// cohort arriving. A single global list would have been simpler and was what
+// step 5 shipped for a day; it made "who was in the 2026 class" unanswerable
+// the moment 2027 pasted over it, which is the opposite of an archive that is
+// supposed to outlive the term. Free to change while the archive is empty,
+// a migration afterwards — the same reasoning as rules spec §10.
+const rosterKey = (term) => `roster:${term}`;
+// What a global roster was stored under before that. Read-only, so nothing
+// pasted in on day one is lost; the first save per term writes the new shape.
+const K_LEGACY_ROSTER = 'roster';
 
 // Public board length is "sized to the class" and deliberately a setting, not a
 // constant: five of fourteen is a third of the room, five of thirty is a sixth
@@ -57,8 +66,11 @@ export class Archive {
     return next;
   }
 
-  async roster() {
-    return (await this.store.get(K_ROSTER)) || [];
+  // The class list for a term — the current one unless you ask for another.
+  async roster(term) {
+    const t = term === undefined ? (await this.config()).term : cleanTerm(term);
+    if (!t) return [];
+    return (await this.store.get(rosterKey(t))) || (await this.store.get(K_LEGACY_ROSTER)) || [];
   }
 
   // The roster is the identity system (PAVILION.md, Identity): the join screen
@@ -70,7 +82,18 @@ export class Archive {
   // Ids are slugs of the name, so re-pasting the same roster keeps every id and
   // the history attached to it. ⚠️ Renaming a student therefore mints a new id
   // and orphans their games; the admin page says so.
-  async setRoster(list) {
+  //
+  // ⚖️ Ids are **not** scoped to the term, deliberately, even though the roster
+  // is. Across cohorts the same name means the same person, which is what makes
+  // an all-time Record Book and a Hall of Champions possible at all — a student
+  // who takes the course twice keeps one history. The cost is that two
+  // different people with the same name in different years would merge in
+  // all-time records. In a class of 14 to 36 that is a small risk against a
+  // large gain, and it never touches a term's own table: those read one term's
+  // summaries, where the roster made every id unique.
+  async setRoster(list, term) {
+    const t = term === undefined ? (await this.config()).term : cleanTerm(term);
+    if (!t) return []; // no term, nowhere to put a class list
     const seen = new Map();
     const roster = [];
     for (const entry of list || []) {
@@ -82,7 +105,7 @@ export class Archive {
       seen.set(base, n);
       roster.push({ id: n === 1 ? base : `${base}-${n}`, name, instructor });
     }
-    await this.store.put(K_ROSTER, roster);
+    await this.store.put(rosterKey(t), roster);
     return roster;
   }
 
@@ -157,9 +180,51 @@ export class Archive {
     return [...map.values()].sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0));
   }
 
+  // Every cohort the archive knows about — the ones with games, and the ones
+  // set up but not yet played. This is what makes the archive outlive a term:
+  // an all-time query is these, merged.
   async terms() {
-    const map = await this.store.list({ prefix: 'sum:' });
-    return [...new Set([...map.keys()].map((k) => k.slice(4, k.indexOf('|'))))].sort();
+    const games = await this.store.list({ prefix: 'sum:' });
+    const rosters = await this.store.list({ prefix: 'roster:' });
+    return [
+      ...new Set([
+        ...[...games.keys()].map((k) => k.slice(4, k.indexOf('|'))),
+        ...[...rosters.keys()].map((k) => k.slice('roster:'.length)),
+      ]),
+    ].sort();
+  }
+
+  // --- deleting -------------------------------------------------------------
+  //
+  // ⚠️ Real deletion, not a flag. Voiding is the instructor's tool for a game
+  // that happened and should not count (§11); this is for games that should
+  // never have been in the archive at all — a demo run, a test, a room two
+  // people opened by accident. The distinction matters because the archive is
+  // meant to be the course's record, and a record full of test data is one
+  // nobody trusts.
+
+  async deleteGame(id) {
+    const rec = await this.game(id);
+    if (!rec) return false;
+    await this.store.delete(gameKey(id));
+    await this.store.delete(sumKey(rec.term, id));
+    return true;
+  }
+
+  // A whole cohort: every game and the class list with it. Irreversible, and
+  // the API makes the caller name the term twice to prove it meant it.
+  async deleteTerm(term) {
+    const t = cleanTerm(term);
+    if (!t) return 0;
+    const map = await this.store.list({ prefix: `sum:${t}|` });
+    let n = 0;
+    for (const key of map.keys()) {
+      await this.store.delete(gameKey(key.slice(key.indexOf('|') + 1)));
+      await this.store.delete(key);
+      n++;
+    }
+    await this.store.delete(rosterKey(t));
+    return n;
   }
 
   // --- instructor overrides -------------------------------------------------
@@ -243,6 +308,8 @@ export async function apiRoute(archive, { route, method = 'GET', query = {}, bod
       const term = query.term || config.term;
       return ok({
         config,
+        // The roster shown is the one being *edited* — the current term's.
+        // The `term` query only browses another cohort's games.
         roster: await archive.roster(),
         terms: await archive.terms(),
         games: term ? await archive.games(term, { limit: 200 }) : [],
@@ -253,17 +320,34 @@ export async function apiRoute(archive, { route, method = 'GET', query = {}, bod
       return ok(await archive.setConfig(body));
 
     case '/admin/roster':
-      return ok({ roster: await archive.setRoster(body.roster) });
+      return ok({ roster: await archive.setRoster(body.roster, body.term) });
 
     case '/admin/game': {
       if (method === 'GET') {
         const rec = await archive.game(query.id);
         return rec ? ok(rec) : fail(404, 'no such game');
       }
+      if (body.delete) {
+        return (await archive.deleteGame(body.id)) ? ok({ deleted: body.id }) : fail(404, 'no such game');
+      }
       let sum = null;
       if (body.mode) sum = await archive.setMode(body.id, body.mode);
       if (body.ending) sum = await archive.setEnding(body.id, body.ending, body.reason);
       return sum ? ok(sum) : fail(404, 'no such game');
+    }
+
+    // Wiping a cohort. ⚠️ The caller has to name the term twice — the admin
+    // page makes you type it, and this refuses even a well-formed request that
+    // doesn't. A misclick should not be able to delete a term's worth of games.
+    case '/admin/term': {
+      if (!body.term || body.confirm !== body.term) return fail(400, 'name the term twice to delete it');
+      const config = await archive.config();
+      const deleted = await archive.deleteTerm(body.term);
+      // Deleting the term you are standing in leaves nothing recording, which
+      // is the honest state — better than silently pointing at a term whose
+      // roster has just gone.
+      if (cleanTerm(body.term) === config.term) await archive.setConfig({ term: null });
+      return ok({ deleted, term: body.term });
     }
 
     // A finished room, arriving from a room. Never routed from outside.

@@ -69,6 +69,9 @@
   .status.bad { color: var(--red); }
   .hidden { display: none; }
   .sm { font-size: 12.5px; padding: 5px 9px; }
+  /* The one section that destroys things, marked so you know before you read. */
+  #danger { border-color: var(--red); }
+  #danger h2 { color: var(--red); }
 </style>
 </head>
 <body>
@@ -122,7 +125,7 @@
 
     <!-- Roster --------------------------------------------------------- -->
     <section>
-      <h2>Roster</h2>
+      <h2>Roster — <span id="roster-term">no term set</span></h2>
       <label for="roster">One name per line. Start a line with <code>*</code> to mark the instructor.</label>
       <textarea id="roster" spellcheck="false" placeholder="*J. Ryan Lamare&#10;Sam Okafor&#10;Alex Reed"></textarea>
       <div class="row" style="margin-top:10px">
@@ -133,6 +136,10 @@
           of the league.
         </div>
       </div>
+      <p class="note">Each term keeps its own class list, so next year's cohort does not paste
+        over this one — set the term above first, then paste. A player's <em>id</em> is not
+        scoped to the term though: the same name means the same person across years, which is
+        what lets a returning student keep one history and an all-time record book exist at all.</p>
       <p class="note warn">⚠️ A player's id comes from their name, so re-saving the same list is
         safe but <em>renaming</em> somebody starts them a fresh history. Fix spellings before
         week 1, not after.</p>
@@ -159,8 +166,25 @@
         winner, so nobody — including you — reports a score. The two things it cannot judge are
         here. <strong>Cup</strong> retags a week 6 knockout game. <strong>Void</strong> is for
         when the wifi, not the player, was the problem; void is the last resort, never the
-        default, and un-voiding re-derives from the moves rather than restoring old numbers.</p>
+        default, and un-voiding re-derives from the moves rather than restoring old numbers.
+        <strong>✕</strong> is different again — it deletes a game that should never have been in
+        the archive at all, like a test run. A voided game stays; a deleted one is gone.</p>
       <p class="status" id="games-status" role="status"></p>
+    </section>
+
+    <!-- Deleting a cohort ---------------------------------------------- -->
+    <section id="danger">
+      <h2>Delete a term</h2>
+      <p class="note">Every game in it, and its class list. There is no undo and no backup —
+        this is for clearing a demo run before the real term starts, not for tidying.</p>
+      <div class="row" style="margin-top:12px">
+        <div style="flex:0 1 260px">
+          <label for="del-term">Type the term key to confirm</label>
+          <input id="del-term" type="text" spellcheck="false" placeholder="demo">
+        </div>
+        <div class="fit"><button class="danger" id="btn-del-term">Delete it</button></div>
+      </div>
+      <p class="status" id="del-status" role="status"></p>
     </section>
   </div>
 </main>
@@ -229,6 +253,9 @@ async function open() {
 function fill() {
   $('#term').value = state.config.term || '';
   $('#board').value = state.config.boardSize;
+  // The roster panel always edits the *current* term's list; the Games picker
+  // below only browses. Saying which one avoids the obvious confusion.
+  $('#roster-term').textContent = state.config.term || 'no term set';
   // `*` marks the instructor — one textarea rather than a row of checkboxes,
   // because this is pasted from a class list once a term.
   $('#roster').value = state.roster.map((r) => (r.instructor ? '*' : '') + r.name).join('\n');
@@ -267,6 +294,7 @@ function renderGames() {
         <td>
           <button class="sm" data-act="mode" data-id="${g.id}" data-to="${g.mode === 'cup' ? 'league' : 'cup'}">${g.mode === 'cup' ? 'League' : 'Cup'}</button>
           <button class="sm ${voided ? '' : 'danger'}" data-act="ending" data-id="${g.id}" data-to="${voided ? 'natural' : 'void'}">${voided ? 'Restore' : 'Void'}</button>
+          <button class="sm danger" data-act="delete" data-id="${g.id}" title="Delete this game outright — not the same as voiding it">✕</button>
         </td>
       </tr>`;
     })
@@ -324,13 +352,36 @@ $('#games').addEventListener('click', async (e) => {
   if (!btn) return;
   const { act, id, to } = btn.dataset;
   if (act === 'ending' && to === 'void' && !confirm('Void this game? It stops counting toward the league.')) return;
+  if (act === 'delete' && !confirm('Delete this game for good? Voiding is what you want if it really happened.')) return;
   try {
-    const body = act === 'mode' ? { id, mode: to } : { id, ending: to, reason: to === 'void' ? 'voided by the instructor' : '' };
+    const body =
+      act === 'mode'
+        ? { id, mode: to }
+        : act === 'delete'
+          ? { id, delete: true }
+          : { id, ending: to, reason: to === 'void' ? 'voided by the instructor' : '' };
     await api('/admin/game', { method: 'POST', body: JSON.stringify(body) });
     await reload();
-    say('#games-status', 'Saved.');
+    say('#games-status', act === 'delete' ? 'Deleted.' : 'Saved.');
   } catch (err) {
     say('#games-status', err.message, true);
+  }
+});
+
+// Typing the term key is the confirmation — the API refuses a request that
+// doesn't name it twice, so a misclick cannot wipe a cohort.
+$('#btn-del-term').addEventListener('click', async () => {
+  const term = $('#del-term').value.trim();
+  if (!term) return $('#del-term').focus();
+  if (!confirm(`Delete every game in “${term}” and its class list? This cannot be undone.`)) return;
+  try {
+    const out = await api('/admin/term', { method: 'POST', body: JSON.stringify({ term, confirm: term }) });
+    $('#del-term').value = '';
+    say('#del-status', `Deleted ${out.deleted} game${out.deleted === 1 ? '' : 's'} from “${out.term}”.`);
+    state = await api('/admin/state');
+    fill();
+  } catch (err) {
+    say('#del-status', err.message, true);
   }
 });
 

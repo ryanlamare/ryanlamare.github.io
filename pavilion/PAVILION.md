@@ -794,6 +794,44 @@ tagged **cup**, and a game the wifi rather than the player ruined, which is
 **void**. Void is the last resort, never the default (§11), and un-voiding
 re-derives from the move list rather than restoring the old numbers.
 
+**Deleting is not voiding, and both exist.** A **voided** game happened and
+should not count — it stays in the archive, and the instructor can restore it,
+which re-derives from the moves. A **deleted** game should never have been in
+the archive at all: a demo run, a test, a room two people opened by accident. It
+goes, moves and all. A whole term can go the same way, class list included, and
+the API refuses unless the caller names the term twice — a misclick must not be
+able to delete a cohort. There is no undo and no backup, which the page says.
+
+### Cohorts — how the archive spans years
+
+**The term key is the partition, and it is the only one.** Every record carries
+the term it was played under, `sum:` keys are per-term, and the archive can
+enumerate every term it has ever seen. So a league table is one term's
+summaries; the **Record Book** and the **Hall of Champions** are all of them
+merged. That is why the term went in on day one — reconstructing cohort
+boundaries from timestamps later is exactly the archaeology this project exists
+to avoid.
+
+⚖️ **The roster is per term; player ids are not** (2026-08-13). Those pull in
+opposite directions on purpose:
+
+- Each cohort keeps **its own class list**, so 2027 does not paste over 2026 and
+  *"who was in the 2026 class"* stays answerable in 2031. A single global roster
+  shipped for one day and was replaced before any real term existed — free then,
+  a migration afterwards, exactly the argument rules spec §10 makes.
+- An id is still a **bare slug of the name**, unscoped. Across cohorts the same
+  name means the same person, which is what makes an all-time record book
+  possible at all and what lets a student who takes the course twice keep one
+  history. ⚠️ The cost: two *different* people sharing a name in different years
+  would merge in all-time records. In a class of 14 to 36 that is a small risk
+  against a large gain, and it can never touch a term's own table, which reads
+  one term's summaries where the roster already made every id unique.
+
+**Records are self-contained**, which is what makes any of this survive. Each
+stored game carries the roster ids *and* the display names *and* the full move
+list, so a 2026 game is still readable, replayable and attributable in 2031 with
+every roster since replaced.
+
 Two smaller decisions worth not rediscovering:
 
 - **A player's id is a slug of their name**, so re-pasting the same roster is

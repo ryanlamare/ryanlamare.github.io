@@ -79,8 +79,15 @@ answers 401 — and with no term configured, games play normally and record
 nothing. Nothing else about the relay changes.
 
 Then open `https://ryanlamare.com/pavilion/admin/`, type the secret, set a term
-key (`2026-fall`) and paste the class list. From that moment every game between
-two rostered players records itself.
+key (`2026-fall`) and paste the class list — in that order, since the roster is
+stored per term. From that moment every game between two rostered players
+records itself.
+
+**Trying it out first**: set the term to `demo`, play, look around, then delete
+that term and set the real one. Deleting a term takes every game in it and its
+class list, and you have to type the term key to confirm. Games carry the term
+they were played under, so a demo term can also simply be left alone — nothing
+ever reads a term you don't ask for.
 
 `npx wrangler dev` runs the Worker locally on the same port as `dev-relay.js`,
 which is the way to check a change against the real Durable Object before

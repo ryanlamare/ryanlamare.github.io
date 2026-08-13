@@ -199,6 +199,39 @@ section('Term, roster and classification (archive.js)');
 }
 
 {
+  // The roster is per term, so a cohort's class list survives the next cohort
+  // arriving — "who was in the 2026 class" stays answerable in 2031.
+  const a = new Archive(new MemoryStore());
+  eq((await a.setRoster(['Sam'])).length, 0, 'with no term set there is nowhere to put a class list');
+
+  await a.setConfig({ term: '2026-fall' });
+  await a.setRoster(['Sam Okafor', 'Alex Reed']);
+  await a.setConfig({ term: '2027-summer' });
+  same(await a.roster(), [], 'a new term starts with no class list rather than the last one');
+  await a.setRoster(['Priya Raman']);
+
+  same((await a.roster('2026-fall')).map((r) => r.name), ['Sam Okafor', 'Alex Reed'], 'the old cohort is still there');
+  same((await a.roster()).map((r) => r.name), ['Priya Raman'], 'and the current one is its own');
+  same(await a.terms(), ['2026-fall', '2027-summer'], 'the archive knows every cohort, played or not');
+
+  // Ids are NOT scoped to the term: across cohorts the same name is the same
+  // person, which is what makes an all-time Record Book possible.
+  await a.setConfig({ term: '2028-fall' });
+  const back = await a.setRoster(['Sam Okafor']);
+  eq(back[0].id, 'sam-okafor', 'a returning student keeps the id their history is attached to');
+}
+
+{
+  // Whatever was pasted in under the single global roster of the first day is
+  // still readable, so nothing set up before this change was lost.
+  const a = new Archive(new MemoryStore({ roster: [{ id: 'sam', name: 'Sam', instructor: false }] }));
+  await a.setConfig({ term: '2026-fall' });
+  same((await a.roster()).map((r) => r.name), ['Sam'], 'a legacy global roster still reads');
+  await a.setRoster(['Alex']);
+  same((await a.roster()).map((r) => r.name), ['Alex'], 'and the first save per term replaces it');
+}
+
+{
   const a = new Archive(new MemoryStore());
   const room = playedRoom();
 
@@ -291,6 +324,62 @@ section('Writing, reading and amending a record');
   eq(back.result.winner, 0, 'with the same winner it had before');
 
   eq(await a.setMode('no-such-game', 'cup'), null, 'amending a game that is not there returns nothing');
+}
+
+// ---------------------------------------------------------------------------
+section('Deleting — a demo run, not a result');
+
+{
+  const a = new Archive(new MemoryStore());
+  await a.setConfig({ term: 'demo' });
+  await a.setRoster(['Sam', 'Alex']);
+
+  const ids = [];
+  for (const seed of ['d1', 'd2', 'd3']) {
+    const room = playedRoom({ seed });
+    room.startedAt += seed.charCodeAt(1);
+    room.ended = { ending: 'natural' };
+    ids.push((await a.record(room)).id);
+  }
+  eq((await a.games('demo')).length, 3, 'three demo games');
+
+  eq(await a.deleteGame(ids[0]), true, 'a single game can be deleted outright');
+  eq(await a.game(ids[0]), null, 'and it is gone, moves and all');
+  eq((await a.games('demo')).length, 2, 'and out of the term');
+  eq(await a.deleteGame(ids[0]), false, 'deleting it twice is not an error, just nothing');
+
+  // Deleting is not voiding. A void game stays in the archive on purpose —
+  // it happened, and the instructor can restore it.
+  await a.setEnding(ids[1], 'void', 'the wifi');
+  eq((await a.games('demo')).length, 2, 'a voided game is still in the archive');
+
+  await a.setConfig({ term: '2026-fall' });
+  await a.setRoster(['Priya']);
+  const keep = playedRoom({ seed: 'real' });
+  keep.ended = { ending: 'natural' };
+  await a.record({ ...keep, seats: [{ seat: 0, name: 'Priya', pid: 'priya' }, { seat: 1, name: 'Priya', pid: 'priya' }] });
+
+  eq(await a.deleteTerm('demo'), 2, 'a whole cohort goes at once');
+  same(await a.games('demo'), [], 'with nothing left in it');
+  same(await a.roster('demo'), [], 'and its class list gone too');
+  eq((await a.games('2026-fall')).length, 1, 'while every other term is untouched');
+  same(await a.terms(), ['2026-fall'], 'and the deleted term stops existing');
+}
+
+{
+  const a = new Archive(new MemoryStore());
+  const call = (route, opts = {}) => apiRoute(a, { route, ...opts });
+  await call('/admin/config', { method: 'POST', body: { term: 'demo' } });
+  await call('/admin/roster', { method: 'POST', body: { roster: ['Sam', 'Alex'] } });
+
+  eq((await call('/admin/term', { method: 'POST', body: { term: 'demo' } })).status, 400,
+    'deleting a term without naming it twice is refused');
+  eq((await call('/admin/term', { method: 'POST', body: { term: 'demo', confirm: 'dem' } })).status, 400,
+    'and a near miss is still refused');
+
+  const gone = await call('/admin/term', { method: 'POST', body: { term: 'demo', confirm: 'demo' } });
+  eq(gone.status, 200, 'naming it twice deletes it');
+  eq((await call('/session')).body.term, null, 'and deleting the term you are standing in leaves nothing recording');
 }
 
 // ---------------------------------------------------------------------------

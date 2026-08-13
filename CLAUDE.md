@@ -206,6 +206,13 @@ the same way `room.js` is); `admin/` is the instructor's page, behind one
 game records only when a term is set and every seat picked their name off the
 roster — everything else plays identically and simply doesn't record.
 
+The **term key is the only partition**: rosters are stored per term so each
+cohort keeps its own class list, but player **ids are bare name slugs and
+deliberately not scoped**, so the same name is the same person across years and
+an all-time Record Book is possible at all. **Voiding and deleting are different
+things** — a void happened and can be restored (re-derived from the moves); a
+delete should never have been archived and goes outright.
+
 After touching any of it run `test/relay.test.js` (headless clients over real
 WebSockets), `test/archive.test.js` (results, roster, storage, the API) and
 `test/online.test.js` (the real UI in headless Chrome, including a mid-game
