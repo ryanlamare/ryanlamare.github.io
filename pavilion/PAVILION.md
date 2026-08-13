@@ -217,6 +217,83 @@ the board length a setting rather than a constant.
 
 ---
 
+## Leagues and the records site — decided 2026-08-13, built at step 6
+
+Scoped with Ryan the day step 5 landed, from the question *"can I keep LER 565
+separate from games with my wife?"*. Nothing here is built. It is written down
+because **one part of it has a deadline and the rest doesn't**: the league is the
+front of the term key and gets stamped onto every game the moment one is played,
+so the naming has to be right before the first real game. The pages can be
+argued about for months.
+
+### A league is the front of the term key
+
+`ler565-2027-summer`, `ler565-2028-summer`, `kitchen`. The first segment is the
+league; everything after it is the season. That is the whole mechanism.
+
+⚖️ **A first-class league object was designed and deliberately skipped**
+(2026-08-13). It would have stored leagues as their own records, each with its
+own current term and rosters, with a room learning its league from a
+`?c=` link. That machinery only earns its keep when **two leagues record at the
+same time** — otherwise the single active term is never ambiguous. Ryan teaches
+one class at a time, so it was over-building, and he said so before it was
+written. If concurrent classes ever happen, this is the design to reach for and
+the reason it was passed over is recorded so it isn't reopened blind.
+
+⚖️ **Stamp the league on the record at write time**, derived from the term key,
+rather than parsing the term name on every page load. Same information; the
+difference is that a typo'd term key becomes a visible, fixable field in the
+admin page instead of a season silently missing from an all-time table with no
+clue why. About an hour of care at the start of step 6, and the cheapest
+insurance available on the one thing that would be miserable to debug later.
+
+### Seasons are optional, and that is the part easy to get wrong
+
+LER 565 has cohorts, so it has seasons. **You and your wife don't** — that is one
+continuous record. Nor does a challenge ladder. So a league is a set of games and
+a season is an *optional* subdivision of one. Do not hard-code the assumption
+that everything has a year attached; it is a cheap decision now and a rewrite
+once three pages assume otherwise.
+
+### The site shape — ESPN, not a dashboard
+
+```text
+/pavilion/records/            hub — pick a league
+/pavilion/records/ler565/     Table · Records · Honours, with a season picker
+/pavilion/records/kitchen/    the same page, no season picker
+```
+
+⚠️ **`/records/ler565/2027` is not available and the reason is the host.** GitHub
+Pages serves files that exist and cannot route, so a segment per season means a
+folder per season, forever. Losing that level costs nothing: **one small file per
+league, made once when the league starts**, with the season as a picker inside
+the page — which is what ESPN does anyway (`/nba/standings` with a year selector,
+not a URL per year). Short links that survive being read aloud, no build step, no
+404-rewrite trick.
+
+**A listed/unlisted flag per league**, so the hub shows LER 565 and not the
+kitchen table. Not secrecy — these pages carry names and scores, and the roster
+is already public by design (*Identity*) — just not advertised. A league that
+should genuinely not be stumbled on gets an unguessable id rather than a
+permission system.
+
+### The challenge ladder — students who ask to play outside class
+
+Ryan's idea, and it needs almost no new machinery: head-to-head history is
+already in the design, because it is what the pre-game splash shows. A ladder is
+that same data pointed at one person. Its roster grows as students join and never
+rotates, which is exactly why *Seasons are optional* above matters.
+
+⚠️ **It collides with the uplifting rule, and the fix is the shape not the
+data.** *Top five, never a full ranking; no wooden spoon* — but "W–L against
+Ryan" is by nature a complete ranking of everyone who has played him, with
+somebody at the bottom. So lead with **the instructor's own** record ("14 played,
+9 won"), give each student **their own line**, and celebrate biggest upset and
+most games played rather than listing all comers worst to best. Same rule as the
+public board, applied to a different shape.
+
+---
+
 ## The stats screens
 
 The sports-broadcast framing, and nearly free once the archive exists — it's all
@@ -812,6 +889,13 @@ merged. That is why the term went in on day one — reconstructing cohort
 boundaries from timestamps later is exactly the archaeology this project exists
 to avoid.
 
+⚠️ **Which is why term keys are named `<league>-<season>`** — `ler565-2027-summer`,
+`kitchen`. The first segment is the league and is what separates a class's tables
+from a kitchen-table rivalry; see *Leagues and the records site* above for the
+whole shape and for why a first-class league object was skipped. This naming is
+the one part of step 6 with a deadline, because it is stamped on every game the
+moment it is played.
+
 ⚖️ **The roster is per term; player ids are not** (2026-08-13). Those pull in
 opposite directions on purpose:
 
@@ -1141,6 +1225,10 @@ reader can tell a quotation from a choice.
 6. **The league table, stats screens, Record Book, Hall of Champions, The
    Bulletin, instructor board.** All queries over stored games; nothing about
    the engine, the wire format or the archive has to change for any of them.
+   The site structure they hang off — leagues, seasons, the records hub, the
+   challenge ladder — was scoped on 2026-08-13 and is under *Leagues and the
+   records site* above. Read it first: one decision in it (the league is the
+   front of the term key) is already stamped on every game recorded.
 
 ### Testing
 
