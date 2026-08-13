@@ -331,8 +331,21 @@ records/records.js      the one engine every league page runs
 records/records.css     shared house style, the board's palette copied
 records/index.html      the hub — hand-written league list
 records/ler565/         a league page: a title, an id, and the engine
+relay/seed.js           fill an archive, so there is something to look at
 test/stats.test.js      78 checks over the arithmetic
 ```
+
+```bash
+node pavilion/relay/seed.js          # a seeded dev relay on :8787, gone on Ctrl-C
+node pavilion/relay/seed.js --live   # real games into the deployed relay
+```
+
+⚠️ **Live seeding plays actual games** — two clients, a real room, moves over
+the wire — because `/record` is not reachable from outside and there is no way
+to write a game without playing it. That is the property worth having, not an
+inconvenience. It refuses any term that doesn't look like a trial
+(`demo`/`test`/`trial`), because a seeded table is a fiction and a fiction in a
+real cohort's record is what this archive exists not to hold.
 
 Five decisions taken while building it, worth not rediscovering:
 

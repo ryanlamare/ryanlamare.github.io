@@ -190,6 +190,10 @@ belongs there instead. Two rules that look like details and are not: the hub's
 hand-written list **is** the listed/unlisted flag, and the top-five-never-a-full-
 ranking rule is enforced at the point of display, not by the API.
 
+An empty archive shows you nothing, so `node pavilion/relay/seed.js` starts a
+dev relay full of plausible games (`--live` plays real ones into the deployed
+relay, and refuses any term that isn't a `demo`/`test`/`trial`).
+
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)
 before committing engine or bot changes. The board UI (`index.html`/`style.css`/`ui.js`) previews through
