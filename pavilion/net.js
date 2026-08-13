@@ -260,6 +260,33 @@ export async function fetchSession(wsUrl, { timeoutMs = 4000 } = {}) {
   }
 }
 
+// The league's own games — what the pre-game splash and the post-game screen
+// are made of (build step 6). Public for the same reason `/session` is: this is
+// the same data the records site serves to anyone who opens it.
+//
+// Summaries only, never move lists, so a season of a 36-student cohort is a few
+// hundred small objects. It fails soft like everything else here: no relay, no
+// term, an old relay without the route — the game plays exactly as before and
+// the splash simply doesn't appear.
+export async function fetchLeagueGames(wsUrl, { league, season = null, timeoutMs = 6000 } = {}) {
+  if (!wsUrl || !league) return null;
+  try {
+    const url = new URL(`${apiBase(wsUrl)}/records/games`);
+    url.searchParams.set('league', league);
+    // A season is optional and `null` is a real answer (result.js, splitTerm),
+    // but an empty `season=` means "all of them" to the route — so a seasonless
+    // league sends no parameter at all rather than an empty one.
+    if (season != null && season !== '') url.searchParams.set('season', season);
+    const stop = AbortSignal.timeout ? AbortSignal.timeout(timeoutMs) : undefined;
+    const res = await fetch(url, { signal: stop, cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data.games) ? data.games : null;
+  } catch {
+    return null;
+  }
+}
+
 // Self-reported, for the clock-fairness question the memo wants answered from
 // data rather than guessed (PAVILION.md, Mobile and devices).
 export function deviceKind() {

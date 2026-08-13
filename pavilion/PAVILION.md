@@ -7,10 +7,11 @@ identity, replay-derived results, instructor admin (2026-08-13). **Step 6 is
 underway** (2026-08-13): the league stamp, `relay/stats.js` — every table,
 record and honour as pure queries — the two public read routes, and the records
 site itself at `/pavilion/records/` (hub, and the LER 565 league page with
-Table · Records · Honours and a season picker). Still to build: the pre-game
-splash, the post-game screen, the instructor live board, the Bulletin and the
-challenge ladder. All of those are more queries over the same module; none of
-them needs the engine, the wire format or the archive to change.**
+Table · Records · Honours and a season picker). The **pre-game splash and
+post-game screen** landed 2026-08-14 (see *The stats screens*). Still to build:
+the instructor live board, the Bulletin and the challenge ladder. All of those
+are more queries over the same module; none of them needs the engine, the wire
+format or the archive to change.**
 
 **The theme was rebuilt on 2026-08-12 and the game is now *Pavilion* — see
 *Theme* below, which is the part of this memo to read first, along with the
@@ -482,13 +483,13 @@ The **Honours** tab is gone, replaced by the **Hall of Champions** (above) —
 with seeding cut there is no top seed to record, and a roll of honour listing
 one prize was a list of one thing.
 
-Still to build, all of it more queries over `stats.js`: the **pre-game splash**
-and **post-game screen** (`headToHead` and `movement` exist and are tested, and
-nothing renders them yet), the **instructor live board**, the **Bulletin**, the
-**challenge ladder**, and the piece the restructure left — **wiring the bracket
-to the archive**, so week 6's results are not typed into a page while the same
-games are recording themselves. (Seeding was the other one, and it is cut — see
-*League, cup, awards*.)
+Still to build, all of it more queries over `stats.js`: the **instructor live
+board**, the **Bulletin**, the **challenge ladder**, and the piece the
+restructure left — **wiring the bracket to the archive**, so week 6's results
+are not typed into a page while the same games are recording themselves.
+(Seeding was the other one, and it is cut — see *League, cup, awards*.) The
+**pre-game splash** and **post-game screen** were built 2026-08-14 — see *The
+stats screens*.
 
 ---
 
@@ -496,6 +497,45 @@ games are recording themselves. (Seeding was the other one, and it is cut — se
 
 The sports-broadcast framing, and nearly free once the archive exists — it's all
 just queries over stored games.
+
+### Both of them built — 2026-08-14
+
+```text
+net.js            fetchLeagueGames() — the season's summaries, failing soft
+ui.js             the two screens: renderTape() and renderAftermath()
+index.html        #tape in the lobby, #end-after in the result modal
+style.css         .tape / .aftermath
+```
+
+⚖️ **The splash lives in the lobby**, not on a screen of its own between the
+start and the board. Everything asked for below is already true of the lobby:
+both players are looking at it, it is brief, the host's **"Start the game" is
+the click-to-start**, and no clock has begun because no game has. A screen after
+the start would have to be dismissed by each device separately — and a player
+still reading theirs while the other has moved is exactly the clock-eating this
+section warns about. The card appears when **every seat has picked a name off
+the roster**, which is the same condition under which the game records at all.
+
+Four things worth not rediscovering:
+
+- **The archive is the trigger for both screens, and its absence shows nothing.**
+  The post-game screen is drawn from the **receipt**, not from the local board,
+  and a game this client holds no history for shows nothing rather than a first
+  meeting on an empty table. A confident lie is worse than a gap.
+- **The finished game is removed by id and put back**, so it makes no
+  difference whether the season we are holding was fetched before the game or
+  after it. A **rematch never passes the lobby again**, so the cache learns
+  about the game that just ended or the next screen shows a stale series —
+  which `test/online.test.js` now plays out twice to check.
+- **The Cup moves the series but not the table.** A knockout game is in
+  `RECORD_MODES` and not in `LEAGUE_MODES`: two people meeting in the final have
+  met, and the league table does not move in June. Exhibitions and practice
+  games show neither.
+- **The scoreline is one "side" per player** — name and number together, with
+  the separator as a CSS pseudo-element — because the mirrored marquee form
+  (*name score – score name*) wraps at 390px and orphans the second name. A
+  phone stacks the same markup into a scoreboard, and a three-player room needs
+  that shape anyway.
 
 **Pre-game splash:** head-to-head record, each player's personal best, average
 score, recent form (`W L W W L`), last meeting's score. Must degrade gracefully
@@ -1436,8 +1476,9 @@ reader can tell a quotation from a choice.
    Bulletin, instructor board.** All queries over stored games; nothing about
    the engine, the wire format or the archive has to change for any of them.
    **Underway since 2026-08-13** — the stamp, `relay/stats.js`, the public read
-   routes and the records site are in; the splash, post-game screen, instructor
-   board, Bulletin and ladder are not. *What step 6 built* has the detail.
+   routes, the records site and (2026-08-14) the pre-game splash and post-game
+   screen are in; the instructor board, Bulletin and ladder are not. *What step
+   6 built* and *The stats screens* have the detail.
    The site structure they hang off — leagues, seasons, the records hub, the
    challenge ladder — was scoped on 2026-08-13 and is under *Leagues and the
    records site* above. Read it first. Its one deadline piece is **done**: the

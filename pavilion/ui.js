@@ -26,7 +26,11 @@
 import * as E from './engine.js';
 import { greedyMove } from './bot.js';
 import { freshSeed } from './words.js';
-import { Relay, defaultRelayUrl, deviceKind, fetchSession } from './net.js';
+import { Relay, defaultRelayUrl, deviceKind, fetchSession, fetchLeagueGames } from './net.js';
+// The stats screens read the archive through the same pure queries the records
+// site and the tests run — no second implementation, and no arithmetic here.
+import { headToHead, movement, standings, playerCard } from './relay/stats.js';
+import { splitTerm } from './relay/result.js';
 
 // Every nation sent a commissioner to Chicago to see its pavilion built.
 // Yours is across the way, hiring from the same crowd, and they have done
@@ -1016,6 +1020,9 @@ function endGame(ending, flaggedSeat = null) {
   $('#end-net').textContent =
     G.online && !host ? `Waiting for ${G.names[0]} to start a rematch — same room, a new crowd.` : '';
   renderRecordLine();
+  // Empty until the receipt lands a beat later — which is the pacing a
+  // broadcast would choose anyway, the table moving after the final whistle.
+  renderAftermath();
 
   $('#end-modal').showModal?.();
 }
@@ -1032,6 +1039,7 @@ function onRecorded(msg) {
   if (!G || !G.online) return;
   G.recorded = msg;
   renderRecordLine();
+  renderAftermath();
 }
 
 function renderRecordLine() {
@@ -1063,6 +1071,265 @@ function renderRecordLine() {
   );
   const where = rec.mode === 'cup' ? 'the Cup' : 'the league';
   el.textContent = `Recorded to ${where}${pts.length ? ` — ${pts.join(', ')}` : ''}.`;
+}
+
+// ---------------------------------------------------------------------------
+// The stats screens (build step 6, PAVILION.md — *The stats screens*).
+//
+// Two of them: the **pre-game splash**, which is the head-to-head card in the
+// lobby, and the **post-game screen**, which is what the finished game did to
+// the season. Both are pure queries over `relay/stats.js` — this file supplies
+// the words and the theatre, exactly as it does for the board.
+//
+// ⚖️ **The splash lives in the lobby**, rather than being its own screen
+// between the start and the board (2026-08-14). The memo asks for a card that
+// is brief, mutually visible, click-to-start and must not eat the clock, and
+// the lobby is already all four: both players are looking at it, the host's
+// "Start the game" *is* the click, and no clock has started because no game
+// has. A screen after the start would have to be dismissed by each device
+// separately, and a player still reading it while the other has moved is
+// exactly the clock-eating the memo warns about.
+//
+// ⚠️ **No league position on the splash** (memo, and the reason is narrow):
+// the splash is shown involuntarily with an opponent reading the same screen,
+// which is the wrong place to surface someone's standing. `playerCard` hands us
+// a rank and we deliberately do not print it — a student's own position is on
+// the records page, where it is theirs to look at.
+
+// The season's games, fetched once and reused by both screens. A minute is
+// long enough to cover opening a room and playing a rematch, and short enough
+// that a lobby opened after somebody else's game shows it.
+// Named for the screen it feeds, and deliberately not `history` — that is a
+// browser global, and a module-scoped shadow of one is a trap for a reader.
+const SEASON_TTL = 60000;
+let seasonSoFar = null; // {league, season, games, at}
+let seasonLoad = null;
+
+async function loadHistory(force = false) {
+  if (!session?.term || !RELAY_URL) return null;
+  if (!force && seasonSoFar && Date.now() - seasonSoFar.at < SEASON_TTL) return seasonSoFar;
+  if (seasonLoad) return seasonLoad;
+  const { league, season } = splitTerm(session.term);
+  seasonLoad = fetchLeagueGames(RELAY_URL, { league, season })
+    .then((games) => {
+      // A failed fetch keeps what we had: a splash showing last week's numbers
+      // beats one that vanishes because the wifi blinked.
+      if (games) seasonSoFar = { league, season, games, at: Date.now() };
+      return seasonSoFar;
+    })
+    .finally(() => {
+      seasonLoad = null;
+    });
+  return seasonLoad;
+}
+
+function when(at) {
+  return at ? new Date(at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+}
+
+function ordinal(n) {
+  if (!Number.isFinite(n)) return '';
+  const v = n % 100;
+  const s = ['th', 'st', 'nd', 'rd'];
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// Form, newest first, as the records site draws it — same letters, same
+// classes, so the two pages read as one thing.
+function formHTML(form) {
+  if (!form || !form.length) return '<span class="form empty">No games yet</span>';
+  const said = form.map((f) => ({ W: 'won', D: 'drew', L: 'lost' })[f]).join(', ');
+  return `<span class="form" aria-label="Form, newest first: ${said}">${form
+    .map((f) => `<b class="${f}" aria-hidden="true">${f}</b>`)
+    .join('')}</span>`;
+}
+
+// Every seat, in seat order, with the roster id it plays under. `null` in here
+// means somebody typed their name — that game records nothing (archive.js,
+// classify), so neither screen has anything true to say about it.
+function seatedPlayers() {
+  const seats = [...(netRoom?.seats || [])].sort((a, b) => a.seat - b.seat);
+  return { names: seats.map((s) => s.name), ids: seats.map((s) => s.pid) };
+}
+
+// --- the pre-game splash ----------------------------------------------------
+
+let tapeKey = null; // what the card was built for, so it animates once
+
+function renderTape() {
+  const el = $('#tape');
+  if (!el) return;
+  const { names, ids } = seatedPlayers();
+  const known = ids.length >= 2 && ids.every(Boolean);
+  if (!known || !seasonSoFar) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    tapeKey = null;
+    return;
+  }
+  // renderLobby runs on every presence flicker; the card is rebuilt only when
+  // the players or the archive behind it actually change, or the numbers would
+  // re-animate every time somebody's phone slept.
+  const key = ids.join('|') + '@' + seasonSoFar.at;
+  if (key === tapeKey) return;
+  tapeKey = key;
+
+  const h2h = headToHead(seasonSoFar.games, ids);
+  const wins = ids.map((id) => h2h.wins[id] || 0);
+  const shared = h2h.drawn ? `<span class="tape-drawn">${count(h2h.drawn, 'game', 'games')} shared</span>` : '';
+
+  // One "side" per player, name and number together, and the separator between
+  // them is a CSS pseudo-element rather than markup. That is what lets a phone
+  // stack the same line into a scoreboard — at 390px the mirrored marquee form
+  // (name score – score name) wraps and orphans the second name, and a
+  // three-player room needs the stacked shape at any width anyway.
+  const cls = h2h.first ? 'first' : ids.length === 2 ? '' : 'many';
+  const score =
+    `<p class="tape-score ${cls}">` +
+    names
+      .map(
+        (n, i) =>
+          `<span class="side"><span class="tn">${esc(n)}</span>${h2h.first ? '' : `<b>${wins[i]}</b>`}</span>`
+      )
+      .join('') +
+    '</p>';
+
+  const cols = ids
+    .map((id, i) => {
+      // playerCard is null for a player with no league games yet, which in
+      // week 1 is everybody — the card says so rather than showing zeros.
+      const c = playerCard(seasonSoFar.games, id);
+      return `<div class="tape-col">
+        <p class="tape-name">${esc(names[i])}</p>
+        ${formHTML(c?.form)}
+        <dl class="tape-stats">
+          <div><dt>Best</dt><dd>${c?.played ? c.best : '—'}</dd></div>
+          <div><dt>Average</dt><dd>${c?.played ? (Math.round(c.avg * 10) / 10).toFixed(1) : '—'}</dd></div>
+          <div><dt>Played</dt><dd>${c?.played ?? 0}</dd></div>
+        </dl>
+      </div>`;
+    })
+    .join('');
+
+  const last = h2h.last
+    ? `<p class="tape-last">Last met ${when(h2h.last.at)} — ${h2h.last.names
+        .map((n, i) => `${esc(n)} ${h2h.last.scores[i]}`)
+        .join(', ')}</p>`
+    : '';
+
+  el.innerHTML =
+    `<p class="tape-kicker">${
+      h2h.first ? 'First meeting' : count(h2h.played, 'previous meeting', 'previous meetings')
+    }${shared}</p>` +
+    score +
+    `<div class="tape-grid">${cols}</div>` +
+    last;
+  el.classList.remove('hidden');
+}
+
+// --- the post-game screen ---------------------------------------------------
+
+// The receipt is the trigger, not the local result: the head-to-head and the
+// table have to move by the *server's* numbers, and a game that recorded
+// nothing moved nothing (PAVILION.md — nobody reports a result).
+function renderAftermath() {
+  const el = $('#end-after');
+  if (!el) return;
+  el.classList.add('hidden');
+  el.innerHTML = '';
+
+  const rec = G?.recorded;
+  if (!rec?.recorded || !rec.result || rec.result.ending === 'void') return;
+  // Exhibitions and practice games are archived and compete in nothing, so
+  // there is no series and no movement to show (stats.js, LEAGUE_MODES).
+  if (rec.mode !== 'league' && rec.mode !== 'cup') return;
+  const { names, ids } = seatedPlayers();
+  if (ids.length < 2 || !ids.every(Boolean)) return;
+  if (!seasonSoFar) {
+    // ⚠️ Without the archive there is no "before", and this game on its own
+    // would read as a first meeting on an empty table — a confident lie rather
+    // than a gap. So it shows nothing and tries the fetch once; the receipt
+    // line above still says the game recorded, which is the part that matters.
+    loadHistory().then((h) => h && renderAftermath());
+    return;
+  }
+
+  const games = seasonSoFar.games;
+  // Idempotent by construction: this game is taken *out* of the before-table by
+  // id and put back for the after-table, so it makes no difference whether the
+  // archive we are holding was fetched before this game or after it.
+  const before = games.filter((g) => g.id !== rec.id);
+  const after = [...before, localSummary(rec, ids, names)];
+  if (games.length === before.length) {
+    // A rematch never passes the lobby again, so the cache has to learn about
+    // the game that just finished or the next screen shows a stale series.
+    seasonSoFar.games = after;
+    seasonSoFar.at = Date.now();
+  }
+
+  const h2h = headToHead(after, ids);
+  const series = seriesLine(h2h, ids, names);
+  // The Cup is a knockout and moves nothing in the league table; the series
+  // still counts it, because two people meeting in the final have met.
+  const moved = rec.mode === 'league' ? movement(standings(before), standings(after), ids) : [];
+  const lines = moved.filter((m) => Number.isFinite(m.to)).map(movementLine);
+
+  el.innerHTML =
+    `<p class="after-kicker">The season so far</p>` +
+    `<p class="series">${esc(series)}</p>` +
+    (lines.length
+      ? `<ul class="moves">${lines
+          .map((l) => `<li class="${l.cls}"><b class="delta">${l.chip}</b><span>${esc(l.text)}</span></li>`)
+          .join('')}</ul>`
+      : '');
+  el.classList.remove('hidden');
+  announce(series + ' ' + lines.map((l) => l.text).join('. '));
+}
+
+// What the server just archived, as `stats.js` reads a game. Built from the
+// receipt rather than from our own board: the result that counts is the one
+// derived by replay (relay/result.js).
+// `ids` and `names` both come from the room's seats rather than one from there
+// and one off the receipt — two orderings that agree today is not a reason to
+// hand a stats query a chance of pairing the wrong name to the wrong id.
+function localSummary(rec, ids, names) {
+  const { league, season } = splitTerm(rec.term);
+  return {
+    id: rec.id,
+    term: rec.term,
+    league,
+    season,
+    mode: rec.mode,
+    seats: ids,
+    names,
+    endedAt: Date.now(),
+    plies: G.moves.length,
+    result: rec.result,
+  };
+}
+
+function seriesLine(h2h, ids, names) {
+  const w = ids.map((id) => h2h.wins[id] || 0);
+  // Week 1 is every pair's first meeting, and saying so plainly beats a 1–0
+  // series that reads as though there were a history behind it.
+  if (h2h.played <= 1) return 'Their first meeting.';
+  const shared = h2h.drawn ? `, with ${count(h2h.drawn, 'game', 'games')} shared` : '';
+  if (ids.length !== 2) {
+    return `${h2h.played} meetings — ` + names.map((n, i) => `${n} ${w[i]}`).join(', ') + shared + '.';
+  }
+  if (w[0] === w[1]) return `The series is level at ${w[0]}–${w[1]}${shared}.`;
+  const lead = w[0] > w[1] ? 0 : 1;
+  return `${names[lead]} leads the series ${w[lead]}–${w[1 - lead]}${shared}.`;
+}
+
+// "Sam ↑2 to 4th" (PAVILION.md). A player with no `from` has just entered the
+// table, which reads as arriving rather than as a rise of null.
+function movementLine(m) {
+  const where = ordinal(m.to);
+  if (!Number.isFinite(m.from)) return { cls: 'new', chip: '•', text: `${m.name} is on the board in ${where}` };
+  if (m.moved > 0) return { cls: 'up', chip: `↑${m.moved}`, text: `${m.name} to ${where}` };
+  if (m.moved < 0) return { cls: 'down', chip: `↓${-m.moved}`, text: `${m.name} to ${where}` };
+  return { cls: 'hold', chip: '–', text: `${m.name} holds ${where}` };
 }
 
 // The game record (§10) — for the Download-record button behind `?dev=1`, and
@@ -1385,6 +1652,9 @@ function showLobby() {
   $('#lobby').classList.remove('hidden');
   renderLobby();
   renderNetChip();
+  // The splash's data, fetched while the room fills up — so the card is ready
+  // by the time the second player arrives, and nothing waits on it if it isn't.
+  loadHistory().then(() => renderLobby());
 }
 
 function renderLobby() {
@@ -1412,6 +1682,7 @@ function renderLobby() {
       ? 'Read the code out in your breakout room, then start when everyone is in.'
       : 'Everyone is in — start when you are ready.'
     : `Waiting for ${seats[0]?.name || 'the host'} to start the game.`;
+  renderTape();
 }
 
 // ---------------------------------------------------------------------------
@@ -1616,6 +1887,9 @@ async function loadRoster() {
   me = saved ? s.roster.find((r) => r.id === saved.id) || null : null;
   $('#name-field').classList.add('rostered');
   renderNameInputs();
+  // Warm the archive while the player is still choosing a name, so the splash
+  // is already there when the room fills. Nothing waits on it.
+  loadHistory();
 }
 
 $$('#players-seg .seg-btn').forEach((btn) => {
@@ -1939,6 +2213,16 @@ if (smokeParams.get('uitest') === 'online') {
       expect($$('#lobby-seats li').length === 2, 'both seats are listed');
       expect($('#lobby-seats .you') !== null, 'your own seat is marked');
 
+      // --- the pre-game splash (build step 6) ------------------------------
+      // Two rostered players in a room is the whole trigger; with an empty
+      // archive behind it the card says "first meeting", which is a real
+      // answer and not an empty state (PAVILION.md, The stats screens).
+      await until(() => !$('#tape').classList.contains('hidden'), 'the pre-game splash');
+      expect($('#tape .tape-kicker').textContent.includes('First meeting'), 'week 1 reads as a first meeting');
+      expect($$('#tape .tape-col').length === 2, 'both players are on the card');
+      expect($('#tape').textContent.includes('Sam') && $('#tape').textContent.includes('Alex'), 'by name');
+      expect(!/\b1st\b|\b2nd\b/.test($('#tape').textContent), 'and no league position on the splash');
+
       // --- start ------------------------------------------------------------
       $('#btn-lobby-start').click();
       await until(() => G && G.online && opp.state, 'the game to start');
@@ -1987,6 +2271,17 @@ if (smokeParams.get('uitest') === 'online') {
       );
       expect($('#end-record').textContent.includes('league'), 'the modal says so');
 
+      // --- the post-game screen (build step 6) -----------------------------
+      // The receipt is the trigger, so by here it has already landed. The
+      // first game of a season moves both players onto an empty table.
+      expect(!$('#end-after').classList.contains('hidden'), 'the post-game screen filled in');
+      expect($('#end-after .series').textContent === 'Their first meeting.', 'the series starts here');
+      expect($$('#end-after .moves li').length === 2, 'both players moved');
+      expect(
+        $('#end-after .moves').textContent.includes('on the board in 1st'),
+        'and the winner is on the board in 1st'
+      );
+
       // --- rematch: same room, same seats, fresh bag -----------------------
       const firstSeed = G.seed;
       $('#btn-rematch').click();
@@ -1998,6 +2293,21 @@ if (smokeParams.get('uitest') === 'online') {
       await playOut('rematch');
       expect(G.cur.over, 'the rematch finished too');
       expect(opp.mismatch === 0, 'and agreed hash for hash');
+
+      // --- and the second game knows about the first ------------------------
+      // A rematch never passes the lobby again, so this is the check that the
+      // screens carry their own history forward rather than showing a stale
+      // series after every game but the first.
+      await until(() => G.recorded, 'the second receipt');
+      await until(() => !$('#end-after').classList.contains('hidden'), 'the second post-game screen');
+      const series = $('#end-after .series').textContent;
+      expect(series !== 'Their first meeting.', 'the second meeting is not the first');
+      expect(series.includes('series'), `the series line reads a series (${series})`);
+      expect($$('#end-after .moves li').length === 2, 'both players moved again');
+      expect(
+        !$('#end-after .moves').textContent.includes('on the board'),
+        'and nobody arrives on the table twice'
+      );
 
       out.textContent = fails.length ? 'NETSMOKE FAIL: ' + fails.join('; ') : 'NETSMOKE OK';
     } catch (err) {

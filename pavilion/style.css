@@ -310,6 +310,103 @@ legend {
 .lobby-actions .cta { flex: 1; }
 .cta:disabled { opacity: .45; box-shadow: none; }
 
+/* ------------------------------------------- the pre-game splash (step 6) */
+
+/* The tale of the tape, in the lobby. It is a *splash*: the numbers land with
+   a pop rather than being drawn (PAVILION.md, The stats screens — animation is
+   the default experience here, not garnish). It rebuilds only when the players
+   or the archive change, so the animation plays once per matchup. */
+.tape {
+  border: 1px solid var(--line); border-radius: 12px;
+  background: #FBF7EC; padding: 14px 16px 16px; margin-bottom: 16px;
+  animation: tape-in .5s cubic-bezier(.2, .9, .3, 1) both;
+}
+.tape.hidden { display: none; }
+@keyframes tape-in { 0% { opacity: 0; transform: translateY(10px); } }
+
+.tape-kicker {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  display: flex; gap: 8px; justify-content: center; align-items: baseline;
+}
+.tape-drawn { font-weight: 600; letter-spacing: .06em; opacity: .75; }
+
+/* The series score is one of the four moments that earn the period face — it
+   is the marquee line of the card and nothing else on the screen is set in it
+   except the room code above. Well over the 30px floor the hairlines need. */
+.tape-score {
+  font-family: var(--display);
+  display: flex; align-items: baseline; justify-content: center;
+  gap: 4px 12px; flex-wrap: wrap; margin: 2px 0 12px;
+}
+.tape-score .side { display: flex; align-items: baseline; gap: 9px; }
+/* The separator lives in CSS, not in the markup, so the narrow layout below
+   can drop it without the renderer knowing which shape it is drawing. */
+.tape-score .side + .side::before {
+  content: '–'; margin-right: 4px; font-size: 20px; color: var(--muted);
+}
+.tape-score.first .side + .side::before { content: 'v'; }
+.tape-score.many .side + .side::before { content: '·'; }
+.tape-score .tn { font-size: clamp(20px, 4.2vw, 26px); }
+.tape-score b { font-size: clamp(34px, 8vw, 46px); color: var(--red); line-height: 1; }
+.tape-score.first .tn { font-size: clamp(22px, 5vw, 30px); }
+.tape-score.many b { font-size: clamp(24px, 5vw, 32px); }
+/* The pop the memo asks for: the numbers arrive after the names. */
+.tape-score b { animation: tape-pop .55s cubic-bezier(.2, 1.5, .4, 1) both .18s; }
+@keyframes tape-pop { 0% { transform: scale(.4); opacity: 0; } }
+
+/* On a phone the marquee becomes a scoreboard: one player per row, name left,
+   number right. The mirrored form wraps at 390px and orphans the second name,
+   and this shape takes a third player without changing again. */
+@media (max-width: 560px) {
+  .tape-score { display: grid; gap: 0; }
+  .tape-score .side { justify-content: space-between; }
+  .tape-score .side + .side::before { content: none; }
+  .tape-score .tn,
+  .tape-score.first .tn { font-size: 21px; }
+  .tape-score b { font-size: 30px; }
+}
+
+.tape-grid { display: flex; gap: 12px; }
+.tape-col {
+  flex: 1; min-width: 0; text-align: center;
+  border-top: 1px solid var(--line); padding-top: 10px;
+}
+.tape-name {
+  font-weight: 800; font-size: 14px; margin-bottom: 6px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Same letters, same colours as the records site's form column: the two are
+   one thing seen from two places. */
+.tape .form { display: inline-flex; gap: 3px; }
+.tape .form b {
+  width: 17px; height: 17px; border-radius: 4px; font-size: 10px; font-weight: 700;
+  display: grid; place-items: center; color: var(--card); background: var(--muted);
+  animation: tape-pop .4s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.tape .form b:nth-child(2) { animation-delay: .04s; }
+.tape .form b:nth-child(3) { animation-delay: .08s; }
+.tape .form b:nth-child(4) { animation-delay: .12s; }
+.tape .form b:nth-child(5) { animation-delay: .16s; }
+.tape .form b.W { background: var(--nat); }
+.tape .form b.D { background: var(--sci); }
+.tape .form b.L { background: var(--well); color: var(--muted); }
+.tape .form.empty { font-size: 11.5px; color: var(--muted); font-style: italic; }
+
+.tape-stats { display: grid; gap: 2px; margin-top: 9px; font-variant-numeric: tabular-nums; }
+.tape-stats > div { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+.tape-stats dt { color: var(--muted); }
+.tape-stats dd { font-weight: 700; }
+
+.tape-last {
+  margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--line);
+  font-size: 12.5px; color: var(--muted); text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tape, .tape-score b, .tape .form b { animation: none; }
+}
+
 /* ----------------------------------------------------------------- topbar */
 
 #game { min-height: 100%; display: flex; flex-direction: column; }
@@ -714,6 +811,51 @@ button.tile:hover { transform: translateY(-3px); }
 .final-table .num { text-align: right; }
 .final-table .win td { font-weight: 800; }
 .final-table .total { font-size: 18px; }
+
+/* ------------------------------------------ the post-game screen (step 6) */
+
+/* What the game did to the season. It arrives a beat after the modal, when the
+   archive's receipt lands, so it slides in under the finished table rather
+   than being part of the card that was already there. */
+.aftermath {
+  margin: 6px 36px 0; padding: 14px 16px;
+  background: #FBF7EC; border: 1px solid var(--line); border-radius: 12px;
+  animation: after-in .45s cubic-bezier(.2, .9, .3, 1) both;
+}
+.aftermath.hidden { display: none; }
+@keyframes after-in { 0% { opacity: 0; transform: translateY(8px); } }
+
+.after-kicker {
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+}
+.series { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+
+.moves { list-style: none; display: grid; gap: 6px; }
+.moves li {
+  display: flex; align-items: center; gap: 9px; font-size: 14px;
+  animation: tape-pop .45s cubic-bezier(.2, 1.4, .4, 1) both .12s;
+}
+.moves li:nth-child(2) { animation-delay: .22s; }
+.moves li:nth-child(3) { animation-delay: .32s; }
+/* The chip carries the movement and the sentence carries the rest, so a glance
+   reads the direction and a second reads the position. */
+/* A climb is the only one in colour. Holding and slipping are pale rather than
+   red — nothing here is a wooden spoon (PAVILION.md, Award names) — but the
+   glyph on them is full-strength ink, because "quiet" must not mean "hard to
+   read": beige on beige at 12px fails contrast, and this is 12px. */
+.moves .delta {
+  min-width: 34px; text-align: center; padding: 2px 6px; border-radius: 999px;
+  font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: var(--well); color: var(--ink);
+}
+.moves .up .delta { background: var(--nat); color: var(--card); }
+.moves .down .delta { background: var(--well-deep); color: var(--ink); }
+.moves .new .delta { background: var(--sci); color: var(--card); }
+
+@media (prefers-reduced-motion: reduce) {
+  .aftermath, .moves li { animation: none; }
+}
 
 .end-net {
   padding: 0 36px; font-size: 13px; color: var(--muted); font-style: italic;
