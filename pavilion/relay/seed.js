@@ -113,7 +113,7 @@ async function local() {
   const first = await archive.games('ler565-2027-summer');
   await archive.setMode(first[0].id, 'cup');
   await archive.setChampion('ler565-2027-summer', {
-    emblem: 'ic-ele',
+    emblem: 'em-husky',
     quote: 'Never once took the tile I wanted. Took the one she needed.',
   });
   const b = await season('ler565-2028-summer', 3, CLASS.slice(2));

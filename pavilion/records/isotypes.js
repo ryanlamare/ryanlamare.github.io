@@ -58,6 +58,11 @@ export const EMBLEMS = [
   { id: 'im-fist', label: 'Fist' },
   { id: 'im-worker', label: 'Worker' },
   { id: 'im-crowd-grid', label: 'Crowd' },
+  // Drawn for this cabinet (2026-08-13), the first four bespoke ones.
+  { id: 'em-cat', label: 'Cat' },
+  { id: 'em-hound', label: 'Hound' },
+  { id: 'em-husky', label: 'Husky' },
+  { id: 'em-terrier', label: 'Terrier' },
 ];
 
 export const SPRITE = `<svg style="display:none" aria-hidden="true">
@@ -103,4 +108,45 @@ export const SPRITE = `<svg style="display:none" aria-hidden="true">
   <symbol id="im-fist" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"></rect><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"></rect><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"></rect><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"></line></symbol>
   <symbol id="im-worker" viewBox="0 0 90 132"><circle fill="var(--ink,#1B1C19)" cx="45" cy="20" r="14"></circle><path fill="var(--ink,#1B1C19)" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"></path><rect fill="var(--ink,#1B1C19)" x="31" y="92" width="12" height="36"></rect><rect fill="var(--ink,#1B1C19)" x="47" y="92" width="12" height="36"></rect></symbol>
   <symbol id="im-crowd-grid" viewBox="0 0 116 132"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"></path><circle fill="var(--red,#CE1E32)" cx="52" cy="52" r="5"></circle><path fill="var(--red,#CE1E32)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"></path></symbol>
+
+  <!-- Drawn for the cabinet. Side profiles, one solid colour, no knockouts:
+       a cat sitting, and three dogs distinguished by the three things that
+       actually differ in silhouette — ear, tail and leg length. -->
+  <symbol id="em-cat" viewBox="0 0 24 24">
+      <path d="M6.6,6.6 L7.0,1.5 L10.7,4.7 Z" fill="currentColor"/>
+      <path d="M13.8,6.6 L13.4,1.5 L9.7,4.7 Z" fill="currentColor"/>
+      <circle cx="10.2" cy="7.7" r="3.9" fill="currentColor"/>
+      <path d="M8.0,10.8 C5.4,13.4 4.9,17.4 5.6,21.4 L15.0,21.4 C15.6,16.6 13.9,12.6 12.2,10.9 Z" fill="currentColor"/>
+      <path d="M14.8,21.0 C19.6,21.2 21.4,18.0 20.2,14.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+  <symbol id="em-hound" viewBox="0 0 24 24">
+      <rect x="6.0" y="11.6" width="14.2" height="5.4" rx="2.7" fill="currentColor"/>
+      <circle cx="5.9" cy="10.1" r="3.4" fill="currentColor"/>
+      <path d="M1.2,10.9 H5.9 V13.8 H2.0 Z" fill="currentColor"/>
+      <path d="M3.8,9.2 C2.2,12.4 3.0,16.8 5.2,17.4 C7.2,16.6 7.0,12.0 6.4,9.4 Z" fill="currentColor"/>
+      <rect x="8.6" y="15.8" width="2.6" height="4.8" rx="1.3" fill="currentColor"/>
+      <rect x="16.4" y="15.8" width="2.6" height="4.8" rx="1.3" fill="currentColor"/>
+      <path d="M19.4,13.4 C21.8,11.8 22.4,9.2 21.8,7.0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+  <symbol id="em-husky" viewBox="0 0 24 24">
+      <rect x="6.6" y="9.4" width="12.2" height="5.6" rx="2.8" fill="currentColor"/>
+      <circle cx="5.9" cy="8.0" r="3.1" fill="currentColor"/>
+      <path d="M1.7,8.4 H6.0 V11.0 H2.5 Z" fill="currentColor"/>
+      <path d="M3.5,5.7 L3.2,2.0 L6.2,4.4 Z" fill="currentColor"/>
+      <path d="M8.2,5.7 L8.5,2.0 L5.5,4.4 Z" fill="currentColor"/>
+      <rect x="7.8" y="13.6" width="2.7" height="7.0" rx="1.35" fill="currentColor"/>
+      <rect x="15.2" y="13.6" width="2.7" height="7.0" rx="1.35" fill="currentColor"/>
+      <path d="M17.8,11.6 C22.6,11.4 22.8,5.0 18.4,5.6" fill="none"
+            stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+    </symbol>
+  <symbol id="em-terrier" viewBox="0 0 24 24">
+      <rect x="6.9" y="10.4" width="11.0" height="5.6" rx="2.4" fill="currentColor"/>
+      <rect x="3.6" y="7.2" width="4.8" height="4.6" rx="1.6" fill="currentColor"/>
+      <rect x="2.4" y="8.8" width="3.0" height="2.8" rx="0.8" fill="currentColor"/>
+      <ellipse cx="4.3" cy="12.0" rx="1.8" ry="1.5" fill="currentColor"/>
+      <path d="M4.8,7.4 L4.4,4.9 L7.2,6.7 Z" fill="currentColor"/>
+      <rect x="8.0" y="14.4" width="2.6" height="6.0" rx="1.3" fill="currentColor"/>
+      <rect x="14.9" y="14.4" width="2.6" height="6.0" rx="1.3" fill="currentColor"/>
+      <path d="M17.0,12.6 L19.6,7.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    </symbol>
 </svg>`;

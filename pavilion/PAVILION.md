@@ -230,9 +230,13 @@ and what line goes under it, and types both into the admin page.
   trophy. Pinned in `test/archive.test.js`.
 - **A champion with no card still gets a trophy**, unengraved. The cabinet
   records who won, and must never depend on anyone having filled in a form.
-- **Emblems come from `records/isotypes.js`**: twenty-one to start with — the
-  game's five disciplines plus sixteen from the LER 565 decks, since the house
-  rule is to copy a pictogram rather than redraw one. One module, two consumers:
+- **Emblems come from `records/isotypes.js`**: twenty-five — the game's five
+  disciplines, sixteen lifted from the LER 565 decks (the house rule is to copy
+  a pictogram rather than redraw one), and four drawn for the cabinet on
+  2026-08-13 at Ryan's request: **cat, hound, husky, terrier**. The three dogs
+  are distinguished by the only three things that differ in silhouette — ear,
+  tail and leg length — and a profile terrier shows *one* folded ear, which is
+  what stopped it reading as a bird. One module, two consumers:
   the admin picker shows the same grid the cabinet renders, so what Ryan clicks
   is what students see.
 - ⚖️ **A champion can ask for an emblem that doesn't exist yet** (Ryan,
@@ -242,6 +246,10 @@ and what line goes under it, and types both into the admin page.
   in the picker; the recipe and the silhouette rules are at the top of that
   file. The stored card is only an id, so a bespoke emblem is exactly as durable
   as a built-in one.
+- ⚠️ **The deck pictograms paint with `--ink` / `--red` / `--paper`, not
+  `currentColor`** — they were drawn for slides, where those are the palette. The
+  cup and the admin picker both bind those variables locally; without that, half
+  the menu comes out black-and-red on gold instead of engraved.
 - ⚠️ **The cabinet falls back to a plain cup for an emblem it doesn't have**, so
   a card saved before the drawing is deployed is unengraved rather than broken.
   A `<use>` pointing at a missing symbol fails silently and would otherwise
