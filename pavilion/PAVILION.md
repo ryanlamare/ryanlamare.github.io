@@ -423,11 +423,17 @@ Five decisions taken while building it, worth not rediscovering:
   setting in the admin page rather than a constant in a stylesheet. Five is the
   documented fallback when the relay is unreachable.
 
-The page opens on the **newest season** rather than all-time (during term almost
-every visit is "how did we do this week"), tabs are linkable (`#records`,
-`#class`, `#honours`), and the class table needs a season to be the table *of* —
-all-time deliberately has no class list, because the union of every cohort is a
-mailing list rather than a class.
+The page opens on **the class standings, newest season** — during term almost
+every visit is "how did we do this week" — and tabs are linkable (`#class`,
+`#records`, `#honours`).
+
+⚖️ **"All time" is offered on Records and nowhere else** (Ryan, 2026-08-13).
+Records are *supposed* to reach across years; that is the whole argument for
+keeping the archive. A class is not: an all-time class table would be every
+student who ever took the course, most of whom never met. So the standings
+picker lists seasons only, newest first, and arriving at the standings with
+all-time selected falls back to the newest season rather than showing a table of
+strangers.
 
 Still to build, all of it more queries over `stats.js`: the **pre-game splash**
 and **post-game screen** (`headToHead` and `movement` exist and are tested, and

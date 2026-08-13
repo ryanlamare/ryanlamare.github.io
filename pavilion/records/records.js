@@ -40,12 +40,15 @@ const RECORD_LABELS = {
   longestStreak: { name: 'Longest winning run', of: 'games in a row', unit: '' },
 };
 
-const state = { games: [], rosters: [], season: null, tab: 'records', boardSize: DEFAULT_BOARD, error: null };
+const state = { games: [], rosters: [], season: null, tab: 'table', boardSize: DEFAULT_BOARD, error: null };
 
-// Tabs are linkable: /records/ler565/#class goes straight to the register. The
+// Tabs are linkable: /records/ler565/#class goes straight to the standings. The
 // hash is the reader's word ("class"), not the code's ("table") — a URL you can
 // say out loud in a lecture is worth one line of mapping.
-const TABS = { records: 'Records', table: 'The class', honours: 'Honours' };
+//
+// The standings come first: during term it is the page, and the records are the
+// thing you go looking for rather than the thing you check every week.
+const TABS = { table: 'The class', records: 'Records', honours: 'Honours' };
 const HASH = { records: 'records', table: 'class', honours: 'honours' };
 const fromHash = (h) => Object.keys(HASH).find((k) => HASH[k] === String(h || '').replace(/^#/, ''));
 
@@ -136,7 +139,17 @@ function render() {
 
   const seasonList = seasons();
   const showPicker = seasonList.length > 1 || seasonList[0]?.season;
-  if (!state.games.length) state.tab = 'table'; // week 0: the register is all there is
+  if (!state.games.length) state.tab = 'table'; // week 0: the standings are all there is
+
+  // ⚖️ **All time is a Records idea, not a standings one** (Ryan, 2026-08-13).
+  // A class is a cohort: "the all-time LER 565 table" would be every student
+  // who ever took the course, most of them never having met. Records are the
+  // opposite — they are *supposed* to reach across years, which is the whole
+  // argument for keeping the archive. So the option only appears on Records,
+  // and landing on the standings with it selected falls back to the newest
+  // season rather than showing a table of strangers.
+  const allTime = state.tab === 'records';
+  if (!allTime && !state.season) state.season = seasonList[0]?.season ?? null;
 
   app.innerHTML = `
     <div class="controls">
@@ -152,7 +165,6 @@ function render() {
         showPicker
           ? `<label class="pick">Season
               <select id="season">
-                <option value="">All time</option>
                 ${seasonList
                   .map(
                     (s) =>
@@ -161,12 +173,13 @@ function render() {
                       )}</option>`
                   )
                   .join('')}
+                ${allTime ? '<option value=""' + (state.season ? '' : ' selected') + '>All time</option>' : ''}
               </select></label>`
           : ''
       }
     </div>
-    ${panel('records', recordsPanel())}
     ${panel('table', tablePanel())}
+    ${panel('records', recordsPanel())}
     ${panel('honours', honoursPanel())}`;
 
   app.querySelectorAll('[data-tab]').forEach((b) =>
