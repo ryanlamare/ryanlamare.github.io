@@ -1133,6 +1133,17 @@ Two smaller decisions worth not rediscovering:
 is closed and every game records nothing, which is a safe default rather than a
 broken one. `relay/README.md` has the sequence.
 
+**Both were done by 2026-08-13**, and the Worker was redeployed the same day
+with the league stamp and the records routes. The live archive is otherwise
+**empty**: the term reads `demo` with no roster, so nothing records and
+`/pavilion/records/` correctly says there is nothing yet.
+
+⚠️ **The next real step is Ryan's, not the code's**: set a term key and paste a
+class list in the live admin page. Until a term and a roster exist, no game can
+record, so nothing on the live records site can be seen working. For a throwaway
+run, `ler565-2026-demo` puts it on the LER 565 page as its own season and
+deletes in one click; then `node relay/seed.js --live` plays real games into it.
+
 ## Design punch list — from playthroughs, applied at the refinement pass
 
 Compiled from Ryan's first hot-seat playthrough (2026-08-05). These are
