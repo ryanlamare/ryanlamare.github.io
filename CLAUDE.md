@@ -182,6 +182,14 @@ needs "because the rules say so", the term is wrong.** Write the paragraph
 before proposing the word. The three failed themes and the mechanic each one
 couldn't explain are recorded in `PAVILION.md`; don't reopen them.
 
+The **records site** (`pavilion/records/`, live at `/pavilion/records/`) is the
+public half: a hand-written hub, and one stub file per league that loads
+`records.js`. Every table, record and honour is a pure query in
+`relay/stats.js` — if you find yourself computing a standing in a page, it
+belongs there instead. Two rules that look like details and are not: the hub's
+hand-written list **is** the listed/unlisted flag, and the top-five-never-a-full-
+ranking rule is enforced at the point of display, not by the API.
+
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)
 before committing engine or bot changes. The board UI (`index.html`/`style.css`/`ui.js`) previews through
@@ -214,10 +222,11 @@ things** — a void happened and can be restored (re-derived from the moves); a
 delete should never have been archived and goes outright.
 
 After touching any of it run `test/relay.test.js` (headless clients over real
-WebSockets), `test/archive.test.js` (results, roster, storage, the API) and
+WebSockets), `test/archive.test.js` (results, roster, storage, the API),
+`test/stats.test.js` (tables, records, honours — pure, no server) and
 `test/online.test.js` (the real UI in headless Chrome, including a mid-game
-disconnect). All three start their own relay, so nothing needs to be running
-first.
+disconnect). They start their own relay where they need one, so nothing needs to
+be running first.
 
 ## Everything else
 

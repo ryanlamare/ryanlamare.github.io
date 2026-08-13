@@ -203,6 +203,62 @@ export class Archive {
     ].sort();
   }
 
+  // --- leagues --------------------------------------------------------------
+  //
+  // A league is the front of the term key and nothing else — there is no league
+  // object, deliberately (PAVILION.md, *Leagues and the records site*). So the
+  // list of leagues is the list of terms, grouped. Cheap, and it means creating
+  // a league is exactly the act of typing a new term key in the admin page.
+
+  async leagues() {
+    const terms = await this.terms();
+    const counts = await this.store.list({ prefix: 'sum:' });
+    const played = new Map();
+    for (const key of counts.keys()) {
+      const t = key.slice(4, key.indexOf('|'));
+      played.set(t, (played.get(t) || 0) + 1);
+    }
+
+    const out = new Map();
+    for (const term of terms) {
+      const { league, season } = splitTerm(term);
+      if (!out.has(league)) out.set(league, { league, games: 0, seasons: [] });
+      const entry = out.get(league);
+      const games = played.get(term) || 0;
+      entry.games += games;
+      entry.seasons.push({ season, term, games });
+    }
+    for (const entry of out.values()) {
+      entry.seasons.sort((a, b) => String(b.season ?? '').localeCompare(String(a.season ?? '')));
+    }
+    return [...out.values()].sort((a, b) => a.league.localeCompare(b.league));
+  }
+
+  // Every summary in a league, optionally one season of it. This is the whole
+  // records site's data: the table, the Record Book and the honours are all
+  // `relay/stats.js` queries over this array, computed in the page.
+  //
+  // ⚠️ Summaries only — a records page must never pull move lists. A term of
+  // games is kilobytes this way and megabytes the other.
+  async leagueGames(league, { season = null, limit = 2000 } = {}) {
+    const wanted = cleanTerm(league);
+    if (!wanted) return [];
+    const terms = (await this.terms()).filter((t) => {
+      const split = splitTerm(t);
+      return split.league === wanted && (season === null || split.season === season);
+    });
+
+    const out = [];
+    for (const term of terms) {
+      if (out.length >= limit) break;
+      const games = await this.games(term, { limit: limit - out.length });
+      // Filter on the *stamped* field, not the key we searched by: the record
+      // is what an all-time table is built from, so the record decides.
+      out.push(...games.filter((g) => (g.league ?? splitTerm(g.term).league) === wanted));
+    }
+    return out.sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0));
+  }
+
   // --- deleting -------------------------------------------------------------
   //
   // ⚠️ Real deletion, not a flag. Voiding is the instructor's tool for a game
@@ -305,12 +361,47 @@ export class Archive {
 // anything but `/session` and `/admin/*`, which is what keeps `/record`
 // reachable only from a room (relay/worker.js).
 
+// ⚠️ **The one list of routes reachable from outside.** Both hosts allow-list
+// against this rather than keeping their own copy, for the same reason
+// `room.js` is one state machine: a route that becomes public in one host and
+// not the other is a bug nobody notices until the wrong one is deployed.
+//
+// `/record` is absent, and that absence is the security model. It writes a game
+// and is reachable only from a finished room's own stub fetch; publishing it
+// would make every result in the archive forgeable by anyone with curl.
+export const PUBLIC_ROUTES = ['/session', '/records/leagues', '/records/games'];
+
+export function isPublicRoute(route) {
+  return PUBLIC_ROUTES.includes(route);
+}
+
 export async function apiRoute(archive, { route, method = 'GET', query = {}, body = {} }) {
   switch (route) {
     // What the setup screen asks for on the way in: is there a term, and who
     // is in the class? Public, because the class is not a secret to itself.
     case '/session':
       return ok(await archive.session());
+
+    // The records site, and the only other public reads. Both hosts allow-list
+    // these by name (worker.js, dev-relay.js) — see PUBLIC_ROUTES below.
+    //
+    // ⚠️ Public means public: these carry names and scores, which the roster
+    // already does by design. A league that should not be stumbled on is given
+    // an unguessable term key, not a permission system — the flag that keeps a
+    // league off the hub is the hub not linking to it (PAVILION.md).
+    case '/records/leagues':
+      return ok({ leagues: await archive.leagues() });
+
+    case '/records/games': {
+      const league = query.league || '';
+      if (!league) return fail(400, 'name a league');
+      const season = query.season === undefined || query.season === '' ? null : query.season;
+      return ok({
+        league,
+        season,
+        games: await archive.leagueGames(league, { season }),
+      });
+    }
 
     case '/admin/state': {
       const config = await archive.config();

@@ -16,7 +16,7 @@
 // No dependencies and no browser, like every other suite here.
 
 import { start, server, archive as devArchive } from '../relay/dev-relay.js';
-import { Archive, MemoryStore, apiRoute, gameId } from '../relay/archive.js';
+import { Archive, MemoryStore, apiRoute, gameId, isPublicRoute } from '../relay/archive.js';
 import { deriveResult, buildRecord, rankSeats, leaguePointsFor, splitTerm, summarize } from '../relay/result.js';
 import { Relay } from '../net.js';
 import { newGame, legalMoves, apply, replay } from '../engine.js';
@@ -472,6 +472,52 @@ section('The API route table');
   eq((await call('/admin/game', { query: { id: rec.id } })).body.moves.length, room.moves.length,
     'and can pull a whole game back out for a bug report');
   eq((await call('/admin/game', { query: { id: 'nope' } })).status, 404, 'and 404s on one that is not there');
+}
+
+// ---------------------------------------------------------------------------
+section('The records site’s two public reads');
+
+{
+  const a = new Archive(new MemoryStore());
+  const call = (route, opts = {}) => apiRoute(a, { route, ...opts });
+
+  const playIn = async (term) => {
+    await call('/admin/config', { method: 'POST', body: { term } });
+    await call('/admin/roster', { method: 'POST', body: { roster: ['Sam', 'Alex'] } });
+    const room = playedRoom();
+    room.ended = { ending: 'natural' };
+    return (await call('/record', { method: 'POST', body: room })).body;
+  };
+
+  await playIn('ler565-2027-summer');
+  await playIn('ler565-2028-summer');
+  await playIn('kitchen');
+
+  const { leagues } = (await call('/records/leagues')).body;
+  same(leagues.map((l) => l.league), ['kitchen', 'ler565'], 'the hub can list the leagues that exist');
+  const ler = leagues.find((l) => l.league === 'ler565');
+  same(ler.seasons.map((s) => s.season), ['2028-summer', '2027-summer'], 'each with its seasons, newest first');
+  eq(ler.games, 2, 'and how many games are in the league all told');
+  eq(leagues.find((l) => l.league === 'kitchen').seasons[0].season, null,
+    'a league with no cohorts reports a null season rather than inventing one');
+
+  const all = (await call('/records/games', { query: { league: 'ler565' } })).body;
+  eq(all.games.length, 2, 'a league page gets every season by default — that is the all-time table');
+  const one = (await call('/records/games', { query: { league: 'ler565', season: '2027-summer' } })).body;
+  eq(one.games.length, 1, 'and the season picker narrows it');
+  eq(one.games[0].moves, undefined, 'summaries only — a records page never pulls a move list');
+  eq((await call('/records/games')).status, 400, 'asking for no league in particular is a bad request');
+  eq((await call('/records/games', { query: { league: 'nobody' } })).body.games.length, 0,
+    'and a league nobody has played is empty rather than an error');
+
+  // ⚠️ The property the whole archive rests on: reading is public, writing is
+  // not routable from outside. `/record` answers here because `apiRoute` is the
+  // table both hosts dispatch through — it is the *hosts* that refuse it, and
+  // they refuse it by not being on this list.
+  eq(isPublicRoute('/records/games'), true, 'the records site’s reads are public');
+  eq(isPublicRoute('/session'), true, 'so is the setup screen’s');
+  eq(isPublicRoute('/record'), false, '⚠️ but the route that writes a game is not, and must never be');
+  eq(isPublicRoute('/admin/state'), false, 'and admin is reached by holding the secret, not by being listed');
 }
 
 // ---------------------------------------------------------------------------

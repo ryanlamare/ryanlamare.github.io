@@ -20,7 +20,7 @@
 // here, so a client's claimed result stops being taken on trust.
 
 import { Room, roomCode } from './room.js';
-import { Archive, apiRoute } from './archive.js';
+import { Archive, apiRoute, isPublicRoute } from './archive.js';
 
 // A room nobody has touched in this long is fair game for a new game to reuse
 // the code. A class runs for two hours; a term does not.
@@ -49,7 +49,7 @@ export default {
       // which is the one property this whole design exists to have.
       const route = path.slice('/api'.length);
       const admin = route.startsWith('/admin/');
-      if (route !== '/session' && !admin) return cors(json({ error: 'not found' }, 404));
+      if (!isPublicRoute(route) && !admin) return cors(json({ error: 'not found' }, 404));
       if (admin && !authorized(request, env)) return cors(json({ error: 'unauthorized' }, 401));
 
       const stub = env.ARCHIVE.get(env.ARCHIVE.idFromName(ARCHIVE_NAME));

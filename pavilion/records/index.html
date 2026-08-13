@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pavilion — Records</title>
+<meta name="description" content="League tables, records and honours from Pavilion.">
+<link rel="stylesheet" href="/pavilion/records/records.css">
+<link rel="icon" href="/pavilion/icon-192.png">
+</head>
+<body>
+<!--
+  The hub. ⚠️ The leagues below are hand-written, and that *is* the
+  listed/unlisted flag (PAVILION.md, The site shape): a league that shouldn't be
+  stumbled on simply isn't linked here. There is no permission system and no
+  first-class league object — a league is the front of a term key, so making one
+  is typing a new term key in the admin page, and publishing one is adding four
+  lines here. The counts come from the API; the list does not.
+-->
+<div class="wrap">
+  <header>
+    <p class="eyebrow"><i></i> <a href="/pavilion/">Pavilion</a></p>
+    <h1>Records</h1>
+    <p class="lede">Every game records itself. Nobody reports a score, nobody files anything —
+      the tables below are what the archive says happened.</p>
+  </header>
+
+  <main>
+    <div class="leagues">
+      <a class="league" href="/pavilion/records/ler565/" data-league="ler565">
+        <span class="n">LER 565</span>
+        <span class="meta" data-count>—</span>
+      </a>
+    </div>
+    <p class="note">A league is a set of games; a season is an optional slice of one. A class has
+      cohorts, so it has seasons — a standing rivalry doesn't, and doesn't have to.</p>
+  </main>
+
+  <footer>
+    <a href="/pavilion/">Play Pavilion</a> · <a href="/">ryanlamare.com</a>
+  </footer>
+</div>
+
+<script type="module">
+  import { defaultRelayUrl, apiBase } from '/pavilion/net.js';
+
+  // Decoration only. If the relay is unreachable the links still work and the
+  // league pages say so themselves — a hub that fails to load a count should
+  // not become a hub that fails.
+  try {
+    const res = await fetch(`${apiBase(defaultRelayUrl(location))}/records/leagues`, { cache: 'no-store' });
+    if (res.ok) {
+      const { leagues } = await res.json();
+      for (const el of document.querySelectorAll('[data-league]')) {
+        const found = leagues.find((l) => l.league === el.dataset.league);
+        const seasons = found ? found.seasons.filter((s) => s.games).length : 0;
+        el.querySelector('[data-count]').textContent = !found || !found.games
+          ? 'no games yet'
+          : `${found.games} game${found.games === 1 ? '' : 's'}` + (seasons > 1 ? ` · ${seasons} seasons` : '');
+      }
+    }
+  } catch {
+    for (const el of document.querySelectorAll('[data-count]')) el.textContent = '';
+  }
+</script>
+</body>
+</html>

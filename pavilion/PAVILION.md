@@ -3,12 +3,14 @@
 **Status: active — build steps 1–5 done: engine, hot-seat board UI, greedy bot
 + Training Ground (2026-08-06, with the punch list below applied the same day),
 two-device play over a relay (2026-08-12), and the backend spine — archive,
-identity, replay-derived results, instructor admin (2026-08-13). **Step 6 has
-started**: the league is now stamped on every record at write time and the admin
-page shows what a term key just became (2026-08-13, the one piece with a
-deadline — see *Leagues and the records site*). Still to build: the league table,
-the stats screens, the Record Book and the instructor board, all of them queries
-over the archive step 5 just started filling.**
+identity, replay-derived results, instructor admin (2026-08-13). **Step 6 is
+underway** (2026-08-13): the league stamp, `relay/stats.js` — every table,
+record and honour as pure queries — the two public read routes, and the records
+site itself at `/pavilion/records/` (hub, and the LER 565 league page with
+Table · Records · Honours and a season picker). Still to build: the pre-game
+splash, the post-game screen, the instructor live board, the Bulletin and the
+challenge ladder. All of those are more queries over the same module; none of
+them needs the engine, the wire format or the archive to change.**
 
 **The theme was rebuilt on 2026-08-12 and the game is now *Pavilion* — see
 *Theme* below, which is the part of this memo to read first, along with the
@@ -19,8 +21,9 @@ underneath is theme-neutral.**
 
 Everything lives in `pavilion/`: `engine.js` (pure rules module), `bot.js` (greedy
 practice opponent, "The Commissioner"), `words.js` (room codes and seeds),
-`net.js` (the transport layer), `relay/` (the relay and the archive — see *Two
-devices* and *The backend spine* below), `admin/` (the instructor's page), and
+`net.js` (the transport layer), `relay/` (the relay, the archive and
+`stats.js` — see *Two devices*, *The backend spine* and *What step 6 built*
+below), `admin/` (the instructor's page), `records/` (the public records site), and
 `index.html` + `style.css` + `ui.js` (the playable board — two-tap
 input, chess clocks, animation layer driven by engine state-diffs via
 `applyTake`; the setup screen's Training Ground mode plays you against the bot,
@@ -29,7 +32,8 @@ Preview with `./serve.sh` at `/pavilion/`. Tests:
 `node pavilion/test/engine.test.js` (soak size as an
 optional argument), `test/bot.test.js`, `test/relay.test.js` (the protocol,
 headless), `test/archive.test.js` (term, roster, replay-derived results and the
-API) and `test/online.test.js` (two-device play through the real UI in
+API), `test/stats.test.js` (the tables, records and honours) and
+`test/online.test.js` (two-device play through the real UI in
 headless Chrome); `?smoke=1` on the game URL plays a full deterministic game
 through the real UI pipeline in a headless browser (`&bot=1` for a practice
 game — that one needs `--virtual-time-budget`, since `--dump-dom` fires long
@@ -228,12 +232,15 @@ has a deadline and the rest doesn't**: the league is the front of the term key
 and gets stamped onto every game the moment one is played, so the naming has to
 be right before the first real game. The pages can be argued about for months.
 
-**Built 2026-08-13 — the deadline part only**: `splitTerm` in `relay/result.js`,
+**Built 2026-08-13 — the deadline part first**: `splitTerm` in `relay/result.js`,
 the stamp in `buildRecord`, the derived pair on `archive.config()`, and the line
 in the admin page that reads a saved term key back as *"League ler565 · season
 2027-summer"*. It landed against an empty archive, so it cost nothing; the same
-change after a term of games would have been a migration. The pages below are
-still unbuilt.
+change after a term of games would have been a migration.
+
+**Then the site itself, the same day**: `relay/stats.js`, two public read
+routes, `records/` (the hub, `records.css`, `records.js`, and `records/ler565/`).
+See *What step 6 built* below for the shape of it.
 
 ### A league is the front of the term key
 
@@ -314,6 +321,48 @@ somebody at the bottom. So lead with **the instructor's own** record ("14 played
 9 won"), give each student **their own line**, and celebrate biggest upset and
 most games played rather than listing all comers worst to best. Same rule as the
 public board, applied to a different shape.
+
+### What step 6 built — 2026-08-13
+
+```text
+relay/stats.js          every table, record and honour, as pure functions
+relay/archive.js        leagues() / leagueGames(), and PUBLIC_ROUTES
+records/records.js      the one engine every league page runs
+records/records.css     shared house style, the board's palette copied
+records/index.html      the hub — hand-written league list
+records/ler565/         a league page: a title, an id, and the engine
+test/stats.test.js      78 checks over the arithmetic
+```
+
+Five decisions taken while building it, worth not rediscovering:
+
+- **`stats.js` imports nothing at all.** It reads the `league` and `season`
+  stamped on each record instead of re-splitting the term key — which is what
+  the stamp was for — and that keeps `result.js` and the 17 KB engine out of a
+  page that never replays a game.
+- **A league page is a stub**: `<body data-league="ler565">`, a heading and a
+  `<script src>`. Publishing a new league is copying one file; starting a new
+  cohort needs no change to it at all, because the season is a picker.
+- ⚖️ **The hand-written list on the hub *is* the listed/unlisted flag.** No
+  league object, no `listed` column, no permission system: a league that
+  shouldn't be stumbled on is a folder nobody linked. `kitchen` is already in
+  the archive and already absent from the hub, which is the feature working.
+- ⚠️ **The uplifting rule is a display rule, and the data does not enforce it.**
+  The page shows a top five and a *private* line you pick your own name to see;
+  but `/records/games` returns the season's games to anyone, so a determined
+  student with the console can compute the full order. That is the right trade —
+  results are public by design (*Identity*) and the harm the rule addresses is
+  social, a visible bottom in a room where everyone knows each other — but it is
+  a rule about what the site *shows*, not an access control, and nobody should
+  later believe otherwise.
+- **The board length comes from `/session`**, so "size N to the class" stays one
+  setting in the admin page rather than a constant in a stylesheet. Five is the
+  documented fallback when the relay is unreachable.
+
+Still to build, all of it more queries over `stats.js`: the **pre-game splash**
+and **post-game screen** (`headToHead` and `movement` exist and are tested, and
+nothing renders them yet), the **instructor live board**, the **Bulletin**, and
+the **challenge ladder**.
 
 ---
 
@@ -1248,6 +1297,9 @@ reader can tell a quotation from a choice.
 6. **The league table, stats screens, Record Book, Hall of Champions, The
    Bulletin, instructor board.** All queries over stored games; nothing about
    the engine, the wire format or the archive has to change for any of them.
+   **Underway since 2026-08-13** — the stamp, `relay/stats.js`, the public read
+   routes and the records site are in; the splash, post-game screen, instructor
+   board, Bulletin and ladder are not. *What step 6 built* has the detail.
    The site structure they hang off — leagues, seasons, the records hub, the
    challenge ladder — was scoped on 2026-08-13 and is under *Leagues and the
    records site* above. Read it first. Its one deadline piece is **done**: the

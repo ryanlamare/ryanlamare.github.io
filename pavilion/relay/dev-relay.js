@@ -20,7 +20,7 @@ import { createHash } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { Room, roomCode } from './room.js';
-import { Archive, MemoryStore, apiRoute } from './archive.js';
+import { Archive, MemoryStore, apiRoute, isPublicRoute } from './archive.js';
 
 const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_FRAME = 1 << 20; // 1 MB — a Pavilion message is a few hundred bytes
@@ -172,7 +172,7 @@ const server = createServer((req, res) => {
     const admin = route.startsWith('/admin/');
     // ⚠️ An allow-list, exactly as in worker.js: `/record` writes a game and
     // must be reachable only from a finished room, never over HTTP.
-    if (route !== '/session' && !admin) {
+    if (!isPublicRoute(route) && !admin) {
       res.writeHead(404, { ...CORS, 'content-type': 'application/json' });
       res.end('{"error":"not found"}');
       return;
