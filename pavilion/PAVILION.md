@@ -3,9 +3,12 @@
 **Status: active — build steps 1–5 done: engine, hot-seat board UI, greedy bot
 + Training Ground (2026-08-06, with the punch list below applied the same day),
 two-device play over a relay (2026-08-12), and the backend spine — archive,
-identity, replay-derived results, instructor admin (2026-08-13). Next is step 6:
-the league table, the stats screens, the Record Book and the instructor board,
-all of them queries over the archive step 5 just started filling.**
+identity, replay-derived results, instructor admin (2026-08-13). **Step 6 has
+started**: the league is now stamped on every record at write time and the admin
+page shows what a term key just became (2026-08-13, the one piece with a
+deadline — see *Leagues and the records site*). Still to build: the league table,
+the stats screens, the Record Book and the instructor board, all of them queries
+over the archive step 5 just started filling.**
 
 **The theme was rebuilt on 2026-08-12 and the game is now *Pavilion* — see
 *Theme* below, which is the part of this memo to read first, along with the
@@ -220,16 +223,29 @@ the board length a setting rather than a constant.
 ## Leagues and the records site — decided 2026-08-13, built at step 6
 
 Scoped with Ryan the day step 5 landed, from the question *"can I keep LER 565
-separate from games with my wife?"*. Nothing here is built. It is written down
-because **one part of it has a deadline and the rest doesn't**: the league is the
-front of the term key and gets stamped onto every game the moment one is played,
-so the naming has to be right before the first real game. The pages can be
-argued about for months.
+separate from games with my wife?"*. It is written down because **one part of it
+has a deadline and the rest doesn't**: the league is the front of the term key
+and gets stamped onto every game the moment one is played, so the naming has to
+be right before the first real game. The pages can be argued about for months.
+
+**Built 2026-08-13 — the deadline part only**: `splitTerm` in `relay/result.js`,
+the stamp in `buildRecord`, the derived pair on `archive.config()`, and the line
+in the admin page that reads a saved term key back as *"League ler565 · season
+2027-summer"*. It landed against an empty archive, so it cost nothing; the same
+change after a term of games would have been a migration. The pages below are
+still unbuilt.
 
 ### A league is the front of the term key
 
 `ler565-2027-summer`, `ler565-2028-summer`, `kitchen`. The first segment is the
 league; everything after it is the season. That is the whole mechanism.
+
+⚠️ **The failure mode is spaces, and it is silent.** Term keys are slugged, so
+`LER 565 2027 Summer` becomes `ler-565-2027-summer` and the league is `ler` —
+a real term key, a wrong league, and nothing in the system can tell it wasn't
+meant. That is the entire reason the admin page prints the split back at you
+instead of just accepting the key; the case is pinned in `test/archive.test.js`
+so nobody later "fixes" the split to be cleverer about it.
 
 ⚖️ **A first-class league object was designed and deliberately skipped**
 (2026-08-13). It would have stored leagues as their own records, each with its
@@ -240,12 +256,19 @@ one class at a time, so it was over-building, and he said so before it was
 written. If concurrent classes ever happen, this is the design to reach for and
 the reason it was passed over is recorded so it isn't reopened blind.
 
-⚖️ **Stamp the league on the record at write time**, derived from the term key,
-rather than parsing the term name on every page load. Same information; the
-difference is that a typo'd term key becomes a visible, fixable field in the
-admin page instead of a season silently missing from an all-time table with no
-clue why. About an hour of care at the start of step 6, and the cheapest
-insurance available on the one thing that would be miserable to debug later.
+⚖️ **Stamp the league on the record at write time** (built 2026-08-13), derived
+from the term key, rather than parsing the term name on every page load. Same
+information; the difference is that a typo'd term key becomes a visible, fixable
+field in the admin page instead of a season silently missing from an all-time
+table with no clue why. About an hour of care at the start of step 6, and the
+cheapest insurance available on the one thing that would be miserable to debug
+later.
+
+⚠️ **A game already stamped with the wrong league cannot be retagged** — there
+is no tool to move a record between terms, and there deliberately isn't one yet:
+with the archive empty, the fix is to correct the term key and delete the demo
+games. If a real cohort ever records under a typo'd key, *that* is when to build
+the retag, and it is a `put` under a new `sum:` key plus a delete of the old one.
 
 ### Seasons are optional, and that is the part easy to get wrong
 
@@ -1227,8 +1250,10 @@ reader can tell a quotation from a choice.
    the engine, the wire format or the archive has to change for any of them.
    The site structure they hang off — leagues, seasons, the records hub, the
    challenge ladder — was scoped on 2026-08-13 and is under *Leagues and the
-   records site* above. Read it first: one decision in it (the league is the
-   front of the term key) is already stamped on every game recorded.
+   records site* above. Read it first. Its one deadline piece is **done**: the
+   league and season are stamped on every record at write time, so the pages can
+   read a field rather than re-parsing a term key, and they can be argued about
+   for as long as they need to be.
 
 ### Testing
 

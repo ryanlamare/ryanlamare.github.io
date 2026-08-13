@@ -127,6 +127,21 @@ export function rankSeats(scores, rows, flagged = null) {
   return ranks;
 }
 
+// A term key is `<league>-<season>`, and **the league is the first segment**:
+// `ler565-2027-summer` is LER 565's 2027 summer cohort; `kitchen` is a league
+// with no season at all. That split is the whole league mechanism — there is no
+// league object, deliberately (PAVILION.md, *Leagues and the records site*).
+//
+// ⚠️ **A season is optional.** A class has cohorts; a kitchen-table rivalry and
+// a challenge ladder are one continuous record. Nothing downstream may assume a
+// year is attached.
+export function splitTerm(term) {
+  const t = String(term || '');
+  if (!t) return { league: null, season: null };
+  const cut = t.indexOf('-');
+  return cut < 0 ? { league: t, season: null } : { league: t.slice(0, cut), season: t.slice(cut + 1) };
+}
+
 // The game record (rules spec §10, "The game record"). One object per game,
 // kilobytes, and the archive stores whole games rather than results — so an
 // award invented in week 5 can be applied retroactively to week 1.
@@ -135,10 +150,19 @@ export function rankSeats(scores, rows, flagged = null) {
 // ids are slugs and a record has to stay readable on its own.
 export function buildRecord(room, { term, mode, id, at, result }) {
   const seats = room.seats || [];
+  // ⚖️ **The league is stamped here, at write time**, rather than parsed out of
+  // the term on every page load (2026-08-13). Same information either way; the
+  // difference is that a typo'd term key becomes a visible field on the record
+  // instead of a season silently missing from an all-time table with nothing to
+  // point at. The cheapest insurance available on the one thing that would be
+  // miserable to debug in 2031.
+  const { league, season } = splitTerm(term);
   return {
     v: ENGINE_VERSION,
     id,
     term,
+    league,
+    season, // null is a real answer, not a missing one — see splitTerm
     mode, // 'league' | 'cup' | 'exhibition' | 'practice' | 'casual'
     room: room.code,
     seed: room.seed,

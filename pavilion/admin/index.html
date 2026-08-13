@@ -105,7 +105,7 @@
       <div class="row">
         <div>
           <label for="term">Term key</label>
-          <input id="term" type="text" placeholder="2026-fall" spellcheck="false">
+          <input id="term" type="text" placeholder="ler565-2027-summer" spellcheck="false">
         </div>
         <div style="flex:0 1 160px">
           <label for="board">Public board length</label>
@@ -113,10 +113,17 @@
         </div>
         <div class="fit"><button class="primary" id="btn-term">Save</button></div>
       </div>
+      <p class="note" id="term-split">No term set.</p>
       <p class="note">Every game carries its term from the moment it is recorded, so records
         accrue across <em>years</em> rather than weeks. <strong>Games only record while a term
         is set</strong> and every player picked their name off the roster — with no term the
         game still plays, it just does not count.</p>
+      <p class="note warn">⚠️ The key is <code>league-season</code>, and <strong>the first
+        segment is the league</strong> — <code>ler565-2027-summer</code> is LER 565's summer
+        2027 cohort, and every table on the records site groups by that first word. A league
+        with no cohorts is just <code>kitchen</code>, with no season at all. Check the line
+        above says what you meant <em>before</em> the first real game: the league is stamped
+        onto every game the moment it records.</p>
       <p class="note">The board length is how many names the public leaderboard shows. Five of
         fourteen is a third of the room; five of thirty is a sixth, and thin enough that most
         people have nothing to chase. There is never a full public ranking.</p>
@@ -253,6 +260,7 @@ async function open() {
 function fill() {
   $('#term').value = state.config.term || '';
   $('#board').value = state.config.boardSize;
+  showSplit(state.config);
   // The roster panel always edits the *current* term's list; the Games picker
   // below only browses. Saying which one avoids the obvious confusion.
   $('#roster-term').textContent = state.config.term || 'no term set';
@@ -267,6 +275,27 @@ function fill() {
 
 function shownTerm() {
   return $('#pick-term').value || state?.config.term || '';
+}
+
+// What the saved term key actually means, in words. The server does the split
+// (relay/result.js) so there is exactly one parser and this can never disagree
+// with what gets stamped on a game.
+function showSplit(config) {
+  const el = $('#term-split');
+  if (!config.term) {
+    el.textContent = 'No term set — nothing is recording.';
+    return;
+  }
+  // This page ships with the site; the split comes from the relay. A term with
+  // no league back means the relay is older than this page — say that, rather
+  // than printing “League undefined” at somebody about to start a term.
+  if (!config.league) {
+    el.textContent = 'The relay has not been updated to stamp leagues yet — deploy it before the first game.';
+    return;
+  }
+  el.innerHTML = config.season
+    ? `League <strong>${escape(config.league)}</strong> · season <strong>${escape(config.season)}</strong>.`
+    : `League <strong>${escape(config.league)}</strong> · no season — one continuous record.`;
 }
 
 // --- the games table -------------------------------------------------------
@@ -324,6 +353,7 @@ $('#btn-term').addEventListener('click', async () => {
     state.config = cfg;
     $('#term').value = cfg.term || '';
     $('#board').value = cfg.boardSize;
+    showSplit(cfg);
     say('#term-status', cfg.term ? `Recording to “${cfg.term}”, top ${cfg.boardSize} on the board.` : 'No term set — games will not record.');
     await reload();
   } catch (err) {

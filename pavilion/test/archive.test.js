@@ -17,7 +17,7 @@
 
 import { start, server, archive as devArchive } from '../relay/dev-relay.js';
 import { Archive, MemoryStore, apiRoute, gameId } from '../relay/archive.js';
-import { deriveResult, buildRecord, rankSeats, leaguePointsFor, summarize } from '../relay/result.js';
+import { deriveResult, buildRecord, rankSeats, leaguePointsFor, splitTerm, summarize } from '../relay/result.js';
 import { Relay } from '../net.js';
 import { newGame, legalMoves, apply, replay } from '../engine.js';
 
@@ -174,7 +174,8 @@ section('Term, roster and classification (archive.js)');
 
 {
   const a = new Archive(new MemoryStore());
-  same(await a.config(), { term: null, boardSize: 5, updatedAt: null }, 'a fresh archive has no term');
+  same(await a.config(), { term: null, league: null, season: null, boardSize: 5, updatedAt: null },
+    'a fresh archive has no term');
 
   const cfg = await a.setConfig({ term: '2026 Fall', boardSize: 8 });
   eq(cfg.term, '2026-fall', 'the term is slugged so it can be a storage key');
@@ -254,6 +255,68 @@ section('Term, roster and classification (archive.js)');
   eq((await a.classify(typed)).record, false, 'someone who typed their name keeps the game out of the archive');
   const madeUp = playedRoom({ seats: [{ seat: 0, name: 'Sam', pid: 'not-a-student' }, { seat: 1, name: 'Alex', pid: 'alex' }] });
   eq((await a.classify(madeUp)).record, false, 'and so does an id that is not on the roster');
+}
+
+// ---------------------------------------------------------------------------
+section('Leagues — the front of the term key');
+
+{
+  // The whole league mechanism: the first segment of the term key. There is no
+  // league object, deliberately (PAVILION.md, Leagues and the records site).
+  same(splitTerm('ler565-2027-summer'), { league: 'ler565', season: '2027-summer' },
+    'the league is the first segment and the season is everything after it');
+  same(splitTerm('kitchen'), { league: 'kitchen', season: null },
+    'a league with no cohorts has no season, and that is a real answer');
+  same(splitTerm(null), { league: null, season: null }, 'no term, no league');
+  eq(splitTerm('ler565-2027-summer').season, '2027-summer',
+    'the season keeps its own hyphens — only the first one is the boundary');
+}
+
+{
+  const a = new Archive(new MemoryStore());
+  const cfg = await a.setConfig({ term: 'ler565-2027-summer' });
+  eq(cfg.term, 'ler565-2027-summer', 'the term is slugged before anything is derived from it');
+  eq(cfg.league, 'ler565', 'and the admin page is told what league that just became…');
+  eq(cfg.season, '2027-summer', '…and what season, so a typo is visible while it is still free');
+  eq((await a.config()).league, 'ler565', 'the split reads back off the stored term');
+
+  // ⚠️ The hazard the admin line exists for, stated as a test rather than a
+  // warning nobody reads: a term typed with spaces slugs to hyphens, and the
+  // league is the *first* segment — so "LER 565 2027 Summer" quietly becomes
+  // league "ler". Nothing here can guess what was meant; showing the split
+  // back is what makes it a five-second fix instead of a mystery in 2031.
+  const loose = await a.setConfig({ term: 'LER 565 2027 Summer' });
+  eq(loose.term, 'ler-565-2027-summer', 'spaces become hyphens, like every other key here');
+  eq(loose.league, 'ler', 'so the league is only the first word — not what was meant');
+  eq(loose.season, '565-2027-summer', 'and the rest lands in the season, visibly wrong on screen');
+}
+
+{
+  // ⚖️ Stamped at write time, not parsed on read. The point is that a wrong
+  // league is a field you can see on the record rather than a season silently
+  // missing from an all-time table years later.
+  const a = new Archive(new MemoryStore());
+  await a.setConfig({ term: 'ler565-2027-summer' });
+  await a.setRoster(['Sam', 'Alex']);
+  const room = playedRoom();
+  room.ended = { ending: 'natural' };
+  const receipt = await a.record(room, 1_700_000_100_000);
+
+  const rec = await a.game(receipt.id);
+  eq(rec.league, 'ler565', 'a recorded game carries its league');
+  eq(rec.season, '2027-summer', 'and its season');
+  eq(summarize(rec).league, 'ler565', 'and so does the summary a league table reads');
+
+  // A kitchen-table league is one continuous record with no year attached, and
+  // nothing downstream may assume otherwise.
+  const b = new Archive(new MemoryStore());
+  await b.setConfig({ term: 'kitchen' });
+  await b.setRoster(['Sam', 'Alex']);
+  const home = playedRoom();
+  home.ended = { ending: 'natural' };
+  const kitchen = await b.game((await b.record(home, 1_700_000_200_000)).id);
+  eq(kitchen.league, 'kitchen', 'a seasonless league still stamps its league');
+  eq(kitchen.season, null, 'with a null season rather than an invented one');
 }
 
 // ---------------------------------------------------------------------------

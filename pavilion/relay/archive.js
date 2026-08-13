@@ -16,7 +16,7 @@
 // is called, which is what lets the theme move a fourth time without a
 // migration of the archive.
 
-import { buildRecord, deriveResult, summarize } from './result.js';
+import { buildRecord, deriveResult, splitTerm, summarize } from './result.js';
 
 // Keys. `sum:` holds everything except the move list, so listing a term for a
 // league table stays cheap however many games have accumulated.
@@ -48,8 +48,15 @@ export class Archive {
 
   async config() {
     const c = (await this.store.get(K_CONFIG)) || {};
+    const term = c.term || null; // e.g. 'ler565-2027-summer'; null = nothing records
     return {
-      term: c.term || null, // e.g. '2026-fall'; null = no term, nothing records
+      term,
+      // Derived, not stored: the term is the source and this is one hyphen's
+      // worth of reading it. Records stamp their own copy (result.js) because
+      // they outlive every config that wrote them; here it is so the admin page
+      // can *show* the instructor what a term key just became, and catch a typo
+      // while it is still free to fix.
+      ...splitTerm(term),
       boardSize: c.boardSize || DEFAULT_BOARD_SIZE,
       updatedAt: c.updatedAt || null,
     };
@@ -63,7 +70,9 @@ export class Archive {
       updatedAt: now,
     };
     await this.store.put(K_CONFIG, next);
-    return next;
+    // Read it back rather than reshaping `next` by hand, so a save and a load
+    // can never hand the admin page two different shapes.
+    return this.config();
   }
 
   // The class list for a term — the current one unless you ask for another.
