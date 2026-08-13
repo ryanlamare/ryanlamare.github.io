@@ -109,17 +109,23 @@ h1 .r, .r { color: var(--red); }
 .pv3 { color: var(--ele); }
 .pv4 { color: var(--nat); }
 
-/* The inverted-tile spec (PAVILION.md) already records that Electricity has
-   to darken to #977712 to hold on cream — same problem, same answer. Only
-   the logo takes it; the tile's own ochre is untouched. */
 .logo { text-transform: uppercase; }
-.logo .pv3, .sub .pv3 { color: #977712; }
 /* A discipline named in prose is set in its own colour and bolded. Bold as
    well as coloured on purpose: at 14px the ochre and the sienna would be
    carrying too much on hue alone, and the same rule the tiles follow —
-   never colour by itself — applies to the copy. */
-.sub b[class^="pv"] { font-weight: 700; }
-.sub b { color: var(--ink); }
+   never colour by itself — applies to the copy.
+
+   :not([class]) matters. This rule used to be a bare `.sub b`, which at
+   0-1-1 outranks a lone `.pv0` at 0-1-0 — so every coloured discipline was
+   quietly forced back to ink, and only Electricity showed, because its own
+   two-class override happened to outrank it (Ryan, 2026-08-13). Excluding
+   the classed spans leaves the palette to win by default. */
+.sub b:not([class]) { color: var(--ink); }
+/* Ochre is a field colour on a tile, not ink, and sits near 2:1 on cream.
+   At 54px the two letters of the logo's LI carry it; at 14px in the pitch
+   they don't, so only the prose darkens — to #977712, which the
+   inverted-tile spec (PAVILION.md) already documents for cream grounds. */
+.sub .pv3 { color: #977712; }
 .sub + .sub { margin-top: -18px; }
 
 /* Back-of-the-box copy: the hook in the house red, the pitch underneath. */

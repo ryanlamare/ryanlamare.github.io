@@ -947,13 +947,15 @@ bugs. The decisions worth keeping:
   which is the same legend for no space at all, since the words were already
   in the sentence. They are bolded as well as coloured: the tiles' own rule
   (never colour by itself) applies to the copy too.
-- **The logo is `PA·V·IL·I·ON`** — uneven on purpose, because that is the only
-  split of eight letters that carries all five disciplines in tile order:
-  sienna, blue, black, ochre, green. Electricity's ochre is a *field* colour
-  on a tile, not ink, and lands near 2:1 on cream — as a single narrow `I`
-  between a black pair and a green one it read as a gap in the word, so the
-  logo and the prose both take the inverted set's already-documented
-  `#977712`. The tile's own ochre is untouched.
+- **The logo is `PA·VI·LI·ON`, four even pairs, and Machinery's black sits it
+  out**: sienna, blue, ochre, green. ⚠️ The uneven `PA·V·IL·I·ON` split was
+  tried — it is the only arrangement of eight letters that carries all five
+  disciplines — and **rejected**: at title size the black pair dominates the
+  word (Ryan, 2026-08-13). Don't re-propose it as the "complete" option; the
+  black is on the tiles and in the pitch, and that is enough. Electricity's
+  ochre is a *field* colour on a tile rather than ink and sits near 2:1 on
+  cream, but two letters at 54px carry it; only the 14px prose darkens, to
+  the inverted set's already-documented `#977712`.
 - The pitch splits into two paragraphs at *"Will your pavilion stand above
   the rest"*, and the CTA reads **Start the competition**.
 - **The seed box is gone.** Nobody outside the tests ever wanted to type one,
@@ -976,6 +978,15 @@ bugs. The decisions worth keeping:
   still wants `seed + move list` for any bug report, so the capability
   survives rather than being deleted, and build step 5's server writes the
   archive from the same move list regardless. The topbar's **New** is **End**.
+
+**A third bug, in the copy's own CSS.** The coloured disciplines came out ink
+black — every one but Electricity, which showed. The `.sub b` rule that bolds
+*"Chicago. 1893."* is specificity 0-1-1 and a lone `.pv0` is 0-1-0, so the
+palette lost every time; Electricity's own two-class override was the one rule
+that outranked it, which is exactly why it alone looked right. `.sub
+b:not([class])` now leaves the classed spans alone. Worth remembering as a
+shape: a bare element-plus-class rule quietly beats the utility classes it
+shares a container with, and the symptom is *one* item mysteriously working.
 
 **Two bugs, both in the phase label's lifecycle.** `renderAll` only writes the
 phase label when the game is over, so a rematch opened under the previous
