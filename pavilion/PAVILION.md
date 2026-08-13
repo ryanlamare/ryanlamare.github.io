@@ -945,8 +945,10 @@ bugs. The decisions worth keeping:
   entirely — the disciplines are named in the aria labels and the move
   announcements — and instead **the pitch names them in their own colours**,
   which is the same legend for no space at all, since the words were already
-  in the sentence. They are bolded as well as coloured: the tiles' own rule
-  (never colour by itself) applies to the copy too.
+  in the sentence. They are bolded *and* underlined as well as coloured: the
+  tiles' own rule (never colour by itself) applies to the copy too, and the
+  underline is thicker and further off the baseline than a link's so the five
+  don't read as navigation.
 - **The logo is `PA·VI·LI·ON`, four even pairs, and Machinery's black sits it
   out**: sienna, blue, ochre, green. ⚠️ The uneven `PA·V·IL·I·ON` split was
   tried — it is the only arrangement of eight letters that carries all five
