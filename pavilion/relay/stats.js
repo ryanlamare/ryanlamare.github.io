@@ -6,14 +6,17 @@
 // in the dev relay, in a headless test and in the records pages the browser
 // loads, with no second implementation to drift.
 //
-// ⚠️ **The screens apply the uplifting rule; this file does not.** `standings`
-// returns the whole ordered table, and what a public page may do with it is a
-// display decision made in the page (2026-08-13, revised — see PAVILION.md,
-// *Public board vs the class register*): the top five are **ranked and
-// numbered** through `topN`, and everyone else appears through `byName`, which
-// shows the same columns in alphabetical order with no position printed. The
-// bottom of an ordered list is the thing the rule exists to prevent; a class
-// register is not that, and hiding half the class was never the point.
+// ⚠️ **The screens decide what to publish; this file does not.** `standings`
+// returns the whole ordered table. The records site now prints it in full —
+// Ryan's call, 2026-08-13: a friendly tournament shows its standings, and the
+// participation point means the bottom of it is attendance rather than ability
+// (PAVILION.md, *The class table*). `topN` and `byName` remain for screens that
+// want a short board or a register; neither is dead, and neither is a rule.
+//
+// The rule that *is* still a rule: nothing here ever ranks a low finish as an
+// achievement, and nobody is ranked in a competition they have not entered —
+// pass a `roster` and unplayed members come back with zeros for the page to
+// render as dashes.
 //
 // ⚠️ **No theme words.** Records come back keyed (`bestGame`, `widestWin`) and
 // the page turns them into Best in Show and the rest, exactly as `ui.js` owns

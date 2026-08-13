@@ -222,30 +222,37 @@ reconstructing term boundaries from timestamps later is exactly the archaeology
 this project exists to avoid. Records pages obey the uplifting rule like
 everything else — halls and highs, never lows.
 
-### Public board vs the class register — revised 2026-08-13
+### The class table — settled 2026-08-13
 
-⚖️ **The rule changed, and the reasoning is worth keeping.** It used to be *top
-five, never a full ranking, and everyone else off the page*. It is now **top
-five ranked, and then the whole class alphabetically with no positions at all**.
+⚖️ **One ranked list of the whole class, and that is Ryan's call.** The rule
+moved twice in a day — from *top five and everyone else off the page*, through
+*top five ranked plus the rest alphabetically*, to this. Both earlier shapes are
+gone; don't reintroduce them thinking they were the considered position.
 
-Ryan's argument, and it is the better one: the harm was never *being on the
-page*, it was **being ranked last on it**. An alphabetical register with
-everyone's played / W–D–L / points / best shows the whole class on one screen —
-which is genuinely nice to look at — while nobody is 27th, because no position
-is printed anywhere. And because a single game is worth at least a point, a row
-with numbers in it is a session attended: the register quietly rewards turning
-up, and shows who hasn't, without a word of nagging.
+His argument, which is a good one: **a friendly tournament publishes its
+standings**, and because every game scores at least a point, the bottom of this
+table is *attendance, not ability* — a position you fix by turning up, which is
+the nudge he wants. *"I mean in tournaments you have to see the bottom?"*
 
-⚠️ **A student who has never played is on the register with dashes**, which is
-why `standings()` takes a roster: the rows come from the class list, not from
-the games. Without that, the one person the attendance argument is about is the
-one person missing from the page. It also means the register is right in **week
-0**, before a single game exists.
+⚠️ **What did not change, and is not up for quiet erosion**: no award is ever
+given for finishing low (the 2026-08-05 wooden-spoon ruling stands), nobody is
+ranked in something they have not entered, and the private line still leads with
+the distance to the next rung so a position reads as a target.
 
-- **The board is still a top N, and still never a full ranking.** The five at
-  the top are numbered; the register below them is not. "Most improved" sits
-  alongside, with a top and no bottom, and is where the rest of the room can be
-  winning.
+⚠️ **A student who has never played is listed with dashes and no position.**
+That is why `standings()` takes a roster: rows come from the class list, not
+from the games. Without it, the one person the attendance argument is about is
+the one person missing from the page — and the table would be wrong in **week
+0**, before a game exists.
+
+- **The board length survives as a highlight.** "Size N to the class" now marks
+  the top N in a full list rather than deciding who appears in a short one.
+  `topN` stays in `stats.js`, tested, for screens that still want a short board.
+- **"Most improved" sits alongside**, with a top and no bottom, and is where the
+  rest of the room can be winning.
+- ⚠️ **The one thing worth watching**: a chess Swiss entrant opted in, and a
+  graded class did not. Recorded because it is the argument that would matter if
+  this ever needs revisiting — not because it was overlooked.
 - **Private stats page: always show the student their exact position.** Visible
   only to them. Withholding it is not kindness — in a class of 30 it would leave
   25 people unable to tell 6th from 30th, unable to see they're close to
@@ -413,9 +420,9 @@ Five decisions taken while building it, worth not rediscovering:
 
 The page opens on the **newest season** rather than all-time (during term almost
 every visit is "how did we do this week"), tabs are linkable (`#records`,
-`#class`, `#honours`), and the class register needs a season to be the register
-*of* — all-time deliberately has no class list, because the union of every
-cohort is a mailing list rather than a class.
+`#class`, `#honours`), and the class table needs a season to be the table *of* —
+all-time deliberately has no class list, because the union of every cohort is a
+mailing list rather than a class.
 
 Still to build, all of it more queries over `stats.js`: the **pre-game splash**
 and **post-game screen** (`headToHead` and `movement` exist and are tested, and

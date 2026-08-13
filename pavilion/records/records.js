@@ -10,15 +10,16 @@
 // the server could run. This file fetches, picks and renders — if you find
 // yourself computing a standing here, it belongs there.
 //
-// ⚠️ **The uplifting rule is enforced here, at the point of display** (revised
-// 2026-08-13): the board numbers the top five, the register below it shows the
-// **whole class alphabetically with no positions at all**, the Record Book
-// holds highs only, and a full ordered position appears in exactly one place —
-// the panel you pick your own name to see. `stats.js` hands you an ordered
-// table; printing it in order, with everybody in it, is the thing not to do.
+// ⚠️ **What the uplifting rule still means here** (revised twice on 2026-08-13,
+// both times by Ryan): the class table *is* published in full, ranked, because
+// a friendly tournament shows its standings and the participation point means
+// the bottom is attendance rather than ability. What remains is that **no award
+// is ever given for finishing low**, somebody who has not played is listed but
+// not ranked, and the Record Book holds highs only. `topN` and the board length
+// survive as a highlight and for screens that still want a short board.
 
 import { defaultRelayUrl, apiBase } from '../net.js';
-import { standings, topN, byName, records, honours, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
+import { standings, byName, records, honours, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
 
 const LEAGUE = document.body.dataset.league;
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
@@ -208,48 +209,38 @@ function panel(name, html) {
     data-panel="${name}" ${state.tab === name ? 'data-open' : ''}>${html}</section>`;
 }
 
+// ⚖️ **One ranked list of the whole class** (Ryan, 2026-08-13, superseding both
+// the top-five board and the alphabetical register). His argument: a friendly
+// tournament publishes its standings, and because every game is worth at least
+// a point, the bottom of *this* table is attendance rather than ability —
+// which is the nudge he wants and is fixed by turning up.
+//
+// ⚠️ What survives from the old rule, and should not be quietly undone:
+// somebody who has not played is listed but **not ranked** (you cannot be 27th
+// in something you have not entered), no award is ever given for finishing low,
+// and the private line below still leads with the distance to the next rung.
 function tablePanel() {
   const roster = classRoster();
   const table = standings(seasonGames(), { roster });
   if (!table.length) return `<p class="empty">No league games in this season yet.</p>`;
 
-  const played = table.filter((r) => r.played);
-  const board = topN(played, state.boardSize);
   const rising = mostImproved(seasonGames()).slice(0, 3);
 
   return `
-    ${
-      board.length
-        ? `<div class="card">
-            <h2>The board</h2>
-            <div class="scroller">
-              <table>
-                <caption class="sr-only">The top ${state.boardSize}: position, player, games played,
-                  won, drawn, lost, points, best single score, and recent form newest first.</caption>
-                ${head('<th><span class="sr-only">Position</span></th>')}
-                <tbody>${board.map((r) => row(r, true)).join('')}</tbody>
-              </table>
-            </div>
-            <p class="note">Win 3, draw 2, loss 1 — the point for playing is the loser's point, not a
-              bonus. The top ${board.length === played.length ? board.length : state.boardSize} are
-              numbered; below, the whole class in alphabetical order, with no positions at all.
-              Nothing here is a title — the season sets the seeding for the Cup.</p>
-          </div>`
-        : ''
-    }
-
     <div class="card">
       <h2>The class</h2>
       <div class="scroller">
         <table>
-          <caption class="sr-only">Every member of the class in alphabetical order, with games played,
-            won, drawn, lost, points, best single score and recent form. No positions are given.</caption>
-          ${head('')}
-          <tbody>${byName(table).map((r) => row(r, false)).join('')}</tbody>
+          <caption class="sr-only">The whole class ranked by points: position, player, games played,
+            won, drawn, lost, points, best single score, and recent form newest first. Players who
+            have not played yet are listed without a position.</caption>
+          ${head('<th><span class="sr-only">Position</span></th>')}
+          <tbody>${table.map((r) => row(r, r.rank <= state.boardSize)).join('')}</tbody>
         </table>
       </div>
-      <p class="note">Everyone who is in the class, whether they have played or not. One game is
-        worth at least a point, so a row with something in it is a session attended.</p>
+      <p class="note">Win 3, draw 2, loss 1 — the point for playing is the loser's point, not a bonus,
+        so a single game is worth more than a missed session. The top ${state.boardSize} are marked.
+        Nothing here is a title: the season sets the seeding for the Cup.</p>
     </div>
 
     ${
@@ -289,14 +280,17 @@ function head(first) {
   </tr></thead>`;
 }
 
-// One row, with or without a position. ⚠️ The register passes `ranked: false`
-// and gets no number and no leader highlight — printing "27th" is the whole of
-// what the page is avoiding, and it is avoided here rather than by leaving
-// people off the page.
-function row(r, ranked) {
+// One row. `top` marks a place inside the board length — the setting that used
+// to decide who was shown at all, now deciding who is highlighted, so "size N
+// to the class" still means something with the whole class on screen.
+//
+// ⚠️ A player with no games gets a dash for a position, not a number: they are
+// on the list because the class list is the list, and ranking somebody who has
+// not entered is the one thing a standings table genuinely cannot claim.
+function row(r, top) {
   const dash = (v) => (r.played ? v : '—');
-  return `<tr class="${ranked && r.rank === 1 ? 'gold' : ''}${r.played ? '' : ' absent'}">
-    ${ranked ? `<td class="rank">${r.rank}</td>` : ''}
+  return `<tr class="${r.rank === 1 && r.played ? 'gold' : ''}${top && r.played ? ' top' : ''}${r.played ? '' : ' absent'}">
+    <td class="rank">${dash(r.rank)}</td>
     <td class="who name">${esc(r.name)}</td>
     <td>${dash(r.played)}</td>
     <td class="hide">${dash(r.won)}</td>
