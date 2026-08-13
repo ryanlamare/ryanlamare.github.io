@@ -79,9 +79,11 @@ async function local() {
   const slug = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   let at = Date.UTC(2027, 5, 1, 14);
 
-  async function season(term, weeks, roster) {
+  // `absent` are on the class list and never play — which is the case the
+  // register exists to show, so the sample data has to contain one.
+  async function season(term, weeks, roster, absent = []) {
     await archive.setConfig({ term });
-    await archive.setRoster([...roster, { name: 'J. Ryan Lamare', instructor: true }]);
+    await archive.setRoster([...roster, ...absent, { name: 'J. Ryan Lamare', instructor: true }]);
     const people = roster.map((n) => ({ id: slug(n), name: n }));
     let played = 0;
     for (let w = 0; w < weeks; w++) {
@@ -104,7 +106,7 @@ async function local() {
     return played;
   }
 
-  const a = await season('ler565-2027-summer', 5, CLASS.slice(0, 6));
+  const a = await season('ler565-2027-summer', 5, CLASS.slice(0, 6), ['Nadia Haddad']);
   // One cup final, retagged the way the instructor would in the admin page.
   const first = await archive.games('ler565-2027-summer');
   await archive.setMode(first[0].id, 'cup');

@@ -14,6 +14,7 @@ import { rankSeats, leaguePointsFor, splitTerm } from '../relay/result.js';
 import {
   standings,
   topN,
+  byName,
   headToHead,
   playerCard,
   movement,
@@ -189,6 +190,45 @@ section('The public board is a top N, never a full ranking');
   ]);
   eq(topN(spread, 2).length, 2, 'a clean cut stays a clean cut');
   ok(!topN(spread, 2).some((r) => r.id === 'jo'), 'and the bottom of the table is simply not published');
+}
+
+// ---------------------------------------------------------------------------
+section('The class register — everyone, including whoever has not played');
+
+{
+  const roster = [
+    { id: 'sam', name: 'Sam', instructor: false },
+    { id: 'alex', name: 'Alex', instructor: false },
+    { id: 'quiet', name: 'Quiet', instructor: false },
+    { id: 'ryan', name: 'Ryan', instructor: true },
+  ];
+  const table = standings([game([['sam', 50], ['alex', 40]])], { roster });
+
+  eq(table.length, 3, 'the table is the class, not just the people who turned up');
+  const quiet = table.find((r) => r.id === 'quiet');
+  eq(quiet.played, 0, 'somebody who has not played is on the page with nothing beside their name');
+  eq(quiet.points, 0, 'and no points — which is what makes one game visibly worth something');
+  ok(!table.some((r) => r.id === 'ryan'), 'the instructor is not on it: their games are exhibitions');
+
+  same(byName(table).map((r) => r.name), ['Alex', 'Quiet', 'Sam'], 'the register is alphabetical…');
+  same(Object.keys(byName(table)[0]).sort(), Object.keys(table[0]).sort(),
+    '…carrying every column the board carries, so the same row renderer draws both');
+  eq(byName(table)[1].name, 'Quiet', 'so the player with no games sits between two others, not at a bottom');
+  eq(byName(table).map((r) => r.name).join() === table.map((r) => r.name).join(), false,
+    'and the register is genuinely a different order from the ranking');
+
+  // The board is still the board: ranked, short, and only people who played.
+  const board = topN(table.filter((r) => r.played), 5);
+  eq(board.length, 2, 'the board holds the players, not the register');
+  eq(board[0].rank, 1, 'and still numbers them');
+
+  // A student who has not played still gets their own line if they look.
+  const card = playerCard([game([['sam', 50], ['alex', 40]])], 'quiet', { roster });
+  eq(card.played, 0, 'their private card exists before their first game');
+  eq(card.gap > 0, true, 'and tells them what a single game would be worth');
+
+  eq(standings([game([['sam', 50], ['alex', 40]])]).length, 2,
+    'with no roster the table is only the people who played — which is what all-time wants');
 }
 
 // ---------------------------------------------------------------------------

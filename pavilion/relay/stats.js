@@ -7,11 +7,13 @@
 // loads, with no second implementation to drift.
 //
 // ⚠️ **The screens apply the uplifting rule; this file does not.** `standings`
-// returns the whole ordered table because the private stats page and the
-// instructor board are entitled to it — "telling someone privately where they
-// stand is neither public nor mocking" (PAVILION.md). Anything *public* passes
-// it through `topN` first: a top five, never a full ranking, never a visible
-// bottom. If you are writing a page and reaching for the raw table, stop.
+// returns the whole ordered table, and what a public page may do with it is a
+// display decision made in the page (2026-08-13, revised — see PAVILION.md,
+// *Public board vs the class register*): the top five are **ranked and
+// numbered** through `topN`, and everyone else appears through `byName`, which
+// shows the same columns in alphabetical order with no position printed. The
+// bottom of an ordered list is the thing the rule exists to prevent; a class
+// register is not that, and hiding half the class was never the point.
 //
 // ⚠️ **No theme words.** Records come back keyed (`bestGame`, `widestWin`) and
 // the page turns them into Best in Show and the rest, exactly as `ui.js` owns
@@ -69,17 +71,31 @@ export function leagueOf(game) {
 // result.js, so this adds up what the server derived rather than re-deciding
 // it. A three-player game uses the same table (§8).
 
-export function standings(games, { modes = LEAGUE_MODES, formLength = 5 } = {}) {
+export function standings(games, { modes = LEAGUE_MODES, formLength = 5, roster = null } = {}) {
   const played = byRecency(counted(games, modes));
   const rows = new Map();
+
+  // ⚖️ Seeded from the roster when one is given (2026-08-13), so a student who
+  // has not played is **on the page with nothing beside their name** rather
+  // than absent from it. Ryan's reason, and it is the better one: a class list
+  // where a single game is worth a visible point quietly rewards turning up,
+  // and an empty row says so without anybody having to.
+  //
+  // The instructor is skipped — their games are exhibitions and count for
+  // nothing, so a row of zeros against their name would be a lie.
+  for (const r of roster || []) {
+    if (r.instructor) continue;
+    rows.set(r.id, blankRow(r.id, r.name));
+  }
 
   for (const g of played) {
     const r = g.result;
     (g.seats || []).forEach((id, seat) => {
       if (!id) return; // an unrostered seat never records, but never trust it
       const row = rows.get(id) || blankRow(id, g.names?.[seat] || id);
-      // The most recent game wins the display name, so a corrected spelling
-      // shows through without touching the ids history hangs off.
+      // The roster's spelling wins where there is one; otherwise the most
+      // recent game names the player, so a correction shows through without
+      // touching the id their history hangs off.
       if (!row.name) row.name = g.names?.[seat] || id;
       const rank = r.ranks?.[seat] ?? null;
       const shared = (r.ranks || []).filter((x) => x === 1).length > 1;
@@ -146,6 +162,13 @@ export function topN(table, n = 5) {
   return table.filter((row, i) => i < n || row.points === cut);
 }
 
+// The class register: everyone, same columns, **no position**. Sorting by name
+// is the whole mechanism — the numbers are all visible and the ordering carries
+// no verdict, so a full class fits on one screen without anybody being last.
+export function byName(table) {
+  return [...table].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 // ---------------------------------------------------------------------------
 // Head to head — what the pre-game splash is made of.
 //
@@ -189,8 +212,8 @@ export function headToHead(games, ids, { modes = RECORD_MODES } = {}) {
 // One player's line, for the private stats page and the post-game screen.
 // Position is always included: withholding it from the person it is about is
 // not kindness, it is leaving them unable to see themselves climbing.
-export function playerCard(games, id, { modes = LEAGUE_MODES, formLength = 5 } = {}) {
-  const table = standings(games, { modes, formLength });
+export function playerCard(games, id, { modes = LEAGUE_MODES, formLength = 5, roster = null } = {}) {
+  const table = standings(games, { modes, formLength, roster });
   const row = table.find((r) => r.id === id);
   if (!row) return null;
   return { ...row, of: table.length };

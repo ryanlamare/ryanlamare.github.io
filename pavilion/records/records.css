@@ -87,12 +87,19 @@ label.pick { font-size: 13px; color: var(--muted); margin-left: auto; display: f
 .scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { border-collapse: collapse; width: 100%; min-width: 320px; font-variant-numeric: tabular-nums; }
 th, td { text-align: right; padding: 9px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th:nth-child(2), td:nth-child(2) { text-align: left; width: 99%; white-space: normal; }
+/* ⚠️ By class, not by position. The board has a rank column and the register
+   does not, so `nth-child(2)` made the register's *played* column the wide
+   left-aligned one and pushed every number out of line under its header. */
+th.who, td.who { text-align: left; width: 99%; white-space: normal; }
 th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 tbody tr:last-child td { border-bottom: 0; }
 td.rank { font-family: var(--display); font-size: 20px; width: 1%; color: var(--muted); }
 tr.gold td.rank { color: var(--gold); }
 td.name { font-weight: 600; }
+/* Nobody is greyed out for not having played — the row is quieter, not marked.
+   A dash reads as "not yet", a struck-through row reads as a judgement. */
+tr.absent td { color: var(--muted); }
+tr.absent td.name { font-weight: 500; }
 
 .form { display: inline-flex; gap: 3px; }
 .form b {

@@ -168,13 +168,33 @@ effectively nothing at this scale.
 
 ## League, cup, awards
 
-The football structure, which gives the term a shape:
+⚖️ **Restructured 2026-08-13 — the qualifying/cup shape, and there is no league
+title.** Ryan's question was the right one: *does a league even make sense at
+four or five games?* As a **table that awards something**, no — four games
+against four of thirty-odd possible opponents produces a ranking the data cannot
+support, and hands a trophy on a tiebreak. As **seeding**, yes, and easily: a
+seed only has to be roughly right, because week 6 re-tests everyone anyway. So
+the weeks qualify and the last session decides.
 
-- **League** — every weekly match, weeks 1–5. Running table, top five shown.
-- **Cup** — the week 6 knockout. Already built: `teaching/ler565/week6/live/bracket.html` needs
-  no changes and is already game-agnostic.
-- **Champion of Champions** — league winner vs cup winner. One person taking
-  both is *the Double*, which is a good way to end a course.
+- **Qualifying** — every weekly match, weeks 1–5 (4 games, 5 if week 1 plays for
+  real). Running board and class register. **Awards nothing.** Its output is the
+  seeding, and the top seed is recorded in the honours as a fact, not a prize.
+- **The Cup** — the last session, and the only title. **Three games each, then
+  semi-finals and a final**: five rounds, everyone plays at least three, the top
+  four reach the semis. `teaching/ler565/week6/live/bracket.html` already runs a
+  round-robin group stage with standings and a seeded knockout; it does not yet
+  read the archive.
+- **Pairing scales with the class**: groups of four up to about sixteen students,
+  Swiss pairing above that (three rounds, seeded from qualifying, equal records
+  paired together). Same five rounds either way — only the pairing method
+  changes, and the tool should pick it from the class size rather than Ryan
+  deciding on the day.
+- ⚠️ **Odd numbers need no byes** — Pavilion plays two, three or four, and a
+  three-player game scores 3/1/1 for the same nine-point maximum as three
+  two-player games. Nobody ever sits out a round, which a chess-style bracket
+  cannot say.
+- **Gone with the league title**: the Grand Prize and the Double. Recorded here
+  so nobody re-adds them wondering where they went.
 
 **League scoring: win 3, draw 2, loss 1 — inclusive totals; the "point for
 playing" *is* the loser's point, not a bonus on top** (three-player split in the
@@ -202,11 +222,30 @@ reconstructing term boundaries from timestamps later is exactly the archaeology
 this project exists to avoid. Records pages obey the uplifting rule like
 everything else — halls and highs, never lows.
 
-### Public board vs private rank — they are different things
+### Public board vs the class register — revised 2026-08-13
 
-- **Public leaderboard: a top N, never a full ranking.** A permanent, visible
-  bottom in a class where everyone knows each other is the thing to avoid. "Most
-  improved" alongside it gives the lower half something live to chase.
+⚖️ **The rule changed, and the reasoning is worth keeping.** It used to be *top
+five, never a full ranking, and everyone else off the page*. It is now **top
+five ranked, and then the whole class alphabetically with no positions at all**.
+
+Ryan's argument, and it is the better one: the harm was never *being on the
+page*, it was **being ranked last on it**. An alphabetical register with
+everyone's played / W–D–L / points / best shows the whole class on one screen —
+which is genuinely nice to look at — while nobody is 27th, because no position
+is printed anywhere. And because a single game is worth at least a point, a row
+with numbers in it is a session attended: the register quietly rewards turning
+up, and shows who hasn't, without a word of nagging.
+
+⚠️ **A student who has never played is on the register with dashes**, which is
+why `standings()` takes a roster: the rows come from the class list, not from
+the games. Without that, the one person the attendance argument is about is the
+one person missing from the page. It also means the register is right in **week
+0**, before a single game exists.
+
+- **The board is still a top N, and still never a full ranking.** The five at
+  the top are numbered; the register below them is not. "Most improved" sits
+  alongside, with a top and no bottom, and is where the rest of the room can be
+  winning.
 - **Private stats page: always show the student their exact position.** Visible
   only to them. Withholding it is not kindness — in a class of 30 it would leave
   25 people unable to tell 6th from 30th, unable to see they're close to
@@ -372,10 +411,18 @@ Five decisions taken while building it, worth not rediscovering:
   setting in the admin page rather than a constant in a stylesheet. Five is the
   documented fallback when the relay is unreachable.
 
+The page opens on the **newest season** rather than all-time (during term almost
+every visit is "how did we do this week"), tabs are linkable (`#records`,
+`#class`, `#honours`), and the class register needs a season to be the register
+*of* — all-time deliberately has no class list, because the union of every
+cohort is a mailing list rather than a class.
+
 Still to build, all of it more queries over `stats.js`: the **pre-game splash**
 and **post-game screen** (`headToHead` and `movement` exist and are tested, and
-nothing renders them yet), the **instructor live board**, the **Bulletin**, and
-the **challenge ladder**.
+nothing renders them yet), the **instructor live board**, the **Bulletin**, the
+**challenge ladder**, and the two pieces the restructure added — **seeding the
+last session from qualifying** and **wiring the bracket to the archive** so
+results are not typed in while the same games are recording themselves.
 
 ---
 
@@ -803,9 +850,10 @@ older than this theme and survives it.
 
 Fair names, which the theme earns:
 
-- **Grand Prize** — league winner
-- **The Cup** — week 6 knockout
-- **The Double** — both, by one person
+- ~~**Grand Prize** — league winner~~ and ~~**The Double**~~ — **cut
+  2026-08-13** when the league stopped awarding a title (see *League, cup,
+  awards*). The season's honour is now **top seed**, printed as a fact.
+- **The Cup** — the last session's tournament, and the only title
 - **Best in Show** — highest single game
 - **Turnaround** — best comeback from behind
 - **Most Improved** — first half to second

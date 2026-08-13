@@ -10,14 +10,15 @@
 // the server could run. This file fetches, picks and renders — if you find
 // yourself computing a standing here, it belongs there.
 //
-// ⚠️ **The uplifting rule is enforced here, at the point of display**: the
-// public table is a top N and never a full ranking, the Record Book holds
-// highs only, and the one place a full position appears is the panel you have
-// to pick your own name to see. `stats.js` will hand you the whole table; do
-// not print it.
+// ⚠️ **The uplifting rule is enforced here, at the point of display** (revised
+// 2026-08-13): the board numbers the top five, the register below it shows the
+// **whole class alphabetically with no positions at all**, the Record Book
+// holds highs only, and a full ordered position appears in exactly one place —
+// the panel you pick your own name to see. `stats.js` hands you an ordered
+// table; printing it in order, with everybody in it, is the thing not to do.
 
 import { defaultRelayUrl, apiBase } from '../net.js';
-import { standings, topN, records, honours, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
+import { standings, topN, byName, records, honours, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
 
 const LEAGUE = document.body.dataset.league;
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
@@ -38,7 +39,14 @@ const RECORD_LABELS = {
   longestStreak: { name: 'Longest winning run', of: 'games in a row', unit: '' },
 };
 
-const state = { games: [], season: null, tab: 'table', boardSize: DEFAULT_BOARD, error: null };
+const state = { games: [], rosters: [], season: null, tab: 'records', boardSize: DEFAULT_BOARD, error: null };
+
+// Tabs are linkable: /records/ler565/#class goes straight to the register. The
+// hash is the reader's word ("class"), not the code's ("table") — a URL you can
+// say out loud in a lecture is worth one line of mapping.
+const TABS = { records: 'Records', table: 'The class', honours: 'Honours' };
+const HASH = { records: 'records', table: 'class', honours: 'honours' };
+const fromHash = (h) => Object.keys(HASH).find((k) => HASH[k] === String(h || '').replace(/^#/, ''));
 
 const app = document.getElementById('app');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -61,6 +69,7 @@ function when(at) {
 // ---------------------------------------------------------------------------
 
 async function load() {
+  state.tab = fromHash(location.hash) || state.tab;
   const base = apiBase(defaultRelayUrl(location));
   try {
     const [gamesRes, sessionRes] = await Promise.all([
@@ -71,8 +80,15 @@ async function load() {
       fetch(`${base}/session`, { cache: 'no-store' }).catch(() => null),
     ]);
     if (!gamesRes.ok) throw new Error(`the records service answered ${gamesRes.status}`);
-    state.games = (await gamesRes.json()).games || [];
+    const body = await gamesRes.json();
+    state.games = body.games || [];
+    state.rosters = body.rosters || [];
     if (sessionRes && sessionRes.ok) state.boardSize = (await sessionRes.json()).boardSize || DEFAULT_BOARD;
+    // ⚖️ Open on the newest season, not all-time. During term almost every
+    // visit is "how did we do this week", and all-time is one click away —
+    // where the reverse would mean a click every week. It also means the class
+    // register has a cohort to be the register *of*, which all-time has not.
+    state.season = seasons()[0]?.season ?? null;
   } catch (err) {
     state.error = err.message;
   }
@@ -84,6 +100,25 @@ function seasonGames() {
   return state.games.filter((g) => (g.season ?? null) === state.season);
 }
 
+// ⚠️ The class list is a *season's* roster, and all-time deliberately has none.
+// "The class" is a cohort; the union of every cohort a league ever had is a
+// mailing list, not a class, and seeding an all-time table with it would put
+// years of alumni on the page showing nothing played.
+function classRoster() {
+  if (!state.season && state.rosters.length > 1) return null;
+  const entry = state.rosters.find((r) => (r.season ?? null) === state.season) || state.rosters[0];
+  return entry?.players || null;
+}
+
+// Seasons come from the rosters *and* the games: a term that has a class list
+// and no games yet is week 0, which is exactly when the register matters most.
+function seasons() {
+  const seen = new Map();
+  for (const r of state.rosters) seen.set(r.season ?? null, { season: r.season ?? null, games: 0 });
+  for (const s of seasonsOf(state.games)) seen.set(s.season, { ...seen.get(s.season), ...s });
+  return [...seen.values()].sort((a, b) => String(b.season ?? '').localeCompare(String(a.season ?? '')));
+}
+
 // ---------------------------------------------------------------------------
 
 function render() {
@@ -92,23 +127,23 @@ function render() {
       <p class="empty">Nothing is lost: every game is stored on the relay, and this page is only a view of it.</p>`;
     return;
   }
-  if (!state.games.length) {
+  if (!state.games.length && !state.rosters.some((r) => r.players.length)) {
     app.innerHTML = `<p class="empty">No games yet. The table, the records and the honours all appear
       the moment the first game is played — nobody has to file anything.</p>`;
     return;
   }
 
-  const seasons = seasonsOf(state.games);
-  const showPicker = seasons.length > 1 || seasons[0]?.season;
+  const seasonList = seasons();
+  const showPicker = seasonList.length > 1 || seasonList[0]?.season;
+  if (!state.games.length) state.tab = 'table'; // week 0: the register is all there is
 
   app.innerHTML = `
     <div class="controls">
       <div class="tabs" role="tablist">
-        ${['table', 'records', 'honours']
+        ${Object.entries(TABS)
           .map(
-            (t) => `<button role="tab" id="tab-${t}" aria-controls="panel-${t}" data-tab="${t}"
-              aria-selected="${state.tab === t}">
-              ${t === 'table' ? 'Table' : t === 'records' ? 'Records' : 'Honours'}</button>`
+            ([t, label]) => `<button role="tab" id="tab-${t}" aria-controls="panel-${t}" data-tab="${t}"
+              aria-selected="${state.tab === t}">${label}</button>`
           )
           .join('')}
       </div>
@@ -117,7 +152,7 @@ function render() {
           ? `<label class="pick">Season
               <select id="season">
                 <option value="">All time</option>
-                ${seasons
+                ${seasonList
                   .map(
                     (s) =>
                       `<option value="${esc(s.season ?? '')}"${state.season === s.season ? ' selected' : ''}>${esc(
@@ -129,13 +164,16 @@ function render() {
           : ''
       }
     </div>
-    ${panel('table', tablePanel())}
     ${panel('records', recordsPanel())}
+    ${panel('table', tablePanel())}
     ${panel('honours', honoursPanel())}`;
 
   app.querySelectorAll('[data-tab]').forEach((b) =>
     b.addEventListener('click', () => {
       state.tab = b.dataset.tab;
+      // replaceState, not a new entry: a tab is a view of one page, and Back
+      // should leave the records rather than walk the tabs you clicked.
+      history.replaceState(null, '', `#${HASH[state.tab]}`);
       render();
     })
   );
@@ -171,32 +209,47 @@ function panel(name, html) {
 }
 
 function tablePanel() {
-  const table = standings(seasonGames());
+  const roster = classRoster();
+  const table = standings(seasonGames(), { roster });
   if (!table.length) return `<p class="empty">No league games in this season yet.</p>`;
 
-  const board = topN(table, state.boardSize);
+  const played = table.filter((r) => r.played);
+  const board = topN(played, state.boardSize);
   const rising = mostImproved(seasonGames()).slice(0, 3);
 
   return `
+    ${
+      board.length
+        ? `<div class="card">
+            <h2>The board</h2>
+            <div class="scroller">
+              <table>
+                <caption class="sr-only">The top ${state.boardSize}: position, player, games played,
+                  won, drawn, lost, points, best single score, and recent form newest first.</caption>
+                ${head('<th><span class="sr-only">Position</span></th>')}
+                <tbody>${board.map((r) => row(r, true)).join('')}</tbody>
+              </table>
+            </div>
+            <p class="note">Win 3, draw 2, loss 1 — the point for playing is the loser's point, not a
+              bonus. The top ${board.length === played.length ? board.length : state.boardSize} are
+              numbered; below, the whole class in alphabetical order, with no positions at all.
+              Nothing here is a title — the season sets the seeding for the Cup.</p>
+          </div>`
+        : ''
+    }
+
     <div class="card">
-      <h2>The table</h2>
+      <h2>The class</h2>
       <div class="scroller">
         <table>
-          <caption class="sr-only">The top ${state.boardSize} of the league table: position, player,
-            games played, won, drawn, lost, league points, best single score, and recent form
-            newest first.</caption>
-          <thead><tr>
-            <th><span class="sr-only">Position</span></th><th>Player</th>
-            <th>P<span class="sr-only">layed</span></th><th class="hide">W<span class="sr-only">on</span></th>
-            <th class="hide">D<span class="sr-only">rawn</span></th><th class="hide">L<span class="sr-only">ost</span></th>
-            <th>Pts<span class="sr-only"> (points)</span></th><th class="hide">Best</th><th>Form</th>
-          </tr></thead>
-          <tbody>${board.map(row).join('')}</tbody>
+          <caption class="sr-only">Every member of the class in alphabetical order, with games played,
+            won, drawn, lost, points, best single score and recent form. No positions are given.</caption>
+          ${head('')}
+          <tbody>${byName(table).map((r) => row(r, false)).join('')}</tbody>
         </table>
       </div>
-      <p class="note">Win 3, draw 2, loss 1 — the point for playing is the loser's point, not a bonus.
-        The board shows the top ${board.length === table.length ? board.length : state.boardSize};
-        there is no full ranking here, by design. Your own position is below, and only you are looking at it.</p>
+      <p class="note">Everyone who is in the class, whether they have played or not. One game is
+        worth at least a point, so a row with something in it is a session attended.</p>
     </div>
 
     ${
@@ -220,23 +273,37 @@ function tablePanel() {
       <label class="pick" style="margin:0 0 12px">Who are you?
         <select id="me">
           <option value="">Pick your name…</option>
-          ${table.map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}
+          ${byName(table).map((r) => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}
         </select>
       </label>
       <div id="mine"></div>
     </div>`;
 }
 
-function row(r) {
-  return `<tr class="${r.rank === 1 ? 'gold' : ''}">
-    <td class="rank">${r.rank}</td>
-    <td class="name">${esc(r.name)}</td>
-    <td>${r.played}</td>
-    <td class="hide">${r.won}</td>
-    <td class="hide">${r.drawn}</td>
-    <td class="hide">${r.lost}</td>
-    <td><b>${r.points}</b></td>
-    <td class="hide">${r.best}</td>
+function head(first) {
+  return `<thead><tr>
+    ${first}<th class="who">Player</th>
+    <th>P<span class="sr-only">layed</span></th><th class="hide">W<span class="sr-only">on</span></th>
+    <th class="hide">D<span class="sr-only">rawn</span></th><th class="hide">L<span class="sr-only">ost</span></th>
+    <th>Pts<span class="sr-only"> (points)</span></th><th class="hide">Best</th><th>Form</th>
+  </tr></thead>`;
+}
+
+// One row, with or without a position. ⚠️ The register passes `ranked: false`
+// and gets no number and no leader highlight — printing "27th" is the whole of
+// what the page is avoiding, and it is avoided here rather than by leaving
+// people off the page.
+function row(r, ranked) {
+  const dash = (v) => (r.played ? v : '—');
+  return `<tr class="${ranked && r.rank === 1 ? 'gold' : ''}${r.played ? '' : ' absent'}">
+    ${ranked ? `<td class="rank">${r.rank}</td>` : ''}
+    <td class="who name">${esc(r.name)}</td>
+    <td>${dash(r.played)}</td>
+    <td class="hide">${dash(r.won)}</td>
+    <td class="hide">${dash(r.drawn)}</td>
+    <td class="hide">${dash(r.lost)}</td>
+    <td><b>${dash(r.points)}</b></td>
+    <td class="hide">${dash(r.best)}</td>
     <td><span class="form" aria-label="Form, newest first: ${r.form
       .map((f) => ({ W: 'won', D: 'drew', L: 'lost' })[f])
       .join(', ')}">${r.form.map((f) => `<b class="${f}" aria-hidden="true">${f}</b>`).join('')}</span></td>
@@ -271,7 +338,7 @@ function renderMine() {
     return;
   }
 
-  const card = playerCard(seasonGames(), id);
+  const card = playerCard(seasonGames(), id, { roster: classRoster() });
   if (!card) {
     box.innerHTML = `<p class="note">No games in this season.</p>`;
     return;
@@ -338,7 +405,14 @@ function recordsPanel() {
 function honoursPanel() {
   // Deliberately ignores the season picker: a roll of honour that shows one
   // season is a fact, not a roll.
-  const rolls = honours(state.games).filter((h) => h.champion);
+  //
+  // ⚖️ **The Cup is the only title** (2026-08-13). There was a Grand Prize for
+  // topping the league and a Double for taking both; the league stopped
+  // awarding anything when it became the seeding for week 6, so they went. What
+  // is left of the season is the top seed, printed as a fact rather than a
+  // prize — four or five games can say who qualified well, and cannot say who
+  // the best player was.
+  const rolls = honours(state.games).filter((h) => h.champion || h.cup);
   if (!rolls.length) return `<p class="empty">No season has finished yet.</p>`;
 
   return `<div class="card">
@@ -347,19 +421,23 @@ function honoursPanel() {
       .map(
         (h) => `<div class="roll" style="padding:12px 0;border-bottom:1px solid var(--line)">
           <span class="season">${esc(seasonLabel(h.season) === 'All time' ? '—' : seasonLabel(h.season))}</span>
-          <span><span class="prize">Grand Prize</span><br><span class="holder">${esc(h.champion.name)}</span>
-            <span class="when">${h.champion.points} pts</span></span>
           ${
             h.cup
               ? `<span><span class="prize">The Cup</span><br><span class="holder">${esc(h.cup.name)}</span></span>`
-              : `<span><span class="prize">The Cup</span><br><span class="when">not played</span></span>`
+              : `<span><span class="prize">The Cup</span><br><span class="when">not played yet</span></span>`
           }
-          ${h.double ? '<span class="double">The Double</span>' : ''}
+          ${
+            h.champion
+              ? `<span><span class="prize">Top seed</span><br><span class="holder">${esc(h.champion.name)}</span>
+                  <span class="when">${h.champion.points} pts</span></span>`
+              : ''
+          }
         </div>`
       )
       .join('')}
-    <p class="note">The Grand Prize goes to the top of the league table; the Cup to whoever wins the
-      week 6 knockout. One person taking both is the Double.</p>
+    <p class="note">The Cup is the title, won in the last session: three games, then semi-finals and a
+      final. The weeks before it decide the seeding, and the top seed is recorded here because
+      qualifying well is worth remembering — not because it wins anything.</p>
   </div>`;
 }
 

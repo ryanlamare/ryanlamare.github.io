@@ -259,6 +259,25 @@ export class Archive {
     return out.sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0));
   }
 
+  // The class list per season, which the records site needs for a reason the
+  // league table alone doesn't reveal: a student who has not played yet has to
+  // appear on the page *with nothing beside their name*. Derived from the
+  // roster rather than from the games, so it is right in week 0 — a term with a
+  // roster and no games is exactly the state the first class starts in.
+  async leagueRosters(league, { season = null } = {}) {
+    const wanted = cleanTerm(league);
+    if (!wanted) return [];
+    const terms = (await this.terms()).filter((t) => {
+      const split = splitTerm(t);
+      return split.league === wanted && (season === null || split.season === season);
+    });
+    const out = [];
+    for (const term of terms) {
+      out.push({ term, season: splitTerm(term).season, players: await this.roster(term) });
+    }
+    return out.sort((a, b) => String(b.season ?? '').localeCompare(String(a.season ?? '')));
+  }
+
   // --- deleting -------------------------------------------------------------
   //
   // ⚠️ Real deletion, not a flag. Voiding is the instructor's tool for a game
@@ -400,6 +419,9 @@ export async function apiRoute(archive, { route, method = 'GET', query = {}, bod
         league,
         season,
         games: await archive.leagueGames(league, { season }),
+        // The class lists, one per season. Public like the rest of the roster,
+        // and for the same reason: the class is not a secret to the class.
+        rosters: await archive.leagueRosters(league, { season }),
       });
     }
 

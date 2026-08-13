@@ -506,6 +506,19 @@ section('The records site’s two public reads');
   const one = (await call('/records/games', { query: { league: 'ler565', season: '2027-summer' } })).body;
   eq(one.games.length, 1, 'and the season picker narrows it');
   eq(one.games[0].moves, undefined, 'summaries only — a records page never pulls a move list');
+  // The class list travels with the games, because the records page has to show
+  // a student who has not played yet — and in week 0 there are no games to
+  // learn the class from.
+  same(one.rosters.map((r) => r.season), ['2027-summer'], 'a season carries its own class list');
+  same(one.rosters[0].players.map((p) => p.id), ['sam', 'alex'], 'the roster, not the players who happen to have played');
+  eq(all.rosters.length, 2, 'and every season has one');
+
+  await call('/admin/config', { method: 'POST', body: { term: 'ler565-2029-summer' } });
+  await call('/admin/roster', { method: 'POST', body: { roster: ['Nobody Yet'] } });
+  const week0 = (await call('/records/games', { query: { league: 'ler565', season: '2029-summer' } })).body;
+  eq(week0.games.length, 0, 'a term set up but not played has no games…');
+  eq(week0.rosters[0].players.length, 1, '…and still knows who is in the class');
+
   eq((await call('/records/games')).status, 400, 'asking for no league in particular is a bad request');
   eq((await call('/records/games', { query: { league: 'nobody' } })).body.games.length, 0,
     'and a league nobody has played is empty rather than an error');
