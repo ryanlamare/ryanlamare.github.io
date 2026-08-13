@@ -97,16 +97,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 h1 .r, .r { color: var(--red); }
 
-/* The logo — the tile palette, two letters at a time (Ryan, playtest
-   2026-08-13), and the same four colours carry the month splashes.
-   Machinery's black is deliberately skipped: against the card it reads as
-   plain ink, which visibly breaks the every-pair-coloured pattern. */
+/* The tile palette as type: the logo and the month splashes are set in it.
+   PAVILION is four pairs and there are five disciplines, so one sits out —
+   Electricity's ochre, which is the weakest of the five on cream. It still
+   appears in the splash cycle. Machinery's black carries LI (Ryan, playtest
+   2026-08-13). */
 .pv0 { color: var(--art); }
 .pv1 { color: var(--sci); }
-.pv2 { color: var(--ele); }
-.pv3 { color: var(--nat); }
+.pv2 { color: var(--mac); }
+.pv3 { color: var(--ele); }
+.pv4 { color: var(--nat); }
 
+.logo { text-transform: uppercase; }
 .sub b { color: var(--ink); }
+.sub + .sub { margin-top: -18px; }
 
 /* Back-of-the-box copy: the hook in the house red, the pitch underneath. */
 .tagline {
@@ -134,7 +138,7 @@ legend {
 #name-inputs { display: grid; gap: 8px; }
 .seg-btn:disabled { opacity: .4; }
 #code-input { text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
-#name-inputs input, #seed-input, #code-input, #clock-select {
+#name-inputs input, #code-input, #clock-select {
   width: 100%; padding: 10px 12px; font: inherit;
   border: 1px solid var(--line); border-radius: 8px; background: #FBF7EC;
 }
@@ -147,6 +151,10 @@ legend {
   transition: transform .12s ease;
 }
 .cta:hover { transform: translateY(-1px); }
+/* The end-screen pair: play again reads blue, leaving reads gold (Ryan,
+   playtest 2026-08-13). The red stays the front door's alone. */
+.cta.blue { background: var(--sci); box-shadow: 0 6px 18px rgba(55, 101, 138, .32); }
+.cta.gold { background: var(--gold); color: var(--ink); box-shadow: 0 6px 18px rgba(201, 162, 39, .32); }
 
 .ghost-btn {
   border: 1px solid var(--line); background: transparent; border-radius: 8px;
@@ -158,22 +166,6 @@ legend {
   border: 0; background: transparent; padding: 0; font: inherit;
   color: var(--red); font-weight: 700; text-decoration: underline;
 }
-/* The five disciplines on the way in — the legend for a board that carries
-   no words at all. Five equal columns, not flex (Ryan, playtest 2026-08-13):
-   under flex each item was as wide as its label, so ELECTRICITY pushed the
-   tiles off any even rhythm. */
-.disciplines {
-  list-style: none; display: grid;
-  grid-template-columns: repeat(5, 1fr); gap: 10px;
-  margin: 0 0 22px;
-}
-.disciplines li {
-  display: grid; justify-items: center; gap: 5px;
-  font-size: 9.5px; font-weight: 700; letter-spacing: .05em;
-  text-transform: uppercase; color: var(--muted);
-}
-.disciplines .tile { width: 34px; height: 34px; border-radius: 7px; }
-
 .rejoin {
   font-size: 13px; color: var(--muted);
   background: #FBF7EC; border: 1px dashed var(--line); border-radius: 10px;
@@ -575,6 +567,20 @@ button.tile:hover { transform: translateY(-3px); }
   padding: 20px 40px;
   max-width: min(92vw, 900px);
 }
+/* The month number on its own line, and bigger than the words above it. */
+.splash-num { display: block; font-size: 1.5em; line-height: 1.05; }
+
+/* The Fair opening is the end of the game, so its splash is the one on ink
+   (Ryan, playtest 2026-08-13). The palette lifts to the tints that hold
+   against black — the cream-ground colours would sink into it. */
+#banner.splash.finale {
+  background: var(--ink); color: var(--card); border-color: var(--ink);
+}
+#banner.finale .pv0 { color: #E4906B; }
+#banner.finale .pv1 { color: #7FB3E0; }
+#banner.finale .pv2 { color: var(--card); }
+#banner.finale .pv3 { color: #E8C24B; }
+#banner.finale .pv4 { color: #74C78B; }
 
 /* ------------------------------------------------------------- end modal */
 
@@ -605,6 +611,10 @@ button.tile:hover { transform: translateY(-3px); }
 .champion.spot { animation: spotlight .8s cubic-bezier(.2, 1.4, .4, 1); }
 @keyframes spotlight { 0% { transform: scale(.6); opacity: 0; } }
 .end-sub { color: var(--muted); margin-bottom: 20px; }
+/* A natural win carries no sub-line; without this the empty <p> still holds
+   its bottom margin and the table drifts away from the headline. */
+.end-sub:empty { display: none; margin: 0; }
+.champion.story { margin-bottom: 18px; }
 
 .final-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
 .final-table td, .final-table th {
@@ -685,7 +695,6 @@ button.tile:hover { transform: translateY(-3px); }
   .icell .pen { font-size: 9px; }
   #topbar { padding: 7px 9px; gap: 5px 7px; }
   .wk-badge { font-size: 12px; }
-  .disciplines li { font-size: 8px; }
   #phase-label { font-size: 12px; }
   .chip { font-size: 11px; padding: 2px 8px; }
   .ghost-btn { padding: 4px 8px; font-size: 12px; }

@@ -365,8 +365,10 @@ function banner(html, cls = '') {
   if (instant()) return Promise.resolve();
   const el = $('#banner');
   clearTimeout(bannerTimer);
-  el.classList.remove('show');
-  el.classList.toggle('splash', cls === 'splash');
+  // Assigning className rather than toggling clears `show` and whatever the
+  // last banner's classes were in one go, so a splash can't leak its
+  // background onto the next plain banner.
+  el.className = cls;
   void el.offsetWidth;
   el.innerHTML = html;
   el.classList.add('show');
@@ -376,14 +378,25 @@ function banner(html, cls = '') {
 
 // The big beats — the month opening, the displays going up, the Fair opening
 // — mirror the logo (Ryan, playtest 2026-08-13): large type on the card
-// cream, words cycling the four logo colours. Machinery's black is skipped
-// there for the same reason it is skipped in the logo: it reads as plain ink.
-const PV_CLASSES = ['pv0', 'pv1', 'pv2', 'pv3'];
+// cream, words cycling the tile palette. The order puts the two weakest on
+// cream (ochre, then black) last, so a three-word beat gets the three
+// strongest.
+const PV_CYCLE = ['pv0', 'pv1', 'pv4', 'pv3', 'pv2'];
 function splashHTML(text) {
   return text
     .split(' ')
-    .map((w, i) => `<span class="${PV_CLASSES[i % 4]}">${esc(w)}</span>`)
+    .map((w, i) => `<span class="${PV_CYCLE[i % PV_CYCLE.length]}">${esc(w)}</span>`)
     .join(' ');
+}
+
+// The month splash puts the number on its own line, large (Ryan, playtest
+// 2026-08-13 — it wrapped that way by accident at some widths and he liked
+// it better). An explicit block beats letting the banner's width decide.
+function monthSplashHTML(n) {
+  return (
+    `<span class="pv0">Construction</span> <span class="pv1">Month</span>` +
+    `<span class="splash-num pv2">${n}</span>`
+  );
 }
 
 // Agencies are rendered filled, so before the start-of-month banner their
@@ -622,7 +635,9 @@ async function animateResolution(interim, final) {
         await beat(280);
       }
     }
-    await banner(splashHTML("The World's Fair is Open!"), 'splash');
+    // The one splash on black: the Fair opening is the end of the game, and
+    // the ground going dark says so before the words are read.
+    await banner(splashHTML("The World's Fair is Open!"), 'splash finale');
     await beat(700);
     return;
   }
@@ -649,7 +664,7 @@ async function animateResolution(interim, final) {
   renderAll();
   setPhase('');
   hideDealTiles();
-  await banner(splashHTML(`Construction Month ${final.round}`), 'splash');
+  await banner(monthSplashHTML(final.round), 'splash');
   await dealAnimation();
 }
 
@@ -881,6 +896,10 @@ function startGame(cfg) {
   $('#game').classList.remove('hidden');
   $('#end-modal').close?.();
   renderAll();
+  // renderAll only writes the phase label when the game is over, so without
+  // this a rematch opened under the last game's "The World's Fair is open"
+  // (Ryan, playtest 2026-08-13). The first move clears it.
+  setPhase('Construction begins');
   announce(
     `New game, seed ${seed}. ${G.names[s.startPlayer]} hires first in month 1.`
   );
@@ -890,7 +909,7 @@ function startGame(cfg) {
   (async () => {
     animating = true;
     hideDealTiles();
-    await banner(splashHTML('Construction Month 1'), 'splash');
+    await banner(monthSplashHTML(1), 'splash');
     await dealAnimation();
     animating = false;
     startClock(s.seatToMove);
@@ -944,12 +963,14 @@ function endGame(ending, flaggedSeat = null) {
     : ending === 'timeout'
       ? `${esc(winName)} wins on time`
       : `<span class="champ-name">${esc(winName)}</span> has built the most prestigious pavilion in the world!`;
+  // A natural win needs no explanation under the headline (Ryan, playtest
+  // 2026-08-13); the two endings that *are* surprising still get a line.
   const sub =
     ending === 'timeout'
       ? `${esc(G.names[flaggedSeat])}'s clock ran out. Scores are recorded but sit out the score-based awards.`
       : draw
         ? 'Level on points and on completed rows — the rulebook calls it a shared win.'
-        : `A pavilion opened its doors in month ${G.cur.round}, so the Fair opened with it.`;
+        : '';
 
   // The scoring breakdown deliberately says rows / columns / colors rather
   // than galleries / aisles / disciplines (Ryan, playtest 2026-08-13): at the
@@ -982,7 +1003,7 @@ function endGame(ending, flaggedSeat = null) {
     <p class="champion spot${draw || ending === 'timeout' ? '' : ' story'}">${titleHTML}</p>
     <p class="end-sub">${sub}</p>
     <table class="final-table">
-      <tr><th>Pavilion</th><th>Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
+      <tr><th>Player</th><th>Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
       ${rows}
     </table>`;
   announce(`${titleText}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
@@ -1454,7 +1475,6 @@ function applySetupMode() {
   // Joining? The host already chose the table size, the clock and the seed.
   $('#players-field').classList.toggle('hidden', !online || joining);
   $('#clock-field').classList.toggle('hidden', joining);
-  $('#seed-field').classList.toggle('hidden', online); // the room's seed is the server's
   // A live game needs no explanation (Ryan, playtest 2026-08-13); the
   // rehearsal hint is Ryan's copy verbatim. The opponent is still the
   // Commissioner — the bot introduces itself on the board.
@@ -1465,7 +1485,7 @@ function applySetupMode() {
   $('#setup-submit').textContent = online
     ? joining
       ? 'Join the room'
-      : 'Open a room'
+      : 'Start the competition'
     : 'Start the rehearsal';
   // Novices should learn the rules before they learn the clock.
   if (!online) $('#clock-select').value = '0';
@@ -1514,7 +1534,6 @@ $('#setup-form').addEventListener('submit', (e) => {
     names: [lastTypedName, BOT_NAME],
     bot: true,
     clockMs: Number($('#clock-select').value),
-    seed: $('#seed-input').value,
   });
 });
 
@@ -1542,6 +1561,13 @@ $('#btn-new').addEventListener('click', () => {
   if (G && !G.cur.over && G.moves.length > 0 && !confirm('Abandon this game?')) return;
   toSetup();
 });
+// ?dev=1 puts the record buttons back: a JSON move log is a bug report, not
+// something to hand a student (Ryan, 2026-08-13). The archive itself is
+// unaffected — build step 5's server writes it from the same move list.
+if (params.get('dev')) {
+  $('#btn-export').classList.remove('hidden');
+  $('#btn-record').classList.remove('hidden');
+}
 $('#btn-export').addEventListener('click', downloadRecord);
 $('#btn-record').addEventListener('click', downloadRecord);
 $('#btn-rematch').addEventListener('click', () => {
@@ -1603,7 +1629,7 @@ if (smokeParams.get('uitest') === 'setup') {
       expect($('#mode-seg [data-mode="online"]').classList.contains('on'), 'live game is preselected');
       expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset shows');
       expect(!$('#players-field').classList.contains('hidden'), 'the host picks the table size');
-      expect($('#seed-field').classList.contains('hidden'), 'the seed field hides — the room owns it');
+      expect($('#setup-submit').textContent.includes('competition'), 'the host button starts the competition');
       expect($$('#name-inputs input').length === 1, 'you name only yourself');
 
       $('#online-seg [data-online="join"]').click();
@@ -1616,11 +1642,9 @@ if (smokeParams.get('uitest') === 'setup') {
 
       $('#mode-seg [data-mode="practice"]').click();
       expect($('#online-field').classList.contains('hidden'), 'the room fieldset hides');
-      expect(!$('#seed-field').classList.contains('hidden'), 'a practice game can be seeded');
       expect($('#clock-select').value === '0', 'practice drops the clock');
       expect($('#mode-hint').textContent.includes('rehearsal'), 'hint pitches the rehearsal');
       $('#name-inputs input').value = 'Ryan';
-      $('#seed-input').value = 'uitest-seed';
       $('#setup-form').requestSubmit();
       expect(!!G && G.cfg.bot === true, 'game starts in practice mode');
       expect(G && G.names[0] === 'Ryan' && G.names[1] === BOT_NAME, 'seats are you vs the bot');
@@ -1716,7 +1740,6 @@ if (smokeParams.get('uitest') === 'online') {
       // --- host a room, through the real form -----------------------------
       $('#mode-seg [data-mode="online"]').click();
       expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset appears');
-      expect($('#seed-field').classList.contains('hidden'), 'the seed field hides — the room owns it');
       expect($$('#name-inputs input').length === 1, 'you name only yourself');
       $('#name-inputs input').value = 'Sam';
       $('#clock-select').value = '0';

@@ -6,7 +6,7 @@
 <title>Pavilion</title>
 <!-- ?v= is a cache-buster: bump it when shipping UI changes so browsers
      holding older copies pick up the new files on a plain reload. -->
-<link rel="stylesheet" href="./style.css?v=10">
+<link rel="stylesheet" href="./style.css?v=11">
 <!-- PWA dressing: the manifest lets a phone "Add to Home Screen", where the
      game opens full-screen under its own icon. Still just this website —
      no store, no service worker; updates arrive on next open as always. -->
@@ -77,31 +77,24 @@
 
 <!-- Setup. The front door carries the full pitch (Ryan, playtest
      2026-08-13, superseding the earlier two-sentence rule — copy supplied
-     verbatim in PAVILION.md, The opening copy). The logo is the tile
-     palette, two letters at a time. -->
+     verbatim in PAVILION.md, The opening copy). The logo is set in the tile
+     palette, two letters at a time. The five-tile legend that used to sit
+     under the pitch came off at the third playtest: the disciplines are
+     named in the aria labels and move announcements, and the board itself
+     teaches them faster than a key does. -->
 <section id="setup" class="screen">
   <div class="setup-card">
-    <h1 class="logo" aria-label="Pavilion"><span class="pv0">Pa</span><span class="pv1">vi</span><span class="pv2">li</span><span class="pv3">on</span></h1>
+    <h1 class="logo" aria-label="Pavilion"><span class="pv0">PA</span><span class="pv1">VI</span><span class="pv2">LI</span><span class="pv4">ON</span></h1>
     <p class="tagline">Hire your craftspeople. Build your exhibit.
       <span class="r">Bring glory to your country!</span></p>
     <p class="sub"><b>Chicago. 1893.</b> Visitors flock from across the globe to
     witness the grand opening of the pavilions of the World's Fair. Countries
     hire the finest craftspeople in the city to build exhibits showcasing their
     country's achievements in art, science, machinery, electricity, and
-    agriculture. Will your pavilion stand above the rest, etching itself into
+    agriculture.</p>
+    <p class="sub">Will your pavilion stand above the rest, etching itself into
     history as the finest in the world, or will it be forgotten? Your chance at
     World's Fair glory awaits!</p>
-
-    <!-- The five disciplines at playing size. Tiles never carry words
-         (PAVILION.md, Tiles), so this is the one place the pictograms are
-         named — on the way in, where a legend is a legend and not a rule. -->
-    <ul class="disciplines">
-      <li><span class="tile k0"><svg class="ic" aria-hidden="true"><use href="#ic-art"/></svg></span>Art</li>
-      <li><span class="tile k1"><svg class="ic" aria-hidden="true"><use href="#ic-sci"/></svg></span>Science</li>
-      <li><span class="tile k2"><svg class="ic" aria-hidden="true"><use href="#ic-mac"/></svg></span>Machinery</li>
-      <li><span class="tile k3"><svg class="ic" aria-hidden="true"><use href="#ic-ele"/></svg></span>Electricity</li>
-      <li><span class="tile k4"><svg class="ic" aria-hidden="true"><use href="#ic-nat"/></svg></span>Agriculture</li>
-    </ul>
 
     <p class="rejoin hidden" id="rejoin">
       You were in room <b id="rejoin-code"></b>.
@@ -146,12 +139,11 @@
           <option value="0">Unlimited time</option>
         </select>
       </fieldset>
-      <fieldset id="seed-field">
-        <legend>Seed <span class="hint">(blank for a fresh crowd)</span></legend>
-        <input id="seed-input" type="text" autocomplete="off" spellcheck="false"
-               placeholder="e.g. TESLA-CEYLON-47">
-      </fieldset>
-      <button type="submit" class="cta" id="setup-submit">Open a room</button>
+      <!-- The seed box came off at the third playtest: nobody outside the
+           tests ever wants to type one, and every game already gets a fresh
+           one. startGame still takes a seed — the smoke tests and rematch
+           pass it directly. -->
+      <button type="submit" class="cta" id="setup-submit">Start the competition</button>
     </form>
   </div>
 </section>
@@ -183,9 +175,13 @@
       <span class="chip" id="pool-chip">Craftspeople <b id="pool-count">80</b></span>
       <span class="chip net hidden" id="net-chip" role="status"></span>
     </div>
+    <!-- The record buttons are a playtest tool, not a player feature (Ryan,
+         2026-08-13: "who can even open json?"). The memo's testing rule still
+         wants seed + move list for any bug report, so they survive behind
+         ?dev=1 rather than being deleted. -->
     <div class="menu">
-      <button id="btn-export" class="ghost-btn" title="Download the game record (seed + moves)">Record</button>
-      <button id="btn-new" class="ghost-btn" title="Abandon and start over">New</button>
+      <button id="btn-export" class="ghost-btn hidden" title="Download the game record (seed + moves)">Record</button>
+      <button id="btn-new" class="ghost-btn" title="Abandon this game">End</button>
     </div>
   </header>
 
@@ -214,12 +210,12 @@
   <div id="end-body"></div>
   <p class="end-net" id="end-net"></p>
   <div class="end-actions">
-    <button id="btn-record" class="ghost-btn">Download record</button>
-    <button id="btn-rematch" class="cta">Rematch</button>
-    <button id="btn-setup" class="ghost-btn">Home</button>
+    <button id="btn-record" class="ghost-btn hidden">Download record</button>
+    <button id="btn-rematch" class="cta blue">Rematch</button>
+    <button id="btn-setup" class="cta gold">Home</button>
   </div>
 </dialog>
 
-<script type="module" src="./ui.js?v=13"></script>
+<script type="module" src="./ui.js?v=14"></script>
 </body>
 </html>

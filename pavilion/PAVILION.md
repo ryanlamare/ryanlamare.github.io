@@ -873,8 +873,9 @@ image** and never a live filter; the First Call token as a single symbol
 (chamfered plate, double keyline, slab-serif 1, ink on cream), which replaces a
 white disc that was one CSS tweak away from looking like a tile; the PWA icons
 regenerated as a 2×2 of the real tiles; and a five-tile legend on the setup
-screen, naming the disciplines once on the way in — the one place naming them is
-a legend rather than a rule.
+screen, naming the disciplines once on the way in. ⚠️ That legend was
+**removed at the third playtest** (2026-08-13) — the disciplines are now named
+only in aria labels and move announcements.
 
 **The palette is `brand.css`'s, copied rather than linked.** `brand.css` also
 `@import`s two webfonts, and a phone in a breakout room should not wait on
@@ -934,6 +935,47 @@ tests below the UI didn't move. The ones that changed standing decisions:
   *then* the deal animation hid and flew the tiles in — so you saw the spread
   before it "arrived". `hideDealTiles()` now hides them before the month
   splash, and the deal unhides them as they land.
+
+## From the third playtest (2026-08-13)
+
+Same day, after playing the second pass. Copy layer again, plus two real
+bugs. The decisions worth keeping:
+
+- **The front door is quieter.** The five-tile discipline legend came off
+  entirely — the disciplines are named in the aria labels and the move
+  announcements, and the board teaches them faster than a key does. The pitch
+  splits into two paragraphs at *"Will your pavilion stand above the rest"*,
+  the CTA reads **Start the competition**, and the logo is **PAVILION** in
+  caps with `LI` in Machinery's black. Four pairs, five disciplines, so
+  Electricity's ochre sits the logo out — it is the weakest of the five on
+  cream and still appears in the splash cycle.
+- **The seed box is gone.** Nobody outside the tests ever wanted to type one,
+  and "blank for a fresh crowd" was explaining a control that had no
+  audience. `startGame` still takes a seed; the smoke tests and rematch pass
+  it directly.
+- **The month number gets its own line**, larger than the words above it —
+  it wrapped that way by accident at some widths and Ryan preferred it, so it
+  is explicit now rather than left to the banner's width.
+- **The Fair-opening splash is the one on ink.** Black ground, palette lifted
+  to tints that hold against it. The end of the game should look different
+  from the start of a month before a word is read.
+- **The end screen loses its explanation.** A natural win needs no "a pavilion
+  opened its doors in month N" under the headline; the two endings that *are*
+  surprising (timeout, shared win) keep theirs. The table's first column is
+  **Player**, not Pavilion. Rematch is blue, Home is gold — the red stays the
+  front door's alone.
+- **The record buttons are behind `?dev=1`.** "Who can even open json?" is
+  the right question for a player-facing button. The memo's testing rule
+  still wants `seed + move list` for any bug report, so the capability
+  survives rather than being deleted, and build step 5's server writes the
+  archive from the same move list regardless. The topbar's **New** is **End**.
+
+**Two bugs, both in the phase label's lifecycle.** `renderAll` only writes the
+phase label when the game is over, so a rematch opened under the previous
+game's "The World's Fair is open" — it now says **Construction begins** until
+the first move clears it. And `banner()` toggled its splash class rather than
+replacing it, so a finale's black ground could leak onto the next plain
+banner; it assigns `className` outright now.
 
 ## Build order
 
