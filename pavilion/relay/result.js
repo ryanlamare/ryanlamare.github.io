@@ -12,7 +12,7 @@
 // Theme-neutral like everything below the copy layer (rules spec §10). Nothing
 // here knows what a discipline is called.
 
-import { ENGINE_VERSION, replay, completeRows, stateHash } from '../engine.js';
+import { ENGINE_VERSION, replay, completeRows, completeColumns, completeKinds, stateHash } from '../engine.js';
 
 // League scoring is **inclusive totals, not bonuses** (§8): win 3, draw 2,
 // loss 1 — the point for playing *is* the loser's point. A three-player game
@@ -52,6 +52,14 @@ export function deriveResult(room, claim = room.ended) {
   // which is exactly why §11 excludes timeouts from score-based awards.
   const scores = final.result ? final.result.scores : final.boards.map((b) => b.score);
   const rows = final.boards.map((b) => completeRows(b.wall));
+  // ⚠️ `rows` is load-bearing — it is §8's tiebreak, read by `rankSeats` below.
+  // `cols` and `kinds` are **not**: they were added on 2026-08-14 purely so the
+  // Record Book can hold all three bonuses rather than only galleries, and
+  // nothing decides a result from them. Games archived before that date have
+  // neither field, which `stats.js` reads as zero and prints as no record —
+  // free, because the only games affected are a throwaway demo season.
+  const cols = final.boards.map((b) => completeColumns(b.wall));
+  const kinds = final.boards.map((b) => completeKinds(b.wall));
   const flagged = ending === 'timeout' ? Number(claim.flagged) : null;
 
   const ranks = rankSeats(scores, rows, flagged);
@@ -62,6 +70,8 @@ export function deriveResult(room, claim = room.ended) {
     flagged: Number.isInteger(flagged) ? flagged : null,
     scores,
     rows,
+    cols,
+    kinds,
     ranks,
     leaders,
     winner: leaders.length === 1 ? leaders[0] : -1, // -1 = draw among leaders

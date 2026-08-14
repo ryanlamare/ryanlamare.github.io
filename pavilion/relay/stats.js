@@ -275,6 +275,12 @@ export function records(games, { modes = RECORD_MODES, minGames = 3 } = {}) {
         score: r.scores[seat] ?? 0,
         margin: (r.scores[seat] ?? 0) - Math.max(...others, 0),
         rows: r.rows?.[seat] ?? 0,
+        // ⚠️ `cols` and `kinds` were added to the derived result on 2026-08-14,
+        // after the first games were stored. A record from before that has
+        // neither, reads 0 here, and `best()` returns null for an all-zero
+        // field — so the card is absent rather than wrong. Nothing to migrate.
+        cols: r.cols?.[seat] ?? 0,
+        kinds: r.kinds?.[seat] ?? 0,
         plies: r.plies ?? 0,
       });
     });
@@ -282,12 +288,19 @@ export function records(games, { modes = RECORD_MODES, minGames = 3 } = {}) {
 
   for (const p of perPlayer.values()) p.avg = p.played ? p.for / p.played : 0;
 
+  // ⚠️ **All three bonus records, not just rows** (Ryan, 2026-08-14). The
+  // pavilion scores galleries, aisles and full disciplines (§8) and a Record
+  // Book that only counted one of them quietly said the other two mattered
+  // less. `mostPlayed` came off the same day — turning up is what the league
+  // table's participation point is for, and a record for it was the same fact
+  // twice.
   return [
     best('bestGame', perGame, (e) => e.score),
     best('widestWin', perGame.filter((e) => e.margin > 0), (e) => e.margin),
     best('mostRows', perGame, (e) => e.rows),
+    best('mostCols', perGame, (e) => e.cols),
+    best('mostKinds', perGame, (e) => e.kinds),
     best('longestGame', perGame, (e) => e.plies),
-    best('mostPlayed', [...perPlayer.values()], (p) => p.played),
     // A best average with no floor rewards playing once and stopping, which is
     // the opposite of what the league is for.
     best('bestAverage', [...perPlayer.values()].filter((p) => p.played >= minGames), (p) => p.avg),
@@ -320,37 +333,13 @@ function streaks(played) {
   return [...out.values()].filter((s) => s.length > 1);
 }
 
-// Most improved, first half of a player's games to the second. It earns its
-// place next to a public top five: the board shows the people at the top, and
-// this is the thing the rest of the room can be winning at. Improvement is a
-// slope, so it has no bottom — the player who improved least is simply not on
-// it, which is the difference between a chase and a wooden spoon.
-export function mostImproved(games, { modes = LEAGUE_MODES, minGames = 4 } = {}) {
-  const played = counted(games, modes).filter((g) => g.result.ending !== 'timeout');
-  const byPlayer = new Map();
-  for (const g of [...played].sort((a, b) => (a.endedAt || 0) - (b.endedAt || 0))) {
-    (g.seats || []).forEach((id, seat) => {
-      if (!id) return;
-      const list = byPlayer.get(id) || { id, name: g.names?.[seat] || id, scores: [] };
-      list.name = g.names?.[seat] || list.name;
-      list.scores.push(g.result.scores?.[seat] ?? 0);
-      byPlayer.set(id, list);
-    });
-  }
-
-  const out = [];
-  for (const p of byPlayer.values()) {
-    if (p.scores.length < minGames) continue;
-    const half = Math.floor(p.scores.length / 2);
-    const first = mean(p.scores.slice(0, half));
-    const second = mean(p.scores.slice(p.scores.length - half));
-    if (second <= first) continue;
-    out.push({ id: p.id, name: p.name, from: first, to: second, delta: second - first, played: p.scores.length });
-  }
-  return out.sort((a, b) => b.delta - a.delta);
-}
-
-const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+// ⚖️ **Most improved was cut outright** (Ryan, 2026-08-14) — the query, the
+// card and its tests, not just the card. It was argued for here as the thing
+// the rest of the room could be winning at; Ryan's call is that the league
+// table is enough, and a records site with fewer things on it reads better than
+// one with a second ranking nobody asked about. Recorded because the argument
+// for it is in this file's history and should not be re-made from scratch: it
+// was a first-half-to-second-half slope with a four-game floor and no bottom.
 
 // ---------------------------------------------------------------------------
 // Honours — one line per season, which is what makes a records site feel like a

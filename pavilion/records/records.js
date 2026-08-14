@@ -19,26 +19,30 @@
 // survive as a highlight and for screens that still want a short board.
 
 import { defaultRelayUrl, apiBase } from '../net.js';
-import { standings, byName, records, seasonsOf, mostImproved, playerCard } from '../relay/stats.js';
+import { standings, byName, records, seasonsOf, playerCard } from '../relay/stats.js';
 import { SPRITE, EMBLEMS } from './isotypes.js';
 
 const LEAGUE = document.body.dataset.league;
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
 const DEFAULT_BOARD = 5;
 
-// The Record Book's keys become Fair names here and nowhere else — `stats.js`
+// The Record Book's keys become their names here and nowhere else — `stats.js`
 // is theme-neutral like everything below the copy layer (rules spec §10).
-// ⚠️ Only *approved* award names appear (PAVILION.md, Award names). The rest
-// stay plain English rather than minting a theme term that never took the
-// read-aloud test.
+//
+// ⚖️ **The titles carry themselves and there is no strapline under them**
+// (Ryan, 2026-08-14) — "Highest score" does not need *highest score in a single
+// game* printed beneath it. That also retired the one theme name on this page:
+// Best in Show read as an award for something a judge decides, when the record
+// is simply the biggest number anyone has scored.
 const RECORD_LABELS = {
-  bestGame: { name: 'Best in Show', of: 'highest score in a single game', unit: '' },
-  widestWin: { name: 'Widest win', of: 'biggest winning margin', unit: '' },
-  mostRows: { name: 'Most complete rows', of: 'in one game', unit: '' },
-  longestGame: { name: 'Longest game', of: 'moves played', unit: '' },
-  mostPlayed: { name: 'Most games played', of: 'turning up is its own record', unit: '' },
-  bestAverage: { name: 'Best average', of: 'across a season of play', unit: '' },
-  longestStreak: { name: 'Longest winning run', of: 'games in a row', unit: '' },
+  bestGame: 'Highest score',
+  widestWin: 'Widest win',
+  mostRows: 'Most completed rows',
+  mostCols: 'Most completed columns',
+  mostKinds: 'Most colour bonuses',
+  longestGame: 'Longest game',
+  bestAverage: 'Best average',
+  longestStreak: 'Longest win streak',
 };
 
 const state = { games: [], rosters: [], champions: [], season: null, tab: 'table', boardSize: DEFAULT_BOARD, error: null };
@@ -49,8 +53,8 @@ const state = { games: [], rosters: [], champions: [], season: null, tab: 'table
 //
 // The standings come first: during term it is the page, and the records are the
 // thing you go looking for rather than the thing you check every week.
-const TABS = { table: 'The class', records: 'Records', champions: 'Champions' };
-const HASH = { records: 'records', table: 'class', champions: 'champions' };
+const TABS = { table: 'Standings', records: 'Records', champions: 'Champions' };
+const HASH = { records: 'records', table: 'standings', champions: 'champions' };
 const fromHash = (h) => Object.keys(HASH).find((k) => HASH[k] === String(h || '').replace(/^#/, ''));
 
 const app = document.getElementById('app');
@@ -239,43 +243,25 @@ function tablePanel() {
   const table = standings(seasonGames(), { roster });
   if (!table.length) return `<p class="empty">No league games in this season yet.</p>`;
 
-  const rising = mostImproved(seasonGames()).slice(0, 3);
-
+  // The tab above says Standings, so a heading saying it again is furniture, and
+  // the scoring is not explained under the table either (Ryan, 2026-08-14). The
+  // transcript still carries both, because a screen reader has no tab to look at.
   return `
     <div class="card">
-      <h2>The class</h2>
       <div class="scroller">
         <table>
-          <caption class="sr-only">The whole class ranked by points: position, player, games played,
-            won, drawn, lost, points, best single score, and recent form newest first. Players who
-            have not played yet are listed without a position.</caption>
+          <caption class="sr-only">Standings, ranked by points: position, player, games played,
+            won, drawn, lost, points, and recent form newest first. Win 3, draw 2, loss 1 — the
+            point for playing is the loser's point. Players who have not played yet are listed
+            without a position.</caption>
           ${head('<th><span class="sr-only">Position</span></th>')}
           <tbody>${table.map((r) => row(r, r.rank <= state.boardSize)).join('')}</tbody>
         </table>
       </div>
-      <p class="note">Win 3, draw 2, loss 1 — the point for playing is the loser's point, not a bonus,
-        so a single game is worth more than a missed session. The top ${state.boardSize} are marked.
-        Nothing here is a title: the season sets the seeding for the Cup.</p>
     </div>
 
-    ${
-      rising.length
-        ? `<div class="card">
-            <h2>Most improved</h2>
-            <div class="roll">${rising
-              .map(
-                (p) => `<span><span class="holder">${esc(p.name)}</span>
-                  <span class="prize">+${n1(p.delta)} a game</span></span>`
-              )
-              .join('')}</div>
-            <p class="note">First half of your games against the second. It has a top and no bottom —
-              the player who improved least simply isn't on it.</p>
-          </div>`
-        : ''
-    }
-
     <div class="card mine">
-      <h2>Your line</h2>
+      <h2>Individual record</h2>
       <label class="pick" style="margin:0 0 12px">Who are you?
         <select id="me">
           <option value="">Pick your name…</option>
@@ -286,12 +272,15 @@ function tablePanel() {
     </div>`;
 }
 
+// No Best column (Ryan, 2026-08-14). A player's best single score is a Record
+// Book question and it is on their own card below; in the table it was an eighth
+// number competing with the seven that decide the order.
 function head(first) {
   return `<thead><tr>
     ${first}<th class="who">Player</th>
     <th>P<span class="sr-only">layed</span></th><th class="hide">W<span class="sr-only">on</span></th>
     <th class="hide">D<span class="sr-only">rawn</span></th><th class="hide">L<span class="sr-only">ost</span></th>
-    <th>Pts<span class="sr-only"> (points)</span></th><th class="hide">Best</th><th>Form</th>
+    <th>Pts<span class="sr-only"> (points)</span></th><th>Form</th>
   </tr></thead>`;
 }
 
@@ -312,7 +301,6 @@ function row(r, top) {
     <td class="hide">${dash(r.drawn)}</td>
     <td class="hide">${dash(r.lost)}</td>
     <td><b>${dash(r.points)}</b></td>
-    <td class="hide">${dash(r.best)}</td>
     <td><span class="form" aria-label="Form, newest first: ${r.form
       .map((f) => ({ W: 'won', D: 'drew', L: 'lost' })[f])
       .join(', ')}">${r.form.map((f) => `<b class="${f}" aria-hidden="true">${f}</b>`).join('')}</span></td>
@@ -385,7 +373,7 @@ function recordsPanel() {
 
   return `<div class="book">${book
     .map((r) => {
-      const label = RECORD_LABELS[r.key] || { name: r.key, of: '' };
+      const name = RECORD_LABELS[r.key] || r.key;
       // One player can hold a record in several games, and a low record (one
       // completed row, say) can be level across half the class. Neither is
       // wrong in the data — `stats.js` keeps every holder — but a card listing
@@ -396,16 +384,13 @@ function recordsPanel() {
         (unique.length > 3 ? ` <span class="when">and ${unique.length - 3} more</span>` : '');
       const at = r.holders[0]?.at;
       return `<div class="rec${r.key === 'bestGame' ? ' best' : ''}">
-        <div class="k">${esc(label.name)}</div>
+        <div class="k">${esc(name)}</div>
         <div class="v">${r.key === 'bestAverage' ? n1(r.value) : r.value}</div>
         <div class="who">${holders}</div>
-        <div class="when">${esc(label.of)}${at ? ` · ${when(at)}` : ''}</div>
+        <div class="when">${at ? when(at) : ''}</div>
       </div>`;
     })
     .join('')}
-    <p class="note">Records are all-time unless you pick a season — the archive outlives the term, so
-      a cohort plays against every cohort before it. Timeouts don't set score records: the game stopped
-      early and the board never finished.</p>
   </div>`;
 }
 
@@ -440,9 +425,7 @@ function championsPanel() {
         </figure>`
       )
       .join('')}
-  </div>
-  <p class="note">The Cup is the only title: won in the last session, derived from the games
-    themselves. Champions pick their own emblem and the line beneath it.</p>`;
+  </div>`;
 }
 
 function trophy(c) {

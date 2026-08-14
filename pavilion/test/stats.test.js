@@ -21,7 +21,6 @@ import {
   records,
   honours,
   seasonsOf,
-  mostImproved,
   counted,
 } from '../relay/stats.js';
 
@@ -53,13 +52,15 @@ function section(title) {
 }
 
 // A summary, built the way the archive builds one. `players` is a list of
-// [id, score] pairs (or [id, score, rows]); everything derived comes from the
-// real ranking code.
+// [id, score] pairs (or [id, score, rows, cols, kinds]); everything derived
+// comes from the real ranking code.
 let clock = 1_700_000_000_000;
 function game(players, { term = 'ler565-2027-summer', mode = 'league', ending = 'natural', flagged = null, at = null, plies = 40 } = {}) {
   const seats = players.map((p) => p[0]);
   const scores = players.map((p) => p[1]);
   const rows = players.map((p) => p[2] ?? 0);
+  const cols = players.map((p) => p[3] ?? 0);
+  const kinds = players.map((p) => p[4] ?? 0);
   const ranks = rankSeats(scores, rows, flagged);
   const leaders = ranks.map((r, i) => (r === 1 ? i : -1)).filter((i) => i >= 0);
   const { league, season } = splitTerm(term);
@@ -79,6 +80,8 @@ function game(players, { term = 'ler565-2027-summer', mode = 'league', ending = 
       flagged,
       scores,
       rows,
+      cols,
+      kinds,
       ranks,
       leaders,
       winner: leaders.length === 1 ? leaders[0] : -1,
@@ -285,8 +288,8 @@ section('The Record Book');
 
 {
   const list = [
-    game([['sam', 94, 3], ['alex', 40]], { plies: 60 }),
-    game([['sam', 30], ['alex', 88]], { mode: 'cup' }),
+    game([['sam', 94, 3, 1, 0], ['alex', 40]], { plies: 60 }),
+    game([['sam', 30], ['alex', 88, 1, 2, 1]], { mode: 'cup' }),
     game([['sam', 50], ['priya', 20]]),
     game([['sam', 99], ['priya', 10]], { ending: 'timeout', flagged: 1 }),
   ];
@@ -299,8 +302,23 @@ section('The Record Book');
   eq(book.widestWin.value, 58, 'the widest win is a margin, not a score');
   eq(book.widestWin.holders[0].id, 'alex', 'and the cup counts towards it — a final is not a friendly');
   eq(book.mostRows.value, 3, 'completed rows are their own record');
+  // All three bonuses, not just rows (2026-08-14). Columns are worth more than
+  // rows on the board, so a book that counted only rows was the wrong one.
+  eq(book.mostCols.value, 2, 'completed columns are a record of their own');
+  eq(book.mostCols.holders[0].id, 'alex', 'held by whoever built them');
+  eq(book.mostKinds.value, 1, 'and so are colour bonuses');
   eq(book.longestGame.value, 60, 'and so is the longest game');
-  eq(book.mostPlayed.value, 4, 'most games played is an achievement anyone can chase');
+  ok(!records(list).some((r) => r.key === 'mostPlayed'),
+    'turning up is not a record — the league table’s point for playing already says it');
+  // ⚠️ A game stored before cols/kinds existed has neither field. It must read
+  // as no record rather than as a record of zero.
+  const older = records([game([['sam', 60], ['alex', 20]])].map((g) => {
+    delete g.result.cols;
+    delete g.result.kinds;
+    return g;
+  }));
+  ok(!older.some((r) => r.key === 'mostCols' || r.key === 'mostKinds'),
+    'and an archive from before those fields shows no card, not a zero');
 
   const shared = records([
     game([['sam', 70], ['alex', 40]]),
@@ -328,23 +346,8 @@ section('The Record Book');
   ok(!records(list).some((r) => /los|worst|bottom/i.test(r.key)), 'there is no record for losing — halls and highs, never lows');
 }
 
-// ---------------------------------------------------------------------------
-section('Most improved — what the rest of the room is chasing');
-
-{
-  const list = [
-    game([['climber', 20], ['steady', 50]]),
-    game([['climber', 25], ['steady', 50]]),
-    game([['climber', 60], ['steady', 50]]),
-    game([['climber', 70], ['steady', 50]]),
-  ];
-  const up = mostImproved(list);
-  eq(up[0].id, 'climber', 'a player whose second half beats their first is improving');
-  close(up[0].delta, 42.5, 'by the difference between the two halves');
-  ok(!up.some((p) => p.id === 'steady'), 'flat is not improvement, so nobody flat is listed');
-  ok(!up.some((p) => p.delta < 0), '⚠️ and there is no bottom to this list at all — that is the point of it');
-  eq(mostImproved([game([['a', 10], ['b', 20]])]).length, 0, 'two games is not a trend');
-}
+// Most improved was cut outright on 2026-08-14 (Ryan) — query, card and these
+// checks. See stats.js for what it was, so the argument is not re-made blind.
 
 // ---------------------------------------------------------------------------
 section('Honours, seasons, and a league with no seasons at all');

@@ -7,7 +7,7 @@ identity, replay-derived results, instructor admin (2026-08-13). **Step 6 is
 underway** (2026-08-13): the league stamp, `relay/stats.js` — every table,
 record and honour as pure queries — the two public read routes, and the records
 site itself at `/pavilion/records/` (hub, and the LER 565 league page with
-Table · Records · Honours and a season picker). The **pre-game splash and
+Standings · Records · Champions and a season picker). The **pre-game splash and
 post-game screen** landed 2026-08-14 (see *The stats screens*). Still to build:
 the instructor live board, the Bulletin and the challenge ladder. All of those
 are more queries over the same module; none of them needs the engine, the wire
@@ -261,7 +261,7 @@ and what line goes under it, and types both into the admin page.
 ### The Record Book — the archive outlives the term
 
 Every game record carries a `term` key from day one, so records accrue across
-*years*, not just weeks: all-time **Best in Show**, all-time biggest comeback,
+*years*, not just weeks: the all-time **highest score**, biggest comeback,
 longest win streak — plus a **Hall of Champions** listing every year's Grand
 Prize winner, Cup winner, and any Doubles. Future cohorts play against history:
 "the all-time record is 94, set in 2026" is the cheapest motivation the league
@@ -296,8 +296,11 @@ the one person missing from the page — and the table would be wrong in **week
 - **The board length survives as a highlight.** "Size N to the class" now marks
   the top N in a full list rather than deciding who appears in a short one.
   `topN` stays in `stats.js`, tested, for screens that still want a short board.
-- **"Most improved" sits alongside**, with a top and no bottom, and is where the
-  rest of the room can be winning.
+- ~~**"Most improved" sits alongside**~~ — **cut outright** (Ryan, 2026-08-14):
+  the query, the card and its tests. The argument for it was that a top with no
+  bottom is where the rest of the room can be winning; his call is that the
+  league table is enough, and the site reads better with one ranking on it than
+  two. `relay/stats.js` records what it was, so nobody re-derives it blind.
 - ⚠️ **The one thing worth watching**: a chess Swiss entrant opted in, and a
   graded class did not. Recorded because it is the argument that would matter if
   this ever needs revisiting — not because it was overlooked.
@@ -383,7 +386,7 @@ once three pages assume otherwise.
 
 ```text
 /pavilion/records/            hub — pick a league
-/pavilion/records/ler565/     Table · Records · Honours, with a season picker
+/pavilion/records/ler565/     Standings · Records · Champions, with a season picker
 /pavilion/records/kitchen/    the same page, no season picker
 ```
 
@@ -468,8 +471,8 @@ Five decisions taken while building it, worth not rediscovering:
   documented fallback when the relay is unreachable.
 
 The page opens on **the class standings, newest season** — during term almost
-every visit is "how did we do this week" — and tabs are linkable (`#class`,
-`#records`, `#honours`).
+every visit is "how did we do this week" — and tabs are linkable
+(`#standings`, `#records`, `#champions`).
 
 ⚖️ **"All time" is offered on Records and nowhere else** (Ryan, 2026-08-13).
 Records are *supposed* to reach across years; that is the whole argument for
@@ -583,6 +586,40 @@ because a board is read at a glance and a serif costs you that. The size floor
 is the same lesson the First Call token taught: a Didone's hairlines die small,
 so anything under ~30px stays in the UI sans. The page also picks up the tiles'
 own grain at `soft-light`, so the cream reads as stock rather than a fill.
+
+### The copy pass over the records site — 2026-08-14
+
+Ryan read the whole site for the first time with real games behind it and cut
+almost every sentence on it. The pattern is worth stating once rather than
+re-litigating per page: **a heading and a number are the content; prose
+explaining them is furniture.** Applied — the hub's lede and its note, the
+league page's lede, the standings heading (the tab already says it), the
+win-3-draw-2 note, each record's strapline, the all-time note, and the
+Champions note. What survived is the `sr-only` table caption, because a screen
+reader has no tab or column header to look at, and the caption is where the
+scoring explanation now lives.
+
+Also in the same pass: **The class → Standings** (with `#standings`), *Your
+line* → **Individual record**, the standings' **Best** column removed (it is a
+Record Book question and it is on the player's own card), **Most improved** cut
+outright, **Most games played** cut, **Best in Show → Highest score**,
+**Longest winning run → Longest win streak**, and the footers reduced to one
+link that says **Play a game of Pavilion** — a student on the records page wants
+a game, not a CV.
+
+⚠️ **Two new records needed a field that did not exist**: the Record Book
+counted completed rows only, so **Most completed columns** and **Most colour
+bonuses** meant adding `cols` and `kinds` to the derived result
+(`relay/result.js`) — *not* to the tiebreak, which is `rows` and stays §8's.
+Games archived before 2026-08-14 have neither field and correctly show no card
+rather than a record of zero. It was free because the only games in the archive
+were a demo season; after a real term it would have been a migration.
+
+**The trophy cabinet is a decoration-pass job** (Ryan, 2026-08-14): a proper
+case with large display type over it — *"Trophy Cabinet"* — rather than a grid
+of drawn cups on cream. Filed here with the rest of the Fair imagery below and
+deliberately not built yet; the cabinet's *data* is done and the champion's
+emblem and line already come off the archive.
 
 The rest of the **Fair imagery is the obvious next seam** (Ryan, 2026-08-12)
 and stays deferred to the achievements-and-decoration pass, once the rules
@@ -960,9 +997,12 @@ Fair names, which the theme earns:
   2026-08-13** when the league stopped awarding a title (see *League, cup,
   awards*). The season's honour is now **top seed**, printed as a fact.
 - **The Cup** — the last session's tournament, and the only title
-- **Best in Show** — highest single game
+- ~~**Best in Show**~~ — **retired 2026-08-14** in favour of plain **Highest
+  score**: the name read as something a judge awards, when the record is just
+  the biggest number anyone has scored. The Record Book's other titles went the
+  same way — plain English, and no strapline under any of them.
 - **Turnaround** — best comeback from behind
-- **Most Improved** — first half to second
+- ~~**Most Improved**~~ — cut 2026-08-14; see *The class table*.
 
 ## Mobile and devices
 
