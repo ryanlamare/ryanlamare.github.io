@@ -146,10 +146,20 @@ export class Archive {
     if (!people.length || people.some((p) => !p)) {
       return { record: false, why: 'not everyone is on the roster' };
     }
-    // The instructor is a playable name like any other, and week 1 opens with a
-    // live demo match — but those games are exhibitions: archived, and excluded
-    // from the league, records and awards by default (rules spec §10).
-    const mode = people.some((p) => p.instructor) ? 'exhibition' : cleanMode(room.mode);
+    // The instructor is a playable name like any other, but their games never
+    // count in the league, the records or the awards (rules spec §10). The
+    // instructor plus exactly one student is a **Boss Battle** — the voluntary
+    // outside-class challenge, with its own board; any other shape with the
+    // instructor in it is an exhibition. ⚠️ Week 1's demo match is
+    // instructor-versus-one-student too, so it auto-tags as `boss` and is one
+    // click to retag in the admin page — the same machinery as the Cup final,
+    // and the right default: the common case costs nothing.
+    const bosses = people.filter((p) => p.instructor).length;
+    const mode = bosses
+      ? bosses === 1 && people.length === 2
+        ? 'boss'
+        : 'exhibition'
+      : cleanMode(room.mode);
     return { record: true, term, mode };
   }
 
@@ -567,7 +577,7 @@ const fail = (status, error) => ({ status, body: { error } });
 // Validation. Everything reaching the archive from a form or a socket goes
 // through here first — a stored record outlives every screen that wrote it.
 
-const MODES = ['league', 'cup', 'exhibition', 'practice', 'casual'];
+const MODES = ['league', 'cup', 'exhibition', 'practice', 'casual', 'boss'];
 
 // ⚖️ `casual` is ours, added in step 5: rules spec §10 lists four modes for
 // games with a course behind them, and the game is now public and unbranded.

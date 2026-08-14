@@ -17,7 +17,7 @@
 
 import { start, server, archive as devArchive } from '../relay/dev-relay.js';
 import { Archive, MemoryStore, apiRoute, gameId, isPublicRoute } from '../relay/archive.js';
-import { deriveResult, buildRecord, rankSeats, leaguePointsFor, splitTerm, summarize } from '../relay/result.js';
+import { deriveResult, deriveComebacks, buildRecord, rankSeats, leaguePointsFor, splitTerm, summarize } from '../relay/result.js';
 import { Relay } from '../net.js';
 import { newGame, legalMoves, apply, replay } from '../engine.js';
 
@@ -118,6 +118,29 @@ section('Deriving a result by replay (result.js)');
   // The whole point: what the client *said* never reaches the record.
   const lying = deriveResult({ ...room }, { ending: 'natural', result: { scores: [999, 0], winner: 0 } });
   same(lying.scores, r.scores, "a client's claimed scores are ignored — the server replays instead");
+}
+
+{
+  // The comeback field — the one derived stat the final state cannot supply,
+  // walked at write time so no records page ever loads the engine.
+  const room = playedRoom();
+  room.ended = { ending: 'natural' };
+  const r = deriveResult(room);
+
+  eq(r.comeback.length, room.players, 'a comeback per seat');
+  ok(r.comeback.every((c) => Number.isInteger(c) && c >= 0), 'each a non-negative deficit');
+  if (r.winner >= 0) {
+    const loser = 1 - r.winner;
+    ok(r.comeback[loser] >= r.scores[r.winner] - r.scores[loser],
+      'the loser has been at least the final margin behind — the last close counts');
+  }
+
+  // ⚠️ Zeros on any oddity, never a throw: a new record must not be able to
+  // turn a good game into a void one.
+  same(deriveComebacks(room.seed, room.players, [{ bad: 'move' }]), [0, 0],
+    'a move list that will not walk yields zeros, not an exception');
+  same(deriveComebacks(room.seed, room.players, []), [0, 0],
+    'and no moves yields no deficits');
 }
 
 {
@@ -245,8 +268,20 @@ section('Term, roster and classification (archive.js)');
   eq(league.record, true, 'two rostered players record');
   eq(league.mode, 'league', 'as a league game');
 
+  // The instructor plus exactly one student is a Boss Battle — the voluntary
+  // outside-class challenge, with its own board (PAVILION.md). Any other shape
+  // with the instructor in it stays an exhibition.
   const withRyan = playedRoom({ seats: [{ seat: 0, name: 'Ryan', pid: 'ryan' }, { seat: 1, name: 'Alex', pid: 'alex' }] });
-  eq((await a.classify(withRyan)).mode, 'exhibition', 'a game with the instructor in it is an exhibition');
+  eq((await a.classify(withRyan)).mode, 'boss', 'the instructor against one student is a Boss Battle');
+  const threeUp = playedRoom({
+    players: 3,
+    seats: [
+      { seat: 0, name: 'Ryan', pid: 'ryan' },
+      { seat: 1, name: 'Alex', pid: 'alex' },
+      { seat: 2, name: 'Sam', pid: 'sam' },
+    ],
+  });
+  eq((await a.classify(threeUp)).mode, 'exhibition', 'the instructor in any other shape is an exhibition');
 
   const cup = await a.classify({ ...room, mode: 'cup' });
   eq(cup.mode, 'cup', 'the host can ask for a cup game');

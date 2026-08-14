@@ -26,9 +26,10 @@ export class Room {
     this.players = clampPlayers(opts.players);
     this.clockMs = clampClock(opts.clockMs);
     // What this game is *for*. The archive decides the final answer — an
-    // instructor at the table makes it an exhibition whatever was asked for —
-    // but the room carries the request so the week 6 knockout can say `cup`
-    // without anybody retagging afterwards (relay/archive.js, classify).
+    // instructor at the table makes it a Boss Battle (one student) or an
+    // exhibition (any other shape) whatever was asked for — but the room
+    // carries the request so the week 6 knockout can say `cup` without
+    // anybody retagging afterwards (relay/archive.js, classify).
     this.mode = cleanMode(opts.mode);
     // ⚖️ The pre-game splash is an intervention, not decoration (PAVILION.md):
     // showing head-to-head history makes the shadow of the future explicit, and

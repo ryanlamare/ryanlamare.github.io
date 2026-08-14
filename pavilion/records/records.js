@@ -19,7 +19,7 @@
 // survive as a highlight and for screens that still want a short board.
 
 import { defaultRelayUrl, apiBase } from '../net.js';
-import { standings, byName, records, seasonsOf, playerCard } from '../relay/stats.js';
+import { standings, byName, records, seasonsOf, playerCard, bossBattles } from '../relay/stats.js';
 import { SPRITE, EMBLEMS } from './isotypes.js';
 
 const LEAGUE = document.body.dataset.league;
@@ -37,6 +37,7 @@ const DEFAULT_BOARD = 5;
 const RECORD_LABELS = {
   bestGame: 'Highest score',
   widestWin: 'Widest win',
+  biggestComeback: 'Biggest comeback',
   mostRows: 'Most completed rows',
   mostCols: 'Most completed columns',
   mostKinds: 'Most colour bonuses',
@@ -53,8 +54,8 @@ const state = { games: [], rosters: [], champions: [], season: null, tab: 'table
 //
 // The standings come first: during term it is the page, and the records are the
 // thing you go looking for rather than the thing you check every week.
-const TABS = { table: 'Standings', records: 'Records', champions: 'Champions' };
-const HASH = { records: 'records', table: 'standings', champions: 'champions' };
+const TABS = { table: 'Standings', records: 'Records', champions: 'Champions', boss: 'Boss Battles' };
+const HASH = { records: 'records', table: 'standings', champions: 'champions', boss: 'boss-battles' };
 const fromHash = (h) => Object.keys(HASH).find((k) => HASH[k] === String(h || '').replace(/^#/, ''));
 
 const app = document.getElementById('app');
@@ -186,7 +187,8 @@ function render() {
     </div>
     ${panel('table', tablePanel())}
     ${panel('records', recordsPanel())}
-    ${panel('champions', championsPanel())}`;
+    ${panel('champions', championsPanel())}
+    ${panel('boss', bossPanel())}`;
 
   app.querySelectorAll('[data-tab]').forEach((b) =>
     b.addEventListener('click', () => {
@@ -393,6 +395,82 @@ function recordsPanel() {
     })
     .join('')}
   </div>`;
+}
+
+// --- Boss Battles -------------------------------------------------------------
+
+// Students who want a game outside class play the instructor (PAVILION.md, Boss
+// Battles). It is a mode, not a league: `classify` tags instructor-plus-one-
+// student as `boss`, and those games get this board of their own — they never
+// touch the standings or the Record Book, because they are voluntary and nobody
+// plays the same number of them.
+
+// The instructor, unioned from every roster shown: the board can span seasons,
+// and each season's roster flags its own.
+function instructorIds() {
+  const ids = new Set();
+  for (const r of state.rosters) for (const p of r.players || []) if (p.instructor) ids.add(p.id);
+  return [...ids];
+}
+
+function bossPanel() {
+  const board = bossBattles(seasonGames(), { instructors: instructorIds() });
+  if (!board.played || !board.boss) {
+    return `<p class="empty">No Boss Battles yet. Want a game outside class? Challenge the
+      instructor — it records here, with its own board, and it never touches the league.</p>`;
+  }
+
+  const b = board.boss;
+  // Beating the boss is the headline, so the names go in the prose, not just a
+  // column. Nobody having done it yet is a real answer, and a good one to print.
+  const beat = [...new Map(board.challengers.filter((c) => c.won > 0).map((c) => [c.id, c])).values()];
+  const beatLine = beat.length
+    ? `Beaten so far by ${beat.slice(0, 3).map((c) => esc(c.name)).join(' & ')}${
+        beat.length > 3 ? ` and ${beat.length - 3} more` : ''
+      }.`
+    : 'Nobody has beaten the boss yet.';
+  const bestNames = board.bestScore
+    ? [...new Map(board.bestScore.holders.map((h) => [h.id, h])).values()].map((h) => esc(h.name)).join(' & ')
+    : '';
+
+  return `
+    <div class="card">
+      <h2>The boss</h2>
+      <p>${esc(b.name)} has taken ${board.played} challenge${board.played === 1 ? '' : 's'}:
+        won ${b.won}, drawn ${b.drawn}, lost ${b.lost}. ${beatLine}</p>
+      ${
+        board.bestScore
+          ? `<p class="note">Best score against the boss: <b>${board.bestScore.value}</b> — ${bestNames}</p>`
+          : ''
+      }
+    </div>
+    <div class="card">
+      <div class="scroller">
+        <table>
+          <caption class="sr-only">Boss Battles: each challenger's games against the instructor —
+            played, won, drawn, lost, and their best score against the boss. Challengers who have
+            beaten the boss are listed first.</caption>
+          <thead><tr>
+            <th class="who">Challenger</th>
+            <th>P<span class="sr-only">layed</span></th><th>W<span class="sr-only">on</span></th>
+            <th>D<span class="sr-only">rawn</span></th><th>L<span class="sr-only">ost</span></th>
+            <th>Best</th>
+          </tr></thead>
+          <tbody>${board.challengers.map(bossRow).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// A win over the boss gets the same highlight a board place gets in the
+// standings. No position column on purpose: challenging is voluntary, and the
+// order (wins first) carries no verdict a number would add.
+function bossRow(c) {
+  return `<tr class="${c.won ? 'top' : ''}">
+    <td class="who name">${esc(c.name)}</td>
+    <td>${c.played}</td><td>${c.won}</td><td>${c.drawn}</td><td>${c.lost}</td>
+    <td>${c.best || '—'}</td>
+  </tr>`;
 }
 
 // --- Honours ----------------------------------------------------------------

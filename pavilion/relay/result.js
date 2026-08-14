@@ -12,7 +12,7 @@
 // Theme-neutral like everything below the copy layer (rules spec §10). Nothing
 // here knows what a discipline is called.
 
-import { ENGINE_VERSION, replay, completeRows, completeColumns, completeKinds, stateHash } from '../engine.js';
+import { ENGINE_VERSION, newGame, apply, replay, completeRows, completeColumns, completeKinds, stateHash } from '../engine.js';
 
 // League scoring is **inclusive totals, not bonuses** (§8): win 3, draw 2,
 // loss 1 — the point for playing *is* the loser's point. A three-player game
@@ -60,6 +60,12 @@ export function deriveResult(room, claim = room.ended) {
   // free, because the only games affected are a throwaway demo season.
   const cols = final.boards.map((b) => completeColumns(b.wall));
   const kinds = final.boards.map((b) => completeKinds(b.wall));
+  // `comeback` is the one derived field the final state cannot supply — it
+  // needs the score *during* the game (PAVILION.md, Biggest comeback). Its own
+  // walk, so the replay above stays exactly the call the void path and the
+  // state hash hang off. Like cols/kinds, games archived before 2026-08-14
+  // have no field, which stats.js reads as zero and prints as no record.
+  const comeback = deriveComebacks(room.seed, room.players, (room.moves || []).map((m) => m.move));
   const flagged = ending === 'timeout' ? Number(claim.flagged) : null;
 
   const ranks = rankSeats(scores, rows, flagged);
@@ -72,6 +78,7 @@ export function deriveResult(room, claim = room.ended) {
     rows,
     cols,
     kinds,
+    comeback,
     ranks,
     leaders,
     winner: leaders.length === 1 ? leaders[0] : -1, // -1 = draw among leaders
@@ -81,6 +88,38 @@ export function deriveResult(room, claim = room.ended) {
     // that disagree about a stored game disagree here first (§9).
     hash: stateHash(final),
   };
+}
+
+// How far behind the leader each seat has been at a month's close, per seat.
+// Scores only move when a round resolves (§4B), so "18 down at the close of
+// month 3" is exactly well defined: walk the moves and snapshot the deficits
+// every time the round advances or the game ends. The Record Book then reads
+// `comeback[winner]` — a deficit the winner recovered from — and a draw has no
+// winner to have come back.
+//
+// ⚠️ Zeros on any oddity, never a throw: a new record must not be able to turn
+// a good game into a void one. The authoritative replay above already decides
+// whether the moves are legal; this walk only measures them.
+export function deriveComebacks(seed, players, moves) {
+  const zeros = new Array(players).fill(0);
+  try {
+    let s = newGame(seed, players);
+    const max = zeros.slice();
+    let round = s.round;
+    for (const move of moves) {
+      s = apply(s, move);
+      if (s.round === round && !s.over) continue;
+      round = s.round;
+      const scores = s.boards.map((b) => b.score);
+      const top = Math.max(...scores);
+      for (let p = 0; p < players; p++) {
+        if (top - scores[p] > max[p]) max[p] = top - scores[p];
+      }
+    }
+    return max;
+  } catch {
+    return zeros;
+  }
 }
 
 export function voided(room, reason) {
@@ -173,7 +212,7 @@ export function buildRecord(room, { term, mode, id, at, result }) {
     term,
     league,
     season, // null is a real answer, not a missing one — see splitTerm
-    mode, // 'league' | 'cup' | 'exhibition' | 'practice' | 'casual'
+    mode, // 'league' | 'cup' | 'exhibition' | 'practice' | 'casual' | 'boss'
     room: room.code,
     seed: room.seed,
     players: room.players,

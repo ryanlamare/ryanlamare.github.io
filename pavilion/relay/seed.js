@@ -117,10 +117,21 @@ async function local() {
     quote: 'Never once took the tile I wanted. Took the one she needed.',
   });
   const b = await season('ler565-2028-summer', 3, CLASS.slice(2));
+  // Three Boss Battles in the current season — students who wanted a game
+  // outside class. Nothing to retag: the instructor plus one rostered student
+  // classifies as `boss` on its own, which is exactly what these check the
+  // site can show. The challengers must be on the *2028* roster.
+  const ryan = { id: slug('J. Ryan Lamare'), name: 'J. Ryan Lamare' };
+  let bosses = 0;
+  for (const [i, name] of [CLASS[2], CLASS[5], CLASS[2]].entries()) {
+    at += 40 * 60 * 1000;
+    const room = playOut(`boss-${i}`, [{ id: slug(name), name }, ryan], at, [TEMPERS[i * 2 + 1], 96]);
+    if (room && (await archive.record(room, at + 15 * 60 * 1000)).recorded) bosses++;
+  }
   const c = await season('kitchen', 4, ['J. Ryan Lamare'].concat(CLASS[0]));
 
   await start(8787);
-  console.log(`\nSeeded: ler565 2027 (${a} games, one retagged as the Cup), 2028 (${b}), kitchen (${c}).`);
+  console.log(`\nSeeded: ler565 2027 (${a} games, one retagged as the Cup), 2028 (${b}, plus ${bosses} Boss Battles), kitchen (${c}).`);
   console.log('Run ./serve.sh in another terminal, then open:');
   console.log('  http://localhost:8000/pavilion/records/');
   console.log('  http://localhost:8000/pavilion/records/ler565/');

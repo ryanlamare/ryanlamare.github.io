@@ -1062,6 +1062,10 @@ function renderRecordLine() {
     el.textContent = 'Recorded, but not counted — this game could not be verified.';
     return;
   }
+  if (rec.mode === 'boss') {
+    el.textContent = 'Recorded as a Boss Battle — it goes on the records, and it doesn’t touch the league.';
+    return;
+  }
   if (rec.mode === 'exhibition') {
     el.textContent = 'Recorded as an exhibition — exhibitions stay out of the league.';
     return;

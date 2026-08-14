@@ -31,9 +31,12 @@
 
 // Which modes feed which screen. The league table is weeks 1–5 only; the cup is
 // its own knockout and the Record Book takes both, because a 94 in the final is
-// still the best game anyone has played. Exhibitions (any game with the
+// still the best game anyone has played. Exhibitions (any other game with the
 // instructor in it), practice and casual games count for nothing anywhere —
-// they are archived, not competed in.
+// they are archived, not competed in. Boss Battles have their own board below,
+// and ⚖️ deliberately do not feed the Record Book: a 94 against the instructor
+// is a fine thing and not the class record, because the games are voluntary and
+// nobody plays the same number of them.
 export const LEAGUE_MODES = ['league'];
 export const RECORD_MODES = ['league', 'cup'];
 
@@ -272,6 +275,7 @@ export function records(games, { modes = RECORD_MODES, minGames = 3 } = {}) {
         at: g.endedAt,
         term: g.term,
         season: g.season ?? null,
+        won: r.winner === seat,
         score: r.scores[seat] ?? 0,
         margin: (r.scores[seat] ?? 0) - Math.max(...others, 0),
         rows: r.rows?.[seat] ?? 0,
@@ -281,6 +285,9 @@ export function records(games, { modes = RECORD_MODES, minGames = 3 } = {}) {
         // field — so the card is absent rather than wrong. Nothing to migrate.
         cols: r.cols?.[seat] ?? 0,
         kinds: r.kinds?.[seat] ?? 0,
+        // Derived at write time in result.js — the only record that needs the
+        // score *during* the game, and this file deliberately never replays.
+        comeback: r.comeback?.[seat] ?? 0,
         plies: r.plies ?? 0,
       });
     });
@@ -297,6 +304,11 @@ export function records(games, { modes = RECORD_MODES, minGames = 3 } = {}) {
   return [
     best('bestGame', perGame, (e) => e.score),
     best('widestWin', perGame.filter((e) => e.margin > 0), (e) => e.margin),
+    // The ninth record, and the only one about the *shape* of a game rather
+    // than a high of one number: the deepest deficit at a month's close that a
+    // player went on to win from. Only winners hold it — being far behind and
+    // losing is not a record, it is the wooden spoon wearing a hat.
+    best('biggestComeback', perGame.filter((e) => e.won), (e) => e.comeback),
     best('mostRows', perGame, (e) => e.rows),
     best('mostCols', perGame, (e) => e.cols),
     best('mostKinds', perGame, (e) => e.kinds),
@@ -345,6 +357,77 @@ function streaks(played) {
 // Honours — one line per season, which is what makes a records site feel like a
 // sport rather than a dashboard. Winners only, by the same rule as everything
 // else here.
+
+// ---------------------------------------------------------------------------
+// Boss Battles — students who want a game outside class play the instructor.
+//
+// A mode, not a league (PAVILION.md, Boss Battles): `classify` tags the
+// instructor plus exactly one student as `boss`, and those games stay out of
+// the standings, the Record Book and the awards — RECORD_MODES is unchanged,
+// deliberately. The games are voluntary and nobody plays the same number of
+// them, which is the same argument that keeps the average record behind a
+// games floor. This board is theirs alone.
+//
+// `instructors` is a list of roster ids. The page unions its rosters' flagged
+// entries, because a board that spans cohorts spans rosters; with nothing
+// passed, the instructor is inferred as the one id present in every Boss
+// Battle — right whenever two different students have challenged, and honest
+// (an empty board, not a guess) when one game leaves it ambiguous.
+
+export function bossBattles(games, { instructors = [] } = {}) {
+  const met = byRecency(counted(games, ['boss']));
+  let ids = new Set(instructors);
+  if (!ids.size && met.length) {
+    let common = new Set(met[0].seats || []);
+    for (const g of met.slice(1)) common = new Set((g.seats || []).filter((id) => common.has(id)));
+    if (common.size === 1) ids = common;
+  }
+
+  let boss = null;
+  const challengers = new Map();
+  const scored = [];
+
+  for (const g of met) {
+    const r = g.result;
+    const seat = (g.seats || []).findIndex((id) => ids.has(id));
+    if (seat < 0) continue; // no instructor identified — nothing to say
+    if (!boss) boss = { id: g.seats[seat], name: g.names?.[seat] || g.seats[seat], played: 0, won: 0, drawn: 0, lost: 0 };
+
+    (g.seats || []).forEach((id, i) => {
+      if (i === seat) return;
+      const c = challengers.get(id) || { id, name: g.names?.[i] || id, played: 0, won: 0, drawn: 0, lost: 0, best: 0 };
+      c.played++;
+      boss.played++;
+      if (r.winner === i) {
+        c.won++;
+        boss.lost++;
+      } else if (r.winner < 0) {
+        c.drawn++;
+        boss.drawn++;
+      } else {
+        c.lost++;
+        boss.won++;
+      }
+      // §11 as everywhere else: a timeout's running score is not a best.
+      if (r.ending !== 'timeout') {
+        c.best = Math.max(c.best, r.scores?.[i] ?? 0);
+        scored.push({ id, name: c.name, gameId: g.id, at: g.endedAt, score: r.scores?.[i] ?? 0 });
+      }
+      challengers.set(id, c);
+    });
+  }
+
+  return {
+    played: met.length,
+    boss,
+    // Beating the boss leads the sort — it is what the board is for.
+    challengers: [...challengers.values()].sort(
+      (a, b) => b.won - a.won || b.best - a.best || b.played - a.played || a.name.localeCompare(b.name)
+    ),
+    // The best score anyone has posted against him, win or lose.
+    bestScore: best('bestScore', scored, (e) => e.score),
+  };
+}
 
 export function honours(games) {
   const bySeason = new Map();

@@ -22,6 +22,8 @@ import {
   honours,
   seasonsOf,
   counted,
+  bossBattles,
+  RECORD_MODES,
 } from '../relay/stats.js';
 
 let passed = 0;
@@ -52,8 +54,8 @@ function section(title) {
 }
 
 // A summary, built the way the archive builds one. `players` is a list of
-// [id, score] pairs (or [id, score, rows, cols, kinds]); everything derived
-// comes from the real ranking code.
+// [id, score] pairs (or [id, score, rows, cols, kinds, comeback]); everything
+// derived comes from the real ranking code.
 let clock = 1_700_000_000_000;
 function game(players, { term = 'ler565-2027-summer', mode = 'league', ending = 'natural', flagged = null, at = null, plies = 40 } = {}) {
   const seats = players.map((p) => p[0]);
@@ -61,6 +63,7 @@ function game(players, { term = 'ler565-2027-summer', mode = 'league', ending = 
   const rows = players.map((p) => p[2] ?? 0);
   const cols = players.map((p) => p[3] ?? 0);
   const kinds = players.map((p) => p[4] ?? 0);
+  const comeback = players.map((p) => p[5] ?? 0);
   const ranks = rankSeats(scores, rows, flagged);
   const leaders = ranks.map((r, i) => (r === 1 ? i : -1)).filter((i) => i >= 0);
   const { league, season } = splitTerm(term);
@@ -82,6 +85,7 @@ function game(players, { term = 'ler565-2027-summer', mode = 'league', ending = 
       rows,
       cols,
       kinds,
+      comeback,
       ranks,
       leaders,
       winner: leaders.length === 1 ? leaders[0] : -1,
@@ -348,6 +352,82 @@ section('The Record Book');
 
 // Most improved was cut outright on 2026-08-14 (Ryan) — query, card and these
 // checks. See stats.js for what it was, so the argument is not re-made blind.
+
+// ---------------------------------------------------------------------------
+section('The ninth record — Biggest comeback');
+
+{
+  // sam was 18 down at a month's close and won; alex was 30 down and lost.
+  const list = [
+    game([['sam', 50, 0, 0, 0, 18], ['alex', 40, 0, 0, 0, 5]]),
+    game([['priya', 60, 0, 0, 0, 0], ['alex', 45, 0, 0, 0, 30]]),
+  ];
+  const book = Object.fromEntries(records(list).map((r) => [r.key, r]));
+  eq(book.biggestComeback.value, 18, 'the record is the deepest deficit a winner recovered from');
+  eq(book.biggestComeback.holders[0].id, 'sam', 'held by the player who came back');
+  ok(!records(list).some((r) => r.key === 'biggestComeback' && r.value === 30),
+    'being 30 down and losing is not a comeback — only winners hold this record');
+
+  // A game that was never behind sets nothing: a comeback of zero is no record.
+  ok(!records([game([['sam', 50], ['alex', 40]])]).some((r) => r.key === 'biggestComeback'),
+    'a wire-to-wire win shows no card, not a comeback of zero');
+
+  // A draw has no winner to have come back.
+  ok(!records([game([['sam', 40, 1, 0, 0, 20], ['alex', 40, 1, 0, 0, 20]])]).some((r) => r.key === 'biggestComeback'),
+    'a draw has no winner to have come back');
+
+  // §11: a timeout's game never reached a real end, so it sets no comeback.
+  ok(!records([game([['sam', 50, 0, 0, 0, 25], ['alex', 20]], { ending: 'timeout', flagged: 1 })])
+    .some((r) => r.key === 'biggestComeback'), 'a timeout sets no comeback record');
+
+  // ⚠️ Like cols and kinds, games archived before the field existed have none,
+  // and must read as no record rather than a record of zero.
+  const older = records([game([['sam', 50, 0, 0, 0, 18], ['alex', 40]])].map((g) => {
+    delete g.result.comeback;
+    return g;
+  }));
+  ok(!older.some((r) => r.key === 'biggestComeback'),
+    'an archive from before the field shows no card, not a zero');
+}
+
+// ---------------------------------------------------------------------------
+section('Boss Battles — a mode with its own board, never the league');
+
+{
+  const list = [
+    game([['ryan', 60], ['sam', 40]], { mode: 'boss' }),
+    game([['sam', 70], ['ryan', 55]], { mode: 'boss' }),
+    game([['ryan', 50], ['priya', 48]], { mode: 'boss' }),
+    game([['ryan', 90], ['priya', 30]], { mode: 'boss', ending: 'timeout', flagged: 1 }),
+    game([['sam', 80], ['alex', 20]]), // a league game, which must not leak in
+  ];
+  const board = bossBattles(list, { instructors: ['ryan'] });
+
+  eq(board.played, 4, 'the board counts Boss Battles and nothing else');
+  eq(board.boss.id, 'ryan', 'the boss is the instructor');
+  eq(board.boss.won, 3, 'with his own record…');
+  eq(board.boss.lost, 1, '…including who has beaten him');
+  eq(board.challengers[0].id, 'sam', 'the challenger who beat him leads the board');
+  eq(board.challengers[0].won, 1, 'with how often');
+  eq(board.challengers[1].played, 2, 'and everyone who challenged is on it');
+  eq(board.bestScore.value, 70, 'the best score anyone has posted against him');
+  eq(board.bestScore.holders[0].id, 'sam', 'held by whoever posted it');
+  eq(board.challengers.find((c) => c.id === 'priya').best, 48,
+    'a timeout’s running score is not a challenger’s best (§11)');
+
+  // ⚖️ Boss Battles never feed the class competition (PAVILION.md): a 94
+  // against the instructor is a fine thing and not the class record.
+  eq(counted(list, RECORD_MODES).some((g) => g.mode === 'boss'), false,
+    'the Record Book does not take Boss Battles');
+  eq(standings(list).some((r) => r.id === 'ryan'), false,
+    'and the league table never sees them');
+
+  // With no roster to hand, the boss is inferred as the one id in every game —
+  // and one ambiguous game yields an empty board, never a guess.
+  eq(bossBattles(list).boss.id, 'ryan', 'two different challengers identify the boss without a roster');
+  const one = bossBattles([game([['ryan', 60], ['sam', 40]], { mode: 'boss' })]);
+  eq(one.boss, null, 'one game cannot say which seat is the boss, and the board says so honestly');
+}
 
 // ---------------------------------------------------------------------------
 section('Honours, seasons, and a league with no seasons at all');

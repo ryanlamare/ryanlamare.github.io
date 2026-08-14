@@ -65,6 +65,7 @@
   .tag.league { background: var(--sci); color: #fff; }
   .tag.cup { background: var(--gold); color: var(--ink); }
   .tag.exhibition { background: var(--line); color: var(--muted); }
+  .tag.boss { background: var(--red); color: #fff; }
   .status { min-height: 20px; font-size: 13px; color: var(--muted); margin-top: 10px; }
   .status.bad { color: var(--red); }
   .hidden { display: none; }
@@ -163,8 +164,9 @@
         <div class="fit"><button class="primary" id="btn-roster">Save roster</button></div>
         <div class="note" style="flex:1 1 auto">
           Students pick their name off this list — no accounts, no passwords, no links to lose.
-          Games with the instructor in them record as <strong>exhibitions</strong> and stay out
-          of the league.
+          The instructor against one student records as a <strong>Boss Battle</strong> (its own
+          board, never the league); any other game with the instructor in it is an
+          <strong>exhibition</strong>. Week 1's demo match is a one-click retag below.
         </div>
       </div>
       <p class="note">Each term keeps its own class list, so next year's cohort does not paste
@@ -360,6 +362,14 @@ function renderGames() {
       const voided = r.ending === 'void';
       const when = g.endedAt ? new Date(g.endedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
       const names = (g.names || []).map((n, i) => (r.winner === i ? `<strong>${escape(n)}</strong>` : escape(n))).join(' v ');
+      // One retag button per row, to the likeliest alternative: a student game
+      // flips league ↔ cup (the week 6 knockout), an instructor game flips
+      // boss ↔ exhibition (week 1's demo match auto-tags as a Boss Battle,
+      // and this is the one click that corrects it).
+      const [to, toLabel] =
+        g.mode === 'boss' ? ['exhibition', 'Exhibition']
+        : g.mode === 'exhibition' ? ['boss', 'Boss']
+        : g.mode === 'cup' ? ['league', 'League'] : ['cup', 'Cup'];
       return `<tr class="${voided ? 'void' : ''}">
         <td>${when}</td>
         <td>${names}</td>
@@ -368,7 +378,7 @@ function renderGames() {
         <td><span class="tag ${g.mode}">${g.mode}</span></td>
         <td>${r.ending || '—'}${r.reason ? ` <span class="note">(${escape(r.reason)})</span>` : ''}</td>
         <td>
-          <button class="sm" data-act="mode" data-id="${g.id}" data-to="${g.mode === 'cup' ? 'league' : 'cup'}">${g.mode === 'cup' ? 'League' : 'Cup'}</button>
+          <button class="sm" data-act="mode" data-id="${g.id}" data-to="${to}">${toLabel}</button>
           <button class="sm ${voided ? '' : 'danger'}" data-act="ending" data-id="${g.id}" data-to="${voided ? 'natural' : 'void'}">${voided ? 'Restore' : 'Void'}</button>
           <button class="sm danger" data-act="delete" data-id="${g.id}" title="Delete this game outright — not the same as voiding it">✕</button>
         </td>

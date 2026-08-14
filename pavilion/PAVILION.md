@@ -728,38 +728,42 @@ and places zero limits on how far the animations go for everyone else.
 
 ---
 
-## Scoped 2026-08-14, not built: the ninth record, and Boss Battles
+## The ninth record and Boss Battles — scoped and built 2026-08-14
 
 ### Biggest comeback — the ninth record
 
 ⚖️ **Ryan's suggestion, and the right one** (2026-08-14). It is the classic sports
-record, it is already in the honours list above as *Turnaround*, and the eight
-records now on the page are all highs of one number — a comeback is the only one
-that is about the *shape* of a game.
+record, it is already in the honours list above as *Turnaround*, and the other
+eight records on the page are all highs of one number — a comeback is the only
+one that is about the *shape* of a game.
 
-**Name it "Biggest comeback", not "Turnaround."** The same pass that renamed Best
-in Show to Highest score applies: plain English, self-explanatory, no theme word
-where none is needed.
+**It is named "Biggest comeback", not "Turnaround."** The same pass that renamed
+Best in Show to Highest score applies: plain English, self-explanatory, no theme
+word where none is needed.
 
 ⚠️ **It is the one record that cannot be computed from what is stored, and that
-is the whole of the work.** The other eight read a number off the record.
+was the whole of the work.** The other eight read a number off the record.
 A comeback needs the score *during* the game, and:
 
 - `stats.js` imports nothing and no page ever loads the engine — that is a
   deliberate 17 KB saving, not an accident, and replaying in the browser to draw
   a records card would throw it away.
 - So it is derived **at write time** in `relay/result.js`, exactly as `cols` and
-  `kinds` now are: walk the move list, and at each month's close record how far
-  behind the leader each seat is. Store the per-seat maximum. The record is then
-  `comeback[winner]`, which `stats.js` reads like any other field.
-- ⚠️ **Do not touch the existing `replay` call to get it.** That call is what
+  `kinds` are: `deriveComebacks` walks the move list, and at each month's close
+  records how far behind the leader each seat is, keeping the per-seat maximum.
+  The record is then the comeback of the seat that won, which `stats.js` reads
+  like any other field — only winners hold it, because being far behind and
+  losing is the wooden spoon wearing a hat.
+- ⚠️ **The existing `replay` call was not touched to get it.** That call is what
   makes an archived result unforgeable and what the void path and the state hash
-  hang off. A second walk over a fifty-move list costs microseconds; wrap it in
-  its own try/catch and return zeros if anything is odd, so a new record can
-  never turn a good game into a void one.
+  hang off. The second walk over a fifty-move list costs microseconds, has its
+  own try/catch and returns zeros if anything is odd, so the record can never
+  turn a good game into a void one.
 - Scores only move at a month's close, so "behind by 18 at the close of month 3
   and won" is exactly well defined. Timeouts are excluded (§11), and a draw has
   no winner to have come back.
+- Games archived before the field existed have none, which reads as **no card,
+  not a record of zero** — the same rule `cols` and `kinds` already follow.
 
 Considered and rejected: **shortest game** (a short game is often a bad one),
 **most idle craftspeople** (a low dressed as a record — see *Award names*), and
@@ -778,23 +782,30 @@ challenge and switching it back afterwards, and forgetting once puts a Boss
 Battle in the class table or a class game in Boss Battles. The term is the wrong
 axis for something that happens *during* a term.
 
-The mode is the right axis, and most of it already exists: a game with the
-instructor in it already records as **`exhibition`** and is already excluded from
-the league, the records and the awards. So:
+The mode was the right axis, and most of it already existed — a game with the
+instructor in it already recorded as **`exhibition`** and was already excluded
+from the league, the records and the awards. As built:
 
-- Add `boss` to `MODES` in `archive.js`.
-- `classify()`: the instructor plus **exactly one** student, two seats → `boss`.
-  The instructor in any other shape — a three-player, two students and him —
-  stays `exhibition`.
-- ⚠️ **Week 1's demo match is instructor-versus-one-student too**, so it would
-  auto-tag as a Boss Battle. That is one click to retag in the admin page, the
-  same machinery the Cup final already uses, and it is the right default: the
-  common case costs nothing and the rare case costs a click. The alternative —
-  requiring a retag for every real Boss Battle — fails the zero-instructor-work
-  rule that the Bulletin is also held to.
-- The board is then pure `stats.js`: who has beaten him and how often, the best
-  score anyone has posted against him, and his own record. Its own section, or a
-  fourth tab.
+- `boss` is in `MODES` in `archive.js`, and `classify()` tags the instructor
+  plus **exactly one** student, two seats, as `boss`. The instructor in any
+  other shape — a three-player, two students and him — stays `exhibition`.
+- ⚠️ **Week 1's demo match is instructor-versus-one-student too**, so it
+  auto-tags as a Boss Battle. That is one click to retag in the admin page —
+  the mode button is context-sensitive: boss ↔ exhibition for instructor games,
+  league ↔ cup for the rest — and it is the right default: the common case
+  costs nothing and the rare case costs a click. The alternative — requiring a
+  retag for every real Boss Battle — fails the zero-instructor-work rule that
+  the Bulletin is also held to.
+- The board is pure `stats.js` (`bossBattles`): who has beaten him and how
+  often, the best score anyone has posted against him, and his own record. It
+  is the fourth tab on the records page (`#boss-battles`), season-scoped like
+  the standings. Challengers sort wins-over-the-boss first and carry no
+  position number — challenging is voluntary, and the order carries no verdict
+  a number would add.
+- The instructor is identified from the rosters' `instructor` flags, unioned
+  across seasons; with no roster to hand, `bossBattles` infers the one id
+  present in every Boss Battle, and a single ambiguous game yields an empty
+  board rather than a guess.
 - ⚖️ **Boss Battles do not feed the class Record Book.** `RECORD_MODES` stays
   league-plus-cup. A 94 against the instructor is a fine thing and it is not the
   class record, because the games are voluntary and nobody plays the same number
@@ -802,7 +813,8 @@ the league, the records and the awards. So:
 
 The name passes the read-aloud test with nothing left over: *"If you want to play
 me outside class, that's a Boss Battle. It goes on the records, and it doesn't
-touch the league."*
+touch the league."* — which is also, word for word, what the post-game screen
+prints when one records.
 
 ---
 
