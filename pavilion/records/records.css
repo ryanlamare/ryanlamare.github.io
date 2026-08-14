@@ -15,7 +15,15 @@
   --red: #CE1E32;
   --gold: #C9A227;
   --well: #DFD5BC;
+  /* ⚠️ All five discipline colours, not the two the form pills needed. The
+     champions' cars are coloured from this palette, and a missing custom
+     property does not warn — `var(--mac)` simply resolves to nothing and the car
+     falls back to beige, which is exactly how three of the five cars came out
+     unpainted the first time the wheel was drawn. */
+  --art: #8E3E28;
   --sci: #37658A;
+  --mac: #1B1C19;
+  --ele: #C9A227;
   --nat: #3C8B51;
   --display: "Didot", "Bodoni 72", "Playfair Display", "Hoefler Text", Georgia, "Times New Roman", serif;
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='72' height='72' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
@@ -124,46 +132,214 @@ tr.absent td.name { font-weight: 500; }
 .rec .when { font-size: 12px; color: var(--muted); }
 .rec.best { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
 
-/* --- the Hall of Champions ---------------------------------------------- */
+/* --- the Hall of Champions: the Ferris Wheel ----------------------------- */
 
-.cabinet { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+/* PAVILION.md, *The Ferris Wheel*. Six cars — apex, bottom, two on each
+   diagonal, so 60° apart — and the rim turns while every gondola hangs level.
+   The emblem knockout rules from the old cup carry over unchanged; the cup
+   itself is gone. */
 
-.trophy {
-  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-  padding: 20px 16px 18px; text-align: center;
-  /* The shelf line under each cup, which is what makes a grid of these read as
-     a cabinet rather than a row of cards. */
-  box-shadow: inset 0 -6px 0 -1px var(--well);
+.wheel-stage { display: grid; place-items: center; padding: 6px 0 4px; }
+
+/* ⚠️ The three fractions below are `VB` in records.js expressed as parts of the
+   stage width: the hub sits at cy/w, a car hangs at rim/w, and the box is h/w
+   tall. Change the viewBox there and these change with it — they are one
+   geometry described in two places, which is the price of drawing the structure
+   in SVG and the cars in HTML (real text, real buttons). */
+.wheel {
+  --stage: 470px;
+  --turn: 0deg;
+  --r: calc(var(--stage) * 0.42);    /* rim 168 / 400 */
+  --cy: calc(var(--stage) * 0.50);   /* hub  200 / 400 */
+  position: relative;
+  width: var(--stage);
+  height: calc(var(--stage) * 1.25); /* 500 / 400 */
 }
-.cupfig { width: 108px; height: 125px; display: block; margin: 0 auto 12px; }
-.cupfig .bowl, .cupfig .stem, .cupfig .foot { fill: var(--gold); }
-.cupfig .plinth { fill: var(--ink); }
-.cupfig .handle { fill: none; stroke: var(--gold); stroke-width: 7; stroke-linecap: round; }
-/* The emblem is knocked out of the bowl, so it reads as engraved rather than
-   stuck on. `--t-bg` is what the sprite's own knockouts paint with.
+
+/* Both SVGs fill the box and share the viewBox, so the rim, the legs and the
+   base line up without any arithmetic here. Only the rig turns. */
+.frame, .rig { position: absolute; inset: 0; width: 100%; height: 100%; }
+.frame { z-index: 0; }
+.rig {
+  z-index: 1;
+  /* The hub, in this box: 200/400 across, 200/500 down. */
+  transform-origin: 50% 40%;
+  transform: rotate(var(--turn));
+  transition: transform .9s cubic-bezier(.32, .72, .2, 1);
+}
+.rig .rim { fill: none; stroke: var(--ink); stroke-width: 3; }
+.rig .rim.inner { stroke-width: 1.2; opacity: .45; }
+.rig .spokes line { stroke: var(--ink); stroke-width: 1; opacity: .38; }
+.rig .hub { fill: var(--ink); }
+.frame .leg { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; opacity: .9; }
+.frame .ground { fill: var(--ink); }
+
+/* A car. The compound transform is the whole trick: swing out to the rim on the
+   seat's angle, then turn back by the same amount so the gondola hangs level —
+   which is what a real wheel does, and what stops the emblems tumbling.
+   ⚠️ The final `translateY(50%)` is of the car's *own height*, which puts its
+   top edge — the hook — exactly on the rim rather than its middle. That is why
+   the label can be any number of lines without shifting the gondola off the
+   rim, and it is what a fixed pixel nudge got wrong. */
+.car {
+  position: absolute; z-index: 2;
+  left: 50%; top: var(--cy);
+  width: 146px; margin: 0; padding: 0;
+  border: 0; background: transparent; color: inherit; font: inherit;
+  text-align: center;
+  --a: calc(var(--turn) + var(--i) * 60deg);
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--a))
+    translateY(calc(-1 * var(--r)))
+    rotate(calc(-1 * var(--a)))
+    translateY(50%);
+  transition: transform .9s cubic-bezier(.32, .72, .2, 1), opacity .5s ease;
+  opacity: var(--dim, 1);
+}
+button.car { cursor: pointer; }
+
+.gondola { display: block; }
+/* The hanger, so a car reads as hanging off the rim rather than glued to it. */
+.hook {
+  display: block; width: 2px; height: 14px; margin: 0 auto;
+  background: var(--ink); opacity: .55;
+}
+.cab {
+  display: grid; place-items: center;
+  width: 62px; height: 50px; margin: 0 auto;
+  border-radius: 8px 8px 11px 11px;
+  background: var(--car-bg, var(--well));
+  box-shadow: inset 0 -5px 0 rgba(27, 28, 25, .13), 0 3px 8px rgba(27, 28, 25, .18);
+}
+.emb { width: 34px; height: 34px; }
+/* The emblem is knocked out of the car, so it reads as painted on rather than
+   stuck to it.
    ⚠️ The deck pictograms paint with `--ink` / `--red` / `--paper` rather than
    `currentColor` — they were drawn for slides, where those are the palette. Bind
-   all four here or half the menu comes out black-and-red on gold instead of
-   engraved. */
-.cupfig .emblem {
-  color: var(--card);
-  --t-bg: var(--gold);
-  --ink: var(--card);
-  --red: var(--card);
-  --paper: var(--gold);
+   all four or half the menu comes out black-and-red instead of knocked out. */
+.emb {
+  color: var(--car-fg);
+  --t-bg: var(--car-bg);
+  --ink: var(--car-fg);
+  --red: var(--car-fg);
+  --paper: var(--car-bg);
 }
 
-.trophy .who { font-family: var(--display); font-weight: 400; font-size: 22px; display: block; line-height: 1.15; }
-.trophy .season { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.trophy blockquote {
-  margin-top: 10px; font-size: 13.5px; line-height: 1.45; color: var(--muted); font-style: italic;
+/* The five car colours (the palette is ours; the emblem is the champion's).
+   ⚠️ Ochre is a field colour near 2:1 on cream, so its car takes ink for the
+   knockout rather than cream — the same exception the logo and the pitch make. */
+.c0 { --car-bg: var(--art); --car-fg: var(--card); }
+.c1 { --car-bg: var(--sci); --car-fg: var(--card); }
+.c2 { --car-bg: var(--nat); --car-fg: var(--card); }
+.c3 { --car-bg: var(--mac); --car-fg: var(--card); }
+.c4 { --car-bg: var(--ele); --car-fg: var(--ink); }
+
+/* ⚠️ The label sits on a cream pill, because five of the six cars hang *inside*
+   the rim (a gondola hangs below its attachment point, as it does in life) and
+   their names would otherwise be read through the spokes. The pill is the fix
+   and it also makes the name read as a plate on the car. */
+.car .tag {
+  display: inline-block; margin-top: 6px; line-height: 1.15;
+  background: var(--paper); border-radius: 8px; padding: 4px 8px 5px;
 }
-.trophy.waiting { opacity: .55; }
-.trophy.waiting .cupfig .bowl,
-.trophy.waiting .cupfig .stem,
-.trophy.waiting .cupfig .foot { fill: var(--well-deep, #D8CBAE); }
-.trophy.waiting .cupfig .handle { stroke: var(--well-deep, #D8CBAE); }
-.trophy.waiting .cupfig .plinth { fill: var(--line); }
+.car .tag b {
+  font-family: var(--display); font-weight: 400; font-size: 15.5px;
+  display: block; overflow-wrap: break-word;
+}
+.car .yr { font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+/* The car at the bottom of the rim is at the platform: full strength, a size
+   larger, and ringed.
+   ⚠️ The ring is **ink with a paper gap**, not gold. Gold was the obvious
+   choice and it is invisible on the ochre car — one of the five colours a
+   champion's season can hash to — so the highlight vanished exactly one year in
+   five. A ring has to read on all five car colours or it is not a highlight. */
+.car.boarding { --dim: 1 !important; }
+.car.boarding .cab {
+  box-shadow:
+    inset 0 -5px 0 rgba(27, 28, 25, .13),
+    0 0 0 3px var(--paper),
+    0 0 0 5px var(--ink),
+    0 5px 14px rgba(27, 28, 25, .24);
+  transform: scale(1.07);
+}
+.car.boarding .tag b { font-weight: 400; }
+
+/* An empty seat, and the one that is waiting to be won. Faded because it is
+   unwon — the rule the old "To be won" trophy already used. */
+.car.empty .cab, .car.coming .cab {
+  background: transparent;
+  border: 2px dashed var(--line);
+  box-shadow: none;
+}
+.car.empty { opacity: calc(var(--dim, 1) * .55); }
+.car.coming { opacity: calc(var(--dim, 1) * .8); }
+.car.coming .tag b { font-size: 15px; color: var(--muted); }
+
+/* The champion's own line, on hover and on focus. It stays in the accessibility
+   tree rather than being hidden markup, so it is not a mouse-only feature. */
+.say {
+  position: absolute; left: 50%; bottom: calc(100% - 22px);
+  width: 208px; transform: translateX(-50%) scale(.94);
+  background: var(--ink); color: var(--paper);
+  font-size: 12.5px; font-style: italic; line-height: 1.4;
+  padding: 9px 11px; border-radius: 9px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.say::after {
+  content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+  border: 5px solid transparent; border-top-color: var(--ink);
+}
+.car:hover .say, .car:focus-visible .say { opacity: 1; transform: translateX(-50%) scale(1); z-index: 5; }
+.car:focus-visible { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 10px; }
+
+.spin { display: flex; gap: 8px; margin-top: 2px; }
+.nudge {
+  border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  border-radius: 8px; width: 40px; height: 30px; font-size: 12px; cursor: pointer;
+}
+.nudge:hover { color: var(--ink); border-color: var(--muted); }
+
+/* --- the line of earlier cars ------------------------------------------- */
+
+/* Where the seventh champion goes, and every one after. Unbounded on purpose:
+   the wheel stays legible and the archive still shows everything (PAVILION.md). */
+.siding-h {
+  font-family: var(--display); font-weight: 400; font-size: 20px;
+  margin: 26px 0 10px; padding-top: 16px; border-top: 1px solid var(--line);
+}
+.siding { list-style: none; display: grid; gap: 10px; }
+.scar {
+  display: grid; grid-template-columns: 62px minmax(120px, 1fr) 2fr;
+  gap: 14px; align-items: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 14px;
+}
+.scar .hook { display: none; }
+.scar .cab { width: 52px; height: 42px; }
+.scar .emb { width: 28px; height: 28px; }
+.scar .tag b { font-family: var(--display); font-weight: 400; font-size: 18px; display: block; }
+.scar .yr { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.scar .line { font-size: 13px; font-style: italic; color: var(--muted); line-height: 1.4; }
+
+@media (max-width: 700px) {
+  .wheel { --stage: min(340px, 92vw); }
+  .car { width: 104px; }
+  .cab { width: 48px; height: 38px; }
+  .car.boarding .cab { transform: scale(1.05); }
+  .emb { width: 26px; height: 26px; }
+  .car .tag { padding: 3px 6px 4px; }
+  .car .tag b { font-size: 13px; }
+  .car .yr { font-size: 8.5px; }
+  .scar { grid-template-columns: 52px 1fr; }
+  .scar .line { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rig, .car { transition: none; }
+}
 
 /* `.roll` went with Most improved (Ryan, 2026-08-14 — cut outright, not
    hidden). `.double` stays: the Double is still a fact `honours()` returns, and

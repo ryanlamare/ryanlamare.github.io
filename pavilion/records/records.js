@@ -204,6 +204,7 @@ function render() {
       render();
     });
   }
+  wireWheel();
   const me = app.querySelector('#me');
   if (me) {
     me.addEventListener('change', () => {
@@ -403,65 +404,201 @@ function recordsPanel() {
 // ⚠️ A champion with no card still gets a trophy, just an unengraved one. The
 // cabinet is a record of who won, and it must not depend on anybody having
 // filled in a form.
+// ⚖️ **The Ferris Wheel, not a trophy cabinet** (Ryan, 2026-08-14 — PAVILION.md,
+// *The Ferris Wheel*). The champions' cars *are* the trophies: a name, an emblem
+// they picked, and their line on hover. The wheel that carried this is the one
+// structure everybody came to the 1893 Fair to see, so it explains itself.
+//
+// ⚠️ **Six cars, and the wheel never grows.** The apex is always the season not
+// yet won; five champions ride below it; and the *sixth* champion pushes the
+// oldest car off the rim and into the line underneath, newest first. That line is
+// unbounded, so the wheel stays legible in 2040 and **nothing is ever dropped** —
+// which is the property the archive exists for. Six is this constant and the
+// 60° step below is derived from it: apex, bottom, two on each diagonal.
+const WHEEL_CARS = 6;
+const PLATFORM = 3; // the seat at the bottom of the rim — where a car is "boarding"
+
 function championsPanel() {
-  const cabinet = state.champions;
-  const pending = seasons().filter((s) => !cabinet.some((c) => (c.season ?? null) === s.season));
+  const cabinet = state.champions; // newest first, from the archive
+  // The newest season nobody has won yet. There may be none — every season won,
+  // or a league with no seasons at all — and then all six seats are champions.
+  const coming = seasons().find((s) => !cabinet.some((c) => (c.season ?? null) === s.season));
 
-  if (!cabinet.length) {
-    return `<p class="empty">The cabinet is empty. It fills when a Cup is won —
-      one trophy per cohort, kept for as long as this site exists.</p>`;
+  const riders = cabinet.slice(0, WHEEL_CARS - (coming ? 1 : 0));
+  const siding = cabinet.slice(riders.length);
+
+  const seats = [];
+  if (coming) seats.push({ kind: 'coming', season: coming.season });
+  for (const c of riders) seats.push({ kind: 'champ', c });
+  // Unfilled seats are drawn as empty gondolas rather than left as gaps: a wheel
+  // missing half its cars reads as broken, and an empty seat reads as one that
+  // has not been won yet — the same thing the old "To be won" trophy said.
+  while (seats.length < WHEEL_CARS) seats.push({ kind: 'empty' });
+
+  return `<div class="wheel-stage">
+    <div class="wheel" style="--turn:0deg">
+      ${frameSvg()}
+      ${rigSvg()}
+      ${seats.map((s, i) => seat(s, i)).join('')}
+    </div>
+    <div class="spin">
+      <button type="button" class="nudge" data-spin="-1" aria-label="Turn the wheel back">◀</button>
+      <button type="button" class="nudge" data-spin="1" aria-label="Turn the wheel on">▶</button>
+    </div>
+  </div>
+  ${
+    siding.length
+      ? `<h3 class="siding-h">Earlier champions</h3>
+         <ul class="siding">${siding.map(sidingCar).join('')}</ul>`
+      : ''
+  }`;
+}
+
+// One seat on the rim. A champion's is a real <button> — clicking brings it down
+// to the platform — which is also what makes the wheel keyboard-operable and
+// gives the hover line a focus state for free. Empty seats are not buttons,
+// because there is nothing to press.
+function seat(s, i) {
+  const pos = ` style="--i:${i}"`;
+  if (s.kind === 'empty') {
+    return `<span class="car empty"${pos} aria-hidden="true">${gondola(null)}</span>`;
   }
-
-  return `<div class="cabinet">
-    ${cabinet.map(trophy).join('')}
-    ${pending
-      .map(
-        (s) => `<figure class="trophy waiting">
-          ${cup(null)}
-          <figcaption>
-            <b class="who">To be won</b>
-            <span class="season">${esc(seasonLabel(s.season))}</span>
-          </figcaption>
-        </figure>`
-      )
-      .join('')}
-  </div>`;
+  if (s.kind === 'coming') {
+    const year = (String(s.season ?? '').match(/\d{4}/) || [])[0];
+    return `<span class="car coming"${pos}>${gondola(null)}
+      <span class="tag"><b>${year ? `Coming ${esc(year)}` : 'To be won'}</b></span></span>`;
+  }
+  const c = s.c;
+  const label = `${c.name}, ${seasonLabel(c.season)}`;
+  return `<button type="button" class="car ${carColour(c.season)}"${pos}
+      aria-label="${esc(label)}">
+    ${gondola(c.emblem)}
+    <span class="tag"><b>${esc(c.name)}</b><span class="yr">${esc(seasonLabel(c.season))}</span></span>
+    ${c.quote ? `<span class="say">“${esc(c.quote)}”</span>` : ''}
+  </button>`;
 }
 
-function trophy(c) {
-  return `<figure class="trophy">
-    ${cup(c.emblem)}
-    <figcaption>
-      <b class="who">${esc(c.name)}</b>
-      <span class="season">${esc(seasonLabel(c.season))}</span>
-      ${c.quote ? `<blockquote>“${esc(c.quote)}”</blockquote>` : ''}
-    </figcaption>
-  </figure>`;
+// The overflow line. The quote is printed here rather than hidden behind a hover,
+// which is the other half of the loose end the memo names: a champion's line is
+// the one thing on this site a student writes, and it has to be readable
+// somewhere that is not a mouse-only interaction.
+function sidingCar(c) {
+  return `<li class="scar ${carColour(c.season)}">
+    ${gondola(c.emblem)}
+    <span class="tag"><b>${esc(c.name)}</b><span class="yr">${esc(seasonLabel(c.season))}</span></span>
+    ${c.quote ? `<span class="line">“${esc(c.quote)}”</span>` : ''}
+  </li>`;
 }
 
-// One loving cup, drawn here rather than in the sprite because it is furniture
-// rather than an isotype: the emblem sits in the bowl, and an unclaimed trophy
-// is the same cup with an empty one.
-function cup(emblem) {
-  // ⚠️ Render only an emblem this build actually has. A card can name one that
-  // isn't here — a bespoke emblem drawn for a champion is added to the repo,
-  // and the card can be saved before that lands (or the symbol renamed years
-  // later). A `<use>` pointing at nothing fails *silently*, which would leave
-  // an empty bowl and no clue why; a plain cup is the honest fallback.
+// A gondola: a hanging car with the champion's emblem in it.
+//
+// ⚠️ Render only an emblem this build actually has. A card can name one that
+// isn't here — a bespoke emblem drawn for a champion is added to the repo, and
+// the card can be saved before that lands (or the symbol renamed years later). A
+// `<use>` pointing at nothing fails *silently*, which would leave a blank car
+// and no clue why; an empty gondola is the honest fallback.
+function gondola(emblem) {
   const known = EMBLEMS.some((e) => e.id === emblem) ? emblem : null;
-  return cupSvg(known);
+  return `<span class="gondola" aria-hidden="true">
+    <span class="hook"></span>
+    <span class="cab">${known ? `<svg class="emb"><use href="#${esc(known)}"/></svg>` : ''}</span>
+  </span>`;
 }
 
-function cupSvg(emblem) {
-  return `<svg class="cupfig" viewBox="0 0 100 116" role="img" aria-hidden="true">
-    <path class="handle" d="M22 26 C6 26 6 54 24 56" />
-    <path class="handle" d="M78 26 C94 26 94 54 76 56" />
-    <path class="bowl" d="M18 20 H82 V44 C82 66 68 78 50 78 C32 78 18 66 18 44 Z" />
-    <rect class="stem" x="45" y="78" width="10" height="16" />
-    <rect class="foot" x="26" y="94" width="48" height="10" rx="2" />
-    <rect class="plinth" x="18" y="104" width="64" height="8" rx="2" />
-    ${emblem ? `<svg class="emblem" x="32" y="26" width="36" height="36"><use href="#${esc(emblem)}"/></svg>` : ''}
+// ⚖️ **The colour is ours, the emblem is theirs** (Ryan). Derived from the season
+// key rather than the champion's position, so a car keeps its colour forever
+// instead of changing hue every time somebody new wins.
+function carColour(season) {
+  const s = String(season ?? '');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997;
+  return 'c' + (h % 5);
+}
+
+// ⚠️ **One coordinate system for the whole structure**, and the cars are placed
+// from the same numbers. Both SVGs use the viewBox below and fill the stage, so
+// the geometry is fixed and `--stage` is the only size knob; `HUB`/`RIM` are
+// mirrored into CSS as fractions of it, and changing one here means changing
+// that fraction there. Getting this wrong is what put the cars inside the rim
+// and the bottom one on top of the base.
+const VB = { w: 400, h: 500, cx: 200, cy: 200, rim: 168, foot: 478 };
+
+// The rim, spokes and hub — the part that turns.
+//
+// Twelve spokes because the original was built like a bicycle wheel, and that is
+// the detail that makes the silhouette read as *the* Ferris Wheel rather than a
+// fairground one.
+function rigSvg() {
+  const { cx, cy, rim } = VB;
+  const spokes = Array.from({ length: 12 }, (_, i) => {
+    const a = (i * Math.PI) / 6;
+    return `<line x1="${(cx + 10 * Math.sin(a)).toFixed(1)}" y1="${(cy - 10 * Math.cos(a)).toFixed(1)}"
+      x2="${(cx + (rim - 4) * Math.sin(a)).toFixed(1)}" y2="${(cy - (rim - 4) * Math.cos(a)).toFixed(1)}" />`;
+  }).join('');
+  return `<svg class="rig" viewBox="0 0 ${VB.w} ${VB.h}" aria-hidden="true">
+    <g class="spokes">${spokes}</g>
+    <circle class="rim" cx="${cx}" cy="${cy}" r="${rim}" />
+    <circle class="rim inner" cx="${cx}" cy="${cy}" r="${rim - 9}" />
+    <circle class="hub" cx="${cx}" cy="${cy}" r="11" />
   </svg>`;
+}
+
+// The A-frame and the base, which do not turn. Drawn in the same viewBox so the
+// feet land on the base and the base clears the lowest car by construction
+// rather than by trial.
+function frameSvg() {
+  const { cx, cy, foot } = VB;
+  const spread = 108;
+  return `<svg class="frame" viewBox="0 0 ${VB.w} ${VB.h}" aria-hidden="true">
+    <path class="leg" d="M${cx} ${cy} L${cx - spread} ${foot}" />
+    <path class="leg" d="M${cx} ${cy} L${cx + spread} ${foot}" />
+    <rect class="ground" x="${cx - spread - 34}" y="${foot}" width="${(spread + 34) * 2}" height="13" rx="5" />
+  </svg>`;
+}
+
+// Turning it. The rim rotates and every car counter-rotates by the same angle,
+// which is how a real wheel works — a gondola hangs level all the way round, and
+// cars that tumble with the rim is the way this looks wrong. Both come off one
+// `--turn` on the wheel, so the CSS transition carries the whole thing.
+function wireWheel() {
+  const wheel = app.querySelector('.wheel');
+  if (!wheel) return;
+  const cars = [...wheel.querySelectorAll('.car')];
+  let turn = 0;
+
+  const place = () => {
+    wheel.style.setProperty('--turn', `${turn * (360 / WHEEL_CARS)}deg`);
+    for (const car of cars) {
+      const i = Number(car.style.getPropertyValue('--i'));
+      const at = (((i + turn) % WHEEL_CARS) + WHEEL_CARS) % WHEEL_CARS;
+      const away = Math.abs(at - PLATFORM);
+      // Distance from the platform, the short way round the rim.
+      const d = Math.min(away, WHEEL_CARS - away);
+      car.style.setProperty('--dim', String(1 - d * 0.11));
+      car.classList.toggle('boarding', at === PLATFORM);
+    }
+  };
+
+  // The short way round, so clicking a car never spins the wheel the long way
+  // and never unwinds a turn the reader just watched.
+  const spinTo = (want) => {
+    let d = (want - turn) % WHEEL_CARS;
+    if (d > WHEEL_CARS / 2) d -= WHEEL_CARS;
+    if (d < -WHEEL_CARS / 2) d += WHEEL_CARS;
+    turn += d;
+    place();
+  };
+
+  cars.forEach((car) =>
+    car.addEventListener('click', () => spinTo(PLATFORM - Number(car.style.getPropertyValue('--i'))))
+  );
+  app.querySelectorAll('[data-spin]').forEach((b) =>
+    b.addEventListener('click', () => {
+      turn += Number(b.dataset.spin);
+      place();
+    })
+  );
+  place();
 }
 
 document.body.insertAdjacentHTML('afterbegin', SPRITE);

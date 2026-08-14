@@ -679,8 +679,38 @@ either option that was open. It is not one wheel sized to the archive; it is a
   weight for it, and the reason the overflow line is plain markup and not
   something you have to spin to reach.
 
-Filed with the rest of the Fair imagery below and deliberately **not built yet**
-— the cup SVG in `records/records.js` is the honest placeholder until it is.
+#### Built 2026-08-14 — and three things it taught
+
+The cup SVG is gone; `records/records.js` draws the wheel and `records.css`
+dresses it. Four bugs were found by drawing it rather than by reasoning about it,
+which is the argument for drawing:
+
+- ⚠️ **`records.css` only copied *two* of the five discipline colours** — the two
+  the form pills needed. A missing custom property does not warn: `var(--mac)`
+  resolves to nothing, the car falls back to beige, and three of the five car
+  colours came out unpainted. All five are in its `:root` now, and the hazard is
+  general — that stylesheet is a **hand-copied** palette (its own header says
+  so), so anything new that reaches for a board colour has to check it is there.
+- ⚠️ **The boarding ring cannot be gold.** Gold is the obvious highlight and it
+  is invisible on the ochre car, so the marker vanished for one year in five. It
+  is ink with a paper gap, which reads on all five.
+- **A gondola hangs *below* its attachment point**, so five of the six cars sit
+  inside the rim and their names would be read through the spokes. The labels sit
+  on cream pills, which fixes it and reads as a plate on the car.
+- **The car's anchor is its top edge, not its centre** — a final
+  `translateY(50%)` of its own height. A fixed pixel nudge put the cars inside
+  the rim and the bottom one on the base, and broke again whenever a name wrapped
+  to two lines.
+
+⚖️ **One geometry, described in two places**: `VB` in `records.js` is the
+viewBox both SVGs use, and three fractions of it are repeated in `records.css` to
+place the HTML cars. That is the price of drawing the structure in SVG while
+keeping the cars as real text in real buttons, and it is the right trade — but
+the two have to move together, and both sides say so.
+
+The quote is on the car as a hover *and* focus tooltip, and printed plainly in
+the line below, which closes the loose end above: the champion's own line is
+readable without a mouse.
 
 The rest of the **Fair imagery is the obvious next seam** (Ryan, 2026-08-12)
 and stays deferred to the achievements-and-decoration pass, once the rules
