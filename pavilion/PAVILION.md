@@ -645,13 +645,39 @@ already holds the pickable set. It is inline SVG plus one rotation, no library:
   stay a plain list underneath for a screen reader, because a wheel is a picture.
 - **`prefers-reduced-motion` jumps instead of spinning.** One media query, as
   everywhere else here.
-- ⚠️ **The sparse-then-crowded problem is the one real design question.** One car
-  in year one looks broken; twenty years in it is a bicycle chain. The original
-  wheel carried **36 cars**, so one option is to always draw the full 36 with
-  the unwon ones faint — the same move the cabinet's "To be won" trophy already
-  makes, and it turns the course's whole future into something visibly waiting
-  to be filled. The other is to size the wheel to the champion count with a
-  floor of about eight. Decide it with real cars drawn, not in prose.
+#### Settled: a six-car wheel, and a line of cars under it — Ryan, 2026-08-14
+
+The sparse-then-crowded problem is **answered**, and the answer is better than
+either option that was open. It is not one wheel sized to the archive; it is a
+**fixed-size wheel plus an overflow line**:
+
+- **The wheel holds six cars, and one of them is always the season not yet
+  won** — the top car, faded, reading *"Coming 2027"*. So five champions ride,
+  and the sixth position is the invitation. Six is a `WHEEL_CARS` constant, not
+  a number spread through the drawing code, because the two readings of "no more
+  than like 6" (five champions plus the pending car, or six plus it) differ by
+  one and should cost one edit to change.
+- **A car carries a name and an emblem. No quote** — the wheel is read at a
+  glance from across a Zoom share, and a sentence in a gondola is a sentence
+  nobody reads. ⚠️ Loose end, deliberately named rather than silently left: the
+  admin page still *collects* a champion's line and labels it "shown under the
+  cup", and the archive still stores it. Either the wheel finds a home for it (a
+  car's `title`, or the overflow row) or the admin page stops asking. **An input
+  that collects text nothing displays is the worse of the two.**
+- **The seventh champion does not crowd the wheel — the oldest car comes off
+  it** and joins an **unending line of cars below**, newest first. That is the
+  whole trick: the wheel stays legible forever at six, and *nothing is ever
+  dropped*, because the line is the archive made visible. A student in 2033 sees
+  five recent champions turning above a row that runs back to 2027.
+- **Fading does two jobs.** The pending car is faded because it is unwon —
+  which is exactly what `.trophy.waiting` already does today, so the rule
+  carries over rather than being invented. Cars toward the back of the wheel dim
+  with depth as it turns, which costs one `opacity` on the same transform and is
+  the difference between a wheel and a diagram.
+- **Clicking still turns it**, bringing a year round to the front. With six cars
+  that is decoration rather than navigation — which is the right amount of
+  weight for it, and the reason the overflow line is plain markup and not
+  something you have to spin to reach.
 
 Filed with the rest of the Fair imagery below and deliberately **not built yet**
 — the cup SVG in `records/records.js` is the honest placeholder until it is.
