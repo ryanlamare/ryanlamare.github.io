@@ -216,7 +216,7 @@ Byes, if they ever happen anyway, earn the participation point only.
 planning needed: highest single game, most completed columns, best comeback from
 behind, most improved first-half to second.
 
-### The Hall of Champions — built 2026-08-13
+### The Hall of Champions — built 2026-08-13 (its art is the Ferris Wheel; see *The stats screens*)
 
 A trophy cabinet, one cup per cohort, and **the only place on the site where a
 student chooses what it says**: Ryan asks the champion which emblem they want
@@ -615,11 +615,46 @@ Games archived before 2026-08-14 have neither field and correctly show no card
 rather than a record of zero. It was free because the only games in the archive
 were a demo season; after a real term it would have been a migration.
 
-**The trophy cabinet is a decoration-pass job** (Ryan, 2026-08-14): a proper
-case with large display type over it — *"Trophy Cabinet"* — rather than a grid
-of drawn cups on cream. Filed here with the rest of the Fair imagery below and
-deliberately not built yet; the cabinet's *data* is done and the champion's
-emblem and line already come off the archive.
+### The Ferris Wheel — replaces the trophy cabinet, decoration pass
+
+Ryan floated a proper trophy case with large display type over it, and then
+immediately floated something better (2026-08-14): **not a cabinet at all — the
+Ferris Wheel, with the champions' cars as the trophies.** A champion decorates
+their own car, picking the isotype; **we** pick the colour. The wheel turns when
+you click it, bringing a different year's winner round to the front.
+
+⚖️ **Take this one.** It is the strongest theme idea since the theme itself, for
+a reason worth writing down: the original Ferris Wheel *was* the 1893 Fair — it
+was built for that exposition and is the one structure everybody came to see, so
+it needs no explanation to a student, and it passes the read-aloud test with
+room to spare: *"Every champion gets a car on the Ferris Wheel. It was the thing
+everybody came to Chicago to see, your car is up there with every winner before
+you, and it turns."* No "because the rules say so" anywhere in that. It also
+turns a static shelf into the one screen on the site that rewards *history*
+rather than this week — which is exactly what the archive is for.
+
+**Yes, it is entirely possible, and the data is already done.** `champions()`
+returns every champion with their emblem and line, and `records/isotypes.js`
+already holds the pickable set. It is inline SVG plus one rotation, no library:
+
+- **The cars hang level.** Rotate the hub, then counter-rotate each car by the
+  same angle — which is what a real wheel does, and one CSS custom property per
+  car gets it. Cars that tumble with the rim is the way this looks wrong.
+- **Each car is a real `<button>`** with the champion's name as its accessible
+  name, so clicking to rotate is keyboard-operable for free — and the champions
+  stay a plain list underneath for a screen reader, because a wheel is a picture.
+- **`prefers-reduced-motion` jumps instead of spinning.** One media query, as
+  everywhere else here.
+- ⚠️ **The sparse-then-crowded problem is the one real design question.** One car
+  in year one looks broken; twenty years in it is a bicycle chain. The original
+  wheel carried **36 cars**, so one option is to always draw the full 36 with
+  the unwon ones faint — the same move the cabinet's "To be won" trophy already
+  makes, and it turns the course's whole future into something visibly waiting
+  to be filled. The other is to size the wheel to the champion count with a
+  floor of about eight. Decide it with real cars drawn, not in prose.
+
+Filed with the rest of the Fair imagery below and deliberately **not built yet**
+— the cup SVG in `records/records.js` is the honest placeholder until it is.
 
 The rest of the **Fair imagery is the obvious next seam** (Ryan, 2026-08-12)
 and stays deferred to the achievements-and-decoration pass, once the rules
