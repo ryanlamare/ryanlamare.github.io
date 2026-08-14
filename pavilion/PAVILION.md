@@ -728,6 +728,84 @@ and places zero limits on how far the animations go for everyone else.
 
 ---
 
+## Scoped 2026-08-14, not built: the ninth record, and Boss Battles
+
+### Biggest comeback — the ninth record
+
+⚖️ **Ryan's suggestion, and the right one** (2026-08-14). It is the classic sports
+record, it is already in the honours list above as *Turnaround*, and the eight
+records now on the page are all highs of one number — a comeback is the only one
+that is about the *shape* of a game.
+
+**Name it "Biggest comeback", not "Turnaround."** The same pass that renamed Best
+in Show to Highest score applies: plain English, self-explanatory, no theme word
+where none is needed.
+
+⚠️ **It is the one record that cannot be computed from what is stored, and that
+is the whole of the work.** The other eight read a number off the record.
+A comeback needs the score *during* the game, and:
+
+- `stats.js` imports nothing and no page ever loads the engine — that is a
+  deliberate 17 KB saving, not an accident, and replaying in the browser to draw
+  a records card would throw it away.
+- So it is derived **at write time** in `relay/result.js`, exactly as `cols` and
+  `kinds` now are: walk the move list, and at each month's close record how far
+  behind the leader each seat is. Store the per-seat maximum. The record is then
+  `comeback[winner]`, which `stats.js` reads like any other field.
+- ⚠️ **Do not touch the existing `replay` call to get it.** That call is what
+  makes an archived result unforgeable and what the void path and the state hash
+  hang off. A second walk over a fifty-move list costs microseconds; wrap it in
+  its own try/catch and return zeros if anything is odd, so a new record can
+  never turn a good game into a void one.
+- Scores only move at a month's close, so "behind by 18 at the close of month 3
+  and won" is exactly well defined. Timeouts are excluded (§11), and a draw has
+  no winner to have come back.
+
+Considered and rejected: **shortest game** (a short game is often a bad one),
+**most idle craftspeople** (a low dressed as a record — see *Award names*), and
+**most points in a season** (the standings already say it).
+
+### Boss Battles — students who want to play the instructor
+
+⚖️ **Ryan, 2026-08-14, and it is the challenge ladder above with a much better
+name.** A student who wants a game outside class plays *him*; those games get
+their own records and stay out of the class league.
+
+⚠️ **It is a mode, not a league — and the reason matters.** `config.term` is a
+**single global value**: one term at a time, and every game records under
+whichever one is set. So a `boss` *league* would mean switching the term before a
+challenge and switching it back afterwards, and forgetting once puts a Boss
+Battle in the class table or a class game in Boss Battles. The term is the wrong
+axis for something that happens *during* a term.
+
+The mode is the right axis, and most of it already exists: a game with the
+instructor in it already records as **`exhibition`** and is already excluded from
+the league, the records and the awards. So:
+
+- Add `boss` to `MODES` in `archive.js`.
+- `classify()`: the instructor plus **exactly one** student, two seats → `boss`.
+  The instructor in any other shape — a three-player, two students and him —
+  stays `exhibition`.
+- ⚠️ **Week 1's demo match is instructor-versus-one-student too**, so it would
+  auto-tag as a Boss Battle. That is one click to retag in the admin page, the
+  same machinery the Cup final already uses, and it is the right default: the
+  common case costs nothing and the rare case costs a click. The alternative —
+  requiring a retag for every real Boss Battle — fails the zero-instructor-work
+  rule that the Bulletin is also held to.
+- The board is then pure `stats.js`: who has beaten him and how often, the best
+  score anyone has posted against him, and his own record. Its own section, or a
+  fourth tab.
+- ⚖️ **Boss Battles do not feed the class Record Book.** `RECORD_MODES` stays
+  league-plus-cup. A 94 against the instructor is a fine thing and it is not the
+  class record, because the games are voluntary and nobody plays the same number
+  of them — the same argument that keeps the average record behind a games floor.
+
+The name passes the read-aloud test with nothing left over: *"If you want to play
+me outside class, that's a Boss Battle. It goes on the records, and it doesn't
+touch the league."*
+
+---
+
 ## Other things worth building
 
 - **Instructor live board.** Every breakout room's game and score updating on

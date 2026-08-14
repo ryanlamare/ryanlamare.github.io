@@ -68,17 +68,30 @@
   .status { min-height: 20px; font-size: 13px; color: var(--muted); margin-top: 10px; }
   .status.bad { color: var(--red); }
   .hidden { display: none; }
-  /* The emblem picker shows exactly what the cabinet will show. */
-  .emblems { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* ⚠️ The picker shows the emblem **on a car**, because the Hall of Champions is
+     the Ferris Wheel now and a champion asked which emblem they want should be
+     looking at the thing that will be painted on their gondola. It showed a bare
+     grey glyph on cream — a comment here even claimed it matched the cabinet,
+     which stopped being true the day the cups became cars.
+     The colour is deliberately *not* the season's: that is derived from the term
+     key in records.js and the champion does not choose it, so promising a
+     specific one here would be a second copy of a rule for no gain. */
+  .emblems { display: flex; flex-wrap: wrap; gap: 8px; }
   .emblem-btn {
-    width: 44px; height: 44px; padding: 8px; border: 1px solid var(--line);
-    background: var(--card); border-radius: 8px; color: var(--muted); cursor: pointer;
+    width: 52px; height: 44px; padding: 7px; border: 0;
+    background: var(--ink); border-radius: 7px 7px 10px 10px;
+    color: var(--card); cursor: pointer;
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16);
   }
-  /* Same binding as the cabinet: the deck pictograms paint with --ink/--red,
-     so tie those to the button's own colour or they ignore its state. */
+  /* Same binding as the wheel: the deck pictograms paint with --ink/--red, so
+     tie those to the car's own foreground or they ignore it entirely. */
   .emblem-btn svg { width: 100%; height: 100%; --ink: currentColor; --red: currentColor; --paper: transparent; --t-bg: transparent; }
-  .emblem-btn:hover { border-color: var(--muted); color: var(--ink); }
-  .emblem-btn.on { border-color: var(--ink); background: var(--gold); color: var(--ink); }
+  .emblem-btn:hover { box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 2px var(--muted); }
+  /* Chosen reads as the car at the platform does on the wheel: ringed, not
+     recoloured — a gold fill here would be invisible on the ochre car there. */
+  .emblem-btn.on {
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .16), 0 0 0 2px var(--paper), 0 0 0 4px var(--ink);
+  }
   .sm { font-size: 12.5px; padding: 5px 9px; }
   /* The one section that destroys things, marked so you know before you read. */
   #danger { border-color: var(--red); }
@@ -168,11 +181,11 @@
     <section id="champ-panel">
       <h2>Hall of Champions</h2>
       <p class="note">The winner is worked out from the games — whoever won the last Cup game of the
-        term — so there is nothing to declare here. What you set is what goes on their trophy:
-        ask them which emblem they want and what line they want under it.</p>
+        term — so there is nothing to declare here. What you set is what goes on their car on the
+        Ferris Wheel: ask them which emblem they want and what line they want with it.</p>
       <p class="status" id="champ-who" role="status"></p>
       <div id="champ-form" class="hidden">
-        <label for="champ-quote">Their line (140 characters, shown under the cup)</label>
+        <label for="champ-quote">Their line (140 characters, shown on their car)</label>
         <input id="champ-quote" type="text" maxlength="140" placeholder="Built it one aisle at a time.">
         <label style="margin-top:12px">Their emblem</label>
         <div id="champ-emblems" class="emblems"></div>
