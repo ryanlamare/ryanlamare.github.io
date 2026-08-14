@@ -418,6 +418,17 @@ function recordsPanel() {
 const WHEEL_CARS = 6;
 const PLATFORM = 3; // the seat at the bottom of the rim — where a car is "boarding"
 
+// ⚖️ **The newest champion starts at the bottom** (Ryan, 2026-08-14), not beside
+// the apex. The bottom seat is already the strongest place on the drawing — the
+// A-frame frames it and the platform ring is on it — so the most recent winner
+// should be the one standing in it. The apex keeps the season nobody has won,
+// which puts the year to come at the top and the year just won at the bottom.
+//
+// Champions fill the rim in this order, oldest last: bottom, then round to 8, 10,
+// 2, 4 o'clock, with the apex (0) taken last and only when there is no unwon
+// season to put there.
+const RIDE_ORDER = [3, 4, 5, 1, 2, 0];
+
 function championsPanel() {
   const cabinet = state.champions; // newest first, from the archive
   // The newest season nobody has won yet. There may be none — every season won,
@@ -427,13 +438,15 @@ function championsPanel() {
   const riders = cabinet.slice(0, WHEEL_CARS - (coming ? 1 : 0));
   const siding = cabinet.slice(riders.length);
 
-  const seats = [];
-  if (coming) seats.push({ kind: 'coming', season: coming.season });
-  for (const c of riders) seats.push({ kind: 'champ', c });
   // Unfilled seats are drawn as empty gondolas rather than left as gaps: a wheel
   // missing half its cars reads as broken, and an empty seat reads as one that
   // has not been won yet — the same thing the old "To be won" trophy said.
-  while (seats.length < WHEEL_CARS) seats.push({ kind: 'empty' });
+  const seats = Array.from({ length: WHEEL_CARS }, () => ({ kind: 'empty' }));
+  if (coming) seats[0] = { kind: 'coming', season: coming.season };
+  riders.forEach((c, n) => {
+    const at = RIDE_ORDER.filter((i) => !(coming && i === 0))[n];
+    seats[at] = { kind: 'champ', c };
+  });
 
   return `<div class="wheel-stage">
     <div class="wheel" style="--turn:0deg">
