@@ -127,7 +127,10 @@ def cv_pub_it(rec):
     else:
         title = f'“<span class="lt">{rec["t"]}</span>”'
     v = f' {rec["venue_cv"]}' if rec["venue_cv"] else ""
-    return f"{a}. {title}.{v}"
+    s = f"{a}. {title}.{v}"
+    if rec.get("replication"):
+        s += f' Replication: {rec["replication"].removeprefix("https://")}.'
+    return s
 
 
 def render_cv_body():
@@ -183,13 +186,20 @@ def home_article(rec, indent="      "):
         if rec.get("award")
         else ""
     )
+    repl = (
+        f'\n{indent}  <div><a class="pub-repl" href="{rec["replication"]}" '
+        f'target="_blank" rel="noopener">Replication: '
+        f'{rec["replication"].removeprefix("https://")}</a></div>'
+        if rec.get("replication")
+        else ""
+    )
     return (
         f'{indent}<article class="pub"><div class="pub-year">{rec["y"]}'
         f'<span class="pub-ic" aria-hidden="true"><svg viewBox="0 0 64 64">'
         f'<use href="#{icon}"></use></svg></span></div><div>\n'
         f'{indent}  <div class="pub-title">{title}</div>\n'
         f'{indent}  <div class="pub-authors">{authors_home(rec)}</div>\n'
-        f'{indent}  <div class="pub-venue">{venue_home(rec)}</div>{award}'
+        f'{indent}  <div class="pub-venue">{venue_home(rec)}</div>{repl}{award}'
         f"</div></article>"
     )
 
