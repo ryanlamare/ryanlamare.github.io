@@ -17,6 +17,7 @@ PORT="${1:-8000}"
 
 ip=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "")
 echo "  site      → http://localhost:${PORT}"
+echo "  teaching  → http://localhost:${PORT}/teaching/"
 echo "  template  → http://localhost:${PORT}/teaching/_template/"
 echo "  CV        → http://localhost:${PORT}/cv/"
 [ -n "$ip" ] && echo "  this LAN  → http://${ip}:${PORT}   (phone / projector)"

@@ -100,9 +100,50 @@ After a push, confirm the Action went green; it commits the rebuilt PDF itself.
 ## Teaching decks
 
 Slides are hand-written HTML, one self-contained file per deck, under
-`teaching/<course>/<week>/<lecture|live>/index.html`. There is no framework and
-no build step. **Start a new deck by copying `teaching/_template/`** — it carries
-the real engine and house styles, lifted from the week 6 lecture.
+`teaching/<affiliation>/<course>/<week>/<lecture|live>/index.html`. There is no
+framework and no build step. **Start a new deck by copying `teaching/_template/`**
+— it carries the real engine and house styles, lifted from the week 6 lecture.
+
+**The top level is affiliation, not course** (`lse/`, `illinois/`), because
+keeping the three bodies of work separate is the organising constraint, and it
+has to be visible in the URL. The structure does that job on its own — don't add
+prose explaining the separation.
+
+### The hub
+
+`/teaching/` is a generated index: affiliation → course → weeks. Same pattern as
+the CV, one layer thinner:
+
+```
+teaching_data.py    <-- affiliations, courses, how each reads
+     |
+     |  python3 build_teaching.py          (--check exits non-zero if stale)
+     v
+teaching/index.html                  the affiliation hub
+teaching/<affiliation>/index.html
+teaching/<affiliation>/<course>/index.html   the week list
+```
+
+**Weeks are in no data file.** The builder walks the course directory, finds
+`week<N>/lecture/` and `week<N>/live/`, and takes each deck's name from its own
+`<title>` — so the house title format (`LER 565 · Week 4 — Topic`,
+`… Week 4 Live Session — Topic`) is load-bearing. Add a week folder and it
+appears; there is nowhere else to update. Those four `index.html` files are
+**generated** — editing them by hand works until the next build.
+
+**Only lectures and live sessions are indexed.** Games, quizzes, brackets and
+shortlist rounds stay reachable from inside a live deck during a session, and
+nowhere else. The Rolls-Royce & Partners Finance executive programme
+(`teaching/exec/rrpf/`) is deliberately **unlisted** and deliberately **did not
+move** — no entry in `teaching_data.py` is what keeps it off the hub, and its
+URLs are sent to a client rather than browsed to.
+
+Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
+including the decks. `robots.txt` does **not** disallow the path, and that is on
+purpose — a crawler has to fetch a page to see its noindex, so blocking would
+leave bare URLs indexable instead. The reasoning is written into `robots.txt`
+itself. None of it restricts *access*: while this repo is public, every deck's
+source is on GitHub. Only a private repo changes that.
 
 ### Preview while editing
 

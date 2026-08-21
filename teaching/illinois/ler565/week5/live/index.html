@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>LER 565 · Week 5 Live Session — Information Asymmetries at Work</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--stage-bg);font-family:var(--sans);color:var(--ink);overflow:hidden}
+.viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center;transform:scale(var(--scale,1));}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .40s ease, visibility 0s linear .40s;}
+.slide.active{opacity:1;visibility:visible;transition:opacity .40s ease;}
+@media (prefers-reduced-motion:reduce){.slide,.slide.active{transition:none}}
+
+/* ---------- COVER ---------- */
+.cover{background:var(--ink);color:var(--paper);position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:80px 96px;overflow:hidden}
+.cover .ghost{position:absolute;right:-30px;bottom:-150px;font-family:var(--display);font-weight:900;font-size:560px;line-height:.7;color:var(--red);opacity:.13;pointer-events:none}
+.cover .tag{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.26em;font-size:17px;margin-bottom:26px;position:relative}
+.cover .tag i{display:inline-block;width:12px;height:12px;background:var(--red);margin-right:14px;vertical-align:middle}
+.cover h1{font-family:var(--display);font-weight:900;font-size:168px;line-height:.84;letter-spacing:-.03em;position:relative}
+.cover h1 .r{color:var(--red)}
+.cover .sub{font-family:var(--sans);font-weight:500;font-size:29px;margin-top:30px;max-width:38ch;line-height:1.18;position:relative}
+.cover .strip{display:flex;gap:12px;margin-top:48px;position:relative}
+.cchip{width:58px;height:58px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.cchip .pg{height:54%;width:auto;max-width:80%}
+.cover .byline{position:absolute;bottom:80px;right:96px;font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:15px;color:var(--paper);opacity:.85}
+
+/* ---------- CONTENT shell ---------- */
+.content{background:var(--paper);color:var(--ink);position:absolute;inset:0;padding:72px 96px;overflow:hidden}
+.content .kicker{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.2em;font-size:17px;color:var(--muted);text-align:center}
+.content .kicker i{display:inline-block;width:11px;height:11px;background:var(--red);margin-right:13px;vertical-align:middle}
+.content h2{font-family:var(--sans);font-weight:700;color:var(--red);font-size:58px;line-height:1.05;letter-spacing:-.015em;margin-top:16px;text-align:center}
+.content .mark{position:absolute;top:72px;right:96px;width:118px;height:118px;display:flex;align-items:center;justify-content:center}
+.content .mark .pg{max-width:100%;max-height:100%}
+.content .ghostnum{position:absolute;right:0;bottom:-80px;font-family:var(--display);font-weight:900;font-size:300px;line-height:.7;color:var(--red);opacity:.07;pointer-events:none}
+.content .footer{position:absolute;bottom:56px;left:96px;font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--muted)}
+
+/* bulleted body — lighter live-session default */
+.bodywrap{position:absolute;left:0;right:0;top:236px;bottom:116px;display:flex;align-items:center;justify-content:center}
+ul.body{list-style:none;max-width:780px}
+ul.body li{position:relative;padding-left:34px;font-family:var(--sans);font-weight:500;font-size:27px;line-height:1.4;color:var(--ink);margin-top:22px}
+ul.body li:first-child{margin-top:0}
+ul.body li::before{content:"";position:absolute;left:0;top:.5em;width:13px;height:13px;background:var(--red)}
+ul.body li b{font-weight:700}
+ul.body li .lead{font-weight:700;color:var(--ink)}
+ul.body a{color:var(--red);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+ul.body a:hover{text-decoration:none}
+
+/* numbered tiles (agenda, roadmap) */
+.ntiles{position:absolute;left:96px;right:96px;top:248px;bottom:130px;display:flex;justify-content:center;align-items:stretch;gap:24px}
+.ntile{flex:1;background:var(--card);border:2px solid var(--rule);padding:26px 22px;display:flex;flex-direction:column;gap:14px;justify-content:flex-start}
+.ntile .pn{font-family:var(--display);font-weight:900;font-size:58px;line-height:.78;color:var(--red)}
+.ntile .pl{font-family:var(--sans);font-weight:500;font-size:20px;line-height:1.28;color:var(--ink)}
+.ntiles.six .ntile{padding:22px 16px}
+.ntiles.six .ntile .pn{font-size:50px}
+.ntiles.six .ntile .pl{font-size:17px}
+.ntiles.grid3{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:24px;align-items:stretch}
+.ntiles.grid3 .ntile{padding:24px 26px}
+.ntiles.grid3 .ntile .pn{font-size:54px}
+.ntiles.grid3 .ntile .pl{font-size:21px;line-height:1.26}
+.ntile.now{border-color:var(--red)}
+.ntile.now .pl{color:var(--red);font-weight:700}
+.ntile .now-tag{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--red);margin-top:auto}
+
+/* roles / instruction card (slide 10) */
+.roles{position:absolute;left:96px;right:96px;top:236px;bottom:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:38px}
+.rolerow{display:flex;justify-content:center;gap:96px;align-items:flex-start}
+.role{display:flex;flex-direction:column;align-items:center;gap:22px;width:340px;text-align:center}
+.role .pg{height:128px;width:auto}
+.role .rt{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:23px;color:var(--ink)}
+.role.you .rt{color:var(--red)}
+.role .rd{font-family:var(--sans);font-weight:500;font-size:20px;color:var(--muted);max-width:24ch;line-height:1.35}
+.rnote{font-family:var(--sans);font-weight:500;font-size:22px;color:var(--muted)}
+.rnote b{color:var(--red);font-weight:700}
+
+/* rules card (slide 11) */
+.rules{position:absolute;left:96px;right:96px;top:236px;bottom:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:46px}
+.rulelist{display:flex;flex-direction:column;gap:20px}
+.ruleline{display:flex;align-items:baseline;gap:20px;font-family:var(--sans);font-weight:500;font-size:30px;color:var(--ink);line-height:1.2}
+.ruleline .rn{font-family:var(--display);font-weight:900;font-size:38px;color:var(--red);width:40px;flex:none;text-align:center}
+.ruleline b{font-weight:700}
+.miniline{width:760px;height:54px;overflow:visible}
+.miniline .axis{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.miniline .tick{stroke:var(--ink);stroke-width:2.5}
+.miniline .endlbl{font-family:var(--sans);font-weight:700;font-size:18px;fill:var(--muted)}
+
+/* number-line figures (12,13) + zoomed (14,15) */
+.fig{position:absolute;left:96px;right:96px;top:236px;bottom:116px;display:flex;align-items:center;justify-content:center}
+.numstack{display:flex;flex-direction:column;align-items:center;gap:38px;width:100%}
+.numline{width:100%;max-width:1000px;height:210px;overflow:visible}
+.numline .axis{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.numline .endlbl{font-family:var(--sans);font-weight:700;font-size:22px;fill:var(--muted)}
+.numline .tick{stroke:var(--ink);stroke-width:3}
+.numline .tick.red{stroke:var(--red);stroke-width:4}
+.numline .dot{fill:var(--ink)} .numline .dot.red{fill:var(--red)} .numline .dot.faint{fill:var(--grey)}
+.numline .val{font-family:var(--display);font-weight:900;font-size:40px;fill:var(--ink)}
+.numline .val.red{fill:var(--red)} .numline .val.faint{fill:var(--grey)}
+.numline .vbig{font-family:var(--display);font-weight:900;font-size:104px;fill:var(--red)}
+.numline .sub{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:16px;fill:var(--muted)}
+.numline .band{fill:var(--red);opacity:.16}
+.numline .brace{stroke:var(--red);stroke-width:3;fill:none;stroke-linecap:round}
+.numline .qmark{font-family:var(--display);font-weight:900;font-size:62px;fill:var(--red)}
+.numline .ilbl{font-family:var(--sans);font-weight:700;font-size:20px;fill:var(--ink)}
+.numline .ilbl.red{fill:var(--red)} .numline .ilbl.faint{fill:var(--grey)}
+.numline .ring{fill:none;stroke:var(--red);stroke-width:4}
+.caps{display:flex;flex-direction:column;align-items:center;gap:10px;min-height:64px}
+.capline{font-family:var(--sans);font-weight:500;font-size:23px;line-height:1.35;color:var(--muted);text-align:center;max-width:52ch}
+.capline b{color:var(--red);font-weight:700}
+.cap{font-family:var(--sans);font-weight:500;font-size:23px;line-height:1.4;color:var(--muted);text-align:center;max-width:48ch}
+.cap b{color:var(--red);font-weight:700}
+
+/* Azee figures (17,18) */
+.azee{width:100%;max-width:880px;height:300px;overflow:visible}
+.azee .lbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:17px;fill:var(--muted)}
+.azee .slot{fill:none;stroke:var(--ink);stroke-width:2.5}
+.azee .disc{fill:none;stroke:var(--ink);stroke-width:3}
+.azee .arrow{stroke:var(--red);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hero{display:flex;flex-direction:column;align-items:center;gap:30px}
+.hero .pg{height:230px;width:auto}
+.nextlist{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:6px}
+.nextlist .nl{font-family:var(--sans);font-weight:500;font-size:23px;color:var(--ink);text-align:center}
+.nextlist .nl b{color:var(--red);font-weight:700}
+
+/* pinned due-date note (18,19) */
+.duenote{position:absolute;left:96px;right:96px;bottom:84px;display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--sans);font-weight:500;font-size:18px;color:var(--ink);max-width:700px;margin:0 auto;background:var(--card);border:1.5px solid var(--rule);padding:12px 18px}
+.duenote i{display:inline-block;width:11px;height:11px;background:var(--red);flex:none}
+.duenote b{color:var(--red);font-weight:700}
+
+/* progress ticks */
+.ticks{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:5}
+.tick{width:12px;height:4px;background:var(--rule)}
+.tick.on{background:var(--red);width:24px}
+.ticks.lightticks .tick{background:color-mix(in srgb,var(--paper) 30%,transparent)}
+.ticks.lightticks .tick.on{background:var(--red)}
+
+/* nav + map button */
+.ui{position:fixed;z-index:30;font-family:var(--sans)}
+.nav{bottom:22px;right:26px;display:flex;gap:10px}
+.nav button,.mapbtn{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:12px;background:color-mix(in srgb,var(--paper) 10%,transparent);color:var(--paper);border:1.5px solid color-mix(in srgb,var(--paper) 35%,transparent);padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+.nav button:hover,.mapbtn:hover{background:color-mix(in srgb,var(--red) 90%,transparent);border-color:var(--red)}
+.nav button:focus-visible,.mapbtn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mapbtn{position:fixed;top:22px;right:26px}
+
+/* MAP overlay */
+.map{position:fixed;inset:0;background:var(--stage-bg);z-index:50;display:none;flex-direction:column;padding:54px 64px;overflow:auto}
+.map.open{display:flex}
+.map h3{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.24em;font-size:14px;color:var(--paper);opacity:.7;margin-bottom:8px}
+.map .mtitle{font-family:var(--display);font-weight:900;font-size:46px;color:var(--paper);margin-bottom:30px;letter-spacing:-.02em}
+.map .mtitle .r{color:var(--red)}
+.branch{margin-bottom:26px}
+.branch .blabel{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:12px;color:var(--red);margin-bottom:12px}
+.branch .blabel i{display:inline-block;width:9px;height:9px;background:var(--red);margin-right:9px;vertical-align:middle}
+.thumbs{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.thumb{aspect-ratio:16/9;background:var(--paper);border:1.5px solid color-mix(in srgb,var(--paper) 25%,transparent);cursor:pointer;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:9px;overflow:hidden;transition:border-color .2s,transform .15s}
+.thumb.cov{background:var(--ink)}
+.thumb:hover{border-color:var(--red);transform:translateY(-2px)}
+.thumb .tn{position:absolute;top:7px;left:8px;font-family:var(--display);font-weight:900;font-size:20px;color:var(--rule)}
+.thumb.cov .tn{color:color-mix(in srgb,var(--paper) 40%,transparent)}
+.thumb .tt{font-family:var(--sans);font-weight:700;font-size:10.5px;line-height:1.15;color:var(--red)}
+.thumb.cov .tt{color:var(--paper)}
+.map .close{position:fixed;top:22px;right:26px;background:transparent;border:1.5px solid color-mix(in srgb,var(--paper) 35%,transparent);color:var(--paper);font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:12px;padding:9px 14px;cursor:pointer}
+.map .close:hover{background:var(--red);border-color:var(--red)}
+
+/* step reveal */
+[data-step]{opacity:0;transition:opacity .32s ease}
+[data-step].shown{opacity:1}
+@media (prefers-reduced-motion:reduce){[data-step]{transition:none}}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:normal;border:0}
+
+/* ===== Finalists grid (slide 5) ===== */
+.finals{display:grid;grid-template-columns:1fr 1fr;gap:22px 30px;width:1000px}
+.fcard{background:var(--card);border:2px solid var(--rule);border-left:7px solid var(--cat,var(--red));padding:18px 24px}
+.fcard .fname{font-family:var(--display);font-weight:900;font-size:32px;line-height:1;color:var(--cat,var(--ink))}
+.fcard .farch{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.13em;font-size:12px;color:var(--muted);margin:7px 0 10px}
+.fcard .fline{font-family:var(--sans);font-weight:500;font-size:18.5px;line-height:1.36;color:var(--ink)}
+.fcard .fline b{color:var(--ink);font-weight:700}
+/* dossier link pill (finalists slides) */
+.playlink{position:absolute;left:50%;transform:translateX(-50%);bottom:72px;display:inline-flex;align-items:center;gap:14px;text-decoration:none;background:var(--ink);color:var(--paper);font-family:var(--sans);font-weight:700;font-size:21px;letter-spacing:.01em;padding:14px 28px}
+.playlink .sq{width:15px;height:15px;background:var(--red);flex:none}
+.playlink .u{color:var(--peach);font-weight:500;font-size:15px;text-transform:uppercase;letter-spacing:.14em;margin-left:4px}
+</style>
+</head>
+<body class="">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="im-crowd-grid" viewBox="0 0 116 132"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"></path><circle fill="var(--red,#CE1E32)" cx="52" cy="52" r="5"></circle><path fill="var(--red,#CE1E32)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"></path></symbol>
+  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"></circle><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"></path><rect x="26" y="92" width="12" height="36"></rect><rect x="42" y="92" width="12" height="36"></rect></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"></circle><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"></path><rect x="116" y="92" width="12" height="36"></rect><rect x="132" y="92" width="12" height="36"></rect></g></symbol>
+  <symbol id="im-mask" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M8 22 Q32 15 56 22 Q58 41 43 45 Q35 47 32 40 Q29 47 21 45 Q6 41 8 22 Z"></path><circle fill="var(--paper,#E9E2D2)" cx="21" cy="29" r="5.4"></circle><circle fill="var(--paper,#E9E2D2)" cx="43" cy="29" r="5.4"></circle><circle fill="var(--red,#CE1E32)" cx="21" cy="29" r="2.4"></circle><circle fill="var(--red,#CE1E32)" cx="43" cy="29" r="2.4"></circle></symbol>
+  <symbol id="im-magnifier" viewBox="0 0 64 64"><circle fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" cx="27" cy="27" r="17"></circle><line stroke="var(--ink,#1B1C19)" stroke-width="7" stroke-linecap="round" x1="40" y1="40" x2="55" y2="55"></line><circle fill="var(--red,#CE1E32)" cx="27" cy="27" r="6"></circle></symbol>
+  <symbol id="im-shield" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M32 6 L54 14 V32 Q54 50 32 60 Q10 50 10 32 V14 Z"></path><path fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" d="M22 31 l7 7 l13 -15"></path></symbol>
+  <symbol id="im-sun" viewBox="0 0 64 64"><circle fill="var(--red,#CE1E32)" cx="32" cy="32" r="13"></circle><g stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round"><line x1="32" y1="5" x2="32" y2="14"></line><line x1="32" y1="50" x2="32" y2="59"></line><line x1="5" y1="32" x2="14" y2="32"></line><line x1="50" y1="32" x2="59" y2="32"></line><line x1="12.6" y1="12.6" x2="19" y2="19"></line><line x1="45" y1="45" x2="51.4" y2="51.4"></line><line x1="51.4" y1="12.6" x2="45" y2="19"></line><line x1="19" y1="45" x2="12.6" y2="51.4"></line></g></symbol>
+  <symbol id="im-moon" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M40 7 a26 26 0 1 0 4 51 a21 21 0 0 1 -4 -51 z"></path><circle fill="var(--red,#CE1E32)" cx="49" cy="20" r="3.4"></circle><circle fill="var(--red,#CE1E32)" cx="40" cy="33" r="2.3"></circle></symbol>
+  <symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"></rect><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"></rect><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"></path><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,42 22,29 Z"></path><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,42 59,29 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="18.2" r="4.2"></circle></symbol>
+  <symbol id="im-eye" viewBox="0 0 64 44"><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round" d="M6 22 Q32 2 58 22"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round" d="M6 22 Q32 42 58 22"></path><circle fill="var(--ink,#1B1C19)" cx="32" cy="22" r="9"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="22" r="4.5"></circle></symbol>
+  <symbol id="im-lock" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="15" y="29" width="34" height="27" rx="4"></rect><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" d="M22 29 v-6 a10 10 0 0 1 20 0 v6"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="40" r="4.2"></circle><path fill="var(--red,#CE1E32)" d="M30.4 41 h3.2 l-1 9 h-1.2 z"></path></symbol>
+  <symbol id="im-screen" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="20" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="32" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="44" cy="10" r="3.2"></circle><path fill="var(--ink,#1B1C19)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="59" r="4.2"></circle></symbol>
+  <symbol id="im-fist" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"></rect><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"></rect><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"></rect><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"></line></symbol>
+</svg>
+
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>LER 565, Week 5 Live Session — Information Asymmetries at Work</h1>
+<p>Accessible text version. Each heading below is one slide, in order. Instructor: Ryan Lamare.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 19: Title slide</h2><p>LER 565, Week 5 live session: Information Asymmetries at Work. Instructor: Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 19: Today's Agenda</h2><p>One: a quick recap of this week's content on information asymmetries. Two: the main event, Closed Session, a hidden-information hiring game. Three: Azee match number four to close out the night. Four: nothing is due this week except the Week 5 quiz, due Sunday August 2.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 19: Brief Discussion of Week 5 Content</h2><p>We drop a key assumption from earlier weeks: that both sides have complete information. One side almost always knows more, about effort, risk, quality, or true loyalty. Three devices respond: signaling reveals, jamming conceals, and screening forces it out. When everyone sends the same signal it separates no one, a pooling equilibrium.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 19: Closed Session, the Setup</h2><p>A company is hiring a new team manager, and you are the hiring committee. Everyone plays: twelve to thirteen of us, and we run the whole panel. Roles: Committee Member, Booster times three, Compliance Officer, and Chair. Two phases each round, day and night; I play the Head of HR and run the game.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 19: Meet the Finalists</h2><p>Marcus Cole, the proven performer: elite track record and delivers under pressure, but abrasive with peers. Priya Nair, the people leader: an exceptional developer of people with high trust, but lighter on technical depth. Tom Reilly, the steady hand: dependable all-rounder, solid everywhere, but with no standout strength. Zoe Chen, the fast riser: steep trajectory and fresh playbook, but junior and a flight risk. The candidates are balanced on purpose: the game is about the members, not the finalists.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 19: Role — Committee Member</h2><p>You are an honest member of the search, here in good faith to hire the best candidate. Your job: spot the colleagues with a hidden conflict and get them recused before they take over. You have no special power, just the discussion and your read of people. If I don't private-message you a special role, you are a Committee Member.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 19: Role — Booster</h2><p>By day you look like any other member, but you secretly back one candidate. I will private-message you your candidate and the identities of your fellow Boosters. Each night, jointly file an anonymous conflict report against one honest member, and I stand that member down pending review; they never learn who filed it. You win when Boosters are half the committee; never reveal your true loyalty.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 19: Role — Compliance Officer</h2><p>An honest member who can request a confidential conflict check on a colleague. Each night, name one person and I will tell you their true role. Your read is always accurate, but you can't prove it, and a Booster can claim to be you. Say what you know and you become the next name in a conflict report.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 19: Role — Chair</h2><p>The one member who can vouch for a colleague on the record. Each night, name one person, and your word makes me dismiss any report against them. You may vouch for yourself, but not for the same person two nights in a row. Keeping the Compliance Officer in the room is often your most important job.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 19: The Day</h2><p>Cameras and mics on; everyone introduces themselves before the first session. Each day the committee debates: who deserves the job, and who isn't acting in good faith? Accuse someone of a hidden conflict and the committee votes to refer them for recusal, majority wins. Anyone recused leaves the panel and reveals their true role.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 19: The Night</h2><p>Cameras and mics off; every move happens by private message to me. The Boosters agree on one honest member and file a confidential conflict report. The Compliance Officer requests a conflict check; the Chair vouches for one member. A vouched-for member has the report dismissed; otherwise I stand that member down.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 19: Endgame</h2><p>Rounds continue until one side wins. The committee wins by getting every Booster recused, a clean hire. The Boosters win by reaching half the committee: they railroad their candidate in. Then everyone reveals who they were, and we debrief.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 19: Debrief</h2><p>Committee: what actually counted as proof that someone was a Booster? Compliance Officer: did anyone believe your read, or could a Booster fake it? Boosters: what made your deflections land? Everyone: the conflict channel removed honest people all game, so who was really using it?</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 19: What Was Hidden?</h2><p>You saw colleagues' words, never their true loyalty, and anyone can say the words. Unlike a prisoner's dilemma, the type was hidden, not just the choice. Both types argued alike: a pooling equilibrium you couldn't separate. A perfect read is useless if it can't be credibly shared; talk is cheap.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 19: Back to HR</h2><p>Hidden conflicts run through hiring panels, references, promotions, and performance reviews. Screens try to surface them: disclosure forms, recusal rules, outside reviewers. But every safeguard invites gaming: a check that becomes a target gets played to. This is hidden-motive bias, distinct from the unconscious bias that also skews selection.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 19: Azee Match #4</h2><p>Your fourth Azee match, same five-minute clocks as before. Notice what your tile choices signal to opponents about your plan. When is it worth hiding your intent, or feinting toward a move you won't make? Nothing to submit this week beyond the Week 5 quiz, due Sunday August 2.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 19: Looking Forward to Week 6</h2><p>Our final week: strategic moves, shaping the game before it's played. Commitment and credibility, threats and promises that actually bind. First-mover advantages, reputations, and burning bridges on purpose. This week, just the Week 5 quiz, due Sunday August 2.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 19: Round 2, A Fresh Hire</h2><p>We play twice: same people, brand new roles and a new brief. Reassign every role by private message to new people. Pick the Boosters' candidate at random, a different finalist than Round 1. The new brief: the panel is now hiring an HR Business Partner.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 19: Round 2, Meet the Finalists</h2><p>The Round 2 shortlist for the HR Business Partner role. Dev Malhotra, the analyst, is data-fluent and builds the evidence leaders act on, but is junior for a high-stakes unit. Andre Bello, the insider, is leaned on for judgment and reads politics deftly, but is too close to the leaders he must challenge. Carol Nakamura, the operator, is compliant and audit-clean and has run an integration, but rarely pushes the business. Renata Vossen, the challenger, runs scaled HR and pushes back on leaders, but bulldozes stakeholders. An open-the-dossier link to the Round 2 shortlist is on this slide.</p></section>
+</section>
+
+<button class="mapbtn ui" onclick="openMap()" aria-label="Open slide map">Map &nbsp;☷</button>
+
+<div class="viewport" aria-hidden="true"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">5</div>
+  <div class="tag"><i></i>WEEK 5 &nbsp;·&nbsp; LER 565 &nbsp;·&nbsp; LIVE SESSION</div>
+  <h1>HRM&nbsp;&amp;<br><span class="r">STRATEGY</span></h1>
+  <div class="sub" style="max-width:40ch">Information Asymmetries at Work</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="11" y="40" width="10" height="16"></rect><rect fill="var(--ink,#1B1C19)" x="27" y="29" width="10" height="27"></rect><rect fill="var(--red,#CE1E32)" x="43" y="16" width="10" height="40"></rect></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="11" y="40" width="10" height="16"></rect><rect fill="var(--ink,#1B1C19)" x="27" y="29" width="10" height="27"></rect><rect fill="var(--ink,#1B1C19)" x="43" y="16" width="10" height="40"></rect><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" d="M6 21 L19 31 L31 15 L43 29 L58 13"></path></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="20" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="32" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="44" cy="10" r="3.2"></circle><path fill="var(--ink,#1B1C19)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="59" r="4.2"></circle></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 44"><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round" d="M6 22 Q32 2 58 22"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round" d="M6 22 Q32 42 58 22"></path><circle fill="var(--ink,#1B1C19)" cx="32" cy="22" r="9"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="22" r="4.5"></circle></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="15" y="29" width="34" height="27" rx="4"></rect><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" d="M22 29 v-6 a10 10 0 0 1 20 0 v6"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="40" r="4.2"></circle><path fill="var(--red,#CE1E32)" d="M30.4 41 h3.2 l-1 9 h-1.2 z"></path></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M8 22 Q32 15 56 22 Q58 41 43 45 Q35 47 32 40 Q29 47 21 45 Q6 41 8 22 Z"></path><circle fill="var(--paper,#E9E2D2)" cx="21" cy="29" r="5.4"></circle><circle fill="var(--paper,#E9E2D2)" cx="43" cy="29" r="5.4"></circle><circle fill="var(--red,#CE1E32)" cx="21" cy="29" r="2.4"></circle><circle fill="var(--red,#CE1E32)" cx="43" cy="29" r="2.4"></circle></svg></span>
+  </div>
+  <div class="byline">Ryan Lamare</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>WEEK 5 · TODAY</div>
+  <h2>Today’s Agenda</h2>
+  <div class="ntiles">
+    <div class="ntile"><div class="pn">1</div><div class="pl">A quick recap of this week’s content on information asymmetries</div></div>
+    <div class="ntile"><div class="pn">2</div><div class="pl">The main event: <b>Closed Session</b>, a hidden-information hiring game</div></div>
+    <div class="ntile"><div class="pn">3</div><div class="pl">Then Azee match&nbsp;#4 to close out the night</div></div>
+    <div class="ntile"><div class="pn">4</div><div class="pl">Nothing due except the Week&nbsp;5 quiz — <b>Sun Aug 2</b></div></div>
+  </div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 02 / 19</div><div class="ghostnum">2</div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>WEEK 5 · THIS WEEK’S IDEAS</div>
+  <h2>Brief Discussion of Week 5 Content</h2>
+  <div class="bodywrap"><ul class="body">
+    <li>We drop a key assumption from earlier weeks: that both sides have <b>complete information</b></li>
+    <li>One side almost always knows more — about effort, risk, quality, or <b>true loyalty</b></li>
+    <li>Three devices respond: <b>signaling</b> (reveal), <b>jamming</b> (conceal), <b>screening</b> (force it out)</li>
+    <li>When everyone sends the same signal, it separates no one: a <b>pooling equilibrium</b></li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 03 / 19</div><div class="ghostnum">3</div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION</div>
+  <h2>Closed Session: The Setup</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 116 132"><use href="#im-crowd-grid"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>A company is hiring a new team manager — and <b>you</b> are the hiring committee</li>
+    <li><b>Everyone plays</b> — 11-12 of us, and we run the whole panel</li>
+    <li>Roles: Committee Member, <b>Booster</b> (×3), Compliance Officer, and Chair</li>
+    <li>Two phases each round, <b>day</b> and <b>night</b>; I play the Head of HR and run the game</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 04 / 19</div><div class="ghostnum">4</div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION</div>
+  <h2>Meet the Finalists</h2>
+  <div class="fig" style="top:222px;bottom:176px"><div class="finals">
+    <div class="fcard" style="--cat:var(--terracotta)"><div class="fname">Marcus Cole</div><div class="farch">The Proven Performer</div><div class="fline">Elite track record, delivers under pressure — but <b>abrasive</b> with peers</div></div>
+    <div class="fcard" style="--cat:var(--teal)"><div class="fname">Priya Nair</div><div class="farch">The People Leader</div><div class="fline">Exceptional people leader, high trust — but <b>lighter on technical depth</b></div></div>
+    <div class="fcard" style="--cat:var(--blue)"><div class="fname">Tom Reilly</div><div class="farch">The Steady Hand</div><div class="fline">Dependable all-rounder, solid everywhere — but <b>no standout strength</b></div></div>
+    <div class="fcard" style="--cat:var(--ochre)"><div class="fname">Zoe Chen</div><div class="farch">The Fast Riser</div><div class="fline">Steep trajectory, fresh playbook — but <b>junior and a flight risk</b></div></div>
+  </div></div>
+  <a class="playlink" href="shortlist-r1.html" target="_blank" rel="noopener" tabindex="-1"><span class="sq"></span>Open: The Shortlist<span class="u">Round 1 dossier</span></a>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 05 / 19</div><div class="ghostnum">5</div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>WEEK 5 · ROLE</div>
+  <h2>Committee Member</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>You’re an honest member of the search — here in good faith to hire the best candidate.</li>
+    <li>Your main job: spot the colleagues with a <b>hidden bias</b>&nbsp;and get them <b>recused from the hiring committee</b> before they take over</li>
+    <li>You have no special power — just the discussion and your read of people. Who is manipulating the game to get their preferred candidate hired?</li>
+    <li>If I don’t PM you a special role, you’re a Committee Member</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 06 / 19</div><div class="ghostnum">6</div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>WEEK 5 · ROLE</div>
+  <h2>Booster</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-mask"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>By day you look like any other member — but you <b>secretly back one specific candidate</b></li>
+    <li>I’ll PM you your candidate and the identities of your fellow Boosters</li>
+    <li>Each night, you get to jointly file an <b>anonymous complaint</b> against one honest member — I will force them off the committee per HR complaint rules</li>
+    <li>You win if Boosters are <b>half the committee, </b>but you lose if you get caught — so never reveal your true loyalty!</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 07 / 19</div><div class="ghostnum">7</div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>WEEK 5 · ROLE</div>
+  <h2>Compliance Officer</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-magnifier"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>You are an honest committee member who can request a <b>confidential bias check</b> on a colleague</li>
+    <li>Each night, name one person and I’ll tell you their true role</li>
+    <li>Your read is always accurate — but you <b>can’t prove it</b>, and a Booster can claim to be you</li>
+    <li>Say who you are, and you risk becoming the next name anonymously sent to HR for complaint review</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 08 / 19</div><div class="ghostnum">8</div>
+</section>
+
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>WEEK 5 · ROLE</div>
+  <h2>Chair</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-shield"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>The one member who can <b>vouch</b> for a colleague and overrule any complaint made against them</li>
+    <li>Each night tell me the name of one person; your word makes me <b>dismiss</b> any complaint report filed against them</li>
+    <li>You can’t vouch for the <b>same person</b> two nights in a row — but you may vouch for yourself</li>
+    <li>Keeping the Compliance Officer in the room is often your most important job, if you can spot who they are!</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 09 / 19</div><div class="ghostnum">9</div>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION</div>
+  <h2>The Day</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-sun"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>Cameras and mics <b>ON</b> — everyone introduces themselves before the first session</li>
+    <li>Each day after Day 1, the committee debates: who deserves the job? And most importantly, who <b>isn’t</b> acting in good faith?</li>
+    <li>If you someone of a hidden bias, the committee then&nbsp;<b>votes to recuse them</b>&nbsp;(majority wins)</li>
+    <li>Anyone recused leaves the panel</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 10 / 19</div><div class="ghostnum">10</div>
+</section>
+
+<section class="slide content" data-i="10">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION</div>
+  <h2>The Night</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-moon"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>Cameras and mics <b>OFF</b> — every move happens by private chat</li>
+    <li>The Boosters agree on one honest member and <b>file a conflict report </b>to force that person off the committee</li>
+    <li>The Compliance Officer requests a <b>bias check</b>; the Chair <b>vouches</b> for one member</li>
+    <li>A vouched-for member has the report dismissed; otherwise I am forced to remove them from the committee</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 11 / 19</div><div class="ghostnum">11</div>
+</section>
+
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION</div>
+  <h2>Endgame</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-scales"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>Rounds continue until one side wins</li>
+    <li>The <b>committee</b> wins by getting <b>every Booster recused</b>, and are able to make&nbsp;a clean hire based purely on merit</li>
+    <li>The <b>Boosters</b> win by becoming half the committee: they can then railroad their preferred candidate in</li>
+    <li>Then everyone reveals who they were — and we debrief</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 12 / 19</div><div class="ghostnum">12</div>
+</section>
+
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION</div>
+  <h2>Debrief</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 44"><use href="#im-eye"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li><b>Committee:</b> what actually counted as <b>proof</b> that someone was a Booster?</li>
+    <li><b>Compliance Officer:</b> did anyone believe your read, or could a Booster fake it?</li>
+    <li><b>Boosters:</b> what made your deflections land?</li>
+    <li><b>Everyone:</b> who was the best candidate, and did that make uncovering the hidden bias more difficult?</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 13 / 19</div><div class="ghostnum">13</div>
+</section>
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>WEEK 5 · THE LESSON</div>
+  <h2>What Was Hidden?</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-lock"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>You saw colleagues’ <b>words</b>, never their true loyalty — and anyone can say the words</li>
+    <li>Unlike a prisoner’s dilemma, the <b>bias</b>&nbsp;was hidden, not just the choice</li>
+    <li>Both legitimate and biased members sounded alike: a <b>pooling equilibrium</b> you couldn’t separate</li>
+    <li>A perfect read is useless if it can’t be <b>credibly shared</b> — talk is cheap</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 14 / 19</div><div class="ghostnum">14</div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>WEEK 5 · BACK TO HR</div>
+  <h2>Back to HR</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><use href="#im-screen"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>Hidden conflicts run through hiring panels, references, promotions, and performance reviews</li>
+    <li>Screens try to surface them: <b>disclosure forms, recusal rules, outside reviewers</b></li>
+    <li>But every safeguard invites gaming: it turns into a check that can be targeted and manipulated</li>
+    <li>This is <b>hidden-motive bias</b> — distinct from the unconscious bias that also skews selection</li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 15 / 19</div><div class="ghostnum">15</div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>WEEK 5 · AZEE MATCH #4</div>
+  <h2>Azee Match&nbsp;#4</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 64 64"><rect x="8" y="8" width="22" height="22" rx="3" fill="var(--teal)"></rect><rect x="34" y="8" width="22" height="22" rx="3" fill="var(--terracotta)"></rect><rect x="8" y="34" width="22" height="22" rx="3" fill="var(--ochre)"></rect><rect x="34" y="34" width="22" height="22" rx="3" fill="var(--blue)"></rect></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>Your fourth Azee match — same 5-minute clocks as before</li>
+    <li>Notice what your tile choices <b>signal</b> to opponents about your plan</li>
+    <li>When is it worth <b>hiding your intent</b>, or feinting toward a move you won’t make?</li>
+  </ul></div>
+  <div class="duenote"><i></i><span>Nothing due this week beyond the Week&nbsp;5 quiz — due <b>Sun Aug 2</b></span></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 16 / 19</div><div class="ghostnum">16</div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>WEEK 5 · LOOKING FORWARD</div>
+  <h2>Looking Forward to Week 6</h2>
+  <div class="fig" style="top:200px;bottom:178px"><div class="hero" style="gap:26px">
+    <svg class="pg" viewBox="0 0 64 64" style="height:150px"><use href="#im-fist"></use></svg>
+    <div class="nextlist">
+      <div class="nl">Our final week: <b>strategic moves</b> — shaping the game before it’s played</div>
+      <div class="nl"><b>Commitment and credibility</b> — threats and promises that actually bind</div>
+      <div class="nl">First-mover advantages, reputations, and <b>burning bridges</b> on purpose</div>
+    </div>
+  </div></div>
+  <div class="duenote"><i></i><span>Due <b>Sun Aug 2</b>: the Week 5 quiz</span></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 17 / 19</div><div class="ghostnum">17</div>
+</section>
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION · ROUND 2</div>
+  <h2>Round 2: A Fresh Hire</h2>
+  <div class="mark"><svg class="pg" viewBox="0 0 116 132"><use href="#im-crowd-grid"></use></svg></div>
+  <div class="bodywrap"><ul class="body">
+    <li>We play <b>twice</b> — same people, brand new roles and a new brief</li>
+    <li>Reassign <b>every role</b> by PM to new people</li>
+    <li>A different finalist pool than Round 1, but perhaps the same Boosters, you never know!</li>
+    <li>New brief: the panel is now hiring an <b>HR Business Partner</b></li>
+  </ul></div>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 18 / 19</div><div class="ghostnum">18</div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>WEEK 5 · CLOSED SESSION · ROUND 2</div>
+  <h2>Meet the Finalists</h2>
+  <div class="fig" style="top:222px;bottom:176px"><div class="finals">
+    <div class="fcard" style="--cat:var(--ochre)"><div class="fname">Dev Malhotra</div><div class="farch">The Analyst</div><div class="fline">Data-fluent, builds evidence leaders act on — but <b>junior for a high-stakes unit</b></div></div>
+    <div class="fcard" style="--cat:var(--teal)"><div class="fname">Andre Bello</div><div class="farch">The Insider</div><div class="fline">Leaders lean on his judgment, deft with politics — but <b>too close to challenge them</b></div></div>
+    <div class="fcard" style="--cat:var(--blue)"><div class="fname">Carol Nakamura</div><div class="farch">The Operator</div><div class="fline">Compliant, audit-clean, has run an integration — but <b>rarely pushes the business</b></div></div>
+    <div class="fcard" style="--cat:var(--terracotta)"><div class="fname">Renata Vossen</div><div class="farch">The Challenger</div><div class="fline">Scaled HR, pushes back on leaders — but <b>bulldozes stakeholders</b></div></div>
+  </div></div>
+  <a class="playlink" href="shortlist-r2.html" target="_blank" rel="noopener" tabindex="-1"><span class="sq"></span>Open: The Shortlist<span class="u">Round 2 dossier</span></a>
+  <div class="footer">Ryan Lamare &nbsp;·&nbsp; 19 / 19</div><div class="ghostnum">19</div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick" data-t="0"></span><span class="tick" data-t="1"></span><span class="tick" data-t="2"></span><span class="tick" data-t="3"></span><span class="tick" data-t="4"></span><span class="tick" data-t="5"></span><span class="tick" data-t="6"></span><span class="tick" data-t="7"></span><span class="tick" data-t="8"></span><span class="tick" data-t="9"></span><span class="tick" data-t="10"></span><span class="tick" data-t="11"></span><span class="tick" data-t="12"></span><span class="tick" data-t="13"></span><span class="tick" data-t="14"></span><span class="tick" data-t="15"></span><span class="tick" data-t="16"></span><span class="tick" data-t="17"></span><span class="tick" data-t="18"></span></div>
+<div class="nav ui"><button onclick="prev()" aria-label="Previous slide">‹ Prev</button><button onclick="next()" aria-label="Next slide">Next ›</button></div>
+
+<div class="map" id="map" aria-hidden="true">
+  <button class="close" tabindex="-1" onclick="closeMap()">Close &nbsp;✕</button>
+  <div class="mtitle">LER <span class="r">565</span> · Week 5 Live Session</div>
+  <h3>Press a slide to jump</h3>
+  <div class="branch"><div class="blabel"><i></i>Opening</div><div class="thumbs">
+    <div class="thumb cov" onclick="goto(0);closeMap()"><span class="tn">1</span><span class="tt">Information Asymmetries</span></div>
+    <div class="thumb" onclick="goto(1);closeMap()"><span class="tn">2</span><span class="tt">Today’s Agenda</span></div>
+    <div class="thumb" onclick="goto(2);closeMap()"><span class="tn">3</span><span class="tt">Brief Discussion</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Closed Session · setup</div><div class="thumbs">
+    <div class="thumb" onclick="goto(3);closeMap()"><span class="tn">4</span><span class="tt">The Setup</span></div>
+    <div class="thumb" onclick="goto(4);closeMap()"><span class="tn">5</span><span class="tt">Meet the Finalists</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>The roles</div><div class="thumbs">
+    <div class="thumb" onclick="goto(5);closeMap()"><span class="tn">6</span><span class="tt">Committee Member</span></div>
+    <div class="thumb" onclick="goto(6);closeMap()"><span class="tn">7</span><span class="tt">Booster</span></div>
+    <div class="thumb" onclick="goto(7);closeMap()"><span class="tn">8</span><span class="tt">Compliance Officer</span></div>
+    <div class="thumb" onclick="goto(8);closeMap()"><span class="tn">9</span><span class="tt">Chair</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>How it plays</div><div class="thumbs">
+    <div class="thumb" onclick="goto(9);closeMap()"><span class="tn">10</span><span class="tt">The Day</span></div>
+    <div class="thumb" onclick="goto(10);closeMap()"><span class="tn">11</span><span class="tt">The Night</span></div>
+    <div class="thumb" onclick="goto(11);closeMap()"><span class="tn">12</span><span class="tt">Endgame</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Debrief &amp; lesson</div><div class="thumbs">
+    <div class="thumb" onclick="goto(12);closeMap()"><span class="tn">13</span><span class="tt">Debrief</span></div>
+    <div class="thumb" onclick="goto(13);closeMap()"><span class="tn">14</span><span class="tt">What Was Hidden?</span></div>
+    <div class="thumb" onclick="goto(14);closeMap()"><span class="tn">15</span><span class="tt">Back to HR</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Wrap &amp; next week</div><div class="thumbs">
+    <div class="thumb" onclick="goto(15);closeMap()"><span class="tn">16</span><span class="tt">Azee Match #4</span></div>
+    <div class="thumb" onclick="goto(16);closeMap()"><span class="tn">17</span><span class="tt">Next Week</span></div>
+  </div></div>
+  <div class="branch"><div class="blabel"><i></i>Round 2 (backup)</div><div class="thumbs">
+    <div class="thumb" onclick="goto(17);closeMap()"><span class="tn">18</span><span class="tt">Round 2: Reset</span></div>
+    <div class="thumb" onclick="goto(18);closeMap()"><span class="tn">19</span><span class="tt">Finalists — Round 2</span></div>
+  </div></div>
+</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const ticksEl=document.querySelector('.ticks');
+const built=slides.length;
+let cur=0, step=0;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--scale',s);}
+addEventListener('resize',fit);fit();
+function maxStep(i){const ds=[...slides[i].querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0);return ds.length?Math.max(...ds):0;}
+function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));}
+function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));[...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();}
+function goto(i){if(i<0||i>=built)return;cur=i;step=0;render();}
+function next(){if(step<maxStep(cur)){step++;applySteps();}else if(cur<built-1){cur++;step=0;render();}}
+function prev(){if(step>0){step--;applySteps();}else if(cur>0){cur--;step=maxStep(cur);render();}}
+addEventListener('keydown',e=>{const t=(document.activeElement||{}).tagName,onCtl=(t==='BUTTON'||t==='A');
+if(e.key==='ArrowRight'||e.key==='PageDown'||e.key==='ArrowDown'){next();e.preventDefault();}
+else if(e.key===' '||e.key==='Spacebar'){if(!onCtl){next();e.preventDefault();}}
+else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){prev();e.preventDefault();}
+else if(e.key.toLowerCase()==='o'){toggleMap();}
+else if(e.key==='Escape'){closeMap();}});
+const mapEl=document.getElementById('map');
+function toggleMap(){mapEl.classList.toggle('open');}
+function openMap(){mapEl.classList.add('open');}
+function closeMap(){mapEl.classList.remove('open');}
+render();
+</script>
+<script defer="" src="/edit.js"></script>
+
+
+
+
+</body></html>
