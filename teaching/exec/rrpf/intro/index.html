@@ -1,228 +1,129 @@
 <!doctype html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Applied Game Theory · Module 1 — What Is Game Theory, Anyway?</title>
+<!-- CHECKPOINT SAMPLE — five slides built on the LER 565 week 1 lecture system
+     (CSS and slide grammar copied from teaching/illinois/ler565/week1/lecture/).
+     The rest of the module gets built in this same grammar once approved. -->
 <link rel="stylesheet" href="/brand.css">
 <style>
+.pg .ink{fill:var(--ink)} .pg .red{fill:var(--red)} .pg .fv{fill:var(--f)}
+.pg .ring{fill:none;stroke:var(--ink);stroke-width:4}
+.pg .branch{stroke:var(--ink);stroke-width:3;fill:none}
+.pg .knock{fill:var(--paper)}
+
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--stage-bg);font-family:var(--sans);color:var(--ink);overflow:hidden}
 .viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-.stage{width:1280px;height:720px;position:relative;transform-origin:center center;transform:scale(var(--scale,1))}
-.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .40s ease, visibility 0s linear .40s}
-.slide.active{opacity:1;visibility:visible;transition:opacity .40s ease}
-@media (prefers-reduced-motion: reduce){.slide,.slide.active{transition:none}}
+.stage{width:1280px;height:720px;position:relative;transform-origin:center center;
+  transform:scale(var(--scale,1));}
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;
+  transition:opacity .40s ease, visibility 0s linear .40s;}
+.slide.active{opacity:1;visibility:visible;transition:opacity .40s ease;}
+@media (prefers-reduced-motion: reduce){.slide{transition:none}.slide.active{transition:none}}
 
 /* ---------- COVER ---------- */
-.cover{background:var(--ink);color:var(--paper);position:absolute;inset:0;display:flex;flex-direction:column;
-  justify-content:center;padding:80px 96px;overflow:hidden}
+.cover{background:var(--ink);color:var(--paper);position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;padding:80px 96px;overflow:hidden;position:relative}
 .cover .ghost{position:absolute;right:-30px;bottom:-150px;font-family:var(--display);font-weight:900;
   font-size:560px;line-height:.7;color:var(--red);opacity:.13;pointer-events:none}
-.cover .tag{font-weight:500;text-transform:uppercase;letter-spacing:.26em;font-size:17px;margin-bottom:26px;position:relative}
+.cover .tag{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.26em;
+  font-size:17px;margin-bottom:26px;position:relative}
 .cover .tag i{display:inline-block;width:12px;height:12px;background:var(--red);margin-right:14px;vertical-align:middle}
 .cover h1{font-family:var(--display);font-weight:900;font-size:118px;line-height:.88;letter-spacing:-.03em;position:relative}
 .cover h1 .r{color:var(--red)}
-.cover .sub{font-weight:500;font-size:28px;margin-top:28px;max-width:40ch;line-height:1.2;position:relative}
-.cover .strip{display:flex;gap:12px;margin-top:44px;position:relative}
+.cover .sub{font-family:var(--sans);font-weight:500;font-size:29px;margin-top:30px;max-width:40ch;line-height:1.18;position:relative}
+.cover .strip{display:flex;gap:12px;margin-top:48px;position:relative}
 .cchip{width:58px;height:58px;background:var(--paper);display:flex;align-items:center;justify-content:center}
 .cchip .pg{height:54%;width:auto;max-width:80%}
-.cover .byline{position:absolute;bottom:80px;right:96px;font-weight:500;text-transform:uppercase;
-  letter-spacing:.18em;font-size:15px;color:var(--paper);opacity:.85}
+.cover .byline{position:absolute;bottom:80px;right:96px;font-family:var(--sans);font-weight:500;
+  text-transform:uppercase;letter-spacing:.18em;font-size:15px;color:var(--paper);opacity:.85}
 
 /* ---------- CONTENT ---------- */
 .content{background:var(--paper);color:var(--ink);position:absolute;inset:0;padding:72px 96px;overflow:hidden}
-.content .kicker{font-weight:500;text-transform:uppercase;letter-spacing:.2em;font-size:17px;color:var(--muted);text-align:center}
+.content .kicker{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.2em;
+  font-size:17px;color:var(--muted);text-align:center}
 .content .kicker i{display:inline-block;width:11px;height:11px;background:var(--red);margin-right:13px;vertical-align:middle}
-.content h2{font-weight:700;color:var(--red);font-size:56px;line-height:1.05;letter-spacing:-.015em;margin-top:16px;text-align:center}
-.content h2.tight{font-size:47px}
-/* text slides: title top-left, bullets filling down beneath it — the PPT geometry */
-.content.txt .kicker{text-align:left}
-.content.txt h2{text-align:left;font-size:42px}
-.txtbody{position:absolute;left:96px;right:96px;top:225px;bottom:96px}
-.txtbody .qlist{max-width:60ch}
+.content h2{font-family:var(--sans);font-weight:700;color:var(--red);font-size:58px;line-height:1.05;
+  letter-spacing:-.015em;margin-top:16px;text-align:center}
 .content .ghostnum{position:absolute;right:0;bottom:-80px;font-family:var(--display);font-weight:900;
   font-size:300px;line-height:.7;color:var(--red);opacity:.07;pointer-events:none}
-.content .footer{position:absolute;bottom:56px;left:96px;font-weight:500;text-transform:uppercase;
-  letter-spacing:.12em;font-size:16px;color:var(--muted)}
+.content .footer{position:absolute;bottom:56px;left:96px;font-family:var(--sans);font-weight:500;
+  text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--muted)}
 
-.ticks{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:5}
-.tick{width:10px;height:4px;background:var(--rule)}
-.tick.on{background:var(--red);width:20px}
+/* progress ticks */
+.ticks{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.tick{width:14px;height:4px;background:var(--rule)}
+.tick.on{background:var(--red);width:26px}
 .ticks.lightticks .tick{background:color-mix(in srgb, var(--paper) 30%, transparent)}
 .ticks.lightticks .tick.on{background:var(--red)}
 
+/* nav + map button */
 .ui{position:fixed;z-index:30;font-family:var(--sans)}
 .nav{bottom:22px;right:26px;display:flex;gap:10px}
-.nav button,.mapbtn{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:12px;
-  background:color-mix(in srgb, var(--paper) 10%, transparent);color:var(--paper);
-  border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);padding:9px 14px;cursor:pointer;
-  transition:background .2s,border-color .2s}
+.nav button,.mapbtn{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;
+  font-size:12px;background:color-mix(in srgb, var(--paper) 10%, transparent);color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s}
 .nav button:hover,.mapbtn:hover{background:color-mix(in srgb, var(--red) 90%, transparent);border-color:var(--red)}
 .nav button:focus-visible,.mapbtn:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 .mapbtn{position:fixed;top:22px;right:26px}
-.map{position:fixed;inset:0;background:var(--stage-bg);z-index:50;display:none;flex-direction:column;padding:50px 60px;overflow:auto}
+
+/* MAP overlay */
+.map{position:fixed;inset:0;background:var(--stage-bg);z-index:50;display:none;
+  flex-direction:column;padding:54px 64px;overflow:auto}
 .map.open{display:flex}
-.map h3{font-weight:500;text-transform:uppercase;letter-spacing:.24em;font-size:14px;color:var(--paper);opacity:.7;margin-bottom:8px}
-.map .mtitle{font-family:var(--display);font-weight:900;font-size:44px;color:var(--paper);margin-bottom:26px;letter-spacing:-.02em}
+.map h3{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.24em;
+  font-size:14px;color:var(--paper);opacity:.7;margin-bottom:8px}
+.map .mtitle{font-family:var(--display);font-weight:900;font-size:46px;color:var(--paper);margin-bottom:30px;letter-spacing:-.02em}
 .map .mtitle .r{color:var(--red)}
-.branch{margin-bottom:24px}
-.branch .blabel{font-weight:500;text-transform:uppercase;letter-spacing:.18em;font-size:12px;color:var(--red);margin-bottom:11px}
+.branch{margin-bottom:30px}
+.branch .blabel{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.18em;
+  font-size:12px;color:var(--red);margin-bottom:14px}
 .branch .blabel i{display:inline-block;width:9px;height:9px;background:var(--red);margin-right:9px;vertical-align:middle}
-.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:11px}
-.thumb{aspect-ratio:16/9;background:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 25%, transparent);
-  cursor:pointer;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:8px;overflow:hidden;
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.thumb{aspect-ratio:16/9;background:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 25%, transparent);cursor:pointer;
+  position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;overflow:hidden;
   transition:border-color .2s,transform .15s}
 .thumb.cov{background:var(--ink)}
 .thumb:hover{border-color:var(--red);transform:translateY(-2px)}
-.thumb .tn{position:absolute;top:6px;left:7px;font-family:var(--display);font-weight:900;font-size:19px;color:var(--rule)}
+.thumb .tn{position:absolute;top:8px;left:9px;font-family:var(--display);font-weight:900;font-size:22px;color:var(--rule)}
 .thumb.cov .tn{color:color-mix(in srgb, var(--paper) 40%, transparent)}
-.thumb .tt{font-weight:700;font-size:10px;line-height:1.15;color:var(--red)}
+.thumb .tt{font-family:var(--sans);font-weight:700;font-size:11px;line-height:1.15;color:var(--red)}
 .thumb.cov .tt{color:var(--paper)}
-.map .close{position:fixed;top:22px;right:26px;background:transparent;
-  border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);color:var(--paper);font-family:var(--sans);
-  font-weight:500;text-transform:uppercase;letter-spacing:.12em;font-size:12px;padding:9px 14px;cursor:pointer}
+.map .close{position:fixed;top:22px;right:26px;background:transparent;border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  color:var(--paper);font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.12em;
+  font-size:12px;padding:9px 14px;cursor:pointer}
 .map .close:hover{background:var(--red);border-color:var(--red)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:normal;border:0}
 
-/* ---------- figure stage ---------- */
-.fig{position:absolute;left:96px;right:96px;top:224px;bottom:114px;display:flex;align-items:center;justify-content:center}
-.fig.wide{top:204px;bottom:100px}
-.fig.hi{top:190px;bottom:92px}
-.fig .cap{font-weight:500;font-size:20px;line-height:1.45;color:var(--muted);text-align:center;max-width:62ch}
+/* ---- image-led: pictogram tiles ---- */
+.tiles{position:absolute;left:96px;right:96px;top:280px;display:flex;justify-content:space-between;gap:24px}
+.tile{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:28px}
+.tile .pgwrap{height:120px;display:flex;align-items:flex-end;justify-content:center}
+.tile .pgwrap .pg{height:118px;width:auto;display:block}
+.tile .lbl{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;
+  font-size:18px;line-height:1.25;color:var(--ink);max-width:18ch}
+/* ---- generic figure stage ---- */
+.fig{position:absolute;left:96px;right:96px;top:226px;bottom:116px;display:flex;align-items:center;justify-content:center}
+.fig .cap{font-family:var(--sans);font-weight:500;font-size:21px;line-height:1.4;color:var(--muted);text-align:center;max-width:46ch}
 .fig .cap b{color:var(--ink)}
-.stack{display:flex;flex-direction:column;align-items:center;gap:32px;width:100%}
-
+/* hero figure */
+.hero{display:flex;flex-direction:column;align-items:center;gap:34px}
+.hero .pg{height:296px;width:auto}
+/* photo hero */
+.hero .photo{display:block;max-height:330px;max-width:100%;border:3px solid var(--ink)}
+/* common knowledge labels */
+.cklbl{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;fill:var(--ink)}
+.cklbl.red{fill:var(--red)}
 /* step reveal */
 [data-step]{opacity:0;transition:opacity .32s ease}
 [data-step].shown{opacity:1}
 @media (prefers-reduced-motion: reduce){[data-step]{transition:none}}
 
-/* ---------- tiles / columns ---------- */
-.tiles{display:flex;justify-content:center;gap:30px;width:100%}
-.tile{flex:1;max-width:248px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
-.tile .sub{font-weight:500;font-size:15.5px;line-height:1.4;color:var(--muted);max-width:26ch}
-.tile .bigletter{font-family:var(--display);font-weight:900;font-size:40px;line-height:1;color:var(--red)}
-
-.cols{display:flex;align-items:flex-start;justify-content:center;gap:90px}
-.col{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;width:380px}
-.col .pg{height:110px;width:auto}
-.col .ctitle{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:21px;color:var(--ink)}
-.col .csub{font-weight:500;font-size:17px;color:var(--muted);max-width:30ch;line-height:1.4}
-.stopnote{font-weight:500;font-size:21px;color:var(--muted);display:flex;align-items:flex-start;gap:14px;
-  text-align:left;max-width:66ch;line-height:1.4}
-.stopnote i{width:13px;height:13px;background:var(--red);display:inline-block;flex:none;margin-top:.35em}
-.stopnote b{color:var(--red);font-weight:700}
-
-/* ---------- agenda (loose running order, no clock) ---------- */
-.agenda{display:flex;flex-direction:column;width:100%;max-width:700px}
-.arow{display:grid;grid-template-columns:56px 1fr;gap:20px;align-items:center;padding:13px 0;border-bottom:1px solid var(--rule)}
-.arow:first-child{border-top:2px solid var(--ink)}
-.arow .an{font-family:var(--display);font-weight:900;font-size:26px;line-height:.9;color:var(--red)}
-.arow .al{font-weight:700;font-size:23px;color:var(--ink);line-height:1.2}
-.arow.hot .al{color:var(--red)}
-
-/* ---------- discussion prompt ---------- */
-.prompt{display:flex;flex-direction:column;align-items:center;gap:24px;width:100%}
-.prompt .pgw .pg{height:100px;width:auto}
-.prompt .q{font-weight:700;font-size:32px;line-height:1.28;color:var(--ink);text-align:center;max-width:40ch}
-.prompt .q b{color:var(--red)}
-.qlist{display:flex;flex-direction:column;gap:18px;max-width:56ch}
-.qlist .ql{display:grid;grid-template-columns:26px 1fr;gap:14px;align-items:baseline}
-.qlist .ql i{width:12px;height:12px;background:var(--red);display:block;margin-top:.45em}
-.qlist .ql span{font-weight:500;font-size:23px;line-height:1.36;color:var(--ink)}
-.qlist .ql span b{font-weight:700}
-
-/* ---------- rules ---------- */
-.rules{display:grid;grid-template-columns:1fr 1fr;gap:17px 50px;width:100%;max-width:970px}
-.rule{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:baseline}
-.rule .rn{font-family:var(--display);font-weight:900;font-size:29px;line-height:.9;color:var(--red)}
-.rule .rt{font-weight:500;font-size:18.5px;line-height:1.38;color:var(--ink)}
-.rule .rt b{font-weight:700}
-
-/* ---------- example slide: hero mark beside a blurb ---------- */
-.exrow{display:flex;align-items:center;justify-content:center;gap:56px;width:100%}
-.exrow .exmark .pg{height:172px;width:auto}
-.exblurb{max-width:46ch;display:flex;flex-direction:column;gap:14px}
-.exblurb p{font-weight:500;font-size:20px;line-height:1.48;color:var(--ink)}
-.exblurb p b{font-weight:700}
-
-/* ---------- photos ---------- */
-.photo{display:block;max-width:100%;max-height:100%;border:3px solid var(--ink)}
-.photoright{width:560px;flex:none}
-.photoright img{display:block;width:100%;border:3px solid var(--ink)}
-
-/* ---------- takeaway card (the paradox list) ---------- */
-.take{background:var(--ink);color:var(--paper);padding:34px 44px 36px;width:100%;max-width:1040px}
-.take ol{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:18px 44px}
-.take li{display:grid;grid-template-columns:24px 1fr;gap:13px;align-items:baseline}
-.take li i{width:11px;height:11px;background:var(--red);display:block;margin-top:.4em}
-.take li .t{font-weight:500;font-size:17.5px;line-height:1.32}
-.take li .t b{font-weight:700}
-
-/* ---------- number lines (guessing game) ---------- */
-.numstack{display:flex;flex-direction:column;align-items:center;gap:34px;width:100%}
-.numline{width:100%;max-width:1000px;height:210px;overflow:visible}
-.numline .axis{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
-.numline .endlbl{font-family:var(--sans);font-weight:700;font-size:22px;fill:var(--muted)}
-.numline .tick{stroke:var(--ink);stroke-width:3}
-.numline .tick.red{stroke:var(--red);stroke-width:4}
-.numline .dot{fill:var(--ink)} .numline .dot.red{fill:var(--red)} .numline .dot.faint{fill:var(--grey)}
-.numline .val{font-family:var(--display);font-weight:900;font-size:40px;fill:var(--ink)}
-.numline .val.red{fill:var(--red)} .numline .val.faint{fill:var(--grey)}
-.numline .vbig{font-family:var(--display);font-weight:900;font-size:104px;fill:var(--red)}
-.numline .sub{font-family:var(--sans);font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:16px;fill:var(--muted)}
-.numline .band{fill:var(--red);opacity:.16}
-.numline .brace{stroke:var(--red);stroke-width:3;fill:none;stroke-linecap:round}
-.numline .qmark{font-family:var(--display);font-weight:900;font-size:62px;fill:var(--red)}
-.numline .ilbl{font-family:var(--sans);font-weight:700;font-size:20px;fill:var(--ink)}
-.numline .ilbl.red{fill:var(--red)} .numline .ilbl.faint{fill:var(--grey)}
-.numline .ring{fill:none;stroke:var(--red);stroke-width:4}
-.caps{display:flex;flex-direction:column;align-items:center;gap:10px;min-height:64px}
-.capline{font-weight:500;font-size:23px;line-height:1.35;color:var(--muted);text-align:center;max-width:52ch}
-.capline b{color:var(--red);font-weight:700}
-.miniline{width:100%;max-width:820px;height:54px;overflow:visible;margin-top:6px}
-.miniline .axis{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
-.miniline .tick{stroke:var(--ink);stroke-width:3}
-.miniline .endlbl{font-family:var(--sans);font-weight:700;font-size:18px;fill:var(--muted)}
-
-/* ---------- versus pairs (types of games) ---------- */
-.versus{display:flex;flex-direction:column;width:100%;max-width:880px}
-.vrow{display:grid;grid-template-columns:1fr 74px 1fr;align-items:center;padding:17px 0;border-bottom:1px solid var(--rule)}
-.vrow:first-child{border-top:2px solid var(--ink)}
-.vrow .va{font-weight:700;font-size:22px;color:var(--ink);text-align:right;line-height:1.25}
-.vrow .vb{font-weight:700;font-size:22px;color:var(--ink);text-align:left;line-height:1.25}
-.vrow .vs{font-family:var(--display);font-weight:900;font-size:19px;color:var(--red);text-align:center;text-transform:uppercase}
-.vrow .sm{display:block;font-weight:500;font-size:14.5px;color:var(--muted);letter-spacing:.02em}
-
-/* ---------- clip moment ---------- */
-.clipmo{display:flex;flex-direction:column;align-items:center;gap:26px}
-.clipmo .bigplay{width:112px;height:112px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
-.clipmo .bigplay svg{width:44px;height:44px;margin-left:6px}
-.clipmo .ct{font-weight:700;font-size:30px;color:var(--ink);text-align:center;max-width:44ch;line-height:1.3}
-.clipmo .cs{font-weight:500;font-size:20px;color:var(--muted);text-align:center;max-width:52ch;line-height:1.4}
-
-/* ---------- elimination ladder (two-thirds game) ---------- */
-.chain{display:flex;align-items:flex-start;justify-content:center;width:100%;flex-wrap:nowrap}
-.link{display:flex;flex-direction:column;align-items:center;gap:8px;width:96px}
-.link .lk{font-family:var(--display);font-weight:900;font-size:38px;line-height:1;color:var(--ink)}
-.link.zero .lk{color:var(--red);font-size:52px}
-.link .ls{font-weight:500;font-size:13px;color:var(--muted);text-align:center;line-height:1.3}
-.chain .ar{font-size:30px;color:var(--red);line-height:1;padding-top:6px}
-
-/* ---------- live reveal cells ---------- */
-.bench{display:flex;justify-content:center;width:100%}
-.bcell{flex:1;max-width:306px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
-  padding:0 24px;border-left:1.5px solid var(--rule)}
-.bcell:first-child{border-left:0}
-.bcell .bk{font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:13.5px;color:var(--muted)}
-.bcell .bv{font-family:var(--display);font-weight:900;font-size:80px;line-height:.86;color:var(--ink)}
-.bcell .bv.red{color:var(--red)}
-.bcell .bs{font-weight:500;font-size:16px;line-height:1.4;color:var(--muted);max-width:25ch}
-
-/* ---------- print: one slide per landscape page ---------- */
+/* print: one slide per landscape page */
 @media print{
   @page{size:1280px 720px;margin:0}
   html,body{height:auto!important;overflow:visible!important;background:#fff!important}
@@ -239,505 +140,99 @@ body{background:var(--stage-bg);font-family:var(--sans);color:var(--ink);overflo
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
-  <!-- library marks -->
-  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></symbol>
-  <symbol id="im-lone-player" viewBox="0 0 90 132"><g fill="var(--ink,#1B1C19)"><circle cx="45" cy="20" r="14"/><path d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect x="31" y="92" width="12" height="36"/><rect x="47" y="92" width="12" height="36"/></g></symbol>
-  <symbol id="im-target" viewBox="0 0 64 64"><circle cx="32" cy="32" r="23" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"/><circle cx="32" cy="32" r="13" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"/><circle fill="var(--red,#CE1E32)" cx="32" cy="32" r="5"/></symbol>
-  <symbol id="im-payoff-matrix" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.8"/></symbol>
-  <symbol id="im-payoff-trap" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"/><rect fill="var(--red,#CE1E32)" x="54" y="54" width="40" height="40"/></symbol>
-  <symbol id="im-signal" viewBox="0 0 64 110"><rect fill="var(--ink,#1B1C19)" x="14" y="4" width="36" height="86" rx="8"/><rect fill="var(--ink,#1B1C19)" x="28" y="90" width="8" height="20"/><circle fill="var(--red,#CE1E32)" cx="32" cy="21" r="10"/><circle fill="var(--paper,#E9E2D2)" opacity=".35" cx="32" cy="47" r="10"/><circle fill="#3f7d4e" cx="32" cy="73" r="10"/></symbol>
-  <symbol id="im-goblets" viewBox="0 0 120 84"><g fill="var(--ink,#1B1C19)"><path d="M8 6 h36 v8 a18 18 0 0 1 -36 0 Z"/><rect x="23" y="30" width="6" height="34"/><rect x="12" y="64" width="28" height="7" rx="2"/></g><g fill="var(--red,#CE1E32)"><path d="M76 6 h36 v8 a18 18 0 0 1 -36 0 Z"/><rect x="91" y="30" width="6" height="34"/><rect x="80" y="64" width="28" height="7" rx="2"/></g></symbol>
-  <symbol id="im-two-thirds" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="23"/><path fill="var(--red,#CE1E32)" d="M32 32 L32 9 A23 23 0 1 1 12.1 43.5 Z"/><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper,#E9E2D2)" stroke-width="2.4"/><line x1="32" y1="32" x2="12.1" y2="43.5" stroke="var(--paper,#E9E2D2)" stroke-width="2.4"/></symbol>
-  <symbol id="im-nested" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4"/><circle cx="50" cy="50" r="28" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4"/><circle cx="50" cy="50" r="14" fill="none" stroke="var(--red,#CE1E32)" stroke-width="4"/><circle cx="50" cy="50" r="4.5" fill="var(--red,#CE1E32)"/></symbol>
-</svg>
 
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 1 — What Is Game Theory, Anyway?</h1>
-<p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 23: Title slide</h2><p>Module 1 of Applied Game Theory: What Is Game Theory, Anyway? Common knowledge, best response, and equilibrium. Facilitator: Ryan Lamare.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 23: Roadmap for today's session</h2><p>The roadmap, with no clock attached. A decision or a game; the types of games we'll cover; the first rule of game theory; game number one, I'm Thinking of a Number; the Battle of Wits; game number two, Guess Two-Thirds of the Average; and a closing discussion of where you are already playing games.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 23: A decision or a game?</h2><p>Two figures side by side. A decision involves a unilateral choice made without regard to others' behaviors. A game involves considerations of how the other side will react to the choices made. We care about the games, and we assume three things: everyone has strategies, everyone has payoffs, and everyone is behaving in their own self-interest. Almost every commercial interaction can be structured as a set of strategic games.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 23: The poll</h2><p>What is your familiarity level with game theory as a strategic tool? Four options: A, never heard of it before today. B, heard of it, but never used it. C, I know the basics. D, I know it well. Answered by show of hands.</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 23: The types of games we'll cover</h2><p>Four pairs of game types. Sequential versus simultaneous. Zero-sum versus non-zero-sum. Single play and single opponent versus repeat play and repeat opponent. Fixed rules and complete information versus manipulable rules and incomplete information.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 23: Mixing art and science in game theory</h2><p>Game theory, as a method of strategic thinking, involves a combination of both art and science. The science comes from calculating as many details as possible and quantifying odds or probabilities of success in a given situation. The art comes from an individual's past experiences and instincts for how to behave in a given situation. Good strategic thinkers mix both elements.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 23: Why game theory is so useful — and why it sometimes sucks</h2><p>Two columns. Why it's useful: it's capable of explaining a vast array of human (and non-human!) behaviors. Originally conceived by mathematicians and economists, it was later applied to military strategy, business, psychology, biology and beyond — the application possibilities are seemingly endless. Why it sometimes sucks: there is a cold, mechanistic rigidity to it, especially with payoff matrices. It may work better in theory than it does in practice. Some of the key assumptions are super hard to meet. It may have been sold as too good to be true.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 23: The first rule of game theory — it's not (just) about you!</h2><p>At its core, the game theoretic way of thinking strategically requires that whatever action one side takes must affect the other side, and vice versa. This means that you cannot think one-dimensionally if you want to think strategically. Everything you do has consequences for both you and your opponent. Equally, everything your opponent does has consequences for both you and your opponent. And, you both know this to be true! This can be thought of as the requirement for common knowledge.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 23: Common knowledge and equilibrium</h2><p>The ultimate goal in game theory is usually to identify an equilibrium point. This is the point at which each player is engaging in a strategy that is the player's best response to the strategies of the other players. Keep in mind, there does not have to be only one equilibrium point. Also keep in mind, an equilibrium point won't always be the most optimal solution. But at its core, game theory explores and finds strategies that generate equilibria.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 23: Using common knowledge to find equilibrium</h2><p>A photograph of traffic signals over a road, alongside four lines revealed in turn. I know to stop on red and go on green. You know that I know to stop on red and go on green. So when the light turns green for you, you proceed safely by using common knowledge. And therefore we get a nice equilibrium of stop-and-go traffic.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 23: Except sometimes game theory sucks</h2><p>The same photograph, now cropped close on the signals — and every one of them is showing red and green lit at the same time. Look a little closer at the traffic lights. You can actually file lawsuits over this equilibrium failure.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 23: Game theory gets weird — here are some paradoxes</h2><p>Eight paradoxes. It's better to be third than to be first or second. The leader can be best served by imitating the follower. The best way to succeed is often to let your competitors do well. You can give yourself more power when your hands are tied. The best way to play a game may be to not play at all. You're frequently better off by refusing to do what your incentives are telling you. Instability and unpredictability can be better for you than consistency. You can usually say a whole lot by saying nothing at all.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 23: Game number one, I'm Thinking of a Number — the rules</h2><p>A number line from 1 to 100. Six rules. I'm thinking of a number between 1 and 100. Everyone plays: you each get five guesses, one per round. You lock each guess in privately, and after each round you'll learn whether your guess was too high or too low. Scoring by speed: find my number in round one for 10 points, round two for 8, then 6, 4, 2. No conferring: this one is every player for themselves. Your goal is to find my number as fast as you can!</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 23: How to guess the number</h2><p>A number line from 1 to 100 showing the divide-and-conquer strategy: the most efficient first guess is 50, then 25 or 75 depending on the answer, dividing the remaining range in half each time toward the answer.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 23: Except…</h2><p>The same number line with a narrow band highlighted between 44 and 49, and a question mark above it. Dividing and conquering narrows you to 44 to 49. But we're not in a vacuum, and I'm strategic too. So what's the right answer?</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 23: I am strategic, too!</h2><p>A zoomed number line from 43 to 50. Anyone who read the first chapter of the pre-read would say 48 — that's the textbook answer. But I'm the one who suggested that book, so I know you've read it. Maybe 47 or 49 is "more clever". And so I picked something more clever still: 46, shown ringed in red.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 23: Lessons from the number game</h2><p>Four lessons. Of course, you already know to always put yourself in the other person's shoes! But also know that people are not random in their strategies. You might know something, but I know that you know it — and you should know that I know that you know it, and I should know that you know that I know that you know it, and so on! A good strategist must always be thinking multidimensionally.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 23: The Battle of Wits</h2><p>A clip moment: the battle of wits from The Princess Bride, played on the room's screen.</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 23: The Battle of Wits as game theory</h2><p>Five observations. Technically, this is a zero-sum game: who is right, and who is dead. Vizzini uses common knowledge: I know that you, so I can clearly not choose. Vizzini also tries to change the rules of the game: what in the world is that?! Westley and Vizzini both believe they have information the other doesn't have, but it turns out only one of them actually has asymmetric information. So the equilibrium in this game is that Westley will always beat Vizzini.</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 23: Game number two, Guess Two-Thirds of the Average — the rules</h2><p>Six rules. Pick any whole number between 0 and 100. Lock it in privately — you get exactly one number. The person whose number is closest to two-thirds of the room's average wins. A worked example: if three people guessed 5, 25 and 60, the average is 30, and two-thirds of 30 is 20, so 25 wins. Remember, you already know the correct answer, but so does everybody else! This one is scored too: the closest guess takes the points.</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 23: Finding the Nash equilibrium in the two-thirds game</h2><p>An elimination ladder from 100 down to 0, revealed step by step: 100, 67, 45, 30, 20, 13, 9, dot dot dot, 0. How do we solve this game? Remember common knowledge and the successive elimination of inferior strategies. Let's say everyone guessed 100 — then you should guess two-thirds of 100, which is 67, so we can eliminate 68 or above. But if nobody will play above 67, your winning strategy should be two-thirds of that: 45. And so on, ruling out everything above 30, 20, 13, 9 — all the way down to 0, which is the Nash equilibrium. So, all of those who answered 0 got it right… or did they??</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 23: So who won?</h2><p>Three cells to be filled in live: the room's average, two-thirds of that average, and the closest guess, which wins ten points. But also, shout out to anyone who said 0, the equilibrium answer!</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 23: Where are you already playing games?</h2><p>Closing discussion. Which of your regular interactions is really a game rather than a decision? Who are the other players, and what are their payoffs?</p></section>
+<p>Accessible text version of a five-slide sample. Each heading below is one slide, in order.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 5: Title slide</h2><p>Module 1 of Applied Game Theory: What Is Game Theory, Anyway? Facilitator: Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 5: This module</h2><p>Four pictogram tiles: the first rule of game theory; game number one, I'm Thinking of a Number; the Battle of Wits; game number two, Guess Two-Thirds of the Average.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 5: It's not (just) about you!</h2><p>A figure of two people, You and Them, each with a thought bubble containing the other. Caption: whatever you do affects both sides, whatever they do affects both sides, and you both know it. This is the common knowledge requirement.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 5: Using common knowledge to find equilibrium</h2><p>A photograph of traffic signals over a busy road. Caption, revealed in two beats: I know to stop on red and go on green, and you know that I know it. So we get a nice equilibrium of stop-and-go traffic.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 5: Except sometimes game theory sucks</h2><p>The same photograph cropped close on the signals, and every one of them shows red and green lit at the same time. Caption: you can actually file lawsuits over this equilibrium failure.</p></section>
 </section>
 
-<button class="mapbtn ui" onclick="openMap()" aria-label="Open slide map">Map &nbsp;&#9783;</button>
+<button class="mapbtn ui" aria-label="Open slide map" onclick="openMap()">Map ▦</button>
 <div class="viewport" aria-hidden="true"><div class="stage">
 
 <section class="slide cover active" data-i="0">
-  <div class="ghost">1</div>
-  <div class="tag"><i></i>MODULE 1 &nbsp;&middot;&nbsp; APPLIED GAME THEORY</div>
+  <div class="tag"><i></i>MODULE 1 &nbsp;·&nbsp; APPLIED GAME THEORY</div>
   <h1 data-edit>WHAT IS <span class="r">GAME THEORY</span>, ANYWAY?</h1>
   <div class="sub" data-edit>Common Knowledge, Best Response, and Equilibrium</div>
   <div class="strip">
-    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-target"/></svg></span>
-    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></span>
-    <span class="cchip"><svg class="pg" viewBox="0 0 64 110"><use href="#im-signal"/></svg></span>
-    <span class="cchip"><svg class="pg" viewBox="0 0 120 84"><use href="#im-goblets"/></svg></span>
-    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-two-thirds"/></svg></span>
-    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><use href="#im-payoff-matrix"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><rect class="ink" x="6" y="6" width="40" height="40"/><rect class="ink" x="54" y="6" width="40" height="40"/><rect class="ink" x="6" y="54" width="40" height="40"/><rect class="ink" x="54" y="54" width="40" height="40"/><rect x="59" y="59" width="30" height="30" fill="none" stroke="var(--red)" stroke-width="4"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 110"><rect class="ink" x="14" y="4" width="36" height="86" rx="8"/><rect class="ink" x="28" y="90" width="8" height="20"/><circle class="knock" opacity=".35" cx="32" cy="21" r="10"/><circle class="knock" opacity=".35" cx="32" cy="47" r="10"/><circle class="red" cx="32" cy="73" r="10"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 120 84"><g class="ink"><path d="M8 6 h36 v8 a18 18 0 0 1 -36 0 Z"/><rect x="23" y="30" width="6" height="34"/><rect x="12" y="64" width="28" height="7" rx="2"/></g><g class="red"><path d="M76 6 h36 v8 a18 18 0 0 1 -36 0 Z"/><rect x="91" y="30" width="6" height="34"/><rect x="80" y="64" width="28" height="7" rx="2"/></g></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><circle class="ink" cx="32" cy="32" r="23"/><path class="red" d="M32 32 L32 9 A23 23 0 1 1 12.1 43.5 Z"/><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper)" stroke-width="2.4"/><line x1="32" y1="32" x2="12.1" y2="43.5" stroke="var(--paper)" stroke-width="2.4"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><rect class="ink" x="30" y="17" width="4" height="33"/><rect class="ink" x="8" y="16" width="48" height="4.4" rx="1"/><path class="ink" d="M21,50 L43,50 L48,59 L16,59 Z"/><rect class="ink" x="12.2" y="20" width="2.6" height="9"/><path class="ink" d="M5,29 Q13.5,42 22,29 Z"/><rect class="ink" x="49.2" y="20" width="2.6" height="9"/><path class="ink" d="M42,29 Q50.5,42 59,29 Z"/><circle class="red" cx="32" cy="18.2" r="4.2"/></svg></span>
   </div>
   <div class="byline">Ryan Lamare</div>
+  <div class="ghost">1</div>
 </section>
 
 <section class="slide content" data-i="1">
-  <div class="kicker"><i></i>MODULE 1 &middot; ROADMAP</div>
-  <h2>Roadmap for Today&rsquo;s Session</h2>
-  <div class="fig wide"><div class="agenda">
-    <div class="arow"><span class="an">1</span><span class="al" data-edit>A decision or a game?</span></div>
-    <div class="arow"><span class="an">2</span><span class="al" data-edit>The types of games we&rsquo;ll cover</span></div>
-    <div class="arow"><span class="an">3</span><span class="al" data-edit>The first rule of game theory</span></div>
-    <div class="arow hot"><span class="an">4</span><span class="al" data-edit>Game #1: I&rsquo;m thinking of a number</span></div>
-    <div class="arow"><span class="an">5</span><span class="al" data-edit>The Battle of Wits</span></div>
-    <div class="arow hot"><span class="an">6</span><span class="al" data-edit>Game #2: Guess &frac23; of the average</span></div>
-    <div class="arow"><span class="an">7</span><span class="al" data-edit>Where are you already playing games?</span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 02 / 23</div><div class="ghostnum">2</div>
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>This Module</h2>
+  <div class="tiles">
+    <div class="tile"><div class="pgwrap"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></div><div class="lbl" data-edit>The first rule of game theory</div></div>
+    <div class="tile"><div class="pgwrap"><svg class="pg" viewBox="0 0 140 64"><line x1="10" y1="40" x2="120" y2="40" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><line x1="10" y1="31" x2="10" y2="49" stroke="var(--ink)" stroke-width="3"/><line x1="120" y1="31" x2="120" y2="49" stroke="var(--ink)" stroke-width="3"/><circle class="red" cx="76" cy="40" r="8"/><text x="10" y="20" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:15px;fill:var(--muted)">1</text><text x="120" y="20" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:15px;fill:var(--muted)">100</text></svg></div><div class="lbl" data-edit>Game #1: I&rsquo;m thinking of a number</div></div>
+    <div class="tile"><div class="pgwrap"><svg class="pg" viewBox="0 0 120 84"><g class="ink"><path d="M8 6 h36 v8 a18 18 0 0 1 -36 0 Z"/><rect x="23" y="30" width="6" height="34"/><rect x="12" y="64" width="28" height="7" rx="2"/></g><g class="red"><path d="M76 6 h36 v8 a18 18 0 0 1 -36 0 Z"/><rect x="91" y="30" width="6" height="34"/><rect x="80" y="64" width="28" height="7" rx="2"/></g></svg></div><div class="lbl" data-edit>The Battle of Wits</div></div>
+    <div class="tile"><div class="pgwrap"><svg class="pg" viewBox="0 0 64 64"><circle class="ink" cx="32" cy="32" r="23"/><path class="red" d="M32 32 L32 9 A23 23 0 1 1 12.1 43.5 Z"/><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper)" stroke-width="2.4"/><line x1="32" y1="32" x2="12.1" y2="43.5" stroke="var(--paper)" stroke-width="2.4"/></svg></div><div class="lbl" data-edit>Game #2: Guess &frac23; of the average</div></div>
+  </div>
+  <div class="footer" data-edit>Ryan Lamare &nbsp;·&nbsp; 02 / 05</div>
+  <div class="ghostnum">2</div>
 </section>
 
 <section class="slide content" data-i="2">
-  <div class="kicker"><i></i>BACKGROUND ASSUMPTIONS</div>
-  <h2>A Decision or a Game?</h2>
-  <div class="fig"><div class="stack" style="gap:30px">
-    <div class="cols">
-      <div class="col"><div class="ctitle" data-edit>A decision</div>
-        <svg class="pg" viewBox="0 0 90 132"><use href="#im-lone-player"/></svg>
-        <div class="csub" data-edit>A unilateral choice, made <b style="color:var(--ink)">without regard to others&rsquo; behaviors</b>.</div></div>
-      <div class="col"><div class="ctitle" data-edit>A game</div>
-        <svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg>
-        <div class="csub" data-edit>A choice that considers <b style="color:var(--ink)">how the other side will react</b> to the choices made.</div></div>
-    </div>
-    <div class="stopnote"><i></i><span data-edit>Almost every commercial interaction can be structured as a game. We care about the games, and we assume that <b>everyone has strategies</b>, everyone has payoffs, and everyone is behaving in their own self-interest.</span></div>
+  <div class="kicker"><i></i>MODULE 1 · THE FIRST RULE</div>
+  <h2>It&rsquo;s Not (Just) About You!</h2>
+  <div class="fig"><div class="hero"><svg class="pg" viewBox="0 0 760 380"><ellipse cx="200" cy="78" rx="92" ry="52" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.5"/><g transform="translate(184.7,52) scale(0.34)"><circle class="red" cx="45" cy="20" r="14"/><path class="red" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect class="red" x="31" y="92" width="12" height="36"/><rect class="red" x="47" y="92" width="12" height="36"/></g><circle cx="200" cy="136" r="5" fill="var(--ink)"/><circle cx="193" cy="150" r="3.6" fill="var(--ink)"/><circle cx="187" cy="161" r="2.6" fill="var(--ink)"/><ellipse cx="560" cy="78" rx="92" ry="52" fill="var(--paper)" stroke="var(--ink)" stroke-width="2.5"/><g transform="translate(544.7,52) scale(0.34)"><circle class="ink" cx="45" cy="20" r="14"/><path class="ink" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect class="ink" x="31" y="92" width="12" height="36"/><rect class="ink" x="47" y="92" width="12" height="36"/></g><circle cx="560" cy="136" r="5" fill="var(--ink)"/><circle cx="553" cy="150" r="3.6" fill="var(--ink)"/><circle cx="547" cy="161" r="2.6" fill="var(--ink)"/><g transform="translate(155.0,172) scale(1.0)"><circle class="ink" cx="45" cy="20" r="14"/><path class="ink" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect class="ink" x="31" y="92" width="12" height="36"/><rect class="ink" x="47" y="92" width="12" height="36"/></g><g transform="translate(515.0,172) scale(1.0)"><circle class="red" cx="45" cy="20" r="14"/><path class="red" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect class="red" x="31" y="92" width="12" height="36"/><rect class="red" x="47" y="92" width="12" height="36"/></g><text class="cklbl" x="200" y="332" text-anchor="middle">You</text><text class="cklbl red" x="560" y="332" text-anchor="middle">Them</text></svg>
+  <div class="cap" data-edit>Whatever you do affects both sides, and whatever they do affects both sides. <b>And you both know it.</b> This is the requirement for common knowledge.</div>
   </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 03 / 23</div><div class="ghostnum">3</div>
+  <div class="footer" data-edit>Ryan Lamare &nbsp;·&nbsp; 03 / 05</div>
+  <div class="ghostnum">3</div>
 </section>
 
-<!-- RRPF-SLOT: poll wording — adjust the four options once we know the group's prior exposure -->
 <section class="slide content" data-i="3">
-  <div class="kicker"><i></i>A QUICK POLL</div>
-  <h2 class="tight">What Is Your Familiarity With Game Theory as a Strategic Tool?</h2>
-  <div class="fig"><div class="stack" style="gap:34px">
-    <div class="tiles" style="max-width:1060px">
-      <div class="tile"><div class="bigletter">A</div>
-        <div class="sub" style="font-size:17px;color:var(--ink)" data-edit>Never heard of it before today</div></div>
-      <div class="tile"><div class="bigletter">B</div>
-        <div class="sub" style="font-size:17px;color:var(--ink)" data-edit>Heard of it, but never used it</div></div>
-      <div class="tile"><div class="bigletter">C</div>
-        <div class="sub" style="font-size:17px;color:var(--ink)" data-edit>I know the basics</div></div>
-      <div class="tile"><div class="bigletter">D</div>
-        <div class="sub" style="font-size:17px;color:var(--ink)" data-edit>I know it well</div></div>
-    </div>
+  <div class="kicker"><i></i>MODULE 1 · A TYPICAL EXAMPLE</div>
+  <h2 style="font-size:47px">Using Common Knowledge to Find Equilibrium</h2>
+  <div class="fig"><div class="hero" style="gap:26px">
+    <img class="photo" src="traffic.jpg" alt="">
+    <div class="cap" data-edit>I know to stop on red and go on green, and you know that I know it. So we get a nice <b>equilibrium</b> of stop/go traffic&hellip;</div>
   </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 04 / 23</div><div class="ghostnum">4</div>
+  <div class="footer" data-edit>Ryan Lamare &nbsp;·&nbsp; 04 / 05</div>
+  <div class="ghostnum">4</div>
 </section>
 
 <section class="slide content" data-i="4">
-  <div class="kicker"><i></i>MODULE 1</div>
-  <h2>The Types of Games We&rsquo;ll Cover</h2>
-  <div class="fig wide"><div class="versus">
-    <div class="vrow"><span class="va" data-edit>Sequential</span><span class="vs">vs</span><span class="vb" data-edit>Simultaneous</span></div>
-    <div class="vrow"><span class="va" data-edit>Zero-sum</span><span class="vs">vs</span><span class="vb" data-edit>Non-zero-sum</span></div>
-    <div class="vrow"><span class="va" data-edit>Single play <span class="sm">single opponent</span></span><span class="vs">vs</span><span class="vb" data-edit>Repeat play <span class="sm">repeat opponent</span></span></div>
-    <div class="vrow"><span class="va" data-edit>Fixed rules <span class="sm">complete information</span></span><span class="vs">vs</span><span class="vb" data-edit>Manipulable rules <span class="sm">incomplete information</span></span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 05 / 23</div><div class="ghostnum">5</div>
-</section>
-
-<section class="slide content" data-i="5">
-  <div class="kicker"><i></i>MODULE 1</div>
-  <h2 class="tight">Mixing Art and Science in Game Theory</h2>
-  <div class="fig"><div class="stack" style="gap:34px">
-    <div class="cols" style="gap:70px">
-      <div class="col" style="width:410px"><div class="ctitle" data-edit>The science</div>
-        <svg class="pg" viewBox="0 0 100 100" style="height:84px"><use href="#im-payoff-matrix"/></svg>
-        <div class="csub" style="max-width:34ch" data-edit>Calculating as many details as possible, and quantifying the odds or probabilities of success in a given situation.</div></div>
-      <div class="col" style="width:410px"><div class="ctitle" data-edit>The art</div>
-        <svg class="pg" viewBox="0 0 100 100" style="height:84px"><use href="#im-nested"/></svg>
-        <div class="csub" style="max-width:34ch" data-edit>Your past experiences, and your instincts for how to behave in a given situation.</div></div>
-    </div>
-    <div class="stopnote"><i></i><span data-edit><b>Good strategic thinkers mix both elements.</b></span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 06 / 23</div><div class="ghostnum">6</div>
-</section>
-
-<section class="slide content" data-i="6">
-  <div class="kicker"><i></i>MODULE 1</div>
-  <h2 class="tight">Why Game Theory Is So Useful&hellip; and Why It Sometimes Sucks</h2>
-  <div class="fig"><div class="cols" style="gap:70px">
-    <div class="col" style="width:430px"><div class="ctitle" data-edit>Why it&rsquo;s so useful&hellip;</div>
-      <svg class="pg" viewBox="0 0 64 64" style="height:80px"><use href="#im-target"/></svg>
-      <div class="csub" style="max-width:36ch" data-edit>It&rsquo;s capable of explaining a vast array of human (and non-human!) behaviors. Conceived by mathematicians and economists, then applied to military strategy, business, psychology, biology&hellip; <b style="color:var(--ink)">the application possibilities are seemingly endless!</b></div></div>
-    <div class="col" style="width:430px"><div class="ctitle" data-edit>&hellip;and why it sometimes sucks</div>
-      <svg class="pg" viewBox="0 0 100 100" style="height:80px"><use href="#im-payoff-trap"/></svg>
-      <div class="csub" style="max-width:36ch" data-edit>There is a cold, mechanistic rigidity to it (especially with payoff matrices). It may work better in theory than it does in practice. Some of the key assumptions are super hard to meet. <b style="color:var(--ink)">It may have been sold as too good to be true!</b></div></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 07 / 23</div><div class="ghostnum">7</div>
-</section>
-
-<section class="slide content txt" data-i="7">
-  <div class="kicker"><i></i>RULE #1 &middot; COMMON KNOWLEDGE</div>
-  <h2>The First Rule of Game Theory: It&rsquo;s Not (Just) About You!</h2>
-  <div class="txtbody"><div class="qlist">
-    <div class="ql"><i></i><span data-edit>Whatever action one side takes <b>must affect the other side</b>, and vice versa.</span></div>
-    <div class="ql" data-step="1"><i></i><span data-edit>This means you <b>cannot think one-dimensionally</b> if you want to think strategically.</span></div>
-    <div class="ql" data-step="2"><i></i><span data-edit>Everything you do has consequences for both you and your opponent.</span></div>
-    <div class="ql" data-step="3"><i></i><span data-edit>Equally, everything your opponent does has consequences for both you and your opponent.</span></div>
-    <div class="ql" data-step="4"><i></i><span data-edit>AND&hellip; <b>you both know this to be true!</b> This can be thought of as the requirement for <b>common knowledge</b>.</span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 08 / 23</div><div class="ghostnum">8</div>
-</section>
-
-<section class="slide content txt" data-i="8">
-  <div class="kicker"><i></i>RULE #1 &middot; EQUILIBRIUM</div>
-  <h2>Common Knowledge and Equilibrium</h2>
-  <div class="txtbody"><div class="qlist">
-    <div class="ql"><i></i><span data-edit>The ultimate goal in game theory is usually to identify an <b>equilibrium point</b>.</span></div>
-    <div class="ql"><i></i><span data-edit>This is the point at which each player&rsquo;s strategy is that player&rsquo;s <b>best response</b> to the strategies of the other players.</span></div>
-    <div class="ql" data-step="1"><i></i><span data-edit>Keep in mind, there does not have to be <b>only one</b> equilibrium point!</span></div>
-    <div class="ql" data-step="2"><i></i><span data-edit>Also keep in mind, an equilibrium point <b>won&rsquo;t always be the most optimal solution!</b></span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 09 / 23</div><div class="ghostnum">9</div>
-</section>
-
-<section class="slide content" data-i="9">
-  <div class="kicker"><i></i>A TYPICAL EXAMPLE</div>
-  <h2 class="tight">Using Common Knowledge to Find Equilibrium</h2>
-  <div class="fig"><div class="exrow" style="gap:56px">
-    <div class="photoright"><img src="traffic.jpg" alt=""></div>
-    <div class="qlist" style="max-width:40ch;gap:15px">
-      <div class="ql"><i></i><span data-edit>I know to <b>stop on red and go on green</b>.</span></div>
-      <div class="ql" data-step="1"><i></i><span data-edit>You know that <b>I know</b> to stop on red and go on green.</span></div>
-      <div class="ql" data-step="2"><i></i><span data-edit>So when the light turns green for you, you proceed safely, <b>by using common knowledge</b>.</span></div>
-      <div class="ql" data-step="3"><i></i><span data-edit>And therefore we get a nice <b>equilibrium</b> of stop/go traffic&hellip;</span></div>
-    </div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 10 / 23</div><div class="ghostnum">10</div>
-</section>
-
-<section class="slide content" data-i="10">
-  <div class="kicker"><i></i>A TYPICAL EXAMPLE &middot; A CLOSER LOOK</div>
+  <div class="kicker"><i></i>MODULE 1 · LOOK A LITTLE CLOSER</div>
   <h2>&hellip;Except Sometimes Game Theory Sucks</h2>
-  <div class="fig hi"><div class="stack" style="gap:24px">
-    <img class="photo" src="traffic-close.jpg" alt="" style="max-height:330px">
-    <div class="qlist" style="max-width:60ch;gap:12px">
-      <div class="ql"><i></i><span data-edit><b>Look a little closer</b> at the traffic lights.</span></div>
-      <div class="ql" data-step="1"><i></i><span data-edit>You can actually <b>file lawsuits</b> over this equilibrium failure.</span></div>
-    </div>
+  <div class="fig"><div class="hero" style="gap:26px">
+    <img class="photo" src="traffic-close.jpg" alt="">
+    <div class="cap" data-step="1" data-edit>You can actually <b>file lawsuits</b> over this equilibrium failure.</div>
   </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 11 / 23</div><div class="ghostnum">11</div>
-</section>
-
-<section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 1</div>
-  <h2 class="tight">Game Theory Gets Weird. Here Are Some Paradoxes</h2>
-  <div class="fig wide"><div class="take">
-    <ol>
-      <li><i></i><span class="t" data-edit>It&rsquo;s better to be <b>third</b> than to be first or second.</span></li>
-      <li><i></i><span class="t" data-edit>The leader can be best served by <b>imitating the follower</b>.</span></li>
-      <li><i></i><span class="t" data-edit>The best way to succeed is often to <b>let your competitors do well</b>.</span></li>
-      <li><i></i><span class="t" data-edit>You can give yourself <b>more power when your hands are tied</b>.</span></li>
-      <li><i></i><span class="t" data-edit>The best way to play a game may be to <b>not play at all</b>.</span></li>
-      <li><i></i><span class="t" data-edit>You&rsquo;re frequently better off by <b>refusing to do what your incentives are telling you</b>.</span></li>
-      <li><i></i><span class="t" data-edit><b>Instability and unpredictability</b> can be better for you than consistency.</span></li>
-      <li><i></i><span class="t" data-edit>You can usually <b>say a whole lot by saying nothing at all</b>.</span></li>
-    </ol>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 12 / 23</div><div class="ghostnum">12</div>
-</section>
-
-<!-- SCORING (draft): all-play, scored by speed. Found in round 1 = 10 pts, R2 = 8, R3 = 6, R4 = 4, R5 = 2, not found = 0.
-     Tier 1: paper slips per round, honesty scored at the end. Tier 3: phone page gives private higher/lower per player
-     (never ship the number to the client — the check happens server-side / in the room). -->
-<section class="slide content" data-i="12">
-  <div class="kicker"><i></i>GAME #1 &middot; SCORED</div>
-  <h2>Let&rsquo;s Play: I&rsquo;m Thinking of a Number</h2>
-  <div class="fig wide"><div class="stack" style="gap:28px">
-    <div class="rules">
-      <div class="rule"><span class="rn">1</span><span class="rt" data-edit>I&rsquo;m thinking of a number <b>between 1 and 100</b>.</span></div>
-      <div class="rule"><span class="rn">2</span><span class="rt" data-edit><b>Everyone plays.</b> You get five guesses, one per round.</span></div>
-      <div class="rule"><span class="rn">3</span><span class="rt" data-edit><b>Lock each guess in privately.</b> After each round, you&rsquo;ll learn whether your guess was too high or too low.</span></div>
-      <div class="rule"><span class="rn">4</span><span class="rt" data-edit><b>Scoring by speed:</b> find my number in round one for 10 points, round two for 8, then 6, 4, 2.</span></div>
-      <div class="rule"><span class="rn">5</span><span class="rt" data-edit><b>No conferring.</b> This one is every player for themselves.</span></div>
-      <div class="rule"><span class="rn">6</span><span class="rt" data-edit><b>Your goal is to find my number as fast as you can!</b></span></div>
-    </div>
-    <svg class="miniline" viewBox="0 0 800 54">
-      <line class="axis" x1="40" y1="30" x2="760" y2="30"></line>
-      <line class="tick" x1="40" y1="22" x2="40" y2="38"></line>
-      <line class="tick" x1="760" y1="22" x2="760" y2="38"></line>
-      <text class="endlbl" x="40" y="14" text-anchor="middle">1</text>
-      <text class="endlbl" x="760" y="14" text-anchor="middle">100</text>
-    </svg>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 13 / 23</div><div class="ghostnum">13</div>
-</section>
-
-<section class="slide content" data-i="13">
-  <div class="kicker"><i></i>GAME #1 &middot; DIVIDE AND CONQUER</div>
-  <h2>How to Guess the Number</h2>
-  <div class="fig"><div class="numstack">
-    <svg class="numline" viewBox="0 0 1000 200">
-      <line class="axis" x1="60" y1="120" x2="940" y2="120"></line>
-      <line class="tick" x1="60" y1="108" x2="60" y2="132"></line>
-      <line class="tick" x1="940" y1="108" x2="940" y2="132"></line>
-      <text class="endlbl" x="60" y="162" text-anchor="middle">1</text>
-      <text class="endlbl" x="940" y="162" text-anchor="middle">100</text>
-      <g data-step="1">
-        <line class="tick red" x1="495.5" y1="96" x2="495.5" y2="144"></line>
-        <circle class="dot red" cx="495.5" cy="120" r="9"></circle>
-        <text class="val red" x="495.5" y="74" text-anchor="middle">50</text>
-        <text class="sub" x="495.5" y="184" text-anchor="middle">1st guess</text>
-      </g>
-      <g data-step="2">
-        <line class="tick" x1="273.3" y1="102" x2="273.3" y2="138"></line>
-        <circle class="dot" cx="273.3" cy="120" r="8"></circle>
-        <text class="val" x="273.3" y="80" text-anchor="middle">25</text>
-        <text class="sub" x="273.3" y="184" text-anchor="middle">2nd guess</text>
-        <line class="tick" x1="717.8" y1="102" x2="717.8" y2="138"></line>
-        <circle class="dot" cx="717.8" cy="120" r="8"></circle>
-        <text class="val" x="717.8" y="80" text-anchor="middle">75</text>
-        <text class="sub" x="717.8" y="184" text-anchor="middle">2nd guess</text>
-      </g>
-    </svg>
-    <div class="cap" data-edit>The most efficient first guess is <b>50</b>, and then <b>25 or 75</b>. Keep dividing and conquering toward the answer.</div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 14 / 23</div><div class="ghostnum">14</div>
-</section>
-
-<section class="slide content" data-i="14">
-  <div class="kicker"><i></i>GAME #1</div>
-  <h2>Except&hellip;</h2>
-  <div class="fig"><div class="numstack">
-    <svg class="numline" viewBox="0 0 1000 200">
-      <line class="axis" x1="60" y1="120" x2="940" y2="120"></line>
-      <line class="tick" x1="60" y1="108" x2="60" y2="132"></line>
-      <line class="tick" x1="940" y1="108" x2="940" y2="132"></line>
-      <text class="endlbl" x="60" y="162" text-anchor="middle">1</text>
-      <text class="endlbl" x="940" y="162" text-anchor="middle">100</text>
-      <g data-step="1">
-        <rect class="band" x="442" y="104" width="45" height="32"></rect>
-        <path class="brace" d="M442 150 v8 h45 v-8"></path>
-        <text class="ilbl red" x="464.5" y="182" text-anchor="middle">44&ndash;49</text>
-      </g>
-      <text class="qmark" data-step="2" x="464.5" y="78" text-anchor="middle">?</text>
-    </svg>
-    <div class="cap" data-edit>Dividing and conquering narrows you to <b>44&ndash;49</b>. But we&rsquo;re not in a vacuum, and <b>I&rsquo;m strategic too</b>. So what&rsquo;s the right answer?</div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 15 / 23</div><div class="ghostnum">15</div>
-</section>
-
-<section class="slide content" data-i="15">
-  <div class="kicker"><i></i>GAME #1 &middot; LEVELS OF REASONING</div>
-  <h2>I Am Strategic, Too!</h2>
-  <div class="fig"><div class="numstack" style="gap:24px">
-    <svg class="numline" viewBox="0 0 1000 250" style="height:250px">
-      <line class="axis" x1="140" y1="170" x2="860" y2="170"></line>
-      <g>
-        <line class="tick" x1="140" y1="160" x2="140" y2="180"></line><text class="ilbl faint" x="140" y="206" text-anchor="middle">43</text>
-        <line class="tick" x1="242.9" y1="160" x2="242.9" y2="180"></line><text class="ilbl faint" x="242.9" y="206" text-anchor="middle">44</text>
-        <line class="tick" x1="345.7" y1="160" x2="345.7" y2="180"></line><text class="ilbl faint" x="345.7" y="206" text-anchor="middle">45</text>
-        <line class="tick" x1="448.6" y1="160" x2="448.6" y2="180"></line><text class="ilbl red" x="448.6" y="206" text-anchor="middle" data-step="2">46</text>
-        <line class="tick" x1="551.4" y1="160" x2="551.4" y2="180"></line><text class="ilbl faint" x="551.4" y="206" text-anchor="middle">47</text>
-        <line class="tick" x1="654.3" y1="160" x2="654.3" y2="180"></line><text class="ilbl faint" x="654.3" y="206" text-anchor="middle">48</text>
-        <line class="tick" x1="757.1" y1="160" x2="757.1" y2="180"></line><text class="ilbl faint" x="757.1" y="206" text-anchor="middle">49</text>
-        <line class="tick" x1="860" y1="160" x2="860" y2="180"></line><text class="ilbl faint" x="860" y="206" text-anchor="middle">50</text>
-      </g>
-      <g>
-        <circle class="dot red" cx="654.3" cy="170" r="9"></circle>
-        <text class="val red" x="654.3" y="132" text-anchor="middle">48</text>
-      </g>
-      <g data-step="1">
-        <circle class="dot" cx="551.4" cy="170" r="8"></circle>
-        <text class="val" x="551.4" y="132" text-anchor="middle">47</text>
-        <circle class="dot" cx="757.1" cy="170" r="8"></circle>
-        <text class="val" x="757.1" y="132" text-anchor="middle">49</text>
-      </g>
-      <g data-step="2">
-        <line class="tick red" x1="448.6" y1="142" x2="448.6" y2="198"></line>
-        <circle class="dot red" cx="448.6" cy="170" r="11"></circle>
-        <circle class="ring" cx="448.6" cy="170" r="22"></circle>
-        <text class="vbig" x="448.6" y="112" text-anchor="middle">46</text>
-      </g>
-    </svg>
-    <div class="caps">
-      <div class="capline" data-edit>Anyone who read the first chapter of the pre-read would say <b>48</b>. That&rsquo;s the textbook answer.</div>
-      <div class="capline" data-step="1" data-edit>But I&rsquo;m the one who suggested that book, so I know you&rsquo;ve read it. Maybe <b>47 or 49</b> is &lsquo;more clever&rsquo;&hellip;</div>
-      <div class="capline" data-step="2" data-edit>&hellip;so I picked something more clever still: <b>46</b>.</div>
-    </div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 16 / 23</div><div class="ghostnum">16</div>
-</section>
-
-<section class="slide content" data-i="16">
-  <div class="kicker"><i></i>GAME #1 &middot; THE LESSONS</div>
-  <h2 class="tight">Lessons From the &ldquo;I&rsquo;m Thinking of a Number&rdquo; Game</h2>
-  <div class="fig"><div class="exrow" style="gap:70px">
-    <div class="exmark"><svg class="pg" viewBox="0 0 100 100" style="height:160px"><use href="#im-nested"/></svg></div>
-    <div class="qlist" style="max-width:48ch">
-      <div class="ql"><i></i><span data-edit>Of course, you already know to always <b>put yourself in the other person&rsquo;s shoes!</b></span></div>
-      <div class="ql"><i></i><span data-edit>But also know that <b>people are not random</b> in their strategies.</span></div>
-      <div class="ql"><i></i><span data-edit>You might know something, but <b>I know that you know it!</b> And you should know that I know that you know it! And I should know that you know that I know that you kn&hellip;!</span></div>
-      <div class="ql"><i></i><span data-edit>A good strategist must always be thinking <b>multidimensionally</b>.</span></div>
-    </div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 17 / 23</div><div class="ghostnum">17</div>
-</section>
-
-<!-- CLIP-LINK: The Princess Bride battle of wits — drop the streaming URL in here if we want a phone link;
-     otherwise it plays from the podium as usual -->
-<section class="slide content" data-i="17">
-  <div class="kicker"><i></i>MEDIA &middot; THE PRINCESS BRIDE</div>
-  <h2 class="tight">Westley and Vizzini Think Strategically</h2>
-  <div class="fig"><div class="clipmo">
-    <div class="bigplay"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1 L11 6 L2 11 Z" fill="var(--paper)"/></svg></div>
-    <div class="ct" data-edit>The battle of wits from <i>The Princess Bride</i>.</div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 18 / 23</div><div class="ghostnum">18</div>
-</section>
-
-<section class="slide content txt" data-i="18">
-  <div class="kicker"><i></i>MEDIA &middot; THE DEBRIEF</div>
-  <h2>The Battle of Wits as Game Theory</h2>
-  <div class="txtbody"><div class="qlist" style="gap:15px">
-    <div class="ql"><i></i><span data-edit>Technically, this is a <b>zero-sum game</b> (&ldquo;Who is right, and who is dead&rdquo;).</span></div>
-    <div class="ql" data-step="1"><i></i><span data-edit>Vizzini uses <b>common knowledge</b> (&ldquo;I know that you&hellip; so I can clearly not choose&hellip;&rdquo;).</span></div>
-    <div class="ql" data-step="2"><i></i><span data-edit>Vizzini also tries to <b>change the rules of the game</b> (&ldquo;What in the world is that?!&rdquo;).</span></div>
-    <div class="ql" data-step="3"><i></i><span data-edit>Westley and Vizzini both believe they have information the other doesn&rsquo;t have. But it turns out, <b>only one of them actually has asymmetric information!</b></span></div>
-    <div class="ql" data-step="4"><i></i><span data-edit>So the equilibrium in this game is that <b>Westley will always beat Vizzini</b>.</span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 19 / 23</div><div class="ghostnum">19</div>
-</section>
-
-<!-- SCORING (draft): one submission each; closest to 2/3 of the room average scores 10 pts, resolved right here
-     in the module. Spoken shout-out (no points) for anyone on 0, the equilibrium answer.
-     Tier 1: paper slips, tallied during the Battle of Wits beat. Tier 3: phone submit, histogram on the reveal slide. -->
-<section class="slide content" data-i="19">
-  <div class="kicker"><i></i>GAME #2 &middot; SCORED</div>
-  <h2>Guess Two-Thirds of the Average</h2>
-  <div class="fig wide"><div class="rules">
-    <div class="rule"><span class="rn">1</span><span class="rt" data-edit>Pick any whole number <b>between 0 and 100</b>.</span></div>
-    <div class="rule"><span class="rn">2</span><span class="rt" data-edit><b>Lock it in privately.</b> You get exactly one number.</span></div>
-    <div class="rule"><span class="rn">3</span><span class="rt" data-edit>The person whose number is <b>closest to two-thirds of the room&rsquo;s average</b> wins.</span></div>
-    <div class="rule"><span class="rn">4</span><span class="rt" data-edit><b>Example:</b> three players guess 5, 25 and 60. The average is 30, and two-thirds of 30 is 20, so <b>25 wins</b>.</span></div>
-    <div class="rule"><span class="rn">5</span><span class="rt" data-edit>Remember, <b>you already know the correct answer!</b> But so does everybody else!</span></div>
-    <div class="rule"><span class="rn">6</span><span class="rt" data-edit><b>This one is scored too.</b> The closest guess takes the points.</span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 20 / 23</div><div class="ghostnum">20</div>
-</section>
-
-<section class="slide content" data-i="20">
-  <div class="kicker"><i></i>GAME #2 &middot; SOLVING IT</div>
-  <h2 class="tight">Finding the Nash Equilibrium in the Two-Thirds Game</h2>
-  <div class="fig"><div class="stack" style="gap:36px">
-    <div class="chain">
-      <div class="link"><span class="lk" data-edit>100</span><span class="ls" data-edit>Say everyone guessed 100&hellip;</span></div>
-      <span class="ar">&rarr;</span>
-      <div class="link"><span class="lk" data-edit>67</span><span class="ls" data-edit>&hellip;so guess &frac23; of it, and rule out 68+</span></div>
-      <span class="ar" data-step="1">&rarr;</span>
-      <div class="link" data-step="1"><span class="lk" data-edit>45</span><span class="ls" data-edit>If nobody plays above 67&hellip;</span></div>
-      <span class="ar" data-step="2">&rarr;</span>
-      <div class="link" data-step="2"><span class="lk" data-edit>30</span></div>
-      <span class="ar" data-step="2">&rarr;</span>
-      <div class="link" data-step="2"><span class="lk" data-edit>20</span></div>
-      <span class="ar" data-step="2">&rarr;</span>
-      <div class="link" data-step="2"><span class="lk" data-edit>13</span></div>
-      <span class="ar" data-step="2">&rarr;</span>
-      <div class="link" data-step="2"><span class="lk" data-edit>9</span><span class="ls" data-edit>&hellip;and so on&hellip;</span></div>
-      <span class="ar" data-step="3">&rarr;</span>
-      <div class="link zero" data-step="3"><span class="lk" data-edit>0</span><span class="ls" data-edit>the Nash equilibrium</span></div>
-    </div>
-    <div class="stopnote"><i></i><span data-edit>Remember <b>common knowledge</b> and the successive elimination of inferior strategies. So, all of those who answered 0 got it right&hellip; <b>or did they??</b></span></div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 21 / 23</div><div class="ghostnum">21</div>
-</section>
-
-<section class="slide content" data-i="21">
-  <div class="kicker"><i></i>GAME #2 &middot; THE REVEAL</div>
-  <h2>So Who Won?</h2>
-  <div class="fig"><div class="stack" style="gap:30px">
-    <div class="bench">
-      <div class="bcell"><span class="bk" data-edit>The room&rsquo;s average</span><span class="bv" data-edit>?</span></div>
-      <div class="bcell" data-step="1"><span class="bk" data-edit>Two-thirds of the average</span><span class="bv red" data-edit>?</span></div>
-      <div class="bcell" data-step="2"><span class="bk" data-edit>Closest guess wins ten points</span><span class="bv red" data-edit>?</span></div>
-    </div>
-    <div class="cap" data-step="3" data-edit>But also, shout out to anyone who said <b>0</b> (the equilibrium answer)!</div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 22 / 23</div><div class="ghostnum">22</div>
-</section>
-
-<!-- RRPF-SLOT: discussion seeds — swap the sub-questions for their sales and negotiation contexts once known -->
-<section class="slide content" data-i="22">
-  <div class="kicker"><i></i>DISCUSSION</div>
-  <h2 class="tight">Where Are You Already Playing Games?</h2>
-  <div class="fig"><div class="prompt">
-    <div class="pgw"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></div>
-    <div class="q" data-edit>Which of your regular interactions is really <b>a game rather than a decision</b>? Who are the other players, and what are their payoffs?</div>
-  </div></div>
-  <div class="footer" data-edit>Ryan Lamare &nbsp;&middot;&nbsp; 23 / 23</div><div class="ghostnum">23</div>
+  <div class="footer" data-edit>Ryan Lamare &nbsp;·&nbsp; 05 / 05</div>
+  <div class="ghostnum">5</div>
 </section>
 
 </div></div>
 
-<div class="ticks"><span class="tick" data-t="0"></span><span class="tick" data-t="1"></span><span class="tick" data-t="2"></span><span class="tick" data-t="3"></span><span class="tick" data-t="4"></span><span class="tick" data-t="5"></span><span class="tick" data-t="6"></span><span class="tick" data-t="7"></span><span class="tick" data-t="8"></span><span class="tick" data-t="9"></span><span class="tick" data-t="10"></span><span class="tick" data-t="11"></span><span class="tick" data-t="12"></span><span class="tick" data-t="13"></span><span class="tick" data-t="14"></span><span class="tick" data-t="15"></span><span class="tick" data-t="16"></span><span class="tick" data-t="17"></span><span class="tick" data-t="18"></span><span class="tick" data-t="19"></span><span class="tick" data-t="20"></span><span class="tick" data-t="21"></span><span class="tick" data-t="22"></span></div>
-<div class="nav ui"><button onclick="prev()" aria-label="Previous slide">&lsaquo; Prev</button><button onclick="next()" aria-label="Next slide">Next &rsaquo;</button></div>
+<div class="ticks"><span class="tick" data-t="0"></span><span class="tick" data-t="1"></span><span class="tick" data-t="2"></span><span class="tick" data-t="3"></span><span class="tick" data-t="4"></span></div>
+<div class="nav ui" role="navigation" aria-label="Slide navigation">
+  <button onclick="prev()" aria-label="Previous slide">‹ Prev</button>
+  <button onclick="next()" aria-label="Next slide">Next ›</button>
+</div>
 
 <div class="map" id="map" aria-hidden="true">
-  <button class="close" tabindex="-1" onclick="closeMap()">Close &nbsp;&#10005;</button>
-  <div class="mtitle">Module <span class="r">1</span> · What Is Game Theory, Anyway?</div><h3>Press a slide to jump</h3>
-  <div class="branch"><div class="blabel"><i></i>Opening</div><div class="thumbs">
+  <button class="close" tabindex="-1" onclick="closeMap()">Close &nbsp;✕</button>
+  <div class="mtitle">Module <span class="r">1</span> · Sample</div>
+  <h3>Deck map — press a slide to jump</h3>
+  <div class="branch"><div class="blabel"><i></i>Checkpoint sample</div><div class="thumbs">
     <div class="thumb cov" onclick="goto(0);closeMap()"><span class="tn">1</span><span class="tt">What Is Game Theory, Anyway?</span></div>
-    <div class="thumb" onclick="goto(1);closeMap()"><span class="tn">2</span><span class="tt">Roadmap for Today&rsquo;s Session</span></div>
-  </div></div>
-  <div class="branch"><div class="blabel"><i></i>1 &middot; The mindset</div><div class="thumbs">
-    <div class="thumb" onclick="goto(2);closeMap()"><span class="tn">3</span><span class="tt">A Decision or a Game?</span></div>
-    <div class="thumb" onclick="goto(3);closeMap()"><span class="tn">4</span><span class="tt">The Poll</span></div>
-    <div class="thumb" onclick="goto(4);closeMap()"><span class="tn">5</span><span class="tt">The Types of Games We&rsquo;ll Cover</span></div>
-    <div class="thumb" onclick="goto(5);closeMap()"><span class="tn">6</span><span class="tt">Mixing Art and Science</span></div>
-    <div class="thumb" onclick="goto(6);closeMap()"><span class="tn">7</span><span class="tt">Useful&hellip; and It Sometimes Sucks</span></div>
-  </div></div>
-  <div class="branch"><div class="blabel"><i></i>2 &middot; Rule #1</div><div class="thumbs">
-    <div class="thumb" onclick="goto(7);closeMap()"><span class="tn">8</span><span class="tt">It&rsquo;s Not (Just) About You!</span></div>
-    <div class="thumb" onclick="goto(8);closeMap()"><span class="tn">9</span><span class="tt">Common Knowledge &amp; Equilibrium</span></div>
-    <div class="thumb" onclick="goto(9);closeMap()"><span class="tn">10</span><span class="tt">The Traffic Lights</span></div>
-    <div class="thumb" onclick="goto(10);closeMap()"><span class="tn">11</span><span class="tt">&hellip;Except Sometimes GT Sucks</span></div>
-    <div class="thumb" onclick="goto(11);closeMap()"><span class="tn">12</span><span class="tt">Here Are Some Paradoxes</span></div>
-  </div></div>
-  <div class="branch"><div class="blabel"><i></i>3 &middot; Game #1</div><div class="thumbs">
-    <div class="thumb" onclick="goto(12);closeMap()"><span class="tn">13</span><span class="tt">I&rsquo;m Thinking of a Number</span></div>
-    <div class="thumb" onclick="goto(13);closeMap()"><span class="tn">14</span><span class="tt">How to Guess the Number</span></div>
-    <div class="thumb" onclick="goto(14);closeMap()"><span class="tn">15</span><span class="tt">Except&hellip;</span></div>
-    <div class="thumb" onclick="goto(15);closeMap()"><span class="tn">16</span><span class="tt">I Am Strategic, Too!</span></div>
-    <div class="thumb" onclick="goto(16);closeMap()"><span class="tn">17</span><span class="tt">Lessons From the Number Game</span></div>
-  </div></div>
-  <div class="branch"><div class="blabel"><i></i>4 &middot; The Battle of Wits</div><div class="thumbs">
-    <div class="thumb" onclick="goto(17);closeMap()"><span class="tn">18</span><span class="tt">Westley and Vizzini</span></div>
-    <div class="thumb" onclick="goto(18);closeMap()"><span class="tn">19</span><span class="tt">The Battle of Wits as Game Theory</span></div>
-  </div></div>
-  <div class="branch"><div class="blabel"><i></i>5 &middot; Game #2</div><div class="thumbs">
-    <div class="thumb" onclick="goto(19);closeMap()"><span class="tn">20</span><span class="tt">Guess &frac23; of the Average</span></div>
-    <div class="thumb" onclick="goto(20);closeMap()"><span class="tn">21</span><span class="tt">Finding the Nash Equilibrium</span></div>
-    <div class="thumb" onclick="goto(21);closeMap()"><span class="tn">22</span><span class="tt">So Who Won?</span></div>
-  </div></div>
-  <div class="branch"><div class="blabel"><i></i>6 &middot; Close</div><div class="thumbs">
-    <div class="thumb" onclick="goto(22);closeMap()"><span class="tn">23</span><span class="tt">Where Are You Already Playing Games?</span></div>
+    <div class="thumb" onclick="goto(1);closeMap()"><span class="tn">2</span><span class="tt">This Module</span></div>
+    <div class="thumb" onclick="goto(2);closeMap()"><span class="tn">3</span><span class="tt">It&rsquo;s Not (Just) About You!</span></div>
+    <div class="thumb" onclick="goto(3);closeMap()"><span class="tn">4</span><span class="tt">Common Knowledge &amp; Equilibrium</span></div>
+    <div class="thumb" onclick="goto(4);closeMap()"><span class="tn">5</span><span class="tt">&hellip;Except Sometimes GT Sucks</span></div>
   </div></div>
 </div>
 
@@ -746,20 +241,27 @@ const slides=[...document.querySelectorAll('.slide')];
 const ticksEl=document.querySelector('.ticks');
 const built=slides.length;
 let cur=0, step=0;
-function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--scale',s);}
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);
+  document.documentElement.style.setProperty('--scale',s);}
 addEventListener('resize',fit);fit();
 function maxStep(i){const ds=[...slides[i].querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0);return ds.length?Math.max(...ds):0;}
 function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>e.classList.toggle('shown',(+e.dataset.step||0)<=step));}
-function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));[...ticksEl.children].forEach((t,i)=>{t.classList.toggle('on',i===cur);});ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();}
+function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
+  [...ticksEl.children].forEach((t,i)=>{t.classList.toggle('on',i===cur);});
+  ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));
+  applySteps();
+}
 function goto(i){if(i<0||i>=built)return;cur=i;step=0;render();}
 function next(){if(step<maxStep(cur)){step++;applySteps();}else if(cur<built-1){cur++;step=0;render();}}
 function prev(){if(step>0){step--;applySteps();}else if(cur>0){cur--;step=maxStep(cur);render();}}
-addEventListener('keydown',e=>{const t=(document.activeElement||{}).tagName,onCtl=(t==='BUTTON'||t==='A');
-if(e.key==='ArrowRight'||e.key==='PageDown'||e.key==='ArrowDown'){next();e.preventDefault();}
-else if(e.key===' '||e.key==='Spacebar'){if(!onCtl){next();e.preventDefault();}}
-else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){prev();e.preventDefault();}
-else if(e.key.toLowerCase()==='o'){toggleMap();}
-else if(e.key==='Escape'){closeMap();}});
+addEventListener('keydown',e=>{
+  const t=(document.activeElement||{}).tagName, onCtl=(t==='BUTTON'||t==='A');
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key==='ArrowDown'){next();e.preventDefault();}
+  else if(e.key===' '||e.key==='Spacebar'){if(!onCtl){next();e.preventDefault();}}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp'){prev();e.preventDefault();}
+  else if(e.key.toLowerCase()==='o'){toggleMap();}
+  else if(e.key==='Escape'){closeMap();}
+});
 const mapEl=document.getElementById('map');
 function toggleMap(){mapEl.classList.toggle('open');}
 function openMap(){mapEl.classList.add('open');}
@@ -767,5 +269,4 @@ function closeMap(){mapEl.classList.remove('open');}
 render();
 </script>
 <script defer src="/edit.js"></script>
-</body>
-</html>
+</body></html>
