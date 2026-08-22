@@ -184,6 +184,13 @@ area. Icons come from an inline `<svg style="display:none">` sprite referenced b
 
 ### Slide voice — read before writing any deck text
 
+**The authorship contract (22 Aug 2026): Ryan writes all deck text himself** —
+in PowerPoint or plain text, with bracketed markers such as `[pic: …]` or
+`[reveal one by one]`. Claude's job is mechanical conversion into the deck:
+his words verbatim, visuals only where marked or where an existing 565 slide
+type directly fits, and any suggestion goes back to him as a question, never
+as a change. Do not draft slide text unprompted.
+
 Deck text is Ryan's speaking script, not display copy. Start from his own
 wording in the source decks (LER 550 / MG478 / the 565 web decks) and trim;
 never restyle, never re-sequence his slide order, and never invent structural
