@@ -182,6 +182,29 @@ the cover subtitle, `.cap` for the caption under a figure, `.fig` for the figure
 area. Icons come from an inline `<svg style="display:none">` sprite referenced by
 `<use href="#id">` — copy symbols from an existing deck rather than redrawing.
 
+### Slide voice — read before writing any deck text
+
+Deck text is Ryan's speaking script, not display copy. Start from his own
+wording in the source decks (LER 550 / MG478 / the 565 web decks) and trim;
+never restyle, never re-sequence his slide order, and never invent structural
+devices (planted arcs, withheld reveals) he doesn't teach with. When a source
+slide carries a photo, the photo is often the joke — pull the real image from
+the pptx (`ppt/media/` in the zip) instead of re-illustrating it.
+
+Phrasings that read as AI-written are banned everywhere, titles included:
+
+- Staccato or inverted titles ("This Morning, in Order"). Titles are complete
+  headlines he would say out loud ("Roadmap for Today's Session").
+- Em-dash bolt-on clauses ("A decision or a game? — and a quick poll"). If a
+  dash is doing a comma's job, use the comma; if it's appending an
+  afterthought, write the sentence properly or cut the afterthought.
+- Quip fragment pairs ("Ten points. Well played.") and tag-on words
+  ("…, promise.").
+- Verbless fragments anywhere a line is spoken.
+
+Agendas are running orders, not schedules — no clock times. The test for every
+line, titles included: can Ryan say it verbatim and sound like himself?
+
 ### Known wrinkle: the CSS is duplicated
 
 Each deck inlines its own ~20 KB of CSS, and the decks have drifted (week 1 and
