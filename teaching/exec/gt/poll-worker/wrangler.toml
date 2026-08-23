@@ -1,0 +1,25 @@
+# gt-poll — live polls/quizzes for the exec teaching decks.
+#
+#   npx wrangler dev      local, http://localhost:8787
+#   npx wrangler deploy   -> https://gt-poll.rlamare.workers.dev
+#
+# Separate from the Pavilion relay on purpose: a poll outage must never take
+# down game night, and vice versa. ADMIN_SECRET (for /reset) is a Wrangler
+# secret, set once with:  echo "<value>" | npx wrangler secret put ADMIN_SECRET
+
+name = "gt-poll"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+[[durable_objects.bindings]]
+name = "POLLS"
+class_name = "PollRoom"
+
+# SQLite-backed Durable Objects — same free-plan constraint as the Pavilion
+# relay (see pavilion/relay/wrangler.toml): new_classes would need a paid plan.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PollRoom"]
+
+[observability]
+enabled = true

@@ -145,6 +145,33 @@ leave bare URLs indexable instead. The reasoning is written into `robots.txt`
 itself. None of it restricts *access*: while this repo is public, every deck's
 source is on GitHub. Only a private repo changes that.
 
+### The exec game-theory programme
+
+`teaching/exec/gt/` is the eight-module Applied Game Theory executive
+programme (unlisted, like everything under `exec/`; it supersedes the earlier
+`exec/rrpf/` attempt, which was left in place and untouched). Unlike the LSE
+decks, the suite shares one `deck.css` + `deck.js` — deliberate: all eight
+were built together as one system, so a restyle is one edit, and Ryan approved
+the centered-caps title geometry for the whole suite. **Module 1 is the
+design-approved reference** — Ryan's LER 550 wording, exec-adapted with his
+sign-off, an interactive beat every 3–6 slides. Modules 2–8 are faithful HTML
+transfers of the 550 decks awaiting the same design pass, one module at a
+time, sample-first. Slides marked COMPANY SLOT and `.swapchip` tokens are the
+only client-specific parts — swap those to retarget the programme at a new
+client. The 550 source pptx live in OneDrive (`Work/Teaching/LER 550/`,
+read-only); the per-topic 2022 decks are the clean text source and
+`LER 550 slides spring 2024.pptm` is the master.
+
+Live polls run through **`gt-poll`** (`teaching/exec/gt/poll-worker/`, a
+Cloudflare Worker at gt-poll.rlamare.workers.dev — separate from the Pavilion
+relay on purpose: a poll outage must never take down game night). Participants
+answer at **`/go/`** (site root for a short URL, same reasoning as
+`/pavilion/`); poll questions live in `/go/polls.json`, so a new poll or quiz
+is a JSON entry plus a deck slide. The deck fetches counts and reveals only on
+a keypress — hidden-until-reveal is client-side, and the slide falls back to
+marked DEMO DATA if the Worker is unreachable. The `/reset` admin secret is a
+Wrangler secret, deliberately not in this repo.
+
 ### Preview while editing
 
 ```bash
