@@ -133,10 +133,12 @@ appears; there is nowhere else to update. Those four `index.html` files are
 
 **Only lectures and live sessions are indexed.** Games, quizzes, brackets and
 shortlist rounds stay reachable from inside a live deck during a session, and
-nowhere else. The Rolls-Royce & Partners Finance executive programme
-(`teaching/exec/rrpf/`) is deliberately **unlisted** and deliberately **did not
-move** — no entry in `teaching_data.py` is what keeps it off the hub, and its
-URLs are sent to a client rather than browsed to.
+nowhere else. The executive programme (`teaching/exec/gt/`) is deliberately
+**unlisted** — no entry in `teaching_data.py` is what keeps it off the hub, and
+its URLs are sent to a client rather than browsed to. (An earlier attempt lived
+at `teaching/exec/rrpf/`; it failed review, was superseded by `exec/gt/`, and
+was deleted on 24 Aug 2026 — it exists only in git history. Do not resurrect it
+as a source.)
 
 Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
 including the decks. `robots.txt` does **not** disallow the path, and that is on
@@ -148,8 +150,8 @@ source is on GitHub. Only a private repo changes that.
 ### The exec game-theory programme
 
 `teaching/exec/gt/` is the eight-module Applied Game Theory executive
-programme (unlisted, like everything under `exec/`; it supersedes the earlier
-`exec/rrpf/` attempt, which was left in place and untouched). Unlike the LSE
+programme (unlisted, like everything under `exec/`; it supersedes the deleted
+`exec/rrpf/` attempt — never use that as a source). Unlike the LSE
 decks, the suite shares one `deck.css` + `deck.js` — deliberate: all eight
 were built together as one system, so a restyle is one edit, and Ryan approved
 the centered-caps title geometry for the whole suite. **Module 1 is the
@@ -211,12 +213,25 @@ area. Icons come from an inline `<svg style="display:none">` sprite referenced b
 
 ### Slide voice — read before writing any deck text
 
-**The authorship contract (22 Aug 2026): Ryan writes all deck text himself** —
-in PowerPoint or plain text, with bracketed markers such as `[pic: …]` or
-`[reveal one by one]`. Claude's job is mechanical conversion into the deck:
+**Two modes, and knowing which one you're in matters more than either rule.**
+
+**LSE course decks — the authorship contract (22 Aug 2026): Ryan writes all
+deck text himself** — in PowerPoint or plain text, with bracketed markers such
+as `[pic: …]` or `[reveal one by one]`. Claude's job is mechanical conversion:
 his words verbatim, visuals only where marked or where an existing 565 slide
 type directly fits, and any suggestion goes back to him as a question, never
 as a change. Do not draft slide text unprompted.
+
+**The exec gt suite — the design-pass mode (23 Aug 2026, Module 1 is the
+worked example):** Ryan's *existing* 550/MG478 slides are the text source
+(extraction replaces authorship — he does not write fresh text), and he has
+authorized: adapting delivery-context words ("this class"→"these sessions",
+"students"→"people in the room"), consolidating for time *when he asks*, and
+design treatments from the 565 system plus interactive widgets. Two hard
+conditions: **every wording change is enumerated for his veto in the build
+report**, and each module goes **sample-first** — a short block he drives and
+redlines before the full build, with choices offered as lettered picks he can
+answer in one line. Never call anything "approved" that he hasn't approved.
 
 Deck text is Ryan's speaking script, not display copy. Start from his own
 wording in the source decks (LER 550 / MG478 / the 565 web decks) and trim;
@@ -241,11 +256,13 @@ line, titles included: can Ryan say it verbatim and sound like himself?
 
 ### Known wrinkle: the CSS is duplicated
 
-Each deck inlines its own ~20 KB of CSS, and the decks have drifted (week 1 and
-week 6 are only ~79% identical). There is deliberately no shared `deck.css` yet:
-extracting one means deciding, per rule, whether a difference is drift or intent.
-New decks inherit the template's copy. If you restyle, **you are editing one deck,
-not all of them** — say so rather than implying a global change.
+Each **LSE/Illinois** deck inlines its own ~20 KB of CSS, and the decks have
+drifted (week 1 and week 6 are only ~79% identical). There is deliberately no
+shared `deck.css` for them: extracting one means deciding, per rule, whether a
+difference is drift or intent. New course decks inherit the template's copy. If
+you restyle, **you are editing one deck, not all of them** — say so rather than
+implying a global change. The exec `gt/` suite is the exception, on purpose: it
+shares one `deck.css`/`deck.js` because all eight decks were built together.
 
 ### Games
 
