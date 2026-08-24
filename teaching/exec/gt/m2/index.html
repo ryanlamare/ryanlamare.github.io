@@ -4,25 +4,151 @@
 <title>Applied Game Theory · Module 2 — Sequential Strategies</title>
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
+<style>
+/* Module-2 widgets (shared components live in deck.css; figure treatments
+   lifted from the LER 565 week 2 decks) */
+/* interactive game trees + the Frost tree: word states are class toggles over
+   static SVG text — no runtime text injection (Safari-safe) */
+.tree .rev{opacity:0;transition:opacity .35s}
+.tree .rev.on{opacity:1}
+.tree .dim{opacity:.25;transition:opacity .35s}
+.tree .hit{stroke:transparent;stroke-width:36;cursor:pointer}
+.tree .pay{fill:var(--teal)}
+.tree .pay.best{fill:var(--red)}
+.tree .paynote{font-weight:600;font-size:15px;fill:var(--muted)}
+.tree .owner{font-weight:700;font-size:16px;letter-spacing:.06em}
+.tree .st1, .frosttree .st1{opacity:0;transition:opacity .4s}
+.tree.two .st1, .frosttree.terms .st1{opacity:1}
+.tree.two .st0, .frosttree.terms .st0{opacity:0}
+.tree .st0, .frosttree .st0{transition:opacity .4s}
+@keyframes tshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.tree.shake{animation:tshake .3s}
+.frosttree{cursor:pointer}
+.frosttree .fword{font-weight:600;font-size:17px;fill:var(--ink);font-style:italic}
+.frosttree .fterm{font-weight:700;font-size:17px;fill:var(--red);text-transform:uppercase;letter-spacing:.04em}
+/* game-tree anatomy row */
+.anatrow{position:absolute;left:96px;right:96px;top:200px;bottom:96px;display:flex;gap:48px;align-items:center}
+.anatrow .ptiles{display:flex;flex-direction:column;gap:20px;flex:1}
+.anatrow .ptile .pt{font-size:17px;white-space:nowrap}
+/* ultimatum split slider — drag the divider from 99/1 to 1/99, starts 50/50 */
+.deal2{width:740px}
+.deal2 .dtrack{height:78px;border:3px solid var(--ink);position:relative;touch-action:none;cursor:ew-resize;background:var(--paper)}
+.deal2 .dA{position:absolute;left:0;top:0;bottom:0;background:var(--teal)}
+.deal2 .dB{position:absolute;right:0;top:0;bottom:0;background:var(--terracotta)}
+.deal2 .dhandle{position:absolute;top:-10px;bottom:-10px;width:14px;margin-left:-7px;background:var(--ink);cursor:grab}
+.deal2 .dvals{display:flex;justify-content:space-between;margin-top:14px;font-family:var(--display);font-weight:900;font-size:40px}
+.deal2 .dvA{color:var(--teal)}
+.deal2 .dvB{color:var(--terracotta)}
+/* three-games tiles (565 live) */
+.gtiles{position:absolute;left:96px;right:96px;top:250px;bottom:120px;display:flex;justify-content:center;gap:44px;align-items:flex-start}
+.gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px}
+.gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.gtile .pg{height:92px;width:auto}
+.gtile .gl{font-weight:700;font-size:22px;color:var(--ink);line-height:1.18}
+.gtile .gs{font-weight:500;font-size:17px;color:var(--muted);line-height:1.32;max-width:24ch}
+/* plain card pile + beat-me widget */
+.resgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:9px;width:100%;max-width:620px;margin:8px auto 0}
+.res{aspect-ratio:3/4;background:var(--card);border:2px solid var(--ink)}
+.res.goneA{opacity:.5;background:
+  linear-gradient(45deg,transparent 44%,var(--ink) 44% 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--ink) 44% 56%,transparent 56%),var(--card)}
+.res.goneB{opacity:.5;background:
+  linear-gradient(45deg,transparent 44%,var(--red) 44% 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--red) 44% 56%,transparent 56%),var(--card)}
+.res.last{outline:3px solid var(--red);outline-offset:2px}
+.hirew{margin:0 auto;max-width:1040px;padding:10px 22px 12px;width:100%}
+.hirew .resgrid{margin:8px auto 0;max-width:520px;gap:7px}
+.hlog{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;min-height:30px;justify-content:center}
+.hlog .g{border:2px solid var(--ink);background:var(--card);font-weight:700;font-size:14px;padding:5px 11px;letter-spacing:.04em}
+.hlog .g.a{border-color:var(--ink)}
+.hlog .g.b{border-color:var(--red);color:var(--red)}
+.hlog .g.win{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* solving numline (565 live) */
+.numstack{display:flex;flex-direction:column;align-items:center;gap:30px;width:100%}
+.numline{width:100%;max-width:1000px;height:210px;overflow:visible}
+.numline .axis{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.numline .tick{stroke:var(--ink);stroke-width:3}
+.numline .endlbl{font-weight:700;font-size:22px;fill:var(--muted)}
+.numline .band{fill:var(--red);opacity:.16}
+/* first-mover example cards (565 lecture) */
+.exgrid{display:flex;justify-content:center;gap:36px;margin-top:110px}
+.excard{width:320px;background:var(--card);border:2px solid var(--ink);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.exhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.expolicy{font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:14px;color:var(--ink)}
+.extag{font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:11px;padding:3px 8px;flex:none}
+.extag.first{background:var(--red);color:var(--paper)}
+.extag.second{background:var(--paper);border:2px solid var(--ink);color:var(--ink)}
+.exbody{font-weight:500;font-size:17px;color:var(--ink);line-height:1.4}
+/* ultimatum split bar (565 live) */
+.splitwrap{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
+.splitbar{display:flex;width:740px;height:78px;border:3px solid var(--ink)}
+.splitbar .seg{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:var(--paper)}
+.splitbar .segA{background:var(--teal);flex:0 0 58%;border-right:3px solid var(--paper)}
+.splitbar .segB{background:var(--terracotta);flex:0 0 42%}
+.splitlbl{display:flex;justify-content:space-between;width:740px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--muted)}
+/* centipede strip (565 live, simple form) */
+.centi{width:100%;max-width:940px;height:210px;overflow:visible}
+.centi .nA{fill:var(--teal);stroke:var(--ink);stroke-width:3}
+.centi .nB{fill:var(--terracotta);stroke:var(--ink);stroke-width:3}
+.centi .pass{stroke:var(--ink);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.centi .take{stroke:var(--red);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.centi .pa{fill:var(--teal);font-weight:700;font-size:18px;text-anchor:middle}
+.centi .pb{fill:var(--terracotta);font-weight:700;font-size:18px;text-anchor:middle}
+.centi .lbl{fill:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13px;text-anchor:middle}
+/* theory-vs-results compare (565 live) */
+.compare{display:flex;flex-direction:column;align-items:center;gap:36px}
+.cols2{display:flex;align-items:flex-start;justify-content:center;gap:96px}
+.col2{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;width:330px}
+.col2 .pg{height:96px;width:auto}
+.col2 .ct{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:19px;color:var(--ink)}
+.col2.theory{opacity:.55}
+.col2.real .ct{color:var(--red)}
+.col2 .cs{font-weight:500;font-size:18px;color:var(--muted);max-width:26ch;line-height:1.34}
+.lesson{font-weight:500;font-size:22px;color:var(--ink);text-align:center;max-width:56ch;line-height:1.35}
+.lesson b{color:var(--red);font-weight:700}
+/* poll results as an Isotype crowd — one figure per answer, in the option colour.
+   Fixed box height so both poll slides match (the smaller, price-war size). */
+.pollopts{flex:0 0 auto}
+.popt{height:164px}
+.popt .crowd{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 7px;margin-top:5px;min-height:56px;overflow:hidden}
+.popt .crowd svg{width:30px;height:40px;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.popt.revealed .crowd svg{opacity:1;transform:scale(1)}
+.popt .pnum{position:absolute;right:16px;bottom:10px}
+</style>
 </head><body>
+
+<svg style="display:none" aria-hidden="true">
+<symbol id="im-screen" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="20" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="32" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="44" cy="10" r="3.2"></circle><path fill="var(--ink,#1B1C19)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="59" r="4.2"></circle></symbol>
+<symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"></circle><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"></circle><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">£</text></symbol>
+<symbol id="im-non-zero-sum" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="30" cy="34" r="15"></circle><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" d="M30 13 A21 21 0 0 1 51 34"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M30 13 l8 1.5 m-8 -1.5 l1.5 8"></path></symbol>
+<symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"></rect><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"></rect><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"></path><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,41 22,29 Z"></path><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,41 59,29 Z"></path></symbol>
+<symbol id="im-no-play" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><line x1="17" y1="17" x2="47" y2="47" stroke="var(--red,#CE1E32)" stroke-width="4" stroke-linecap="round"></line></symbol>
+<symbol id="im-repeat" viewBox="0 0 64 64"><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" stroke-linecap="round" d="M32 12 A20 20 0 0 1 52 32"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M52 32 l-9 -1 m9 1 l-2 9"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="6" stroke-linecap="round" d="M32 52 A20 20 0 0 1 12 32"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M12 32 l9 1 m-9 -1 l2 -9"></path></symbol>
+</svg>
 
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 2 — Sequential Strategies</h1>
 <p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 14: Title slide</h2><p>Sequential Strategies. Module 2 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 14: Introductory concepts</h2><p>Recall that there are two overarching types of strategic interactions — those that involve sequential choices, and those that involve simultaneous choices. Strategic interactions can be wholly sequential, wholly simultaneous, or have elements of both. This lesson focuses on sequential thinking, and the next several will introduce simultaneous thinking.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 14: Introductory concepts</h2><p>Also recall a key takeaway from last class: always put yourself in the other person's shoes! Let's add another key ingredient for strategic thinking to this: always be thinking about the future! Every good strategist, from managers to employees to car salespeople to Survivor contestants, thinks not just about the move at hand, but about the effects of that move on the future. The very best strategists can think many, many moves into the future and deduce the best course of action in the present.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 14: Robert Frost, game theorist</h2><p>A quote card: "Two roads diverged in a wood, and I — I took the road less traveled by, And that has made all the difference." We can think of the roads diverged in a wood as branches on a game tree.</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 14: Characteristics of game trees</h2><p>Game trees consist of nodes, branches, and paths of play. To uncover what one player should do first, a tree can be constructed showing all the possible payoffs for all players at each decision node. Trees can be "pruned" as decisions are made to reduce the number of possible outcomes. Start with the terminal nodes and "rollback" or use backward induction to find your optimal strategy. Eventually, you will reach rollback equilibrium, where all players are choosing their optimal strategies. To form a strategy, all players must devise a complete course of action for all possible interactions.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 14: Solving games using trees</h2><p>Let's consider a question many of us face in life: should I smoke or not? Ryan has two initial choices — try smoking or do not try smoking. If he never tries smoking, let's give him a payoff of 0. If he tries smoking, he then has two choices — continue, or quit. If he continues smoking after he tries it, let's give him a payoff of minus 1. If he decides to quit smoking after trying it, let's give him a payoff of 1.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 14: The smoking game tree</h2><p>A game tree drawn step by step. The first node asks: should Ryan smoke? The YES branch leads to a second node: should Ryan keep smoking? Its YES branch pays minus 1, its NO branch pays 1. The NO branch from the first node pays 0. Rolling back: at the second node, quitting (payoff 1) beats continuing (payoff minus 1), so the continue branch is pruned. The path try-then-quit is highlighted in red, and the closing line asks: Ryan's best strategy here is to try smoking, then quit?</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 14: Solving games using trees</h2><p>But what are we missing here? The cost of addiction and the presence of your future self!</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 14: The smoking game tree with Future Ryan</h2><p>The same tree redrawn with two players. The first node asks: should TODAY'S Ryan smoke? The YES branch leads to: should FUTURE Ryan keep smoking? Future Ryan's YES branch pays minus 1 to Today's Ryan and 1 to Future Ryan; his NO branch pays 1 to Today's Ryan and minus 1 to Future Ryan. The never-smoke branch pays 0. Rolling back: Future Ryan is the addict and picks keep smoking (his 1 beats his minus 1), so the quit branch is pruned. Today's Ryan therefore faces minus 1 from trying versus 0 from never trying — and the never-smoke path is highlighted in red.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 14: Advantages of sequential strategies</h2><p>One of the advantages of thinking about sequential strategies is that in many real-world situations (especially business and politics) moves are often made in this way rather than being made simultaneously. Politicians might decide to veto or sign bills, to challenge or not challenge incumbents, to enter or not enter presidential races, etc. Businesses might decide to merge or not merge, to hire or not hire certain workers, to enter or not enter into markets, etc. Often you know (or at least have a good idea of) what the other side will do before you have to make a decision.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 14: Application to business strategy: the first-mover advantage</h2><p>The first-mover advantage represents the benefits an entity receives from being the first to enter a space. Potential rewards include market share; goodwill from press or customers; securing a rare resource. First-movers can master their domains; can preempt competitors' access to the market; and can create customer/employee loyalty. Examples: Radiohead with In Rainbows (what do other bands do in response?), CVS and cigarettes (what do Walgreens and Rite-Aide do in response?). Is the first-mover always at an advantage? We know it isn't! "Hey Siri" versus "Ok Google".</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 14: Other examples where backward reasoning helps</h2><p>Tic-Tac-Toe. Checkers. Chess. And the programme game (a swappable slot — Azul in the university course).</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 14: The limits of sequential reasoning</h2><p>Complexity of drawing game trees to completion (even tic tac toe is hard!). Requirement of complete information (in reality, uncertainty plagues us all). Limits of rationality in sequential decision-making (think ultimatum and centipede games).</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 14: Company slot</h2><p>A dashed placeholder card marking swappable client material: a sequential decision from the client's own business, drawn live as a game tree with the room.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 20: Title slide</h2><p>Sequential Strategies. Module 2 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 20: Learning objectives</h2><p>Four numbered objectives: one, reason sequentially about strategic decisions. Two, chart a complete course of action with a decision tree. Three, weigh the value of the first-mover advantage. Four, recognize the limits of sequential reasoning.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 20: Two kinds of strategic interaction</h2><p>Two columns. Sequential: one side moves, then the other responds — shown as two figures with an arrow from the first to the second. Simultaneous: both sides choose at the same time — shown as two figures with arrows meeting in the middle. Below, a recalled takeaway from our last session — always put yourself in the other person's shoes — and then a new key ingredient added, highlighted in red: always be thinking about the future. A final line: this module focuses on sequential thinking, and the next several will introduce simultaneous thinking.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 20: Robert Frost, game theorist</h2><p>A quote card: "Two roads diverged in a wood, and I — I took the road less traveled by, And that has made all the difference." We can think of the roads diverged in a wood as branches on a game tree.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 20: Characteristics of game trees</h2><p>Frost's poem drawn as a tree: a box reading "two roads diverged" splits into "the road less traveled by," ending at "all the difference," and "the road more traveled," ending at "no difference." After five numbered points, tapping the tree (or the final keypress) swaps each phrase for the game-theory term it represents: the box becomes a decision node, the roads become branches, and the endings become payoffs. The five points: game trees consist of nodes, branches, and paths of play; payoffs sit at the terminal nodes; trees can be pruned as decisions are made; rollback means starting at the end and reasoning backward; rollback equilibrium is every player choosing their optimal strategy.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 20: Cut prices, or hold?</h2><p>A live decision answered on phones at ryanlamare.com/go (QR code shown): a discount would get you short-term market share, but might start a price war. What should you do? Two options, cut prices or hold prices. A response counter rises while the distribution stays hidden; a keypress reveals the results as a crowd of Isotype figures, one per answer, in each option's colour. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 20: Welcome to the price war</h2><p>A second live decision, answered by scanning a second QR code: you cut, but so did your rival, and you're both bleeding money. What should you do? Two options, return prices to normal or keep cutting. A keypress reveals the crowd of answers.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 20: Do we cut prices?</h2><p>An interactive game tree, payoffs in teal. The first node asks: do we cut prices? Its NO branch pays 0, annotated hold steady. The YES branch leads to a second node: do we keep discounting? Its YES branch pays minus 1, annotated price war; its NO branch pays 1, annotated gain market share. Tapping the branch to prune (or a keypress) strikes out keep discounting, since stopping pays 1 against minus 1, and highlights the cut-then-stop path in red. The closing caption asks: so the best move is to cut, gain market share, then stop the discount?</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 20: Do we cut prices? — the two-player version</h2><p>The identical tree at the identical size, so the slide change reads as one tree carrying on. A first keypress reveals the caption: but what are we missing? Price wars are addictive. The tree then morphs into a two-player game: an owner tag appears over each node — today's team owns the cut-prices node, the future team owns the keep-discounting node — and each payoff gains a second number for the future team in a plain face, while today's teal numbers stay exactly as they were: keep discounting pays minus 1 to today and 1 to the future team; stopping pays 1 to today and minus 1 to the future team; not cutting pays 0. The future team won't stop the discount, so tapping prunes the stop branch, and the hold-prices path is highlighted in red with its payoff of 0.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 20: The first-mover advantage</h2><p>The first-mover advantage represents the benefits an entity receives from being the first to enter a space: market share, goodwill, a rare resource. Three cards: Radiohead, first mover — In Rainbows, pay-what-you-want; what do other bands do in response? CVS, first mover — dropped cigarettes in 2014; what do Walgreens and Rite-Aid do in response? "Hey Siri" versus "OK Google" — is the first-mover always at an advantage? We know it isn't!</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 20: Charting a complete course of action</h2><p>To form a strategy, all players must devise a complete course of action for all possible interactions. Three tiles of games where that is possible: Tic-Tac-Toe, Checkers, Chess. A pinned link plays the Game of Thrones clip, Littlefinger counsels Sansa — fight every battle, everywhere, always, in your mind.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 20: Three games</h2><p>Three pictogram tiles introducing the games ahead, by their game-theory names: a game of backward reasoning — take the last card. The ultimatum game — one offer, split a thousand pounds. The centipede game — take the pot, or let it grow.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 20: A game of backward reasoning</h2><p>The rules, in full: twenty-three cards are on the table. Two teams take turns removing one, two, or three cards. The team that takes the last card wins. Each team has a maximum of one minute to decide how many to remove each round. Below the rules sits the pile itself: twenty-three cards with buttons to take one, two, or three, and a remaining count. The instructor taps whatever each team calls, and the crossed-out cards and count track the game as the room plays it.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 20: Solving the game</h2><p>A number line from 0 to 23 with backward arcs: remove three first to leave 20, then answer every removal by landing on 16, 12, 8, then 4 — a shaded band marks the positions of one to three left, where your opponent must hand you the last card. Caption: think forward and reason backward — whoever faces four cards loses, so leave 20 after your first move, then answer every removal back to 16, 12, 8, and 4, and the last card is yours.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 20: The ultimatum game</h2><p>A draggable split bar over one pot of one thousand pounds: the divider slides between ninety-nine to one and one to ninety-nine, starting at five hundred each, with the proposer's share in teal on the left and the responder's share in terracotta on the right. The rules, in full: there is one thousand pounds to split between you and the person next to you. The person whose first name is nearest to A proposes a split. The second person accepts or rejects. If they reject, nobody gets anything.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 20: The ultimatum game: theory vs your results</h2><p>Two columns. Rollback theory: offer a token amount — it's accepted. Real play: people reject lowball splits as unfair, so proposers offer far more. The lesson: a "rational" lowball can cost you the deal.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 20: The centipede game</h2><p>A strip of ten turns, players one and two alternating, the pot growing from one hundred pounds to a capped thousand. The rules, in full: one hundred pounds is on the table. Player 1 can take it, or pass. Each pass adds another hundred, and the choice switches sides. At one thousand pounds the game ends, and whoever's turn it is takes it all. Played in pairs.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 20: The centipede game: theory vs your results</h2><p>Two columns. Rollback theory: someone takes at the end, so the logic says grab on turn one. Real play: you kept passing — trust builds real value. The lesson: short-term grabs wreck relationships worth keeping.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 20: The limits of sequential reasoning</h2><p>Three numbered points: complexity of drawing game trees to completion (even tic-tac-toe is hard!); requirement of complete information (in reality, uncertainty plagues us all); limits of rationality in sequential decision-making (think of the games we just played). A pinned link, appearing together with the last point, plays a video on the limits of sequential reasoning.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 20: Company slot</h2><p>A dashed placeholder card marking swappable client material: a sequential decision from the client's own business, drawn live as a game tree with the room.</p></section>
 </section>
 
 <div class="viewport"><div class="stage">
@@ -37,25 +163,41 @@
 
 <section class="slide content" data-i="1">
   <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Introductory concepts</h2>
-  <ul class="bullets">
-    <li>Recall that there are two overarching types of strategic interactions &ndash; those that involve <b>sequential</b> choices, and those that involve <b>simultaneous</b> choices</li>
-    <li data-step="1">Strategic interactions can be wholly sequential, wholly simultaneous, or have elements of both</li>
-    <li data-step="2">This lesson focuses on sequential thinking, and the next several will introduce simultaneous thinking</li>
-  </ul>
+  <h2>Learning objectives</h2>
+  <div class="rail">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Reason sequentially about strategic decisions</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Chart a complete course of action with a decision tree</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Weigh the value of the first-mover advantage</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Recognize the limits of sequential reasoning</div></div>
+  </div>
 </section>
 
 <section class="slide content" data-i="2">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Introductory concepts</h2>
-  <ul class="bullets">
-    <li>Also recall a key takeaway from last class:</li>
-    <li class="sub">Always put yourself in the other person&rsquo;s shoes!</li>
-    <li data-step="1">Let&rsquo;s add another key ingredient for strategic thinking to this:</li>
-    <li class="sub" data-step="1"><b>Always be thinking about the future!</b></li>
-    <li data-step="2">Every good strategist, from managers to employees to car salespeople to Survivor contestants, thinks not just about the move at hand, but about the effects of that move on the future</li>
-    <li data-step="3">The very best strategists can think many, many moves into the future and deduce the best course of action in the present</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 2 · TWO MODES</div>
+  <h2>Two kinds of strategic interaction</h2>
+  <div class="dvg" style="top:190px">
+    <div class="dvgcol">
+      <svg class="pg" viewBox="0 0 200 132"><g class="ink"><circle cx="34" cy="20" r="14"/><path d="M11 46 Q34 36 57 46 L49 92 L19 92 Z"/><rect x="20" y="92" width="12" height="36"/><rect x="36" y="92" width="12" height="36"/></g><path d="M72 62 h44 m-12 -10 l14 10 l-14 10" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g class="ink"><circle cx="160" cy="20" r="14"/><path d="M137 46 Q160 36 183 46 L175 92 L145 92 Z"/><rect x="146" y="92" width="12" height="36"/><rect x="162" y="92" width="12" height="36"/></g></svg>
+      <div class="dt">Sequential</div>
+      <div class="dd">One side moves, then the other responds</div>
+    </div>
+    <div class="dvgcol accent">
+      <svg class="pg" viewBox="0 0 200 132"><g class="ink"><circle cx="34" cy="20" r="14"/><path d="M11 46 Q34 36 57 46 L49 92 L19 92 Z"/><rect x="20" y="92" width="12" height="36"/><rect x="36" y="92" width="12" height="36"/></g><path d="M66 62 h24 m-10 -9 l12 9 l-12 9" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M134 62 h-24 m10 -9 l-12 9 l12 9" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g class="ink"><circle cx="160" cy="20" r="14"/><path d="M137 46 Q160 36 183 46 L175 92 L145 92 Z"/><rect x="146" y="92" width="12" height="36"/><rect x="162" y="92" width="12" height="36"/></g></svg>
+      <div class="dt">Simultaneous</div>
+      <div class="dd">Both sides choose at the same time</div>
+    </div>
+  </div>
+  <div class="chiprow">
+    <div class="chips" data-step="1">
+      <div class="chead2">Recall a key takeaway from our last session:</div>
+      <div class="chip">Always put yourself in the other person&rsquo;s shoes!</div>
+    </div>
+    <div class="chips" data-step="2">
+      <div class="chead2">Let&rsquo;s add another key ingredient:</div>
+      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Always be thinking about the future!</b></div>
+    </div>
+    <div class="chead2" data-step="3">This module focuses on sequential thinking, and the next several will introduce simultaneous thinking</div>
+  </div>
 </section>
 
 <section class="slide content" data-i="3">
@@ -70,142 +212,335 @@
 </section>
 
 <section class="slide content" data-i="4">
-  <div class="kicker"><i></i>MODULE 2</div>
+  <div class="kicker"><i></i>MODULE 2 · ROLLBACK</div>
   <h2>Characteristics of game trees</h2>
-  <ul class="bullets">
-    <li>Game trees consist of <b>nodes</b>, <b>branches</b>, and <b>paths of play</b></li>
-    <li data-step="1">To uncover what one player should do first, a tree can be constructed showing all the possible payoffs for all players at each decision node</li>
-    <li data-step="2">Trees can be &ldquo;pruned&rdquo; as decisions are made to reduce the number of possible outcomes</li>
-    <li data-step="3">Start with the terminal nodes and <b>&ldquo;rollback&rdquo;</b> or use backward induction to find your optimal strategy</li>
-    <li data-step="4">Eventually, you will reach rollback equilibrium, where all players are choosing their optimal strategies</li>
-    <li data-step="5">To form a strategy, all players must devise a complete course of action for all possible interactions</li>
-  </ul>
+  <div class="anatrow">
+    <svg class="pg frosttree" id="frost" viewBox="0 0 540 340" style="width:420px;flex:none">
+      <line x1="200" y1="170" x2="380" y2="80" stroke="var(--ink)" stroke-width="3"/>
+      <line x1="200" y1="170" x2="380" y2="262" stroke="var(--ink)" stroke-width="3"/>
+      <rect x="8" y="142" width="196" height="56" rx="6" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+      <g class="st0">
+        <text class="fword" x="106" y="176" text-anchor="middle">two roads diverged</text>
+        <text class="fword" x="272" y="84" text-anchor="middle">less traveled by</text>
+        <text class="fword" x="272" y="256" text-anchor="middle">more traveled</text>
+        <text class="fword" x="392" y="72">all the difference</text>
+        <text class="fword" x="392" y="286">no difference</text>
+      </g>
+      <g class="st1">
+        <text class="fterm" x="106" y="176" text-anchor="middle">a decision node</text>
+        <text class="fterm" x="272" y="84" text-anchor="middle">a branch</text>
+        <text class="fterm" x="272" y="256" text-anchor="middle">a branch</text>
+        <text class="fterm" x="392" y="72">a payoff</text>
+        <text class="fterm" x="392" y="286">a payoff</text>
+      </g>
+      <text x="270" y="330" text-anchor="middle" font-weight="600" font-size="14" fill="var(--muted)" letter-spacing=".05em">TAP TO TRANSLATE</text>
+    </svg>
+    <div class="ptiles">
+      <div class="ptile" data-step="1"><div class="pn">1</div><div class="pt">Game trees consist of <b>nodes</b>, <b>branches</b>, and <b>paths of play</b></div></div>
+      <div class="ptile" data-step="2"><div class="pn">2</div><div class="pt">Payoffs sit at the terminal nodes</div></div>
+      <div class="ptile" data-step="3"><div class="pn">3</div><div class="pt">Trees can be <b>&ldquo;pruned&rdquo;</b> as decisions are made</div></div>
+      <div class="ptile" data-step="4"><div class="pn">4</div><div class="pt"><b>&ldquo;Rollback&rdquo;</b>: start at the end and reason backward</div></div>
+      <div class="ptile" data-step="5"><div class="pn">5</div><div class="pt"><b>Rollback equilibrium</b>: every player choosing their optimal strategy</div></div>
+    </div>
+  </div>
+  <span data-step="6" data-stepcall="frostSwap" style="position:absolute;width:0;height:0"></span>
 </section>
 
 <section class="slide content" data-i="5">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Solving games using trees</h2>
-  <ul class="bullets">
-    <li>Let&rsquo;s consider a question many of us face in life: <b>should I smoke or not?</b></li>
-    <li data-step="1">Ryan has two initial choices &ndash; try smoking or do not try smoking</li>
-    <li data-step="2">If he never tries smoking, let&rsquo;s give him a payoff of 0</li>
-    <li data-step="3">If he tries smoking, he then has two choices &ndash; continue, or quit</li>
-    <li data-step="4">If he continues smoking after he tries it, let&rsquo;s give him a payoff of -1</li>
-    <li data-step="5">If he decides to quit smoking after trying it, let&rsquo;s give him a payoff of 1</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 2 · LIVE</div>
+  <h2>Cut prices, or hold?</h2>
+  <div class="leadline">A discount would get you short-term market share, but might start a price war. What should you do?</div>
+  <div class="pollwrap" style="top:250px;bottom:110px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="p1N">0</span><span class="l">ANSWERS<br>IN</span></div>
+    </div>
+    <div class="pollopts">
+      <div class="popt" id="p1o1"><div class="demotag" id="p1demo">DEMO DATA</div>
+        <div class="ptxt">Cut prices</div>
+        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
+      <div class="popt" id="p1o2">
+        <div class="ptxt">Hold prices</div>
+        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="p1Reveal" style="position:absolute;width:0;height:0"></span>
 </section>
 
 <section class="slide content" data-i="6">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Should Ryan smoke?</h2>
-  <div class="fig" style="top:160px">
-    <svg class="tree" viewBox="0 0 1040 430" style="width:1040px;height:430px">
-      <line class="edge" x1="196" y1="196" x2="420" y2="110"/>
-      <line class="edge" x1="196" y1="224" x2="850" y2="360"/>
-      <g data-step="3" class="pathwrap"><line class="path" x1="196" y1="196" x2="420" y2="110"/><line class="path" x1="600" y1="122" x2="850" y2="190"/></g>
-      <line class="edge" x1="600" y1="98" x2="850" y2="55"/>
-      <line class="edge" x1="600" y1="122" x2="850" y2="190"/>
-      <text class="elabel" x="290" y="128">YES</text>
-      <text class="elabel" x="480" y="330">NO</text>
-      <text class="elabel" x="716" y="58">YES</text>
-      <text class="elabel" x="712" y="178">NO</text>
-      <rect class="node" x="66" y="176" width="260" height="58" rx="6"/>
-      <text class="q" x="196" y="212" text-anchor="middle">Should Ryan smoke?</text>
-      <rect class="node" x="380" y="80" width="300" height="58" rx="6"/>
-      <text class="q" x="530" y="116" text-anchor="middle">Should Ryan keep smoking?</text>
-      <g data-step="2" class="prunewrap"><line class="strike" x1="712" y1="58" x2="742" y2="96" stroke="var(--maroon)" stroke-width="6" stroke-linecap="round"/><line class="strike" x1="732" y1="55" x2="762" y2="93" stroke="var(--maroon)" stroke-width="6" stroke-linecap="round"/></g>
-      <text class="pay" x="890" y="66">-1</text>
-      <text class="pay" x="890" y="200">1</text>
-      <text class="pay" x="890" y="372">0</text>
-    </svg>
-    <div class="cap" data-step="4">Ryan&rsquo;s best strategy here is to try smoking, then quit?</div>
+  <div class="kicker"><i></i>MODULE 2 · LIVE</div>
+  <h2>Welcome to the price war</h2>
+  <div class="leadline">You cut, but so did your rival, and you&rsquo;re both bleeding money. What should you do?</div>
+  <div class="pollwrap" style="top:250px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-war.svg" alt="QR code for the second poll at ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go &middot; scan again</div>
+      </div>
+      <div class="livecount"><span class="n" id="p2N">0</span><span class="l">ANSWERS<br>IN</span></div>
+    </div>
+    <div class="pollopts">
+      <div class="popt" id="p2o1"><div class="demotag" id="p2demo">DEMO DATA</div>
+        <div class="ptxt">Return prices to normal</div>
+        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
+      <div class="popt" id="p2o2">
+        <div class="ptxt">Keep cutting</div>
+        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
+    </div>
   </div>
+  <span data-step="1" data-stepcall="p2Reveal" style="position:absolute;width:0;height:0"></span>
 </section>
 
 <section class="slide content" data-i="7">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Solving games using trees</h2>
-  <ul class="bullets">
-    <li>But what are we missing here?</li>
-    <li data-step="1"><b>The cost of addiction and the presence of your future self!</b></li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 2 · THE TREE</div>
+  <h2>Do we cut prices?</h2>
+  <div class="fig" style="top:150px;bottom:80px">
+    <svg class="tree" id="tr1" viewBox="0 0 1080 430" style="width:934px;height:372px;flex:none">
+      <line class="edge" x1="216" y1="196" x2="430" y2="110"/>
+      <line class="edge" x1="216" y1="224" x2="860" y2="360"/>
+      <line class="edge" id="t1eKeep" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="edge" x1="640" y1="122" x2="860" y2="190"/>
+      <g id="t1path" class="rev"><line class="path" x1="216" y1="196" x2="430" y2="110"/><line class="path" x1="640" y1="122" x2="860" y2="190"/></g>
+      <text class="elabel" x="300" y="130">YES</text>
+      <text class="elabel" x="490" y="330">NO</text>
+      <text class="elabel" id="t1lKeep" x="736" y="58">YES</text>
+      <text class="elabel" x="732" y="180">NO</text>
+      <rect class="node" x="56" y="176" width="300" height="58" rx="6"/>
+      <text class="q" x="206" y="212" text-anchor="middle">Do we cut prices?</text>
+      <rect class="node" x="410" y="80" width="310" height="58" rx="6"/>
+      <text class="q" x="565" y="116" text-anchor="middle">Do we keep discounting?</text>
+      <g id="t1strike" class="rev"><line x1="736" y1="60" x2="766" y2="98" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><line x1="756" y1="57" x2="786" y2="95" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/></g>
+      <text class="pay" id="t1payK" x="890" y="66">-1</text>
+      <text class="pay" id="t1payQ" x="890" y="200">1</text>
+      <text class="pay" x="890" y="372">0</text>
+      <text class="paynote" id="t1noteK" x="940" y="63">price war</text>
+      <text class="paynote" x="940" y="197">gain market share</text>
+      <text class="paynote" x="940" y="369">hold steady</text>
+      <line class="hit" id="t1hitKeep" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="hit" id="t1hitQuit" x1="640" y1="122" x2="860" y2="190"/>
+    </svg>
+    <div class="cap" style="min-height:84px"><span data-step="2">So the best move is to <b>cut, gain market share, then stop the discount</b>?</span></div>
+    <span data-step="1" data-stepcall="t1Prune" style="position:absolute;width:0;height:0"></span>
+  </div>
 </section>
 
 <section class="slide content" data-i="8">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Should TODAY&rsquo;S Ryan smoke?</h2>
-  <div class="fig" style="top:160px">
-    <svg class="tree" viewBox="0 0 1080 430" style="width:1080px;height:430px">
+  <div class="kicker"><i></i>MODULE 2 · TWO PLAYERS</div>
+  <h2>Do we cut prices?</h2>
+  <div class="fig" style="top:150px;bottom:80px">
+    <svg class="tree" id="tr2" viewBox="0 0 1080 430" style="width:934px;height:372px;flex:none">
       <line class="edge" x1="216" y1="196" x2="430" y2="110"/>
       <line class="edge" x1="216" y1="224" x2="860" y2="360"/>
-      <g data-step="2"><line class="path" x1="216" y1="224" x2="860" y2="360"/></g>
+      <g id="t2path" class="rev"><line class="path" x1="216" y1="224" x2="860" y2="360"/></g>
       <line class="edge" x1="640" y1="98" x2="860" y2="55"/>
-      <line class="edge" x1="640" y1="122" x2="860" y2="190"/>
-      <g data-step="1"><line class="path" x1="640" y1="98" x2="860" y2="55"/><line class="strike" x1="736" y1="136" x2="764" y2="176" stroke="var(--maroon)" stroke-width="6" stroke-linecap="round"/><line class="strike" x1="756" y1="133" x2="784" y2="173" stroke="var(--maroon)" stroke-width="6" stroke-linecap="round"/></g>
+      <line class="edge" id="t2eQuit" x1="640" y1="122" x2="860" y2="190"/>
+      <g id="t2keep" class="rev"><line class="path" x1="640" y1="98" x2="860" y2="55"/></g>
       <text class="elabel" x="300" y="130">YES</text>
       <text class="elabel" x="490" y="330">NO</text>
       <text class="elabel" x="736" y="58">YES</text>
-      <text class="elabel" x="732" y="180">NO</text>
-      <rect class="node" x="56" y="176" width="320" height="58" rx="6"/>
-      <text class="q" x="216" y="212" text-anchor="middle">Should TODAY&rsquo;S Ryan smoke?</text>
-      <rect class="node" x="400" y="80" width="330" height="58" rx="6"/>
-      <text class="q" x="565" y="116" text-anchor="middle">Should FUTURE Ryan keep smoking?</text>
-      <text class="pay" x="900" y="66">-1, 1</text>
-      <text class="pay" x="900" y="200">1, -1</text>
-      <text class="pay" x="900" y="372">0</text>
+      <text class="elabel" id="t2lQuit" x="732" y="180">NO</text>
+      <rect class="node" x="56" y="176" width="300" height="58" rx="6"/>
+      <text class="q" x="206" y="212" text-anchor="middle">Do we cut prices?</text>
+      <rect class="node" x="410" y="80" width="310" height="58" rx="6"/>
+      <text class="q" x="565" y="116" text-anchor="middle">Do we keep discounting?</text>
+      <g class="st1">
+        <text class="owner" x="206" y="162" text-anchor="middle" fill="var(--teal)">TODAY&rsquo;S TEAM</text>
+        <text class="owner" x="565" y="66" text-anchor="middle" fill="var(--terracotta)">THE FUTURE TEAM</text>
+      </g>
+      <g id="t2strike" class="rev"><line x1="736" y1="136" x2="764" y2="176" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><line x1="756" y1="133" x2="784" y2="173" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/></g>
+      <text class="pay st0" x="890" y="66">-1</text>
+      <text class="pay st0" id="t2payQ0" x="890" y="200">1</text>
+      <g class="st0">
+        <text class="paynote" x="940" y="63">price war</text>
+        <text class="paynote" x="940" y="197">gain market share</text>
+        <text class="paynote" x="940" y="369">hold steady</text>
+      </g>
+      <g class="st1">
+        <text class="pay" x="890" y="66"><tspan>-1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:23px">1</tspan></text>
+        <text class="pay" id="t2payQ1" x="890" y="200"><tspan>1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:23px">-1</tspan></text>
+      </g>
+      <text class="pay" id="t2payN" x="890" y="372">0</text>
+      <line class="hit" id="t2hitKeep" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="hit" id="t2hitQuit" x1="640" y1="122" x2="860" y2="190"/>
     </svg>
-    <div class="cap"><span style="color:var(--teal);font-weight:700">Today&rsquo;s Ryan</span> scores first, <span style="color:var(--terracotta);font-weight:700">Future Ryan</span> second</div>
+    <div class="cap" style="min-height:84px"><span data-step="1">But what are we missing? <b>Price wars are addictive</b></span></div>
+    <span data-step="2" data-stepcall="t2Morph" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="t2Prune" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="t2Path" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
 <section class="slide content" data-i="9">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Advantages of sequential strategies</h2>
-  <ul class="bullets">
-    <li>One of the advantages of thinking about sequential strategies is that in many real-world situations (especially business and politics) moves are often made in this way rather than being made simultaneously</li>
-    <li data-step="1">Politicians might decide to veto or sign bills, to challenge or not challenge incumbents, to enter or not enter presidential races, etc.</li>
-    <li data-step="2">Businesses might decide to merge or not merge, to hire or not hire certain workers, to enter or not enter into markets, etc.</li>
-    <li data-step="3">Often you know (or at least have a good idea of) what the other side will do before you have to make a decision</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 2 · WHO MOVES FIRST</div>
+  <h2>The first-mover advantage</h2>
+  <div class="leadline">The benefits an entity receives from being the <b>first to enter a space</b>: market share; goodwill; a rare resource</div>
+  <div class="exgrid">
+    <div class="excard" data-step="1">
+      <div class="exhead"><span class="expolicy">Radiohead</span><span class="extag first">First mover</span></div>
+      <div class="exbody"><b>In Rainbows</b>, pay-what-you-want. What do other bands do in response?</div>
+    </div>
+    <div class="excard" data-step="2">
+      <div class="exhead"><span class="expolicy">CVS</span><span class="extag first">First mover</span></div>
+      <div class="exbody"><b>Dropped cigarettes</b> in 2014. What do Walgreens and Rite-Aid do in response?</div>
+    </div>
+    <div class="excard" data-step="3">
+      <div class="exhead"><span class="expolicy">&ldquo;Hey Siri&rdquo; vs &ldquo;OK Google&rdquo;</span><span class="extag second">Not always</span></div>
+      <div class="exbody">Is the first-mover <b>always</b> at an advantage? We know it isn&rsquo;t!</div>
+    </div>
+  </div>
 </section>
 
 <section class="slide content" data-i="10">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Application to business strategy: the first-mover advantage</h2>
-  <ul class="bullets">
-    <li>The <b>first-mover advantage</b> represents the benefits an entity receives from being the first to enter a space</li>
-    <li data-step="1">Potential rewards include market share; goodwill from press or customers; securing a rare resource</li>
-    <li data-step="2">First-movers can master their domains; can preempt competitors&rsquo; access to the market; and can create customer/employee loyalty</li>
-    <li data-step="3">Examples</li>
-    <li class="sub" data-step="3">Radiohead with In Rainbows (what do other bands do in response?)</li>
-    <li class="sub" data-step="3">CVS and cigarettes (what do Walgreens and Rite-Aide do in response?)</li>
-    <li data-step="4">Is the first-mover always at an advantage? We know it isn&rsquo;t!</li>
-    <li class="sub" data-step="4">&ldquo;Hey Siri&rdquo; versus &ldquo;Ok Google&rdquo;</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 2 · COMPLETE COURSES</div>
+  <h2>Charting a complete course of action</h2>
+  <div class="leadline">To form a strategy, all players must devise a <b>complete course of action</b> for all possible interactions</div>
+  <div class="gtiles" style="top:290px">
+    <div class="gtile" data-step="1"><svg class="pg" viewBox="0 0 72 66" style="height:80px"><line x1="14" y1="8" x2="14" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="14" y1="54" x2="58" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="50" x2="54" y2="16" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="16" x2="54" y2="50" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle cx="36" cy="33" r="4" fill="var(--ink)"/></svg><div class="gl">Tic-Tac-Toe</div></div>
+    <div class="gtile" data-step="2"><svg class="pg" viewBox="0 0 72 66" style="height:80px"><ellipse cx="36" cy="48" rx="22" ry="9" fill="var(--ink)"/><ellipse cx="36" cy="38" rx="22" ry="9" fill="var(--red)"/><ellipse cx="36" cy="28" rx="22" ry="9" fill="var(--ink)"/></svg><div class="gl">Checkers</div></div>
+    <div class="gtile" data-step="3"><svg class="pg" viewBox="0 0 72 66" style="height:80px"><circle cx="36" cy="16" r="9" fill="var(--ink)"/><path d="M28 26 Q36 22 44 26 L42 44 L30 44 Z" fill="var(--ink)"/><path d="M24 50 L48 50 L52 60 L20 60 Z" fill="var(--ink)"/></svg><div class="gl">Chess</div></div>
+  </div>
+  <a class="medialink" href="https://youtu.be/X1QKUWqNFgo" target="_blank" rel="noopener" data-step="3" style="position:absolute;left:50%;transform:translateX(-50%);bottom:100px;margin:0">
+    <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+    <span class="mlk">VIDEO</span>
+    <span class="mlt">Littlefinger counsels Sansa &mdash; fight every battle in your mind</span>
+  </a>
 </section>
 
 <section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>Other examples where backward reasoning helps</h2>
-  <ul class="bullets" style="margin-top:60px">
-    <li data-step="1">Tic-Tac-Toe</li>
-    <li data-step="2">Checkers</li>
-    <li data-step="3">Chess</li>
-    <li data-step="4"><span class="swapchip">Azul?!</span></li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 2 · GAMES</div>
+  <h2>Three games</h2>
+  <div class="gtiles">
+    <div class="gtile" data-step="1"><div class="gn">Game #1</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-screen"></use></svg><div class="gl">A game of backward reasoning</div><div class="gs">Take the last card</div></div>
+    <div class="gtile" data-step="2"><div class="gn">Game #2</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-coin"></use></svg><div class="gl">The ultimatum game</div><div class="gs">One offer, split &pound;1,000</div></div>
+    <div class="gtile" data-step="3"><div class="gn">Game #3</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-non-zero-sum"></use></svg><div class="gl">The centipede game</div><div class="gs">Take the pot, or let it grow</div></div>
+  </div>
 </section>
 
 <section class="slide content" data-i="12">
-  <div class="kicker"><i></i>MODULE 2</div>
-  <h2>The limits of sequential reasoning</h2>
-  <ul class="bullets">
-    <li data-step="1">Complexity of drawing game trees to completion (even tic tac toe is hard!)</li>
-    <li data-step="2">Requirement of complete information (in reality, uncertainty plagues us all)</li>
-    <li data-step="3">Limits of rationality in sequential decision-making (think ultimatum and centipede games)</li>
+  <div class="kicker"><i></i>MODULE 2 · GAME #1</div>
+  <h2>A game of backward reasoning</h2>
+  <ul class="bullets tightlist" style="max-width:700px;margin-top:10px">
+    <li><b>Twenty-three cards</b> are on the table</li>
+    <li data-step="1">Two teams take turns removing <b>1, 2, or 3</b> cards</li>
+    <li data-step="2">The team that <b>takes the last card</b> wins</li>
+    <li data-step="3">Each team has a maximum of <b>1 minute</b> to decide how many to remove each round</li>
   </ul>
+  <div class="widget hirew" style="margin-top:16px">
+    <div class="whead">
+      <span class="wlabel" id="hwLeft">23 LEFT</span>
+      <span><button id="hw1" class="primary">TAKE 1</button><button id="hw2" class="primary">TAKE 2</button><button id="hw3" class="primary">TAKE 3</button><button id="hwReset">RESET</button></span>
+    </div>
+    <div class="resgrid" id="hwGrid"></div>
+  </div>
 </section>
 
 <section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 2 · GAME #1</div>
+  <h2>Solving the game</h2>
+  <div class="fig" style="top:200px"><div class="numstack">
+    <svg class="numline" viewBox="0 0 1000 200">
+      <line class="axis" x1="60" y1="120" x2="940" y2="120"/>
+      <line class="tick" x1="60" y1="110" x2="60" y2="130"/><text class="endlbl" x="60" y="158" text-anchor="middle">0</text>
+      <line class="tick" x1="213" y1="110" x2="213" y2="130"/><text class="endlbl" x="213" y="158" text-anchor="middle">4</text>
+      <line class="tick" x1="366" y1="110" x2="366" y2="130"/><text class="endlbl" x="366" y="158" text-anchor="middle">8</text>
+      <line class="tick" x1="519" y1="110" x2="519" y2="130"/><text class="endlbl" x="519" y="158" text-anchor="middle">12</text>
+      <line class="tick" x1="672" y1="110" x2="672" y2="130"/><text class="endlbl" x="672" y="158" text-anchor="middle">16</text>
+      <line class="tick" x1="825" y1="110" x2="825" y2="130"/><text class="endlbl" x="825" y="158" text-anchor="middle">20</text>
+      <line class="tick" x1="940" y1="110" x2="940" y2="130"/><text class="endlbl" x="940" y="158" text-anchor="middle">23</text>
+      <g data-step="1"><path d="M940 104 Q882 72 825 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M825 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="825" cy="120" r="8" fill="var(--red)"/><text x="825" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">20</text></g>
+      <g data-step="2"><path d="M825 104 Q748 72 672 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M672 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="672" cy="120" r="8" fill="var(--red)"/><text x="672" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">16</text></g>
+      <g data-step="3"><path d="M672 104 Q596 72 519 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M519 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="519" cy="120" r="8" fill="var(--red)"/><text x="519" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">12</text></g>
+      <g data-step="4"><path d="M519 104 Q443 72 366 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M366 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="366" cy="120" r="8" fill="var(--red)"/><text x="366" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">8</text></g>
+      <g data-step="5"><path d="M366 104 Q290 72 213 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M213 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="213" cy="120" r="8" fill="var(--red)"/><text x="213" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">4</text></g>
+      <g data-step="5"><rect class="band" x="92" y="100" width="90" height="40"/><rect x="92" y="100" width="90" height="40" fill="none" stroke="var(--red)" stroke-width="2"/><text x="137" y="172" text-anchor="middle" font-family="var(--sans)" font-weight="600" font-size="15" fill="var(--red)">they face 1&ndash;3</text></g>
+    </svg>
+    <div class="cap" data-step="5" style="max-width:none"><b>Think forward and reason backward</b>: whoever faces four cards loses. Leave 20 after your first move, then answer every removal back to 16, 12, 8, and 4, and the last card is yours</div>
+  </div></div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>MODULE 2 · GAME #2</div>
+  <h2>The ultimatum game</h2>
+  <div class="fig" style="top:190px"><div class="splitwrap">
+    <div class="splitlbl"><span>Proposer&rsquo;s share</span><span>Responder&rsquo;s share</span></div>
+    <div class="deal2" id="deal">
+      <div class="dtrack"><div class="dA"></div><div class="dB"></div><div class="dhandle"></div></div>
+      <div class="dvals"><span class="dvA">&pound;500</span><span class="dvB">&pound;500</span></div>
+    </div>
+    <ul class="bullets" style="margin-top:10px;max-width:700px">
+      <li>There is <b>&pound;1,000</b> to split between you and the person next to you</li>
+      <li data-step="1">The person whose first name is <b>nearest to A</b> proposes a split</li>
+      <li data-step="2">The second person <b>accepts or rejects</b></li>
+      <li data-step="3">If they reject, <b>nobody gets anything</b></li>
+    </ul>
+  </div></div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 2 · GAME #2</div>
+  <h2>The ultimatum game: theory vs your results</h2>
+  <div class="fig"><div class="compare"><div class="cols2">
+    <div class="col2 theory"><div class="ct">Rollback theory</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-coin"></use></svg><div class="cs">Offer a token amount &ndash; it&rsquo;s accepted</div></div>
+    <div class="col2 real"><div class="ct">Real play</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-scales"></use></svg><div class="cs">People reject lowball splits as unfair, so proposers offer far more</div></div>
+  </div><div class="lesson" data-step="1"><b>The lesson:</b> a &ldquo;rational&rdquo; lowball can cost you the deal</div></div></div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 2 · GAME #3</div>
+  <h2>The centipede game</h2>
+  <div class="fig" style="top:180px"><div class="numstack" style="gap:22px">
+    <svg class="centi" viewBox="0 0 940 210">
+      <line class="pass" x1="70" y1="80" x2="855" y2="80"/><path class="pass" d="M855 80 l-14 -7 m14 7 l-14 7"/>
+      <text class="lbl" x="70" y="34">P1</text><circle class="nA" cx="70" cy="80" r="15"/><line class="take" x1="70" y1="95" x2="70" y2="115"/><path class="take" d="M70 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="70" y="140">&pound;100</text>
+      <text class="lbl" x="160" y="34">P2</text><circle class="nB" cx="160" cy="80" r="15"/><line class="take" x1="160" y1="95" x2="160" y2="115"/><path class="take" d="M160 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="160" y="140">&pound;200</text>
+      <text class="lbl" x="250" y="34">P1</text><circle class="nA" cx="250" cy="80" r="15"/><line class="take" x1="250" y1="95" x2="250" y2="115"/><path class="take" d="M250 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="250" y="140">&pound;300</text>
+      <text class="lbl" x="340" y="34">P2</text><circle class="nB" cx="340" cy="80" r="15"/><line class="take" x1="340" y1="95" x2="340" y2="115"/><path class="take" d="M340 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="340" y="140">&pound;400</text>
+      <text class="lbl" x="430" y="34">P1</text><circle class="nA" cx="430" cy="80" r="15"/><line class="take" x1="430" y1="95" x2="430" y2="115"/><path class="take" d="M430 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="430" y="140">&pound;500</text>
+      <text class="lbl" x="520" y="34">P2</text><circle class="nB" cx="520" cy="80" r="15"/><line class="take" x1="520" y1="95" x2="520" y2="115"/><path class="take" d="M520 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="520" y="140">&pound;600</text>
+      <text class="lbl" x="610" y="34">P1</text><circle class="nA" cx="610" cy="80" r="15"/><line class="take" x1="610" y1="95" x2="610" y2="115"/><path class="take" d="M610 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="610" y="140">&pound;700</text>
+      <text class="lbl" x="700" y="34">P2</text><circle class="nB" cx="700" cy="80" r="15"/><line class="take" x1="700" y1="95" x2="700" y2="115"/><path class="take" d="M700 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="700" y="140">&pound;800</text>
+      <text class="lbl" x="790" y="34">P1</text><circle class="nA" cx="790" cy="80" r="15"/><line class="take" x1="790" y1="95" x2="790" y2="115"/><path class="take" d="M790 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="790" y="140">&pound;900</text>
+      <text class="lbl" x="880" y="34" style="fill:var(--red)">cap</text><circle cx="880" cy="80" r="20" fill="none" stroke="var(--red)" stroke-width="4"/><text x="880" y="140" text-anchor="middle" font-weight="700" font-size="18" fill="var(--red)">&pound;1,000</text>
+    </svg>
+    <ul class="bullets" style="margin-top:0;max-width:720px">
+      <li><b>&pound;100</b> is on the table. <b>Player 1 can take it, or pass</b></li>
+      <li data-step="1">Each pass <b>adds another &pound;100</b>, and the choice switches sides</li>
+      <li data-step="2">At <b>&pound;1,000</b> the game ends, and whoever&rsquo;s turn it is <b>takes it all</b></li>
+      <li data-step="3"><b>Play it in pairs</b></li>
+    </ul>
+  </div></div>
+</section>
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 2 · GAME #3</div>
+  <h2>The centipede game: theory vs your results</h2>
+  <div class="fig"><div class="compare"><div class="cols2">
+    <div class="col2 theory"><div class="ct">Rollback theory</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-no-play"></use></svg><div class="cs">Someone takes at the end &ndash; so the logic says grab on turn one</div></div>
+    <div class="col2 real"><div class="ct">Real play</div><svg class="pg" viewBox="0 0 64 64"><use href="#im-repeat"></use></svg><div class="cs">You kept passing &ndash; trust builds real value</div></div>
+  </div><div class="lesson" data-step="1"><b>The lesson:</b> short-term grabs wreck relationships worth keeping</div></div></div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 2</div>
+  <h2>The limits of sequential reasoning</h2>
+  <div class="anatrow" style="top:220px">
+    <div class="ptiles" style="max-width:860px;margin:0 auto">
+      <div class="ptile" data-step="1"><div class="pn">1</div><div class="pt">Complexity of drawing game trees to completion (even tic-tac-toe is hard!)</div></div>
+      <div class="ptile" data-step="2"><div class="pn">2</div><div class="pt">Requirement of complete information (in reality, uncertainty plagues us all)</div></div>
+      <div class="ptile" data-step="3"><div class="pn">3</div><div class="pt">Limits of rationality in sequential decision-making (think of the games we just played)</div></div>
+      <a class="medialink" href="https://youtu.be/A_q2fNc-7-0" target="_blank" rel="noopener" data-step="3" style="margin:20px 0 0;align-self:flex-start">
+        <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="mlk">VIDEO</span>
+        <span class="mlt">The limits of sequential reasoning</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
   <div class="kicker"><i></i>MODULE 2 · COMPANY SLOT</div>
   <h2>Draw one of your own decisions as a tree</h2>
   <div class="fig">
@@ -218,7 +553,132 @@
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
+
+<script>
+/* ---- live decisions: try the gt-poll worker, fall back to marked demo data ---- */
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
+function mkPoll(pollId, nId, optIds, demoId, demoDist){
+  const st={live:false,counts:demoDist.slice(),total:0,demoShown:0,revealed:false};
+  const nEl=document.getElementById(nId);
+  function renderCount(){nEl.textContent=st.live?st.total:st.demoShown;}
+  function crowdHTML(n){
+    let h='';
+    for(let i=0;i<Math.min(n,24);i++)h+=PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"');
+    return h;
+  }
+  function renderCrowds(){
+    const counts=st.live?st.counts:demoDist;
+    optIds.forEach((id,i)=>{
+      const o=document.getElementById(id);
+      const crowd=o.querySelector('.crowd');
+      if(st.revealed){
+        const want=Math.min(counts[i]||0,24);
+        if(crowd.children.length!==want){crowd.innerHTML=crowdHTML(counts[i]||0);void crowd.offsetWidth;}
+      }else crowd.innerHTML='';
+      o.classList.toggle('revealed',st.revealed);
+      o.querySelector('.pnum').textContent=st.revealed?(counts[i]||0):'';
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+pollId).then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById(demoId).style.display='none';
+      st.counts=optIds.map((_,i)=>d.counts[i]||0);
+      st.total=d.total;
+      renderCount();
+      if(st.revealed)renderCrowds();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{const demoTotal=demoDist.reduce((a,b)=>a+b,0);
+    if(!st.live&&st.demoShown<demoTotal){st.demoShown++;renderCount();}},420);
+  return {reveal(on){st.revealed=on;renderCrowds();}};
+}
+const poll1=mkPoll('m2-cuthold','p1N',['p1o1','p1o2'],'p1demo',[14,7]);
+const poll2=mkPoll('m2-raisehold','p2N',['p2o1','p2o2'],'p2demo',[16,5]);
+function p1Reveal(el,on){poll1.reveal(on);}
+function p2Reveal(el,on){poll2.reveal(on);}
+
+/* ---- Frost tree: tap (or the final keypress) to translate poem words into terms ---- */
+function frostSwap(el,on){document.getElementById('frost').classList.toggle('terms',on);}
+document.getElementById('frost').addEventListener('pointerdown',()=>{
+  document.getElementById('frost').classList.toggle('terms');});
+
+/* ---- price-cut tree 1: tap the dominated branch to prune it ---- */
+const T=(id)=>document.getElementById(id);
+function shake(svg){svg.classList.remove('shake');void svg.offsetWidth;svg.classList.add('shake');}
+function t1Prune(el,on){
+  T('t1strike').classList.toggle('on',on);
+  T('t1path').classList.toggle('on',on);
+  ['t1eKeep','t1lKeep','t1payK','t1noteK'].forEach(id=>T(id).classList.toggle('dim',on));
+  T('t1payQ').classList.toggle('best',on);
+}
+T('t1hitKeep').addEventListener('pointerdown',()=>t1Prune(null,true));
+T('t1hitQuit').addEventListener('pointerdown',()=>shake(T('tr1')));
+
+/* ---- price-cut tree 2: class-toggle morph to two players, then tap to prune ---- */
+let t2m=false;
+function t2Morph(el,on){
+  t2m=on;
+  T('tr2').classList.toggle('two',on);
+  if(!on){t2Prune(null,false);t2Path(null,false);}
+}
+function t2Prune(el,on){
+  if(on&&!t2m)return;
+  T('t2strike').classList.toggle('on',on);
+  T('t2keep').classList.toggle('on',on);
+  ['t2eQuit','t2lQuit','t2payQ1'].forEach(id=>T(id).classList.toggle('dim',on));
+}
+function t2Path(el,on){
+  if(on&&!t2m)return;
+  T('t2path').classList.toggle('on',on);
+  T('t2payN').classList.toggle('best',on);
+}
+T('t2hitQuit').addEventListener('pointerdown',()=>{t2m?t2Prune(null,true):shake(T('tr2'));});
+T('t2hitKeep').addEventListener('pointerdown',()=>shake(T('tr2')));
+
+/* ---- ultimatum split slider: drag from 99/1 to 1/99, starts 50/50 ---- */
+(function(){
+  const root=T('deal');
+  const track=root.querySelector('.dtrack'), A=root.querySelector('.dA'), B=root.querySelector('.dB');
+  const handle=root.querySelector('.dhandle'), vA=root.querySelector('.dvA'), vB=root.querySelector('.dvB');
+  let pos=50, dragging=false;
+  function render(){
+    A.style.width=pos+'%'; B.style.width=(100-pos)+'%'; handle.style.left=pos+'%';
+    vA.textContent='£'+(pos*10); vB.textContent='£'+((100-pos)*10);
+  }
+  function drag(e){
+    if(!dragging)return;
+    const r=track.getBoundingClientRect();
+    pos=Math.max(1,Math.min(99,Math.round((e.clientX-r.left)/r.width*100)));
+    render();
+  }
+  track.addEventListener('pointerdown',e=>{dragging=true;track.setPointerCapture(e.pointerId);drag(e);});
+  track.addEventListener('pointermove',drag);
+  track.addEventListener('pointerup',()=>dragging=false);
+  render();
+})();
+
+/* ---- card-pile tracker: the instructor taps whatever the teams call ---- */
+(function(){
+  const grid=T('hwGrid'), left=T('hwLeft');
+  let n;
+  function reset(){grid.innerHTML='<div class="res"></div>'.repeat(23);n=23;left.textContent='23 LEFT';}
+  function take(k){
+    if(k>n)return;
+    const live=[...grid.children].filter(c=>c.className==='res');
+    for(let i=0;i<k;i++)live[live.length-1-i].classList.add('goneB');
+    n-=k;left.textContent=n+' LEFT';
+  }
+  T('hw1').addEventListener('click',()=>take(1));
+  T('hw2').addEventListener('click',()=>take(2));
+  T('hw3').addEventListener('click',()=>take(3));
+  T('hwReset').addEventListener('click',reset);
+  reset();
+})();
+</script>
 <script src="/teaching/exec/gt/deck.js"></script>
 </body></html>

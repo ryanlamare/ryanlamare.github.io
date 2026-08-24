@@ -137,8 +137,12 @@ nowhere else. The executive programme (`teaching/exec/gt/`) is deliberately
 **unlisted** — no entry in `teaching_data.py` is what keeps it off the hub, and
 its URLs are sent to a client rather than browsed to. (An earlier attempt lived
 at `teaching/exec/rrpf/`; it failed review, was superseded by `exec/gt/`, and
-was deleted on 24 Aug 2026 — it exists only in git history. Do not resurrect it
-as a source.)
+was deleted on 24 Aug 2026 — it exists only in git history. Do not resurrect
+its *text* as a source — with one Ryan-endorsed exception: its pd deck
+(`teaching/exec/rrpf/pd/index.html` at `f945b7a^`, "Module 4 — Prisoner's
+Dilemmas") is a good design reference — game staged first across several
+slides, theory named afterwards, business cases in the back half, 25–95
+words a slide.)
 
 Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
 including the decks. `robots.txt` does **not** disallow the path, and that is on
@@ -158,11 +162,19 @@ the centered-caps title geometry for the whole suite. **Module 1 is the
 design-approved reference** — Ryan's LER 550 wording, exec-adapted with his
 sign-off, an interactive beat every 3–6 slides. Modules 2–8 are faithful HTML
 transfers of the 550 decks awaiting the same design pass, one module at a
-time, sample-first. Slides marked COMPANY SLOT and `.swapchip` tokens are the
+time, sample-first. **Each module is a merge of LER 550 and LER 565 for
+executives, minus the HR-course framing** (Ryan, 23 Aug 2026): the 550 master
+supplies the wording, and the matching 565 week's lecture *and* live web decks
+(`teaching/illinois/ler565/week<N>/`) supply designed figures and widgets to
+lift directly — never redraw a treatment a 565 deck already has.
+Slides marked COMPANY SLOT and `.swapchip` tokens are the
 only client-specific parts — swap those to retarget the programme at a new
 client. The 550 source pptx live in OneDrive (`Work/Teaching/LER 550/`,
-read-only); the per-topic 2022 decks are the clean text source and
-`LER 550 slides spring 2024.pptm` is the master.
+read-only). **Extract only from the master, `LER 550 slides spring 2024.pptm`**
+— the per-topic pptx (e.g. `Sequential Strategies powerpoint.pptx`) are student
+handout versions that silently omit the games and interactive slides (Ryan,
+23 Aug 2026). A module transferred from a per-topic deck must be checked
+against the master's section before its design pass.
 
 Live polls run through **`gt-poll`** (`teaching/exec/gt/poll-worker/`, a
 Cloudflare Worker at gt-poll.rlamare.workers.dev — separate from the Pavilion
