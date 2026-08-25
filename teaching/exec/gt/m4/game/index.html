@@ -100,6 +100,32 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
   clip-path:polygon(0 0,35% 0,35% 100%,0 100%,0 0,65% 0,100% 0,100% 100%,65% 100%,65% 0)}
 
 
+
+/* ---- price lock-in (inline; posts to the gt-poll room m4-prices) ---- */
+.lockwrap{margin-top:6px}
+.lk-h{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--muted);margin:18px 0 8px}
+.lk-stations{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lk-stations button{font-family:var(--sans);font-weight:700;font-size:15px;padding:12px 0;background:var(--card);
+  border:2px solid var(--rule);cursor:pointer}
+.lk-stations button.a{color:var(--teal)}
+.lk-stations button.b{color:var(--terracotta)}
+.lk-stations button.on{border-color:var(--ink);background:var(--paper-soft);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.lk-weeks{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.lk-weeks button{font-family:var(--sans);font-weight:700;font-size:15px;padding:12px 0;background:var(--card);
+  border:2px solid var(--rule);cursor:pointer;color:var(--ink)}
+.lk-weeks button.on{border-color:var(--ink);background:var(--paper-soft);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.lk-prices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lk-prices button{font-family:var(--display);font-weight:900;font-size:38px;padding:20px 0;cursor:pointer;
+  background:var(--ink);color:var(--paper);border:3px solid var(--ink)}
+.lk-prices button.on{background:var(--red);border-color:var(--red)}
+.lk-go{width:100%;margin-top:20px;font-family:var(--sans);font-weight:700;text-transform:uppercase;
+  letter-spacing:.14em;font-size:15px;padding:16px 0;background:var(--red);color:var(--paper);border:0;cursor:pointer}
+.lk-go:disabled{background:var(--rule);cursor:default}
+.lk-status{margin-top:12px;text-align:center;font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.lk-status.ok{color:var(--green)}
+.lk-status.bad{color:var(--red)}
+@media (max-width:640px){.lk-prices button{font-size:30px}}
+
 /* ---- footer ---- */
 .hfoot{display:flex;justify-content:space-between;margin-top:54px;padding-top:16px;border-top:1.5px solid var(--ink);
   font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;color:var(--muted)}
@@ -277,9 +303,23 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
   <div class="shead"><span class="sq"></span><h2>Locking in your price</h2></div>
   <hr class="srule">
 
-  <p class="lead-p">When your team has decided, one of you locks the week&rsquo;s price in at
-  <a href="lockin/"><b>the lock-in page</b></a>. It stays hidden until both signs go up on the
-  board at the front.</p>
+  <p class="lead-p" data-edit>When your team has decided, one of you locks the week&rsquo;s price in right here.
+  It stays hidden until both signs go up on the board at the front, and locking in again before the
+  reveal replaces your earlier choice.</p>
+
+  <div class="lockwrap">
+    <div class="lk-h" data-edit>Your station</div>
+    <div class="lk-stations" id="lkStations"></div>
+    <div class="lk-h" data-edit>Week</div>
+    <div class="lk-weeks" id="lkWeeks"></div>
+    <div class="lk-h" data-edit>Your price</div>
+    <div class="lk-prices">
+      <button type="button" id="lk150">&pound;1.50</button>
+      <button type="button" id="lk140">&pound;1.40</button>
+    </div>
+    <button class="lk-go" id="lkGo" disabled>LOCK IT IN</button>
+    <div class="lk-status" id="lkStatus">Pick your station, the week, and a price.</div>
+  </div>
 
   <div class="shead"><span class="sq"></span><h2>Your team ledger</h2></div>
   <hr class="srule">
@@ -309,6 +349,58 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
   </div>
 
 </main>
+<script>
+/* Price lock-in: posts one "station|week|price" line per lock into the
+   gt-poll /say lane, room m4-prices. The deck's board and the
+   facilitator's desk page read the same room; the latest line per
+   station and week wins. Station choice sticks in localStorage. */
+(function(){
+const API='https://gt-poll.rlamare.workers.dev/p/m4-prices/say';
+const TEAMS=['a1','a2','a3','a4','b1','b2','b3','b4'];
+const LBL={a:'Aura',b:"Buco's"};
+let station=localStorage.getItem('pw-station')||'', week='', price='';
+let voter=localStorage.getItem('pw-voter');
+if(!voter){voter=(crypto.randomUUID?crypto.randomUUID():('v'+Date.now()+'-'+Math.random().toString(36).slice(2,10)));localStorage.setItem('pw-voter',voter);}
+const stEl=document.getElementById('lkStations');
+TEAMS.forEach(t=>{
+  const b=document.createElement('button');b.type='button';
+  b.className=t[0];b.textContent=LBL[t[0]]+' '+t[1];b.dataset.t=t;
+  b.addEventListener('click',()=>{station=t;localStorage.setItem('pw-station',t);paint();});
+  stEl.appendChild(b);
+});
+const wkEl=document.getElementById('lkWeeks');
+for(let w=1;w<=6;w++){
+  const b=document.createElement('button');b.type='button';b.dataset.w=w;b.textContent='W'+w;
+  b.addEventListener('click',()=>{week=String(w);paint();});
+  wkEl.appendChild(b);
+}
+const b150=document.getElementById('lk150'), b140=document.getElementById('lk140');
+b150.addEventListener('click',()=>{price='1.50';paint();});
+b140.addEventListener('click',()=>{price='1.40';paint();});
+const go=document.getElementById('lkGo'), status=document.getElementById('lkStatus');
+function paint(){
+  [...stEl.children].forEach(b=>b.classList.toggle('on',b.dataset.t===station));
+  [...wkEl.children].forEach(b=>b.classList.toggle('on',b.dataset.w===week));
+  b150.classList.toggle('on',price==='1.50');
+  b140.classList.toggle('on',price==='1.40');
+  go.disabled=!(station&&week&&price);
+}
+go.addEventListener('click',()=>{
+  go.disabled=true;
+  status.className='lk-status';status.textContent='Locking in\u2026';
+  fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:station+'|'+week+'|'+price,v:voter})})
+  .then(r=>r.json()).then(d=>{
+    if(d.ok){status.className='lk-status ok';
+      status.textContent='Locked: \u00a3'+price+' for Week '+week+' ('+LBL[station[0]]+' '+station[1]+')';}
+    else{status.className='lk-status bad';
+      status.textContent=d.error==='enough'?'This phone has locked in too many times \u2013 use a teammate\u2019s phone.':'That didn\u2019t go through. Try again.';}
+    paint();
+  }).catch(()=>{status.className='lk-status bad';status.textContent='No connection. Try again, or tell the facilitator your price.';paint();});
+});
+paint();
+})();
+</script>
 <script defer="" src="/edit.js"></script>
 <script>
 /* The Theme button plays showdown.mp3 if it is sitting next to this file.
