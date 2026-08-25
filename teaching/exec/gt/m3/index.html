@@ -6,33 +6,39 @@
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
 <style>
 /* Module-3 widgets (shared components live in deck.css) */
-/* truel tiles (container lifted from the m2 three-games row) */
+/* pictogram tiles (container lifted from the m2 three-games row) */
 .gtiles{position:absolute;left:96px;right:96px;top:250px;bottom:120px;display:flex;justify-content:center;gap:44px;align-items:flex-start}
 .gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
 .gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
 .gtile .gl{font-weight:700;font-size:21px;color:var(--ink);line-height:1.22}
-.gtile .gs{font-weight:500;font-size:17px;color:var(--muted);line-height:1.32;max-width:26ch}
-.gtile .gq{font-weight:500;font-style:italic;font-size:17px;color:var(--ink);line-height:1.3}
+.gtile .gq{font-weight:500;font-style:italic;font-size:16.5px;color:var(--ink);line-height:1.3}
 .gtile .pg{height:88px;width:auto}
-.hitpct{font-family:var(--display);font-weight:900;font-size:58px;line-height:1;color:var(--ink)}
-/* three-option poll */
-.pollopts.three{grid-template-columns:repeat(3,1fr);flex:0 0 auto}
-.pollopts.three .popt{height:196px}
-.pollopts.three .ptxt{padding-right:0}
-.popt .crowd{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 6px;margin-top:5px;min-height:56px;overflow:hidden}
-.popt .crowd svg{width:24px;height:32px;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
-.popt.revealed .crowd svg{opacity:1;transform:scale(1)}
-.popt .pnum{position:absolute;right:16px;bottom:10px}
-.popt.winner{outline:4px solid var(--red);outline-offset:3px}
+.hitpct{font-family:var(--display);font-weight:900;font-size:46px;line-height:1;color:var(--ink)}
+.hitpct.win{color:var(--red)}
+.bigpct{font-family:var(--display);font-weight:900;font-size:72px;line-height:1;color:var(--ink)}
+.bigpct.win{color:var(--red)}
+/* live poll crowds inside the shooter tiles */
+.tcrowd{min-height:66px;display:flex;flex-wrap:wrap;gap:3px 5px;justify-content:center;align-content:flex-start;max-width:230px}
+.tcrowd svg{width:20px;height:27px;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.gtile.revealed .tcrowd svg{opacity:1;transform:scale(1)}
+.gtile .pnum{font-family:var(--display);font-weight:900;font-size:24px;color:var(--ink);min-height:28px}
+.pollbar{position:absolute;left:96px;right:96px;bottom:70px;display:flex;align-items:center;justify-content:space-between;gap:30px}
+.pollbar .pq{font-weight:700;font-size:27px;color:var(--red);text-transform:uppercase;letter-spacing:.03em}
+.pollbar .joinchip .qr{width:64px;height:64px}
+.pollbar .joinchip .ju{font-size:17px;padding:8px 14px}
+.demotag2{position:relative}
+.demotag2 .demotag{top:-24px;right:auto;left:50%;transform:translateX(-50%)}
 /* clip beside bullets */
-.rowfig{position:absolute;left:96px;right:96px;top:236px;display:flex;gap:48px;align-items:flex-start}
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
 .rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
 .clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
-.clipframe iframe{width:520px;height:292px;border:0;display:block}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipframe.small iframe{width:420px;height:236px}
 /* click-to-load cover: keeps YouTube's title (which gives the ending away)
    off screen until the clip is deliberately started */
-.clipcover{width:520px;height:292px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipcover.small{width:420px;height:236px;gap:12px}
 .clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
 .clipcover .bigplay svg{width:24px;height:24px;display:block}
 .clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
@@ -43,23 +49,23 @@
 .wmap .sea{fill:color-mix(in srgb, var(--blue) 15%, var(--paper));stroke:var(--ink);stroke-width:2.5}
 .wmap .land{fill:var(--tan);stroke:var(--ink);stroke-width:2.2}
 .wmap .isl{font-weight:700;letter-spacing:.12em;font-size:15px;fill:var(--muted)}
-.wmap .place{font-weight:700;letter-spacing:.06em;font-size:13px;fill:var(--ink)}
-.wmap .route{fill:none;stroke:var(--ink);stroke-width:3.2;stroke-dasharray:10 9;stroke-linecap:round}
-.wmap .rlabel{font-weight:700;letter-spacing:.1em;font-size:14.5px;fill:var(--ink)}
+.wmap .route{fill:none;stroke:var(--ink);stroke-width:3.2;stroke-dasharray:10 9;stroke-linecap:round;opacity:.8}
 .wmap .ship{fill:var(--terracotta)}
 .wmap .plane{fill:var(--teal)}
 .wmap .side{font-weight:700;letter-spacing:.1em;font-size:14px}
 .wmap .rain{stroke:var(--blue);stroke-width:3;stroke-linecap:round}
-.wmap .qq{font-weight:700;font-size:19px;fill:var(--red)}
-/* matrix solving, per Ryan's rulings: dominated strategies disappear one at a
-   time, at most one circled number (the final pick), the red box marks only
+.wmap .unit{cursor:grab}
+/* four-point setup grid under the small map */
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 44px;max-width:1080px;margin:0 auto;text-align:left}
+.kgrid .kitem{position:relative;padding-left:26px;font-weight:500;font-size:19px;line-height:1.35;color:var(--ink)}
+.kgrid .kitem::before{content:"";position:absolute;left:0;top:.42em;width:10px;height:10px;background:var(--red)}
+.kgrid .kitem b{color:var(--red)}
+/* matrix solving, per Ryan's rulings: dominated strategies disappear one
+   line at a time, alternating sides; no circles; the red box marks only
    the equilibrium */
 .mx .cell,.mx .cl,.mx .rl{transition:opacity .4s}
 .mx .cell.gone,.mx .cl.gone,.mx .rl.gone{opacity:.07}
-.mx .cell .val,.mx .cell .pa{position:relative}
 .mx .cell .val{color:var(--ink)}
-.mx .cell .val.circ::after,.mx .cell .pa.circ::after{content:"";position:absolute;inset:-7px -13px;
-  border:3px solid var(--red);border-radius:50%;pointer-events:none}
 /* definition cards (guidelines) */
 .defcard{background:var(--card);border:2.5px solid var(--ink);padding:24px 30px;max-width:960px;width:100%}
 .defcard .dh{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--red);margin-bottom:10px}
@@ -69,6 +75,14 @@
 .ptrow{position:absolute;left:96px;right:96px;top:216px}
 .ptrow .ptiles{display:flex;flex-direction:column;gap:22px;max-width:920px;margin:0 auto}
 .ptrow .pt .sq{display:block;font-weight:500;font-size:17px;color:var(--muted);margin-top:4px}
+/* big free-roaming hot-dog carts (Hotelling opener) */
+.cartstage{position:absolute;left:96px;right:96px;top:230px;bottom:70px}
+.bigcart{position:absolute;width:230px;cursor:grab;touch-action:none;user-select:none}
+.bigcart svg{width:100%;height:auto;display:block}
+.bigcart.a .cbody{fill:var(--teal)}
+.bigcart.b .cbody{fill:var(--terracotta)}
+.bigcart .cwheel{fill:var(--ink)}
+.bigcart .cletter{fill:var(--paper);font-family:var(--display);font-weight:900;font-size:26px}
 /* Hotelling beach: draggable hot-dog carts */
 .beach{position:relative;width:100%;height:180px;background:linear-gradient(180deg,var(--tan-light) 0 62%,var(--blue) 62% 100%);border:2.5px solid var(--ink);user-select:none;touch-action:none}
 .beach .shade{position:absolute;top:0;bottom:38%;background:color-mix(in srgb, var(--teal) 30%, transparent)}
@@ -104,26 +118,25 @@
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 3 — Simultaneous Zero-Sum Games</h1>
 <p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 20: Title slide</h2><p>Zero-sum games. Simultaneous zero-sum strategies. Module 3 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 20: Learning objectives</h2><p>Four numbered objectives: one, recognize zero-sum games, where one side's win is the other side's loss. Two, make strategic choices without knowing what your rival has chosen. Three, solve simultaneous games with payoff matrices, dominant strategies, and inferior strategies. Four, apply Hotelling's game to business and politics.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 20: Introduction to simultaneous zero-sum strategies</h2><p>Lead line: often a player must make a choice without knowing what their rivals have chosen, and vice versa. Two pictogram columns under the line "Two types of simultaneous games": zero-sum (win/lose), drawn as a fixed pie, and non-zero-sum (win/win), drawn as a pie with a growing arrow. Reveals: recall that one of the limitations of sequential games is the notion of complete information; in simultaneous games, we have our first application of incomplete information; applications: voting behavior, football plays, pricing moves, etc.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 20: Characteristics of zero-sum games</h2><p>Three pictogram tiles: rational parties (a figure with a check mark); each player has a choice of two or more strategies (a node with two branching arrows); diametrically opposed interests (two figures pulling in opposite directions).</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 20: Some well-known zero-sum examples, soccer players during cup games</h2><p>Bullets on the left: Barbados needs to win by two goals. Goals count double if the game goes into overtime. It's 2-0 to Barbados. In the 83rd minute, Grenada scores (2-1). The Barbados vs. Grenada clip is embedded on the right of the slide; the instructor pauses it to run the next slide's poll.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 20: What should Barbados do?</h2><p>A live poll answered on phones at ryanlamare.com/go (QR code shown), with three options: push for a third goal; defend the 2-1 lead; score an own goal. A response counter rises while the distribution stays hidden; a keypress reveals the answers as a crowd of Isotype figures per option. A further reveal asks the room: what should Grenada do? If the poll server is unreachable the slide runs on marked demo data.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 20: Other well-known zero-sum game players from throughout history</h2><p>Four pictogram tiles: Westley and Vizzini (two goblets). Anyone who's ever played rock, paper, scissors (a mixed-strategy zero-sum game). Soccer teams' penalty kick takers (another mixed-strategy zero-sum game; a ball and goal). Anyone who's ever been in a three-person duel — aka Truel, aka "Mexican Standoff" (three arrows pointing at each other).</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 20: Michael, Dwight, and Andy in a zero-sum truel game</h2><p>Three tiles, one per shooter, each with a big hit-rate figure. Dwight Schrute, "Fastest Crossbow in Scranton": 100% hit rate on his shots. Andy Bernard, "Cornell Gun Club President '06": 80% hit rate on his shots. Michael Scott, "I Once Shot Myself by Mistake": 50% hit rate on his shots. One rule: shooting order is random, and after each person fires, he has to reload.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 20: Who would you rather be?</h2><p>A live poll with three options: Dwight (hits 100% of his shots), Andy (hits 80% of his shots), Michael (hits 50% of his shots). A keypress reveals the crowd of answers. Two further reveals: What if Michael decides to (or is forced to) shoot first? Then: "Survival of the weakest" — Michael wins 52% of the time; Dwight 30%; Andy 18% — and Michael's option card is ringed as the winner. A final reveal shows the link to the Mexican standoff clip.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 20: Solving zero-sum games using payoff matrices</h2><p>Lead line: in February 1943, General George Churchill Kenney, Commander of the Allied Air Forces in the Southwest Pacific, was faced with a problem. A mid-century wargame-style map: New Guinea at the left with the port of Lae, the island of New Britain in the middle, the Japanese convoy at Rabaul on the right in terracotta, and Kenney's bombers in teal to the northwest. Two dashed routes run from Rabaul to Lae: the northern route, under a rain cloud, and the southern route, under a sun. Reveals: the Japanese were about to reinforce their army in New Guinea — sail north of New Britain in the rain, or south in fair weather, three days either way. General Kenney had to decide where to concentrate the bulk of his reconnaissance aircraft. The Japanese wanted their ships to have the least possible exposure to enemy bombers, and of course, General Kenney wanted the reverse.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 20: What should each side do?</h2><p>The same map, now with a red question by the convoy — north, or south? — and a red question by the bombers — patrol north, or south? Caption: each side must pick its best response to what it thinks the other side will do.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 20: Days of bombing</h2><p>A two-by-two payoff matrix. Allied choice (rows: northern route, southern route) against Japanese choice (columns: northern route, southern route). Northern/northern: 2 days. Northern/southern: 2 days. Southern/northern: 1 day. Southern/southern: 3 days. Steps: the Japanese should never sail south — the northern route means less exposure whatever the Allies do — so the southern column disappears. When Kenney realizes this, his choice is clear: pick the biggest number left, and the 2 days at northern/northern is circled. The red box then marks the equilibrium there, and the game is said to have an "equilibrium point": a stable outcome, because a player unilaterally picking a new strategy is not helped by the change.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 20: A zero-sum game in your own market</h2><p>Lead line: a mature market is a fixed pie — every point of share you win comes straight off your rival's total. A three-by-three payoff matrix of your share of the market (your rival gets the rest). Both you (rows) and your closest rival (columns) choose between promote hard, match the market, and pull back spend. Values by row: 50, 60, 70; 40, 50, 60; 30, 40, 50. Steps eliminate one line at a time: your rival will never pull back spend, so that column disappears; with it gone, pulling back can never be your best move either, so that row disappears; your rival is better off promoting hard than matching, so the matching column disappears; that leaves your choice — 50 beats 40 — so your 50 is circled; and the red box marks the equilibrium where both sides promote hard, a 50/50 split.</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 20: Guidelines for solving zero-sum games</h2><p>Two definition cards. Identify dominant (or superior) strategies: a dominant strategy exists if a player's payoff from choosing this strategy is always greater than, or at least equal to, the payoff from choosing any other available strategy. If a dominant strategy exists, choose it. Eliminate dominated (or inferior) strategies: an inferior strategy exists if a player's payoff from choosing this strategy is always less than the payoff from choosing any other available strategy. If an inferior strategy exists, never choose it.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 20: Combining sequential and simultaneous thinking, Hotelling's game</h2><p>We've so far considered how to solve zero-sum games with finite choices available (go north/go south; promote hard/match the market). But what strategy should we use if the choices are infinite? Consider Hotelling's game. Two vendors are selling hot dogs to beach goers — identical products and prices. Vendors choose where to place their carts. Beach goers will always choose the closest cart. Where should the vendors set up their carts?</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 20: The beach</h2><p>An interactive beach strip with two draggable hot-dog carts, A in teal and B in terracotta, each showing its live share of customers; the sand shades toward whichever cart is closer. Two preset buttons replay the lecture beats: "Suppose they set up like this" places A three-quarters of the way east and B in the middle (A gets 37.5 percent, B gets 62.5 percent); "They should always end up like this" places both carts together in the middle, the 50/50 equilibrium. The instructor plays this live with the room.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 20: Where else do we see Hotelling's game?</h2><p>A paired game: in pairs, come up with as many real-world examples of Hotelling's game as you can. Think of the curry houses on Brick Lane, then find your own. Two minutes, with a large on-screen countdown timer. Debrief reveals: this is also one reason why so many products are marketed and sold with such similar characteristics. But is this clustering socially optimal?</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 20: Application to politics, the median voter theorem</h2><p>Lead line: Hotelling proposed this game in 1929 — in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach. An interactive political spectrum from 0, entirely Liberal, to 100, entirely Conservative, drawn as a band blending blue to red. Two draggable candidate badges — a blue donkey and a red rhino — each showing its live vote share, with a divider marking where voters switch sides. The same two preset buttons replay the beats: candidates apart (the blue candidate at 15 gets 40 percent, the red candidate at 65 gets 60 percent), then both converging on the median voter for 50/50.</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 20: Challenges to the median voter theorem</h2><p>Four numbered points: one, not all voters are evenly distributed across the political spectrum. Two, there are always more than just two options for voters (third candidates/not voting). Three, voters may care about more than just unidimensional political issues. Four, what if the candidates are lying? Can a voter really believe the announcement of a candidate's position on an issue? Can candidates actually commit themselves to their positions?</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 20: Company slot</h2><p>A dashed placeholder card marking swappable client material: where the client's own market has Hotelling-style clustering or head-to-head zero-sum moves, written per engagement.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 19: Title slide</h2><p>Zero-sum games. Simultaneous zero-sum strategies. Module 3 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 19: Learning objectives</h2><p>Four numbered objectives: one, recognize zero-sum games, where one side's win is the other side's loss. Two, make strategic choices without knowing what your rival has chosen. Three, solve simultaneous games with payoff matrices, dominant strategies, and inferior strategies. Four, apply Hotelling's game to business and politics.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 19: Introduction to simultaneous zero-sum strategies</h2><p>Lead line: often a player must make a choice without knowing what their rivals have chosen, and vice versa. Two pictogram columns under the line "Two types of simultaneous games": zero-sum (win/lose), drawn as a fixed pie, and non-zero-sum (win/win), drawn as a pie with a growing arrow. Reveals: recall one of the limitations of sequential games, the notion of complete information; in simultaneous games, we have our first application of incomplete information; applications: voting behavior, football plays, pricing moves, etc.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 19: Characteristics of zero-sum games</h2><p>Three pictogram tiles: rational parties (a figure with a check mark); each player has a choice of two or more strategies (a node with two branching arrows); diametrically opposed interests (two figures pulling in opposite directions).</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 19: Soccer players during cup games</h2><p>Bullets on the left: Barbados needs to win by two goals. Goals count double if the game goes into overtime. It's 2-0 to Barbados. In the 83rd minute, Grenada scores (2-1). The Barbados vs. Grenada clip is embedded large on the right of the slide behind a click-to-play cover.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 19: Zero-sum game players throughout history</h2><p>Four pictogram tiles: Westley and Vizzini (two goblets). Anyone who's played rock, paper, scissors. Soccer teams' penalty kick takers (a ball and goal). Anyone who's been in a Mexican standoff (three arrows pointing at each other).</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 19: Michael, Dwight, and Andy in a zero-sum truel game</h2><p>Lead line: shooting order is random, and after each person fires, he has to reload. Three shooter tiles, each with a hit-rate figure and epithet: Dwight Schrute, "Fastest Crossbow in Scranton", 100%. Andy Bernard, "Cornell Gun Club President '06", 80%. Michael Scott, "I Once Shot Myself by Mistake", 50%. A live poll runs on this slide: who would you rather be? The room answers at ryanlamare.com/go (QR code shown) and each tile fills live with a crowd of Isotype figures and a count as answers arrive. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 19: "Survival of the weakest"</h2><p>The reveal: the same three shooters with their actual truel win rates. Dwight 30%. Andy 18%. Michael 52%, in red — the weakest shooter wins most often. A reveal asks: what if Michael decides to (or is forced to) shoot first? Then the Mexican standoff clip, embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 19: Solving zero-sum games</h2><p>A small mid-century wargame-style map: New Guinea at the left, the island of New Britain in the middle, the Japanese convoy in terracotta at the right, Kenney's bombers in teal at the upper left, and two dashed routes — the northern route under rain clouds, the southern route over suns. Four points below, left to right in two rows: February 1943, the Japanese are about to reinforce their army in New Guinea. They can sail north of New Britain in the rain, or south in fair weather — three days either way. General Kenney must decide where to concentrate his reconnaissance aircraft. The Japanese want the least possible exposure to his bombers, and of course, Kenney wants the reverse.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 19: What should each side do?</h2><p>The map fills the slide, with no other text. Every ship and plane is draggable, so the class can war-game the choices live: move the convoy along the northern or southern route, and position the bombers to patrol either side.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 19: The game expressed as a payoff matrix</h2><p>A two-by-two payoff matrix of days of bombing. Allied choice (rows: northern route, southern route) against Japanese choice (columns: northern route, southern route). Northern/northern: 2 days. Northern/southern: 2 days. Southern/northern: 1 day. Southern/southern: 3 days. Steps: the Japanese should never sail south — the northern route means less exposure whatever the Allies do — so the southern column disappears. When Kenney realizes this, his choice is clear — go north — and the southern row disappears. The red box marks the equilibrium at northern/northern, and the game is said to have an "equilibrium point": a stable outcome, because a player unilaterally picking a new strategy is not helped by the change.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 19: A zero-sum game in your own market</h2><p>Lead line: a mature market is a fixed pie — every point of share you win comes straight off your rival's total. A three-by-three payoff matrix of your share of the market (your rival gets the rest). Both you (rows) and your closest rival (columns) choose between promote hard, match the market, and pull back spend. Values by row: 50, 60, 70; 40, 50, 60; 30, 40, 50. Steps eliminate one line at a time: your rival will never pull back spend, so that column disappears; with it gone, pulling back can never be your best move either, so that row disappears; your rival is better off promoting hard than matching, so the matching column disappears; that leaves your choice — 50 beats 40 — so the matching row disappears; and the red box marks the equilibrium where both sides promote hard, a 50/50 split.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 19: Guidelines for solving zero-sum games</h2><p>Two definition cards. Identify dominant (or superior) strategies: a dominant strategy exists if a player's payoff from choosing this strategy is always greater than, or at least equal to, the payoff from choosing any other available strategy. If a dominant strategy exists, choose it. Eliminate dominated (or inferior) strategies: an inferior strategy exists if a player's payoff from choosing this strategy is always less than the payoff from choosing any other available strategy. If an inferior strategy exists, never choose it.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 19: Consider Hotelling's game</h2><p>No other text: two big hot-dog carts, A in teal and B in terracotta, sit at the bottom of the slide and can be dragged anywhere while the instructor sets up the game aloud.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 19: The beach</h2><p>An interactive beach strip with two draggable hot-dog carts, A in teal and B in terracotta, each showing its live share of customers; the sand shades toward whichever cart is closer. Two preset buttons replay the lecture beats: "Suppose they set up like this" places A three-quarters of the way east and B in the middle (A gets 37.5 percent, B gets 62.5 percent); "They should always end up like this" places both carts together in the middle, the 50/50 equilibrium. The instructor plays this live with the room.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 19: Where else do we see Hotelling's game?</h2><p>A paired game: in pairs, come up with as many real-world examples of Hotelling's game as you can. Think of the curry houses on Brick Lane, then find your own. Two minutes, with a large on-screen countdown timer. Debrief reveals: this is also one reason why so many products are marketed and sold with such similar characteristics. But is this clustering socially optimal?</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 19: Application to politics, the median voter theorem</h2><p>Lead line: Hotelling proposed this game in 1929 — in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach. An interactive political spectrum from 0, entirely Liberal, to 100, entirely Conservative, drawn as a band blending blue to red. Two draggable candidate badges — a blue donkey and a red rhino — each showing its live vote share, with a divider marking where voters switch sides. Preset buttons replay the beats: candidates apart, then both converging on the median voter for 50/50.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 19: Challenges to the median voter theorem</h2><p>Four numbered points: one, not all voters are evenly distributed across the political spectrum. Two, there are always more than just two options for voters (third candidates/not voting). Three, voters may care about more than just unidimensional political issues. Four, what if the candidates are lying? Can a voter really believe the announcement of a candidate's position on an issue? Can candidates actually commit themselves to their positions?</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 19: Company slot</h2><p>A dashed placeholder card marking swappable client material: where the client's own market has Hotelling-style clustering or head-to-head zero-sum moves, written per engagement.</p></section>
 </section>
 
 <div class="viewport"><div class="stage">
@@ -194,7 +207,7 @@
 
 <section class="slide content" data-i="4">
   <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Some well-known zero-sum examples: soccer players during cup games</h2>
+  <h2>Soccer players during cup games</h2>
   <div class="rowfig">
     <ul class="bullets">
       <li>Barbados needs to win by two goals</li>
@@ -212,37 +225,8 @@
 </section>
 
 <section class="slide content" data-i="5">
-  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
-  <h2>What should Barbados do?</h2>
-  <div class="pollwrap" style="top:180px;bottom:56px">
-    <div class="polltop">
-      <div class="joinchip">
-        <div class="qr"><img src="qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
-        <div class="ju">ryanlamare.com/go</div>
-      </div>
-      <div class="livecount"><span class="n" id="pbN">0</span><span class="l">ANSWERS<br>IN</span></div>
-    </div>
-    <div class="pollopts three">
-      <div class="popt" id="pbo1"><div class="demotag" id="pbdemo">DEMO DATA</div>
-        <div class="ptxt">Push for a third goal</div>
-        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
-      <div class="popt" id="pbo2">
-        <div class="ptxt">Defend the 2-1 lead</div>
-        <div class="crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
-      <div class="popt" id="pbo3">
-        <div class="ptxt">Score an own goal</div>
-        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
-    </div>
-    <div class="cap" style="text-align:center;max-width:none;margin-top:4px;min-height:34px">
-      <span data-step="2"><b>What should Grenada do?</b></span>
-    </div>
-  </div>
-  <span data-step="1" data-stepcall="pbReveal" style="position:absolute;width:0;height:0"></span>
-</section>
-
-<section class="slide content" data-i="6">
   <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Other well-known zero-sum game players from throughout history</h2>
+  <h2>Zero-sum game players throughout history</h2>
   <div class="gtiles" style="top:266px;gap:36px">
     <div class="gtile" data-step="1">
       <svg class="pg" viewBox="0 0 120 100"><g class="ink"><path d="M14 8 Q30 8 46 8 Q44 34 34 40 L34 74 L44 80 L16 80 L26 74 L26 40 Q16 34 14 8 Z"/></g><g class="red"><path d="M74 8 Q90 8 106 8 Q104 34 94 40 L94 74 L104 80 L76 80 L86 74 L86 40 Q76 34 74 8 Z"/></g></svg>
@@ -250,151 +234,129 @@
     </div>
     <div class="gtile" data-step="2">
       <svg class="pg" viewBox="0 0 140 100"><circle cx="24" cy="56" r="16" fill="var(--ink)"/><rect x="56" y="36" width="30" height="40" fill="none" stroke="var(--ink)" stroke-width="5"/><g stroke="var(--red)" stroke-width="5" stroke-linecap="round" fill="none"><line x1="104" y1="40" x2="128" y2="72"/><line x1="128" y1="40" x2="104" y2="72"/><circle cx="102" cy="78" r="6"/><circle cx="130" cy="78" r="6"/></g></svg>
-      <div class="gl">Anyone who&rsquo;s ever played rock, paper, scissors</div>
-      <div class="gs">a mixed-strategy zero-sum game</div>
+      <div class="gl">Anyone who&rsquo;s played rock, paper, scissors</div>
     </div>
     <div class="gtile" data-step="3">
       <svg class="pg" viewBox="0 0 130 100"><path d="M14 84 L14 16 L116 16 L116 84" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><line x1="14" y1="42" x2="116" y2="42" stroke="var(--ink)" stroke-width="2.5" opacity=".35"/><circle cx="92" cy="32" r="12" fill="var(--red)"/></svg>
       <div class="gl">Soccer teams&rsquo; penalty kick takers</div>
-      <div class="gs">another mixed-strategy zero-sum game</div>
     </div>
     <div class="gtile" data-step="4">
       <svg class="pg" viewBox="0 0 120 104"><g stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M60 18 L34 66 m2 -16 l-2 16 l16 -3"/><path d="M22 88 L78 78 m-15 -8 l15 8 l-12 12"/></g><path d="M98 84 L68 32 m-1 16 l1 -16 l15 4" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-      <div class="gl">Anyone who&rsquo;s ever been in a three-person duel</div>
-      <div class="gs">aka Truel, aka &ldquo;Mexican Standoff&rdquo; &ndash; another variant of a zero-sum game</div>
+      <div class="gl">Anyone who&rsquo;s been in a Mexican standoff</div>
     </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
+  <h2>Michael, Dwight, and Andy in a zero-sum truel game</h2>
+  <div class="leadline">Shooting order is random, and after each person fires, he has to <b>reload</b></div>
+  <div class="gtiles" style="top:262px;bottom:auto;gap:36px">
+    <div class="gtile demotag2" id="pto1"><div class="demotag" id="ptdemo">DEMO DATA</div>
+      <div class="gn">Dwight Schrute</div><div class="hitpct">100%</div><div class="gq">&ldquo;Fastest Crossbow in Scranton&rdquo;</div>
+      <div class="tcrowd crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
+    <div class="gtile" id="pto2">
+      <div class="gn">Andy Bernard</div><div class="hitpct">80%</div><div class="gq">&ldquo;Cornell Gun Club President &rsquo;06&rdquo;</div>
+      <div class="tcrowd crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
+    <div class="gtile" id="pto3">
+      <div class="gn">Michael Scott</div><div class="hitpct">50%</div><div class="gq">&ldquo;I Once Shot Myself by Mistake&rdquo;</div>
+      <div class="tcrowd crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
+  </div>
+  <div class="pollbar">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+    <div class="pq">Who would you rather be?</div>
+    <div class="livecount"><span class="n" id="ptN">0</span><span class="l">ANSWERS<br>IN</span></div>
   </div>
 </section>
 
 <section class="slide content" data-i="7">
   <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
-  <h2>Michael, Dwight, and Andy in a zero-sum truel game</h2>
-  <div class="gtiles" style="top:230px;bottom:auto">
-    <div class="gtile"><div class="gn">Dwight Schrute</div><div class="hitpct">100%</div><div class="gq">&ldquo;Fastest Crossbow in Scranton&rdquo;</div><div class="gs">hit rate on his shots</div></div>
-    <div class="gtile" data-step="1"><div class="gn">Andy Bernard</div><div class="hitpct">80%</div><div class="gq">&ldquo;Cornell Gun Club President &rsquo;06&rdquo;</div><div class="gs">hit rate on his shots</div></div>
-    <div class="gtile" data-step="2"><div class="gn">Michael Scott</div><div class="hitpct">50%</div><div class="gq">&ldquo;I Once Shot Myself by Mistake&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+  <h2>&ldquo;Survival of the weakest&rdquo;</h2>
+  <div class="gtiles" style="top:220px;bottom:auto;gap:36px">
+    <div class="gtile"><div class="gn">Dwight Schrute</div><div class="bigpct">30%</div><div class="gq">wins the truel</div></div>
+    <div class="gtile"><div class="gn">Andy Bernard</div><div class="bigpct">18%</div><div class="gq">wins the truel</div></div>
+    <div class="gtile"><div class="gn">Michael Scott</div><div class="bigpct win">52%</div><div class="gq">wins the truel</div></div>
   </div>
-  <ul class="bullets" style="position:absolute;left:50%;transform:translateX(-50%);bottom:120px;margin-top:0;width:760px">
-    <li data-step="3">Shooting order is random, and after each person fires, he has to reload</li>
-  </ul>
+  <div class="cap" data-step="1" style="position:absolute;left:96px;right:96px;top:392px;text-align:center;max-width:none;margin:0"><b>What if Michael decides to (or is forced to) shoot first?</b></div>
+  <div class="clipframe small" id="standoffwrap" data-step="2" style="position:absolute;left:50%;transform:translateX(-50%);bottom:52px">
+    <button class="clipcover small" id="standoffload" type="button">
+      <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+      <span class="ct">Play the clip &middot; Mexican standoff</span>
+    </button>
+  </div>
 </section>
 
 <section class="slide content" data-i="8">
-  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
-  <h2>Who would you rather be?</h2>
-  <div class="pollwrap" style="top:180px;bottom:56px">
-    <div class="polltop">
-      <div class="joinchip">
-        <div class="qr"><img src="qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
-        <div class="ju">ryanlamare.com/go</div>
-      </div>
-      <div class="livecount"><span class="n" id="ptN">0</span><span class="l">ANSWERS<br>IN</span></div>
-    </div>
-    <div class="pollopts three">
-      <div class="popt" id="pto1"><div class="demotag" id="ptdemo">DEMO DATA</div>
-        <div class="ptxt">Dwight (hits 100% of his shots)</div>
-        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
-      <div class="popt" id="pto2">
-        <div class="ptxt">Andy (hits 80% of his shots)</div>
-        <div class="crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
-      <div class="popt" id="pto3">
-        <div class="ptxt">Michael (hits 50% of his shots)</div>
-        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
-    </div>
-    <div class="cap" style="text-align:center;max-width:none;margin-top:4px;min-height:56px">
-      <span data-step="2">What if Michael decides to (or is forced to) shoot first?</span><br>
-      <span data-step="3"><b>&ldquo;Survival of the weakest&rdquo; &ndash; Michael wins 52% of the time; Dwight 30%; Andy 18%</b></span>
-    </div>
-    <a class="medialink" href="https://www.youtube.com/watch?v=IHQr0HCIN2w" target="_blank" rel="noopener" data-step="4" style="margin:0 auto">
-      <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
-      <span class="mlk">CLIP</span>
-      <span class="mlt">Mexican standoff</span>
-    </a>
-  </div>
-  <span data-step="1" data-stepcall="ptReveal" style="position:absolute;width:0;height:0"></span>
-  <span data-step="3" data-stepcall="truelWin" style="position:absolute;width:0;height:0"></span>
-</section>
-
-<section class="slide content" data-i="9">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
-  <h2>Solving zero-sum games using payoff matrices</h2>
-  <div class="fig" style="top:196px;bottom:66px;gap:14px">
-    <svg class="wmap" viewBox="0 0 1000 400" style="max-width:750px">
+  <h2>Solving zero-sum games</h2>
+  <div class="fig" style="top:176px;bottom:66px;gap:22px">
+    <svg class="wmap" viewBox="0 0 1000 400" style="max-width:600px">
       <rect class="sea" x="1.5" y="1.5" width="997" height="397"/>
       <path class="land" d="M2 150 Q90 168 150 210 Q210 252 245 312 Q268 355 278 398 L2 398 Z"/>
       <text class="isl" x="48" y="330">NEW GUINEA</text>
-      <circle cx="196" cy="242" r="7" fill="var(--red)"/>
-      <text class="place" x="148" y="268">LAE</text>
       <path class="land" d="M430 195 Q560 148 700 130 Q795 118 852 128 Q842 160 762 167 Q622 177 502 216 Q456 210 430 195 Z"/>
       <text class="isl" x="565" y="168" transform="rotate(-7 565 168)">NEW BRITAIN</text>
-      <circle cx="852" cy="132" r="6" fill="var(--ink)"/>
-      <text class="place" x="812" y="118">RABAUL</text>
-      <g class="ship" transform="translate(872,58)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
-      <g class="ship" transform="translate(902,90)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
-      <g class="ship" transform="translate(878,122)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
-      <text class="side" x="890" y="42" text-anchor="middle" fill="var(--terracotta)">JAPANESE CONVOY</text>
       <path class="route" d="M845 118 Q490 8 210 230"/>
       <path d="M210 230 l17 -12 m-17 12 l19 3" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/>
-      <text class="rlabel" x="392" y="66">NORTHERN ROUTE &middot; RAIN</text>
       <path class="route" d="M862 168 Q640 335 226 262"/>
       <path d="M226 262 l19 -6 m-19 6 l17 9" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/>
-      <text class="rlabel" x="440" y="352">SOUTHERN ROUTE &middot; FAIR</text>
-      <g fill="var(--ink)"><circle cx="316" cy="88" r="15"/><circle cx="338" cy="80" r="18"/><circle cx="360" cy="90" r="13"/><rect x="302" y="86" width="72" height="14" rx="7"/></g>
-      <g class="rain"><line x1="316" y1="112" x2="309" y2="128"/><line x1="336" y1="112" x2="329" y2="128"/><line x1="356" y1="112" x2="349" y2="128"/></g>
-      <g><circle cx="700" cy="290" r="13" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3.5" stroke-linecap="round"><line x1="700" y1="268" x2="700" y2="260"/><line x1="700" y1="312" x2="700" y2="320"/><line x1="678" y1="290" x2="670" y2="290"/><line x1="722" y1="290" x2="730" y2="290"/><line x1="684" y1="274" x2="678" y2="268"/><line x1="716" y1="306" x2="722" y2="312"/><line x1="716" y1="274" x2="722" y2="268"/><line x1="684" y1="306" x2="678" y2="312"/></g></g>
+      <g class="ship" transform="translate(872,58)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
+      <g class="ship" transform="translate(902,92)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
+      <g class="ship" transform="translate(878,126)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
       <g class="plane" transform="translate(150,110) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
       <g class="plane" transform="translate(206,76) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
-      <g class="plane" transform="translate(222,140) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
-      <text class="side" x="182" y="38" fill="var(--teal)">KENNEY&rsquo;S BOMBERS</text>
+      <g transform="translate(300,64) scale(.85)"><g fill="var(--ink)"><circle cx="14" cy="12" r="11"/><circle cx="32" cy="6" r="14"/><circle cx="50" cy="14" r="10"/><rect x="2" y="12" width="58" height="12" rx="6"/></g><g class="rain"><line x1="14" y1="34" x2="9" y2="48"/><line x1="30" y1="34" x2="25" y2="48"/><line x1="46" y1="34" x2="41" y2="48"/></g></g>
+      <g transform="translate(470,26) scale(.85)"><g fill="var(--ink)"><circle cx="14" cy="12" r="11"/><circle cx="32" cy="6" r="14"/><circle cx="50" cy="14" r="10"/><rect x="2" y="12" width="58" height="12" rx="6"/></g><g class="rain"><line x1="14" y1="34" x2="9" y2="48"/><line x1="30" y1="34" x2="25" y2="48"/><line x1="46" y1="34" x2="41" y2="48"/></g></g>
+      <g transform="translate(630,44) scale(.85)"><g fill="var(--ink)"><circle cx="14" cy="12" r="11"/><circle cx="32" cy="6" r="14"/><circle cx="50" cy="14" r="10"/><rect x="2" y="12" width="58" height="12" rx="6"/></g><g class="rain"><line x1="14" y1="34" x2="9" y2="48"/><line x1="30" y1="34" x2="25" y2="48"/><line x1="46" y1="34" x2="41" y2="48"/></g></g>
+      <g transform="translate(430,330)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
+      <g transform="translate(590,300)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
+      <g transform="translate(750,262)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
     </svg>
-    <div class="cap" style="max-width:none;min-height:104px;text-align:center">
-      In February 1943, General George Churchill Kenney, Commander of the Allied Air Forces in the Southwest Pacific, was faced with a problem.
-      <span data-step="1"> The Japanese were about to reinforce their army in New Guinea: sail <b>north</b> of New Britain in the rain, or <b>south</b> in fair weather &ndash; three days either way.</span>
-      <span data-step="2"> Kenney had to decide where to concentrate his reconnaissance aircraft.</span><br>
-      <span data-step="3">The Japanese wanted their ships to have the least possible exposure to enemy bombers, and of course, General Kenney wanted the reverse</span>
+    <div class="kgrid">
+      <div class="kitem">February 1943: the Japanese are about to reinforce their army in New Guinea</div>
+      <div class="kitem" data-step="1">They can sail <b>north</b> of New Britain in the rain, or <b>south</b> in fair weather &ndash; three days either way</div>
+      <div class="kitem" data-step="2">General Kenney must decide where to concentrate his reconnaissance aircraft</div>
+      <div class="kitem" data-step="3">The Japanese want the least possible exposure to his bombers, and of course, Kenney wants the reverse</div>
     </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 3 · WAR GAME</div>
+  <h2>What should each side do?</h2>
+  <div class="fig" style="top:176px;bottom:56px">
+    <svg class="wmap" id="warmap" viewBox="0 0 1000 400" style="max-width:980px">
+      <rect class="sea" x="1.5" y="1.5" width="997" height="397"/>
+      <path class="land" d="M2 150 Q90 168 150 210 Q210 252 245 312 Q268 355 278 398 L2 398 Z"/>
+      <text class="isl" x="40" y="376">NEW GUINEA</text>
+      <path class="land" d="M430 195 Q560 148 700 130 Q795 118 852 128 Q842 160 762 167 Q622 177 502 216 Q456 210 430 195 Z"/>
+      <text class="isl" x="565" y="168" transform="rotate(-7 565 168)">NEW BRITAIN</text>
+      <path class="route" d="M845 118 Q490 8 210 230"/>
+      <path d="M210 230 l17 -12 m-17 12 l19 3" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/>
+      <path class="route" d="M862 168 Q640 335 226 262"/>
+      <path d="M226 262 l19 -6 m-19 6 l17 9" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/>
+      <g transform="translate(300,64) scale(.85)"><g fill="var(--ink)"><circle cx="14" cy="12" r="11"/><circle cx="32" cy="6" r="14"/><circle cx="50" cy="14" r="10"/><rect x="2" y="12" width="58" height="12" rx="6"/></g><g class="rain"><line x1="14" y1="34" x2="9" y2="48"/><line x1="30" y1="34" x2="25" y2="48"/><line x1="46" y1="34" x2="41" y2="48"/></g></g>
+      <g transform="translate(470,26) scale(.85)"><g fill="var(--ink)"><circle cx="14" cy="12" r="11"/><circle cx="32" cy="6" r="14"/><circle cx="50" cy="14" r="10"/><rect x="2" y="12" width="58" height="12" rx="6"/></g><g class="rain"><line x1="14" y1="34" x2="9" y2="48"/><line x1="30" y1="34" x2="25" y2="48"/><line x1="46" y1="34" x2="41" y2="48"/></g></g>
+      <g transform="translate(630,44) scale(.85)"><g fill="var(--ink)"><circle cx="14" cy="12" r="11"/><circle cx="32" cy="6" r="14"/><circle cx="50" cy="14" r="10"/><rect x="2" y="12" width="58" height="12" rx="6"/></g><g class="rain"><line x1="14" y1="34" x2="9" y2="48"/><line x1="30" y1="34" x2="25" y2="48"/><line x1="46" y1="34" x2="41" y2="48"/></g></g>
+      <g transform="translate(430,330)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
+      <g transform="translate(590,300)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
+      <g transform="translate(750,262)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
+      <g class="unit ship" data-x="872" data-y="58"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/><rect x="-8" y="-8" width="60" height="38" fill="transparent"/></g>
+      <g class="unit ship" data-x="902" data-y="92"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/><rect x="-8" y="-8" width="60" height="38" fill="transparent"/></g>
+      <g class="unit ship" data-x="878" data-y="126"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/><rect x="-8" y="-8" width="60" height="38" fill="transparent"/></g>
+      <g class="unit plane" data-x="150" data-y="110" data-rot="70"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/><rect x="-22" y="-24" width="44" height="48" fill="transparent"/></g>
+      <g class="unit plane" data-x="206" data-y="76" data-rot="70"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/><rect x="-22" y="-24" width="44" height="48" fill="transparent"/></g>
+      <g class="unit plane" data-x="222" data-y="140" data-rot="70"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/><rect x="-22" y="-24" width="44" height="48" fill="transparent"/></g>
+    </svg>
   </div>
 </section>
 
 <section class="slide content" data-i="10">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
-  <h2>What should each side do?</h2>
-  <div class="fig" style="top:186px;bottom:80px;gap:16px">
-    <svg class="wmap" viewBox="0 0 1000 400" style="max-width:900px">
-      <rect class="sea" x="1.5" y="1.5" width="997" height="397"/>
-      <path class="land" d="M2 150 Q90 168 150 210 Q210 252 245 312 Q268 355 278 398 L2 398 Z"/>
-      <text class="isl" x="48" y="330">NEW GUINEA</text>
-      <circle cx="196" cy="242" r="7" fill="var(--red)"/>
-      <text class="place" x="148" y="268">LAE</text>
-      <path class="land" d="M430 195 Q560 148 700 130 Q795 118 852 128 Q842 160 762 167 Q622 177 502 216 Q456 210 430 195 Z"/>
-      <text class="isl" x="565" y="168" transform="rotate(-7 565 168)">NEW BRITAIN</text>
-      <circle cx="852" cy="132" r="6" fill="var(--ink)"/>
-      <text class="place" x="812" y="118">RABAUL</text>
-      <g class="ship" transform="translate(872,58)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
-      <g class="ship" transform="translate(902,90)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
-      <g class="ship" transform="translate(878,122)"><polygon points="0,10 44,10 38,20 6,20"/><rect x="14" y="2" width="10" height="8"/><rect x="27" y="5" width="7" height="5"/></g>
-      <text class="qq" x="888" y="42" text-anchor="middle">NORTH, OR SOUTH?</text>
-      <path class="route" d="M845 118 Q490 8 210 230"/>
-      <path d="M210 230 l17 -12 m-17 12 l19 3" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/>
-      <text class="rlabel" x="392" y="66">NORTHERN ROUTE &middot; RAIN</text>
-      <path class="route" d="M862 168 Q640 335 226 262"/>
-      <path d="M226 262 l19 -6 m-19 6 l17 9" fill="none" stroke="var(--ink)" stroke-width="3.2" stroke-linecap="round"/>
-      <text class="rlabel" x="440" y="352">SOUTHERN ROUTE &middot; FAIR</text>
-      <g fill="var(--ink)"><circle cx="316" cy="88" r="15"/><circle cx="338" cy="80" r="18"/><circle cx="360" cy="90" r="13"/><rect x="302" y="86" width="72" height="14" rx="7"/></g>
-      <g class="rain"><line x1="316" y1="112" x2="309" y2="128"/><line x1="336" y1="112" x2="329" y2="128"/><line x1="356" y1="112" x2="349" y2="128"/></g>
-      <g><circle cx="700" cy="290" r="13" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3.5" stroke-linecap="round"><line x1="700" y1="268" x2="700" y2="260"/><line x1="700" y1="312" x2="700" y2="320"/><line x1="678" y1="290" x2="670" y2="290"/><line x1="722" y1="290" x2="730" y2="290"/><line x1="684" y1="274" x2="678" y2="268"/><line x1="716" y1="306" x2="722" y2="312"/><line x1="716" y1="274" x2="722" y2="268"/><line x1="684" y1="306" x2="678" y2="312"/></g></g>
-      <g class="plane" transform="translate(150,110) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
-      <g class="plane" transform="translate(206,76) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
-      <g class="plane" transform="translate(222,140) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
-      <text class="qq" x="186" y="38">PATROL NORTH, OR SOUTH?</text>
-    </svg>
-    <div class="cap" style="max-width:none;text-align:center" data-step="1">Each side must pick its <b>best response</b> to what it thinks the other side will do</div>
-  </div>
-</section>
-
-<section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
-  <h2>Days of bombing</h2>
+  <h2>The game expressed as a payoff matrix</h2>
   <div class="fig" style="top:180px">
     <div class="mxwrap">
       <div class="mx" style="--cols:2;--rows:2;--cw:220px;--rh:96px">
@@ -403,26 +365,25 @@
         <div class="cl" style="grid-column:3">Northern Route</div>
         <div class="cl" id="bcl2" style="grid-column:4">Southern Route</div>
         <div class="rl" style="grid-row:3">Northern Route</div>
-        <div class="rl" style="grid-row:4">Southern Route</div>
-        <div class="cell" id="b11" style="grid-row:3;grid-column:3"><span class="val" id="nb11">2 Days</span></div>
+        <div class="rl" id="brl2" style="grid-row:4">Southern Route</div>
+        <div class="cell" id="b11" style="grid-row:3;grid-column:3"><span class="val">2 Days</span></div>
         <div class="cell" id="b12" style="grid-row:3;grid-column:4"><span class="val">2 Days</span></div>
         <div class="cell" id="b21" style="grid-row:4;grid-column:3"><span class="val">1 Day</span></div>
         <div class="cell" id="b22" style="grid-row:4;grid-column:4"><span class="val">3 Days</span></div>
       </div>
       <div class="mxnote">
         <span data-step="1">The Japanese should never sail south &ndash; the northern route means less exposure whatever the Allies do&hellip;</span>
-        <span data-step="2"> when Kenney realizes this, his choice is clear: pick the biggest number left&hellip;go north.</span>
+        <span data-step="2"> when Kenney realizes this, his choice is clear&hellip;go north.</span>
         <span data-step="3"> <b>The game has an &ldquo;equilibrium point&rdquo;</b> &ndash; a stable outcome, because a player unilaterally picking a new strategy is not helped by the change</span>
       </div>
     </div>
     <span data-step="1" data-stepcall="mxMark" data-cells="bcl2,b12,b22" data-cls="gone" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="nb11" data-cls="circ" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="b21" data-cls="gone" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="brl2,b21" data-cls="gone" style="position:absolute;width:0;height:0"></span>
     <span data-step="3" data-stepcall="mxMark" data-cells="b11" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="12">
+<section class="slide content" data-i="11">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>A zero-sum game in your own market</h2>
   <div class="leadline">A mature market is a <b>fixed pie</b>: every point of share you win comes straight off your rival&rsquo;s total</div>
@@ -438,7 +399,7 @@
         <div class="rl" style="grid-row:3">Promote Hard</div>
         <div class="rl" id="mr2" style="grid-row:4">Match the Market</div>
         <div class="rl" id="mr3" style="grid-row:5">Pull Back Spend</div>
-        <div class="cell" id="m11" style="grid-row:3;grid-column:3"><span class="pa" id="n11">50%</span></div>
+        <div class="cell" id="m11" style="grid-row:3;grid-column:3"><span class="pa">50%</span></div>
         <div class="cell" id="m12" style="grid-row:3;grid-column:4"><span class="pa">60%</span></div>
         <div class="cell" id="m13" style="grid-row:3;grid-column:5"><span class="pa">70%</span></div>
         <div class="cell" id="m21" style="grid-row:4;grid-column:3"><span class="pa">40%</span></div>
@@ -459,13 +420,12 @@
     <span data-step="1" data-stepcall="mxMark" data-cells="mc3,m13,m23,m33" data-cls="gone" style="position:absolute;width:0;height:0"></span>
     <span data-step="2" data-stepcall="mxMark" data-cells="mr3,m31,m32" data-cls="gone" style="position:absolute;width:0;height:0"></span>
     <span data-step="3" data-stepcall="mxMark" data-cells="mc2,m12,m22" data-cls="gone" style="position:absolute;width:0;height:0"></span>
-    <span data-step="4" data-stepcall="mxMark" data-cells="n11" data-cls="circ" style="position:absolute;width:0;height:0"></span>
     <span data-step="4" data-stepcall="mxMark" data-cells="m21,mr2" data-cls="gone" style="position:absolute;width:0;height:0"></span>
     <span data-step="5" data-stepcall="mxMark" data-cells="m11" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="13">
+<section class="slide content" data-i="12">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>Guidelines for solving zero-sum games</h2>
   <div class="fig" style="top:220px;gap:30px">
@@ -480,21 +440,20 @@
   </div>
 </section>
 
-<section class="slide content" data-i="14">
+<section class="slide content" data-i="13">
   <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
-  <h2>Combining sequential and simultaneous thinking: Hotelling&rsquo;s game</h2>
-  <ul class="bullets" style="margin-top:44px">
-    <li>We&rsquo;ve so far considered how to solve zero-sum games with <b>finite</b> choices available (go north/go south; promote hard/match the market)</li>
-    <li data-step="1">But what strategy should we use if the choices are <b>infinite</b>?</li>
-    <li data-step="2">Consider <b>Hotelling&rsquo;s game</b></li>
-    <li class="sub" data-step="2">Two vendors are selling hot dogs to beach goers &ndash; identical products and prices</li>
-    <li class="sub" data-step="2">Vendors choose where to place their carts</li>
-    <li class="sub" data-step="2">Beach goers will always choose the closest cart</li>
-    <li data-step="3"><b>Where should the vendors set up their carts?</b></li>
-  </ul>
+  <h2>Consider Hotelling&rsquo;s game</h2>
+  <div class="cartstage" id="cartstage">
+    <div class="bigcart a" id="bigA" style="left:16%;top:34%">
+      <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+    </div>
+    <div class="bigcart b" id="bigB" style="left:62%;top:34%">
+      <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+    </div>
+  </div>
 </section>
 
-<section class="slide content" data-i="15">
+<section class="slide content" data-i="14">
   <div class="kicker"><i></i>MODULE 3 · LIVE</div>
   <h2>The beach</h2>
   <div class="fig" style="top:180px">
@@ -523,7 +482,7 @@
   </div>
 </section>
 
-<section class="slide content" data-i="16">
+<section class="slide content" data-i="15">
   <div class="kicker"><i></i>MODULE 3 · IN PAIRS</div>
   <h2>Where else do we see Hotelling&rsquo;s game?</h2>
   <ul class="bullets" style="max-width:640px">
@@ -539,7 +498,7 @@
   </div>
 </section>
 
-<section class="slide content" data-i="17">
+<section class="slide content" data-i="16">
   <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Application to politics: the median voter theorem</h2>
   <div class="leadline" style="max-width:1010px;margin-left:auto;margin-right:auto">Hotelling proposed this game in 1929 &ndash; in 1957, a political scientist named Downs proposed that <b>political representation</b> operates just like vendors on a beach</div>
@@ -573,7 +532,7 @@
   </div>
 </section>
 
-<section class="slide content" data-i="18">
+<section class="slide content" data-i="17">
   <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Challenges to the median voter theorem</h2>
   <div class="ptrow">
@@ -586,7 +545,7 @@
   </div>
 </section>
 
-<section class="slide content" data-i="19">
+<section class="slide content" data-i="18">
   <div class="kicker"><i></i>MODULE 3 · COMPANY SLOT</div>
   <h2>Where does your market cluster?</h2>
   <div class="fig">
@@ -599,66 +558,62 @@
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
 
 <script>
-/* ---- live polls: try the gt-poll worker, fall back to marked demo data ---- */
+/* ---- live poll on the truel slide: crowds fill the shooter tiles as
+   answers arrive; falls back to marked demo data ---- */
 const POLL_API='https://gt-poll.rlamare.workers.dev';
 const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
-function mkPoll(pollId, nId, optIds, demoId, demoDist){
-  const st={live:false,counts:demoDist.slice(),total:0,demoShown:0,revealed:false};
-  const nEl=document.getElementById(nId);
-  function renderCount(){nEl.textContent=st.live?st.total:st.demoShown;}
+(function(){
+  const optIds=['pto1','pto2','pto3'], demoDist=[11,6,4];
+  const st={live:false,counts:[0,0,0],demoShown:0};
+  const nEl=document.getElementById('ptN');
   function crowdHTML(n){
     let h='';
     for(let i=0;i<Math.min(n,24);i++)h+=PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"');
     return h;
   }
-  function renderCrowds(){
-    const counts=st.live?st.counts:demoDist;
+  function render(){
+    const counts=st.live?st.counts:demoDist.map(d=>Math.min(d,Math.round(st.demoShown*d/21)));
+    nEl.textContent=counts.reduce((a,b)=>a+b,0);
     optIds.forEach((id,i)=>{
       const o=document.getElementById(id);
       const crowd=o.querySelector('.crowd');
-      if(st.revealed){
-        const want=Math.min(counts[i]||0,24);
-        if(crowd.children.length!==want){crowd.innerHTML=crowdHTML(counts[i]||0);void crowd.offsetWidth;}
-      }else crowd.innerHTML='';
-      o.classList.toggle('revealed',st.revealed);
-      o.querySelector('.pnum').textContent=st.revealed?(counts[i]||0):'';
+      const want=Math.min(counts[i]||0,24);
+      if(crowd.children.length!==want){crowd.innerHTML=crowdHTML(counts[i]||0);void crowd.offsetWidth;}
+      o.classList.add('revealed');
+      o.querySelector('.pnum').textContent=counts[i]||0;
     });
   }
   function fetchIt(){
-    fetch(POLL_API+'/p/'+pollId).then(r=>r.json()).then(d=>{
+    fetch(POLL_API+'/p/m3-truel').then(r=>r.json()).then(d=>{
       st.live=true;
-      document.getElementById(demoId).style.display='none';
+      document.getElementById('ptdemo').style.display='none';
       st.counts=optIds.map((_,i)=>d.counts[i]||0);
-      st.total=d.total;
-      renderCount();
-      if(st.revealed)renderCrowds();
+      render();
     }).catch(()=>{});
   }
   setInterval(fetchIt,2500);fetchIt();
-  setInterval(()=>{const demoTotal=demoDist.reduce((a,b)=>a+b,0);
-    if(!st.live&&st.demoShown<demoTotal){st.demoShown++;renderCount();}},420);
-  return {reveal(on){st.revealed=on;renderCrowds();}};
-}
-const pollB=mkPoll('m3-barbados','pbN',['pbo1','pbo2','pbo3'],'pbdemo',[10,7,3]);
-const pollT=mkPoll('m3-truel','ptN',['pto1','pto2','pto3'],'ptdemo',[11,6,4]);
-function pbReveal(el,on){pollB.reveal(on);}
-function ptReveal(el,on){pollT.reveal(on);}
-function truelWin(el,on){document.getElementById('pto3').classList.toggle('winner',on);}
+  setInterval(()=>{if(!st.live&&st.demoShown<21){st.demoShown++;render();}},500);
+  render();
+})();
 
-/* ---- Barbados clip: load the YouTube embed only on click ---- */
-document.getElementById('clipload').addEventListener('click',()=>{
-  const wrap=document.getElementById('clipwrap');
-  const f=document.createElement('iframe');
-  f.src='https://www.youtube.com/embed/TbuD-6BbnQw?autoplay=1';
-  f.title='Barbados vs. Grenada';
-  f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-  f.allowFullscreen=true;
-  wrap.replaceChildren(f);
-});
+/* ---- embedded clips: load YouTube only on click (the titles spoil the endings) ---- */
+function clipOnClick(btnId,wrapId,videoId,title){
+  document.getElementById(btnId).addEventListener('click',()=>{
+    const wrap=document.getElementById(wrapId);
+    const f=document.createElement('iframe');
+    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    f.title=title;
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    f.allowFullscreen=true;
+    wrap.replaceChildren(f);
+  });
+}
+clipOnClick('clipload','clipwrap','TbuD-6BbnQw','Barbados vs. Grenada');
+clipOnClick('standoffload','standoffwrap','IHQr0HCIN2w','Mexican standoff');
 
 /* ---- pairs game timer (2:00) ---- */
 (function(){
@@ -674,6 +629,47 @@ document.getElementById('clipload').addEventListener('click',()=>{
       if(t<=10)disp.classList.add('low');
       if(t<=0){clearInterval(iv);iv=null;}
     },1000);
+  });
+})();
+
+/* ---- war-game map: every ship and plane drags freely ---- */
+(function(){
+  const svg=document.getElementById('warmap');
+  svg.querySelectorAll('.unit').forEach(u=>{
+    const rot=u.dataset.rot?' rotate('+u.dataset.rot+')':'';
+    let pos={x:+u.dataset.x,y:+u.dataset.y};
+    const apply=()=>u.setAttribute('transform','translate('+pos.x+','+pos.y+')'+rot);
+    apply();
+    u.addEventListener('pointerdown',e=>{
+      e.preventDefault();u.setPointerCapture(e.pointerId);
+      const pt=svg.createSVGPoint();
+      const toSvg=ev=>{pt.x=ev.clientX;pt.y=ev.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());};
+      const s=toSvg(e), off={x:s.x-pos.x,y:s.y-pos.y};
+      const move=ev=>{const p=toSvg(ev);pos={x:p.x-off.x,y:p.y-off.y};apply();};
+      const up=()=>{u.removeEventListener('pointermove',move);u.removeEventListener('pointerup',up);};
+      u.addEventListener('pointermove',move);u.addEventListener('pointerup',up);
+    });
+  });
+})();
+
+/* ---- big free-roaming carts on the Hotelling opener ---- */
+(function(){
+  const stage=document.getElementById('cartstage');
+  ['bigA','bigB'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('pointerdown',e=>{
+      e.preventDefault();el.setPointerCapture(e.pointerId);
+      const r0=el.getBoundingClientRect();
+      const off={x:e.clientX-r0.left,y:e.clientY-r0.top};
+      const move=ev=>{
+        const r=stage.getBoundingClientRect();
+        const x=Math.max(0,Math.min(r.width-r0.width,ev.clientX-r.left-off.x));
+        const y=Math.max(0,Math.min(r.height-r0.height,ev.clientY-r.top-off.y));
+        el.style.left=(x/r.width*100)+'%';el.style.top=(y/r.height*100)+'%';
+      };
+      const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};
+      el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+    });
   });
 })();
 
