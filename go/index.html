@@ -21,6 +21,14 @@ button.opt .e{font-size:26px;flex:none;letter-spacing:.05em}
 button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
 .status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
 .status b{color:var(--red)}
+/* write-in polls (type:"text"): send as many answers as you like */
+.sayrow{display:flex;gap:10px}
+.sayrow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.sayrow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.sent{display:flex;flex-direction:column;gap:8px}
+.sent .s{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:15px;padding:9px 14px}
 </style>
 </head><body>
 <div class="wrap">
@@ -45,6 +53,7 @@ fetch('polls.json').then(r=>r.json()).then(cfg=>{
   if(!poll){document.getElementById('q').textContent='No poll is running right now.';return;}
   document.getElementById('q').textContent=poll.q;
   const opts=document.getElementById('opts');
+  if(poll.type==='text'){setupText(opts);return;}
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
   poll.options.forEach((o,i)=>{
     const b=document.createElement('button');
@@ -58,6 +67,33 @@ fetch('polls.json').then(r=>r.json()).then(cfg=>{
   if(mine!==null&&opts.children[+mine]){opts.children[+mine].classList.add('mine');
     document.getElementById('status').innerHTML='<b>Answer received.</b> Tap another option to change it.';}
 }).catch(()=>{document.getElementById('q').textContent='Could not load the poll — check the address.';});
+function setupText(opts){
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
+  const row=document.createElement('div');row.className='sayrow';
+  const inp=document.createElement('input');
+  inp.maxLength=80;inp.placeholder='Type an example…';inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='SEND';
+  row.appendChild(inp);row.appendChild(btn);opts.appendChild(row);
+  const sent=document.createElement('div');sent.className='sent';opts.appendChild(sent);
+  const st=document.getElementById('status');
+  function send(){
+    const t=inp.value.trim();
+    if(!t)return;
+    btn.disabled=true;st.textContent='Sending…';
+    fetch(API+'/p/'+pollId+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:t,v:voter})})
+    .then(r=>{if(!r.ok)throw r.status;
+      const s=document.createElement('div');s.className='s';s.textContent=t;
+      sent.prepend(s);
+      inp.value='';inp.focus();
+      st.innerHTML='<b>Sent.</b> Keep them coming — send as many as you can think of.';})
+    .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';})
+    .finally(()=>{btn.disabled=false;});
+  }
+  btn.addEventListener('click',send);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}});
+  inp.focus();
+}
 function vote(i,btn){
   const st=document.getElementById('status');
   st.textContent='Sending…';

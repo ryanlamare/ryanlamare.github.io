@@ -6,12 +6,17 @@
 // polls GET /p/:id and decides for itself when to reveal — the server never
 // knows whether results are on screen.
 //
-//   POST /p/:id/vote   {o: 0..7, v: "voter-uuid"}      -> {ok:true}
+//   POST /p/:id/vote     {o: 0..7, v: "voter-uuid"}    -> {ok:true}
 //   GET  /p/:id                                        -> {counts:[..], total}
-//   POST /p/:id/reset  {s: "<ADMIN_SECRET>"}           -> {ok:true}
+//   POST /p/:id/say      {t: "text", v: "voter-uuid"}  -> {ok:true}
+//   GET  /p/:id/answers                                -> {answers:[..], total}
+//   POST /p/:id/reset    {s: "<ADMIN_SECRET>"}         -> {ok:true}
 //
 // Poll ids are [a-z0-9-], max 64 chars. Question text and option labels live
-// in the site's /go/polls.json, not here — the server only counts.
+// in the site's /go/polls.json, not here — the server only counts. /say is
+// the write-in lane (the Hotelling examples wall): unlike votes, one voter
+// may send several answers; capped per voter and per room so a stuck finger
+// or a prankster can't flood the screen.
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +35,7 @@ export default {
   async fetch(req, env) {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     const url = new URL(req.url);
-    const m = url.pathname.match(/^\/p\/([a-z0-9-]{1,64})(\/(vote|reset))?$/);
+    const m = url.pathname.match(/^\/p\/([a-z0-9-]{1,64})(\/(vote|say|answers|reset))?$/);
     if (!m) return json({ error: 'not found' }, 404);
     const stub = env.POLLS.get(env.POLLS.idFromName(m[1]));
     return stub.fetch(req);
@@ -47,6 +52,11 @@ export class PollRoom {
     const url = new URL(req.url);
     const action = url.pathname.split('/')[3] || '';
 
+    if (req.method === 'GET' && action === 'answers') {
+      const answers = (await this.storage.get('answers')) || [];
+      return json({ answers: answers.map(a => a.t), total: answers.length });
+    }
+
     if (req.method === 'GET') {
       const votes = (await this.storage.get('votes')) || {};
       const counts = [];
@@ -57,6 +67,22 @@ export class PollRoom {
       }
       for (let i = 0; i < counts.length; i++) counts[i] = counts[i] || 0;
       return json({ counts, total });
+    }
+
+    if (req.method === 'POST' && action === 'say') {
+      let body;
+      try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); }
+      const v = String(body.v || '');
+      if (!/^[A-Za-z0-9-]{8,64}$/.test(v)) return json({ error: 'bad voter' }, 400);
+      // eslint-disable-next-line no-control-regex
+      const t = String(body.t || '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (!t) return json({ error: 'bad text' }, 400);
+      const answers = (await this.storage.get('answers')) || [];
+      if (answers.length >= 400) return json({ error: 'full' }, 429);
+      if (answers.filter(a => a.v === v).length >= 15) return json({ error: 'enough' }, 429);
+      answers.push({ v, t });
+      await this.storage.put('answers', answers);
+      return json({ ok: true });
     }
 
     if (req.method === 'POST' && action === 'vote') {
@@ -77,6 +103,7 @@ export class PollRoom {
       const secret = this.env.ADMIN_SECRET;
       if (!secret || body.s !== secret) return json({ error: 'no' }, 403);
       await this.storage.delete('votes');
+      await this.storage.delete('answers');
       return json({ ok: true });
     }
 
