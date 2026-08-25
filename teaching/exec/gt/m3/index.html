@@ -5,47 +5,88 @@
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
 <style>
-/* Hotelling beach widget */
-.beach{position:relative;width:100%;height:170px;background:linear-gradient(180deg,var(--tan-light) 0 62%,var(--blue) 62% 100%);border:2.5px solid var(--ink);user-select:none;touch-action:none}
+/* Module-3 widgets (shared components live in deck.css) */
+/* truel tiles (container lifted from the m2 three-games row) */
+.gtiles{position:absolute;left:96px;right:96px;top:250px;bottom:120px;display:flex;justify-content:center;gap:44px;align-items:flex-start}
+.gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.gtile .gs{font-weight:500;font-size:17px;color:var(--muted);line-height:1.32;max-width:24ch}
+.gtile .gq{font-weight:500;font-style:italic;font-size:17px;color:var(--ink);line-height:1.3}
+.hitpct{font-family:var(--display);font-weight:900;font-size:58px;line-height:1;color:var(--ink)}
+/* three-option poll */
+.pollopts.three{grid-template-columns:repeat(3,1fr);flex:0 0 auto}
+.pollopts.three .popt{height:196px}
+.pollopts.three .ptxt{padding-right:0}
+.popt .crowd{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 6px;margin-top:5px;min-height:56px;overflow:hidden}
+.popt .crowd svg{width:24px;height:32px;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.popt.revealed .crowd svg{opacity:1;transform:scale(1)}
+.popt .pnum{position:absolute;right:16px;bottom:10px}
+.popt.winner{outline:4px solid var(--red);outline-offset:3px}
+/* matrix solving, per Ryan's ruling: dominated strategies disappear, the
+   dominant strategy's numbers get circled, the red box marks only the
+   equilibrium */
+.mx .cell,.mx .cl,.mx .rl{transition:opacity .4s}
+.mx .cell.gone,.mx .cl.gone,.mx .rl.gone{opacity:.07}
+.mx .cell .val,.mx .cell .pa{position:relative}
+.mx .cell .val{color:var(--ink)}
+.mx .cell .val.circ::after,.mx .cell .pa.circ::after{content:"";position:absolute;inset:-7px -13px;
+  border:3px solid var(--red);border-radius:50%;pointer-events:none}
+/* Hotelling beach: draggable hot-dog carts */
+.beach{position:relative;width:100%;height:180px;background:linear-gradient(180deg,var(--tan-light) 0 62%,var(--blue) 62% 100%);border:2.5px solid var(--ink);user-select:none;touch-action:none}
 .beach .shade{position:absolute;top:0;bottom:38%;background:color-mix(in srgb, var(--teal) 30%, transparent)}
 .beach .shadeB{background:color-mix(in srgb, var(--terracotta) 30%, transparent)}
-.cart{position:absolute;top:14px;width:64px;margin-left:-32px;text-align:center;cursor:grab;font-weight:900;font-family:var(--display)}
-.cart .box{width:52px;height:44px;margin:0 auto;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--paper)}
-.cart.a .box{background:var(--teal)}
-.cart.b .box{background:var(--terracotta)}
-.cart .pct{font-size:19px;color:var(--ink);margin-top:6px}
-.beachnote{font-weight:500;font-size:18px;color:var(--muted);text-align:center;margin-top:14px}
+.cart{position:absolute;top:8px;width:92px;margin-left:-46px;text-align:center;cursor:grab}
+.cart svg{width:78px;height:auto;display:block;margin:0 auto}
+.cart .pct{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);margin-top:2px}
+.cart.a .cbody{fill:var(--teal)}
+.cart.b .cbody{fill:var(--terracotta)}
+.cart .cwheel{fill:var(--ink)}
+.cart .cletter{fill:var(--paper);font-family:var(--display);font-weight:900;font-size:26px}
+.widgetnote{font-weight:500;font-size:18px;color:var(--muted);text-align:center;margin-top:14px;min-height:26px}
+.widgetnote b{color:var(--red)}
+/* median-voter spectrum */
+.spec{position:relative;width:100%;max-width:1020px;height:200px;margin:0 auto;user-select:none;touch-action:none}
+.specband{position:absolute;left:0;right:0;top:66px;height:74px;border:2.5px solid var(--ink);
+  background:linear-gradient(90deg,var(--blue),var(--maroon) 55%,var(--red))}
+.specsplit{position:absolute;top:56px;height:94px;width:4px;margin-left:-2px;background:var(--ink)}
+.speclbl{position:absolute;top:98px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:13px;
+  color:color-mix(in srgb, var(--paper) 88%, transparent)}
+.cand{position:absolute;top:0;width:96px;margin-left:-48px;text-align:center;cursor:grab}
+.cand .badge{width:66px;height:66px;margin:0 auto;border-radius:50%;background:var(--paper);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.cand .badge svg{width:46px;height:auto;display:block}
+.cand .stem{width:4px;height:14px;background:var(--ink);margin:0 auto}
+.cand .cpct{font-family:var(--display);font-weight:900;font-size:26px;margin-top:74px}
+.cand.d .cpct{color:var(--blue)}
+.cand.r .cpct{color:var(--red)}
+.cand.d .animal{fill:var(--blue)}
+.cand.r .animal{fill:var(--red)}
 </style>
 </head><body>
 
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 3 — Simultaneous Zero-Sum Games</h1>
 <p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 25: Title slide</h2><p>Simultaneous zero-sum strategies. Module 3 of the Applied Game Theory executive programme.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 25: Introduction to simultaneous zero-sum strategies</h2><p>Although many strategic interactions involve sequential choices, often a player must make a choice without knowing what their rivals have chosen, and vice versa. Recall that one of the limitations of sequential games is the notion of complete information. In simultaneous games, we have our first application of incomplete information. Two types of simultaneous games: zero-sum (win/lose) and non-zero-sum (win/win). Applications: voting behavior; football plays; employment negotiations; etc.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 25: Characteristics of zero-sum games</h2><p>Rational parties. Each player has a choice of two or more strategies. Diametrically opposed interests.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 25: Some well-known zero-sum examples: soccer players during cup games</h2><p>Barbados needs to win by two goals. Goals count double if the game goes into overtime. It's 2-0 to Barbados. In the 83rd minute, Grenada scores (2-1). What should Barbados do? What should Grenada do?</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 25: Some well-known zero-sum examples: Jeopardy Champion Arthur Chu</h2><p>A clip placeholder for the Arthur Chu Jeopardy story.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 25: Other well-known zero-sum game players from throughout history</h2><p>Westley and Vizzini. Anyone who's ever played rock, paper, scissors (a mixed-strategy zero-sum game). Soccer teams' penalty kick takers (another mixed-strategy zero-sum game). Anyone who's ever been in a three-person duel — aka, Truel, aka "Mexican Standoff" (another variant of a zero-sum game).</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 25: Michael, Dwight, and Andy in a zero-sum truel game</h2><p>Dwight: "Fastest Crossbow in Scranton" Schrute (100% hit rate on his shots). Andy: "Cornell Gun Club President '06" Bernard (80% hit rate on his shots). Michael: "I Once Shot Myself by Mistake" Scott (50% hit rate on his shots). Shooting order is random, and after each person fires, he has to reload. Who would you rather be? What if Michael decides to (or is forced to) shoot first? "Survival of the weakest" — Michael wins 52% of the time; Dwight 30%; Andy 18%.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 25: Zero-sum games, common knowledge, and incomplete information</h2><p>Section transition slide with this title.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 25: Solving zero-sum games using payoff matrices</h2><p>In February 1943, General George Churchill Kenney, Commander of the Allied Air Forces in the Southwest Pacific, was faced with a problem. The Japanese were about to reinforce their army in New Guinea and had a choice of two routes. They could sail either north of New Britain, where the weather was rainy, or south of New Britain where the weather was generally fair. In any case, the journey would take three days. General Kenney had to decide where to concentrate the bulk of his reconnaissance aircraft. The Japanese wanted their ships to have the least possible exposure to enemy bombers, and of course, General Kenney wanted the reverse.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 25: The allies' choice</h2><p>It would be best for the Allied forces to choose the same route as the Japanese, but the Allies and the Japanese need to make a simultaneous choice. So the Allies — when they make their decision — don't know which route the Japanese will choose. All the Allies know is that the weather is rainy north of the island and fair south of the island, and they have a maximum of three possible days to bomb the Japanese. What should the Allies do? They must pick their best responses to what they think the Japanese will do, and vice versa!</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 25: The payoff matrix, days of bombing</h2><p>A two-by-two payoff matrix. Allied choice (rows: northern route, southern route) against Japanese choice (columns: northern route, southern route). Northern/northern: 2 days. Northern/southern: 2 days. Southern/northern: 1 day. Southern/southern: 3 days. Steps highlight the northern row (2 days either way), dim the southern row (1 day of risk against 3), and ring the equilibrium at northern/northern: 2 days.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 25: The Japanese choice</h2><p>For the Japanese, the northern route minimizes their exposure — whatever the Allies choose to do. When General Kenney realizes this, his choice is clear: go north. The game has an "equilibrium point". Recall, an equilibrium point is a stable outcome, because a player unilaterally picking a new strategy is not helped by the change.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 25: A workplace example</h2><p>Two workers, Casey and Pat, are vying to become the chief negotiator at a unionized company. There is a dispute over whether the union should employ hard or soft tactics in its upcoming negotiation with the employer. Each candidate must decide whether to favor hard or soft tactics, or evade the issue. The candidates can calculate how their decision will influence the votes they will receive in the upcoming election to decide who will be chief negotiator. They must pick their best responses to what they think each other will do.</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 25: The workplace example matrix</h2><p>A three-by-three matrix of Casey's vote share. Casey (rows: favor hard tactics, favor soft tactics, dodge the issue) against Pat (columns: the same three). Values by row: 45, 50, 40; 60, 55, 50; 45, 55, 40. Steps highlight Casey's soft-tactics row as dominant, dim the other rows, and ring the outcome at soft tactics versus dodge the issue: 50 percent.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 25: Seeking the dominant strategy</h2><p>Is there a dominant strategy for Casey? Yes: favor soft tactics. How about for Pat? Yes: if Pat realizes what Casey's strategy is certain to be, then clearly Pat should dodge the issue. What is the outcome? The outcome is 50% (conveniently an even split). Moral: always look for the dominant strategy, if there is one.</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 25: A slightly different workplace example</h2><p>A three-by-three matrix with a payoff pair in each cell (Casey's share, Pat's share). Row favor hard tactics: 35,65; 10,90; 60,40. Row favor soft tactics: 45,55; 55,45; 50,50. Row dodge the issue: 40,60; 10,90; 65,35. Steps scratch out Pat's dodge-the-issue column (inferior for Pat), highlight Casey's soft-tactics row, dim Casey's other rows, and ring the equilibrium at soft tactics versus hard tactics: 45, 55.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 25: Eliminating the inferior strategy</h2><p>Here it is clear Pat should never play the "Dodge the Issue" strategy. It is an inferior strategy for Pat (scratch it out). Effectively that means we have a 2 by 3 matrix. Casey's dominant strategy in the reduced matrix is clearly to favor soft tactics (this is their best response no matter what the other side does). If Casey always chooses to favor soft tactics, then clearly Pat's best response is to favor hard tactics.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 25: Guidelines for solving zero-sum games</h2><p>Identify dominant (or superior) strategies. A dominant strategy exists if a player's payoff from choosing this strategy is always greater than, or at least equal to, the payoff from choosing any other available strategy. If a dominant strategy exists, choose it! Eliminate dominated (or inferior) strategies. An inferior strategy exists if a player's payoff from choosing this strategy is always less than the payoff from choosing any other available strategy. If an inferior strategy exists, never choose it!</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 25: Combining sequential and simultaneous thinking: Hotelling's game</h2><p>We've so far considered how to solve zero-sum games with finite choices available (go north/go south; favor hard tactics/soft tactics/dodge the issue). But what strategy should we use if the choices are infinite? Consider Hotelling's game. Two vendors are selling goods to beach goers — identical products and prices. Vendors choose where to place their carts. Beach goers will always choose the closest cart. Where should the vendors set up their carts?</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 25: The beach, interactive</h2><p>An interactive beach strip with two draggable vendor carts, A and B. The beach shades toward whichever cart is closer, and each cart shows its live share of customers. Two preset buttons replay the lecture beats: "Suppose they set up like this" places A three-quarters of the way east and B in the middle (A gets 37.5 percent, B gets 62.5 percent); "They should always end up like this" places both carts together in the middle (50/50 — the equilibrium).</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 25: Hotelling's game, worked</h2><p>Each vendor has a choice of anywhere along the spectrum of the beach. The vendors will get all the customers more extreme to their location, and a portion of the customers less extreme to their location. Say Vendor A sets up 3/4ths of the way along the eastern side of the beach and Vendor B sets up exactly in the middle of the beach. Vendor A will get all customers farther east of the chosen location, and also a portion of customers between his/her location and the location of Vendor B. Vendor B will get all customers farther west of the chosen location, and also a portion of the customers between his/her location and the location of Vendor A. Who gets more customers? Vendor A gets 25% plus half of 25%, which is 37.5% of customers. Vendor B gets 50% plus half of 25%, which is 62.5% of customers. Is this game in equilibrium? No — Vendor A can improve by moving closer to Vendor B's position!</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 25: Applications of Hotelling's game to business strategies</h2><p>So, Vendors A and B will always try to locate themselves as close to each other as possible in order to receive the maximum amount of profit — this is the equilibrium. Does this game matter in actual business strategies? You bet! Examples: think about where gas stations locate; in Champaign — look at Home Depot and Lowe's; in Idaho — cupcake wars; in New York City — jewelry stores. This is also one reason why so many products are marketed and sold with such similar characteristics. Even differentiators like the airline JetBlue eventually look a lot more like other airlines. BUT — is this clustering socially optimal?</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 25: Application to politics: the median voter theorem</h2><p>Hotelling proposed this game in 1929 — in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach. Assume that ideologies of voters run from 0-100, with 0 being entirely Liberal and 100 being entirely Conservative. If Candidate A positions herself at 15 and Candidate B positions herself at 65, what will each vote share be? Candidate A gets all votes to the left of 15 and half the votes between 15 and 65: 15% plus 25% equals 40%. Candidate B gets all the votes to the right of 65 and half the votes between 65 and 15: 35% plus 25% equals 60%. Is this game at equilibrium? No, for the same reason as the hot dog vendor game was not at equilibrium. So, the successful Republican and Democrat candidates in presidential elections always look very similar. But do we see this in reality? What are some of the challenges that you can make to this theorem?</p></section>
-<section aria-label="Slide 24"><h2>Slide 24 of 25: Challenges to the median voter theorem</h2><p>Not all voters are evenly distributed across the political spectrum. There are always more than just two options for voters (third candidates/not voting). Voters may care about more than just unidimensional political issues. What if the candidates are lying? Can a voter really believe the announcement of a candidate's position on an issue? Can candidates actually commit themselves to their positions?</p></section>
-<section aria-label="Slide 25"><h2>Slide 25 of 25: Company slot</h2><p>A dashed placeholder card marking swappable client material: where the client's own market has Hotelling-style clustering or head-to-head zero-sum moves, written per engagement.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 21: Title slide</h2><p>Zero-sum games. Simultaneous zero-sum strategies. Module 3 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 21: Learning objectives</h2><p>Four numbered objectives: one, recognize zero-sum games, where one side's win is the other side's loss. Two, make strategic choices without knowing what your rival has chosen. Three, solve simultaneous games with payoff matrices, dominant strategies, and inferior strategies. Four, apply Hotelling's game to business and politics.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 21: Introduction to simultaneous zero-sum strategies</h2><p>Although many strategic interactions involve sequential choices, often a player must make a choice without knowing what their rivals have chosen, and vice versa. Recall that one of the limitations of sequential games is the notion of complete information. In simultaneous games, we have our first application of incomplete information. Two types of simultaneous games: zero-sum (win/lose) and non-zero-sum (win/win). Applications: voting behavior; football plays; pricing moves; etc.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 21: Characteristics of zero-sum games</h2><p>Rational parties. Each player has a choice of two or more strategies. Diametrically opposed interests.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 21: Some well-known zero-sum examples, soccer players during cup games</h2><p>Barbados needs to win by two goals. Goals count double if the game goes into overtime. It's 2-0 to Barbados. In the 83rd minute, Grenada scores (2-1). A link plays the Barbados vs. Grenada clip; the instructor pauses it to run the next slide's poll.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 21: What should Barbados do?</h2><p>A live poll answered on phones at ryanlamare.com/go (QR code shown), with three options: push for a third goal; defend the 2-1 lead; score an own goal. A response counter rises while the distribution stays hidden; a keypress reveals the answers as a crowd of Isotype figures per option. A further reveal asks the room: what should Grenada do? If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 21: Other well-known zero-sum game players from throughout history</h2><p>Westley and Vizzini. Anyone who's ever played rock, paper, scissors (a mixed-strategy zero-sum game). Soccer teams' penalty kick takers (another mixed-strategy zero-sum game). Anyone who's ever been in a three-person duel — aka, Truel, aka "Mexican Standoff" (another variant of a zero-sum game).</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 21: Michael, Dwight, and Andy in a zero-sum truel game</h2><p>Three tiles, one per shooter, each with a big hit-rate figure. Dwight Schrute, "Fastest Crossbow in Scranton": 100% hit rate on his shots. Andy Bernard, "Cornell Gun Club President '06": 80% hit rate on his shots. Michael Scott, "I Once Shot Myself by Mistake": 50% hit rate on his shots. One rule: shooting order is random, and after each person fires, he has to reload.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 21: Who would you rather be?</h2><p>A live poll with three options: Dwight (hits 100% of his shots), Andy (hits 80% of his shots), Michael (hits 50% of his shots). A keypress reveals the crowd of answers. Two further reveals: What if Michael decides to (or is forced to) shoot first? Then: "Survival of the weakest" — Michael wins 52% of the time; Dwight 30%; Andy 18% — and Michael's option card is ringed as the winner. A final reveal shows the link to the Mexican standoff clip.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 21: Solving zero-sum games using payoff matrices</h2><p>In February 1943, General George Churchill Kenney, Commander of the Allied Air Forces in the Southwest Pacific, was faced with a problem. The Japanese were about to reinforce their army in New Guinea and had a choice of two routes. They could sail either north of New Britain, where the weather was rainy, or south of New Britain where the weather was generally fair. In any case, the journey would take three days. General Kenney had to decide where to concentrate the bulk of his reconnaissance aircraft. The Japanese wanted their ships to have the least possible exposure to enemy bombers, and of course, General Kenney wanted the reverse.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 21: The allies' choice</h2><p>It would be best for the Allied forces to choose the same route as the Japanese, but the Allies and the Japanese need to make a simultaneous choice. So the Allies — when they make their decision — don't know which route the Japanese will choose. All the Allies know is that the weather is rainy north of the island and fair south of the island, and they have a maximum of three possible days to bomb the Japanese. What should the Allies do? They must pick their best responses to what they think the Japanese will do, and vice versa.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 21: Days of bombing</h2><p>A two-by-two payoff matrix. Allied choice (rows: northern route, southern route) against Japanese choice (columns: northern route, southern route). Northern/northern: 2 days. Northern/southern: 2 days. Southern/northern: 1 day. Southern/southern: 3 days. Steps circle the two days figures in the northern row as the dominant strategy, make the southern row disappear as the dominated one, and mark the equilibrium at northern/northern with a red box: 2 days.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 21: The Japanese choice</h2><p>For the Japanese, the northern route minimizes their exposure — whatever the Allies choose to do. When General Kenney realizes this, his choice is clear: go north. The game has an "equilibrium point". Recall, an equilibrium point is a stable outcome, because a player unilaterally picking a new strategy is not helped by the change.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 21: A zero-sum game in your own market</h2><p>Lead line: a mature market is a fixed pie — every point of share you win comes straight off your rival's total. A three-by-three payoff matrix of your share of the market (your rival gets the rest). Both you (rows) and your closest rival (columns) choose between promote hard, match the market, and pull back spend. Values by row: 50, 60, 70; 40, 50, 60; 30, 40, 50. Steps make both pull-back lines disappear as inferior strategies, circle the numbers in your promote-hard row as the dominant strategy while the matching row disappears, and mark the equilibrium with a red box where both sides promote hard: a 50/50 split.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 21: Guidelines for solving zero-sum games</h2><p>Identify dominant (or superior) strategies. A dominant strategy exists if a player's payoff from choosing this strategy is always greater than, or at least equal to, the payoff from choosing any other available strategy. If a dominant strategy exists, choose it. Eliminate dominated (or inferior) strategies. An inferior strategy exists if a player's payoff from choosing this strategy is always less than the payoff from choosing any other available strategy. If an inferior strategy exists, never choose it.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 21: Combining sequential and simultaneous thinking, Hotelling's game</h2><p>We've so far considered how to solve zero-sum games with finite choices available (go north/go south; promote hard/match the market). But what strategy should we use if the choices are infinite? Consider Hotelling's game. Two vendors are selling hot dogs to beach goers — identical products and prices. Vendors choose where to place their carts. Beach goers will always choose the closest cart. Where should the vendors set up their carts?</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 21: The beach</h2><p>An interactive beach strip with two draggable hot-dog carts, A in teal and B in terracotta, each showing its live share of customers; the sand shades toward whichever cart is closer. Two preset buttons replay the lecture beats: "Suppose they set up like this" places A three-quarters of the way east and B in the middle (A gets 37.5 percent, B gets 62.5 percent); "They should always end up like this" places both carts together in the middle, the 50/50 equilibrium. The instructor plays this live with the room.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 21: Applications of Hotelling's game to business strategies</h2><p>So, Vendors A and B will always try to locate themselves as close to each other as possible in order to receive the maximum amount of profit — this is the equilibrium. Does this game matter in actual business strategies? You bet! Examples: think about where gas stations locate; in London — look at the curry houses on Brick Lane; in Idaho — cupcake wars; in New York City — jewelry stores. This is also one reason why so many products are marketed and sold with such similar characteristics. Even differentiators like the airline JetBlue eventually look a lot more like other airlines. But is this clustering socially optimal?</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 21: Application to politics, the median voter theorem</h2><p>Lead line: Hotelling proposed this game in 1929 — in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach. An interactive political spectrum from 0, entirely Liberal, to 100, entirely Conservative, drawn as a band blending blue to red. Two draggable candidate badges — a blue donkey and a red rhino — each showing its live vote share, with a divider marking where voters switch sides. The same two preset buttons replay the beats: candidates apart (the blue candidate at 15 gets 40 percent, the red candidate at 65 gets 60 percent), then both converging on the median voter for 50/50.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 21: Challenges to the median voter theorem</h2><p>Not all voters are evenly distributed across the political spectrum. There are always more than just two options for voters (third candidates/not voting). Voters may care about more than just unidimensional political issues. What if the candidates are lying? Can a voter really believe the announcement of a candidate's position on an issue? Can candidates actually commit themselves to their positions?</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 21: Company slot</h2><p>A dashed placeholder card marking swappable client material: where the client's own market has Hotelling-style clustering or head-to-head zero-sum moves, written per engagement.</p></section>
 </section>
 
 <div class="viewport"><div class="stage">
@@ -60,6 +101,17 @@
 
 <section class="slide content" data-i="1">
   <div class="kicker"><i></i>MODULE 3</div>
+  <h2>Learning objectives</h2>
+  <div class="rail">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Recognize zero-sum games, where one side&rsquo;s win is the other side&rsquo;s loss</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Make strategic choices without knowing what your rival has chosen</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Solve simultaneous games with payoff matrices, dominant strategies, and inferior strategies</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Apply Hotelling&rsquo;s game to business and politics</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 3</div>
   <h2>Introduction to simultaneous zero-sum strategies</h2>
   <ul class="bullets">
     <li>Although many strategic interactions involve sequential choices, often a player must make a choice without knowing what their rivals have chosen, and vice versa</li>
@@ -68,11 +120,11 @@
     <li data-step="3">Two types of simultaneous games:</li>
     <li class="sub" data-step="3">Zero-sum (win/lose)</li>
     <li class="sub" data-step="3">Non-zero-sum (win/win)</li>
-    <li data-step="4">Applications: voting behavior; football plays; employment negotiations; etc.</li>
+    <li data-step="4">Applications: voting behavior; football plays; pricing moves; etc.</li>
   </ul>
 </section>
 
-<section class="slide content" data-i="2">
+<section class="slide content" data-i="3">
   <div class="kicker"><i></i>MODULE 3</div>
   <h2>Characteristics of zero-sum games</h2>
   <ul class="bullets" style="margin-top:60px">
@@ -82,7 +134,7 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="3">
+<section class="slide content" data-i="4">
   <div class="kicker"><i></i>MODULE 3</div>
   <h2>Some well-known zero-sum examples: soccer players during cup games</h2>
   <ul class="bullets">
@@ -90,24 +142,44 @@
     <li data-step="1">Goals count double if the game goes into overtime</li>
     <li data-step="2">It&rsquo;s 2-0 to Barbados</li>
     <li data-step="3">In the 83rd minute, Grenada scores (2-1)</li>
-    <li data-step="4"><b>What should Barbados do?</b></li>
-    <li data-step="5"><b>What should Grenada do?</b></li>
   </ul>
-</section>
-
-<section class="slide content" data-i="4">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Some well-known zero-sum examples: Jeopardy Champion Arthur Chu</h2>
-  <div class="fig">
-    <a class="medialink" href="#">
-      <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
-      <span class="mlk">CLIP</span>
-      <span class="mlt">[Arthur Chu clip &mdash; link to be added]</span>
-    </a>
-  </div>
+  <a class="medialink" href="https://www.youtube.com/watch?v=TbuD-6BbnQw" target="_blank" rel="noopener" style="position:absolute;left:50%;transform:translateX(-50%);bottom:96px;margin:0">
+    <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+    <span class="mlk">CLIP</span>
+    <span class="mlt">Barbados vs. Grenada</span>
+  </a>
 </section>
 
 <section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
+  <h2>What should Barbados do?</h2>
+  <div class="pollwrap" style="top:180px;bottom:56px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="pbN">0</span><span class="l">ANSWERS<br>IN</span></div>
+    </div>
+    <div class="pollopts three">
+      <div class="popt" id="pbo1"><div class="demotag" id="pbdemo">DEMO DATA</div>
+        <div class="ptxt">Push for a third goal</div>
+        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
+      <div class="popt" id="pbo2">
+        <div class="ptxt">Defend the 2-1 lead</div>
+        <div class="crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
+      <div class="popt" id="pbo3">
+        <div class="ptxt">Score an own goal</div>
+        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
+    </div>
+    <div class="cap" style="text-align:center;max-width:none;margin-top:4px;min-height:34px">
+      <span data-step="2"><b>What should Grenada do?</b></span>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="pbReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="6">
   <div class="kicker"><i></i>MODULE 3</div>
   <h2>Other well-known zero-sum game players from throughout history</h2>
   <ul class="bullets">
@@ -118,27 +190,57 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="6">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
   <h2>Michael, Dwight, and Andy in a zero-sum truel game</h2>
-  <ul class="bullets">
-    <li>Dwight: &ldquo;Fastest Crossbow in Scranton&rdquo; Schrute (100% hit rate on his shots)</li>
-    <li>Andy: &ldquo;Cornell Gun Club President &rsquo;06&rdquo; Bernard (80% hit rate on his shots)</li>
-    <li>Michael: &ldquo;I Once Shot Myself by Mistake&rdquo; Scott (50% hit rate on his shots)</li>
-    <li data-step="1">Shooting order is random, and after each person fires, he has to reload</li>
-    <li data-step="2"><b>Who would you rather be?</b></li>
-    <li data-step="3">What if Michael decides to (or is forced to) shoot first?</li>
-    <li data-step="4">&ldquo;Survival of the weakest&rdquo; &ndash; Michael wins 52% of the time; Dwight 30%; Andy 18%</li>
+  <div class="gtiles" style="top:230px;bottom:auto">
+    <div class="gtile"><div class="gn">Dwight Schrute</div><div class="hitpct">100%</div><div class="gq">&ldquo;Fastest Crossbow in Scranton&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+    <div class="gtile" data-step="1"><div class="gn">Andy Bernard</div><div class="hitpct">80%</div><div class="gq">&ldquo;Cornell Gun Club President &rsquo;06&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+    <div class="gtile" data-step="2"><div class="gn">Michael Scott</div><div class="hitpct">50%</div><div class="gq">&ldquo;I Once Shot Myself by Mistake&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+  </div>
+  <ul class="bullets" style="position:absolute;left:50%;transform:translateX(-50%);bottom:120px;margin-top:0;width:760px">
+    <li data-step="3">Shooting order is random, and after each person fires, he has to reload</li>
   </ul>
 </section>
 
-<section class="slide content" data-i="7">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2 style="margin-top:250px;text-align:center;max-width:none">Zero-sum games, common knowledge, and incomplete information</h2>
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
+  <h2>Who would you rather be?</h2>
+  <div class="pollwrap" style="top:180px;bottom:56px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="ptN">0</span><span class="l">ANSWERS<br>IN</span></div>
+    </div>
+    <div class="pollopts three">
+      <div class="popt" id="pto1"><div class="demotag" id="ptdemo">DEMO DATA</div>
+        <div class="ptxt">Dwight (hits 100% of his shots)</div>
+        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
+      <div class="popt" id="pto2">
+        <div class="ptxt">Andy (hits 80% of his shots)</div>
+        <div class="crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
+      <div class="popt" id="pto3">
+        <div class="ptxt">Michael (hits 50% of his shots)</div>
+        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
+    </div>
+    <div class="cap" style="text-align:center;max-width:none;margin-top:4px;min-height:56px">
+      <span data-step="2">What if Michael decides to (or is forced to) shoot first?</span><br>
+      <span data-step="3"><b>&ldquo;Survival of the weakest&rdquo; &ndash; Michael wins 52% of the time; Dwight 30%; Andy 18%</b></span>
+    </div>
+    <a class="medialink" href="https://www.youtube.com/watch?v=IHQr0HCIN2w" target="_blank" rel="noopener" data-step="4" style="margin:0 auto">
+      <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+      <span class="mlk">CLIP</span>
+      <span class="mlt">Mexican standoff</span>
+    </a>
+  </div>
+  <span data-step="1" data-stepcall="ptReveal" style="position:absolute;width:0;height:0"></span>
+  <span data-step="3" data-stepcall="truelWin" style="position:absolute;width:0;height:0"></span>
 </section>
 
-<section class="slide content" data-i="8">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>Solving zero-sum games using payoff matrices</h2>
   <ul class="bullets">
     <li>In February 1943, General George Churchill Kenney, Commander of the Allied Air Forces in the Southwest Pacific, was faced with a problem</li>
@@ -150,8 +252,8 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="9">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="10">
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>The allies&rsquo; choice</h2>
   <ul class="bullets">
     <li>It would be best for the Allied forces to choose the same route as the Japanese, but the Allies and the Japanese need to make a simultaneous choice</li>
@@ -162,8 +264,8 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="10">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>Days of bombing</h2>
   <div class="fig" style="top:180px">
     <div class="mxwrap">
@@ -173,26 +275,26 @@
         <div class="cl" style="grid-column:3">Northern Route</div>
         <div class="cl" style="grid-column:4">Southern Route</div>
         <div class="rl" style="grid-row:3">Northern Route</div>
-        <div class="rl" style="grid-row:4">Southern Route</div>
-        <div class="cell" id="b11" style="grid-row:3;grid-column:3">2 Days</div>
-        <div class="cell" id="b12" style="grid-row:3;grid-column:4">2 Days</div>
-        <div class="cell" id="b21" style="grid-row:4;grid-column:3">1 Day</div>
-        <div class="cell" id="b22" style="grid-row:4;grid-column:4">3 Days</div>
+        <div class="rl" id="brl2" style="grid-row:4">Southern Route</div>
+        <div class="cell" id="b11" style="grid-row:3;grid-column:3"><span class="val" id="nb11">2 Days</span></div>
+        <div class="cell" id="b12" style="grid-row:3;grid-column:4"><span class="val" id="nb12">2 Days</span></div>
+        <div class="cell" id="b21" style="grid-row:4;grid-column:3"><span class="val">1 Day</span></div>
+        <div class="cell" id="b22" style="grid-row:4;grid-column:4"><span class="val">3 Days</span></div>
       </div>
       <div class="mxnote">
         <span data-step="1">Going north guarantees the Allies two days of bombing&hellip;</span>
-        <span data-step="2"> going south risks getting only one.</span>
-        <span data-step="3"> <b>The equilibrium: both go north.</b></span>
+        <span data-step="2"> going south risks getting only one, so the southern route drops out&hellip;</span>
+        <span data-step="3"> <b>the equilibrium: both go north</b></span>
       </div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="b11,b12" data-cls="hot" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="b21,b22" data-cls="dead" style="position:absolute;width:0;height:0"></span>
+    <span data-step="1" data-stepcall="mxMark" data-cells="nb11,nb12" data-cls="circ" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="brl2,b21,b22" data-cls="gone" style="position:absolute;width:0;height:0"></span>
     <span data-step="3" data-stepcall="mxMark" data-cells="b11" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>The Japanese choice</h2>
   <ul class="bullets">
     <li>For the Japanese, the northern route minimizes their exposure &ndash; whatever the Allies choose to do.  When General Kenney realizes this, his choice is clear&hellip;go north</li>
@@ -201,119 +303,48 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="12">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Solving zero-sum games using payoff matrices: a workplace example</h2>
-  <ul class="bullets">
-    <li>Two workers, Casey and Pat, are vying to become the chief negotiator at a unionized company</li>
-    <li data-step="1">There is a dispute over whether the union should employ hard or soft tactics in its upcoming negotiation with the employer</li>
-    <li data-step="2">Each candidate must decide whether to favor hard or soft tactics, or evade the issue</li>
-    <li data-step="3">The candidates can calculate how their decision will influence the votes they will receive in the upcoming election to decide who will be chief negotiator</li>
-    <li data-step="4">They must pick their best responses to what they think each other will do</li>
-  </ul>
-</section>
-
 <section class="slide content" data-i="13">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>A workplace example</h2>
-  <div class="fig" style="top:180px">
-    <div class="mxwrap">
-      <div class="mxtitle">CASEY&rsquo;S SHARE OF THE VOTE</div>
-      <div class="mx" style="--cols:3;--rows:3;--cw:190px;--rh:76px">
-        <div class="chead" style="grid-column:3 / span 3">PAT</div>
-        <div class="rhead" style="grid-row:3 / span 3">CASEY</div>
-        <div class="cl" style="grid-column:3">Favor Hard Tactics</div>
-        <div class="cl" style="grid-column:4">Favor Soft Tactics</div>
-        <div class="cl" style="grid-column:5">Dodge the Issue</div>
-        <div class="rl" style="grid-row:3">Favor Hard Tactics</div>
-        <div class="rl" style="grid-row:4">Favor Soft Tactics</div>
-        <div class="rl" style="grid-row:5">Dodge the Issue</div>
-        <div class="cell" id="c11" style="grid-row:3;grid-column:3">45%</div>
-        <div class="cell" id="c12" style="grid-row:3;grid-column:4">50%</div>
-        <div class="cell" id="c13" style="grid-row:3;grid-column:5">40%</div>
-        <div class="cell" id="c21" style="grid-row:4;grid-column:3">60%</div>
-        <div class="cell" id="c22" style="grid-row:4;grid-column:4">55%</div>
-        <div class="cell" id="c23" style="grid-row:4;grid-column:5">50%</div>
-        <div class="cell" id="c31" style="grid-row:5;grid-column:3">45%</div>
-        <div class="cell" id="c32" style="grid-row:5;grid-column:4">55%</div>
-        <div class="cell" id="c33" style="grid-row:5;grid-column:5">40%</div>
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
+  <h2>A zero-sum game in your own market</h2>
+  <div class="leadline">A mature market is a <b>fixed pie</b>: every point of share you win comes straight off your rival&rsquo;s total</div>
+  <div class="fig" style="top:266px;gap:0">
+    <div class="mxwrap" style="gap:12px">
+      <div class="mxtitle">EACH CELL: YOUR SHARE OF THE MARKET &middot; YOUR RIVAL GETS THE REST</div>
+      <div class="mx" style="--cols:3;--rows:3;--cw:184px;--rh:62px">
+        <div class="chead">YOUR CLOSEST RIVAL</div>
+        <div class="rhead">YOU</div>
+        <div class="cl" style="grid-column:3">Promote Hard</div>
+        <div class="cl" id="mc2" style="grid-column:4">Match the Market</div>
+        <div class="cl" id="mc3" style="grid-column:5">Pull Back Spend</div>
+        <div class="rl" style="grid-row:3">Promote Hard</div>
+        <div class="rl" id="mr2" style="grid-row:4">Match the Market</div>
+        <div class="rl" id="mr3" style="grid-row:5">Pull Back Spend</div>
+        <div class="cell" id="m11" style="grid-row:3;grid-column:3"><span class="pa" id="n11">50%</span></div>
+        <div class="cell" id="m12" style="grid-row:3;grid-column:4"><span class="pa" id="n12">60%</span></div>
+        <div class="cell" id="m13" style="grid-row:3;grid-column:5"><span class="pa">70%</span></div>
+        <div class="cell" id="m21" style="grid-row:4;grid-column:3"><span class="pa">40%</span></div>
+        <div class="cell" id="m22" style="grid-row:4;grid-column:4"><span class="pa">50%</span></div>
+        <div class="cell" id="m23" style="grid-row:4;grid-column:5"><span class="pa">60%</span></div>
+        <div class="cell" id="m31" style="grid-row:5;grid-column:3"><span class="pa">30%</span></div>
+        <div class="cell" id="m32" style="grid-row:5;grid-column:4"><span class="pa">40%</span></div>
+        <div class="cell" id="m33" style="grid-row:5;grid-column:5"><span class="pa">50%</span></div>
       </div>
       <div class="mxnote">
-        <span data-step="1">Casey&rsquo;s soft-tactics row beats her other rows no matter what Pat does&hellip;</span>
-        <span data-step="3"> <b>so Pat dodges the issue, and the outcome is 50%</b></span>
+        <span data-step="1">Neither side should ever pull back spend &ndash; an inferior strategy, so it disappears&hellip;</span>
+        <span data-step="2"> promoting hard beats matching no matter what your rival does &ndash; your dominant strategy&hellip;</span>
+        <span data-step="3"> <b>your rival reasons the same way &ndash; the equilibrium: both promote hard, and the market splits 50/50</b></span>
       </div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="c21,c22,c23" data-cls="hot" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="c11,c12,c13,c31,c32,c33" data-cls="dead" style="position:absolute;width:0;height:0"></span>
-    <span data-step="3" data-stepcall="mxMark" data-cells="c23" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <span data-step="1" data-stepcall="mxMark" data-cells="mc3,m13,m23,mr3,m31,m32,m33" data-cls="gone" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="n11,n12" data-cls="circ" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="mr2,m21,m22" data-cls="gone" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="mxMark" data-cells="mc2,m12" data-cls="gone" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="mxMark" data-cells="m11" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
 <section class="slide content" data-i="14">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Seeking the dominant strategy</h2>
-  <ul class="bullets">
-    <li>Is there a dominant strategy for Casey?</li>
-    <li class="sub" data-step="1">Yes: Favor soft tactics</li>
-    <li data-step="2">How about for Pat?</li>
-    <li class="sub" data-step="3">Yes: If Pat realizes what Casey&rsquo;s strategy is certain to be, then clearly Pat should dodge the issue</li>
-    <li data-step="4">What is the outcome?</li>
-    <li class="sub" data-step="5">The outcome is 50% (conveniently an even split)</li>
-    <li data-step="6"><b>Moral:  Always look for the dominant strategy, if there is one</b></li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="15">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>A slightly different workplace example</h2>
-  <div class="fig" style="top:180px">
-    <div class="mxwrap">
-      <div class="mxtitle"><span style="color:var(--teal)">CASEY&rsquo;S SHARE</span> , <span style="color:var(--terracotta)">PAT&rsquo;S SHARE</span></div>
-      <div class="mx" style="--cols:3;--rows:3;--cw:190px;--rh:76px">
-        <div class="chead" style="grid-column:3 / span 3">PAT</div>
-        <div class="rhead" style="grid-row:3 / span 3">CASEY</div>
-        <div class="cl" style="grid-column:3">Favor Hard Tactics</div>
-        <div class="cl" style="grid-column:4">Favor Soft Tactics</div>
-        <div class="cl" id="d0" style="grid-column:5">Dodge the Issue</div>
-        <div class="rl" style="grid-row:3">Favor Hard Tactics</div>
-        <div class="rl" style="grid-row:4">Favor Soft Tactics</div>
-        <div class="rl" style="grid-row:5">Dodge the Issue</div>
-        <div class="cell" id="d11" style="grid-row:3;grid-column:3"><span class="pa">35%</span><span class="pc">,</span><span class="pb">65%</span></div>
-        <div class="cell" id="d12" style="grid-row:3;grid-column:4"><span class="pa">10%</span><span class="pc">,</span><span class="pb">90%</span></div>
-        <div class="cell" id="d13" style="grid-row:3;grid-column:5"><span class="pa">60%</span><span class="pc">,</span><span class="pb">40%</span></div>
-        <div class="cell" id="d21" style="grid-row:4;grid-column:3"><span class="pa">45%</span><span class="pc">,</span><span class="pb">55%</span></div>
-        <div class="cell" id="d22" style="grid-row:4;grid-column:4"><span class="pa">55%</span><span class="pc">,</span><span class="pb">45%</span></div>
-        <div class="cell" id="d23" style="grid-row:4;grid-column:5"><span class="pa">50%</span><span class="pc">,</span><span class="pb">50%</span></div>
-        <div class="cell" id="d31" style="grid-row:5;grid-column:3"><span class="pa">40%</span><span class="pc">,</span><span class="pb">60%</span></div>
-        <div class="cell" id="d32" style="grid-row:5;grid-column:4"><span class="pa">10%</span><span class="pc">,</span><span class="pb">90%</span></div>
-        <div class="cell" id="d33" style="grid-row:5;grid-column:5"><span class="pa">65%</span><span class="pc">,</span><span class="pb">35%</span></div>
-      </div>
-      <div class="mxnote">
-        <span data-step="1">Pat should never dodge the issue &ndash; scratch it out&hellip;</span>
-        <span data-step="2"> in the reduced matrix Casey&rsquo;s soft tactics dominate&hellip;</span>
-        <span data-step="4"> <b>so Pat favors hard tactics: 45%, 55%</b></span>
-      </div>
-    </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="d0,d13,d23,d33" data-cls="dead" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="d21,d22" data-cls="hot" style="position:absolute;width:0;height:0"></span>
-    <span data-step="3" data-stepcall="mxMark" data-cells="d11,d12,d31,d32" data-cls="dead" style="position:absolute;width:0;height:0"></span>
-    <span data-step="4" data-stepcall="mxMark" data-cells="d21" data-cls="eq" style="position:absolute;width:0;height:0"></span>
-  </div>
-</section>
-
-<section class="slide content" data-i="16">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Eliminating the inferior strategy</h2>
-  <ul class="bullets">
-    <li>Here it is clear Pat should never play the &ldquo;Dodge the Issue&rdquo; strategy.  It is an <b>inferior strategy</b> for Pat (scratch it out).</li>
-    <li data-step="1">Effectively that means we have a 2 x 3 matrix</li>
-    <li data-step="2">Casey&rsquo;s dominant strategy in the reduced matrix is clearly to favor soft tactics (this is their best response no matter what the other side does)</li>
-    <li data-step="3">If Casey always chooses to favor soft tactics, then clearly Pat&rsquo;s best response is to favor hard tactics</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="17">
-  <div class="kicker"><i></i>MODULE 3</div>
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>Guidelines for solving zero-sum games</h2>
   <ul class="bullets">
     <li><b>Identify dominant (or superior) strategies</b></li>
@@ -325,27 +356,27 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="18">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Combining sequential and simultaneous thinking: Hotelling&rsquo;s game</h2>
-  <ul class="bullets">
-    <li>We&rsquo;ve so far considered how to solve zero-sum games with finite choices available (go north/go south; favor hard tactics/soft tactics/dodge the issue)</li>
-    <li data-step="1">But what strategy should we use if the choices are infinite?</li>
+  <ul class="bullets" style="margin-top:44px">
+    <li>We&rsquo;ve so far considered how to solve zero-sum games with <b>finite</b> choices available (go north/go south; promote hard/match the market)</li>
+    <li data-step="1">But what strategy should we use if the choices are <b>infinite</b>?</li>
     <li data-step="2">Consider <b>Hotelling&rsquo;s game</b></li>
-    <li class="sub" data-step="2">Two vendors are selling goods to beach goers &ndash; identical products and prices</li>
+    <li class="sub" data-step="2">Two vendors are selling hot dogs to beach goers &ndash; identical products and prices</li>
     <li class="sub" data-step="2">Vendors choose where to place their carts</li>
     <li class="sub" data-step="2">Beach goers will always choose the closest cart</li>
     <li data-step="3"><b>Where should the vendors set up their carts?</b></li>
   </ul>
 </section>
 
-<section class="slide content" data-i="19">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
   <h2>The beach</h2>
-  <div class="fig" style="top:170px">
+  <div class="fig" style="top:180px">
     <div class="widget">
       <div class="whead">
-        <span class="wlabel">DRAG THE CARTS · CUSTOMERS WALK TO THE NEAREST ONE</span>
+        <span class="wlabel">DRAG THE CARTS &middot; CUSTOMERS WALK TO THE NEAREST ONE</span>
         <span>
           <button id="presetA">Suppose they set up like this&hellip;</button>
           <button id="presetB" class="primary">They should always end up like this&hellip;</button>
@@ -354,40 +385,29 @@
       <div class="beach" id="beach">
         <div class="shade" id="shadeA"></div>
         <div class="shade shadeB" id="shadeB"></div>
-        <div class="cart a" id="cartA"><div class="box">A</div><div class="pct" id="pctA">50%</div></div>
-        <div class="cart b" id="cartB"><div class="box">B</div><div class="pct" id="pctB">50%</div></div>
+        <div class="cart a" id="cartA">
+          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+          <div class="pct" id="pctA">50%</div>
+        </div>
+        <div class="cart b" id="cartB">
+          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+          <div class="pct" id="pctB">50%</div>
+        </div>
       </div>
-      <div class="beachnote" id="beachnote">Neither vendor can gain by moving &mdash; until someone drags a cart.</div>
+      <div class="widgetnote" id="beachnote">An even split. Can either vendor do better by moving?</div>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="20">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Combining sequential and simultaneous thinking: Hotelling&rsquo;s game</h2>
-  <ul class="bullets" style="max-width:1060px">
-    <li>Each vendor has a choice of anywhere along the spectrum of the beach</li>
-    <li data-step="1">The vendors will get all the customers more extreme to their location, and a portion of the customers less extreme to their location</li>
-    <li data-step="2">Say Vendor A sets up 3/4ths of the way along the eastern side of the beach and Vendor B sets up exactly in the middle of the beach</li>
-    <li class="sub" data-step="2">Vendor A will get all customers farther east of the chosen location, plus a portion of customers between his/her location and the location of Vendor B</li>
-    <li class="sub" data-step="2">Vendor B will get all customers farther west of the chosen location, and also a portion of the customers between his/her location and the location of Vendor A</li>
-    <li data-step="3">Who gets more customers?</li>
-    <li class="sub" data-step="4">Vendor A gets 25% + &frac12;&times;(25%) = 25% + 12.5% = <b>37.5%</b> of customers</li>
-    <li class="sub" data-step="4">Vendor B gets 50% + &frac12;&times;(25%) = 50% + 12.5% = <b>62.5%</b> of customers</li>
-    <li data-step="5">Is this game in equilibrium?</li>
-    <li class="sub" data-step="6"><b>No &ndash; Vendor A can improve by moving closer to Vendor B&rsquo;s position!</b></li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="21">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Applications of Hotelling&rsquo;s game to business strategies</h2>
   <ul class="bullets">
     <li>So, Vendors A and B will always try to locate themselves as close to each other as possible in order to receive the maximum amount of profit &ndash; <b>this is the equilibrium</b></li>
     <li data-step="1">Does this game matter in actual business strategies? You bet!</li>
     <li data-step="2">Examples</li>
     <li class="sub" data-step="2">Think about where gas stations locate</li>
-    <li class="sub" data-step="2">In Champaign &ndash; look at Home Depot and Lowe&rsquo;s</li>
+    <li class="sub" data-step="2">In London &ndash; look at the curry houses on Brick Lane</li>
     <li class="sub" data-step="2">In Idaho &ndash; cupcake wars</li>
     <li class="sub" data-step="2">In New York City &ndash; jewelry stores</li>
     <li data-step="3">This is also one reason why so many products are marketed and sold with such similar characteristics</li>
@@ -396,23 +416,42 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="22">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Application to politics: the median voter theorem</h2>
-  <ul class="bullets" style="max-width:1060px">
-    <li>Hotelling proposed this game in 1929 &ndash; in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach</li>
-    <li data-step="1">Assume that ideologies of voters run from 0-100, with 0 being entirely Liberal and 100 being entirely Conservative</li>
-    <li data-step="2">If Candidate A positions herself at 15 and Candidate B positions herself at 65, what will each vote share be?</li>
-    <li class="sub" data-step="3">Candidate A gets all votes to the left of 15 and half the votes between 15 and 65: 15% + &frac12;&times;(50%) = <b>40%</b></li>
-    <li class="sub" data-step="3">Candidate B gets all the votes to the right of 65 and half the votes between 65 and 15: 35% + &frac12;&times;(50%) = <b>60%</b></li>
-    <li data-step="4">Is this game at equilibrium? No, for the same reason as the hot dog vendor game was not at equilibrium</li>
-    <li data-step="5">So, the successful Republican and Democrat candidates in presidential elections always look very similar</li>
-    <li data-step="6"><b>But do we see this in reality? What are some of the challenges that you can make to this theorem?</b></li>
-  </ul>
+  <div class="leadline" style="max-width:1010px;margin-left:auto;margin-right:auto">Hotelling proposed this game in 1929 &ndash; in 1957, a political scientist named Downs proposed that <b>political representation</b> operates just like vendors on a beach</div>
+  <div class="fig" style="top:312px;bottom:74px">
+    <div class="widget">
+      <div class="whead">
+        <span class="wlabel">DRAG THE CANDIDATES &middot; VOTERS PICK THE NEARER ONE</span>
+        <span>
+          <button id="presetC">Suppose they set up like this&hellip;</button>
+          <button id="presetD" class="primary">They should always end up like this&hellip;</button>
+        </span>
+      </div>
+      <div class="spec" id="spec">
+        <div class="specband"></div>
+        <div class="specsplit" id="specsplit"></div>
+        <span class="speclbl" style="left:14px">0 &middot; ENTIRELY LIBERAL</span>
+        <span class="speclbl" style="right:14px">100 &middot; ENTIRELY CONSERVATIVE</span>
+        <div class="cand d" id="candD">
+          <div class="badge"><svg viewBox="0 0 68 60"><g class="animal"><ellipse cx="28" cy="36" rx="17" ry="11"/><rect x="15" y="42" width="5" height="16"/><rect x="24" y="44" width="5" height="14"/><rect x="33" y="44" width="5" height="14"/><rect x="41" y="42" width="5" height="16"/><polygon points="40,32 52,16 58,18 50,34"/><ellipse cx="56" cy="17" rx="9" ry="5.5" transform="rotate(18 56 17)"/><polygon points="49,13 45,1 50,2 53,12"/><polygon points="54,12 52,0 57,2 58,13"/><path d="M12 30 q-7 2 -8 10 l2 1 q3 -6 8 -7 z"/></g></svg></div>
+          <div class="stem"></div>
+          <div class="cpct" id="pctD">50%</div>
+        </div>
+        <div class="cand r" id="candR">
+          <div class="badge"><svg viewBox="0 0 68 60"><g class="animal"><ellipse cx="38" cy="34" rx="20" ry="13"/><rect x="24" y="44" width="6" height="14"/><rect x="34" y="46" width="6" height="12"/><rect x="46" y="44" width="6" height="14"/><path d="M22 27 Q10 28 6 38 L6 44 Q12 46 18 44 L22 40 Z"/><polygon points="7,36 0,24 11,32"/><polygon points="21,24 23,16 27,23"/><path d="M57 28 q6 4 4 12 l-2 0 q0 -6 -4 -9 z"/></g></svg></div>
+          <div class="stem"></div>
+          <div class="cpct" id="pctR">50%</div>
+        </div>
+      </div>
+      <div class="widgetnote" id="specnote">An even split. Can either candidate do better by moving?</div>
+    </div>
+  </div>
 </section>
 
-<section class="slide content" data-i="23">
-  <div class="kicker"><i></i>MODULE 3</div>
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Challenges to the median voter theorem</h2>
   <ul class="bullets">
     <li data-step="1">Not all voters are evenly distributed across the political spectrum</li>
@@ -424,7 +463,7 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="24">
+<section class="slide content" data-i="20">
   <div class="kicker"><i></i>MODULE 3 · COMPANY SLOT</div>
   <h2>Where does your market cluster?</h2>
   <div class="fig">
@@ -437,11 +476,57 @@
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
 
 <script>
-/* Hotelling beach widget — pure client-side */
+/* ---- live polls: try the gt-poll worker, fall back to marked demo data ---- */
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
+function mkPoll(pollId, nId, optIds, demoId, demoDist){
+  const st={live:false,counts:demoDist.slice(),total:0,demoShown:0,revealed:false};
+  const nEl=document.getElementById(nId);
+  function renderCount(){nEl.textContent=st.live?st.total:st.demoShown;}
+  function crowdHTML(n){
+    let h='';
+    for(let i=0;i<Math.min(n,24);i++)h+=PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"');
+    return h;
+  }
+  function renderCrowds(){
+    const counts=st.live?st.counts:demoDist;
+    optIds.forEach((id,i)=>{
+      const o=document.getElementById(id);
+      const crowd=o.querySelector('.crowd');
+      if(st.revealed){
+        const want=Math.min(counts[i]||0,24);
+        if(crowd.children.length!==want){crowd.innerHTML=crowdHTML(counts[i]||0);void crowd.offsetWidth;}
+      }else crowd.innerHTML='';
+      o.classList.toggle('revealed',st.revealed);
+      o.querySelector('.pnum').textContent=st.revealed?(counts[i]||0):'';
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+pollId).then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById(demoId).style.display='none';
+      st.counts=optIds.map((_,i)=>d.counts[i]||0);
+      st.total=d.total;
+      renderCount();
+      if(st.revealed)renderCrowds();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{const demoTotal=demoDist.reduce((a,b)=>a+b,0);
+    if(!st.live&&st.demoShown<demoTotal){st.demoShown++;renderCount();}},420);
+  return {reveal(on){st.revealed=on;renderCrowds();}};
+}
+const pollB=mkPoll('m3-barbados','pbN',['pbo1','pbo2','pbo3'],'pbdemo',[10,7,3]);
+const pollT=mkPoll('m3-truel','ptN',['pto1','pto2','pto3'],'ptdemo',[11,6,4]);
+function pbReveal(el,on){pollB.reveal(on);}
+function ptReveal(el,on){pollT.reveal(on);}
+function truelWin(el,on){document.getElementById('pto3').classList.toggle('winner',on);}
+
+/* ---- Hotelling beach: draggable carts, live shares, preset beats ---- */
 (function(){
 const beach=document.getElementById('beach');
 let A=25, B=75; // percent along the beach
@@ -450,34 +535,66 @@ const shadeA=document.getElementById('shadeA'), shadeB=document.getElementById('
 const pctA=document.getElementById('pctA'), pctB=document.getElementById('pctB');
 const note=document.getElementById('beachnote');
 function layout(){
-  const left=Math.min(A,B), right=Math.max(A,B);
-  const mid=(left+right)/2;
+  const mid=(Math.min(A,B)+Math.max(A,B))/2;
   const leftIsA=A<=B;
-  const shareLeft=mid, shareRight=100-mid;
-  const sA=leftIsA?shareLeft:shareRight, sB=100-sA;
+  const sA=leftIsA?mid:100-mid, sB=100-sA;
   cartA.style.left=A+'%'; cartB.style.left=B+'%';
-  shadeA.style.left='0'; shadeA.style.width='0'; shadeB.style.left='0'; shadeB.style.width='0';
   const aEl=leftIsA?shadeA:shadeB, bEl=leftIsA?shadeB:shadeA;
   aEl.style.left='0'; aEl.style.width=mid+'%';
   bEl.style.left=mid+'%'; bEl.style.width=(100-mid)+'%';
   pctA.textContent=Math.round(sA*10)/10+'%';
   pctB.textContent=Math.round(sB*10)/10+'%';
-  if(Math.abs(A-50)<2.5&&Math.abs(B-50)<2.5){note.innerHTML='<b style="color:var(--red)">Equilibrium:</b> back to back in the middle of the beach — neither vendor can gain by moving.';}
-  else if(Math.abs(sA-sB)<0.5){note.textContent='An even split — but can someone do better by moving?';}
-  else{note.textContent=(sA>sB?'Vendor A':'Vendor B')+' is winning — what should the other vendor do?';}
+  if(Math.abs(A-50)<2.5&&Math.abs(B-50)<2.5){note.innerHTML='<b>Equilibrium:</b> back to back in the middle of the beach. Neither vendor can gain by moving.';}
+  else if(Math.abs(sA-sB)<0.5){note.textContent='An even split. Can either vendor do better by moving?';}
+  else{note.textContent=(sA>sB?'Vendor A':'Vendor B')+' is winning. What should the other vendor do?';}
 }
-function drag(cart,setter){
-  cart.addEventListener('pointerdown',e=>{
-    e.preventDefault();cart.setPointerCapture(e.pointerId);
+function drag(el,setter){
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();el.setPointerCapture(e.pointerId);
     const move=ev=>{const r=beach.getBoundingClientRect();
       setter(Math.max(2,Math.min(98,(ev.clientX-r.left)/r.width*100)));layout();};
-    const up=()=>{cart.removeEventListener('pointermove',move);cart.removeEventListener('pointerup',up);};
-    cart.addEventListener('pointermove',move);cart.addEventListener('pointerup',up);
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
   });
 }
 drag(cartA,v=>A=v); drag(cartB,v=>B=v);
 document.getElementById('presetA').addEventListener('click',()=>{A=75;B=50;layout();});
 document.getElementById('presetB').addEventListener('click',()=>{A=49;B=51;layout();});
+layout();
+})();
+
+/* ---- median voter: same mechanics on the political spectrum ---- */
+(function(){
+const spec=document.getElementById('spec');
+let D=25, R=75; // positions 0-100
+const candD=document.getElementById('candD'), candR=document.getElementById('candR');
+const split=document.getElementById('specsplit');
+const pctD=document.getElementById('pctD'), pctR=document.getElementById('pctR');
+const note=document.getElementById('specnote');
+function layout(){
+  const mid=(Math.min(D,R)+Math.max(D,R))/2;
+  const leftIsD=D<=R;
+  const sD=leftIsD?mid:100-mid, sR=100-sD;
+  candD.style.left=D+'%'; candR.style.left=R+'%';
+  split.style.left=mid+'%';
+  pctD.textContent=Math.round(sD*10)/10+'%';
+  pctR.textContent=Math.round(sR*10)/10+'%';
+  if(Math.abs(D-50)<2.5&&Math.abs(R-50)<2.5){note.innerHTML='<b>Equilibrium:</b> both candidates converge on the median voter.';}
+  else if(Math.abs(sD-sR)<0.5){note.textContent='An even split. Can either candidate do better by moving?';}
+  else{note.textContent=(sD>sR?'The blue candidate':'The red candidate')+' is winning. What should the other candidate do?';}
+}
+function drag(el,setter){
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();el.setPointerCapture(e.pointerId);
+    const move=ev=>{const r=spec.getBoundingClientRect();
+      setter(Math.max(2,Math.min(98,(ev.clientX-r.left)/r.width*100)));layout();};
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+  });
+}
+drag(candD,v=>D=v); drag(candR,v=>R=v);
+document.getElementById('presetC').addEventListener('click',()=>{D=15;R=65;layout();});
+document.getElementById('presetD').addEventListener('click',()=>{D=49;R=51;layout();});
 layout();
 })();
 </script>
