@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Poll Desk</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Instructor-only housekeeping for the gt-poll rooms: live counts per
+   room and a reset button for each, so no session ever starts on stale
+   test data. The admin secret is pasted once and kept in this browser's
+   localStorage — it lives on the instructor's device only and is never
+   in the repo. Bookmark alongside the deck; linked from nowhere. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--paper);font-family:var(--sans);padding:26px 16px 50px}
+.wrap{max-width:640px;margin:0 auto}
+.hkick{font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:11px;opacity:.7}
+h1{font-family:var(--display);font-weight:900;font-size:32px;margin:8px 0 4px}
+h1 .r{color:var(--red)}
+.sub{font-size:13.5px;opacity:.65;margin-bottom:20px;line-height:1.5}
+.secretrow{display:flex;gap:10px;margin-bottom:24px}
+.secretrow input{flex:1;font-family:var(--sans);font-weight:600;font-size:15px;padding:11px 14px;
+  background:color-mix(in srgb, var(--paper) 8%, transparent);color:var(--paper);
+  border:2px solid color-mix(in srgb, var(--paper) 30%, transparent);min-width:0}
+.secretrow button{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.08em;
+  background:var(--red);color:var(--paper);border:0;padding:11px 18px;cursor:pointer}
+.room{display:flex;align-items:center;gap:14px;border:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);
+  padding:13px 16px;margin-bottom:10px}
+.room .rn{flex:1;min-width:0}
+.room .rid{font-weight:700;font-size:15px}
+.room .rq{font-size:12.5px;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room .ct{font-family:var(--display);font-weight:900;font-size:26px;width:56px;text-align:right;flex:none}
+.room .ct.hot{color:var(--red)}
+.room button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;flex:none;
+  background:transparent;color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  padding:9px 14px;cursor:pointer}
+.room button:hover{background:var(--red);border-color:var(--red)}
+.room button:disabled{opacity:.35;cursor:default}
+.msg{font-size:13px;min-height:1.4em;margin-top:12px;opacity:.8}
+.msg.bad{color:var(--red);opacity:1}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="hkick">Applied Game Theory · Facilitator only</div>
+  <h1>POLL <span class="r">DESK</span></h1>
+  <p class="sub">Live answer counts for every room, and a reset for each. Reset every room you plan to
+  use before a session starts. The secret is remembered on this device only.</p>
+  <div class="secretrow">
+    <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
+    <button id="saveSecret" type="button">SAVE</button>
+  </div>
+  <div id="rooms"></div>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+(function(){
+const API='https://gt-poll.rlamare.workers.dev';
+const EXTRA=[{id:'m4-prices',q:'Price Wars lock-ins (Module 4 game)',text:true}];
+const secretEl=document.getElementById('secret'), msg=document.getElementById('msg');
+try{secretEl.value=localStorage.getItem('gt-admin')||'';}catch(_){}
+document.getElementById('saveSecret').addEventListener('click',()=>{
+  try{localStorage.setItem('gt-admin',secretEl.value.trim());}catch(_){}
+  say('Secret saved on this device.');
+});
+function say(t,bad){msg.textContent=t;msg.className='msg'+(bad?' bad':'');}
+const roomsEl=document.getElementById('rooms');
+fetch('/go/polls.json').then(r=>r.json()).then(cfg=>{
+  const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:p.type==='text'})).concat(EXTRA);
+  rooms.forEach(room=>{
+    const div=document.createElement('div');div.className='room';
+    div.innerHTML='<div class="rn"><div class="rid"></div><div class="rq"></div></div>'+
+      '<div class="ct">–</div><button type="button">RESET</button>';
+    div.querySelector('.rid').textContent=room.id;
+    div.querySelector('.rq').textContent=room.q;
+    const ct=div.querySelector('.ct'), btn=div.querySelector('button');
+    function refresh(){
+      const url=API+'/p/'+room.id+(room.text?'/answers':'');
+      fetch(url).then(r=>r.json()).then(d=>{
+        const n=d.total||0;
+        ct.textContent=n;
+        ct.className='ct'+(n>0?' hot':'');
+      }).catch(()=>{ct.textContent='?';});
+    }
+    btn.addEventListener('click',()=>{
+      const s=secretEl.value.trim();
+      if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
+      if(!confirm('Reset '+room.id+'? This clears every answer in the room.'))return;
+      btn.disabled=true;say('Resetting '+room.id+'…');
+      fetch(API+'/p/'+room.id+'/reset',{method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({s:s})})
+      .then(r=>r.json()).then(d=>{
+        if(d.ok){say(room.id+' is clear.');refresh();}
+        else{say('The worker said no – is the secret right?',true);}
+      }).catch(()=>{say('No connection to the poll server.',true);})
+      .finally(()=>{btn.disabled=false;});
+    });
+    roomsEl.appendChild(div);
+    refresh();setInterval(refresh,4000);
+  });
+}).catch(()=>{say('Could not load polls.json.',true);});
+})();
+</script>
+</body></html>
