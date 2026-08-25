@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Price Wars — facilitator desk</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Instructor-only view of the m4-prices lock-in room, for the phone in
+   Ryan's hand: every station's latest locked price per week, live, so he
+   knows what he is about to reveal on the board. Never on the projector. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--paper);font-family:var(--sans);padding:24px 14px 40px}
+.wrap{max-width:560px;margin:0 auto}
+.hkick{font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:11px;opacity:.7}
+h1{font-family:var(--display);font-weight:900;font-size:30px;margin:8px 0 2px}
+h1 .r{color:var(--red)}
+.sub{font-size:13px;opacity:.65;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1.5px solid color-mix(in srgb, var(--paper) 25%, transparent);text-align:center;padding:8px 2px;font-size:14px}
+thead th{font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+thead th.x2{color:var(--ochre)}
+tbody th{font-weight:700;font-size:13px;text-align:left;padding-left:8px;white-space:nowrap}
+tbody th.a{color:var(--teal)}
+tbody th.b{color:var(--terracotta)}
+td.p150{color:var(--teal);font-weight:700}
+td.p140{color:var(--red);font-weight:700}
+td.empty{opacity:.25}
+.count{margin-top:16px;font-size:13px;opacity:.65}
+.err{color:var(--red)}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="hkick">Module 4 · Facilitator only</div>
+  <h1>PRICE <span class="r">DESK</span></h1>
+  <div class="sub">Latest locked price per station and week. Refreshes every two seconds.</div>
+  <table>
+    <thead><tr><th>Station</th><th>W1</th><th>W2</th><th class="x2">W3</th><th>W4</th><th>W5</th><th class="x2">W6</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="count" id="count">Connecting…</div>
+</div>
+<script>
+(function(){
+const API='https://gt-poll.rlamare.workers.dev/p/m4-prices/answers';
+const TEAMS=['a1','b1','a2','b2','a3','b3','a4','b4'];
+const LBL={a:'Aura',b:"Buco's"};
+const tb=document.getElementById('rows'), count=document.getElementById('count');
+TEAMS.forEach(t=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML='<th class="'+t[0]+'">'+LBL[t[0]]+' · '+t[1]+'</th>'+'<td class="empty">–</td>'.repeat(6);
+  tb.appendChild(tr);
+});
+function tick(){
+  fetch(API).then(r=>r.json()).then(d=>{
+    const sub={};
+    (d.answers||[]).forEach(t=>{
+      const m=String(t).toLowerCase().match(/^([ab][1-4])\s*\|\s*([1-6])\s*\|\s*(1\.[45]0)$/);
+      if(m)sub[m[1]+'-'+m[2]]=m[3];
+    });
+    TEAMS.forEach((t,r)=>{
+      for(let w=1;w<=6;w++){
+        const td=tb.children[r].children[w];
+        const p=sub[t+'-'+w];
+        td.textContent=p?('£'+p):'–';
+        td.className=p?(p==='1.50'?'p150':'p140'):'empty';
+      }
+    });
+    count.textContent=(d.total||0)+' locks received';count.classList.remove('err');
+  }).catch(()=>{count.textContent='No connection to the poll server.';count.classList.add('err');});
+}
+setInterval(tick,2000);tick();
+})();
+</script>
+</body></html>
