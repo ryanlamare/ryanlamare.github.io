@@ -1,0 +1,362 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 3 — Zero-Sum Sample Block</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/gt/deck.css">
+<style>
+/* Module-3 sample widgets (shared components live in deck.css) */
+/* truel tiles (container lifted from the m2 three-games row) */
+.gtiles{position:absolute;left:96px;right:96px;top:250px;bottom:120px;display:flex;justify-content:center;gap:44px;align-items:flex-start}
+.gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.gtile .gs{font-weight:500;font-size:17px;color:var(--muted);line-height:1.32;max-width:24ch}
+.hitpct{font-family:var(--display);font-weight:900;font-size:58px;line-height:1;color:var(--ink)}
+.gtile .gq{font-weight:500;font-style:italic;font-size:17px;color:var(--ink);line-height:1.3}
+/* three-option poll */
+.pollopts.three{grid-template-columns:repeat(3,1fr);flex:0 0 auto}
+.pollopts.three .popt{height:196px}
+.pollopts.three .ptxt{padding-right:0}
+.popt .crowd{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px 6px;margin-top:5px;min-height:56px;overflow:hidden}
+.popt .crowd svg{width:24px;height:32px;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.popt.revealed .crowd svg{opacity:1;transform:scale(1)}
+.popt .pnum{position:absolute;right:16px;bottom:10px}
+.popt.winner{outline:4px solid var(--red);outline-offset:3px}
+/* Hotelling beach: draggable hot-dog carts */
+.beach{position:relative;width:100%;height:180px;background:linear-gradient(180deg,var(--tan-light) 0 62%,var(--blue) 62% 100%);border:2.5px solid var(--ink);user-select:none;touch-action:none}
+.beach .shade{position:absolute;top:0;bottom:38%;background:color-mix(in srgb, var(--teal) 30%, transparent)}
+.beach .shadeB{background:color-mix(in srgb, var(--terracotta) 30%, transparent)}
+.cart{position:absolute;top:8px;width:92px;margin-left:-46px;text-align:center;cursor:grab}
+.cart svg{width:78px;height:auto;display:block;margin:0 auto}
+.cart .pct{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);margin-top:2px}
+.cart.a .cbody{fill:var(--teal)}
+.cart.b .cbody{fill:var(--terracotta)}
+.cart .cwheel{fill:var(--ink)}
+.cart .cletter{fill:var(--paper);font-family:var(--display);font-weight:900;font-size:26px}
+.widgetnote{font-weight:500;font-size:18px;color:var(--muted);text-align:center;margin-top:14px;min-height:26px}
+.widgetnote b{color:var(--red)}
+/* median-voter spectrum */
+.spec{position:relative;width:100%;max-width:1020px;height:200px;margin:0 auto;user-select:none;touch-action:none}
+.specband{position:absolute;left:0;right:0;top:66px;height:74px;border:2.5px solid var(--ink);
+  background:linear-gradient(90deg,var(--blue),var(--maroon) 55%,var(--red))}
+.specsplit{position:absolute;top:56px;height:94px;width:4px;margin-left:-2px;background:var(--ink)}
+.speclbl{position:absolute;top:98px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;font-size:13px;
+  color:color-mix(in srgb, var(--paper) 88%, transparent)}
+.cand{position:absolute;top:0;width:96px;margin-left:-48px;text-align:center;cursor:grab}
+.cand .badge{width:66px;height:66px;margin:0 auto;border-radius:50%;background:var(--paper);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.cand .badge svg{width:46px;height:auto;display:block}
+.cand .stem{width:4px;height:14px;background:var(--ink);margin:0 auto}
+.cand .cpct{font-family:var(--display);font-weight:900;font-size:26px;margin-top:74px}
+.cand.d .cpct{color:var(--blue)}
+.cand.r .cpct{color:var(--red)}
+.cand.d .animal{fill:var(--blue)}
+.cand.r .animal{fill:var(--red)}
+</style>
+</head><body>
+
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>Applied Game Theory, Module 3 — Simultaneous Zero-Sum Games: sample block</h1>
+<p>Accessible text version. Each heading below is one slide, in order. This is a short sample block from the Module 3 design pass, for review.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 7: Title slide</h2><p>Zero-sum games. Simultaneous zero-sum strategies. A sample block from Module 3 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 7: Michael, Dwight, and Andy in a zero-sum truel game</h2><p>Three tiles, one per shooter, each with a big hit-rate figure. Dwight Schrute, "Fastest Crossbow in Scranton": 100% hit rate on his shots. Andy Bernard, "Cornell Gun Club President '06": 80% hit rate on his shots. Michael Scott, "I Once Shot Myself by Mistake": 50% hit rate on his shots. Two rules: shooting order is random, and after each person fires, he has to reload. A link plays the Mexican standoff clip.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 7: Who would you rather be?</h2><p>A live poll answered on phones at ryanlamare.com/go (QR code shown), with three options: Dwight (hits 100% of his shots), Andy (hits 80% of his shots), Michael (hits 50% of his shots). A response counter rises while the distribution stays hidden; a keypress reveals the answers as a crowd of Isotype figures per option. Two further reveals: What if Michael decides to (or is forced to) shoot first? Then: "Survival of the weakest" — Michael wins 52% of the time; Dwight 30%; Andy 18% — and Michael's option card is ringed as the winner. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 7: A zero-sum game in your own market</h2><p>Lead line: a mature market is a fixed pie — every point of share you win comes straight off your rival's total. A two-by-three payoff matrix of your share of the market (your rival gets the rest). You (rows): promote hard, match the market. Your closest rival (columns): promote hard, match the market, pull back spend. Values by row: 50, 60, 70; 40, 50, 60. Steps grey out the rival's pull-back column as an inferior strategy, ring your promote-hard row as dominant, and ring the equilibrium where both sides promote hard: a 50/50 split.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 7: Combining sequential and simultaneous thinking: Hotelling's game</h2><p>We've so far considered how to solve zero-sum games with finite choices available (go north/go south; promote hard/match the market). But what strategy should we use if the choices are infinite? Consider Hotelling's game. Two vendors are selling hot dogs to beach goers — identical products and prices. Vendors choose where to place their carts. Beach goers will always choose the closest cart. Where should the vendors set up their carts?</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 7: The beach</h2><p>An interactive beach strip with two draggable hot-dog carts, A in teal and B in terracotta, each showing its live share of customers; the sand shades toward whichever cart is closer. Two preset buttons replay the lecture beats: "Suppose they set up like this" places A three-quarters of the way east and B in the middle (A gets 37.5 percent, B gets 62.5 percent); "They should always end up like this" places both carts together in the middle, the 50/50 equilibrium. The instructor plays this live with the room.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 7: Application to politics, the median voter theorem</h2><p>Lead line: Hotelling proposed this game in 1929 — in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach. An interactive political spectrum from 0, entirely Liberal, to 100, entirely Conservative, drawn as a band blending blue to red. Two draggable candidate badges — a blue donkey and a red rhino — each showing its live vote share, with a divider marking where voters switch sides. The same two preset buttons replay the beats: candidates apart (the blue candidate at 15 gets 40 percent, the red candidate at 65 gets 60 percent), then both converging on the median voter for 50/50.</p></section>
+</section>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">3</div>
+  <div class="tag"><i></i>MODULE 3 SAMPLE · APPLIED GAME THEORY</div>
+  <h1>ZERO-SUM<br><span class="r">GAMES</span></h1>
+  <div class="sub">Simultaneous zero-sum strategies</div>
+  <div class="byline">J. RYAN LAMARE</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
+  <h2>Michael, Dwight, and Andy in a zero-sum truel game</h2>
+  <div class="gtiles" style="top:230px;bottom:auto">
+    <div class="gtile"><div class="gn">Dwight Schrute</div><div class="hitpct">100%</div><div class="gq">&ldquo;Fastest Crossbow in Scranton&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+    <div class="gtile" data-step="1"><div class="gn">Andy Bernard</div><div class="hitpct">80%</div><div class="gq">&ldquo;Cornell Gun Club President &rsquo;06&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+    <div class="gtile" data-step="2"><div class="gn">Michael Scott</div><div class="hitpct">50%</div><div class="gq">&ldquo;I Once Shot Myself by Mistake&rdquo;</div><div class="gs">hit rate on his shots</div></div>
+  </div>
+  <ul class="bullets" style="position:absolute;left:50%;transform:translateX(-50%);bottom:170px;margin-top:0;width:760px">
+    <li data-step="3">Shooting order is random, and after each person fires, he has to reload</li>
+  </ul>
+  <a class="medialink" href="https://www.youtube.com/watch?v=IHQr0HCIN2w" target="_blank" rel="noopener" style="position:absolute;left:50%;transform:translateX(-50%);bottom:84px;margin:0">
+    <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+    <span class="mlk">CLIP</span>
+    <span class="mlt">Mexican standoff</span>
+  </a>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
+  <h2>Who would you rather be?</h2>
+  <div class="pollwrap" style="top:180px;bottom:56px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="../qr-go.svg" alt="QR code for ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="p3N">0</span><span class="l">ANSWERS<br>IN</span></div>
+    </div>
+    <div class="pollopts three">
+      <div class="popt" id="p3o1"><div class="demotag" id="p3demo">DEMO DATA</div>
+        <div class="ptxt">Dwight (hits 100% of his shots)</div>
+        <div class="crowd" style="color:var(--teal)"></div><div class="pnum"></div></div>
+      <div class="popt" id="p3o2">
+        <div class="ptxt">Andy (hits 80% of his shots)</div>
+        <div class="crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
+      <div class="popt" id="p3o3">
+        <div class="ptxt">Michael (hits 50% of his shots)</div>
+        <div class="crowd" style="color:var(--red)"></div><div class="pnum"></div></div>
+    </div>
+    <div class="cap" style="text-align:center;max-width:none;margin-top:4px;min-height:60px">
+      <span data-step="2">What if Michael decides to (or is forced to) shoot first?</span><br>
+      <span data-step="3"><b>&ldquo;Survival of the weakest&rdquo; &ndash; Michael wins 52% of the time; Dwight 30%; Andy 18%</b></span>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="p3Reveal" style="position:absolute;width:0;height:0"></span>
+  <span data-step="3" data-stepcall="truelWin" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
+  <h2>A zero-sum game in your own market</h2>
+  <div class="leadline">A mature market is a <b>fixed pie</b>: every point of share you win comes straight off your rival&rsquo;s total</div>
+  <div class="fig" style="top:280px;gap:0">
+    <div class="mxwrap">
+      <div class="mxtitle">EACH CELL: YOUR SHARE OF THE MARKET &middot; YOUR RIVAL GETS THE REST</div>
+      <div class="mx" style="--cols:3;--rows:2;--cw:200px;--rh:84px">
+        <div class="chead">YOUR CLOSEST RIVAL</div>
+        <div class="rhead">YOU</div>
+        <div class="cl" style="grid-column:3">Promote Hard</div>
+        <div class="cl" style="grid-column:4">Match the Market</div>
+        <div class="cl" id="mc3" style="grid-column:5">Pull Back Spend</div>
+        <div class="rl" style="grid-row:3">Promote Hard</div>
+        <div class="rl" style="grid-row:4">Match the Market</div>
+        <div class="cell" id="m11" style="grid-row:3;grid-column:3"><span class="pa">50%</span></div>
+        <div class="cell" id="m12" style="grid-row:3;grid-column:4"><span class="pa">60%</span></div>
+        <div class="cell" id="m13" style="grid-row:3;grid-column:5"><span class="pa">70%</span></div>
+        <div class="cell" id="m21" style="grid-row:4;grid-column:3"><span class="pa">40%</span></div>
+        <div class="cell" id="m22" style="grid-row:4;grid-column:4"><span class="pa">50%</span></div>
+        <div class="cell" id="m23" style="grid-row:4;grid-column:5"><span class="pa">60%</span></div>
+      </div>
+      <div class="mxnote">
+        <span data-step="1">Your rival should never pull back spend &ndash; an inferior strategy, so scratch it out&hellip;</span>
+        <span data-step="2"> promoting hard is your dominant strategy &ndash; it beats matching no matter what your rival does&hellip;</span>
+        <span data-step="3"> <b>the equilibrium: both sides promote hard, and the market splits 50/50</b></span>
+      </div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="mc3,m13,m23" data-cls="dead" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="m11,m12" data-cls="hot" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="mxMark" data-cells="m11" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
+  <h2>Combining sequential and simultaneous thinking: Hotelling&rsquo;s game</h2>
+  <ul class="bullets" style="margin-top:44px">
+    <li>We&rsquo;ve so far considered how to solve zero-sum games with <b>finite</b> choices available (go north/go south; promote hard/match the market)</li>
+    <li data-step="1">But what strategy should we use if the choices are <b>infinite</b>?</li>
+    <li data-step="2">Consider <b>Hotelling&rsquo;s game</b></li>
+    <li class="sub" data-step="2">Two vendors are selling hot dogs to beach goers &ndash; identical products and prices</li>
+    <li class="sub" data-step="2">Vendors choose where to place their carts</li>
+    <li class="sub" data-step="2">Beach goers will always choose the closest cart</li>
+    <li data-step="3"><b>Where should the vendors set up their carts?</b></li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
+  <h2>The beach</h2>
+  <div class="fig" style="top:180px">
+    <div class="widget">
+      <div class="whead">
+        <span class="wlabel">DRAG THE CARTS &middot; CUSTOMERS WALK TO THE NEAREST ONE</span>
+        <span>
+          <button id="presetA">Suppose they set up like this&hellip;</button>
+          <button id="presetB" class="primary">They should always end up like this&hellip;</button>
+        </span>
+      </div>
+      <div class="beach" id="beach">
+        <div class="shade" id="shadeA"></div>
+        <div class="shade shadeB" id="shadeB"></div>
+        <div class="cart a" id="cartA">
+          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+          <div class="pct" id="pctA">50%</div>
+        </div>
+        <div class="cart b" id="cartB">
+          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+          <div class="pct" id="pctB">50%</div>
+        </div>
+      </div>
+      <div class="widgetnote" id="beachnote">An even split. Can either vendor do better by moving?</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
+  <h2>Application to politics: the median voter theorem</h2>
+  <div class="leadline" style="max-width:1010px;margin-left:auto;margin-right:auto">Hotelling proposed this game in 1929 &ndash; in 1957, a political scientist named Downs proposed that <b>political representation</b> operates just like vendors on a beach</div>
+  <div class="fig" style="top:312px;bottom:74px">
+    <div class="widget">
+      <div class="whead">
+        <span class="wlabel">DRAG THE CANDIDATES &middot; VOTERS PICK THE NEARER ONE</span>
+        <span>
+          <button id="presetC">Suppose they set up like this&hellip;</button>
+          <button id="presetD" class="primary">They should always end up like this&hellip;</button>
+        </span>
+      </div>
+      <div class="spec" id="spec">
+        <div class="specband"></div>
+        <div class="specsplit" id="specsplit"></div>
+        <span class="speclbl" style="left:14px">0 &middot; ENTIRELY LIBERAL</span>
+        <span class="speclbl" style="right:14px">100 &middot; ENTIRELY CONSERVATIVE</span>
+        <div class="cand d" id="candD">
+          <div class="badge"><svg viewBox="0 0 68 60"><g class="animal"><ellipse cx="28" cy="36" rx="17" ry="11"/><rect x="15" y="42" width="5" height="16"/><rect x="24" y="44" width="5" height="14"/><rect x="33" y="44" width="5" height="14"/><rect x="41" y="42" width="5" height="16"/><polygon points="40,32 52,16 58,18 50,34"/><ellipse cx="56" cy="17" rx="9" ry="5.5" transform="rotate(18 56 17)"/><polygon points="49,13 45,1 50,2 53,12"/><polygon points="54,12 52,0 57,2 58,13"/><path d="M12 30 q-7 2 -8 10 l2 1 q3 -6 8 -7 z"/></g></svg></div>
+          <div class="stem"></div>
+          <div class="cpct" id="pctD">50%</div>
+        </div>
+        <div class="cand r" id="candR">
+          <div class="badge"><svg viewBox="0 0 68 60"><g class="animal"><ellipse cx="38" cy="34" rx="20" ry="13"/><rect x="24" y="44" width="6" height="14"/><rect x="34" y="46" width="6" height="12"/><rect x="46" y="44" width="6" height="14"/><path d="M22 27 Q10 28 6 38 L6 44 Q12 46 18 44 L22 40 Z"/><polygon points="7,36 0,24 11,32"/><polygon points="21,24 23,16 27,23"/><path d="M57 28 q6 4 4 12 l-2 0 q0 -6 -4 -9 z"/></g></svg></div>
+          <div class="stem"></div>
+          <div class="cpct" id="pctR">50%</div>
+        </div>
+      </div>
+      <div class="widgetnote" id="specnote">An even split. Can either candidate do better by moving?</div>
+    </div>
+  </div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
+
+<script>
+/* ---- live poll: try the gt-poll worker, fall back to marked demo data ---- */
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
+function mkPoll(pollId, nId, optIds, demoId, demoDist){
+  const st={live:false,counts:demoDist.slice(),total:0,demoShown:0,revealed:false};
+  const nEl=document.getElementById(nId);
+  function renderCount(){nEl.textContent=st.live?st.total:st.demoShown;}
+  function crowdHTML(n){
+    let h='';
+    for(let i=0;i<Math.min(n,24);i++)h+=PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"');
+    return h;
+  }
+  function renderCrowds(){
+    const counts=st.live?st.counts:demoDist;
+    optIds.forEach((id,i)=>{
+      const o=document.getElementById(id);
+      const crowd=o.querySelector('.crowd');
+      if(st.revealed){
+        const want=Math.min(counts[i]||0,24);
+        if(crowd.children.length!==want){crowd.innerHTML=crowdHTML(counts[i]||0);void crowd.offsetWidth;}
+      }else crowd.innerHTML='';
+      o.classList.toggle('revealed',st.revealed);
+      o.querySelector('.pnum').textContent=st.revealed?(counts[i]||0):'';
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+pollId).then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById(demoId).style.display='none';
+      st.counts=optIds.map((_,i)=>d.counts[i]||0);
+      st.total=d.total;
+      renderCount();
+      if(st.revealed)renderCrowds();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{const demoTotal=demoDist.reduce((a,b)=>a+b,0);
+    if(!st.live&&st.demoShown<demoTotal){st.demoShown++;renderCount();}},420);
+  return {reveal(on){st.revealed=on;renderCrowds();}};
+}
+const poll3=mkPoll('m3-truel','p3N',['p3o1','p3o2','p3o3'],'p3demo',[11,6,4]);
+function p3Reveal(el,on){poll3.reveal(on);}
+function truelWin(el,on){document.getElementById('p3o3').classList.toggle('winner',on);}
+
+/* ---- Hotelling beach: draggable carts, live shares, preset beats ---- */
+(function(){
+const beach=document.getElementById('beach');
+let A=25, B=75; // percent along the beach
+const cartA=document.getElementById('cartA'), cartB=document.getElementById('cartB');
+const shadeA=document.getElementById('shadeA'), shadeB=document.getElementById('shadeB');
+const pctA=document.getElementById('pctA'), pctB=document.getElementById('pctB');
+const note=document.getElementById('beachnote');
+function layout(){
+  const mid=(Math.min(A,B)+Math.max(A,B))/2;
+  const leftIsA=A<=B;
+  const sA=leftIsA?mid:100-mid, sB=100-sA;
+  cartA.style.left=A+'%'; cartB.style.left=B+'%';
+  const aEl=leftIsA?shadeA:shadeB, bEl=leftIsA?shadeB:shadeA;
+  aEl.style.left='0'; aEl.style.width=mid+'%';
+  bEl.style.left=mid+'%'; bEl.style.width=(100-mid)+'%';
+  pctA.textContent=Math.round(sA*10)/10+'%';
+  pctB.textContent=Math.round(sB*10)/10+'%';
+  if(Math.abs(A-50)<2.5&&Math.abs(B-50)<2.5){note.innerHTML='<b>Equilibrium:</b> back to back in the middle of the beach. Neither vendor can gain by moving.';}
+  else if(Math.abs(sA-sB)<0.5){note.textContent='An even split. Can either vendor do better by moving?';}
+  else{note.textContent=(sA>sB?'Vendor A':'Vendor B')+' is winning. What should the other vendor do?';}
+}
+function drag(el,setter){
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();el.setPointerCapture(e.pointerId);
+    const move=ev=>{const r=beach.getBoundingClientRect();
+      setter(Math.max(2,Math.min(98,(ev.clientX-r.left)/r.width*100)));layout();};
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+  });
+}
+drag(cartA,v=>A=v); drag(cartB,v=>B=v);
+document.getElementById('presetA').addEventListener('click',()=>{A=75;B=50;layout();});
+document.getElementById('presetB').addEventListener('click',()=>{A=49;B=51;layout();});
+layout();
+})();
+
+/* ---- median voter: same mechanics on the political spectrum ---- */
+(function(){
+const spec=document.getElementById('spec');
+let D=25, R=75; // positions 0-100
+const candD=document.getElementById('candD'), candR=document.getElementById('candR');
+const split=document.getElementById('specsplit');
+const pctD=document.getElementById('pctD'), pctR=document.getElementById('pctR');
+const note=document.getElementById('specnote');
+function layout(){
+  const mid=(Math.min(D,R)+Math.max(D,R))/2;
+  const leftIsD=D<=R;
+  const sD=leftIsD?mid:100-mid, sR=100-sD;
+  candD.style.left=D+'%'; candR.style.left=R+'%';
+  split.style.left=mid+'%';
+  pctD.textContent=Math.round(sD*10)/10+'%';
+  pctR.textContent=Math.round(sR*10)/10+'%';
+  if(Math.abs(D-50)<2.5&&Math.abs(R-50)<2.5){note.innerHTML='<b>Equilibrium:</b> both candidates converge on the median voter.';}
+  else if(Math.abs(sD-sR)<0.5){note.textContent='An even split. Can either candidate do better by moving?';}
+  else{note.textContent=(sD>sR?'The blue candidate':'The red candidate')+' is winning. What should the other candidate do?';}
+}
+function drag(el,setter){
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();el.setPointerCapture(e.pointerId);
+    const move=ev=>{const r=spec.getBoundingClientRect();
+      setter(Math.max(2,Math.min(98,(ev.clientX-r.left)/r.width*100)));layout();};
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+  });
+}
+drag(candD,v=>D=v); drag(candR,v=>R=v);
+document.getElementById('presetC').addEventListener('click',()=>{D=15;R=65;layout();});
+document.getElementById('presetD').addEventListener('click',()=>{D=49;R=51;layout();});
+layout();
+})();
+</script>
+<script src="/teaching/exec/gt/deck.js"></script>
+</body></html>
