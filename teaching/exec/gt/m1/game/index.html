@@ -1,0 +1,329 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 1 Games</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 1 games — three modes, deep-linked from
+   each slide's QR (?g=dog / ?g=number / ?g=offer; bare URL shows a
+   chooser).
+   DOG: sketch the median dog on a 300x300 canvas; strokes post to the
+   gt-poll drawing lane (room m1-dog), one drawing per phone, resubmit to
+   redraw. NUMBER: the instructor's 1-100 number, played in five rounds —
+   one guess per round, the Worker holds the number and the round and
+   answers too high / too low / correct (room m1-number). OFFER: the added
+   values game — send a whole-dollar
+   offer (your share of the $100 pair) into room m1-av as "name|o|amt"
+   lines; the deck's board queues it, the instructor accepts or rejects,
+   and this page watches for the "name|d|amt|a-or-r|phase" decision line.
+   Names come from the shared gt-name flow and are claimed into gt-names. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+.rules{font-weight:500;font-size:14.5px;line-height:1.45;color:var(--muted)}
+.rules b{color:var(--ink)}
+canvas{width:100%;height:auto;background:#fff;border:3px solid var(--ink);touch-action:none;cursor:crosshair;display:block}
+.btnrow{display:flex;gap:10px}
+.btnrow button{flex:1;font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;
+  background:var(--card);border:2.5px solid var(--ink);color:var(--ink);padding:13px 0;cursor:pointer}
+.btnrow button.primary{background:var(--red);border-color:var(--red);color:var(--paper)}
+.btnrow button:disabled{opacity:.4;cursor:default}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+button.pick,button.opt{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 18px;cursor:pointer}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.choices{display:flex;flex-direction:column;gap:10px}
+.hist{display:flex;flex-direction:column;gap:8px}
+.hrow{display:flex;justify-content:space-between;align-items:baseline;border:2px solid var(--ink);
+  background:var(--card);padding:10px 14px;font-weight:700;font-size:17px}
+.hrow .hv{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hrow.high .hv{color:var(--terracotta)}
+.hrow.low .hv{color:var(--teal)}
+.hrow.correct{border-color:var(--red)}
+.hrow.correct .hv{color:var(--red)}
+input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px}
+.big{font-family:var(--display);font-weight:900;font-size:40px;line-height:1;color:var(--red)}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 1</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+  <div class="rules" id="rules"></div>
+</div>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'),
+      st=document.getElementById('status'), rules=document.getElementById('rules');
+let name=null, roster=[], watcher=null;
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+const MODE=new URLSearchParams(location.search).get('g');
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+function render(){
+  st.textContent='';rules.textContent='';
+  if(watcher){clearInterval(watcher);watcher=null;}
+  if(!name){renderName();return;}
+  if(MODE==='dog')renderDog();
+  else if(MODE==='number')renderNumber();
+  else if(MODE==='offer')renderOffer();
+  else renderChooser();
+}
+function meRow(){
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  return me;
+}
+function renderName(){
+  q.textContent='Who are you?';
+  app.innerHTML='';
+  const pick=n=>{
+    name=n.trim().replace(/\s+/g,' ').slice(0,40);
+    if(!name)return;
+    try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();render();
+  };
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>pick(n));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=40;inp.placeholder=roster.length?'Not on the list? Type your name':'Type your first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='THAT’S ME';
+  btn.addEventListener('click',()=>pick(inp.value));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pick(inp.value);}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function renderChooser(){
+  q.textContent='Which game is on the screen?';
+  app.innerHTML='';
+  app.appendChild(meRow());
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='10px';
+  [['dog','A game of drawing'],['number','I’m thinking of a number'],['offer','Added values — make an offer']].forEach(([g,label])=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.addEventListener('click',()=>{history.replaceState(null,'','?g='+g);location.reload();});
+    ch.appendChild(b);
+  });
+  app.appendChild(ch);
+}
+
+/* ---- the median dog ---- */
+function renderDog(){
+  q.textContent='Draw the median dog';
+  rules.innerHTML='Draw <b>the median dog</b> — sized so that half the room&rsquo;s dogs are bigger and half are smaller. <b>Drawing quality does not matter — stick dogs are welcome.</b> The winner is the median dog measured <b>from snout to tail</b>, not the type or quality of the drawing. Facing left or right is up to you. Redraw and resubmit as often as you like until time is called.';
+  app.innerHTML='';
+  app.appendChild(meRow());
+  const cv=document.createElement('canvas');cv.width=300;cv.height=300;cv.style.marginTop='8px';
+  app.appendChild(cv);
+  const row=document.createElement('div');row.className='btnrow';row.style.marginTop='10px';
+  row.innerHTML='<button type="button" id="undo">UNDO</button><button type="button" id="clear">CLEAR</button><button type="button" id="send" class="primary">SUBMIT DOG</button>';
+  app.appendChild(row);
+  pad(cv,row.querySelector('#undo'),row.querySelector('#clear'),row.querySelector('#send'));
+}
+function pad(cv,undoBtn,clearBtn,sendBtn){
+  const ctx=cv.getContext('2d');
+  ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#1B1C19';
+  let strokes=[], cur=null;
+  function redraw(){
+    ctx.clearRect(0,0,300,300);
+    [...strokes,cur].filter(Boolean).forEach(pts=>{
+      if(pts.length<2){if(pts.length){ctx.beginPath();ctx.arc(pts[0].x,pts[0].y,2.5,0,7);ctx.fillStyle='#1B1C19';ctx.fill();}return;}
+      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+      pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.stroke();
+    });
+  }
+  function pos(e){
+    const r=cv.getBoundingClientRect();
+    return {x:Math.max(0,Math.min(300,Math.round((e.clientX-r.left)/r.width*300))),
+            y:Math.max(0,Math.min(300,Math.round((e.clientY-r.top)/r.height*300)))};
+  }
+  function size(){let c=0;strokes.forEach(s=>c+=s.length*8);return c;}
+  cv.addEventListener('pointerdown',e=>{e.preventDefault();cv.setPointerCapture(e.pointerId);cur=[pos(e)];redraw();});
+  cv.addEventListener('pointermove',e=>{
+    if(!cur)return;
+    const p=pos(e), last=cur[cur.length-1];
+    if(Math.hypot(p.x-last.x,p.y-last.y)>=3)cur.push(p);
+    redraw();
+  });
+  const up=()=>{if(cur){if(size()<5200)strokes.push(cur);cur=null;redraw();}};
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  undoBtn.addEventListener('click',()=>{strokes.pop();redraw();});
+  clearBtn.addEventListener('click',()=>{strokes=[];redraw();});
+  sendBtn.addEventListener('click',()=>{
+    if(!strokes.length){st.textContent='Draw a dog first!';return;}
+    const d=strokes.map(s=>s.map(p=>p.x+','+p.y).join(' ')).join(';').slice(0,5990);
+    sendBtn.disabled=true;st.textContent='Sending…';
+    fetch(API+'/p/m1-dog/draw',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({v:voter,n:name,d:d})})
+    .then(r=>{if(!r.ok)throw r.status;
+      let minX=300,maxX=0;
+      strokes.forEach(s=>s.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);}));
+      st.innerHTML='<b>Dog received.</b> Snout to tail: <b>'+Math.round(maxX-minX)+'</b>. Redraw and resubmit until time is called.';})
+    .catch(code=>{st.textContent=code===429?'The kennel is full — flag the instructor.':'That didn’t send — try again.';})
+    .finally(()=>{sendBtn.disabled=false;});
+  });
+}
+
+/* ---- I'm thinking of a number ----
+   Five rounds, run from the front: one guess per round, the phone answers
+   too high / too low / correct straight away, and between rounds the board
+   shows the whole room's guesses. The Worker holds the round number, so
+   the input only reopens when the instructor opens the next round. */
+function renderNumber(){
+  q.textContent='I’m thinking of a number…';
+  rules.innerHTML='A number between <b>1 and 100</b>. The game runs in <b>five rounds</b>: one guess per round, and each one comes back <b>too high</b>, <b>too low</b>, or <b>correct</b>. Between rounds the board shows the whole room&rsquo;s guesses — and remember, the instructor is strategic too.';
+  app.innerHTML='';
+  app.appendChild(meRow());
+  const rdTag=document.createElement('div');rdTag.className='tag';rdTag.style.margin='10px 0 0';
+  app.appendChild(rdTag);
+  const hist=document.createElement('div');hist.className='hist';hist.style.marginTop='10px';
+  app.appendChild(hist);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop='12px';
+  const inp=document.createElement('input');inp.type='number';inp.min=1;inp.max=100;inp.placeholder='1 – 100';
+  const btn=document.createElement('button');btn.textContent='GUESS';
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+  let mine=[], round=1, opened=false;
+  function paint(){
+    rdTag.textContent=opened?(round>5?'GAME OVER':'ROUND '+round+' OF 5'):'';
+    hist.innerHTML='';
+    mine.forEach(x=>{
+      const div=document.createElement('div');
+      div.className='hrow '+x.r;
+      div.innerHTML='<span>'+x.g+'</span><span class="hv">'+(x.r==='correct'?'CORRECT!':(x.r==='high'?'TOO HIGH':'TOO LOW'))+'</span>';
+      hist.appendChild(div);
+    });
+    const done=mine.some(x=>x.r==='correct'), out=mine.length>=5||round>5;
+    const played=mine.some(x=>x.rd===round);
+    row.style.display=(done||out||played||!opened)?'none':'flex';
+    if(done)st.innerHTML='<b>You got it in '+mine.length+'!</b> Watch the board.';
+    else if(out)st.innerHTML='<b>Out of guesses!</b> Watch the board.';
+    else if(!opened)st.textContent='Waiting for the game to open…';
+    else if(played)st.innerHTML='<b>Round '+round+' guess is in.</b> Watch the board — the next round opens from the front.';
+    else st.textContent=mine.length?'Higher or lower — one guess this round.':'';
+  }
+  function sync(){
+    fetch(API+'/p/m1-number/guesses').then(r=>r.json()).then(d=>{
+      mine=(d.guesses||[]).filter(x=>x.v===voter);
+      paint();
+    }).catch(()=>{});
+    fetch(API+'/p/m1-number/target').then(r=>r.json()).then(d=>{
+      opened=!!d.set;round=d.round||1;
+      paint();
+    }).catch(()=>{});
+  }
+  sync();watcher=setInterval(sync,4000);
+  const go=()=>{
+    const g=Math.round(Number(inp.value));
+    if(!Number.isFinite(g)||g<1||g>100){st.textContent='Pick a whole number from 1 to 100.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    fetch(API+'/p/m1-number/guess',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({v:voter,n:name,g:g})})
+    .then(r=>r.json().then(d=>({ok:r.ok,d})))
+    .then(({ok,d})=>{
+      if(!ok){
+        st.textContent=d.error==='not started'?'The game hasn’t opened yet — hold on.'
+          :(d.error==='round played'?'That round is done for you — wait for the next one.':'That didn’t send — try again.');
+        return;
+      }
+      mine.push({g:g,r:d.r,rd:round});
+      inp.value='';
+      paint();
+    })
+    .catch(()=>{st.textContent='That didn’t send — try again.';})
+    .finally(()=>{btn.disabled=false;});
+  };
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+}
+
+/* ---- added values: make an offer ---- */
+function renderOffer(){
+  q.textContent='Make me an offer';
+  rules.innerHTML='A white and yellow pair is worth <b>$100</b>. Offer the instructor a price for <b>your share</b> — how many of the hundred dollars you keep. Offers go to the board; the instructor accepts or rejects each one, and a rejection means you can offer again.';
+  app.innerHTML='';
+  app.appendChild(meRow());
+  const lbl=document.createElement('div');lbl.className='tag';lbl.style.margin='10px 0 6px';lbl.textContent='YOUR SHARE OF THE $100';
+  app.appendChild(lbl);
+  const inp=document.createElement('input');inp.className='amt';inp.type='number';inp.min=0;inp.max=100;inp.step=1;inp.placeholder='0 – 100';
+  app.appendChild(inp);
+  const btn=document.createElement('button');btn.className='namerow'.replace('namerow','opt');
+  btn.style.cssText='margin-top:12px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-weight:700;letter-spacing:.06em';
+  btn.textContent='SEND THE OFFER';
+  app.appendChild(btn);
+  let lastOfferIdx=-1;
+  function watch(){
+    fetch(API+'/p/m1-av/answers').then(r=>r.json()).then(d=>{
+      const lines=d.answers||[];
+      const nkey=name.trim().toLowerCase();
+      let oIdx=-1,dec=null,decIdx=-1;
+      lines.forEach((t,i)=>{
+        const p=String(t).split('|').map(s=>s.trim());
+        if(p[0].toLowerCase()!==nkey)return;
+        if(p[1]==='o')oIdx=i;
+        if(p[1]==='d'){dec=p;decIdx=i;}
+      });
+      if(oIdx<0)return;
+      if(decIdx>oIdx&&dec){
+        st.innerHTML=dec[3]==='a'
+          ?'<b>Accepted!</b> Your pair is in at $'+dec[2]+' for you.'
+          :'<b>Rejected.</b> The instructor passed on $'+dec[2]+' — make another offer.';
+      }else{
+        st.innerHTML='<b>Offer in.</b> Waiting on the instructor…';
+      }
+    }).catch(()=>{});
+  }
+  watch();watcher=setInterval(watch,3000);
+  btn.addEventListener('click',()=>{
+    const amt=Math.round(Number(inp.value));
+    if(!Number.isFinite(amt)||amt<0||amt>100){st.textContent='The offer needs to be between 0 and 100.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    fetch(API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:name+'|o|'+amt,v:voter})})
+    .then(r=>{if(!r.ok)throw r.status;
+      st.innerHTML='<b>Offer in.</b> Waiting on the instructor…';})
+    .catch(code=>{st.textContent=code===429?'That’s plenty of offers from one phone!':'That didn’t send — try again.';})
+    .finally(()=>{btn.disabled=false;});
+  });
+}
+</script>
+</body></html>

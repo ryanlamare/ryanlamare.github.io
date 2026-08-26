@@ -38,6 +38,8 @@ h1 .r{color:var(--red)}
 .room button:disabled{opacity:.35;cursor:default}
 .msg{font-size:13px;min-height:1.4em;margin-top:12px;opacity:.8}
 .msg.bad{color:var(--red);opacity:1}
+.sctag{font-weight:700;font-size:9.5px;letter-spacing:.12em;color:var(--red);
+  border:1px solid var(--red);padding:1px 6px;vertical-align:2px}
 </style>
 </head><body>
 <div class="wrap">
@@ -55,7 +57,20 @@ h1 .r{color:var(--red)}
 <script>
 (function(){
 const API='https://gt-poll.rlamare.workers.dev';
-const EXTRA=[{id:'m4-prices',q:'Price Wars lock-ins (Module 4 game)',text:true}];
+const EXTRA=[
+  {id:'m1-dog',q:'Median dog drawings (Module 1 game)',draws:true},
+  {id:'m1-number',q:'Number game guesses + the secret number (Module 1)',guesses:true},
+  {id:'m1-av',q:'Added values offers and decisions (Module 1)',text:true},
+  {id:'m2-ultimatum',q:'Ultimatum results (Module 2 recorder)',text:true},
+  {id:'m2-centipede',q:'Centipede results (Module 2 recorder)',text:true},
+  {id:'m2-bracket',q:'Last-card bracket champion (Module 2)',text:true},
+  {id:'m4-prices',q:'Price Wars lock-ins (Module 4 game)',text:true},
+  {id:'m5-invest',q:'Investment game rounds (Module 5 game)',text:true},
+  {id:'gt-names',q:'Class name claims — the points system’s join table',text:true},
+];
+/* rooms the class points system scores from: resetting one mid-cohort
+   erases earned points, so they carry a tag and a sterner confirm */
+const SCORING=/^(gt-names|m1-dog|m1-number|m5-invest|m5-twothirds|m5-k\d+)$/;
 const secretEl=document.getElementById('secret'), msg=document.getElementById('msg');
 try{secretEl.value=localStorage.getItem('gt-admin')||'';}catch(_){}
 document.getElementById('saveSecret').addEventListener('click',()=>{
@@ -71,10 +86,11 @@ fetch('/go/polls.json').then(r=>r.json()).then(cfg=>{
     div.innerHTML='<div class="rn"><div class="rid"></div><div class="rq"></div></div>'+
       '<div class="ct">–</div><button type="button">RESET</button>';
     div.querySelector('.rid').textContent=room.id;
+    if(SCORING.test(room.id))div.querySelector('.rid').insertAdjacentHTML('beforeend',' <span class="sctag">SCORING</span>');
     div.querySelector('.rq').textContent=room.q;
     const ct=div.querySelector('.ct'), btn=div.querySelector('button');
     function refresh(){
-      const url=API+'/p/'+room.id+(room.text?'/answers':'');
+      const url=API+'/p/'+room.id+(room.draws?'/draws':(room.guesses?'/guesses':(room.text?'/answers':'')));
       fetch(url).then(r=>r.json()).then(d=>{
         const n=d.total||0;
         ct.textContent=n;
@@ -84,7 +100,10 @@ fetch('/go/polls.json').then(r=>r.json()).then(cfg=>{
     btn.addEventListener('click',()=>{
       const s=secretEl.value.trim();
       if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
-      if(!confirm('Reset '+room.id+'? This clears every answer in the room.'))return;
+      const warn=SCORING.test(room.id)
+        ?'Reset '+room.id+'? This is a SCORING room — clearing it erases points the class has already earned. Only do this between cohorts.'
+        :'Reset '+room.id+'? This clears every answer in the room.';
+      if(!confirm(warn))return;
       btn.disabled=true;say('Resetting '+room.id+'…');
       fetch(API+'/p/'+room.id+'/reset',{method:'POST',headers:{'content-type':'application/json'},
         body:JSON.stringify({s:s})})

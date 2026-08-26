@@ -1,0 +1,91 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>My Points</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Each participant's private running score — their own full detail, and
+   only their own. The room screen shows the top five and never a full
+   ranking; this page is the other half of that rule. Everything is
+   recomputed from the poll rooms via /go/scores.js on every refresh. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+.total{display:flex;align-items:baseline;gap:14px;border:2.5px solid var(--ink);background:var(--card);padding:18px 20px}
+.total .n{font-family:var(--display);font-weight:900;font-size:56px;line-height:1;color:var(--red)}
+.total .l{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted)}
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;align-items:baseline;border:2px solid var(--ink);background:var(--card);padding:12px 16px}
+.row .e{font-weight:600;font-size:16px}
+.row .p{font-family:var(--display);font-weight:900;font-size:24px}
+.row .p.neg{color:var(--red)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.hhead{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--muted);margin-top:10px}
+.hist{display:flex;flex-direction:column;gap:8px}
+.hitem{border:2px solid var(--rule);background:var(--card);padding:10px 14px;position:relative}
+.hitem.scored{border-color:var(--red)}
+.hitem .hq{font-weight:500;font-size:12.5px;color:var(--muted);line-height:1.35;padding-right:64px}
+.hitem .ha{font-weight:700;font-size:16px;color:var(--ink);margin-top:3px}
+.hitem .sc{position:absolute;top:8px;right:10px;font-weight:700;font-size:9px;letter-spacing:.12em;
+  color:var(--paper);background:var(--red);padding:2px 7px}
+.who{font-weight:600;font-size:14px;color:var(--muted)}
+.who b{color:var(--ink)}
+.who button{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;margin-left:8px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MY POINTS</div>
+  <h1 id="head">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/go/scores.js"></script>
+<script>
+const head=document.getElementById('head'), app=document.getElementById('app'), st=document.getElementById('status');
+let name=null, voter=null;
+try{name=localStorage.getItem('gt-name');voter=localStorage.getItem('gt-voter');}catch(_){}
+if(!name){
+  head.textContent='No name on this phone yet';
+  st.textContent='Join one of the named games first — pick your name there and your points will show up here.';
+}else{
+  head.textContent='Your points';
+  render();
+  setInterval(render,15000);
+}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function render(){
+  Promise.all([GT_SCORES.load(),GT_SCORES.myHistory(voter,name)]).then(([d,hist])=>{
+    const key=name.trim().toLowerCase().replace(/\s+/g,' ');
+    const me=d.players.find(p=>p.name.trim().toLowerCase().replace(/\s+/g,' ')===key);
+    let h='<div class="who">Playing as <b></b><button type="button" id="chg">not you?</button></div>';
+    h+='<div class="total"><span class="n">'+(me?me.total:0)+'</span><span class="l">points<br>so far</span></div>';
+    h+='<div class="rows">';
+    d.events.forEach(ev=>{
+      const p=me?(me.byEvent[ev.key]||0):0;
+      h+='<div class="row"><span class="e"></span><span class="p'+(p<0?' neg':'')+'">'+p+'</span></div>';
+    });
+    h+='</div>';
+    if(hist.length){
+      h+='<div class="hhead">Everything you&rsquo;ve answered</div><div class="hist">';
+      hist.forEach(it=>{
+        h+='<div class="hitem'+(it.scored?' scored':'')+'">'+(it.scored?'<span class="sc">SCORED</span>':'')+
+           '<div class="hq">'+esc(it.q)+'</div><div class="ha">'+esc(it.answer)+'</div></div>';
+      });
+      h+='</div>';
+    }
+    app.innerHTML=h;
+    app.querySelector('.who b').textContent=name;
+    [...app.querySelectorAll('.row .e')].forEach((e,i)=>{e.textContent=d.events[i].label;});
+    app.querySelector('#chg').addEventListener('click',()=>{
+      try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}
+      location.href='/go/';
+    });
+    st.textContent='Scores update as the games run. Red-tagged items count for points. Only you can see this page’s detail.';
+  }).catch(()=>{st.textContent='Could not reach the score server — try again in a moment.';});
+}
+</script>
+</body></html>
