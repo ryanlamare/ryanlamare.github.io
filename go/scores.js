@@ -23,7 +23,17 @@
      mediandog  — the drawing room's median snout-to-tail span; the
                   three nearest distances take gold/silver/bronze
                   (podium points, ties share the medal).
-     numbergame — first correct guess on attempt k earns 6−k points. */
+     numbergame — first correct guess on attempt k earns 6−k points.
+     ultimatum  — "prop|resp|offer|a-or-r" lines, latest per pair; an
+                  accepted deal pays each player their share in £ ÷ 100
+                  (rounded, minimum 1), a rejected one pays nobody —
+                  the game's own lesson, priced in points.
+     centipede  — "taker|other|turn" lines (the live game posts the
+                  taker first), latest per pair; the taker earns the
+                  pot in points (£ ÷ 100, so turn 3 pays 3 and a full
+                  run pays whoever it capped on 10).
+     lastcard   — "winner|loser|leaves" lines, latest per pair; the
+                  winner earns 3 points. */
 
 const GT_SCORES = (() => {
   const API = 'https://gt-poll.rlamare.workers.dev';
@@ -35,6 +45,15 @@ const GT_SCORES = (() => {
       events: [
         { key: 'dog', label: 'The median dog', kind: 'mediandog', room: 'm1-dog', podium: [5, 3, 1] },
         { key: 'number', label: 'The number game', kind: 'numbergame', room: 'm1-number' },
+      ],
+    },
+    {
+      id: 'm2',
+      title: 'Sequential Strategies',
+      events: [
+        { key: 'lastcard', label: 'Take the last card', kind: 'lastcard', room: 'm2-lastcard' },
+        { key: 'ultimatum', label: 'The ultimatum game', kind: 'ultimatum', room: 'm2-ultimatum' },
+        { key: 'centipede', label: 'The centipede game', kind: 'centipede', room: 'm2-centipede' },
       ],
     },
     {
@@ -61,9 +80,9 @@ const GT_SCORES = (() => {
     { id: 'm1-dog', label: 'The median dog · Module 1', kind: 'draw' },
     { id: 'm1-number', label: 'I’m thinking of a number · Module 1', kind: 'guesses' },
     { id: 'm1-av', label: 'Added values, your offers · Module 1', kind: 'av' },
+    { id: 'm2-lastcard', label: 'Take the last card · Module 2' },
     { id: 'm2-ultimatum', label: 'The ultimatum game · Module 2' },
     { id: 'm2-centipede', label: 'The centipede game · Module 2' },
-    { id: 'm2-bracket', label: 'Take the last card, the bracket · Module 2' },
     { id: 'm5-invest', label: 'The investment game · Module 5' },
   ];
 
@@ -169,6 +188,53 @@ const GT_SCORES = (() => {
     }
   }
 
+  /* the ultimatum game: names ride inside the lines, no voter join
+     needed. Latest line per (unordered) pair wins, mirroring the deck;
+     an accepted deal pays both sides their share, a rejection pays
+     nobody. A name playing in several pairs sums its deals. */
+  async function scoreUltimatum(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const byPair = new Map();
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(s => s.trim());
+      if (p.length !== 4 || !p[0] || !p[1] || !/^\d{1,4}$/.test(p[2]) || +p[2] > 1000 || !/^[ar]$/i.test(p[3])) return;
+      byPair.set([norm(p[0]), norm(p[1])].sort().join('~'),
+        { prop: p[0], resp: p[1], offer: +p[2], res: p[3].toLowerCase() });
+    });
+    byPair.forEach(g => {
+      if (g.res !== 'a') return;
+      addPoints(tally, g.prop, ev.key, Math.max(1, Math.round((1000 - g.offer) / 100)));
+      addPoints(tally, g.resp, ev.key, Math.max(1, Math.round(g.offer / 100)));
+    });
+  }
+
+  /* centipede: the live game posts the taker first, latest line per
+     (unordered) pair wins; the taker earns the pot in points and the
+     other player nothing — no negatives */
+  async function scoreCentipede(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const byPair = new Map();
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(s => s.trim());
+      if (p.length !== 3 || !p[0] || !p[1] || !/^(10|[1-9])$/.test(p[2])) return;
+      byPair.set([norm(p[0]), norm(p[1])].sort().join('~'), { taker: p[0], turn: +p[2] });
+    });
+    byPair.forEach(g => addPoints(tally, g.taker, ev.key, g.turn));
+  }
+
+  /* take the last card: winner first, latest line per pair; a flat
+     3 points to the winner */
+  async function scoreLastcard(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const byPair = new Map();
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(s => s.trim());
+      if (p.length !== 3 || !p[0] || !p[1]) return;
+      byPair.set([norm(p[0]), norm(p[1])].sort().join('~'), p[0]);
+    });
+    byPair.forEach(winner => addPoints(tally, winner, ev.key, 3));
+  }
+
   /* the median dog: spans from the stroke data (bbox width, exactly as
      the deck's kennel computes it), median of spans (average of the two
      middles when even). The podium: the three distinct distances nearest
@@ -232,6 +298,9 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'twothirds') await scoreTwothirds(ev, claims, tally);
         else if (ev.kind === 'invest') await scoreInvest(ev, claims, tally);
         else if (ev.kind === 'numbergame') await scoreNumber(ev, claims, tally);
+        else if (ev.kind === 'ultimatum') await scoreUltimatum(ev, claims, tally);
+        else if (ev.kind === 'centipede') await scoreCentipede(ev, claims, tally);
+        else if (ev.kind === 'lastcard') await scoreLastcard(ev, claims, tally);
         else if (ev.kind === 'mediandog') await scoreDog(ev, claims, tally);
       }
     }
@@ -257,8 +326,12 @@ const GT_SCORES = (() => {
       return (me ? 'offered £' + p[2] + ' to ' + p[1] : 'offered £' + p[2] + ' by ' + p[0]) +
         (p[3] === 'a' ? ' — accepted' : ' — rejected');
     }
-    if (id === 'm2-centipede') return 'with ' + (norm(p[0]) === nkey ? p[1] : p[0]) + ' — ended at turn ' + p[2];
-    if (id === 'm2-bracket') return p[0] === 'champion' ? 'champion!' : t;
+    if (id === 'm2-centipede') {
+      const took = norm(p[0]) === nkey;
+      return 'with ' + (took ? p[1] : p[0]) +
+        (p[2] === '10' ? ' — it ran to £1,000' : ' — ' + (took ? 'you' : 'they') + ' took £' + (+p[2] * 100) + ' at turn ' + p[2]);
+    }
+    if (id === 'm2-lastcard') return norm(p[0]) === nkey ? 'took the last card against ' + p[1] : 'played ' + p[0] + ' — they took the last card';
     if (id === 'm1-av') {
       if (p[1] === 'o') return 'offered to keep $' + p[2];
       if (p[1] === 'd') return '$' + p[2] + (p[3] === 'a' ? ' accepted' : ' rejected') + (p[4] === '2' ? ' (three cards lost)' : ' (equal cards)');
@@ -320,7 +393,7 @@ const GT_SCORES = (() => {
             const latest = new Map();
             mine.forEach(t => {
               const p = String(t).split('|').map(s => norm(s));
-              const key = g.id === 'm5-invest' ? p[1] : (g.id === 'm2-bracket' ? 'one' : [p[0], p[1]].sort().join('~'));
+              const key = g.id === 'm5-invest' ? p[1] : [p[0], p[1]].sort().join('~');
               latest.set(key, t);
             });
             mine = [...latest.values()];
