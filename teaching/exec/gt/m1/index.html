@@ -216,7 +216,7 @@
 <section aria-label="Slide 19"><h2>Slide 19 of 32: How to guess the correct number</h2><p>This is actually a game about common knowledge, not about guessing the right number. Remember — I am strategic too! The game actually started when you were sent the pre-course reading (if you read it, that is!). If I know that you've done the reading, how should I play this game? If you know that I know that you've done the reading, how should you play this game? Beside the bullets, a tower of four cards builds one by one, each indented deeper: you might know something; but I know that you know it; and you should know that I know that you know it; and I should know that you know that I know that you kn…!</p></section>
 <section aria-label="Slide 20"><h2>Slide 20 of 32: Lessons from the "I'm thinking of a number" game</h2><p>Bullets on the left: of course, you already know to always put yourself in the other person's shoes! But also know that, people are not random in their strategies! And crucially, you might know something, but I know that you know it! And you should know that I know that you know it! And I should know that you know that I know that you kn…! A good strategist must always be thinking multidimensionally! On the right, The Princess Bride battle of wits is embedded behind a click-to-play cover.</p></section>
 <section aria-label="Slide 21"><h2>Slide 21 of 32: Added value game</h2><p>Bullets on the left: game theory can result in paradoxical or unusual strategic choices that benefit players' self-interest. Let's consider the idea of added value. I have one white card for every person in this session, and each of you has one yellow card. Senior management has agreed to pay anyone who turns in a pair of white and yellow cards $100. You can negotiate with me individually, but you cannot band together (this is key!). Make me an offer for my card. On the right, a drawn figure: a fan of three white cards labeled mine, one per person, a plus sign, one yellow card labeled yours, and underneath, equals $100 a pair.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 32: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones send dollar offers for their share of the $100 (QR code shown, with a rising offers counter); each pending offer appears as a card with the sender's name and amount, and the deck decides it automatically against this game's rule — a share between 40 and 60 dollars is accepted, anything else rejected. The phone shows a big ACCEPTED or REJECTED, and every decided offer lands as a dot on a zero-to-one-hundred-dollar strip — accepted teal, rejected red — with the mean accepted deal and a count of deals and rejections. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 32: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones send dollar offers for their share of the $100 (QR code shown, with a rising offers counter); each pending offer appears as a card with the sender's name and amount, and the deck decides it automatically against this game's rule — a share between 40 and 60 dollars is accepted, anything else rejected. The phone shows a big ACCEPTED or REJECTED — one offer per player per game, no second tries — and every decided offer lands as a dot on a zero-to-one-hundred-dollar strip — accepted teal, rejected red — with the mean accepted deal and a count of deals and rejections. If the poll server is unreachable the board shows marked demo data.</p></section>
 <section aria-label="Slide 23"><h2>Slide 23 of 32: What happens if I "lose" three cards?</h2><p>The rule change only — no analysis yet, so the game isn't given away. Say I "lose" three cards: now we have fewer white cards, but each of you still has 1 yellow card. Let's play again. On the right, a drawn figure: the fan of three white cards each crossed out in red, labeled three of mine, gone, and the yellow card untouched, labeled still one each.</p></section>
 <section aria-label="Slide 24"><h2>Slide 24 of 32: Make me another offer</h2><p>The live offers board again, second game: after I lose three. New offers are decided the same way, now against a harder rule — only a share of ten dollars or less is accepted — and land on a second strip labeled after I lose three, shown under the equal-cards strip so the room can compare the two distributions. If the poll server is unreachable the board shows marked demo data.</p></section>
 <section aria-label="Slide 25"><h2>Slide 25 of 32: Added value matters</h2><p>The debrief, after the second game has been played. Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction whenever I want — so you're lucky if I give you even $10! The key stipulation was that you could not band together — what would the difference have been if you could have collectively interacted with me? The crossed-out-cards figure sits on the right.</p></section>
@@ -1185,8 +1185,8 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
    picks the rule, so nothing is decided until a board slide is up. ---- */
 (function(){
   const DEMO=[['Priya','50','a','1'],['Tom','55','a','1'],['Sam','40','a','1'],['Elena','65','r','1'],
-              ['Elena','50','a','1'],['Marcus','10','a','2'],['Nadia','5','a','2'],['Chris','20','r','2'],
-              ['Chris','10','a','2'],['Priya','50','a','3'],['Tom','40','r','3'],['Tom','50','a','3']];
+              ['Marcus','10','a','2'],['Nadia','5','a','2'],['Chris','20','r','2'],['Elena','8','a','2'],
+              ['Priya','50','a','3'],['Tom','40','r','3'],['Sam','50','a','3']];
   const st={live:false,lines:[]};
   const X=v=>30+(v/100)*940;
   document.querySelectorAll('.avticks').forEach(g=>{
@@ -1232,6 +1232,7 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
         q.appendChild(card);
       });
     });
+    ensureMarker(lines);
     autoDecide(pending);
     const offers=lines.filter(p=>p[1]==='o').length||(st.live?0:DEMO.length);
     document.querySelectorAll('[data-avn]').forEach(n=>n.textContent=offers);
@@ -1264,6 +1265,22 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
      they live in this public source, like every game brief — the game is
      played in minutes, live */
   const RULE={1:a=>a>=40&&a<=60, 2:a=>a<=10, 3:a=>a===50};
+  /* one offer per game: when a board slide is up, make sure the room holds
+     a "=game|p|N" marker line for it — phones read the latest marker to
+     know which game is on and lock anyone who has already played it */
+  const markerPosted={};
+  function ensureMarker(lines){
+    const act=document.querySelector('.slide.active');
+    if(!st.live||!act||!act.dataset.avphase)return;
+    const ph=+act.dataset.avphase;
+    const seen=lines.some(p=>p[0]==='=game'&&p[1]==='p'&&+p[2]===ph);
+    if(seen||markerPosted[ph])return;
+    markerPosted[ph]=1;
+    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
+    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:'=game|p|'+ph,v:deckVoter()})})
+    .then(()=>fetchIt()).catch(()=>{});
+  }
   const sched=new Set();
   function autoDecide(pending){
     const act=document.querySelector('.slide.active');

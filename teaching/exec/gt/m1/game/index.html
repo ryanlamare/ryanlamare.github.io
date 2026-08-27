@@ -213,7 +213,7 @@ function pad(cv,undoBtn,clearBtn,sendBtn){
    the input only reopens when the instructor opens the next round. */
 function renderNumber(){
   q.textContent='I’m thinking of a number…';
-  rules.innerHTML='A number between <b>1 and 100</b>. The game runs in <b>five rounds</b>: one guess per round, and each one comes back <b>too high</b>, <b>too low</b>, or <b>correct</b>. Between rounds the board shows the whole room&rsquo;s guesses — and remember, the instructor is strategic too.';
+  rules.innerHTML='A number between <b>1 and 100</b>. The game runs in <b>five rounds</b>: one guess per round, and each one comes back <b>too high</b>, <b>too low</b>, or <b>correct</b>. Between rounds the board shows the whole room&rsquo;s guesses.';
   app.innerHTML='';
   app.appendChild(meRow());
   const rdTag=document.createElement('div');rdTag.className='tag';rdTag.style.margin='10px 0 0';
@@ -282,7 +282,7 @@ function renderNumber(){
 /* ---- added values: make an offer ---- */
 function renderOffer(){
   q.textContent='Make me an offer';
-  rules.innerHTML='A white and yellow pair is worth <b>$100</b>. Offer the instructor a price for <b>your share</b> — how many of the hundred dollars you keep. Offers go to the board and are answered on the spot; a rejection means you can offer again.';
+  rules.innerHTML='A white and yellow pair is worth <b>$100</b>. Offer the instructor a price for <b>your share</b> — how many of the hundred dollars you keep. Offers go to the board and are answered on the spot. <b>You get one offer per game</b>, so make it count.';
   app.innerHTML='';
   app.appendChild(meRow());
   const lbl=document.createElement('div');lbl.className='tag';lbl.style.margin='10px 0 6px';lbl.textContent='YOUR SHARE OF THE $100';
@@ -293,39 +293,51 @@ function renderOffer(){
   btn.style.cssText='margin-top:12px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-weight:700;letter-spacing:.06em';
   btn.textContent='SEND THE OFFER';
   app.appendChild(btn);
-  let lastOfferIdx=-1;
+  /* one offer per game version: the deck posts a "=game|p|N" marker line
+     when a board slide goes up; a phone that already has a decision in the
+     current game stays locked until the next game's marker appears */
+  let locked=false;
+  function setLock(on){locked=on;inp.disabled=on;btn.disabled=on;btn.style.opacity=on?'.4':'';}
   function watch(){
     fetch(API+'/p/m1-av/answers').then(r=>r.json()).then(d=>{
       const lines=d.answers||[];
       const nkey=name.trim().toLowerCase();
-      let oIdx=-1,dec=null,decIdx=-1;
+      let oIdx=-1,dec=null,decIdx=-1,gamePh=0;
       lines.forEach((t,i)=>{
         const p=String(t).split('|').map(s=>s.trim());
+        if(p[0]==='=game'&&p[1]==='p'){gamePh=Math.max(gamePh,+p[2]||0);return;}
         if(p[0].toLowerCase()!==nkey)return;
         if(p[1]==='o')oIdx=i;
         if(p[1]==='d'){dec=p;decIdx=i;}
       });
       if(oIdx<0)return;
       if(decIdx>oIdx&&dec){
+        const decPh=+dec[4]||0;
+        const played=!gamePh||decPh>=gamePh;
+        setLock(played);
+        const shot=played?' That was your one offer in this game.':' A new game is on the screen — you have one offer.';
         st.innerHTML=dec[3]==='a'
-          ?'<div class="bigv ok">ACCEPTED</div>Your pair is in at $'+dec[2]+' for you.'
-          :'<div class="bigv no">REJECTED</div>The $'+dec[2]+' offer was turned down. Make another offer.';
+          ?'<div class="bigv ok">ACCEPTED</div>Your pair is in at $'+dec[2]+' for you.'+shot
+          :'<div class="bigv no">REJECTED</div>The $'+dec[2]+' offer was turned down.'+shot;
       }else{
+        setLock(true);
         st.innerHTML='<b>Offer in.</b> The answer lands here in a moment…';
       }
     }).catch(()=>{});
   }
   watch();watcher=setInterval(watch,3000);
   btn.addEventListener('click',()=>{
+    if(locked)return;
     const amt=Math.round(Number(inp.value));
     if(!Number.isFinite(amt)||amt<0||amt>100){st.textContent='The offer needs to be between 0 and 100.';return;}
     btn.disabled=true;st.textContent='Sending…';
     fetch(API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({t:name+'|o|'+amt,v:voter})})
     .then(r=>{if(!r.ok)throw r.status;
+      setLock(true);
       st.innerHTML='<b>Offer in.</b> The answer lands here in a moment…';})
     .catch(code=>{st.textContent=code===429?'That’s plenty of offers from one phone!':'That didn’t send — try again.';})
-    .finally(()=>{btn.disabled=false;});
+    .finally(()=>{if(!locked)btn.disabled=false;});
   });
 }
 </script>
