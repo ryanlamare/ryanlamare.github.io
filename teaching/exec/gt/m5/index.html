@@ -4,36 +4,189 @@
 <title>Applied Game Theory · Module 5 — Coordination Games</title>
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
+<style>
+/* Module-5 widgets (shared components live in deck.css). The live spine runs
+   through gt-poll: guess-two-thirds is played on slide 3 and solved from the
+   same answers at the end; the hunt, café and movie games are choice polls
+   revealed on a keypress; the investment game is a four-round repeated stag
+   hunt — participants play from game/ under their own name (roster in
+   /go/roster.json, typed once otherwise) and the board reveals a round when
+   its column header is tapped; the common knowledge quiz runs self-paced on
+   phones (fifteen chained polls, m5-k1..k15) against a ten-minute timer,
+   then two board slides walk the scores. Every live slide falls back to
+   marked DEMO DATA when the Worker is unreachable. */
+
+/* clip beside text, click-to-load (keeps YouTube's title off screen) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipframe.sm iframe{width:560px;height:315px}
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipframe.sm .clipcover{width:560px;height:315px}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+
+/* best-response marking, the Module-4 scheme: payoffs circled in each
+   player's colour, red box on the equilibrium cell */
+.mx .cell .pa,.mx .cell .pb{position:relative;display:inline-block}
+.mx .cell .circ::after{content:"";position:absolute;inset:-5px -10px;border:3.5px solid currentColor;border-radius:50%;pointer-events:none}
+.mkey{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
+.mkey .k{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--muted)}
+.mkey .sw{width:22px;height:22px;background:var(--card);flex:none}
+.mkey .sw.circA{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--teal)}
+.mkey .sw.circB{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--terracotta)}
+.mkey .sw.eq{box-shadow:inset 0 0 0 4px var(--red)}
+.mkey .k b{color:var(--ink);font-weight:700}
+
+/* verdict line under a poll's bars, filled in by its reveal step */
+.pollnote{position:absolute;left:96px;right:96px;bottom:58px;text-align:center;
+  font-weight:600;font-size:21px;line-height:1.35;color:var(--ink)}
+.pollnote b{color:var(--red)}
+
+/* the investment board: rows appear as names lock choices in; a round's
+   column reveals when its header is tapped, and totals count only the
+   revealed rounds */
+.board{border-collapse:collapse}
+.board th,.board td{border:2px solid var(--ink)}
+.board thead th{background:var(--ink);color:var(--paper);font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;font-size:13px;height:36px;padding:0 12px;cursor:pointer;user-select:none}
+.board thead th.name,.board thead th.tot{cursor:default}
+.board thead th.open{color:var(--red)}
+.board tbody th{background:var(--card);font-weight:700;font-size:15px;text-align:left;padding:0 14px;height:34px;white-space:nowrap}
+.board tbody td{background:var(--paper);width:104px;height:34px;text-align:center;font-weight:700;font-size:15px}
+.board tbody td.in{color:var(--teal)}
+.board tbody td.out{color:var(--muted);font-weight:500}
+.board tbody td.lose{color:var(--red)}
+.board tbody td.tot{background:var(--card);color:var(--red);font-size:16px;width:96px}
+.board.compact tbody th{height:26px;font-size:13px}
+.board.compact tbody td{height:26px;font-size:13px}
+.boardhint{font-weight:500;font-size:15px;color:var(--muted);text-align:center;margin-top:10px}
+.boardhint b{color:var(--red)}
+
+/* quiz countdown */
+.timerbox{position:absolute;left:96px;bottom:96px;width:300px;display:flex;flex-direction:column;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--paper-soft);padding:22px 20px}
+.timerbox .t{font-family:var(--display);font-weight:900;font-size:84px;line-height:.9;color:var(--ink)}
+.timerbox .t.low{color:var(--red)}
+.timerbox button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);color:var(--paper);border:none;padding:12px 20px;cursor:pointer}
+.timerbox button:hover{background:var(--ink)}
+
+/* quiz score board: one row per question, revealed one keypress at a time */
+.krows{width:100%;max-width:1060px;display:flex;flex-direction:column;gap:11px}
+.krow{display:grid;grid-template-columns:220px 1fr 260px 74px 44px;align-items:center;gap:16px;
+  border:2px solid var(--ink);background:var(--card);padding:8px 16px;position:relative}
+.krow .ql{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--ink)}
+.krow .qa{font-weight:600;font-size:17px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.krow .qbar{height:20px;background:var(--paper);position:relative}
+.krow .qbar i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);transition:width .8s ease}
+.krow.pt .qbar i{background:var(--red)}
+.krow .qp{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);text-align:right}
+.krow .qm{font-weight:900;font-size:20px;text-align:center;color:var(--muted)}
+.krow.pt .qm{color:var(--red)}
+
+/* live poll join chrome + the write-in wall (Module-4 idioms) */
+.qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .5s}
+.faded{opacity:.06 !important;pointer-events:none}
+#ycbul,#ycqr{transition:opacity .5s}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:12px 14px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+
+/* two-thirds reveal: three big figures, then the winning number */
+.tour{display:flex;justify-content:center;gap:52px;width:100%}
+.tcell{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;width:250px}
+.tcell .tv{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--ink)}
+.tcell .tv.red{color:var(--red)}
+.tcell .tl{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+
+/* focal-point convergence figure + closing staircase (both lifted from the
+   LER 565 week-4 lecture; geometry unchanged, type set in the suite's sizes) */
+.conv{display:flex;flex-direction:column;align-items:center;gap:26px}
+.stairs{display:flex;align-items:flex-end;justify-content:center;gap:40px}
+.stairs .step{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;width:220px}
+.stairs .step .pg{width:auto}
+.stairs .step .sname{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:19px;color:var(--ink)}
+.stairs .step .ssub{font-weight:500;font-size:16px;color:var(--muted);line-height:1.3;max-width:22ch}
+.stairs .step.s3 .sname{color:var(--red)}
+.stopnote{font-weight:500;font-size:22px;color:var(--muted);display:flex;align-items:center;gap:14px}
+.stopnote i{width:13px;height:13px;background:var(--red);display:inline-block;flex:none}
+.stopnote b{color:var(--red);font-weight:700}
+
+/* the module scoreboard: five rows, revealed fifth place first */
+.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 130px 130px 130px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+</style>
 </head><body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></symbol>
+  <symbol id="im-mx2" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink)" x="54" y="54" width="40" height="40"/><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/></symbol>
+  <symbol id="im-tower" viewBox="0 0 64 64"><rect fill="var(--ink)" x="19" y="46" width="26" height="12"/><rect fill="var(--ink)" x="23" y="33" width="18" height="13"/><rect fill="var(--ink)" x="27" y="13" width="10" height="20"/><rect fill="var(--ink)" x="31" y="8" width="2" height="6"/><circle fill="var(--red)" cx="32" cy="7" r="2.6"/><rect fill="var(--paper)" x="28.5" y="18" width="7" height="1.6"/><rect fill="var(--paper)" x="28.5" y="23" width="7" height="1.6"/><rect fill="var(--paper)" x="28.5" y="28" width="7" height="1.6"/><rect fill="var(--paper)" x="25" y="38" width="14" height="1.8"/><rect fill="var(--paper)" x="21.5" y="51" width="21" height="1.8"/></symbol>
+  <symbol id="im-coffee" viewBox="0 0 64 64"><path fill="var(--ink)" d="M13 26 h30 v14 a12 12 0 0 1 -12 12 h-6 a12 12 0 0 1 -12 -12 z"/><path fill="none" stroke="var(--ink)" stroke-width="4" d="M43 30 h5 a6 6 0 0 1 0 12 h-5"/><path fill="none" stroke="var(--red)" stroke-width="3.2" stroke-linecap="round" d="M23 12 q3 4 0 9"/><path fill="none" stroke="var(--red)" stroke-width="3.2" stroke-linecap="round" d="M33 10 q3 5 0 11"/></symbol>
+  <symbol id="im-film" viewBox="0 0 64 64"><rect fill="var(--ink)" x="8" y="24" width="48" height="30" rx="2"/><path fill="var(--red)" d="M8 22 L56 12 L58 20 L10 30 Z"/><g fill="var(--paper)"><rect x="14" y="14.8" width="6" height="5" transform="rotate(-12 17 17)"/><rect x="28" y="12" width="6" height="5" transform="rotate(-12 31 14.5)"/><rect x="42" y="9.2" width="6" height="5" transform="rotate(-12 45 11.7)"/></g></symbol>
+  <symbol id="im-reverse-arrows" viewBox="0 0 64 64"><line x1="10" y1="42" x2="50" y2="42" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/><path d="M50,42 l-9,-6 m9,6 l-9,6" stroke="var(--ink)" stroke-width="3.5" fill="none" stroke-linecap="round"/><line x1="54" y1="24" x2="14" y2="24" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/><path d="M14,24 l9,-6 m-9,6 l9,6" stroke="var(--red)" stroke-width="3.5" fill="none" stroke-linecap="round"/></symbol>
+</svg>
 
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 5 — Coordination Games</h1>
 <p>Accessible text version. Each heading below is one slide, in order. Payoff matrices are described cell by cell.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 25: Title slide</h2><p>Coordination games. Beyond the prisoner's dilemma. Module 5 of the Applied Game Theory executive programme.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 25: Introduction</h2><p>So far, we've covered strategic thinking as it applies to sequential choices, simultaneous zero-sum (win/lose) choices, and a specific type of simultaneous non-zero-sum strategic thinking (the prisoner's dilemma). But there are many other important types of strategic thinking that come into play both in business decision-making and in everyday life. Although the prisoner's dilemma gets a lot of attention, other theories are equally important in explaining strategic thinking!</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 25: Best response and the Nash equilibrium</h2><p>First, we need to figure out a comprehensive way to identify parties' ideal strategies in all games, not just prisoner's dilemmas or zero-sum games. We know already that we should (1) identify dominant strategies, and (2) reject inferior strategies. But what if there aren't any clear answers even after considering dominant and inferior strategies? Can we still find an equilibrium? The answer is yes — thanks to John Nash! Best response analysis.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 25: Nash equilibrium</h2><p>A Nash equilibrium is a combination of two conditions: each player is choosing a best response to what he believes the other players will do in the game; and each player's beliefs are correct — the other players are doing just what everyone else thinks they are doing.</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 25: Best response and the Nash equilibrium</h2><p>Best response analysis finds all the possible Nash equilibria in a game. That is, it's a way to find all strategies for each player whereby no player can get a better payoff by switching to some other strategy. Like the other games we've studied, best response relies on considering one side's strategy as a function of others' moves. The Nash equilibrium, and using best response analysis to identify Nash equilibria, helps to square potentially circular strategies and provides clarity when there is no dominant response.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 25: An example of using best response analysis to find the Nash equilibrium</h2><p>A four-by-three matrix. Player 1 rows: top, high, low, bottom. Player 2 columns: left, middle, right. Payoffs (player 1, player 2) by row — top: 3,1; 2,3; 10,2. High: 4,5; 3,0; 6,4. Low: 2,2; 5,4; 12,3. Bottom: 5,6; 4,5; 9,7. Steps mark player 1's best response in each column (bottom-left, low-middle, low-right), then player 2's best response in each row (top-middle, high-left, low-middle, bottom-right), then ring the one cell marked twice — low/middle, 5, 4 — the Nash equilibrium.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 25: Multiple Nash equilibria</h2><p>So far, we have considered only games where one unique solution is present — i.e., a single pure strategy Nash equilibrium. But there are often instances where individuals can conceive of many strategies that are capable of generating similar outcomes for players. Games with multiple equilibria often require some sort of coordination by the players in order to reach a useful resolution.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 25: You need to find some food!</h2><p>Oops, we blew most of the planet up, but there's good news! Three things survived the nuclear fallout, and are edible by humans: two-headed cows, three-headed pigs, and cockroaches. Each type of animal has a known area in which it likes to roam. Two hunters set off to find food — but, since there are no phones left, they can't communicate with each other before they get to the roaming areas. Both hunters would prefer cow or pig over cockroach, but they also both must eat something in order to survive.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 25: The hunting matrix</h2><p>Hunter 1 against Hunter 2, choices: two-headed cow, two-headed pig, cockroach. Cow/cow: 3, 3. Pig/pig: 3, 3. Cockroach/cockroach: 1, 1. Mixed choices score 0 for a hunter who finds no partner, 1 for a hunter eating cockroach alone. Steps ring the three equilibria on the diagonal.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 25: You need to find some food, resolved</h2><p>Here there are three Nash equilibria — cow/cow, pig/pig, and cockroach/cockroach. If Hunter 1 heads to the area where the cows (or pigs, or cockroaches) are, Hunter 2 should also go there. But there is no way for Hunter 2 to know where Hunter 1 is going to go — and although Hunters 1 and 2 both dislike cockroaches, how are they meant to determine who prefers two-headed pork and who prefers two-headed beef? This can be thought of as a coordination game, because both sides need to coordinate in order to be successful. The name of this game is commonly known as stag hunt.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 25: You need to go on a date!</h2><p>Oops, we blew most of the planet up, but don't worry, there are still two of life's staples that survived: coffee and dating. Since we need to repopulate the planet, dating has been encouraged, and since there's only one thing to drink (coffee), most dating happens at coffee shops. You've got a date tonight and you agreed to meet at the coffee shop. But oh no! You forgot to tell your date which coffee shop, and there are two cafes (Café Post-Apocalatte and Café Armagaddo) in this nuclear wasteland of a town. Again, we have a coordination issue.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 25: The date matrix</h2><p>You against your date, choices Armagaddo or Post-Apocalatte. Both Armagaddo: 1, 1. Both Post-Apocalatte: 1, 1. Different cafés: 0, 0. Steps ring the two matching-café equilibria.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 25: You need to go on a date, resolved</h2><p>How will you coordinate in order to repopulate the earth together? We need to identify a focal point where our expectations can converge. How might we find a focal point in this game? We have to consider common knowledge — do you know that your date knows to go to a certain café? Does your date know that you know to go to a certain café? Are you both 100 percent sure this is true?</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 25: Examples of coordination games</h2><p>Coordination games are very common in society. Examples of coordination problems: Sleepless in Seattle (where should Meg Ryan and Tom Hanks find each other?). Television shows (if everyone else watches Game of Thrones, I should too otherwise I won't have anything to talk about with people, even if I hate it). Bad fashion ideas (normcore? Hush puppies? The Tipping Point and coordination games). Political bandwagons (it's best to present a unified — even if incorrect — front). Bank runs (we all keep our money in the banks only as long as we're sure it's safe).</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 25: Overcoming coordination problems</h2><p>If only we could communicate, we could assure the other side by persuading them that we're better off at a certain equilibrium (or that we'll coordinate at the right place). This is why key figureheads give speeches in order to restore confidence. This is also one reason why leadership matters! Finally, this is also a crucial difference between these types of games and the prisoner's dilemma — would strategic communication matter under a PD?</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 25: You need to go to the movies!</h2><p>The first date went really well and you had a nice latte together, so you've set up a second date. This time, you want to take your date to the movies — only one movie theater survived the nuclear winter, so you know to go to the same place. But, oh no! You forgot to tell your date which movie you want to see together. Three movies are playing at the theater: Mad Max, Zombieland, Waterworld. Both you and your date have preferences for each of these movies.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 25: The movies matrix</h2><p>You against your date, choices Mad Max, Zombieland, Waterworld. Mad Max/Mad Max: 2, 1. Zombieland/Zombieland: 1, 2. Waterworld anywhere: negative payoffs, worst of all Waterworld/Waterworld at minus 2, minus 2. Mismatches score 0 or negative. A step dims the Waterworld row and column.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 25: Waterworld is the worst</h2><p>The Waterworld film poster, full slide. The joke is the payoffs: nobody should ever pick Waterworld.</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 25: The reduced movies matrix</h2><p>With Waterworld eliminated: Mad Max/Mad Max: 2, 1. Mad Max/Zombieland: 0, 0. Zombieland/Mad Max: 0, 0. Zombieland/Zombieland: 1, 2. Steps ring the two equilibria.</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 25: You need to go to the movies, resolved</h2><p>Here, unlike in stag hunt, you have a problem. There are two equilibria, but players have different preferences for each equilibrium point. You'd rather see Mad Max than Zombieland, and vice versa for your date, but you'd both rather be on a date together than to watch the movie separately (unless the movie is Waterworld). This makes coordination more difficult — and communication trickier as well. The coordination game here is commonly (and misogynistically) known as the "Battle of the Sexes".</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 25: A few B.O.S examples</h2><p>Like the stag hunt, the battle of the sexes variant can be found throughout society. One clear example is in bargaining and negotiations (we'll return to this later). Another example can be found in the parables of O. Henry.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 25: Let's play chicken!</h2><p>Ren (Kevin Bacon) against Chuck (Some Other Guy), choices swerve or straight. Both swerve: tie, tie. Swerve/straight: lose, win. Straight/swerve: win, lose. Both straight: crash, crash.</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 25: Chicken in numbers</h2><p>The same matrix with payoffs. Both swerve: 0, 0. Swerve/straight: minus 10, plus 10. Straight/swerve: plus 10, minus 10. Both straight: minus 100, minus 100. Steps ring the two swerve/straight equilibria.</p></section>
-<section aria-label="Slide 24"><h2>Slide 24 of 25: Solving games of chicken</h2><p>There are two equilibrium points in this game (swerve/straight). So how do you win? Well, one way is to convince the other side that under no circumstances will you swerve. We'll return to commitment and credibility later. Another way is to alternate swerve/straight strategies if you play a repeated game.</p></section>
-<section aria-label="Slide 25"><h2>Slide 25 of 25: Company slot</h2><p>A dashed placeholder card marking swappable client material: where the client's organization faces coordination problems across sites or teams, and which focal points make agreement possible. Written per engagement.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 34: Title slide</h2><p>Coordination games. Beyond the prisoner's dilemma. Module 5 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 34: Learning objectives</h2><p>Four numbered objectives: one, play guess two-thirds of the average, and find out at the end who won. Two, use best response analysis to find every Nash equilibrium in a game. Three, play three coordination games: stag hunt, battle of the sexes, and chicken. Four, take the common knowledge quiz and see where the room converges.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 34: Guess two-thirds of the average</h2><p>A live game answered by phone — a QR code links to ryanlamare.com/go and a counter shows how many numbers are in. The rules: pick any whole number between 0 and 100. The individual whose number is closest to two-thirds of the room's average wins. A worked example: with guesses of 5, 25, and 60 the average is 30, two-thirds of 30 is 20, so 25 would win. Remember, you already know the correct answer — but so does everybody else. Numbers lock in now; the game is solved at the end of the session.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 34: Introduction</h2><p>So far, we've covered sequential choices, simultaneous zero-sum choices, and the prisoner's dilemma. But there are many other important types of strategic thinking that come into play both in business decision-making and in everyday life. Although the prisoner's dilemma gets a lot of attention, other theories are equally important in explaining strategic thinking!</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 34: Best response and the Nash equilibrium</h2><p>We need a comprehensive way to identify parties' ideal strategies in all games, not just prisoner's dilemmas or zero-sum games. We know to identify dominant strategies and reject inferior ones — but what if there are no clear answers even then? Can we still find an equilibrium? The answer is yes — thanks to John Nash. A Nash equilibrium is a combination of two conditions: each player is choosing a best response to what he believes the other players will do, and each player's beliefs are correct.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 34: Best response analysis, worked</h2><p>A four-by-three matrix. Player 1 rows: top, high, low, bottom. Player 2 columns: left, middle, right. Payoffs (player 1, player 2) by row — top: 3,1; 2,3; 10,2. High: 4,5; 3,0; 6,4. Low: 2,2; 5,4; 12,3. Bottom: 5,6; 4,5; 9,7. Steps circle player 1's best-response payoffs in each column in teal (bottom-left, low-middle, low-right), then player 2's best-response payoffs in each row in terracotta (top-middle, high-left, low-middle, bottom-right), then draw a red box on the one cell holding both circles — low/middle, 5, 4 — the Nash equilibrium.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 34: Multiple Nash equilibria</h2><p>So far, we have considered only games with one unique solution — a single pure strategy Nash equilibrium. But there are often instances where individuals can conceive of many strategies capable of generating similar outcomes. Games with multiple equilibria often require some sort of coordination by the players in order to reach a useful resolution.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 34: You need to find some food!</h2><p>Oops, we blew most of the planet up, but there's good news! Three things survived the nuclear fallout, and are edible by humans: two-headed cows, three-headed pigs, and cockroaches, each with a known roaming area. Two hunters set off to find food — but with no phones left, they can't communicate before they get to the roaming areas. Both would prefer cow or pig over cockroach, but both must eat something in order to survive.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 34: The hunt, played live</h2><p>The room plays by phone: you're one of the two hunters — where do you set off to? A QR code, an answer counter, and three options (two-headed cow, three-headed pig, cockroach) hidden until a keypress fills each option's bar and count. A second keypress computes, from the room's actual distribution, the percentage chance that two people paired at random chose the same dinner. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 34: The hunting matrix</h2><p>Hunter 1 against Hunter 2, choices: two-headed cow, three-headed pig, cockroach. Cow/cow: 3, 3. Pig/pig: 3, 3. Cockroach/cockroach: 1, 1. Mixed choices score 0 for a hunter who finds no partner, 1 for a hunter eating cockroach alone. Steps ring the three diagonal equilibria, then narrate: three Nash equilibria — wherever Hunter 1 goes, Hunter 2 should go too, but there is no way to know where that is. A coordination game, commonly known as stag hunt.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 34: The investment game</h2><p>Let's play a game where you can win lots of money! You have two choices — invest, or don't invest. Investing puts $10 into the pot; sitting out puts in nothing and risks nothing. If you invest and at least 90% of the room invests too, you get your $10 back plus another $5; if less than 90% invest, you lose your $10. We play four rounds and your wins and losses add up. Round one is played in silence; after each reveal, one volunteer can address the room before the next round. A QR code links to the game page, where each player picks their name and locks a choice per round.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 34: The investment board</h2><p>A live table built from the players' phones: one row per name, columns for rounds one to four and a running total. A dot count above the table shows choices arriving. Tapping a round's column header reveals that round: invested cells show plus five dollars in teal when the room cleared 90 percent, minus ten in red when it did not; sat-out cells show zero. The hint line under the table gives each revealed round's investment rate and whether the venture paid out. Totals sum the revealed rounds. If the poll server is unreachable the board runs on marked demo data.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 34: The investment game in matrix form</h2><p>You against everyone else, choices invest or don't invest. Both invest: plus five dollars each. You invest while the room doesn't: minus ten for you, nothing for them. You sit out while the room invests: nothing for you, plus five for them. Nobody invests: nothing for anyone. A step rings the two diagonal equilibria, and a note names the structure: the investment game is a stag hunt, and the whole room just played it.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 34: You need to go on a date!</h2><p>Oops, we blew most of the planet up — but two of life's staples survived: coffee and dating. You've got a date tonight at the coffee shop. But oh no! You forgot to say which one, and there are two cafés in town: Café Post-Apocalatte and Café Armagaddo. Again, we have a coordination issue.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 34: The café vote, played live</h2><p>The room votes by phone: which café do you go to? Café Armagaddo or Café Post-Apocalatte, hidden until a keypress reveals the bars. A second keypress reads the split: a near-even split means expectations had nowhere to converge; a lopsided one means the room found a focal point. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 34: Focal points and common knowledge</h2><p>How will you coordinate in order to repopulate the earth together? We need to identify a focal point where our expectations can converge. How might we find one? We have to consider common knowledge — do you know that your date knows to go to a certain café? Does your date know that you know? Are you both 100 percent sure? Beside the bullets, a drawn figure: two red arrows converge on a clock tower that fades in — the spot everyone guesses is the focal point.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 34: The common knowledge quiz</h2><p>Rules for the self-paced quiz: the goal is to get as many answers correct as you possibly can — but the right answer is the answer the room provides, and you score a point only when at least 90 percent of the room answers the way you did. No conferring: you are coordinating on instinct. Ten minutes, fifteen questions, on your phones — each question offers the next — and then we go through the scores together. A QR code starts the quiz, and a ten-minute countdown timer sits on the slide.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 34: Quiz scores, questions one to eight</h2><p>A board of eight rows revealed one keypress at a time, each computed live from the room's answers: the coin flip; name any positive number; choose one of the boxes (four ink boxes and one red); choose one of the numbers 100, 13, 261, 99, 555; meet in Paris; meet in Chicago; meet in London; the most important musician. Each row shows the room's top answer, its share as a bar and percentage, and a point marker when the share reached 90 percent. If the poll server is unreachable the board runs on marked demo data.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 34: Quiz scores, questions nine to fifteen</h2><p>Seven more rows, same format: name a famous football player; the election second ballot (Brown 15, Jones 28, Robinson 19, Smith 29, White 9); divide $100 into two piles; the favorite mountain; name a board game; who speaks first in a chairless meeting; and the matching bonus.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 34: Examples of coordination games</h2><p>Coordination games are very common in society. Examples: Sleepless in Seattle (where should Meg Ryan and Tom Hanks find each other?). Television shows (everyone else watches Game of Thrones, so I should too). Bad fashion ideas (normcore? Hush Puppies? The Tipping Point). Political bandwagons (a unified front, even an incorrect one). Bank runs (money stays in the bank only while we're all sure it's safe).</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 34: Overcoming coordination problems</h2><p>If only we could communicate, we could assure the other side that we're better off at a certain equilibrium. This is why key figureheads give speeches to restore confidence — one reason why leadership matters. And a crucial difference from the prisoner's dilemma: would strategic communication matter under a PD? On the right, a JetBlue clip labeled "JetBlue customers, game theorists" is embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 34: You need to go to the movies!</h2><p>The first date went really well, so you've set up a second date at the movies. Only one theater survived the nuclear winter, so you know where to go — but you forgot to tell your date which movie. Two movies are playing: Mad Max and I Am Legend. Both you and your date have preferences for each of these movies.</p></section>
+<section aria-label="Slide 23"><h2>Slide 23 of 34: The movie vote, played live</h2><p>The room votes by phone: which movie do you pick? Mad Max or I Am Legend, hidden until a keypress reveals the bars — the split shows the room's own divided preferences. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 24"><h2>Slide 24 of 34: The movies matrix</h2><p>You against your date. Mad Max/Mad Max: 2, 1. Mad Max/I Am Legend: 0, 0. I Am Legend/Mad Max: 0, 0. I Am Legend/I Am Legend: 1, 2. Steps ring the two equilibria, then narrate: two equilibria, but you each prefer a different one — you'd both rather be together than apart, which makes communication trickier. This game is commonly (and misogynistically) known as the Battle of the Sexes.</p></section>
+<section aria-label="Slide 25"><h2>Slide 25 of 34: A few B.O.S examples</h2><p>Like the stag hunt, the battle of the sexes variant can be found throughout society. One clear example is in bargaining and negotiations (we'll return to this later). Another example can be found in the parables of O. Henry. On the right, the Sesame Street Gift of the Magi clip, labeled "Bert and Ernie, game theorists", embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 26"><h2>Slide 26 of 34: Let's play chicken!</h2><p>The chicken matrix in words — Ren (Kevin Bacon) against Chuck (Some Other Guy), choices swerve or straight. Both swerve: tie, tie. Swerve/straight: lose, win. Straight/swerve: win, lose. Both straight: crash, crash. On the right, the Footloose tractor chicken-race clip, embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 27"><h2>Slide 27 of 34: Chicken in numbers</h2><p>The same matrix with payoffs. Both swerve: 0, 0. Swerve/straight: minus 10, plus 10. Straight/swerve: plus 10, minus 10. Both straight: minus 100, minus 100. A step rings the two swerve/straight equilibria.</p></section>
+<section aria-label="Slide 28"><h2>Slide 28 of 34: Solving games of chicken</h2><p>There are two equilibrium points in this game (swerve/straight). So how do you win? One way is to convince the other side that under no circumstances will you swerve — we'll return to commitment and credibility later. Another way is to alternate swerve/straight strategies if you play a repeated game.</p></section>
+<section aria-label="Slide 29"><h2>Slide 29 of 34: Finding the Nash equilibrium in the two-thirds game</h2><p>How do we solve this game? Remember common knowledge and successive elimination of inferior strategies. If everyone guessed 100, you should guess two-thirds of that: 67 — so eliminate 68 and above. But if nobody plays above 67, your winning strategy is two-thirds of that: 45 — eliminate 46 and above. If nobody plays above 45, play 30. And so on, ruling out numbers above 20, 13, 9 — all the way down to 0, which is the Nash equilibrium. So, all of those who answered 0 got it right — or did they??</p></section>
+<section aria-label="Slide 30"><h2>Slide 30 of 34: The two-thirds game, resolved live</h2><p>Three large figures from the numbers locked in at the start of the session: how many answers came in; the room's average, revealed on a keypress; and two-thirds of that average, revealed on the next. A final reveal names the winning number — the guess closest to the target — and gives a shout out to anyone who said 0, the equilibrium answer. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 31"><h2>Slide 31 of 34: Find your own coordination games</h2><p>A paired write-in exercise. In pairs: think of situations in your own world where everyone simply needs to land on the same answer — a time, a format, a standard, a place — and send them from your phones. A QR code links to the write-in page, and a counter shows how many examples are in. When the instructor calls time, a keypress fades the setup and fills the screen with everyone's answers as a wall of coloured cards, identical answers grouped with a times-N marker. If the poll server is unreachable the wall shows marked demo data.</p></section>
+<section aria-label="Slide 32"><h2>Slide 32 of 34: Where we land</h2><p>A rising staircase of the three games, revealed step by step. Stag hunt, a small matrix with both diagonal cells ringed: aligned — trust unlocks the best one. Battle of the sexes, taller, both cells ringed: different preferences over which one. Chicken, tallest, its bottom-right cell solid red: opposed — miscoordination is disaster. A closing note: where you land turns on focal points. Next session: mixed strategies — when the right move is to be unpredictable.</p></section>
+<section aria-label="Slide 33"><h2>Slide 33 of 34: Top of the class</h2><p>The module scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time. Columns show each player's points from the common knowledge quiz, the two-thirds game, and the investment game, plus the total. Top five only, never a full ranking; each participant can check their own running total privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 34"><h2>Slide 34 of 34: Company slot</h2><p>A dashed placeholder card marking swappable client material: where the client's organization faces coordination problems across sites or teams, and which focal points make agreement possible. Written per engagement.</p></section>
 </section>
 
 <div class="viewport"><div class="stage">
@@ -43,38 +196,58 @@
   <div class="tag"><i></i>MODULE 5 · APPLIED GAME THEORY · <span class="swapchip">[CLIENT]</span></div>
   <h1>COORDINATION<br><span class="r">GAMES</span></h1>
   <div class="sub">Beyond the prisoner&rsquo;s dilemma: coordination games</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx2"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-tower"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-coffee"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-film"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-reverse-arrows"/></svg></span>
+  </div>
   <div class="byline">J. RYAN LAMARE</div>
 </section>
 
 <section class="slide content" data-i="1">
   <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Introduction</h2>
-  <ul class="bullets">
-    <li>So far, we&rsquo;ve covered strategic thinking as it applies to sequential choices, simultaneous zero-sum (win/lose) choices, and a specific type of simultaneous non-zero-sum (win/lose, lose/lose, or win/win) strategic thinking (the prisoner&rsquo;s dilemma)</li>
-    <li data-step="1">But there are many other important types of strategic thinking that come into play both in business decision-making and in everyday life</li>
-    <li data-step="2">Although the prisoner&rsquo;s dilemma gets a lot of attention, other theories are equally important in explaining strategic thinking!</li>
-  </ul>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:980px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Play guess two-thirds of the average, and find out at the end who won</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Use best response analysis to find every Nash equilibrium in a game</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Play three coordination games: stag hunt, battle of the sexes, and chicken</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Take the common knowledge quiz and see where the room converges</div></div>
+  </div>
 </section>
 
 <section class="slide content" data-i="2">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Best response and the Nash equilibrium</h2>
-  <ul class="bullets">
-    <li>First, we need to figure out a comprehensive way to identify parties&rsquo; ideal strategies in all games, not just prisoner&rsquo;s dilemmas or zero-sum games</li>
-    <li data-step="1">We know already that we should (1) identify dominant strategies, and (2) reject inferior strategies</li>
-    <li data-step="2">But what if there aren&rsquo;t any clear answers even after considering dominant and inferior strategies? Can we still find an equilibrium?</li>
-    <li data-step="3">The answer is yes &ndash; thanks to John Nash!</li>
-    <li class="sub" data-step="3"><b>Best response analysis</b></li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
+  <h2>Guess two-thirds of the average</h2>
+  <div class="rowfig" style="top:200px">
+    <ul class="bullets" style="max-width:640px">
+      <li>Pick any whole number between 0 and 100</li>
+      <li data-step="1">The individual whose number is closest to <b>two-thirds of the room&rsquo;s average</b> wins!</li>
+      <li data-step="2">So, if the guesses were 5, 25, and 60, the winner would be&hellip;</li>
+      <li class="sub" data-step="3">(5+25+60)/3 = 30, and 30 &times; (2/3) = 20, so 25 wins</li>
+      <li data-step="4"><b>Remember, you already know the correct answer! But so does everybody else!</b></li>
+      <li data-step="5">Lock your number in now &ndash; we&rsquo;ll come back to this at the end of the session</li>
+    </ul>
+  </div>
+  <div class="qrpanel" style="top:220px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-twothirds.svg" alt="QR code for the two-thirds poll at ryanlamare.com/go"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+    <div class="livecount"><span class="n" id="ttN">0</span><span class="l">NUMBERS<br>IN</span></div>
+  </div>
+  <div class="demotag" id="ttD" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
 </section>
 
 <section class="slide content" data-i="3">
   <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Nash equilibrium</h2>
+  <h2>Introduction</h2>
   <ul class="bullets">
-    <li>A Nash equilibrium is a combination of two conditions:</li>
-    <li data-step="1">Each player is choosing a best response to what he believes the other players will do in the game</li>
-    <li data-step="2">Each player&rsquo;s beliefs are correct. The other players are doing just what everyone else thinks they are doing</li>
+    <li>So far, we&rsquo;ve covered sequential choices, simultaneous zero-sum choices, and the prisoner&rsquo;s dilemma</li>
+    <li data-step="1">But there are many other important types of strategic thinking that come into play both in business decision-making and in everyday life</li>
+    <li data-step="2">Although the prisoner&rsquo;s dilemma gets a lot of attention, <b>other theories are equally important</b> in explaining strategic thinking!</li>
   </ul>
 </section>
 
@@ -82,19 +255,21 @@
   <div class="kicker"><i></i>MODULE 5</div>
   <h2>Best response and the Nash equilibrium</h2>
   <ul class="bullets">
-    <li>Best response analysis finds all the possible Nash equilibria in a game</li>
-    <li data-step="1">That is, it&rsquo;s a way to find all strategies for each player whereby no player can get a better payoff by switching to some other strategy</li>
-    <li data-step="2">Like the other games we&rsquo;ve studied, best response relies on considering one side&rsquo;s strategy as a function of others&rsquo; moves</li>
-    <li data-step="3">The Nash equilibrium, and using best response analysis to identify Nash equilibria, helps to square potentially circular strategies and provides clarity when there is no dominant response</li>
+    <li>We need a comprehensive way to identify parties&rsquo; ideal strategies in <b>all</b> games, not just prisoner&rsquo;s dilemmas or zero-sum games</li>
+    <li data-step="1">We know to identify dominant strategies and reject inferior ones &ndash; but what if there are no clear answers even then? Can we still find an equilibrium?</li>
+    <li data-step="2">The answer is yes &ndash; thanks to John Nash!</li>
+    <li data-step="3">A <b>Nash equilibrium</b> is a combination of two conditions:</li>
+    <li class="sub" data-step="3">Each player is choosing a best response to what he believes the other players will do</li>
+    <li class="sub" data-step="3">Each player&rsquo;s beliefs are correct</li>
   </ul>
 </section>
 
 <section class="slide content" data-i="5">
   <div class="kicker"><i></i>MODULE 5</div>
-  <h2>An example of using best response analysis to find the Nash equilibrium</h2>
-  <div class="fig" style="top:170px">
+  <h2>Best response analysis, worked</h2>
+  <div class="fig" style="top:170px;gap:18px">
     <div class="mxwrap">
-      <div class="mx" style="--cols:3;--rows:4;--cw:170px;--rh:66px">
+      <div class="mx" style="--cols:3;--rows:4;--cw:170px;--rh:64px">
         <div class="chead" style="grid-column:3 / span 3">PLAYER 2</div>
         <div class="rhead" style="grid-row:3 / span 4">PLAYER 1</div>
         <div class="cl" style="grid-column:3">Left</div>
@@ -105,20 +280,26 @@
         <div class="rl" style="grid-row:5">Low</div>
         <div class="rl" style="grid-row:6">Bottom</div>
         <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">3</span><span class="pc">,</span><span class="pb">1</span></div>
-        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb">3</span><span class="brB" data-step="2"></span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb" id="b2c1">3</span></div>
         <div class="cell" style="grid-row:3;grid-column:5"><span class="pa">10</span><span class="pc">,</span><span class="pb">2</span></div>
-        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">4</span><span class="pc">,</span><span class="pb">5</span><span class="brB" data-step="2"></span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">4</span><span class="pc">,</span><span class="pb" id="b2c2">5</span></div>
         <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">3</span><span class="pc">,</span><span class="pb">0</span></div>
         <div class="cell" style="grid-row:4;grid-column:5"><span class="pa">6</span><span class="pc">,</span><span class="pb">4</span></div>
-        <div class="cell" id="n32" style="grid-row:5;grid-column:4"><span class="pa">5</span><span class="pc">,</span><span class="pb">4</span><span class="brA" data-step="1"></span><span class="brB" data-step="2"></span></div>
+        <div class="cell" id="n32" style="grid-row:5;grid-column:4"><span class="pa" id="b1c2">5</span><span class="pc">,</span><span class="pb" id="b2c3">4</span></div>
         <div class="cell" style="grid-row:5;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">2</span></div>
-        <div class="cell" style="grid-row:5;grid-column:5"><span class="pa">12</span><span class="pc">,</span><span class="pb">3</span><span class="brA" data-step="1"></span></div>
-        <div class="cell" style="grid-row:6;grid-column:3"><span class="pa">5</span><span class="pc">,</span><span class="pb">6</span><span class="brA" data-step="1"></span></div>
+        <div class="cell" style="grid-row:5;grid-column:5"><span class="pa" id="b1c3">12</span><span class="pc">,</span><span class="pb">3</span></div>
+        <div class="cell" style="grid-row:6;grid-column:3"><span class="pa" id="b1c1">5</span><span class="pc">,</span><span class="pb">6</span></div>
         <div class="cell" style="grid-row:6;grid-column:4"><span class="pa">4</span><span class="pc">,</span><span class="pb">5</span></div>
-        <div class="cell" style="grid-row:6;grid-column:5"><span class="pa">9</span><span class="pc">,</span><span class="pb">7</span><span class="brB" data-step="2"></span></div>
+        <div class="cell" style="grid-row:6;grid-column:5"><span class="pa">9</span><span class="pc">,</span><span class="pb" id="b2c4">7</span></div>
       </div>
-      <div class="mxnote"><span data-step="1" style="color:var(--teal)">&#9679; Player 1&rsquo;s best response in each column</span><span data-step="2" style="color:var(--terracotta)"> &nbsp;&#9679; Player 2&rsquo;s best response in each row</span></div>
+      <div class="mkey">
+        <div class="k" data-step="1"><span class="sw circA"></span><span><b>Player 1&rsquo;s best response</b> in each column</span></div>
+        <div class="k" data-step="2"><span class="sw circB"></span><span><b>Player 2&rsquo;s best response</b> in each row</span></div>
+        <div class="k" data-step="3"><span class="sw eq"></span><span><b>Nash equilibrium.</b> The one cell holding both circles.</span></div>
+      </div>
     </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="b1c1,b1c2,b1c3" data-cls="circ" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="b2c1,b2c2,b2c3,b2c4" data-cls="circ" style="position:absolute;width:0;height:0"></span>
     <span data-step="3" data-stepcall="mxMark" data-cells="n32" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
@@ -127,31 +308,55 @@
   <div class="kicker"><i></i>MODULE 5</div>
   <h2>Multiple Nash equilibria</h2>
   <ul class="bullets">
-    <li>So far, we have considered only games where one unique solution is present &ndash; i.e., a single pure strategy Nash equilibrium</li>
-    <li data-step="1">But there are often instances where individuals can conceive of many strategies that are capable of generating similar outcomes for players</li>
+    <li>So far, we have considered only games where one unique solution is present &ndash; a single pure strategy Nash equilibrium</li>
+    <li data-step="1">But there are often instances where individuals can conceive of many strategies capable of generating similar outcomes</li>
     <li data-step="2">Games with multiple equilibria often require some sort of <b>coordination</b> by the players in order to reach a useful resolution</li>
   </ul>
 </section>
 
 <section class="slide content" data-i="7">
-  <div class="kicker"><i></i>MODULE 5</div>
+  <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
   <h2>You need to find some food!</h2>
   <ul class="bullets">
     <li>Oops, we blew most of the planet up, but there&rsquo;s good news! Three things survived the nuclear fallout, and are edible by humans</li>
-    <li class="sub" data-step="1">Two-headed cows</li>
-    <li class="sub" data-step="1">Three-headed pigs</li>
-    <li class="sub" data-step="1">Cockroaches</li>
-    <li data-step="2">Each type of animal has a known area in which it likes to roam</li>
-    <li data-step="3">Two hunters set off to find food &ndash; but, since there are no phones left, they can&rsquo;t communicate with each other before they get to the roaming areas</li>
-    <li data-step="4">Both hunters would prefer cow or pig over cockroach, but they also both must eat something in order to survive</li>
+    <li class="sub" data-step="1">Two-headed cows &middot; three-headed pigs &middot; cockroaches &ndash; each with a known roaming area</li>
+    <li data-step="2">Two hunters set off to find food &ndash; but with no phones left, they can&rsquo;t communicate before they get to the roaming areas</li>
+    <li data-step="3">Both would prefer cow or pig over cockroach, but both must eat something in order to survive</li>
   </ul>
 </section>
 
 <section class="slide content" data-i="8">
-  <div class="kicker"><i></i>MODULE 5</div>
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
   <h2>You need to find some food!</h2>
-  <div class="fig" style="top:180px">
-    <div class="mx" style="--cols:3;--rows:3;--cw:190px;--rh:78px">
+  <div class="pollwrap" style="bottom:120px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-hunt.svg" alt="QR code for the hunting poll at ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="huntN">0</span><span class="l">HUNTERS<br>OUT</span></div>
+    </div>
+    <div class="pollopts" style="grid-template-columns:1fr;align-content:center">
+      <div class="popt" id="hu1"><div class="demotag" id="huntD">DEMO DATA</div>
+        <div class="ptxt">Two-headed cow</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--teal)"></div><div class="pnum"></div></div></div>
+      <div class="popt" id="hu2">
+        <div class="ptxt">Three-headed pig</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--terracotta)"></div><div class="pnum"></div></div></div>
+      <div class="popt" id="hu3">
+        <div class="ptxt">Cockroach</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--ochre)"></div><div class="pnum"></div></div></div>
+    </div>
+  </div>
+  <div class="pollnote" data-step="2" data-stepcall="huntVerdict"></div>
+  <span data-step="1" data-stepcall="huntReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
+  <h2>You need to find some food!</h2>
+  <div class="fig" style="top:180px;gap:20px">
+    <div class="mx" style="--cols:3;--rows:3;--cw:190px;--rh:74px">
       <div class="chead" style="grid-column:3 / span 3">HUNTER 2</div>
       <div class="rhead" style="grid-row:3 / span 3">HUNTER 1</div>
       <div class="cl" style="grid-column:3">Two-Headed Cow</div>
@@ -170,202 +375,317 @@
       <div class="cell" style="grid-row:5;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">0</span></div>
       <div class="cell" id="h33" style="grid-row:5;grid-column:5"><span class="pa">1</span><span class="pc">,</span><span class="pb">1</span></div>
     </div>
+    <div class="mxnote">
+      <span data-step="1">Three Nash equilibria &ndash; cow/cow, pig/pig, and cockroach/cockroach&hellip;</span>
+      <span data-step="2"> wherever Hunter 1 goes, Hunter 2 should go too &ndash; but there&rsquo;s no way to know where that is.</span>
+      <span data-step="3"> <b>A coordination game, commonly known as stag hunt.</b></span>
+    </div>
     <span data-step="1" data-stepcall="mxMark" data-cells="h11,h22,h33" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="9">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to find some food!</h2>
-  <ul class="bullets">
-    <li>Here there are three Nash equilibria &ndash; cow/cow, pig/pig, and cockroach/cockroach</li>
-    <li data-step="1">If Hunter 1 heads to the area where the cows (or pigs, or cockroaches) are, Hunter 2 should also go there</li>
-    <li data-step="2">But there is no way for Hunter 2 to know where Hunter 1 is going to go &ndash; and although Hunters 1 and 2 both dislike cockroaches, how are they meant to determine who prefers two-headed pork and who prefers two-headed beef?</li>
-    <li data-step="3">This can be thought of as a <b>coordination game</b>, because both sides need to coordinate in order to be successful</li>
-    <li data-step="4">The name of this game is commonly known as <b>stag hunt</b></li>
-  </ul>
-</section>
-
 <section class="slide content" data-i="10">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to go on a date!</h2>
-  <ul class="bullets">
-    <li>Oops, we blew most of the planet up, but don&rsquo;t worry, there are still two of life&rsquo;s staples that survived: coffee and dating</li>
-    <li data-step="1">Since we need to repopulate the planet, dating has been encouraged, and since there&rsquo;s only one thing to drink (coffee), most dating happens at coffee shops</li>
-    <li data-step="2">You&rsquo;ve got a date tonight and you agreed to meet at the coffee shop. But oh no! You forgot to tell your date which coffee shop, and there are two cafes (Caf&eacute; Post-Apocalatte and Caf&eacute; Armagaddo) in this nuclear wasteland of a town</li>
-    <li data-step="3">Again, we have a coordination issue</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to go on a date!</h2>
-  <div class="fig" style="top:180px">
-    <div class="mx" style="--cols:2;--rows:2;--cw:250px;--rh:104px">
-      <div class="chead">YOUR DATE</div>
-      <div class="rhead">YOU</div>
-      <div class="cl" style="grid-column:3">Armagaddo</div>
-      <div class="cl" style="grid-column:4">Post-Apocalatte</div>
-      <div class="rl" style="grid-row:3">Armagaddo</div>
-      <div class="rl" style="grid-row:4">Post-Apocalatte</div>
-      <div class="cell" id="e11" style="grid-row:3;grid-column:3"><span class="pa">1</span><span class="pc">,</span><span class="pb">1</span></div>
-      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" id="e22" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">1</span></div>
+  <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
+  <h2>The investment game</h2>
+  <div class="rowfig" style="top:200px">
+    <ul class="bullets" style="max-width:640px">
+      <li><b>Let&rsquo;s play a game where you can win lots of money!</b></li>
+      <li data-step="1">You have two choices &ndash; invest, or don&rsquo;t invest. Investing puts <b>$10</b> into the pot; sitting out puts in nothing, and risks nothing</li>
+      <li data-step="2">If you invest and <b>90% of the room</b> invests too, you get your $10 back and I&rsquo;ll give you another $5</li>
+      <li data-step="3">If less than 90% of the room invests, you lose your $10 and get nothing back</li>
+      <li data-step="4">We&rsquo;ll play <b>four rounds</b>, and your wins and losses add up</li>
+      <li data-step="5">Round one is played in silence. After each reveal, <b>one volunteer can address the room</b> before the next round</li>
+    </ul>
+  </div>
+  <div class="qrpanel" style="top:220px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-investgame.svg" alt="QR code for the investment game page"></div>
+      <div class="ju">pick your name, then choose each round</div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="e11,e22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
+  <h2>The investment board</h2>
+  <div class="fig" style="top:176px;bottom:50px;gap:0;justify-content:flex-start">
+    <div class="livecount" style="margin-bottom:10px"><span class="n" id="invN">0</span><span class="l">CHOICES<br>IN</span></div>
+    <table class="board" id="ivboard">
+      <thead><tr><th class="name">Player</th><th id="ivh1">R1</th><th id="ivh2">R2</th><th id="ivh3">R3</th><th id="ivh4">R4</th><th class="tot">Total</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="boardhint" id="ivhint">Tap a round&rsquo;s header to reveal it once everyone has locked in.</div>
+  </div>
+  <div class="demotag" id="invD" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+</section>
+
 <section class="slide content" data-i="12">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to go on a date!</h2>
-  <ul class="bullets">
-    <li><b>How will you coordinate in order to repopulate the earth together?</b></li>
-    <li data-step="1">We need to identify a <b>focal point</b> where our expectations can converge</li>
-    <li data-step="2">How might we find a focal point in this game?</li>
-    <li data-step="3">We have to consider common knowledge &ndash; do you know that your date knows to go to a certain caf&eacute;? Does your date know that you know to go to a certain caf&eacute;? Are you both 100 percent sure this is true?</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
+  <h2>The investment game</h2>
+  <div class="fig" style="top:200px;gap:22px">
+    <div class="mx" style="--cols:2;--rows:2;--cw:250px;--rh:104px">
+      <div class="chead">EVERYONE ELSE</div>
+      <div class="rhead">YOU</div>
+      <div class="cl" style="grid-column:3">Invest</div>
+      <div class="cl" style="grid-column:4">Don&rsquo;t Invest</div>
+      <div class="rl" style="grid-row:3">Invest</div>
+      <div class="rl" style="grid-row:4">Don&rsquo;t Invest</div>
+      <div class="cell" id="iv11" style="grid-row:3;grid-column:3"><span class="pa">+$5</span><span class="pc">,</span><span class="pb">+$5</span></div>
+      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">&minus;$10</span><span class="pc">,</span><span class="pb">$0</span></div>
+      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">$0</span><span class="pc">,</span><span class="pb">+$5</span></div>
+      <div class="cell" id="iv22" style="grid-row:4;grid-column:4"><span class="pa">$0</span><span class="pc">,</span><span class="pb">$0</span></div>
+    </div>
+    <div class="mxnote" data-step="2">Two equilibria on the diagonal again &ndash; <b>the investment game is a stag hunt</b>, and the whole room just played it</div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="iv11,iv22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
 </section>
 
 <section class="slide content" data-i="13">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Examples of coordination games</h2>
+  <div class="kicker"><i></i>MODULE 5 · FOCAL POINTS</div>
+  <h2>You need to go on a date!</h2>
   <ul class="bullets">
-    <li>Coordination games are very common in society</li>
-    <li data-step="1">Examples of coordination problems</li>
-    <li class="sub" data-step="1">Sleepless in Seattle (where should Meg Ryan and Tom Hanks find each other?)</li>
-    <li class="sub" data-step="2">Television shows (if everyone else watches Game of Thrones, I should too otherwise I won&rsquo;t have anything to talk about with people, even if I hate it)</li>
-    <li class="sub" data-step="3">Bad fashion ideas (normcore? Hush puppies? The Tipping Point and coordination games)</li>
-    <li class="sub" data-step="4">Political bandwagons (it&rsquo;s best to present a unified &ndash; even if incorrect &ndash; front)</li>
-    <li class="sub" data-step="5">Bank runs (we all keep our money in the banks only as long as we&rsquo;re sure it&rsquo;s safe)</li>
+    <li>Oops, we blew most of the planet up &ndash; but two of life&rsquo;s staples survived: <b>coffee and dating</b></li>
+    <li data-step="1">You&rsquo;ve got a date tonight at the coffee shop. But oh no! You forgot to say which one &ndash; and there are two caf&eacute;s in town: Caf&eacute; Post-Apocalatte and Caf&eacute; Armagaddo</li>
+    <li data-step="2">Again, we have a coordination issue</li>
   </ul>
 </section>
 
 <section class="slide content" data-i="14">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Overcoming coordination problems</h2>
-  <ul class="bullets">
-    <li>If only we could communicate, we could assure the other side by persuading them that we&rsquo;re better off at a certain equilibrium (or that we&rsquo;ll coordinate at the right place)</li>
-    <li data-step="1">This is why key figureheads give speeches in order to restore confidence</li>
-    <li data-step="2"><b>This is also one reason why leadership matters!</b></li>
-    <li data-step="3">Finally, this is also a crucial difference between these types of games and the prisoner&rsquo;s dilemma &ndash; would strategic communication matter under a PD?</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
+  <h2>You need to go on a date!</h2>
+  <div class="pollwrap" style="bottom:120px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-cafe.svg" alt="QR code for the caf&eacute; poll at ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="cafeN">0</span><span class="l">DATES<br>SET</span></div>
+    </div>
+    <div class="pollopts" style="grid-template-columns:1fr;align-content:center">
+      <div class="popt" id="cf1"><div class="demotag" id="cafeD">DEMO DATA</div>
+        <div class="ptxt">Caf&eacute; Armagaddo</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--teal)"></div><div class="pnum"></div></div></div>
+      <div class="popt" id="cf2">
+        <div class="ptxt">Caf&eacute; Post-Apocalatte</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--terracotta)"></div><div class="pnum"></div></div></div>
+    </div>
+  </div>
+  <div class="pollnote" data-step="2" data-stepcall="cafeVerdict"></div>
+  <span data-step="1" data-stepcall="cafeReveal" style="position:absolute;width:0;height:0"></span>
 </section>
 
 <section class="slide content" data-i="15">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to go to the movies!</h2>
-  <ul class="bullets">
-    <li>The first date went really well and you had a nice latte together, so you&rsquo;ve set up a second date</li>
-    <li data-step="1">This time, you want to take your date to the movies &ndash; only one movie theater survived the nuclear winter, so you know to go to the same place</li>
-    <li data-step="2">But, oh no! You forgot to tell your date which movie you want to see together</li>
-    <li data-step="3">Three movies are playing at the theater:</li>
-    <li class="sub" data-step="3">Mad Max</li>
-    <li class="sub" data-step="3">Zombieland</li>
-    <li class="sub" data-step="3">Waterworld</li>
-    <li data-step="4">Both you and your date have preferences for each of these movies</li>
-  </ul>
+  <div class="kicker"><i></i>MODULE 5 · FOCAL POINTS</div>
+  <h2>You need to go on a date!</h2>
+  <div class="rowfig" style="align-items:center;gap:50px">
+    <ul class="bullets" style="max-width:640px">
+      <li><b>How will you coordinate in order to repopulate the earth together?</b></li>
+      <li data-step="1">We need to identify a <b>focal point</b> where our expectations can converge</li>
+      <li data-step="2">How might we find one? We have to consider <b>common knowledge</b> &ndash; do you know that your date knows to go to a certain caf&eacute;? Does your date know that you know? Are you both 100 percent sure?</li>
+    </ul>
+    <div class="conv" style="flex:none;width:400px">
+      <svg class="pg" viewBox="0 0 240 150" style="height:280px"><g data-step="1"><rect fill="var(--ink)" x="100" y="108" width="40" height="22"></rect><rect fill="var(--ink)" x="105" y="86" width="30" height="22"></rect><rect fill="var(--ink)" x="111" y="42" width="18" height="44"></rect><rect fill="var(--ink)" x="114" y="34" width="12" height="8"></rect><rect fill="var(--ink)" x="119" y="16" width="2" height="18"></rect><circle fill="var(--ink)" cx="120" cy="16" r="3"></circle><rect fill="var(--paper)" x="113" y="50" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="58" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="66" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="74" width="14" height="2"></rect><rect fill="var(--paper)" x="108" y="94" width="24" height="2"></rect><rect fill="var(--paper)" x="104" y="116" width="32" height="2"></rect></g><g transform="translate(94,102) rotate(28)"><line x1="-62" y1="0" x2="-6" y2="0" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"></line><path d="M0 0 l-12 -6 m12 6 l-12 6" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path></g><g transform="translate(146,102) rotate(152)"><line x1="-62" y1="0" x2="-6" y2="0" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"></line><path d="M0 0 l-12 -6 m12 6 l-12 6" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+      <div class="cap" style="text-align:center;max-width:32ch">The spot everyone guesses is the <b>focal point</b></div>
+    </div>
+  </div>
 </section>
 
 <section class="slide content" data-i="16">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to go to the movies!</h2>
-  <div class="fig" style="top:180px">
-    <div class="mx" style="--cols:3;--rows:3;--cw:180px;--rh:76px">
-      <div class="chead" style="grid-column:3 / span 3">YOUR DATE</div>
-      <div class="rhead" style="grid-row:3 / span 3">YOU</div>
-      <div class="cl" style="grid-column:3">Mad Max</div>
-      <div class="cl" style="grid-column:4">Zombieland</div>
-      <div class="cl" id="m0" style="grid-column:5">Waterworld</div>
-      <div class="rl" style="grid-row:3">Mad Max</div>
-      <div class="rl" style="grid-row:4">Zombieland</div>
-      <div class="rl" id="m1" style="grid-row:5">Waterworld</div>
-      <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">1</span></div>
-      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" id="m13" style="grid-row:3;grid-column:5"><span class="pa">0</span><span class="pc">,</span><span class="pb">-1</span></div>
-      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">2</span></div>
-      <div class="cell" id="m23" style="grid-row:4;grid-column:5"><span class="pa">0</span><span class="pc">,</span><span class="pb">-1</span></div>
-      <div class="cell" id="m31" style="grid-row:5;grid-column:3"><span class="pa">-1</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" id="m32" style="grid-row:5;grid-column:4"><span class="pa">-1</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" id="m33" style="grid-row:5;grid-column:5"><span class="pa">-2</span><span class="pc">,</span><span class="pb">-2</span></div>
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
+  <h2>The common knowledge quiz</h2>
+  <div class="rowfig" style="top:200px">
+    <ul class="bullets" style="max-width:640px">
+      <li>The goal is to get as many answers correct as you possibly can</li>
+      <li data-step="1">But here&rsquo;s the thing: <b>the right answer is the answer the room provides</b>. You score a point only when at least 90% of the room answers the way you did</li>
+      <li data-step="2">No conferring: you are coordinating on <b>instinct</b>!</li>
+      <li data-step="3">Ten minutes, fifteen questions, on your phones &ndash; each question offers the next &ndash; and then we&rsquo;ll go through the scores together</li>
+    </ul>
+  </div>
+  <div class="qrpanel" style="top:220px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-quiz.svg" alt="QR code for the common knowledge quiz at ryanlamare.com/go"></div>
+      <div class="ju">ryanlamare.com/go</div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="m0,m1,m13,m23,m31,m32,m33" data-cls="dead" style="position:absolute;width:0;height:0"></span>
+  </div>
+  <div class="timerbox">
+    <div class="t" id="timerT">10:00</div>
+    <button id="timerBtn" type="button">START 10 MINUTES</button>
   </div>
 </section>
 
 <section class="slide content" data-i="17">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Waterworld is the worst</h2>
-  <div class="fig" style="top:160px">
-    <img class="figimg" src="waterworld.jpg" alt="The Waterworld film poster, with Kevin Costner" style="max-height:440px">
+  <div class="kicker"><i></i>MODULE 5 · QUIZ SCORES</div>
+  <h2>Where the room converged</h2>
+  <div class="fig" style="top:180px;bottom:50px;justify-content:flex-start;gap:0">
+    <div class="krows">
+      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k1"><div class="demotag" style="top:-13px" id="krD">DEMO DATA</div><span class="ql">The coin flip</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k2"><span class="ql">A positive number</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k3"><span class="ql">The boxes</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="4" data-stepcall="krRow" data-k="k4"><span class="ql">100 &middot; 13 &middot; 261 &middot; 99 &middot; 555</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="5" data-stepcall="krRow" data-k="k5"><span class="ql">Meet in Paris</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="6" data-stepcall="krRow" data-k="k6"><span class="ql">Meet in Chicago</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="7" data-stepcall="krRow" data-k="k7"><span class="ql">Meet in London</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="8" data-stepcall="krRow" data-k="k8"><span class="ql">The musician</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+    </div>
   </div>
 </section>
 
 <section class="slide content" data-i="18">
-  <div class="kicker"><i></i>MODULE 5</div>
+  <div class="kicker"><i></i>MODULE 5 · QUIZ SCORES</div>
+  <h2>Where the room converged</h2>
+  <div class="fig" style="top:180px;bottom:50px;justify-content:flex-start;gap:0">
+    <div class="krows">
+      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k9"><div class="demotag" style="top:-13px" id="krD2">DEMO DATA</div><span class="ql">The football player</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k10"><span class="ql">The election</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k11"><span class="ql">$100, two piles</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="4" data-stepcall="krRow" data-k="k12"><span class="ql">The favorite mountain</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="5" data-stepcall="krRow" data-k="k13"><span class="ql">A board game</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="6" data-stepcall="krRow" data-k="k14"><span class="ql">Who speaks first</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="7" data-stepcall="krRow" data-k="k15"><span class="ql">The matching bonus</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 5 · FOCAL POINTS</div>
+  <h2>Examples of coordination games</h2>
+  <ul class="bullets">
+    <li>Coordination games are very common in society</li>
+    <li class="sub" data-step="1">Sleepless in Seattle (where should Meg Ryan and Tom Hanks find each other?)</li>
+    <li class="sub" data-step="2">Television shows (everyone else watches Game of Thrones, so I should too)</li>
+    <li class="sub" data-step="3">Bad fashion ideas (normcore? Hush Puppies? The Tipping Point)</li>
+    <li class="sub" data-step="4">Political bandwagons (a unified front, even an incorrect one)</li>
+    <li class="sub" data-step="5">Bank runs (money stays in the bank only while we&rsquo;re all sure it&rsquo;s safe)</li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 5 · FOCAL POINTS</div>
+  <h2>Overcoming coordination problems</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets">
+      <li>If only we could communicate, we could assure the other side that we&rsquo;re better off at a certain equilibrium</li>
+      <li data-step="1">This is why key figureheads give speeches to restore confidence</li>
+      <li data-step="2"><b>This is also one reason why leadership matters!</b></li>
+      <li data-step="3">Would strategic communication matter under a PD?</li>
+    </ul>
+    <div class="clipframe" id="jbwrap">
+      <button class="clipcover" id="jbload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">JetBlue customers, game theorists</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="21">
+  <div class="kicker"><i></i>MODULE 5 · BATTLE OF THE SEXES</div>
   <h2>You need to go to the movies!</h2>
-  <div class="fig" style="top:180px">
+  <ul class="bullets">
+    <li>The first date went really well, so you&rsquo;ve set up a second date: <b>the movies</b></li>
+    <li data-step="1">Only one theater survived the nuclear winter, so you know where to go &ndash; but you forgot to tell your date <b>which movie</b></li>
+    <li data-step="2">Two movies are playing:</li>
+    <li class="sub" data-step="2">Mad Max</li>
+    <li class="sub" data-step="2">I Am Legend</li>
+    <li data-step="3">Both you and your date have preferences for each of these movies</li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="22">
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
+  <h2>You need to go to the movies!</h2>
+  <div class="pollwrap" style="bottom:120px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-movies.svg" alt="QR code for the movie poll at ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="moviesN">0</span><span class="l">TICKETS<br>BOOKED</span></div>
+    </div>
+    <div class="pollopts" style="grid-template-columns:1fr;align-content:center">
+      <div class="popt" id="mv1"><div class="demotag" id="moviesD">DEMO DATA</div>
+        <div class="ptxt">Mad Max</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--teal)"></div><div class="pnum"></div></div></div>
+      <div class="popt" id="mv2">
+        <div class="ptxt">I Am Legend</div>
+        <div class="pbarrow"><div class="pbar" style="background:var(--terracotta)"></div><div class="pnum"></div></div></div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="moviesReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>MODULE 5 · BATTLE OF THE SEXES</div>
+  <h2>You need to go to the movies!</h2>
+  <div class="fig" style="top:190px;gap:20px">
     <div class="mx" style="--cols:2;--rows:2;--cw:230px;--rh:100px">
       <div class="chead">YOUR DATE</div>
       <div class="rhead">YOU</div>
       <div class="cl" style="grid-column:3">Mad Max</div>
-      <div class="cl" style="grid-column:4">Zombieland</div>
+      <div class="cl" style="grid-column:4">I Am Legend</div>
       <div class="rl" style="grid-row:3">Mad Max</div>
-      <div class="rl" style="grid-row:4">Zombieland</div>
+      <div class="rl" style="grid-row:4">I Am Legend</div>
       <div class="cell" id="v11" style="grid-row:3;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">1</span></div>
       <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
       <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
       <div class="cell" id="v22" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">2</span></div>
     </div>
+    <div class="mxnote">
+      <span data-step="1">Two equilibria, but you each prefer a different one&hellip;</span>
+      <span data-step="2"> you&rsquo;d both rather be together than apart, and that makes communication trickier.</span>
+      <span data-step="3"> <b>Commonly (and misogynistically) known as the &ldquo;Battle of the Sexes&rdquo;.</b></span>
+    </div>
     <span data-step="1" data-stepcall="mxMark" data-cells="v11,v22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="19">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>You need to go to the movies!</h2>
-  <ul class="bullets">
-    <li>Here, unlike in stag hunt, you have a problem</li>
-    <li data-step="1">There are two equilibria, but players have different preferences for each equilibrium point</li>
-    <li data-step="2">You&rsquo;d rather see Mad Max than Zombieland, and vice versa for your date, but you&rsquo;d both rather be on a date together than to watch the movie separately (unless the movie is Waterworld)</li>
-    <li data-step="3">This makes coordination more difficult &ndash; and communication trickier as well</li>
-    <li data-step="4">The coordination game here is commonly (and misogynistically) known as the <b>&ldquo;Battle of the Sexes&rdquo;</b></li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="20">
-  <div class="kicker"><i></i>MODULE 5</div>
+<section class="slide content" data-i="24">
+  <div class="kicker"><i></i>MODULE 5 · BATTLE OF THE SEXES</div>
   <h2>A few B.O.S examples</h2>
-  <ul class="bullets">
-    <li>Like the stag hunt, the battle of the sexes variant can be found throughout society</li>
-    <li data-step="1">One clear example is in bargaining and negotiations (we&rsquo;ll return to this later)</li>
-    <li data-step="2">Another example can be found in the parables of O. Henry</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="21">
-  <div class="kicker"><i></i>MODULE 5</div>
-  <h2>Let&rsquo;s play chicken!</h2>
-  <div class="fig" style="top:180px">
-    <div class="mx" style="--cols:2;--rows:2;--cw:250px;--rh:104px">
-      <div class="chead">CHUCK (SOME OTHER GUY)</div>
-      <div class="rhead">REN (KEVIN BACON)</div>
-      <div class="cl" style="grid-column:3">Swerve</div>
-      <div class="cl" style="grid-column:4">Straight</div>
-      <div class="rl" style="grid-row:3">Swerve</div>
-      <div class="rl" style="grid-row:4">Straight</div>
-      <div class="cell words" style="grid-row:3;grid-column:3"><span class="pa">Tie</span><span class="pc">,</span><span class="pb">Tie</span></div>
-      <div class="cell words" style="grid-row:3;grid-column:4"><span class="pa">Lose</span><span class="pc">,</span><span class="pb">Win</span></div>
-      <div class="cell words" style="grid-row:4;grid-column:3"><span class="pa">Win</span><span class="pc">,</span><span class="pb">Lose</span></div>
-      <div class="cell words" style="grid-row:4;grid-column:4"><span class="pa">Crash</span><span class="pc">,</span><span class="pb">Crash</span></div>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets">
+      <li>Like the stag hunt, the battle of the sexes variant can be found throughout society</li>
+      <li data-step="1">One clear example is in bargaining and negotiations (we&rsquo;ll return to this later)</li>
+      <li data-step="2">Another example can be found in the parables of O. Henry</li>
+    </ul>
+    <div class="clipframe" id="bewrap">
+      <button class="clipcover" id="beload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Bert and Ernie, game theorists</span>
+      </button>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="22">
-  <div class="kicker"><i></i>MODULE 5</div>
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
+  <h2>Let&rsquo;s play chicken!</h2>
+  <div class="rowfig" style="align-items:center;gap:34px">
+    <div style="flex:1;display:flex;justify-content:center">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:80px">
+        <div class="chead">CHUCK</div>
+        <div class="rhead">REN</div>
+        <div class="cl" style="grid-column:3">Swerve</div>
+        <div class="cl" style="grid-column:4">Straight</div>
+        <div class="rl" style="grid-row:3">Swerve</div>
+        <div class="rl" style="grid-row:4">Straight</div>
+        <div class="cell words" style="grid-row:3;grid-column:3"><span class="pa">Tie</span><span class="pc">,</span><span class="pb">Tie</span></div>
+        <div class="cell words" style="grid-row:3;grid-column:4"><span class="pa">Lose</span><span class="pc">,</span><span class="pb">Win</span></div>
+        <div class="cell words" style="grid-row:4;grid-column:3"><span class="pa">Win</span><span class="pc">,</span><span class="pb">Lose</span></div>
+        <div class="cell words" style="grid-row:4;grid-column:4"><span class="pa">Crash</span><span class="pc">,</span><span class="pb">Crash</span></div>
+      </div>
+    </div>
+    <div class="clipframe sm" id="ftwrap">
+      <button class="clipcover" id="ftload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Ren and Chuck, Footloose</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="26">
+  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
   <h2>Let&rsquo;s play chicken!</h2>
   <div class="fig" style="top:180px">
     <div class="mx" style="--cols:2;--rows:2;--cw:250px;--rh:104px">
@@ -384,19 +704,93 @@
   </div>
 </section>
 
-<section class="slide content" data-i="23">
-  <div class="kicker"><i></i>MODULE 5</div>
+<section class="slide content" data-i="27">
+  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
   <h2>Solving games of chicken</h2>
   <ul class="bullets">
     <li>There are two equilibrium points in this game (swerve/straight)</li>
     <li data-step="1"><b>So how do you win?</b></li>
-    <li data-step="2">Well, one way is to convince the other side that under no circumstances will you swerve</li>
-    <li data-step="3">We&rsquo;ll return to commitment and credibility later</li>
-    <li data-step="4">Another way is to alternate swerve/straight strategies if you play a repeated game</li>
+    <li data-step="2">One way is to convince the other side that under no circumstances will you swerve &ndash; we&rsquo;ll return to commitment and credibility later</li>
+    <li data-step="3">Another way is to alternate swerve/straight strategies if you play a repeated game</li>
   </ul>
 </section>
 
-<section class="slide content" data-i="24">
+<section class="slide content" data-i="28">
+  <div class="kicker"><i></i>MODULE 5 · TWO-THIRDS</div>
+  <h2>Finding the Nash equilibrium in the two-thirds game</h2>
+  <ul class="bullets">
+    <li>How do we solve this game? Remember <b>common knowledge</b> and <b>successive elimination of inferior strategies</b></li>
+    <li data-step="1">Let&rsquo;s say everyone in the room guessed 100&hellip;what should you guess?</li>
+    <li class="sub" data-step="1">100 &times; (2/3) = 67, so we can eliminate numbers 68 or above</li>
+    <li data-step="2">But if nobody will play above 67, your winning strategy should be 2/3 of those choices</li>
+    <li class="sub" data-step="2">67 &times; (2/3) = 45, so we can now eliminate numbers 46 or above</li>
+    <li data-step="3">And so on (30, 20, 13, 9&hellip;)&hellip;all the way down to <b>0, which is the Nash equilibrium</b></li>
+    <li data-step="4"><b>So, all of those who answered 0 got it right&hellip;or did they??</b></li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="29">
+  <div class="kicker"><i></i>MODULE 5 · LIVE</div>
+  <h2>Finding the Nash equilibrium in the two-thirds game</h2>
+  <div class="fig" style="top:230px;gap:44px">
+    <div class="tour">
+      <div class="tcell"><span class="tv" id="ttcN2">0</span><span class="tl">Numbers in</span></div>
+      <div class="tcell" data-step="1" data-stepcall="ttAvgFill"><span class="tv" id="ttAvg">&ndash;</span><span class="tl">The room&rsquo;s average</span></div>
+      <div class="tcell" data-step="2" data-stepcall="ttTargetFill"><span class="tv red" id="ttTarget">&ndash;</span><span class="tl">Two-thirds of that</span></div>
+    </div>
+    <div class="cap" data-step="3" data-stepcall="ttWinner" id="ttWin" style="font-size:23px;color:var(--ink)"></div>
+  </div>
+  <div class="demotag" id="ttD2" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="30">
+  <div class="kicker"><i></i>MODULE 5 · IN PAIRS</div>
+  <h2>Find your own coordination games</h2>
+  <ul class="bullets" id="ycbul" style="max-width:620px">
+    <li>In pairs: think of situations in <b>your own world</b> where everyone simply needs to land on the same answer &ndash; a time, a format, a standard, a place &ndash; and send them from your phones</li>
+  </ul>
+  <div class="qrpanel" id="ycqr" style="top:236px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-yourcoord.svg" alt="QR code for the write-in poll at ryanlamare.com/go"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+    <div class="livecount"><span class="n" id="ycN">0</span><span class="l">EXAMPLES<br>IN</span></div>
+  </div>
+  <div class="wall" id="ycwall"></div>
+  <div class="demotag" id="ycdemo" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+  <span data-step="1" data-stepcall="ycReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="31">
+  <div class="kicker"><i></i>MODULE 5 · WRAP-UP</div>
+  <h2>Where we land</h2>
+  <div class="fig" style="top:210px;gap:44px">
+    <div class="stairs">
+      <div class="step s1" data-step="1"><svg class="pg" viewBox="0 0 100 100" style="height:84px"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"></rect></svg><div class="sname">Stag Hunt</div><div class="ssub">Aligned &ndash; trust unlocks the best one</div></div>
+      <div class="step s2" data-step="2"><svg class="pg" viewBox="0 0 100 100" style="height:128px"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"></rect></svg><div class="sname">Battle of the Sexes</div><div class="ssub">Different preferences over which one</div></div>
+      <div class="step s3" data-step="3"><svg class="pg" viewBox="0 0 100 100" style="height:176px"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--red)" x="54" y="54" width="40" height="40"></rect></svg><div class="sname">Chicken</div><div class="ssub">Opposed &ndash; miscoordination is disaster</div></div>
+    </div>
+    <div class="stopnote" data-step="4"><i></i><span>Where you land turns on <b>focal points</b>. Next session: mixed strategies &ndash; when the right move is to be unpredictable.</span></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="32">
+  <div class="kicker"><i></i>MODULE 5 · TOP OF THE CLASS</div>
+  <h2>Top of the class</h2>
+  <div class="fig" style="top:200px;gap:30px">
+    <div class="scb">
+      <div class="scbrow head"><span class="rk"></span><span class="nm"></span><span class="pv">Quiz</span><span class="pv">Two-thirds</span><span class="pv">Investment</span><span class="tt">Total</span></div>
+      <div class="scbrow" data-step="5" id="scbr0"><div class="demotag" id="scbD">DEMO DATA</div><span class="rk">1</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="4" id="scbr1"><span class="rk">2</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="3" id="scbr2"><span class="rk">3</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="2" id="scbr3"><span class="rk">4</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="1" id="scbr4"><span class="rk">5</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+    </div>
+    <div class="cap">Points from the common knowledge quiz, the two-thirds game, and the investment game. Top five only &ndash; check your own running total any time at <b>ryanlamare.com/go/points</b>.</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="33">
   <div class="kicker"><i></i>MODULE 5 · COMPANY SLOT</div>
   <h2>Coordination at your company</h2>
   <div class="fig">
@@ -409,8 +803,388 @@
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
 
+<script src="/go/scores.js"></script>
+<script>
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+
+/* a verdict, fill or score row that is already on screen recomputes as
+   answers arrive, the same way the bars do */
+function refreshShownCalls(){
+  document.querySelectorAll('[data-stepcall]').forEach(el=>{
+    const n=el.dataset.stepcall;
+    if(el.dataset.stepon==='1'&&(/Verdict$/.test(n)||n==='ttAvgFill'||n==='ttTargetFill'||n==='ttWinner'||n==='krRow')){
+      try{window[n](el,true);}catch(_){}
+    }
+  });
+}
+
+/* ---- choice polls with on-slide bars: hunt, café, movies ---- */
+const CH={
+  hunt:  {id:'m5-hunt',  o:['hu1','hu2','hu3'], demo:{total:21,dist:[9,7,5]}, n:'huntN',  d:'huntD'},
+  cafe:  {id:'m5-cafe',  o:['cf1','cf2'],       demo:{total:21,dist:[11,10]}, n:'cafeN',  d:'cafeD'},
+  movies:{id:'m5-movies',o:['mv1','mv2'],       demo:{total:21,dist:[11,10]}, n:'moviesN',d:'moviesD'}
+};
+Object.entries(CH).forEach(([key,p])=>{
+  p.live=false;p.counts=p.demo.dist.slice();p.total=0;p.shown=0;p.revealed=false;
+  const nEl=document.getElementById(p.n);
+  function renderCount(){nEl.textContent=p.live?p.total:p.shown;}
+  function renderBars(){
+    const counts=p.live?p.counts:p.demo.dist;
+    const max=Math.max(1,...counts);
+    p.o.forEach((oid,i)=>{
+      const o=document.getElementById(oid);
+      o.classList.toggle('revealed',p.revealed);
+      o.querySelector('.pbar').style.width=p.revealed?((counts[i]||0)/max*70+'%'):'0';
+      o.querySelector('.pnum').textContent=p.revealed?(counts[i]||0):'';
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+p.id).then(r=>r.json()).then(d=>{
+      p.live=true;
+      document.getElementById(p.d).style.display='none';
+      p.counts=p.o.map((_,i)=>d.counts[i]||0);
+      p.total=d.total;
+      renderCount();
+      if(p.revealed)renderBars();
+      refreshShownCalls();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{if(!p.live&&p.shown<p.demo.total){p.shown++;renderCount();}},420);
+  window[key+'Reveal']=function(el,on){p.revealed=on;renderBars();};
+  p.stats=function(){
+    const counts=p.live?p.counts:p.demo.dist;
+    const total=counts.reduce((a,b)=>a+b,0);
+    return {counts,total};
+  };
+  p.optName=function(i){return document.getElementById(p.o[i]).querySelector('.ptxt').textContent;};
+});
+
+window.huntVerdict=function(el,on){
+  if(!on){el.innerHTML='';return;}
+  const s=CH.hunt.stats();
+  if(!s.total){el.innerHTML='';return;}
+  const match=s.counts.reduce((a,c)=>a+(c/s.total)*(c/s.total),0);
+  el.innerHTML='Pair up at random, and there&rsquo;s a <b>'+Math.round(match*100)+'%</b> chance the two of you eat the same dinner';
+};
+window.cafeVerdict=function(el,on){
+  if(!on){el.innerHTML='';return;}
+  const s=CH.cafe.stats();
+  if(!s.total){el.innerHTML='';return;}
+  const top=s.counts[0]>=s.counts[1]?0:1;
+  const pct=Math.round(s.counts[top]/s.total*100);
+  el.innerHTML=pct<=65
+    ?'A near-even split. <b>With no focal point, expectations have nowhere to converge</b>'
+    :'<b>'+pct+'%</b> went to '+CH.cafe.optName(top)+'. The room found a focal point &ndash; what was it?';
+};
+
+/* ---- the investment board: names arrive from game/ as "name|round|i-or-d"
+   lines in the m5-invest room; the latest line per name and round wins.
+   Tapping a round's header reveals that round; totals count revealed
+   rounds only, so nothing is spoiled early. ---- */
+(function(){
+  const DEMO=[
+    ['Alex','i','i','i','i'],['Sam','i','d','i','i'],['Priya','i','i','i','i'],
+    ['Marcus','d','i','i','i'],['Elena','i','i','i','i'],['Tom','i','d','i','i'],
+    ['Nadia','i','i','i','i'],['Chris','d','i','i','i']
+  ];
+  const tbody=document.querySelector('#ivboard tbody');
+  const nEl=document.getElementById('invN'), demoTag=document.getElementById('invD');
+  const hint=document.getElementById('ivhint');
+  const st={live:false,players:new Map(),revealed:[false,false,false,false]};
+  function data(){
+    if(st.live)return st.players;
+    const m=new Map();
+    DEMO.forEach(([n,...rs])=>m.set(n.toLowerCase(),{name:n,rounds:[...rs]}));
+    return m;
+  }
+  function roundStats(m,r){
+    let inN=0,part=0;
+    m.forEach(p=>{const c=p.rounds[r];if(c){part++;if(c==='i')inN++;}});
+    return {inN,part,rate:part?inN/part:0,pays:part?inN/part>=0.9:false};
+  }
+  function render(){
+    const m=data();
+    demoTag.style.display=st.live?'none':'';
+    let choices=0;m.forEach(p=>p.rounds.forEach(c=>{if(c)choices++;}));
+    nEl.textContent=st.live?choices:choices;
+    const names=[...m.values()].sort((a,b)=>a.name.localeCompare(b.name));
+    document.getElementById('ivboard').classList.toggle('compact',names.length>12);
+    const stats=[0,1,2,3].map(r=>roundStats(m,r));
+    tbody.innerHTML='';
+    names.forEach(p=>{
+      const tr=document.createElement('tr');
+      const th=document.createElement('th');th.textContent=p.name;tr.appendChild(th);
+      let total=0;
+      for(let r=0;r<4;r++){
+        const td=document.createElement('td');
+        const c=p.rounds[r];
+        if(!st.revealed[r]){td.textContent=c?'·':'';td.className='out';}
+        else if(c==='i'){
+          const pay=stats[r].pays?5:-10;
+          total+=pay;
+          td.textContent=(pay>0?'+$':'−$')+Math.abs(pay);
+          td.className=pay>0?'in':'lose';
+        }else if(c==='d'){td.textContent='$0';td.className='out';}
+        else{td.textContent='';td.className='out';}
+        tr.appendChild(td);
+      }
+      const tot=document.createElement('td');tot.className='tot';
+      tot.textContent=st.revealed.some(Boolean)?((total<0?'−$':'$')+Math.abs(total)):'';
+      tr.appendChild(tot);
+      tbody.appendChild(tr);
+    });
+    const parts=[];
+    for(let r=0;r<4;r++){
+      if(!st.revealed[r])continue;
+      const s=stats[r];
+      parts.push('<b>R'+(r+1)+':</b> '+Math.round(s.rate*100)+'% invested &ndash; '+(s.pays?'<b>pays out</b>':'the venture fails'));
+    }
+    hint.innerHTML=parts.length?parts.join(' &nbsp;·&nbsp; '):'Tap a round&rsquo;s header to reveal it once everyone has locked in.';
+    for(let r=1;r<=4;r++)document.getElementById('ivh'+r).classList.toggle('open',st.revealed[r-1]);
+  }
+  for(let r=1;r<=4;r++){
+    document.getElementById('ivh'+r).addEventListener('click',()=>{
+      st.revealed[r-1]=!st.revealed[r-1];render();
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
+      st.live=true;
+      st.players=new Map();
+      (d.answers||[]).forEach(t=>{
+        const m=String(t).match(/^(.{1,40}?)\s*\|\s*([1-4])\s*\|\s*([id])$/i);
+        if(!m)return;
+        const key=m[1].trim().toLowerCase();
+        if(!st.players.has(key))st.players.set(key,{name:m[1].trim(),rounds:['','','','']});
+        st.players.get(key).rounds[+m[2]-1]=m[3].toLowerCase();
+      });
+      render();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  render();
+})();
+
+/* ---- common knowledge quiz score rows: choice rooms read counts, write-in
+   rooms group identical answers (case-insensitive); the top answer's share
+   is the room's convergence, and 90% scores the point ---- */
+const KROWS={
+  k1:{id:'m5-k1',type:'c',opts:['Heads','Tails'],demo:[17,4]},
+  k2:{id:'m5-k2',type:'t',demo:['7','7','3','7','1','12','7','3','7','100','7','7','42','7','3','7','1','7','7','2','7']},
+  k3:{id:'m5-k3',type:'c',opts:['Box 1','Box 2','Box 3 (the red one)','Box 4','Box 5'],demo:[3,1,15,1,1]},
+  k4:{id:'m5-k4',type:'c',opts:['100','13','261','99','555'],demo:[19,1,0,1,0]},
+  k5:{id:'m5-k5',type:'t',demo:['The Eiffel Tower','Eiffel Tower','eiffel tower','The Louvre','Eiffel Tower','Eiffel Tower','the eiffel tower','Notre Dame','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Arc de Triomphe','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower']},
+  k6:{id:'m5-k6',type:'t',demo:['The Bean','Millennium Park','The Bean','the bean','Willis Tower','The Bean','Navy Pier','The Bean','The Bean','Wrigley Field','The Bean','The Bean','Willis Tower','The Bean','The Bean','The Bean','Union Station','The Bean','The Bean','The Bean','The Bean']},
+  k7:{id:'m5-k7',type:'t',demo:['Big Ben','Big Ben','big ben','Trafalgar Square','Big Ben','Big Ben','Big Ben','Piccadilly Circus','Big Ben','Big Ben','London Eye','Big Ben','Big Ben','Big Ben','Trafalgar Square','Big Ben','Big Ben','Big Ben','King’s Cross','Big Ben','Big Ben']},
+  k8:{id:'m5-k8',type:'t',demo:['Taylor Swift','Taylor Swift','taylor swift','Beyoncé','Taylor Swift','Taylor Swift','Drake','Taylor Swift','Taylor Swift','Taylor Swift','Bad Bunny','Taylor Swift','Taylor Swift','Beyoncé','Taylor Swift','Taylor Swift','Taylor Swift','The Beatles','Taylor Swift','Taylor Swift','Taylor Swift']},
+  k9:{id:'m5-k9',type:'t',demo:['Messi','Lionel Messi','messi','Ronaldo','Messi','Messi','Cristiano Ronaldo','Messi','Messi','Mbappé','Messi','Messi','Ronaldo','Messi','Messi','Messi','Haaland','Messi','Messi','Ronaldo','Messi']},
+  k10:{id:'m5-k10',type:'c',opts:['Brown','Jones','Robinson','Smith','White'],demo:[0,4,1,16,0]},
+  k11:{id:'m5-k11',type:'t',demo:['50 - 50','50-50','50/50','60 - 40','50 - 50','50 - 50','50 - 50','70 - 30','50 - 50','50 - 50','50 - 50','50 - 50','99 - 1','50 - 50','50 - 50','50 - 50','50 - 50','50 - 50','80 - 20','50 - 50','50 - 50']},
+  k12:{id:'m5-k12',type:'c',opts:['Everest','K2','Kilimanjaro','Mont Blanc','Denali'],demo:[15,1,2,1,2]},
+  k13:{id:'m5-k13',type:'t',demo:['Monopoly','Monopoly','monopoly','Chess','Monopoly','Monopoly','Scrabble','Monopoly','Monopoly','Catan','Monopoly','Monopoly','Chess','Monopoly','Monopoly','Monopoly','Risk','Monopoly','Monopoly','Cluedo','Monopoly']},
+  k14:{id:'m5-k14',type:'c',opts:['The most senior person','The person who called it','Whoever’s most affected','The first to break the silence'],demo:[4,12,2,3]},
+  k15:{id:'m5-k15',type:'c',opts:['$1,000','$10,000','$100,000','$1,000,000'],demo:[2,3,2,14]}
+};
+Object.values(KROWS).forEach(k=>{k.live=false;k.counts=null;k.answers=null;});
+function krTop(k){
+  if(k.type==='c'){
+    const counts=k.live&&k.counts?k.counts:k.demo;
+    const total=counts.reduce((a,b)=>a+b,0);
+    if(!total)return null;
+    let top=0;counts.forEach((c,i)=>{if(c>counts[top])top=i;});
+    return {name:k.opts[top],n:counts[top],total};
+  }
+  const answers=k.live&&k.answers?k.answers:k.demo;
+  if(!answers.length)return null;
+  const groups=new Map();
+  answers.forEach(t=>{
+    const key=String(t).trim().toLowerCase().replace(/\s+/g,' ');
+    if(!key)return;
+    if(!groups.has(key))groups.set(key,{t:String(t).trim(),n:0});
+    groups.get(key).n++;
+  });
+  let top=null;groups.forEach(g=>{if(!top||g.n>top.n)top=g;});
+  const total=[...groups.values()].reduce((a,g)=>a+g.n,0);
+  return top?{name:top.t,n:top.n,total}:null;
+}
+window.krRow=function(el,on){
+  const k=KROWS[el.dataset.k];
+  const qa=el.querySelector('.qa'), bar=el.querySelector('.qbar i'),
+        qp=el.querySelector('.qp'), qm=el.querySelector('.qm');
+  if(!on||!k){qa.textContent='';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  const t=krTop(k);
+  if(!t){qa.textContent='no answers yet';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  const pct=Math.round(t.n/t.total*100);
+  qa.textContent=t.name;
+  bar.style.width=Math.min(100,pct)+'%';
+  qp.textContent=pct+'%';
+  const pt=pct>=90;
+  el.classList.toggle('pt',pt);
+  qm.textContent=pt?'✓':'✗';
+};
+(function(){
+  let i=0;
+  const keys=Object.keys(KROWS);
+  function fetchOne(){
+    const k=KROWS[keys[i%keys.length]];i++;
+    const url=POLL_API+'/p/'+k.id+(k.type==='t'?'/answers':'');
+    fetch(url).then(r=>r.json()).then(d=>{
+      k.live=true;
+      if(k.type==='t')k.answers=d.answers||[];
+      else k.counts=k.opts.map((_,j)=>d.counts[j]||0);
+      const anyLive=Object.values(KROWS).some(x=>x.live);
+      ['krD','krD2'].forEach(id=>{const e=document.getElementById(id);if(e&&anyLive)e.style.display='none';});
+      refreshShownCalls();
+    }).catch(()=>{});
+  }
+  setInterval(fetchOne,700);fetchOne();
+})();
+
+/* ---- quiz countdown ---- */
+(function(){
+  const disp=document.getElementById('timerT'), btn=document.getElementById('timerBtn');
+  let t=600,iv=null;
+  const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  btn.addEventListener('click',()=>{
+    if(iv){clearInterval(iv);iv=null;t=600;disp.textContent='10:00';disp.style.fontSize='';disp.classList.remove('low');btn.textContent='START 10 MINUTES';return;}
+    btn.textContent='RESET';
+    iv=setInterval(()=>{
+      t--;disp.textContent=t>0?fmt(t):'TIME!';
+      disp.style.fontSize=t>0?'':'52px';
+      if(t<=60)disp.classList.add('low');
+      if(t<=0){clearInterval(iv);iv=null;}
+    },1000);
+  });
+})();
+
+/* ---- guess two-thirds: numbers arrive on slide 3 via /go?p=m5-twothirds,
+   the same answers resolve the game at the end ---- */
+(function(){
+  const DEMO=[33,20,25,17,50,0,22,14,29,41,12,8,7,66,23,18,31,2,44,27,15];
+  const st={live:false,nums:[],shown:0};
+  const n1=document.getElementById('ttN'), n2=document.getElementById('ttcN2');
+  function nums(){return st.live?st.nums:DEMO;}
+  function renderCount(){
+    n1.textContent=st.live?st.nums.length:st.shown;
+    n2.textContent=st.live?st.nums.length:DEMO.length;
+    const off=st.live?'none':'';
+    document.getElementById('ttD').style.display=off;
+    document.getElementById('ttD2').style.display=off;
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m5-twothirds/answers').then(r=>r.json()).then(d=>{
+      st.live=true;
+      st.nums=(d.answers||[]).map(t=>parseInt(String(t).replace(/[^0-9-]/g,''),10))
+        .filter(v=>Number.isInteger(v)&&v>=0&&v<=100);
+      renderCount();
+      refreshShownCalls();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{if(!st.live&&st.shown<DEMO.length){st.shown++;renderCount();}},420);
+  renderCount();
+  function avg(){const v=nums();return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
+  window.ttAvgFill=function(el,on){
+    document.getElementById('ttAvg').textContent=on?(Math.round(avg()*10)/10).toString():'–';
+  };
+  window.ttTargetFill=function(el,on){
+    document.getElementById('ttTarget').textContent=on?Math.round(avg()*2/3).toString():'–';
+  };
+  window.ttWinner=function(el,on){
+    if(!on){el.innerHTML='';return;}
+    const v=nums(), a=avg(), target=a*2/3;
+    if(!v.length){el.innerHTML='';return;}
+    let best=v[0];v.forEach(x=>{if(Math.abs(x-target)<Math.abs(best-target))best=x;});
+    el.innerHTML='The winning guess is <b>'+best+'</b> &ndash; who had it? But also, a shout out to anyone who said <b>0</b> (the equilibrium answer)!';
+  };
+})();
+
+/* ---- your-coordination-games wall (Module-4 pattern) ---- */
+(function(){
+  const DEMO=['Which chat app the team lives in','Meeting times across time zones','File naming conventions','Which side of the corridor to walk','Office days midweek','The version of the deck everyone edits','Currency for internal reporting','Dress codes at client sites'];
+  const nEl=document.getElementById('ycN'), wall=document.getElementById('ycwall');
+  const demoTag=document.getElementById('ycdemo');
+  const st={live:false,answers:[],revealed:false};
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function render(){
+    const answers=st.live?st.answers:DEMO;
+    nEl.textContent=st.live?st.answers.length:0;
+    demoTag.style.display=(st.live||!st.revealed)?'none':'';
+    if(!st.revealed)return;
+    const groups=new Map();
+    answers.forEach(t=>{const k=t.toLowerCase();
+      if(!groups.has(k))groups.set(k,{t:t,n:0});
+      groups.get(k).n++;});
+    wall.classList.toggle('dense',groups.size>26);
+    let h='', i=0;
+    groups.forEach(g=>{h+='<span class="ex c'+(i++%7)+'">'+esc(g.t)+(g.n>1?'<span class="xn">&times;'+g.n+'</span>':'')+'</span>';});
+    wall.innerHTML=h;
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m5-yourcoord/answers').then(r=>r.json()).then(d=>{
+      st.live=true;st.answers=d.answers||[];render();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  render();
+  window.ycReveal=function(el,on){
+    st.revealed=on;
+    document.getElementById('ycbul').classList.toggle('faded',on);
+    document.getElementById('ycqr').classList.toggle('faded',on);
+    wall.classList.toggle('on',on);
+    if(on)render();
+  };
+})();
+
+/* ---- top of the class: recomputed from the poll rooms via /go/scores.js;
+   rows reveal fifth place first, one keypress each ---- */
+(function(){
+  const DEMO=[
+    {name:'Priya',byEvent:{quiz:9,twothirds:5,invest:20},total:34},
+    {name:'Marcus',byEvent:{quiz:10,twothirds:0,invest:20},total:30},
+    {name:'Elena',byEvent:{quiz:8,twothirds:0,invest:20},total:28},
+    {name:'Sam',byEvent:{quiz:7,twothirds:0,invest:10},total:17},
+    {name:'Tom',byEvent:{quiz:6,twothirds:0,invest:10},total:16}
+  ];
+  const EVS=['quiz','twothirds','invest'];
+  function fill(players,demo){
+    for(let i=0;i<5;i++){
+      const row=document.getElementById('scbr'+i), p=players[i];
+      row.querySelector('.nm').textContent=p?p.name:'—';
+      const pvs=row.querySelectorAll('.pv');
+      EVS.forEach((k,j)=>{pvs[j].textContent=p?(p.byEvent[k]||0):'';});
+      row.querySelector('.tt').textContent=p?p.total:'';
+    }
+    document.getElementById('scbD').style.display=demo?'':'none';
+  }
+  function refresh(){
+    GT_SCORES.load().then(d=>{
+      if(d.players.length)fill(d.players,false);
+      else fill(DEMO,true);
+    }).catch(()=>fill(DEMO,true));
+  }
+  setInterval(refresh,10000);refresh();
+})();
+
+/* ---- embedded clips: load YouTube only on click (the title spoils the punchline) ---- */
+function clipOnClick(btnId,wrapId,videoId,title){
+  document.getElementById(btnId).addEventListener('click',()=>{
+    const wrap=document.getElementById(wrapId);
+    const f=document.createElement('iframe');
+    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    f.title=title;
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    f.allowFullscreen=true;
+    wrap.replaceChildren(f);
+  });
+}
+clipOnClick('jbload','jbwrap','9nB-JXH2Wyc','JetBlue customers, game theorists');
+clipOnClick('beload','bewrap','cExeSvmSXMA','Bert and Ernie, game theorists');
+clipOnClick('ftload','ftwrap','Fn7d_a0pmio','Ren and Chuck, Footloose');
+</script>
 <script src="/teaching/exec/gt/deck.js"></script>
 </body></html>
