@@ -11,10 +11,10 @@
    gt-poll drawing lane (room m1-dog), one drawing per phone, resubmit to
    redraw. NUMBER: the instructor's 1-100 number, played in five rounds —
    one guess per round, the Worker holds the number and the round and
-   answers too high / too low / correct (room m1-number). OFFER: the added
-   values game — send a whole-dollar
+   answers too high / too low / correct (room m1-number).    values game — send a whole-dollar
    offer (your share of the $100 pair) into room m1-av as "name|o|amt"
-   lines; the deck's board queues it, the instructor accepts or rejects,
+   lines; the deck's board queues it and decides it against the active
+   game's rule,
    and this page watches for the "name|d|amt|a-or-r|phase" decision line.
    Names come from the shared gt-name flow and are claimed into gt-names. */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -57,6 +57,9 @@ button.pick,button.opt{display:block;text-align:left;width:100%;font-family:var(
 input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;color:var(--ink);
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px}
 .big{font-family:var(--display);font-weight:900;font-size:40px;line-height:1;color:var(--red)}
+.bigv{font-family:var(--display);font-weight:900;font-size:46px;letter-spacing:.04em;line-height:1;margin:12px 0 8px}
+.bigv.ok{color:var(--teal)}
+.bigv.no{color:var(--red)}
 </style>
 </head><body>
 <div class="wrap">
@@ -279,7 +282,7 @@ function renderNumber(){
 /* ---- added values: make an offer ---- */
 function renderOffer(){
   q.textContent='Make me an offer';
-  rules.innerHTML='A white and yellow pair is worth <b>$100</b>. Offer the instructor a price for <b>your share</b> — how many of the hundred dollars you keep. Offers go to the board; the instructor accepts or rejects each one, and a rejection means you can offer again.';
+  rules.innerHTML='A white and yellow pair is worth <b>$100</b>. Offer the instructor a price for <b>your share</b> — how many of the hundred dollars you keep. Offers go to the board and are answered on the spot; a rejection means you can offer again.';
   app.innerHTML='';
   app.appendChild(meRow());
   const lbl=document.createElement('div');lbl.className='tag';lbl.style.margin='10px 0 6px';lbl.textContent='YOUR SHARE OF THE $100';
@@ -305,10 +308,10 @@ function renderOffer(){
       if(oIdx<0)return;
       if(decIdx>oIdx&&dec){
         st.innerHTML=dec[3]==='a'
-          ?'<b>Accepted!</b> Your pair is in at $'+dec[2]+' for you.'
-          :'<b>Rejected.</b> The instructor passed on $'+dec[2]+' — make another offer.';
+          ?'<div class="bigv ok">ACCEPTED</div>Your pair is in at $'+dec[2]+' for you.'
+          :'<div class="bigv no">REJECTED</div>The $'+dec[2]+' offer was turned down. Make another offer.';
       }else{
-        st.innerHTML='<b>Offer in.</b> Waiting on the instructor…';
+        st.innerHTML='<b>Offer in.</b> The answer lands here in a moment…';
       }
     }).catch(()=>{});
   }
@@ -320,7 +323,7 @@ function renderOffer(){
     fetch(API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({t:name+'|o|'+amt,v:voter})})
     .then(r=>{if(!r.ok)throw r.status;
-      st.innerHTML='<b>Offer in.</b> Waiting on the instructor…';})
+      st.innerHTML='<b>Offer in.</b> The answer lands here in a moment…';})
     .catch(code=>{st.textContent=code===429?'That’s plenty of offers from one phone!':'That didn’t send — try again.';})
     .finally(()=>{btn.disabled=false;});
   });

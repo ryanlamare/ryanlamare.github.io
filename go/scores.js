@@ -79,7 +79,7 @@ const GT_SCORES = (() => {
   const GAME_ROOMS = [
     { id: 'm1-dog', label: 'The median dog · Module 1', kind: 'draw' },
     { id: 'm1-number', label: 'I’m thinking of a number · Module 1', kind: 'guesses' },
-    { id: 'm1-av', label: 'Added values, your offers · Module 1', kind: 'av' },
+    { id: 'm1-av', label: 'Added value, your offers · Module 1', kind: 'av' },
     { id: 'm2-lastcard', label: 'Take the last card · Module 2' },
     { id: 'm2-ultimatum', label: 'The ultimatum game · Module 2' },
     { id: 'm2-centipede', label: 'The centipede game · Module 2' },
