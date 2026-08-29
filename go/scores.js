@@ -24,16 +24,14 @@
                   three nearest distances take gold/silver/bronze
                   (podium points, ties share the medal).
      numbergame — first correct guess on attempt k earns 6−k points.
-     ultimatum  — "prop|resp|offer|a-or-r" lines, latest per pair; an
-                  accepted deal pays each player their share in £ ÷ 100
-                  (rounded, minimum 1), a rejected one pays nobody —
-                  the game's own lesson, priced in points.
      centipede  — "taker|other|turn" lines (the live game posts the
                   taker first), latest per pair; the taker earns the
-                  pot in points (£ ÷ 100, so turn 3 pays 3 and a full
-                  run pays whoever it capped on 10).
+                  pot ÷ 200 in points (turn 3 pays 2, a full run pays
+                  5 to whoever it capped on). Ultimatum is deliberately
+                  unscored — negotiation games never score, the m1
+                  added-value precedent; modules aim at 10 points max.
      lastcard   — "winner|loser|leaves" lines, latest per pair; the
-                  winner earns 3 points. */
+                  winner earns 5 points. */
 
 const GT_SCORES = (() => {
   const API = 'https://gt-poll.rlamare.workers.dev';
@@ -52,7 +50,6 @@ const GT_SCORES = (() => {
       title: 'Sequential Strategies',
       events: [
         { key: 'lastcard', label: 'Take the last card', kind: 'lastcard', room: 'm2-lastcard' },
-        { key: 'ultimatum', label: 'The ultimatum game', kind: 'ultimatum', room: 'm2-ultimatum' },
         { key: 'centipede', label: 'The centipede game', kind: 'centipede', room: 'm2-centipede' },
       ],
     },
@@ -189,29 +186,9 @@ const GT_SCORES = (() => {
     }
   }
 
-  /* the ultimatum game: names ride inside the lines, no voter join
-     needed. Latest line per (unordered) pair wins, mirroring the deck;
-     an accepted deal pays both sides their share, a rejection pays
-     nobody. A name playing in several pairs sums its deals. */
-  async function scoreUltimatum(ev, claims, tally) {
-    const d = await j('/p/' + ev.room + '/answers');
-    const byPair = new Map();
-    (d.answers || []).forEach(t => {
-      const p = String(t).split('|').map(s => s.trim());
-      if (p.length !== 4 || !p[0] || !p[1] || !/^\d{1,4}$/.test(p[2]) || +p[2] > 1000 || !/^[ar]$/i.test(p[3])) return;
-      byPair.set([norm(p[0]), norm(p[1])].sort().join('~'),
-        { prop: p[0], resp: p[1], offer: +p[2], res: p[3].toLowerCase() });
-    });
-    byPair.forEach(g => {
-      if (g.res !== 'a') return;
-      addPoints(tally, g.prop, ev.key, Math.max(1, Math.round((1000 - g.offer) / 100)));
-      addPoints(tally, g.resp, ev.key, Math.max(1, Math.round(g.offer / 100)));
-    });
-  }
-
   /* centipede: the live game posts the taker first, latest line per
-     (unordered) pair wins; the taker earns the pot in points and the
-     other player nothing — no negatives */
+     (unordered) pair wins; the taker earns the pot ÷ 200 in points
+     (max 5) and the other player nothing — no negatives */
   async function scoreCentipede(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
     const byPair = new Map();
@@ -220,11 +197,11 @@ const GT_SCORES = (() => {
       if (p.length !== 3 || !p[0] || !p[1] || !/^(10|[1-9])$/.test(p[2])) return;
       byPair.set([norm(p[0]), norm(p[1])].sort().join('~'), { taker: p[0], turn: +p[2] });
     });
-    byPair.forEach(g => addPoints(tally, g.taker, ev.key, g.turn));
+    byPair.forEach(g => addPoints(tally, g.taker, ev.key, Math.max(1, Math.round(g.turn / 2))));
   }
 
   /* take the last card: winner first, latest line per pair; a flat
-     3 points to the winner */
+     5 points to the winner */
   async function scoreLastcard(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
     const byPair = new Map();
@@ -233,7 +210,7 @@ const GT_SCORES = (() => {
       if (p.length !== 3 || !p[0] || !p[1]) return;
       byPair.set([norm(p[0]), norm(p[1])].sort().join('~'), p[0]);
     });
-    byPair.forEach(winner => addPoints(tally, winner, ev.key, 3));
+    byPair.forEach(winner => addPoints(tally, winner, ev.key, 5));
   }
 
   /* the median dog: spans from the stroke data (bbox width, exactly as
@@ -299,7 +276,6 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'twothirds') await scoreTwothirds(ev, claims, tally);
         else if (ev.kind === 'invest') await scoreInvest(ev, claims, tally);
         else if (ev.kind === 'numbergame') await scoreNumber(ev, claims, tally);
-        else if (ev.kind === 'ultimatum') await scoreUltimatum(ev, claims, tally);
         else if (ev.kind === 'centipede') await scoreCentipede(ev, claims, tally);
         else if (ev.kind === 'lastcard') await scoreLastcard(ev, claims, tally);
         else if (ev.kind === 'mediandog') await scoreDog(ev, claims, tally);
