@@ -26,6 +26,19 @@
    "prop|resp|offer|a-or-r" line into m2-ultimatum — exactly the line
    the deck's theory-vs-results slide already plots. Latest line per
    pair wins everywhere, so replays and mis-taps are recoverable.
+
+   The long-term Tapas deal is the whole-room game: the deck shows each
+   choice (A or B), the room debates, and every phone votes here. The
+   deck posts a "::open|<token>" marker line into m2-decade when a vote
+   opens and counts only "name|a-or-b" lines that arrive after the
+   latest marker (latest vote per name wins), so revisits and retries
+   never double-count. Phones rotate a voter-id suffix per post to stay
+   under the Worker's per-voter line cap. The game's content lives in
+   the deck, not here — this page is just the anonymous ballot.
+   How many ways is solo: "name|12345" in m2-tapasguess, latest guess
+   per name wins.
+   ?g=decade / ?g=guess deep-link straight to them (?g=cards/ult/cent
+   work too), which is what the deck's QR codes encode.
    Names come from the shared gt-name (roster picker or typed once) and
    are claimed into gt-names for the points system. */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -95,6 +108,12 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
   margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
 @keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
 .waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.solohead{font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
+/* the long-term deal vote: two big anonymous ballot buttons */
+.abrow{display:flex;gap:12px;margin-top:14px}
+.abrow button{flex:1;font-family:var(--display);font-weight:900;font-size:64px;line-height:1;
+  color:var(--ink);background:var(--card);border:3px solid var(--ink);padding:34px 0 30px;cursor:pointer}
+.abrow button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
 </style>
 </head><body>
 <div class="wrap">
@@ -147,6 +166,9 @@ const GAMES={
   cent: {label:'The centipede game', live:'m2-cent-live', finals:'m2-centipede',
          roles:['I’m Player 1, I start','My partner starts']},
 };
+/* the deck's QR codes deep-link one game each */
+let jump=null;
+try{jump=new URLSearchParams(location.search).get('g');}catch(_){}
 
 function render(){
   stopPolling();
@@ -155,6 +177,12 @@ function render(){
     name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   });return;}
+  if(jump){
+    const g=jump;jump=null;
+    if(g==='guess')return renderGuess();
+    if(g==='decade')return renderDecade();
+    if(GAMES[g])return renderRole(g);
+  }
   q.textContent='Pick your game';
   app.innerHTML='';
   const me=document.createElement('div');me.className='me';
@@ -166,6 +194,11 @@ function render(){
   ['cards','ult','cent'].forEach(id=>{
     const b=document.createElement('button');b.className='opt';b.textContent=GAMES[id].label;
     b.addEventListener('click',()=>renderRole(id));
+    ch.appendChild(b);
+  });
+  [['The long-term Tapas deal',renderDecade],['How many ways?',renderGuess]].forEach(([label,go])=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.addEventListener('click',go);
     ch.appendChild(b);
   });
   app.appendChild(ch);
@@ -218,6 +251,60 @@ function backBtn(){
   const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
   b.addEventListener('click',render);
   return b;
+}
+
+/* ================= the Tapas solo + duel games ================= */
+function soloDone(head,sub,againLabel,again){
+  stopPolling();
+  st.textContent='';
+  app.innerHTML='';
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div class="head good">'+head+'</div><div class="sub">'+sub+'</div>';
+  app.appendChild(big);
+  const b=document.createElement('button');b.className='send';b.style.marginTop='14px';
+  b.textContent=againLabel;
+  b.addEventListener('click',again);
+  app.appendChild(b);
+  app.appendChild(backBtn());
+}
+/* the long-term deal ballot. The question lives on the big
+   screen; this page is two buttons. Votes post as "name|a" with a
+   rotating voter-id suffix; the deck counts only votes after its
+   latest ::open marker, latest per name. */
+let decadeN=0, decadeMine=null;
+function renderDecade(){
+  stopPolling();
+  q.textContent='The long-term Tapas deal';
+  st.textContent='';
+  app.innerHTML='';
+  const lead=document.createElement('div');lead.className='solohead';
+  lead.textContent='Debate with the room first. Then vote for the option on the big screen. You can change your vote until the reveal.';
+  app.appendChild(lead);
+  const row=document.createElement('div');row.className='abrow';
+  const btns={};
+  ['a','b'].forEach(x=>{
+    const b=document.createElement('button');b.textContent=x.toUpperCase();
+    b.addEventListener('click',()=>{
+      say2('m2-decade',name+'|'+x)
+        .then(()=>{
+          decadeMine=x;
+          Object.entries(btns).forEach(([k,el])=>el.classList.toggle('mine',k===x));
+          st.textContent='Vote sent. Tap the other letter to change it before the reveal.';
+        })
+        .catch(code=>{st.textContent=failMsg(code);});
+    });
+    btns[x]=b;row.appendChild(b);
+  });
+  if(decadeMine)btns[decadeMine].classList.add('mine');
+  app.appendChild(row);
+  app.appendChild(backBtn());
+}
+/* rotate the voter-id suffix so a whole game of votes never trips the
+   Worker's per-voter cap */
+function say2(room,line){
+  decadeN++;
+  return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'.'+(decadeN%9)})}).then(r=>{if(!r.ok)throw r.status;});
 }
 
 /* ================= the turn games (last card + centipede) ================= */

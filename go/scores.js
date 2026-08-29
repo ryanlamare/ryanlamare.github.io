@@ -83,6 +83,7 @@ const GT_SCORES = (() => {
     { id: 'm2-lastcard', label: 'Take the last card · Module 2' },
     { id: 'm2-ultimatum', label: 'The ultimatum game · Module 2' },
     { id: 'm2-centipede', label: 'The centipede game · Module 2' },
+    { id: 'm2-tapasguess', label: 'How many ways? · Module 2', solo: true },
     { id: 'm5-invest', label: 'The investment game · Module 5' },
   ];
 
@@ -332,6 +333,7 @@ const GT_SCORES = (() => {
         (p[2] === '10' ? ' — it ran to £1,000' : ' — ' + (took ? 'you' : 'they') + ' took £' + (+p[2] * 100) + ' at turn ' + p[2]);
     }
     if (id === 'm2-lastcard') return norm(p[0]) === nkey ? 'took the last card against ' + p[1] : 'played ' + p[0] + ' — they took the last card';
+    if (id === 'm2-tapasguess') return 'guessed ' + (+p[1]).toLocaleString('en-GB') + ' (the answer: 755,476)';
     if (id === 'm1-av') {
       if (p[1] === 'o') return 'offered to keep $' + p[2];
       if (p[1] === 'd') return '$' + p[2] + (p[3] === 'a' ? ' accepted' : ' rejected') + (p[4] === '2' ? ' (three cards lost)' : ' (equal cards)');
@@ -393,7 +395,7 @@ const GT_SCORES = (() => {
             const latest = new Map();
             mine.forEach(t => {
               const p = String(t).split('|').map(s => norm(s));
-              const key = g.id === 'm5-invest' ? p[1] : [p[0], p[1]].sort().join('~');
+              const key = g.solo ? p[0] : g.id === 'm5-invest' ? p[1] : [p[0], p[1]].sort().join('~');
               latest.set(key, t);
             });
             mine = [...latest.values()];
