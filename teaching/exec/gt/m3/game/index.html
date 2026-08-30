@@ -1,0 +1,349 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 3 · The Engine Game</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 3 Tapas engine game — pairs of rival
+   bidders play simultaneous rounds from two phones, polling the gt-poll
+   Worker (no sockets; a move can take a couple of seconds to land, and
+   the game is round-based, which is why that works).
+
+   Wire format, room m3-engine, one line per action:
+     join:  "aurora|borealis|0|a|j"   posted by the Aurora phone on pairing
+     pitch: "aurora|borealis|r|a-or-b|p-t-s-c"
+   The Aurora name always comes first, whichever seat posts. Latest line
+   per pair+round+seat wins, so mis-taps are recoverable until the pair
+   is complete. The deck posts "::open|r" markers to open rounds; phones
+   read the latest marker as the current round (round 1 is open by
+   default). The moment both seats have pitched, this page spins the
+   pair's own small engine and shows the split — the big screen reveals
+   the room only on the instructor's button. Names come from the shared
+   gt-name and are claimed into gt-names for the points system. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+button.opt:disabled{opacity:.55;cursor:default}
+button.opt .def{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+button.opt.mine .def{color:color-mix(in srgb, var(--paper) 82%, transparent)}
+.choices{display:flex;flex-direction:column;gap:11px}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.vsbar{border:2.5px solid var(--ink);background:var(--card);padding:12px 16px;display:flex;
+  justify-content:space-between;align-items:baseline;gap:10px}
+.vsbar .side{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px}
+.vsbar .side.a{color:var(--teal)} .vsbar .side.b{color:var(--terracotta)}
+.vsbar .rd{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+.fanwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.fanwrap svg{width:230px;height:230px;display:block}
+.fanshares{display:flex;gap:26px;font-weight:700;font-size:15px}
+.fanshares .fa{color:var(--teal)} .fanshares .fb{color:var(--terracotta)}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:16px;text-align:center}
+.bigcard .head{font-weight:700;font-size:20px}
+.bigcard .head.good{color:var(--teal)} .bigcard .head.bad{color:var(--terracotta)}
+.bigcard .sub{font-weight:600;font-size:14px;color:var(--muted);margin-top:6px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 3</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+const ROOM='m3-engine', ROUNDS=4;
+const SHARE=[[50,55,40,70],[45,50,45,65],[60,55,50,60],[30,35,40,50]];
+const MK={p:0,t:1,s:2,c:3};
+const MOVES=[
+  {m:'p',n:'Cut the price',d:'Offer Tapas the same deal for less money'},
+  {m:'t',n:'Promise better terms',d:'Keep your price, make the deal easier to live with'},
+  {m:'s',n:'Solve a longstanding concern',d:'Fix a problem Tapas has lived with for years'},
+  {m:'c',n:'Charm the board',d:'Goodwill, hospitality, warm words — no substance'},
+];
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+let sayN=0;
+function say(line){
+  sayN++;
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=()=>fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+function parseLines(lines){
+  let markers=[], moves=[];
+  lines.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());
+    if(p.length===2&&p[0]==='::open'&&/^\d{1,2}$/.test(p[1]))markers.push(+p[1]);
+    else if(p.length===5&&p[0]&&p[1]&&/^\d{1,2}$/.test(p[2])&&/^[ab]$/.test(p[3])&&/^[jptsc]$/.test(p[4]))
+      moves.push({A:p[0],B:p[1],r:+p[2],seat:p[3],m:p[4]});
+  });
+  return {round:Math.min(ROUNDS,Math.max(1,...markers)), moves};
+}
+
+function render(){
+  stopPolling();
+  st.textContent='';
+  if(!name){renderName('Who are you?',n=>{
+    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();render();
+  });return;}
+  /* rejoin a pair this phone already sat in */
+  let saved=null;
+  try{saved=JSON.parse(localStorage.getItem('m3eng-pair')||'null');}catch(_){}
+  if(saved&&saved.A&&saved.B&&(norm(saved.seat==='a'?saved.A:saved.B)===norm(name)))
+    return renderPlay(saved.A,saved.B,saved.seat);
+  q.textContent='The engine game';
+  app.innerHTML='';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const lead=document.createElement('div');lead.className='lbl';lead.style.marginTop='6px';
+  lead.textContent='Pair up with a rival, then pick your team';
+  app.appendChild(lead);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
+  [['I’m on Team Aurora — I’ll pick my rival','a'],
+   ['I’m on Team Borealis — my rival picks me','b']].forEach(([label,seat])=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.style.borderColor=seat==='a'?'var(--teal)':'var(--terracotta)';
+    b.addEventListener('click',()=>seat==='a'?renderPickRival():renderWaitPick());
+    ch.appendChild(b);
+  });
+  app.appendChild(ch);
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>done(clean(n)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function backBtn(){
+  const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
+  b.addEventListener('click',()=>{try{localStorage.removeItem('m3eng-pair');}catch(_){}render();});
+  return b;
+}
+function renderPickRival(){
+  renderName('Who is your rival?',rival=>{
+    if(norm(rival)===norm(name)){st.textContent='That’s you — pick the person you’re playing against.';return;}
+    st.textContent='Pairing up…';
+    say(name+'|'+rival+'|0|a|j')
+      .then(()=>{st.textContent='';renderPlay(name,rival,'a');})
+      .catch(code=>{st.textContent=failMsg(code);});
+  });
+}
+function renderWaitPick(){
+  stopPolling();
+  q.textContent='Waiting for your rival';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>Keep this page open. The game starts when your rival on Team Aurora picks you.';
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
+  hint.textContent='They need to pick exactly “'+name+'”';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    answers().then(lines=>{
+      const mine=parseLines(lines).moves.filter(m=>norm(m.B)===norm(name));
+      if(mine.length){const m=mine[mine.length-1];renderPlay(m.A,m.B,'b');}
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2000);check();
+}
+
+function renderPlay(A,B,seat){
+  stopPolling();
+  try{localStorage.setItem('m3eng-pair',JSON.stringify({A,B,seat}));}catch(_){}
+  const myTeam=seat==='a'?'AURORA':'BOREALIS', rival=seat==='a'?B:A;
+  q.textContent='The engine game';
+  app.innerHTML='';
+  const bar=document.createElement('div');bar.className='vsbar';
+  bar.innerHTML='<span class="side '+(seat==='a'?'a':'b')+'">Team '+myTeam.toLowerCase()+' · '+esc(seat==='a'?A:B)+'</span>'+
+    '<span class="rd" id="rdlbl">ROUND 1</span>'+
+    '<span class="side '+(seat==='a'?'b':'a')+'">vs '+esc(rival)+'</span>';
+  app.appendChild(bar);
+  const stage=document.createElement('div');stage.style.marginTop='12px';
+  app.appendChild(stage);
+  app.appendChild(backBtn());
+
+  const key=pairKey(A,B);
+  let shownRound=0, lockedRound=0, myPick=null, posting=false;
+
+  function buttonsUI(r,mine){
+    stage.innerHTML='';
+    const lead=document.createElement('div');lead.className='lbl';
+    lead.textContent='Round '+r+' — what does your pitch push hardest?';
+    stage.appendChild(lead);
+    const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
+    MOVES.forEach(o=>{
+      const b=document.createElement('button');b.className='opt'+(mine===o.m?' mine':'');
+      b.innerHTML='<b>'+o.n+'</b><span class="def">'+o.d+'</span>';
+      b.addEventListener('click',()=>{
+        if(posting)return;
+        posting=true;
+        say(A+'|'+B+'|'+r+'|'+seat+'|'+o.m)
+          .then(()=>{posting=false;myPick=o.m;st.textContent='Pitch sent. You can change it until your rival has played.';
+            ch.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));b.classList.add('mine');})
+          .catch(code=>{posting=false;st.textContent=failMsg(code);});
+      });
+      ch.appendChild(b);
+    });
+    stage.appendChild(ch);
+  }
+  function fanUI(r,ma,mb){
+    const sa=SHARE[MK[ma]][MK[mb]], sb=100-sa;
+    const myShare=seat==='a'?sa:sb;
+    stage.innerHTML='';
+    const wrapf=document.createElement('div');wrapf.className='fanwrap';
+    wrapf.innerHTML=
+      '<svg viewBox="0 0 460 460" aria-label="Your pair&#39;s engine: Aurora '+sa+', Borealis '+sb+'">'+
+      '<circle cx="230" cy="230" r="222" fill="var(--ink)"/><circle cx="230" cy="230" r="204" fill="var(--tan-light)"/>'+
+      '<circle cx="230" cy="230" r="196" fill="var(--ink)"/>'+
+      '<g id="prot" transform="rotate(0 230 230)"><path id="psa" fill="var(--teal)"/><path id="psb" fill="var(--terracotta)"/>'+
+      '<g id="pbl" stroke="var(--paper)" stroke-width="3" opacity=".55" fill="none"></g>'+
+      '<circle cx="230" cy="230" r="46" fill="var(--ink)"/>'+
+      '<path d="M230 196 q30 14 12 46 q-14 24 -42 12" stroke="var(--paper)" stroke-width="9" fill="none" stroke-linecap="round"/></g></svg>'+
+      '<div class="fanshares"><span class="fa">AURORA '+sa+'</span><span class="fb">BOREALIS '+sb+'</span></div>';
+    stage.appendChild(wrapf);
+    const bl=wrapf.querySelector('#pbl');
+    const NSs='http://www.w3.org/2000/svg';
+    for(let i=0;i<18;i++){
+      const p=document.createElementNS(NSs,'path');
+      p.setAttribute('d','M230 82 q26 60 8 138');
+      p.setAttribute('transform','rotate('+(i*20)+' 230 230)');
+      bl.appendChild(p);
+    }
+    const sec=(a0,a1)=>{
+      const big=(a1-a0)%360>180?1:0;
+      const x0=230+196*Math.sin(a0*Math.PI/180), y0=230-196*Math.cos(a0*Math.PI/180);
+      const x1=230+196*Math.sin(a1*Math.PI/180), y1=230-196*Math.cos(a1*Math.PI/180);
+      return 'M230 230 L'+x0+' '+y0+' A196 196 0 '+big+' 1 '+x1+' '+y1+' Z';
+    };
+    const drawF=f=>{const a=f*3.6;
+      wrapf.querySelector('#psa').setAttribute('d',sec(0,a));
+      wrapf.querySelector('#psb').setAttribute('d',sec(a,360));};
+    const rotor=wrapf.querySelector('#prot');
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){drawF(sa);}
+    else{
+      drawF(50);
+      let t0=null; const DUR=1800, dir=myShare>=50?-1:1;
+      const step=ts=>{
+        if(!t0)t0=ts;
+        const t=Math.min(1,(ts-t0)/DUR), e=1-Math.pow(1-t,3);
+        rotor.setAttribute('transform','rotate('+(dir*3*360*e)+' 230 230)');
+        drawF(50+(sa-50)*e);
+        if(t<1)requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    const card=document.createElement('div');card.className='bigcard';card.style.marginTop='12px';
+    const good=myShare>50, evenS=myShare===50;
+    card.innerHTML='<div class="head '+(evenS?'':(good?'good':'bad'))+'">'+
+      (evenS?'Dead even: 50 · 50':'You took '+myShare+' of this slice')+'</div>'+
+      '<div class="sub" id="pbook"></div>';
+    stage.appendChild(card);
+    const note=document.createElement('div');note.className='lbl';note.style.marginTop='10px';
+    note.textContent='Round '+r+' locked. Wait for the reveal on the big screen — the next round opens from there.';
+    stage.appendChild(note);
+  }
+  function pairBook(moves){
+    const avgs=[];
+    for(let r=1;r<=ROUNDS;r++){
+      const latest={};
+      moves.filter(m=>m.r===r&&m.m!=='j'&&pairKey(m.A,m.B)===key).forEach(m=>latest[m.seat]=m.m);
+      if(latest.a&&latest.b)avgs.push(SHARE[MK[latest.a]][MK[latest.b]]);
+    }
+    if(!avgs.length)return null;
+    const b=Math.round(avgs.reduce((s,x)=>s+x,0)/avgs.length);
+    return {n:avgs.length,a:b,b:100-b};
+  }
+  function tick(){
+    answers().then(lines=>{
+      const p=parseLines(lines);
+      const r=p.round;
+      document.getElementById('rdlbl').textContent='ROUND '+r;
+      const latest={};
+      p.moves.filter(m=>m.r===r&&m.m!=='j'&&pairKey(m.A,m.B)===key).forEach(m=>latest[m.seat]=m.m);
+      if(latest[seat])myPick=latest[seat];
+      if(latest.a&&latest.b){
+        if(lockedRound!==r){lockedRound=r;shownRound=0;st.textContent='';fanUI(r,latest.a,latest.b);}
+        const bk=pairBook(p.moves), el=document.getElementById('pbook');
+        if(bk&&el)el.textContent='Your pair over '+bk.n+' round'+(bk.n>1?'s':'')+': Aurora '+bk.a+' · Borealis '+bk.b;
+      }else if(shownRound!==r){
+        shownRound=r;lockedRound=0;st.textContent='';
+        buttonsUI(r,myPick=latest[seat]||null);
+      }
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2000);tick();
+}
+</script>
+</body></html>
