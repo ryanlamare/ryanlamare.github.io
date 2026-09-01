@@ -1,0 +1,127 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 5 · Tapas</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the two Module 5 Tapas votes: the shape of the deal
+   (?g=bos, a battle of the sexes) and the final meeting (?g=chicken).
+   Each phone is put on one side, RRPF or Tapas, from its own voter id, so
+   the room splits roughly in half with nobody assigning seats. Everyone
+   votes in round 1; the deck posts a "::open|2" marker after the two
+   volunteers have spoken and round 2 opens on every phone. A vote can be
+   changed until the big screen reveals it. Anonymous, unscored.
+   Wire (rooms m5-bos / m5-chicken): "v|<voter>|<r-or-t>|<round>|<a-or-b>". */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+.side{border:3px solid var(--ink);background:var(--card);padding:14px 18px}
+.side .sk{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--muted)}
+.side .sn{font-family:var(--display);font-weight:900;font-size:40px;line-height:1;margin:4px 0 8px}
+.side .sn.r{color:var(--teal)} .side .sn.t{color:var(--terracotta)}
+.side .sb{font-weight:600;font-size:15.5px;line-height:1.4;color:var(--ink)}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.choices{display:flex;flex-direction:column;gap:11px}
+button.opt{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.pick{display:block;width:100%;font-family:var(--sans);font-weight:700;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:16px 18px;text-align:left;cursor:pointer;text-decoration:none}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 5</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+/* every word below is Ryan's to redline */
+const GAMES={
+  bos:{room:'m5-bos',title:'The shape of the deal',
+    brief:{r:'You would rather sign than walk away. The shape you push for: lock in a long-term partnership.',
+           t:'You would rather sign than walk away. The shape you push for: keep the freedom to walk away.'},
+    rule:'If both sides land on the same shape, you sign on that shape. If not, there is no deal.',
+    opts:[{k:'a',n:'Lock in a long-term partnership'},{k:'b',n:'Keep the freedom to walk away'}]},
+  chicken:{room:'m5-chicken',title:'The final meeting',
+    brief:{r:'One point is still open, and the bank is waiting in the wings.',
+           t:'One point is still open, and the bank is waiting in the wings.'},
+    rule:'If one side gives ground, the other gets its way. If both give, you split the difference. If both hold firm, there is no deal.',
+    opts:[{k:'a',n:'Give ground'},{k:'b',n:'Hold firm'}]}
+};
+const SIDE={r:'RRPF',t:'Tapas'};
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+/* the side comes from the voter id itself, so it is stable per phone and about even across the room */
+const side=(voter.split('').reduce((a,c)=>a+c.charCodeAt(0),0)%2)?'t':'r';
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const g=GAMES[new URLSearchParams(location.search).get('g')];
+let sayN=0;
+function say(room,line){
+  sayN++;
+  return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+if(!g){
+  q.textContent='Which vote is on the screen?';
+  app.innerHTML='<div class="choices"><a class="pick" href="?g=bos">The shape of the deal</a><a class="pick" href="?g=chicken">The final meeting</a></div>';
+}else{
+  q.textContent=g.title;
+  const sd=document.createElement('div');sd.className='side';
+  sd.innerHTML='<div class="sk">Your side</div><div class="sn '+side+'">'+SIDE[side]+'</div><div class="sb"></div>';
+  sd.querySelector('.sb').textContent=g.brief[side];
+  app.appendChild(sd);
+  const rule=document.createElement('div');rule.className='status';rule.style.color='var(--ink)';rule.textContent=g.rule;
+  app.appendChild(rule);
+  const stage=document.createElement('div');app.appendChild(stage);
+  let round=1, mine={1:null,2:null}, shown='';
+  try{mine=JSON.parse(localStorage.getItem('m5tapas-'+g.room)||'{"1":null,"2":null}');}catch(_){}
+  function save(){try{localStorage.setItem('m5tapas-'+g.room,JSON.stringify(mine));}catch(_){}}
+  function ui(){
+    const key=round+':'+(mine[round]||'');
+    if(key===shown)return; shown=key;
+    stage.innerHTML='';
+    const lead=document.createElement('div');lead.className='lbl';lead.style.margin='6px 0 8px';
+    lead.textContent=round===1?'Round 1 — what do you push for?':'Round 2 — after the volunteers. What do you push for now?';
+    stage.appendChild(lead);
+    const ch=document.createElement('div');ch.className='choices';
+    g.opts.forEach(o=>{
+      const b=document.createElement('button');b.className='opt'+(mine[round]===o.k?' mine':'');b.textContent=o.n;
+      b.addEventListener('click',()=>{
+        say(g.room,'v|'+voter+'|'+side+'|'+round+'|'+o.k).then(()=>{
+          mine[round]=o.k;save();shown='';ui();
+          st.innerHTML='<b>Sent.</b> '+(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.');
+        }).catch(code=>{st.textContent=failMsg(code);});
+      });
+      ch.appendChild(b);
+    });
+    stage.appendChild(ch);
+  }
+  function tick(){
+    fetch(API+'/p/'+g.room+'/answers').then(r=>r.json()).then(d=>{
+      const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
+      const nr=open2?2:1;
+      if(nr!==round){round=nr;st.textContent='';}
+      ui();
+    }).catch(()=>{ui();});
+  }
+  setInterval(tick,2000);tick();ui();
+}
+</script>
+</body></html>
