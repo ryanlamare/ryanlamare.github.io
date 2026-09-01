@@ -242,8 +242,12 @@ authorized: adapting delivery-context words ("this class"→"these sessions",
 design treatments from the 565 system plus interactive widgets. Two hard
 conditions: **every wording change is enumerated for his veto in the build
 report**, and each module goes **sample-first** — a short block he drives and
-redlines before the full build, with choices offered as lettered picks he can
-answer in one line. Never call anything "approved" that he hasn't approved.
+redlines before the full build. Put open design questions to him as questions
+in prose and let him answer at whatever length he likes — do **not** package
+them as lettered picks or ask for "one line back" (Ryan, 31 Aug 2026: that
+habit outlived whatever it was for; it takes a day to get a game right and he
+wants to talk it through). Never call anything "approved" that he hasn't
+approved.
 
 Deck text is Ryan's speaking script, not display copy. Start from his own
 wording in the source decks (LER 550 / MG478 / the 565 web decks) and trim;

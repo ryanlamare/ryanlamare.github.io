@@ -1,0 +1,332 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 4 · Inside Tapas</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 4 Tapas game. Everyone in the room is
+   a Tapas executive and plays the same prisoner's dilemma from this phone,
+   all at once, month by month: with the airline under shareholder
+   pressure, push for fast growth or grow responsibly. Everyone reads the
+   same setup (nobody is sure how long the board keeps asking — the total
+   number of months is never shown). The ONLY thing that differs between
+   phones is one line of the brief: part of the room decides with the
+   same colleague every month; the rest with a different colleague they
+   will never interact with again, and they really are re-paired. The
+   room does not know there are two briefs until the board reveals the
+   split.
+
+   Pairing comes from schedule.js (shared with the deck) so this phone
+   never needs to be told who it plays; it polls the gt-poll Worker (no
+   sockets; month-based, so a couple of seconds' lag is fine). A pair
+   moves on to the next month the moment both have played — no lockstep,
+   no markers — and each player sees only their own results. The big
+   screen shows nothing until the instructor reveals the whole game. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+button.opt:disabled{opacity:.55;cursor:default}
+button.opt .def{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+button.opt.mine .def{color:color-mix(in srgb, var(--paper) 82%, transparent)}
+.choices{display:flex;flex-direction:column;gap:11px}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.brief{border:3px solid var(--ink);background:var(--card);padding:16px 18px}
+.brief .bk{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:8px}
+.brief .bt{font-weight:600;font-size:17px;line-height:1.4;color:var(--ink)}
+.pay{font-weight:500;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.pay b{color:var(--ink)}
+.vsbar{border:2.5px solid var(--ink);background:var(--card);padding:12px 16px;display:flex;
+  justify-content:space-between;align-items:baseline;gap:10px}
+.vsbar .rd{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+.vsbar .tot{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--teal)}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:16px;text-align:center}
+.bigcard .head{font-weight:700;font-size:20px}
+.bigcard .head.good{color:var(--teal)} .bigcard .head.bad{color:var(--terracotta)}
+.bigcard .sub{font-weight:600;font-size:14px;color:var(--muted);margin-top:6px}
+.bigcard .pts{font-family:var(--display);font-weight:900;font-size:54px;line-height:1;color:var(--ink);margin:8px 0 2px}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+button.go{display:block;width:100%;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 18px;cursor:pointer;margin-top:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 4</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/gt/m4/tapas/schedule.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+const ROOM='m4-tapas';
+const S=window.TAPAS_SCHED, PAY=S.PAY;
+/* every word below is Ryan's to redline — the briefs are the whole manipulation.
+   Moves: c = grow responsibly, d = push for fast growth. Seats (r/a) only
+   keep the stranger-arm rotation bipartite; the game is symmetric. */
+const SETUP='You and another Tapas executive need to decide on a growth strategy over several months. Nobody is sure how long the board will ask for your input. It could shift focus next month, or keep debating growth options in perpetuity.';
+const BRIEF={
+  p:'Each month, you and the same colleague decide on your strategies simultaneously.',
+  s:'Each month, you and a different colleague, someone you’ll never interact with again, decide on your strategies simultaneously.'
+};
+const LEAD={
+  p:['your first decision with this colleague','the same colleague again'],
+  s:['a new colleague','a new colleague']
+};
+const MOVES=[
+  {m:'c',n:'Grow responsibly',d:'Expand only as fast as the balance sheet can carry'},
+  {m:'d',n:'Push for fast growth',d:'More aircraft, more routes, more debt, now'}
+];
+/* what a colleague did, in the past tense */
+const DID={c:'chose responsible growth',d:'pushed for fast growth'};
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+let sayN=0;
+function say(line){
+  sayN++;
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=()=>fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+function render(){
+  stopPolling();
+  st.textContent='';
+  if(!name){renderName('Who are you?',n=>{
+    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();render();
+  });return;}
+  let joined=false;
+  try{joined=localStorage.getItem('m4tapas-joined')===voter;}catch(_){}
+  if(joined)return renderWait();
+  q.textContent='Inside Tapas';
+  app.innerHTML='';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
+  const b=document.createElement('button');b.className='opt';b.style.borderColor='var(--red)';
+  b.innerHTML='<b>I’m in</b><span class="def">You’ll be paired with a colleague in this room. You won’t be told who.</span>';
+  b.addEventListener('click',()=>{
+    st.textContent='Joining…';
+    say('j|'+voter+'|'+name).then(()=>{
+      try{localStorage.setItem('m4tapas-joined',voter);}catch(_){}
+      st.textContent='';renderWait();
+    }).catch(code=>{st.textContent=failMsg(code);});
+  });
+  ch.appendChild(b);app.appendChild(ch);
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>done(clean(n)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function backBtn(){
+  const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
+  b.addEventListener('click',()=>{try{localStorage.removeItem('m4tapas-joined');}catch(_){}render();});
+  return b;
+}
+function renderWait(){
+  stopPolling();
+  q.textContent='You’re in';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>Keep this page open. The game starts from the big screen.';
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';hint.id='joincount';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    answers().then(lines=>{
+      const p=S.parse(lines);
+      hint.textContent=p.joins.length+' response'+(p.joins.length===1?'':'s')+' so far';
+      if(p.start){const sch=S.fromParsed(p);renderPlay(sch);}
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2000);check();
+}
+
+function renderPlay(sch){
+  stopPolling();
+  const me=sch.by[voter];
+  st.textContent='';
+  app.innerHTML='';
+  if(!me){
+    q.textContent='The game has started';
+    const w=document.createElement('div');w.className='waitcard';
+    w.textContent='It started before you joined, so you’re watching this one. Follow it on the big screen.';
+    app.appendChild(w);app.appendChild(backBtn());
+    return;
+  }
+  q.textContent='Inside Tapas';
+  const setup=document.createElement('div');setup.className='pay';setup.style.color='var(--ink)';
+  setup.textContent=SETUP;
+  app.appendChild(setup);
+  const brief=document.createElement('div');brief.className='brief';
+  brief.innerHTML='<div class="bk">Your brief</div><div class="bt"></div>';
+  brief.querySelector('.bt').textContent=BRIEF[me.arm];
+  app.appendChild(brief);
+  const pay=document.createElement('div');pay.className='pay';
+  pay.innerHTML='Both grow responsibly: <b>3 each</b>. You push while your colleague holds back: <b>5 for you, nothing for them</b>. Both push and the airline over-leverages: <b>1 each</b>.';
+  app.appendChild(pay);
+  const bar=document.createElement('div');bar.className='vsbar';
+  bar.innerHTML='<span class="rd" id="rdlbl">MONTH 1</span><span class="tot" id="totlbl">0 POINTS SO FAR</span>';
+  app.appendChild(bar);
+  const stage=document.createElement('div');stage.id='stage';
+  app.appendChild(stage);
+  app.appendChild(backBtn());
+
+  /* which results this phone has already read — per game, so a reset starts clean */
+  const ACK='m4tapas-ack-'+sch.seed;
+  let ack=0; try{ack=+localStorage.getItem(ACK)||0;}catch(_){}
+  const setAck=r=>{ack=r;try{localStorage.setItem(ACK,String(r));}catch(_){}tick();};
+  let shownKey='', posting=false;
+  function goBtn(label,r){
+    const b=document.createElement('button');b.className='go';b.type='button';b.textContent=label;
+    b.addEventListener('click',()=>setAck(r));
+    return b;
+  }
+  function buttonsUI(r,mine){
+    stage.innerHTML='';
+    const lead=document.createElement('div');lead.className='lbl';
+    lead.textContent='Month '+r+' — '+LEAD[me.arm][r===1?0:1]+'. What do you push for?';
+    stage.appendChild(lead);
+    const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
+    MOVES.forEach(o=>{
+      const b=document.createElement('button');b.className='opt'+(mine===o.m?' mine':'');
+      b.innerHTML='<b>'+o.n+'</b><span class="def">'+o.d+'</span>';
+      b.addEventListener('click',()=>{
+        if(posting)return;
+        posting=true;
+        say('m|'+r+'|'+voter+'|'+o.m)
+          .then(()=>{posting=false;st.textContent='Sent. Waiting for your colleague — you can change your mind until they’ve played.';
+            ch.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));b.classList.add('mine');})
+          .catch(code=>{posting=false;st.textContent=failMsg(code);});
+      });
+      ch.appendChild(b);
+    });
+    stage.appendChild(ch);
+  }
+  function resultUI(r,mine,theirs){
+    stage.innerHTML='';
+    const pts=PAY[mine][theirs];
+    const card=document.createElement('div');card.className='bigcard';
+    card.innerHTML='<div class="head '+(theirs==='c'?'good':'bad')+'">Your colleague '+DID[theirs]+'</div>'+
+      '<div class="pts">'+pts+'</div>'+
+      '<div class="sub">'+(pts===1?'point':'points')+' for you this month — you '+DID[mine]+'</div>';
+    stage.appendChild(card);
+    stage.appendChild(goBtn(r<sch.rounds?'On to month '+(r+1):'Done',r));
+  }
+  function byeUI(r){
+    stage.innerHTML='';
+    const lead=document.createElement('div');lead.className='lbl';lead.style.marginBottom='8px';
+    lead.textContent='Month '+r+' — sitting this one out';
+    stage.appendChild(lead);
+    const w=document.createElement('div');w.className='waitcard';
+    w.innerHTML='Odd numbers this month — no colleague is free. You’re back next month.';
+    stage.appendChild(w);
+    stage.appendChild(goBtn(r<sch.rounds?'On to month '+(r+1):'Done',r));
+  }
+  function endUI(total){
+    stage.innerHTML='';
+    const card=document.createElement('div');card.className='bigcard';
+    card.innerHTML='<div class="head">The board has moved on</div><div class="pts">'+total+'</div>'+
+      '<div class="sub">points over '+sch.rounds+' months. Look up — the whole room is about to go on the big screen.</div>';
+    stage.appendChild(card);
+  }
+  function tick(){
+    answers().then(lines=>{
+      const p=S.parse(lines);
+      let total=0, cur=0;
+      for(let r=1;r<=sch.rounds;r++){
+        const o=me.mate[r], mv=p.moves[r]||{};
+        if(o&&mv[voter]&&mv[o])total+=PAY[mv[voter]][mv[o]];
+        if(!cur&&!(S.complete(sch,p.moves,voter,r)&&ack>=r))cur=r;
+      }
+      document.getElementById('totlbl').textContent=total+' POINT'+(total===1?'':'S')+' SO FAR';
+      document.getElementById('rdlbl').textContent=cur?'MONTH '+cur:'ALL MONTHS PLAYED';  /* never the total: nobody is sure how long the board keeps asking */
+      let key;
+      if(!cur)key='end';
+      else{
+        const o=me.mate[cur], mv=p.moves[cur]||{};
+        if(!o)key='bye'+cur;
+        else if(mv[voter]&&mv[o])key='res'+cur;
+        else key='btn'+cur;
+      }
+      if(key===shownKey)return;
+      shownKey=key;st.textContent='';
+      if(key==='end')endUI(total);
+      else if(key.startsWith('bye'))byeUI(cur);
+      else if(key.startsWith('res')){const mv=p.moves[cur];resultUI(cur,mv[voter],mv[me.mate[cur]]);}
+      else buttonsUI(cur,(p.moves[cur]||{})[voter]||null);
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2000);tick();
+}
+</script>
+</body></html>
