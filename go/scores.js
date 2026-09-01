@@ -16,6 +16,9 @@
    Scoring kinds:
      consensus  — the common-knowledge rule: a question's top answer must
                   reach the threshold share; everyone in that group scores.
+                  With maxPoints set, a name's matched questions scale to
+                  that ceiling (15 matches = 5 points, rounded); with
+                  points set, each match pays that flat amount.
      twothirds  — closest guess(es) to 2/3 of the average win.
      invest     — "name|round|i-or-d" lines; +$5 a round when the round's
                   investment rate clears 90%, −$10 when it doesn't, $0 out.
@@ -57,7 +60,7 @@ const GT_SCORES = (() => {
       id: 'm5',
       title: 'Coordination Games',
       events: [
-        { key: 'quiz', label: 'Quiz', kind: 'consensus', threshold: 0.9, points: 1,
+        { key: 'quiz', label: 'Quiz', kind: 'consensus', threshold: 0.9, maxPoints: 5,
           rooms: [
             { id: 'm5-k1', type: 'c' }, { id: 'm5-k2', type: 't' }, { id: 'm5-k3', type: 'c' },
             { id: 'm5-k4', type: 'c' }, { id: 'm5-k5', type: 't' }, { id: 'm5-k6', type: 't' },
@@ -66,7 +69,9 @@ const GT_SCORES = (() => {
             { id: 'm5-k13', type: 't' }, { id: 'm5-k14', type: 'c' }, { id: 'm5-k15', type: 'c' },
           ] },
         { key: 'twothirds', label: 'Two-thirds', kind: 'twothirds', room: 'm5-twothirds', winPoints: 5 },
-        { key: 'invest', label: 'Investment', kind: 'invest', room: 'm5-invest', floorZero: false },
+        /* the investment game (m5-invest) is deliberately unscored: it is a
+           whole-room trust game, and the module's ten points are already
+           spoken for by its two skill games */
       ],
     },
   ];
@@ -113,6 +118,7 @@ const GT_SCORES = (() => {
 
   async function scoreConsensus(ev, claims, tally) {
     /* a name scores a question at most once, however many devices it has */
+    const matches = new Map(); /* normalized name -> {name, n} */
     for (const room of ev.rooms) {
       let perVoter; /* voter -> normalized answer */
       if (room.type === 'c') {
@@ -133,10 +139,16 @@ const GT_SCORES = (() => {
         const name = claims.get(v);
         if (name && a === top && !scoredNames.has(norm(name))) {
           scoredNames.add(norm(name));
-          addPoints(tally, name, ev.key, ev.points);
+          const m = matches.get(norm(name)) || { name, n: 0 };
+          m.n++;
+          matches.set(norm(name), m);
         }
       });
     }
+    matches.forEach(m => {
+      const pts = ev.maxPoints ? Math.round(m.n / ev.rooms.length * ev.maxPoints) : m.n * ev.points;
+      if (pts > 0) addPoints(tally, m.name, ev.key, pts);
+    });
   }
 
   async function scoreTwothirds(ev, claims, tally) {
