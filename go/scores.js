@@ -174,7 +174,7 @@ const GT_SCORES = (() => {
     const d = await j('/p/' + ev.room + '/answers');
     const players = new Map();
     (d.answers || []).forEach(t => {
-      const m = String(t).match(/^(.{1,40}?)\s*\|\s*([1-4])\s*\|\s*([id])$/i);
+      const m = String(t).match(/^(.{1,40}?)\s*\|\s*([1-8])\s*\|\s*([id])$/i);
       if (!m) return;
       const key = norm(m[1]);
       if (!players.has(key)) players.set(key, { name: m[1].trim(), rounds: ['', '', '', ''] });
