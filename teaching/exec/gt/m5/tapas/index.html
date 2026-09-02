@@ -8,8 +8,9 @@
    (?g=bos, a battle of the sexes) and the final meeting (?g=chicken).
    Each phone is put on one side, RRPF or Tapas, from its own voter id, so
    the room splits roughly in half with nobody assigning seats. Everyone
-   votes in round 1; the deck posts a "::open|2" marker after the two
-   volunteer has spoken and round 2 opens on every phone. A vote can be
+   votes in round 1; for the final meeting the deck posts a "::open|2"
+   marker after the volunteer has spoken and round 2 opens on every
+   phone. The shape of the deal is a single vote taken after its volunteer. A vote can be
    changed until the big screen reveals it. Anonymous, unscored.
    Wire (rooms m5-bos / m5-chicken): "v|<voter>|<r-or-t>|<round>|<a-or-b>". */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -49,7 +50,7 @@ button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)
 const API='https://gt-poll.rlamare.workers.dev';
 /* every word below is Ryan's to redline */
 const GAMES={
-  bos:{room:'m5-bos',title:'Tapas: the shape of the deal',
+  bos:{room:'m5-bos',title:'Tapas: the shape of the deal',rounds:1,
     brief:{r:'Both sides want this deal. The version you push for: the terms fixed for the whole deal.',
            t:'Both sides want this deal. The version you push for: the freedom to reshape the deal later as your fleet plans change.'},
     rule:'If both sides land on the same version, you sign it. If not, there is no deal.',
@@ -98,7 +99,7 @@ if(!g){
     if(key===shown)return; shown=key;
     stage.innerHTML='';
     const lead=document.createElement('div');lead.className='lbl';lead.style.margin='6px 0 8px';
-    lead.textContent=round===1?'Round 1 — what do you push for?':'Round 2 — after the volunteer. What do you push for now?';
+    lead.textContent=g.rounds===1?'After the volunteer — what do you push for?':(round===1?'Round 1 — what do you push for?':'Round 2 — after the volunteer. What do you push for now?');
     stage.appendChild(lead);
     const ch=document.createElement('div');ch.className='choices';
     g.opts.forEach(o=>{
@@ -106,7 +107,7 @@ if(!g){
       b.addEventListener('click',()=>{
         say(g.room,'v|'+voter+'|'+side+'|'+round+'|'+o.k).then(()=>{
           mine[round]=o.k;save();shown='';ui();
-          st.innerHTML='<b>Sent.</b> '+(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.');
+          st.innerHTML='<b>Sent.</b> '+(g.rounds===1?'You can change it until the big screen reveals the vote.':(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.'));
         }).catch(code=>{st.textContent=failMsg(code);});
       });
       ch.appendChild(b);
@@ -116,7 +117,7 @@ if(!g){
   function tick(){
     fetch(API+'/p/'+g.room+'/answers').then(r=>r.json()).then(d=>{
       const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
-      const nr=open2?2:1;
+      const nr=(open2&&g.rounds!==1)?2:1;
       if(nr!==round){round=nr;st.textContent='';}
       ui();
     }).catch(()=>{ui();});

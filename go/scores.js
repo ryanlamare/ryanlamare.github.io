@@ -90,7 +90,7 @@ const GT_SCORES = (() => {
       id: 'm5',
       title: 'Coordination Games',
       events: [
-        { key: 'quiz', label: 'Quiz', kind: 'consensus', threshold: 0.9, maxPoints: 5,
+        { key: 'quiz', label: 'Quiz', kind: 'consensus', threshold: 0.8, maxPoints: 5,
           rooms: [
             { id: 'm5-k1', type: 'c' }, { id: 'm5-k2', type: 't' }, { id: 'm5-k3', type: 'c' },
             { id: 'm5-k4', type: 'c' }, { id: 'm5-k5', type: 't' }, { id: 'm5-k6', type: 't' },
@@ -102,6 +102,17 @@ const GT_SCORES = (() => {
         /* the investment game (m5-invest) is deliberately unscored: it is a
            whole-room trust game, and the module's ten points are already
            spoken for by its two skill games */
+      ],
+    },
+    {
+      id: 'm6',
+      title: 'Mixed Strategies',
+      events: [
+        /* the penalty shootout: whoever scored more goals as the kicker in
+           their pair (eight kicks each) takes 5; a dead heat pays nobody.
+           This is the programme's five-point module. Rock, paper, scissors
+           (m6-rps) is played for the pattern it leaves, not for points. */
+        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', winPoints: 5 },
       ],
     },
   ];
@@ -119,9 +130,34 @@ const GT_SCORES = (() => {
     { id: 'm3-engine', label: 'The engine game · Module 3' },
     { id: 'm4-prices', label: 'Price Wars · Module 4' },
     { id: 'm5-invest', label: 'The investment game · Module 5' },
+    { id: 'm6-pk', label: 'The penalty shootout · Module 6' },
+    { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
+
+  /* answers that mean the same thing count together: accents and punctuation
+   dropped, a leading "the" ignored, digit-only answers compared without
+   spaces ("50 - 50" is "50/50"), and a shorter answer joins a longer one
+   that contains it as whole words ("Kelce" joins "Travis Kelce") */
+  function fuzzyKey(t){
+  let s=String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  s=s.replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  s=s.replace(/^(the|a|an) /,'');
+  if(/^[\d\s]+$/.test(s))s=s.replace(/\s/g,'');
+  return s;
+}
+  function fuzzyGroups(counts){
+  const keys=[...counts.keys()].sort((a,b)=>counts.get(b)-counts.get(a)||a.length-b.length);
+  const groupOf=new Map(), reps=[];
+  const contains=(a,b)=>a===b||(' '+a+' ').includes(' '+b+' ');
+  keys.forEach(k=>{
+    const rep=reps.find(r=>contains(r,k)||contains(k,r));
+    if(rep)groupOf.set(k,rep);else{reps.push(k);groupOf.set(k,k);}
+  });
+  return groupOf;
+}
+
   const j = url => fetch(API + url).then(r => r.json());
 
   /* voter uuid -> display name, later claims overriding earlier ones */
@@ -158,7 +194,12 @@ const GT_SCORES = (() => {
         perVoter = new Map(Object.entries(d.votes || {}).map(([v, o]) => [v, 'o' + o]));
       } else {
         const d = await j('/p/' + room.id + '/entries');
-        perVoter = new Map([...latestPerVoter(d.entries)].map(([v, t]) => [v, norm(t)]).filter(([, t]) => t));
+        perVoter = new Map([...latestPerVoter(d.entries)].map(([v, t]) => [v, fuzzyKey(t)]).filter(([, t]) => t));
+        /* spellings that mean the same answer count as one (see fuzzyKey) */
+        const raw = new Map();
+        perVoter.forEach(a => raw.set(a, (raw.get(a) || 0) + 1));
+        const groupOf = fuzzyGroups(raw);
+        perVoter = new Map([...perVoter].map(([v, a]) => [v, groupOf.get(a)]));
       }
       if (!perVoter.size) continue;
       const counts = new Map();
@@ -259,6 +300,41 @@ const GT_SCORES = (() => {
       if (!byPair.has(k)) byPair.set(k, p[0]);
     });
     byPair.forEach(winner => addPoints(tally, winner, ev.key, 5));
+  }
+
+  /* the penalty shootout: "A|B|n|seat|l-or-r" lines, A kicking 1-8 and B
+     kicking 9-16; whether a kick went in is the same hash draw the phones
+     use (MUST match m6/game/ and the m6 deck), against the real success
+     rates; more goals as the kicker takes winPoints */
+  const PK_RATE = { ll: 58, lr: 95, rl: 93, rr: 70 };
+  function h01(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
+  const pkGoal = (key, n, kick, dive) => h01(key + '|' + n + '|' + kick + '|' + dive) < PK_RATE[kick + dive] / 100;
+  async function scoreShootout(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const latest = new Map(); /* pair|n|seat -> move */
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p.length !== 5 || !p[0] || !p[1] || !/^\d{1,2}$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[lr]$/.test(p[4])) return;
+      const key = [norm(p[0]), norm(p[1])].sort().join('~');
+      latest.set(key + '|' + p[2] + '|' + p[3], { A: p[0], B: p[1], key, n: +p[2], seat: p[3], x: p[4] });
+    });
+    const pairs = new Map();
+    latest.forEach(m => {
+      if (!pairs.has(m.key)) pairs.set(m.key, { A: m.A, B: m.B, kicks: {} });
+      const pr = pairs.get(m.key);
+      pr.kicks[m.n] = pr.kicks[m.n] || {};
+      pr.kicks[m.n][m.seat] = m.x;
+    });
+    pairs.forEach(pr => {
+      let gA = 0, gB = 0;
+      for (let n = 1; n <= 16; n++) {
+        const k = pr.kicks[n]; if (!k || !k.a || !k.b) continue;
+        const ks = n <= 8 ? 'a' : 'b', kick = k[ks], dive = k[ks === 'a' ? 'b' : 'a'];
+        if (pkGoal([norm(pr.A), norm(pr.B)].sort().join('~'), n, kick, dive)) { if (ks === 'a') gA++; else gB++; }
+      }
+      if (gA > gB) addPoints(tally, pr.A, ev.key, ev.winPoints);
+      else if (gB > gA) addPoints(tally, pr.B, ev.key, ev.winPoints);
+    });
   }
 
   /* the median dog: spans from the stroke data (bbox width, exactly as
@@ -406,6 +482,7 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'mediandog') await scoreDog(ev, claims, tally);
         else if (ev.kind === 'enginegame') await scoreEngine(ev, claims, tally);
         else if (ev.kind === 'pricewars') await scorePricewars(ev, claims, tally);
+        else if (ev.kind === 'shootout') await scoreShootout(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -443,6 +520,15 @@ const GT_SCORES = (() => {
         (p[2] === '10' ? ' — it ran to £1,000' : ' — ' + (took ? 'you' : 'they') + ' took £' + (+p[2] * 100) + ' at turn ' + p[2]);
     }
     if (id === 'm2-lastcard') return norm(p[0]) === nkey ? 'took the last card against ' + p[1] : 'played ' + p[0] + ' — they took the last card';
+    if (id === 'm6-pk' || id === 'm6-rps') {
+      if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
+      const me = (norm(p[0]) === nkey) === (p[3] === 'a');
+      if (!me) return null;
+      const W = { l: 'left', r: 'right' }, T = { r: 'rock', p: 'paper', s: 'scissors' };
+      if (id === 'm6-rps') return 'throw ' + p[2] + ': ' + (T[p[4]] || p[4]);
+      const kicking = (+p[2] <= 8) === (p[3] === 'a');
+      return 'kick ' + p[2] + ': ' + (kicking ? 'shot ' : 'dived ') + (W[p[4]] || p[4]);
+    }
     if (id === 'm2-tapasguess') return 'guessed ' + (+p[1]).toLocaleString('en-GB') + ' (the answer: 755,476)';
     if (id === 'm1-av') {
       if (p[1] === 'o') return 'offered to keep $' + p[2];
@@ -510,7 +596,7 @@ const GT_SCORES = (() => {
             });
             mine = [...latest.values()];
           }
-          if (mine.length) items.push({ id: g.id, q: g.label, answer: mine.map(t => gameLine(g.id, t, nkey)).join(' · '), scored: scoring.has(g.id) });
+          if (mine.length) items.push({ id: g.id, q: g.label, answer: mine.map(t => gameLine(g.id, t, nkey)).filter(Boolean).join(' · '), scored: scoring.has(g.id) });
         } catch (_) {}
       }
     }

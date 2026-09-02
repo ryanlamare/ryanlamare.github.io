@@ -1,0 +1,372 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 6 · Games</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the two Module 6 games, played in pairs from two
+   phones at the pair's own pace (no rounds to open from the front):
+
+     ?g=pk   the penalty shootout — 16 kicks, the first kicker takes 1–8
+             and keeps goal for 9–16. Both phones choose left or right at
+             the same time; whether the ball goes in is a draw against the
+             real success rates (kicker left / goalie left 58%, left/right
+             95%, right/left 93%, right/right 70%). The draw is a hash of
+             the pair, the kick and both choices, so both phones and the
+             big screen land on the same result without a server ruling.
+     ?g=rps  rock, paper, scissors — 10 throws, nothing random at all.
+
+   Wire, rooms m6-pk / m6-rps, one line per action, the first kicker's
+   name always first: join "A|B|0|a|j"; a choice "A|B|n|seat|x" where
+   x is l or r (kicks) or r, p, s (throws). Latest line per pair, kick
+   and seat wins until the other seat has played. Names come from the
+   shared gt-name and are claimed into gt-names for the points system.
+   ?room=<id> plays into a scratch room (rehearsals). */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer;text-decoration:none}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+button.opt:disabled{opacity:.55;cursor:default}
+.choices{display:flex;flex-direction:column;gap:11px}
+.bigrow{display:flex;gap:12px}
+.bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:30px;padding:26px 10px;letter-spacing:.02em}
+.bigrow.three button.opt{font-size:20px;padding:22px 6px}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.vsbar{border:2.5px solid var(--ink);background:var(--card);padding:12px 16px;display:flex;
+  justify-content:space-between;align-items:baseline;gap:10px}
+.vsbar .side{font-weight:700;font-size:15px}
+.vsbar .side.me{color:var(--teal)} .vsbar .side.them{color:var(--terracotta)}
+.vsbar .rd{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+.role{font-family:var(--display);font-weight:900;font-size:26px;line-height:1;color:var(--ink);margin:4px 0 2px}
+.role.keep{color:var(--terracotta)} .role.kick{color:var(--teal)}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center}
+.bigcard .head{font-family:var(--display);font-weight:900;font-size:40px;line-height:1}
+.bigcard .head.good{color:var(--teal)} .bigcard .head.bad{color:var(--terracotta)} .bigcard .head.draw{color:var(--muted)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px}
+.score{display:flex;justify-content:center;gap:26px;margin-top:10px;font-weight:700;font-size:15px}
+.score .me{color:var(--teal)} .score .them{color:var(--terracotta)}
+.score b{font-family:var(--display);font-weight:900;font-size:26px;line-height:1}
+button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 6</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+const qs=new URLSearchParams(location.search);
+const GAMES={
+  pk:{room:'m6-pk',title:'The penalty shootout',n:16,codes:/^[lr]$/,
+      opts:[{k:'l',n:'LEFT'},{k:'r',n:'RIGHT'}],
+      pairLead:'Pair up with the person next to you',
+      seats:['I’ll kick first — I’ll pick my partner','My partner picks me'],
+      wait:'Keep this page open. The shootout starts when your partner picks you.'},
+  rps:{room:'m6-rps',title:'Rock, paper, scissors',n:10,codes:/^[rps]$/,
+      opts:[{k:'r',n:'ROCK'},{k:'p',n:'PAPER'},{k:'s',n:'SCISSORS'}],
+      pairLead:'Same partner as the shootout, or pair up again',
+      seats:['I’ll pick my partner','My partner picks me'],
+      wait:'Keep this page open. The game starts when your partner picks you.'}
+};
+/* the real penalty success rates, kicker side then goalie side (%) */
+const PK={ll:58,lr:95,rl:93,rr:70};
+/* the same hash on every phone and on the big screen — MUST match the
+   deck's copy and go/scores.js */
+function h01(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
+const isGoal=(key,n,kick,dive)=>h01(key+'|'+n+'|'+kick+'|'+dive)<PK[kick+dive]/100;
+/* r beats s, s beats p, p beats r: 1 = first wins, -1 = second wins, 0 draw */
+const rpsWin=(a,b)=>a===b?0:((a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r')?1:-1);
+
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const G=GAMES[qs.get('g')];
+const ROOM=G?(qs.get('room')||G.room):null;
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+let sayN=0;
+function say(line){
+  sayN++;
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=()=>fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+function parseLines(lines){
+  const moves=[];
+  lines.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());
+    if(p.length===5&&p[0]&&p[1]&&/^\d{1,2}$/.test(p[2])&&/^[ab]$/.test(p[3])&&(p[4]==='j'||G.codes.test(p[4])))
+      moves.push({A:p[0],B:p[1],n:+p[2],seat:p[3],x:p[4]});
+  });
+  return moves;
+}
+
+function render(){
+  stopPolling();
+  st.textContent='';
+  if(!G){
+    q.textContent='Which game is on the screen?';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=rps">Rock, paper, scissors</a></div>';
+    return;
+  }
+  if(!name){renderName('Who are you?',n=>{
+    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();render();
+  });return;}
+  /* rejoin a pair this phone already sat in (the shootout pair carries into RPS) */
+  let saved=null;
+  try{saved=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||localStorage.getItem('m6-pair-'+G.room)||'null');}catch(_){}
+  if(saved&&saved.A&&saved.B&&(norm(saved.seat==='a'?saved.A:saved.B)===norm(name))){
+    if(saved.seat==='a'&&!saved.joined){say(saved.A+'|'+saved.B+'|0|a|j').catch(()=>{});}
+    return renderPlay(saved.A,saved.B,saved.seat);
+  }
+  q.textContent=G.title;
+  app.innerHTML='';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const lead=document.createElement('div');lead.className='lbl';lead.style.marginTop='6px';
+  lead.textContent=G.pairLead;
+  app.appendChild(lead);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
+  [[G.seats[0],'a'],[G.seats[1],'b']].forEach(([label,seat])=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.style.borderColor=seat==='a'?'var(--teal)':'var(--terracotta)';
+    b.addEventListener('click',()=>seat==='a'?renderPickPartner():renderWaitPick());
+    ch.appendChild(b);
+  });
+  app.appendChild(ch);
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>done(clean(n)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function backBtn(){
+  const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
+  b.addEventListener('click',()=>{try{localStorage.removeItem('m6-pair-'+ROOM);}catch(_){}render();});
+  return b;
+}
+function renderPickPartner(){
+  renderName('Who is your partner?',partner=>{
+    if(norm(partner)===norm(name)){st.textContent='That’s you — pick the person you’re playing with.';return;}
+    st.textContent='Pairing up…';
+    say(name+'|'+partner+'|0|a|j')
+      .then(()=>{st.textContent='';renderPlay(name,partner,'a',true);})
+      .catch(code=>{st.textContent=failMsg(code);});
+  });
+}
+function renderWaitPick(){
+  stopPolling();
+  q.textContent='Waiting for your partner';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>'+esc(G.wait);
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
+  hint.textContent='They need to pick exactly “'+name+'”';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    answers().then(lines=>{
+      const mine=parseLines(lines).filter(m=>m.x==='j'&&norm(m.B)===norm(name));
+      if(mine.length){const m=mine[mine.length-1];renderPlay(m.A,m.B,'b',true);}
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2000);check();
+}
+
+function renderPlay(A,B,seat,joined){
+  stopPolling();
+  try{localStorage.setItem('m6-pair-'+ROOM,JSON.stringify({A,B,seat,joined:!!joined}));}catch(_){}
+  const me=seat==='a'?A:B, them=seat==='a'?B:A;
+  const key=pairKey(A,B);
+  const isPK=G===GAMES.pk;
+  q.textContent=G.title;
+  app.innerHTML='';
+  const bar=document.createElement('div');bar.className='vsbar';
+  bar.innerHTML='<span class="side me">'+esc(me)+'</span><span class="rd" id="rdlbl"></span><span class="side them">vs '+esc(them)+'</span>';
+  app.appendChild(bar);
+  const stage=document.createElement('div');stage.style.marginTop='12px';
+  app.appendChild(stage);
+  app.appendChild(backBtn());
+
+  /* which kick or throw the pair is on: the first n with a seat missing */
+  let shownKey='', posting=false, ackN=0;
+  try{ackN=+(localStorage.getItem('m6-ack-'+ROOM+'-'+key)||0);}catch(_){}
+  const kickerSeat=n=>n<=G.n/2?'a':'b';
+  function state(moves){
+    const per={};
+    moves.filter(m=>m.x!=='j'&&pairKey(m.A,m.B)===key).forEach(m=>{per[m.n]=per[m.n]||{};per[m.n][m.seat]=m.x;});
+    let n=1;while(n<=G.n&&per[n]&&per[n].a&&per[n].b)n++;
+    return {per,n};
+  }
+  function tally(per,upto){
+    let mine=0,theirs=0,draws=0;
+    for(let n=1;n<=upto;n++){const k=per[n];if(!k||!k.a||!k.b)continue;
+      if(isPK){
+        const ks=kickerSeat(n), kick=k[ks], dive=k[ks==='a'?'b':'a'];
+        if(isGoal(key,n,kick,dive)){if(ks===seat)mine++;else theirs++;}
+      }else{
+        const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
+        if(w>0)mine++;else if(w<0)theirs++;else draws++;
+      }}
+    return {mine,theirs,draws};
+  }
+  function scoreRow(t){
+    return '<div class="score"><span class="me"><b>'+t.mine+'</b> you</span>'+(isPK?'':'<span><b>'+t.draws+'</b> drawn</span>')+'<span class="them"><b>'+t.theirs+'</b> '+esc(them)+'</span></div>';
+  }
+  function choiceUI(n,per){
+    const mine=per[n]&&per[n][seat];
+    stage.innerHTML='';
+    const lead=document.createElement('div');lead.className='lbl';
+    lead.textContent=(isPK?'Kick ':'Throw ')+n+' of '+G.n;
+    stage.appendChild(lead);
+    if(isPK){
+      const r=document.createElement('div');r.className='role '+(kickerSeat(n)===seat?'kick':'keep');
+      r.textContent=kickerSeat(n)===seat?'You kick':'You’re in goal';
+      stage.appendChild(r);
+      const hint=document.createElement('div');hint.className='status';
+      hint.textContent=kickerSeat(n)===seat?'Which side do you shoot?':'Which side do you dive?';
+      stage.appendChild(hint);
+    }
+    const row=document.createElement('div');row.className='bigrow'+(G.opts.length>2?' three':'');row.style.marginTop='10px';
+    G.opts.forEach(o=>{
+      const b=document.createElement('button');b.className='opt'+(mine===o.k?' mine':'');b.textContent=o.n;
+      b.addEventListener('click',()=>{
+        if(posting)return;
+        posting=true;
+        say(A+'|'+B+'|'+n+'|'+seat+'|'+o.k)
+          .then(()=>{posting=false;st.textContent='Sent. Waiting for '+them+'…';
+            row.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));b.classList.add('mine');})
+          .catch(code=>{posting=false;st.textContent=failMsg(code);});
+      });
+      row.appendChild(b);
+    });
+    stage.appendChild(row);
+    if(n>1){const t=tally(per,n-1);const sc=document.createElement('div');sc.innerHTML=scoreRow(t);stage.appendChild(sc);}
+  }
+  function resultUI(n,per){
+    const k=per[n];
+    stage.innerHTML='';
+    const card=document.createElement('div');card.className='bigcard';
+    let head='',cls='',sub='';
+    const label=c=>G.opts.find(o=>o.k===c).n.toLowerCase();
+    if(isPK){
+      const ks=kickerSeat(n), kick=k[ks], dive=k[ks==='a'?'b':'a'], goal=isGoal(key,n,kick,dive);
+      const iKick=ks===seat;
+      head=goal?'GOAL':'SAVED';
+      cls=(goal===iKick)?'good':'bad';
+      sub=(iKick?'You shot '+label(kick)+', '+them+' dived '+label(dive):them+' shot '+label(kick)+', you dived '+label(dive))+(kick===dive?' — the same way':' — the other way');
+    }else{
+      const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
+      head=w>0?'YOU WIN':(w<0?'THEY WIN':'DRAW');cls=w>0?'good':(w<0?'bad':'draw');
+      sub='You threw '+label(k[seat])+', '+them+' threw '+label(k[seat==='a'?'b':'a']);
+    }
+    card.innerHTML='<div class="head '+cls+'">'+head+'</div><div class="sub">'+esc(sub)+'</div>'+scoreRow(tally(per,n));
+    stage.appendChild(card);
+    const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
+    btn.textContent=n<G.n?('On to '+(isPK?'kick ':'throw ')+(n+1)):'See the final score';
+    btn.addEventListener('click',()=>{ackN=n;try{localStorage.setItem('m6-ack-'+ROOM+'-'+key,String(n));}catch(_){}shownKey='';tick();});
+    stage.appendChild(btn);
+  }
+  function finalUI(per){
+    const t=tally(per,G.n);
+    stage.innerHTML='';
+    const card=document.createElement('div');card.className='bigcard';
+    const cls=t.mine>t.theirs?'good':(t.mine<t.theirs?'bad':'draw');
+    card.innerHTML='<div class="head '+cls+'">'+(t.mine>t.theirs?'YOU WIN':(t.mine<t.theirs?'THEY WIN':'ALL SQUARE'))+'</div>'+
+      '<div class="sub">'+(isPK?'Goals scored as the kicker, eight kicks each':'Ten throws')+'</div>'+scoreRow(t);
+    stage.appendChild(card);
+    const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
+    note.textContent='All done. Look up — the whole room is about to go on the big screen.';
+    stage.appendChild(note);
+  }
+  function tick(){
+    answers().then(lines=>{
+      const s=state(parseLines(lines));
+      document.getElementById('rdlbl').textContent=(isPK?'KICK ':'THROW ')+Math.min(s.n,G.n)+' OF '+G.n;
+      /* show the last completed kick's result until it is acknowledged */
+      const last=s.n-1;
+      let k;
+      if(last>=1&&ackN<last)k='res:'+last;
+      else if(s.n>G.n)k='final';
+      else k='pick:'+s.n+':'+((s.per[s.n]&&s.per[s.n][seat])||'');
+      if(k===shownKey)return;shownKey=k;st.textContent='';
+      if(k.startsWith('res:'))resultUI(last,s.per);
+      else if(k==='final')finalUI(s.per);
+      else choiceUI(s.n,s.per);
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2000);tick();
+}
+</script>
+</body></html>

@@ -5,7 +5,28 @@
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
 <style>
-/* penalty-kick mixed strategy widget */
+/* Module-6-specific widgets (shared components live in deck.css) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.sidefig{flex:none;height:400px;width:auto;overflow:visible}
+.sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
+/* clips beside bullets, click-to-load (keeps YouTube's title off screen) */
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:560px;height:315px;border:0;display:block}
+.clipcover{width:560px;height:315px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover .todo{font-weight:600;font-size:12px;letter-spacing:.1em;color:color-mix(in srgb, var(--paper) 55%, transparent)}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+/* three small clip chips stacked beside the psychology bullets */
+.clipstack{flex:none;display:flex;flex-direction:column;gap:12px;width:400px}
+.clipstack .clipframe iframe,.clipstack .clipcover{width:400px;height:112px;gap:12px;flex-direction:row}
+.clipstack .clipcover .bigplay{width:44px;height:44px}
+.clipstack .clipcover .bigplay svg{width:16px;height:16px}
+/* the penalty-kick mixed strategy widget */
 .pkgrid{display:flex;gap:40px;align-items:center}
 .pkleft{flex:1;display:flex;flex-direction:column;gap:16px}
 .pkstat{display:flex;justify-content:space-between;align-items:baseline;border:2px solid var(--ink);background:var(--paper);padding:10px 18px}
@@ -16,28 +37,72 @@
 .pkslider{display:flex;flex-direction:column;gap:6px}
 .pkslider .plab{display:flex;justify-content:space-between;font-weight:600;font-size:16px;color:var(--muted)}
 .pkchart{background:var(--paper);border:2px solid var(--ink)}
+.pknote{font-weight:600;font-size:17px;line-height:1.3;color:var(--ink);min-height:2.6em}
+.pknote b{color:var(--red)}
+/* the two live boards: a bar of counters and buttons, then big stat tiles */
+.board{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:18px}
+.bbar{display:flex;align-items:center;gap:30px;justify-content:center}
+.stats{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:18px}
+.stat{border:2.5px solid var(--ink);background:var(--paper-soft);padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:6px;position:relative}
+.stat .sl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.stat .sv{font-family:var(--display);font-weight:900;font-size:76px;line-height:.9;color:var(--ink)}
+.stat .sv small{font-size:34px;color:var(--muted);margin-left:6px}
+.stat .sb{font-weight:600;font-size:17px;line-height:1.3;color:var(--ink)}
+.stat .sb b{color:var(--red)}
+.stat .rule{position:absolute;right:22px;top:16px;bottom:16px;width:8px;background:var(--rule)}
+.stat .rule i{position:absolute;left:0;width:8px;background:var(--red)}
+/* rock, paper, scissors: three bars against the one-third line */
+.rmix{flex:none;display:flex;flex-direction:column;gap:12px;border:2.5px solid var(--ink);background:var(--paper-soft);padding:18px 22px}
+.rmix .rl{display:grid;grid-template-columns:130px 1fr 80px;align-items:center;gap:14px}
+.rmix .rn{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:15px}
+.rmix .rb{position:relative;height:30px;background:var(--card);border:1.5px solid var(--ink)}
+.rmix .rb i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);width:0;transition:width .6s}
+.rmix .rb .third{position:absolute;top:-6px;bottom:-6px;left:33.3%;width:3px;background:var(--red)}
+.rmix .rp{font-family:var(--display);font-weight:900;font-size:28px;text-align:right}
+.rmix .rk{font-weight:600;font-size:14px;color:var(--muted);text-align:right}
+.rstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;flex:1}
+/* the module scoreboard: five rows, revealed fifth place first */
+.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 170px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+/* discussion prompts */
+.prompts{position:absolute;left:96px;right:96px;top:300px;display:flex;justify-content:center;gap:40px}
+.prompt2{flex:1;max-width:460px;border:2.5px solid var(--ink);background:var(--card);padding:26px 30px;font-weight:600;font-size:22px;line-height:1.35;color:var(--ink)}
+.prompt2 .pk{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--red);margin-bottom:10px}
 </style>
 </head><body>
 
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 6 — Mixed Strategies</h1>
 <p>Accessible text version. Each heading below is one slide, in order. Payoff matrices are described cell by cell.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 16: Title slide</h2><p>Mixed strategies. Sometimes it pays to be inconsistent or unpredictable. Module 6 of the Applied Game Theory executive programme.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 16: Mixing strategies</h2><p>Remember one of the paradoxes of strategic thinking, from way back in the first week — sometimes it pays to be inconsistent or unpredictable. Chomsky on Clinton's nuclear strategy in the 1990s: "It is 'beneficial' for our strategic posture if some elements may appear to be potentially 'out of control'". Nixon's madman theory in the 1960s: "I want them to believe I've reached the point where I might do anything". But let's go back even further to Machiavelli: "A very wise thing to simulate madness". Why might unpredictability be, in some cases, a preferable strategy? Think about a zero-sum game, where coordination is not preferable or possible.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 16: The penalty kick in soccer</h2><p>Penalty kicks involve two players — a kicker and a goalie. They face a simultaneous choice (in this case let's limit the choice to left or right). If the kicker shoots left, the goalie would always be best off by diving left. Conversely, if the kicker shoots left the kicker would always be best off by having the goalie dive right. Therefore, neither player is incentivized to coordinate strategies. How should a penalty kicker behave?</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 16: The psychology of penalties</h2><p>Penalties are often thought of as a psychological game. Neither side wants to reveal to the other which way he or she will go. The psychological trickery can result in situations like the linked clips. "I told the players I knew where they were going and it made them a bit nervous." And, most famously, the last clip. But can you play the penalty kick game ideally, ignoring psychology, when no coordination is possible and no strategy dominates another?</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 16: The penalty kick matrix</h2><p>The kicker's success percentage. Kicker left, goalie left: 58. Kicker left, goalie right: 95. Kicker right, goalie left: 93. Kicker right, goalie right: 70.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 16: No pure strategy works</h2><p>In this case, there is no (pure strategy) Nash equilibrium. If the kicker always chooses left, the goalie can choose left and drop the kicker's percentage to 58. If the kicker always chooses right, the goalie can choose right and drop the kicker's percentage to 70. Of the two, the kicker would prefer right-right to left-left, but can the kicker do better? Yes — by employing a mixed strategy and making it so that it doesn't matter which direction the goalie guesses!</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 16: The 50/50 coin flip</h2><p>What if the kicker alternated left/right strategies at a 50/50 rate (say the kicker decides to flip a coin just before the run-up to decide where to shoot)? If the goalie goes left, the kicker gets 75.5 percent odds of success. If the goalie goes right, the kicker gets 82.5 percent. So the worst option from playing a completely random strategy (50/50 split) is better than even the best pure strategy option (70 percent if you choose to purely kick right). But can the kicker do even better than this? Yes — by making it so that the kicker's odds are the same irrespective of whatever the goalie does. What if the kicker decided, "I'm going left with 40% likelihood and I'm going right with 60% likelihood?" Then the kicker's success rate is 79% if the goalie picks left, and 80% if the goalie picks right.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 16: Mix the kicker's strategy, interactive</h2><p>An interactive slider sets p, the share of kicks going left. Two readouts show the kicker's expected success if the goalie dives left (58p plus 93 times one minus p) and if the goalie dives right (95p plus 70 times one minus p), plotted as two crossing lines. A button jumps to the indifference point at p equals 38.3 percent, where both readouts equal 79.6.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 16: The kicker's optimal mixture</h2><p>Is there a mixture that the kicker can use to make the goalie completely indifferent about going left or right? Think about the goalie's expected success rate for each choice the kicker has, left (p) or right (1-p). If the goalie goes left, the expected utility is 58p plus 93(1-p), which is 93 minus 35p. If the goalie goes right, it is 95p plus 70(1-p), which is 70 plus 25p. Setting them equal: 93 minus 35p equals 70 plus 25p, so 23 equals 60p, and p equals 23/60, which is 38.3 percent. So the kicker should go left 38.3 percent of the time (and thus right 61.7 percent of the time). With this mixture, the expected payoff would be 79.6 against any strategy the goalie chooses.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 16: The goalie's mixture</h2><p>Okay, but what about the goalie? Think about the kicker's expected success rate for each choice the goalie has, left (p) or right (1-p). If the kicker goes left, the expected utility is 95 minus 37p. If the kicker goes right, it is 70 plus 23p. Setting them equal gives 25 equals 60p, so p equals 41.7 percent. So the goalie should go left 41.7 percent of the time, and right 58.3 percent of the time. At a kicker mixture of 38.3% left and a goalie mixture of 41.7% left, neither side can be made better off by changing its strategy — we have found our Nash equilibrium!</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 16: Real-life penalty kick strategies</h2><p>In real life, the probability of scoring a penalty kick goal is around 75-80%. In real life, kickers go left about 40% of the time (recall the optimal strategy would be 38.3%). In real life, goalies guess left about 42.4% of the time (recall the optimal strategy would be 41.7%). So, soccer players are game theorists even though they may not realize it!</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 16: Rock-paper-scissors and strategy</h2><p>Can strategic thinking be applied to a game like rock-paper-scissors? If so, can the strategic thinking in a game like this tell us anything about business strategies? Yes and yes! Let's first design a payoff matrix and solve out RPS.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 16: The RPS matrix</h2><p>Player 1 against Player 2, choices rock, paper, scissors. Ties on the diagonal: 0, 0. Each off-diagonal cell: plus 1 for the winner, minus 1 for the loser (paper beats rock, scissors beat paper, rock beats scissors).</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 16: Rock-paper-scissors, solved</h2><p>The best strategy is to mix with 1/3 probability of each option, for an average payoff of 0, which is better than the minimax outcome of minus 1 if each side plays a pure strategy. Since the game is symmetrical, both sides have identical strategies (1/3, 1/3, 1/3) which is the Nash equilibrium. And yet — nobody is really random! We fall into subconscious patterns even if we don't realize it, which makes the (1/3, 1/3, 1/3) strategy impossible.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 16: Mixed strategies in business</h2><p>The most obvious application of mixed strategies to the business world comes from organizational efforts to motivate compliance. Organizations and institutions want people to behave, but can't always monitor them. So, they introduce selective enforcement — aka a mixed strategy of enforcement (somewhere between 0% and 100% enforcement). Think about parking meters, speed limits, stop lights, etc. — the police employ "random" mixed enforcement strategies combined with excessive penalties to deter many criminal actions without actually monitoring those actions.</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 16: Company slot</h2><p>A dashed placeholder card marking swappable client material: where mixed or unpredictable strategies appear in the client's own market, such as pricing, audits, enforcement, and negotiations. Written per engagement.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 21: Title slide</h2><p>Mixed strategies. Sometimes it pays to be inconsistent or unpredictable. Module 6 of the Applied Game Theory programme for RRPF.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 21: Learning objectives</h2><p>Four numbered objectives: one, recognize games with no stable move, where the right strategy is to be unpredictable; two, play a penalty shootout and find out how the room really kicks; three, find the mix that leaves your rival nothing to exploit, without the algebra; four, spot where mixing pays in business, and why a good mixed strategy can look like a bad decision. Two chips name the games: the penalty shootout, and rock, paper, scissors.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 21: Mixing strategies</h2><p>Remember one of the paradoxes of strategic thinking, from way back in the first session — sometimes it pays to be inconsistent or unpredictable. Chomsky on Clinton's nuclear strategy in the 1990s: "It is 'beneficial' for our strategic posture if some elements may appear to be potentially 'out of control'". Nixon's madman theory in the 1960s: "I want them to believe I've reached the point where I might do anything". But let's go back even further to Machiavelli: "A very wise thing to simulate madness". Why might unpredictability be, in some cases, a preferable strategy? Think about a zero-sum game, where coordination is not preferable or possible.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 21: The penalty kick in soccer</h2><p>Penalty kicks involve two players — a kicker and a goalie. They face a simultaneous choice (in this case let's limit the choice to left or right). If the kicker shoots left, the goalie would always be best off by diving left. Conversely, if the kicker shoots left the kicker would always be best off by having the goalie dive right. Therefore, neither player is incentivized to coordinate strategies. How should a penalty kicker behave? On the right, a drawn goal with a goalkeeper in the middle, a kicker with the ball at the spot, and two dashed arrows to the left and right corners.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 21: The psychology of penalties</h2><p>Penalties are often thought of as a psychological game. Neither side wants to reveal to the other which way he or she will go. The psychological trickery can result in situations like the first two clips. "I told the players I knew where they were going and it made them a bit nervous." And, most famously, the third clip. But can you play the penalty kick game ideally, ignoring psychology, when no coordination is possible and no strategy dominates another? Three click-to-play clip chips sit on the right.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 21: Let's play: the penalty shootout</h2><p>The rules, one at a time: pair up with the person next to you, on your phones. Sixteen kicks — one of you kicks the first eight while the other keeps goal, then you swap. On every kick you both choose left or right at the same time, without seeing the other's choice. Whether the ball goes in is decided by the real odds in the table — the same ones professional kickers and keepers face. Whoever scores more goals as the kicker wins the pair, and five points. A QR code opens the game page. The odds table: kicker's success rate — kicker left and goalie left 58 percent; kicker left and goalie right 95; kicker right and goalie left 93; kicker right and goalie right 70.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 21: How the room kicked</h2><p>The live board, computed from every pair's kicks: counters for pairs in and kicks taken, then four stat tiles revealed one keypress at a time. Goals: the share of kicks that went in, against the real-life 75 to 80 percent. Kickers went left: the room's share, against the best mix of 38 percent and the real-life 40. Goalies dived left: the room's share, against 42 percent. Predictable? The share of kicks that went the same way as the kicker's previous kick, against the coin's 50 percent, and the longest run to one side. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 21: So how should a penalty kicker behave?</h2><p>In this case, there is no (pure strategy) Nash equilibrium. If the kicker always chooses left, the goalie can choose left and drop the kicker's percentage to 58. If the kicker always chooses right, the goalie can choose right and drop the kicker's percentage to 70. Of the two, the kicker would prefer right-right to left-left, but can the kicker do better? Yes — by employing a mixed strategy and making it so that it doesn't matter which direction the goalie guesses! The odds table sits small on the right.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 21: Mix the kicker's strategy, interactive</h2><p>An interactive slider sets p, the share of kicks going left. Two readouts show the kicker's expected success if the goalie dives left (58p plus 93 times one minus p) and if the goalie dives right (95p plus 70 times one minus p), plotted as two crossing lines. A button jumps to the indifference point at p equals 38.3 percent, where both readouts equal 79.6.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 21: Real-life penalty kick strategies</h2><p>In real life, the probability of scoring a penalty kick goal is around 75-80%. In real life, kickers go left about 40% of the time (recall the optimal strategy would be 38.3%). In real life, goalies guess left about 42.4% of the time (recall the optimal strategy would be 41.7%). So, soccer players are game theorists even though they may not realize it! A final reveal reads the room's own numbers from the shootout: how often this room's kickers and goalies went left.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 21: The kicker's mix, worked (a flex slide)</h2><p>Is there a mixture that the kicker can use to make the goalie completely indifferent about going left or right? Think about the goalie's expected success rate for each choice the kicker has, left (p) or right (1-p). If the goalie goes left, the expected utility is 58p plus 93(1-p), which is 93 minus 35p. If the goalie goes right, it is 95p plus 70(1-p), which is 70 plus 25p. Setting them equal: 93 minus 35p equals 70 plus 25p, so 23 equals 60p, and p equals 23/60, which is 38.3 percent. So the kicker should go left 38.3 percent of the time (and thus right 61.7 percent of the time). With this mixture, the expected payoff would be 79.6 against any strategy the goalie chooses.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 21: The goalie's mix, worked (a flex slide)</h2><p>Okay, but what about the goalie? Think about the kicker's expected success rate for each choice the goalie has, left (p) or right (1-p). If the kicker goes left, the expected utility is 95 minus 37p. If the kicker goes right, it is 70 plus 23p. Setting them equal gives 25 equals 60p, so p equals 41.7 percent. So the goalie should go left 41.7 percent of the time, and right 58.3 percent of the time. At a kicker mixture of 38.3% left and a goalie mixture of 41.7% left, neither side can be made better off by changing its strategy — we have found our Nash equilibrium!</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 21: Pete Carroll, game theorist?</h2><p>Super Bowl XLIX, February 2015. Seattle trail by four with 26 seconds left, second down on New England's one-yard line. Marshawn Lynch, the best short-yardage runner in football, is standing in the backfield, and everyone in the stadium expects the run. Seattle throw a quick slant. Malcolm Butler intercepts it, and the game is over. It was called the worst play call in Super Bowl history. Was it? A click-to-play clip of the play sits on the right.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 21: The worst call, or the worst draw?</h2><p>If Seattle run every time from the one, the defense only has to stop the run. A team that sometimes passes is harder to defend on every play, including the runs. The call was part of a mix, and the interception was the worst draw of it. So: do you judge your people on their decisions, or on their outcomes? On the right, a drawn goal line: seven defenders stacked against three attackers, a solid arrow for the run into the stack and a dashed red arrow for the pass over the top.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 21: Let's play rock, paper, scissors</h2><p>Can strategic thinking be applied to a game like rock-paper-scissors? Let's find out. The rules: same partner, on your phones — ten throws. Both of you throw at the same time; rock beats scissors, scissors beat paper, paper beats rock. No points for this one — we are playing it for the pattern it leaves behind. A QR code opens the game page.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 21: Nobody is really random</h2><p>The live board from the room's throws: three bars for the share of rock, paper and scissors against the one-third line, then three stat tiles revealed one keypress at a time — the room's opening throw, how often a player switched after losing a throw (a random player switches two times in three), and how often a player repeated after winning. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 21: Rock, paper, scissors and strategy</h2><p>The best strategy is to mix with 1/3 probability of each option, for an average payoff of 0, which is better than the minimax outcome of minus 1 if each side plays a pure strategy. Since the game is symmetrical, both sides have identical strategies (1/3, 1/3, 1/3) which is the Nash equilibrium. And yet — nobody is really random! We fall into subconscious patterns even if we don't realize it, which makes the (1/3, 1/3, 1/3) strategy impossible. The three-by-three matrix sits on the right: ties on the diagonal, plus one for the winner and minus one for the loser elsewhere.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 21: Mixed strategies in business</h2><p>The most obvious application of mixed strategies to the business world comes from organizational efforts to motivate compliance. Organizations and institutions want people to behave, but can't always monitor them. So, they introduce selective enforcement — aka a mixed strategy of enforcement (somewhere between 0% and 100% enforcement). Think about parking meters, speed limits, stop lights, etc. — the police employ "random" mixed enforcement strategies combined with excessive penalties to deter many criminal actions without actually monitoring those actions. On the right, a drawn row of ten cars with two picked out in red, labelled random checks.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 21: Unpredictability in your world</h2><p>A discussion slide. Where does it pay to be unpredictable in your business, and where does it cost you? Two prompts: the moves you would rather the other side could not predict; and the moves you need them to be able to predict.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 21: When there is no stable move</h2><p>The wrap-up. Today: when there is no stable move, mix, and don't let anyone read the pattern. A reveal asks: remember Ren's boot in Footloose — he won by committing, by accident. What does it take to make a commitment, a threat, or a promise believable on purpose? Closing chip: next session covers credibility, commitment, and strategic moves.</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 21: Top of the class</h2><p>The break scoreboard, computed live from the game rooms: the top five names, revealed fifth place first, one keypress at a time. Columns show each player's points from the shootout and a total that carries every earlier module. Top five only, never a full ranking; each participant can check their own running total privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
 </section>
 
 <div class="viewport"><div class="stage">
@@ -52,9 +117,22 @@
 
 <section class="slide content" data-i="1">
   <div class="kicker"><i></i>MODULE 6</div>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:1000px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Recognize games with no stable move, where the right strategy is to be unpredictable</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Play a penalty shootout and find out how the room really kicks</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Find the mix that leaves your rival nothing to exploit, without the algebra</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Spot where mixing pays in business, and why a good mixed strategy can look like a bad decision
+      <div class="rchips"><span class="rchip">THE PENALTY SHOOTOUT</span><span class="rchip">ROCK, PAPER, SCISSORS</span></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 6</div>
   <h2>Mixing strategies</h2>
   <ul class="bullets">
-    <li>Remember one of the paradoxes of strategic thinking, from way back in the first week &ndash; sometimes it pays to be inconsistent or unpredictable</li>
+    <li>Remember one of the paradoxes of strategic thinking, from way back in the first session &ndash; <b>sometimes it pays to be inconsistent or unpredictable</b></li>
     <li class="sub" data-step="1">Chomsky on Clinton&rsquo;s nuclear strategy in the 1990s: &ldquo;It is &lsquo;beneficial&rsquo; for our strategic posture if some elements may appear to be potentially &lsquo;out of control&rsquo;&rdquo;</li>
     <li class="sub" data-step="2">Nixon&rsquo;s madman theory in the 1960s: &ldquo;I want [them] to believe I&rsquo;ve reached the point where I might do anything&hellip;&rdquo;</li>
     <li class="sub" data-step="3">But let&rsquo;s go back even further to Machiavelli: &ldquo;A very wise thing to simulate madness&rdquo;</li>
@@ -63,93 +141,163 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="2">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The penalty kick in soccer</h2>
-  <ul class="bullets">
-    <li>Penalty kicks involve two players &ndash; a kicker and a goalie</li>
-    <li data-step="1">They face a simultaneous choice (in this case let&rsquo;s limit the choice to left or right)</li>
-    <li data-step="2">If the kicker shoots left, the goalie would always be best off by diving left</li>
-    <li data-step="3">Conversely, if the kicker shoots left the kicker would always be best off by having the goalie dive right</li>
-    <li data-step="4">Therefore, neither player is incentivized to coordinate strategies</li>
-    <li data-step="5"><b>How should a penalty kicker behave?</b></li>
-  </ul>
-</section>
-
 <section class="slide content" data-i="3">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The psychology of penalties</h2>
-  <ul class="bullets">
-    <li>Penalties are often thought of as a psychological game</li>
-    <li data-step="1">Neither side wants to reveal to the other which way he or she will go</li>
-    <li data-step="2">The psychological trickery can result in situations like this and also this</li>
-    <li class="sub" data-step="2">&ldquo;I told the players I knew where they were going and it made them a bit nervous&rdquo;</li>
-    <li data-step="3">And, most famously&hellip;this</li>
-    <li data-step="4"><b>But can you play the penalty kick game ideally, ignoring psychology, when no coordination is possible and no strategy dominates another?</b></li>
-  </ul>
-  <a class="medialink" href="#" style="margin-top:26px">
-    <span class="play"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
-    <span class="mlk">CLIPS</span>
-    <span class="mlt">[Penalty psychology clips &mdash; links to be added]</span>
-  </a>
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>The penalty kick in soccer</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>Penalty kicks involve two players &ndash; a kicker and a goalie</li>
+      <li data-step="1">They face a simultaneous choice (in this case let&rsquo;s limit the choice to left or right)</li>
+      <li data-step="2">If the kicker shoots left, the goalie would always be best off by diving left</li>
+      <li data-step="3">Conversely, if the kicker shoots left the kicker would always be best off by having the goalie dive right</li>
+      <li data-step="4">Therefore, neither player is incentivized to coordinate strategies</li>
+      <li data-step="5"><b>How should a penalty kicker behave?</b></li>
+    </ul>
+    <svg class="sidefig" style="height:330px" viewBox="0 0 460 340" role="img" aria-label="A goal with a goalkeeper in the middle, a kicker at the spot, and dashed arrows to each corner">
+      <!-- goal frame and net -->
+      <path d="M40 40 L40 200 M420 40 L420 200 M40 40 L420 40" fill="none" stroke="var(--ink)" stroke-width="8" stroke-linecap="round"/>
+      <g stroke="var(--ink)" stroke-width="1.4" opacity=".28">
+        <path d="M60 40V200M80 40V200M100 40V200M120 40V200M140 40V200M160 40V200M180 40V200M200 40V200M220 40V200M240 40V200M260 40V200M280 40V200M300 40V200M320 40V200M340 40V200M360 40V200M380 40V200M400 40V200"/>
+        <path d="M40 60H420M40 80H420M40 100H420M40 120H420M40 140H420M40 160H420M40 180H420"/>
+      </g>
+      <line x1="20" y1="200" x2="440" y2="200" stroke="var(--ink)" stroke-width="4"/>
+      <!-- goalkeeper -->
+      <g fill="var(--terracotta)" transform="translate(206,86)">
+        <circle cx="24" cy="14" r="13"/>
+        <path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/>
+        <path d="M4 40 L-24 20 M44 40 L72 20" stroke="var(--terracotta)" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <rect x="9" y="84" width="11" height="30"/><rect x="28" y="84" width="11" height="30"/>
+      </g>
+      <!-- kicker and ball -->
+      <g fill="var(--teal)" transform="translate(196,214)">
+        <circle cx="24" cy="14" r="13"/>
+        <path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/>
+        <rect x="9" y="84" width="11" height="30"/><path d="M28 84 L52 110" stroke="var(--teal)" stroke-width="11" stroke-linecap="round"/>
+      </g>
+      <circle cx="262" cy="326" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+      <!-- the two options -->
+      <path d="M250 318 Q120 240 70 150" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="12 9" stroke-linecap="round"/>
+      <path d="M70 150 l2 22 m-2 -22 l20 8" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M274 318 Q360 240 392 150" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="12 9" stroke-linecap="round"/>
+      <path d="M392 150 l-2 22 m2 -22 l-20 8" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/>
+      <text class="cardlab" x="70" y="26" text-anchor="middle" style="fill:var(--red)">LEFT</text>
+      <text class="cardlab" x="392" y="26" text-anchor="middle" style="fill:var(--red)">RIGHT</text>
+    </svg>
+  </div>
 </section>
 
 <section class="slide content" data-i="4">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The penalty kick in soccer</h2>
-  <div class="fig" style="top:180px">
-    <div class="mxwrap">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>The psychology of penalties</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>Penalties are often thought of as a psychological game</li>
+      <li data-step="1">Neither side wants to reveal to the other which way he or she will go</li>
+      <li data-step="2">The psychological trickery can result in situations like this and also this</li>
+      <li class="sub" data-step="2">&ldquo;I told the players I knew where they were going and it made them a bit nervous&rdquo;</li>
+      <li data-step="3">And, most famously&hellip;this</li>
+      <li data-step="4"><b>But can you play the penalty kick game ideally, ignoring psychology, when no coordination is possible and no strategy dominates another?</b></li>
+    </ul>
+    <div class="clipstack">
+      <div class="clipframe" id="pen1wrap"><button class="clipcover" id="pen1load" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">Like this</span></button></div>
+      <div class="clipframe" id="pen2wrap"><button class="clipcover" id="pen2load" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">And also this</span></button></div>
+      <div class="clipframe" id="pen3wrap"><button class="clipcover" id="pen3load" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">Most famously, this</span></button></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY SHOOTOUT</div>
+  <h2>Let&rsquo;s play: the penalty shootout</h2>
+  <div class="rowfig" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li><b>Pair up with the person next to you</b>, on your phones</li>
+      <li data-step="1">Sixteen kicks: one of you kicks the first eight while the other keeps goal, then you swap</li>
+      <li data-step="2">On every kick you both choose <b>left or right at the same time</b>, without seeing the other&rsquo;s choice</li>
+      <li data-step="3">Whether the ball goes in is decided by the <b>real odds</b> in the table &ndash; the same ones professional kickers and keepers face</li>
+      <li data-step="4">Whoever scores more goals as the kicker wins the pair &ndash; <b>and five points</b></li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="joinchip"><div class="qr"><img src="qr-pk.svg" alt="QR code for the penalty shootout at ryanlamare.com/teaching/exec/gt/m6/game/?g=pk"></div></div>
+        <div class="livecount"><span class="n" id="pkPairs0">0</span><span class="l">PAIRS<br>IN</span></div>
+      </div>
+      <div class="mxwrap" style="gap:8px">
+        <div class="mxtitle">KICKER&rsquo;S SUCCESS RATE (%)</div>
+        <div class="mx" style="--cols:2;--rows:2;--cw:120px;--rh:54px">
+          <div class="chead">GOALIE</div>
+          <div class="rhead">KICKER</div>
+          <div class="cl" style="grid-column:3">Left</div>
+          <div class="cl" style="grid-column:4">Right</div>
+          <div class="rl" style="grid-row:3">Left</div>
+          <div class="rl" style="grid-row:4">Right</div>
+          <div class="cell" style="grid-row:3;grid-column:3">58</div>
+          <div class="cell" style="grid-row:3;grid-column:4">95</div>
+          <div class="cell" style="grid-row:4;grid-column:3">93</div>
+          <div class="cell" style="grid-row:4;grid-column:4">70</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY SHOOTOUT</div>
+  <h2>How the room kicked</h2>
+  <div class="board">
+    <div class="bbar">
+      <div class="livecount"><span class="n" id="pkPairs">0</span><span class="l">PAIRS<br>IN</span></div>
+      <div class="livecount"><span class="n" id="pkKicks">0</span><span class="l">KICKS<br>TAKEN</span></div>
+      <div class="demotag" id="pkDemo" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="stats">
+      <div class="stat" data-step="1" data-stepcall="pkTile" data-t="goals"><div class="sl">Goals</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the room&rsquo;s kicks went in. In real life, <b>75 to 80%</b> do</div></div>
+      <div class="stat" data-step="2" data-stepcall="pkTile" data-t="kl"><div class="sl">Kickers went left</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time. The best mix is <b>38%</b>, and real kickers go left about 40%</div></div>
+      <div class="stat" data-step="3" data-stepcall="pkTile" data-t="gl"><div class="sl">Goalies dived left</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time. The best mix is <b>42%</b>, and real goalies go left about 42%</div></div>
+      <div class="stat" data-step="4" data-stepcall="pkTile" data-t="rep"><div class="sl">Predictable?</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of kicks went <b>the same way as the kicker&rsquo;s last one</b>. A coin would say about 50%. Longest run to one side: <b><span class="run">&ndash;</span></b></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>So how should a penalty kicker behave?</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>In this case, there is no (pure strategy) Nash equilibrium</li>
+      <li class="sub" data-step="1">If the kicker always chooses left, the goalie can choose left and drop the kicker&rsquo;s percentage to 58</li>
+      <li class="sub" data-step="2">If the kicker always chooses right, the goalie can choose right and drop the kicker&rsquo;s percentage to 70</li>
+      <li data-step="3">Of the two, the kicker would prefer right-right to left-left, but can the kicker do better?</li>
+      <li data-step="4"><b>Yes &ndash; by employing a mixed strategy and making it so that it doesn&rsquo;t matter which direction the goalie guesses!</b></li>
+    </ul>
+    <div class="mxwrap" style="flex:none;gap:8px">
       <div class="mxtitle">KICKER&rsquo;S SUCCESS RATE (%)</div>
-      <div class="mx" style="--cols:2;--rows:2;--cw:220px;--rh:96px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:130px;--rh:64px">
         <div class="chead">GOALIE</div>
         <div class="rhead">KICKER</div>
         <div class="cl" style="grid-column:3">Left</div>
         <div class="cl" style="grid-column:4">Right</div>
         <div class="rl" style="grid-row:3">Left</div>
         <div class="rl" style="grid-row:4">Right</div>
-        <div class="cell" style="grid-row:3;grid-column:3">58</div>
+        <div class="cell" id="pkc-ll" style="grid-row:3;grid-column:3">58</div>
         <div class="cell" style="grid-row:3;grid-column:4">95</div>
         <div class="cell" style="grid-row:4;grid-column:3">93</div>
-        <div class="cell" style="grid-row:4;grid-column:4">70</div>
+        <div class="cell" id="pkc-rr" style="grid-row:4;grid-column:4">70</div>
       </div>
     </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="pkc-ll" data-cls="hot" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="pkc-rr" data-cls="hot" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="5">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The penalty kick in soccer</h2>
-  <ul class="bullets">
-    <li>In this case, there is no (pure strategy) Nash equilibrium</li>
-    <li class="sub" data-step="1">If the kicker always chooses left, the goalie can choose left and drop the kicker&rsquo;s percentage to 58</li>
-    <li class="sub" data-step="2">If the kicker always chooses right, the goalie can choose right and drop the kicker&rsquo;s percentage to 70</li>
-    <li data-step="3">Of the two, the kicker would prefer right-right to left-left, but can the kicker do better?</li>
-    <li data-step="4"><b>Yes &ndash; by employing a mixed strategy and making it so that it doesn&rsquo;t matter which direction the goalie guesses!</b></li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="6">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The penalty kick in soccer</h2>
-  <ul class="bullets" style="max-width:1060px">
-    <li>What if the kicker alternated left/right strategies at a 50/50 rate (say the kicker decides to flip a coin just before the run-up to decide where to shoot)?</li>
-    <li class="sub" data-step="1">If the goalie goes left, the kicker gets (.5&times;58 + .5&times;93) = 75.5 percent odds of success</li>
-    <li class="sub" data-step="1">If the goalie goes right, the kicker gets (.5&times;95 + .5&times;70) = 82.5 percent odds of success</li>
-    <li class="sub" data-step="2">So the worst option from playing a completely random strategy (50/50 split) is better than even the best pure strategy option (70 percent if you choose to purely kick right)</li>
-    <li data-step="3">But can the kicker do even better than this?  Yes &ndash; by making it so that the kicker&rsquo;s odds are the same irrespective of whatever the goalie does</li>
-    <li data-step="4">What if the kicker decided, &ldquo;I&rsquo;m going left with 40% likelihood and I&rsquo;m going right with 60% likelihood?&rdquo;</li>
-    <li class="sub" data-step="5">So if the kicker goes left 40% of the time and right 60% of the time, the kicker&rsquo;s success rate is 79% if the goalie picks left, and 80% if the goalie picks right</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="7">
-  <div class="kicker"><i></i>MODULE 6</div>
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
   <h2>Mix the kicker&rsquo;s strategy</h2>
   <div class="fig" style="top:166px">
     <div class="widget">
       <div class="whead">
         <span class="wlabel">DRAG p · SHARE OF KICKS GOING LEFT</span>
-        <button id="pkOpt" class="primary">SET p = 38.3%</button>
+        <button id="pkOpt" class="primary" type="button">SET p = 38.3%</button>
       </div>
       <div class="pkgrid">
         <div class="pkleft">
@@ -159,7 +307,7 @@
           </div>
           <div class="pkstat gl"><span class="lbl">If the goalie dives LEFT</span><span class="val" id="pkEL">75.5</span></div>
           <div class="pkstat gr"><span class="lbl">If the goalie dives RIGHT</span><span class="val" id="pkER">82.5</span></div>
-          <div class="tverdict" id="pkNote" style="text-align:left;font-size:17px;min-height:2.6em"></div>
+          <div class="pknote" id="pkNote"></div>
         </div>
         <svg class="pkchart" id="pkChart" viewBox="0 0 380 300" width="380" height="300" role="img" aria-label="Expected success versus p, two crossing lines"></svg>
       </div>
@@ -167,9 +315,21 @@
   </div>
 </section>
 
-<section class="slide content" data-i="8">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The penalty kick in soccer</h2>
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>Real-life penalty kick strategies</h2>
+  <ul class="bullets">
+    <li>In real life, the probability of scoring a penalty kick goal is around 75-80%</li>
+    <li data-step="1">In real life, kickers go left about 40% of the time (recall the optimal strategy would be 38.3%)</li>
+    <li data-step="2">In real life, goalies guess left about 42.4% of the time (recall the optimal strategy would be 41.7%)</li>
+    <li data-step="3"><b>So, soccer players are game theorists even though they may not realize it!</b></li>
+    <li data-step="4" data-stepcall="pkRoomLine"><span class="room">And this room?</span></li>
+  </ul>
+</section>
+
+<section class="slide content flex" data-i="10">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>The kicker&rsquo;s mix, worked</h2>
   <ul class="bullets" style="max-width:1060px">
     <li>Is there a mixture that the kicker can use to make the goalie completely indifferent about going left or right &ndash; i.e., so that it makes no difference to the expected outcome whatever side the goalie picks?</li>
     <li data-step="1">Think about the goalie&rsquo;s expected success rate (or expected utility) for each choice the kicker has, left (p) or right (1-p)</li>
@@ -182,9 +342,9 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="9">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>The penalty kick in soccer</h2>
+<section class="slide content flex" data-i="11">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>The goalie&rsquo;s mix, worked</h2>
   <ul class="bullets" style="max-width:1060px">
     <li>Okay, but what about the goalie? What mixture would work best?</li>
     <li data-step="1">Think about the kicker&rsquo;s expected success rate (or expected utility) for each choice the goalie has, left (p) or right (1-p)</li>
@@ -196,33 +356,105 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="10">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>Real-life penalty kick strategies</h2>
-  <ul class="bullets">
-    <li>In real life, the probability of scoring a penalty kick goal is around 75-80%</li>
-    <li data-step="1">In real life, kickers go left about 40% of the time (recall the optimal strategy would be 38.3%)</li>
-    <li data-step="2">In real life, goalies guess left about 42.4% of the time (recall the optimal strategy would be 41.7%)</li>
-    <li data-step="3"><b>So, soccer players are game theorists even though they may not realize it!</b></li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>Rock-paper-scissors and strategy</h2>
-  <ul class="bullets">
-    <li>Can strategic thinking be applied to a game like rock-paper-scissors?</li>
-    <li data-step="1">If so, can the strategic thinking in a game like this tell us anything about business strategies?</li>
-    <li data-step="2"><b>Yes and yes!</b></li>
-    <li data-step="3">Let&rsquo;s first design a payoff matrix and solve out RPS</li>
-  </ul>
-</section>
-
 <section class="slide content" data-i="12">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>Rock-paper-scissors and strategy</h2>
-  <div class="fig" style="top:180px">
-    <div class="mx" style="--cols:3;--rows:3;--cw:170px;--rh:76px">
+  <div class="kicker"><i></i>MODULE 6 · PETE CARROLL</div>
+  <h2>Pete Carroll, game theorist?</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Super Bowl XLIX, February 2015. Seattle trail by four with 26 seconds left, second down on New England&rsquo;s <b>one-yard line</b></li>
+      <li data-step="1">Marshawn Lynch, the best short-yardage runner in football, is standing in the backfield. Everyone in the stadium expects the run</li>
+      <li data-step="2">Seattle throw a quick slant. Malcolm Butler intercepts it, and the game is over</li>
+      <li data-step="3">It was called <b>the worst play call in Super Bowl history</b>. Was it?</li>
+    </ul>
+    <div class="clipframe" id="carrollwrap" style="align-self:center">
+      <button class="clipcover" id="carrollload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">The pass at the one</span></button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 6 · PETE CARROLL</div>
+  <h2>The worst call, or the worst draw?</h2>
+  <div class="rowfig" style="align-items:center;gap:44px">
+    <ul class="bullets" style="margin-top:0">
+      <li>If Seattle run every time from the one, the defense only has to stop the run</li>
+      <li data-step="1">A team that sometimes passes is harder to defend <b>on every play</b> &ndash; including the runs</li>
+      <li data-step="2">The call was part of a mix. The interception was <b>the worst draw of it</b></li>
+      <li data-step="3"><b>So: do you judge your people on their decisions, or on their outcomes?</b></li>
+    </ul>
+    <svg class="sidefig" style="height:300px" viewBox="0 0 420 300" role="img" aria-label="A goal line with a running arrow straight ahead and a passing arrow over the top; the defense stacked against the run">
+      <rect x="20" y="30" width="380" height="240" fill="var(--paper-soft)" stroke="var(--ink)" stroke-width="3"/>
+      <g stroke="var(--ink)" stroke-width="2" opacity=".35"><line x1="20" y1="90" x2="400" y2="90"/><line x1="20" y1="150" x2="400" y2="150"/><line x1="20" y1="210" x2="400" y2="210"/></g>
+      <rect x="20" y="30" width="380" height="36" fill="var(--terracotta)" opacity=".85"/>
+      <text x="210" y="55" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="15" letter-spacing="2" fill="var(--paper)">END ZONE</text>
+      <g fill="var(--terracotta)"><circle cx="110" cy="100" r="11"/><circle cx="160" cy="100" r="11"/><circle cx="210" cy="100" r="11"/><circle cx="260" cy="100" r="11"/><circle cx="310" cy="100" r="11"/><circle cx="185" cy="128" r="11"/><circle cx="235" cy="128" r="11"/></g>
+      <g fill="var(--teal)"><circle cx="210" cy="176" r="12"/><circle cx="210" cy="232" r="12"/><circle cx="330" cy="176" r="12"/></g>
+      <path d="M210 218 L210 150" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M210 150 l-9 12 m9 -12 l9 12" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M222 168 Q290 60 340 48" stroke="var(--red)" stroke-width="6" stroke-dasharray="12 9" stroke-linecap="round" fill="none"/><path d="M340 48 l-14 2 m14 -2 l-6 13" stroke="var(--red)" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <text class="cardlab" x="150" y="256" text-anchor="middle">THE RUN</text>
+      <text class="cardlab" x="330" y="256" text-anchor="middle" style="fill:var(--red)">THE PASS</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>MODULE 6 · ROCK, PAPER, SCISSORS</div>
+  <h2>Let&rsquo;s play rock, paper, scissors</h2>
+  <div class="rowfig" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li>Can strategic thinking be applied to a game like rock-paper-scissors? <b>Let&rsquo;s find out</b></li>
+      <li data-step="1"><b>Same partner</b>, on your phones &ndash; ten throws</li>
+      <li data-step="2">Both of you throw at the same time: rock beats scissors, scissors beat paper, paper beats rock</li>
+      <li data-step="3">No points for this one &ndash; we&rsquo;re playing it for <b>the pattern it leaves behind</b></li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="joinchip"><div class="qr"><img src="qr-rps.svg" alt="QR code for rock, paper, scissors at ryanlamare.com/teaching/exec/gt/m6/game/?g=rps"></div></div>
+        <div class="livecount"><span class="n" id="rpsPairs0">0</span><span class="l">PAIRS<br>IN</span></div>
+      </div>
+      <svg class="pg" viewBox="0 0 300 100" style="height:90px" aria-hidden="true">
+        <g fill="var(--ink)"><circle cx="50" cy="50" r="30"/></g>
+        <g fill="none" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"><rect x="118" y="20" width="64" height="60" rx="4"/></g>
+        <g stroke="var(--red)" stroke-width="7" stroke-linecap="round" fill="none"><line x1="222" y1="26" x2="272" y2="76"/><line x1="272" y1="26" x2="222" y2="76"/><circle cx="218" cy="84" r="9"/><circle cx="276" cy="84" r="9"/></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 6 · ROCK, PAPER, SCISSORS</div>
+  <h2>Nobody is really random</h2>
+  <div class="board">
+    <div class="bbar">
+      <div class="livecount"><span class="n" id="rpsPairs">0</span><span class="l">PAIRS<br>IN</span></div>
+      <div class="livecount"><span class="n" id="rpsThrows">0</span><span class="l">THROWS<br>MADE</span></div>
+      <div class="demotag" id="rpsDemo" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="rmix">
+      <div class="rl"><span class="rn">Rock</span><div class="rb"><i id="rb-r"></i><span class="third"></span></div><span class="rp" id="rp-r">&ndash;</span></div>
+      <div class="rl"><span class="rn">Paper</span><div class="rb"><i id="rb-p"></i><span class="third"></span></div><span class="rp" id="rp-p">&ndash;</span></div>
+      <div class="rl"><span class="rn">Scissors</span><div class="rb"><i id="rb-s"></i><span class="third"></span></div><span class="rp" id="rp-s">&ndash;</span></div>
+      <div class="rl"><span></span><span class="rk">the red line is one in three &ndash; a perfectly random player</span><span></span></div>
+    </div>
+    <div class="rstats">
+      <div class="stat" data-step="1" data-stepcall="rpsTile" data-t="open"><div class="sl">The opening throw</div><div class="sv" style="font-size:54px"><span class="v">&ndash;</span></div><div class="sb"><span class="x">&ndash;</span> of players opened with it</div></div>
+      <div class="stat" data-step="2" data-stepcall="rpsTile" data-t="loss"><div class="sl">After losing a throw</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">switched to something else. A random player switches <b>two times in three</b></div></div>
+      <div class="stat" data-step="3" data-stepcall="rpsTile" data-t="win"><div class="sl">After winning a throw</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">threw the same thing again. Random would be <b>one in three</b></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 6 · ROCK, PAPER, SCISSORS</div>
+  <h2>Rock, paper, scissors and strategy</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>The best strategy is to mix with 1/3 probability of each option, for an average payoff of 0, which is better than the minimax outcome of -1 if each side plays a pure strategy</li>
+      <li data-step="1">Since the game is symmetrical, both sides have identical strategies (1/3, 1/3, 1/3) which is the Nash equilibrium</li>
+      <li data-step="2"><b>And yet &ndash; nobody is really random!</b></li>
+      <li data-step="3">We fall into subconscious patterns even if we don&rsquo;t realize it, which makes the (1/3, 1/3, 1/3) strategy impossible</li>
+    </ul>
+    <div class="mx" style="flex:none;--cols:3;--rows:3;--cw:104px;--rh:54px">
       <div class="chead" style="grid-column:3 / span 3">PLAYER 2</div>
       <div class="rhead" style="grid-row:3 / span 3">PLAYER 1</div>
       <div class="cl" style="grid-column:3">Rock</div>
@@ -231,58 +463,254 @@
       <div class="rl" style="grid-row:3">Rock</div>
       <div class="rl" style="grid-row:4">Paper</div>
       <div class="rl" style="grid-row:5">Scissors</div>
-      <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
-      <div class="cell" style="grid-row:3;grid-column:5"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
-      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
-      <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" style="grid-row:4;grid-column:5"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
-      <div class="cell" style="grid-row:5;grid-column:3"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
-      <div class="cell" style="grid-row:5;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
-      <div class="cell" style="grid-row:5;grid-column:5"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+      <div class="cell" style="grid-row:3;grid-column:3;font-size:19px"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+      <div class="cell" style="grid-row:3;grid-column:4;font-size:19px"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
+      <div class="cell" style="grid-row:3;grid-column:5;font-size:19px"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
+      <div class="cell" style="grid-row:4;grid-column:3;font-size:19px"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
+      <div class="cell" style="grid-row:4;grid-column:4;font-size:19px"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+      <div class="cell" style="grid-row:4;grid-column:5;font-size:19px"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
+      <div class="cell" style="grid-row:5;grid-column:3;font-size:19px"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
+      <div class="cell" style="grid-row:5;grid-column:4;font-size:19px"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
+      <div class="cell" style="grid-row:5;grid-column:5;font-size:19px"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="13">
-  <div class="kicker"><i></i>MODULE 6</div>
-  <h2>Rock-paper-scissors and strategy</h2>
-  <ul class="bullets">
-    <li>The best strategy is to mix with 1/3 probability of each option, for an average payoff of 0, which is better than the minimax outcome of -1 if each side plays a pure strategy</li>
-    <li data-step="1">Since the game is symmetrical, both sides have identical strategies (1/3, 1/3, 1/3) which is the Nash equilibrium</li>
-    <li data-step="2"><b>And yet &ndash; nobody is really random!</b></li>
-    <li data-step="3">We fall into subconscious patterns even if we don&rsquo;t realize it, which makes the (1/3, 1/3, 1/3) strategy impossible</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="14">
-  <div class="kicker"><i></i>MODULE 6</div>
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 6 · IN BUSINESS</div>
   <h2>Mixed strategies in business</h2>
-  <ul class="bullets">
-    <li>The most obvious application of mixed strategies to the business world comes from organizational efforts to motivate compliance</li>
-    <li data-step="1">Organizations and institutions want people to behave, but can&rsquo;t always monitor them</li>
-    <li data-step="2">So, they introduce <b>selective enforcement</b> &ndash; aka a mixed strategy of enforcement (somewhere between 0% and 100% enforcement)</li>
-    <li data-step="3">Think about parking meters, speed limits, stop lights, etc. &ndash; the police employ &ldquo;random&rdquo; mixed enforcement strategies combined with excessive penalties to deter many criminal actions without actually monitoring those actions</li>
-  </ul>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>The most obvious application of mixed strategies to the business world comes from organizational efforts to motivate compliance</li>
+      <li data-step="1">Organizations and institutions want people to behave, but can&rsquo;t always monitor them</li>
+      <li data-step="2">So, they introduce <b>selective enforcement</b> &ndash; aka a mixed strategy of enforcement (somewhere between 0% and 100% enforcement)</li>
+      <li data-step="3">Think about parking meters, speed limits, stop lights, etc. &ndash; the police employ &ldquo;random&rdquo; mixed enforcement strategies combined with excessive penalties to deter many criminal actions without actually monitoring those actions</li>
+    </ul>
+    <svg class="sidefig" style="height:250px" viewBox="0 0 380 250" role="img" aria-label="Ten cars in two rows, two of them picked out in red: random checks">
+      <g id="cars"></g>
+      <text class="cardlab" x="190" y="238" text-anchor="middle" style="fill:var(--red)">RANDOM CHECKS</text>
+    </svg>
+  </div>
 </section>
 
-<section class="slide content" data-i="15">
-  <div class="kicker"><i></i>MODULE 6 · COMPANY SLOT</div>
-  <h2>Unpredictability at your company</h2>
-  <div class="fig">
-    <div class="slotcard">
-      <div class="sl">COMPANY SLOT · SWAPPABLE PER CLIENT</div>
-      <div class="st">[Client-specific discussion goes here: where mixed or unpredictable strategies appear in the client&rsquo;s own market &mdash; pricing, audits, enforcement, negotiations. Written per engagement.]</div>
+<!-- COMPANY SLOT (RRPF): a discussion, no phones — swap the prompts to retarget the programme -->
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 6 · GAME THEORY IN YOUR WORLD</div>
+  <h2>Unpredictability in your world</h2>
+  <div class="leadline" style="max-width:980px;margin-left:auto;margin-right:auto">Where does it pay to be unpredictable in your business &ndash; and where does it cost you?</div>
+  <div class="prompts">
+    <div class="prompt2" data-step="1"><span class="pk">Keep them guessing</span>The moves you would rather the other side could not predict</div>
+    <div class="prompt2" data-step="2"><span class="pk">Let them count on it</span>The moves you need them to be able to predict</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 6 · WHERE NEXT</div>
+  <h2>When there is no stable move</h2>
+  <div class="leadline" style="max-width:1010px;margin-left:auto;margin-right:auto">Today: when there is no stable move, <b>mix</b> &ndash; and don&rsquo;t let anyone read the pattern</div>
+  <div class="fig" style="top:290px;bottom:170px">
+    <svg class="pg" viewBox="0 0 170 132" style="height:120px" aria-hidden="true"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg>
+    <div class="chead2" data-step="1" style="font-size:22px;max-width:48ch;text-align:center;line-height:1.4">Remember Ren&rsquo;s boot in Footloose: he won by committing, <b>by accident</b>. What does it take to make a commitment, a threat, or a promise believable <b>on purpose</b>?</div>
+  </div>
+  <div class="chiprow" style="bottom:76px">
+    <div class="chips" data-step="2">
+      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Next session: credibility, commitment, and strategic moves</b></div>
     </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 6 · TOP OF THE CLASS</div>
+  <h2>Top of the class</h2>
+  <div class="fig" style="top:200px;gap:30px">
+    <div class="scb">
+      <div class="scbrow head"><span class="rk"></span><span class="nm"></span><span class="pv">Shootout</span><span class="tt">Total</span></div>
+      <div class="scbrow" data-step="5" id="scbr0"><div class="demotag" id="scbD">DEMO DATA</div><span class="rk">1</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="4" id="scbr1"><span class="rk">2</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="3" id="scbr2"><span class="rk">3</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="2" id="scbr3"><span class="rk">4</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="1" id="scbr4"><span class="rk">5</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+    </div>
+    <div class="cap">Five points to whoever scored more goals as the kicker in their pair. Top five only &ndash; check your own score any time at <b>ryanlamare.com/go/points</b>.</div>
   </div>
 </section>
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
+
+<script src="/go/scores.js"></script>
 <script>
-/* penalty-kick mixed strategy widget */
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const QS=new URLSearchParams(location.search);
+/* a tile that is already on screen recomputes as answers arrive */
+function refreshShownCalls(){
+  document.querySelectorAll('[data-stepcall]').forEach(el=>{
+    const n=el.dataset.stepcall;
+    if(el.dataset.stepon==='1'&&(n==='pkTile'||n==='rpsTile'||n==='pkRoomLine')){try{window[n](el,true);}catch(_){}}
+  });
+}
+/* the same hash draw as the phones and go/scores.js — MUST stay identical */
+const PK_RATE={ll:58,lr:95,rl:93,rr:70};
+function h01(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
+const pkGoal=(key,n,kick,dive)=>h01(key+'|'+n+'|'+kick+'|'+dive)<PK_RATE[kick+dive]/100;
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
+function parsePairLines(lines,codes){
+  const joins=new Set(), latest=new Map();
+  lines.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());
+    if(p.length!==5||!p[0]||!p[1]||!/^\d{1,2}$/.test(p[2])||!/^[ab]$/.test(p[3]))return;
+    const key=pairKey(p[0],p[1]);
+    if(p[4]==='j'){joins.add(key);return;}
+    if(!codes.test(p[4]))return;
+    joins.add(key);
+    latest.set(key+'|'+p[2]+'|'+p[3],{key,n:+p[2],seat:p[3],x:p[4]});
+  });
+  const pairs=new Map();
+  latest.forEach(m=>{if(!pairs.has(m.key))pairs.set(m.key,{});const pr=pairs.get(m.key);pr[m.n]=pr[m.n]||{};pr[m.n][m.seat]=m.x;});
+  return {joins,pairs};
+}
+
+/* ---- the penalty shootout board: room m6-pk (?pkroom= for rehearsals) ---- */
+(function(){
+  const ROOM=QS.get('pkroom')||'m6-pk';
+  const st={live:false,lines:[]};
+  /* a plausible demo room: ten pairs, kickers who alternate a little too much */
+  function demoLines(){
+    const names=['Demo Alex','Demo Bea','Demo Chris','Demo Dana','Demo Eli','Demo Fay','Demo Gus','Demo Hana','Demo Ivo','Demo Jo','Demo Kim','Demo Lou','Demo Max','Demo Nia','Demo Oli','Demo Pat','Demo Quin','Demo Rae','Demo Sol','Demo Tam'];
+    const out=[];
+    for(let p=0;p<10;p++){
+      const A=names[2*p],B=names[2*p+1]; out.push(A+'|'+B+'|0|a|j');
+      let lastK=null,lastG=null;
+      for(let n=1;n<=16;n++){
+        const rk=h01('dk'+p+'-'+n), rg=h01('dg'+p+'-'+n);
+        const kick=lastK?(rk<0.62?(lastK==='l'?'r':'l'):lastK):(rk<0.42?'l':'r');
+        const dive=lastG?(rg<0.58?(lastG==='l'?'r':'l'):lastG):(rg<0.45?'l':'r');
+        const ks=n<=8?'a':'b';
+        out.push(A+'|'+B+'|'+n+'|'+ks+'|'+kick); out.push(A+'|'+B+'|'+n+'|'+(ks==='a'?'b':'a')+'|'+dive);
+        lastK=kick;lastG=dive;
+      }
+    }
+    return out;
+  }
+  function stats(){
+    const lines=st.live?st.lines:demoLines();
+    const {joins,pairs}=parsePairLines(lines,/^[lr]$/);
+    let kicks=0,goals=0,kl=0,gl=0,same=0,trans=0,run=0;
+    pairs.forEach((pr,key)=>{
+      const seq={a:[],b:[]};
+      for(let n=1;n<=16;n++){const k=pr[n];if(!k||!k.a||!k.b)continue;
+        const ks=n<=8?'a':'b', kick=k[ks], dive=k[ks==='a'?'b':'a'];
+        kicks++; if(pkGoal(key,n,kick,dive))goals++;
+        if(kick==='l')kl++; if(dive==='l')gl++;
+        seq[ks].push(kick);
+      }
+      ['a','b'].forEach(s=>{let r=1;for(let i=1;i<seq[s].length;i++){trans++;if(seq[s][i]===seq[s][i-1]){same++;r++;}else r=1;run=Math.max(run,r);}
+        if(seq[s].length===1)run=Math.max(run,1);});
+    });
+    const pct=(a,b)=>b?Math.round(a/b*100):null;
+    return {pairs:joins.size,kicks,goals:pct(goals,kicks),kl:pct(kl,kicks),gl:pct(gl,kicks),rep:pct(same,trans),run};
+  }
+  window.pkStats=stats;
+  function render(){
+    const s=stats();
+    ['pkPairs0','pkPairs'].forEach(id=>{document.getElementById(id).textContent=st.live?s.pairs:0;});
+    document.getElementById('pkKicks').textContent=st.live?s.kicks:0;
+    document.getElementById('pkDemo').style.display=st.live?'none':'';
+    refreshShownCalls();
+  }
+  window.pkTile=function(el,on){
+    const v=el.querySelector('.v');
+    if(!on){v.textContent='–';return;}
+    const s=stats(), x=s[el.dataset.t];
+    v.textContent=x===null?'–':x;
+    const r=el.querySelector('.run'); if(r)r.textContent=s.run||'–';
+  };
+  window.pkRoomLine=function(el,on){
+    const t=el.querySelector('.room');
+    if(!on){t.textContent='And this room?';return;}
+    const s=stats();
+    t.innerHTML=(s.kicks?'And this room? Kickers went left <b>'+s.kl+'%</b> of the time, goalies dived left <b>'+s.gl+'%</b>':'And this room? No kicks in yet')+(st.live?'':' <span class="demotag" style="position:static;margin-left:10px">DEMO DATA</span>');
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+
+/* ---- rock, paper, scissors board: room m6-rps (?rpsroom= for rehearsals) ---- */
+(function(){
+  const ROOM=QS.get('rpsroom')||'m6-rps';
+  const st={live:false,lines:[]};
+  const beats=(a,b)=>(a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r');
+  function demoLines(){
+    const names=['Demo Alex','Demo Bea','Demo Chris','Demo Dana','Demo Eli','Demo Fay','Demo Gus','Demo Hana','Demo Ivo','Demo Jo','Demo Kim','Demo Lou','Demo Max','Demo Nia','Demo Oli','Demo Pat','Demo Quin','Demo Rae','Demo Sol','Demo Tam'];
+    const out=[], T=['r','p','s'];
+    for(let p=0;p<10;p++){
+      const A=names[2*p],B=names[2*p+1]; out.push(A+'|'+B+'|0|a|j');
+      let last={a:null,b:null}, prevRes={a:0,b:0};
+      for(let n=1;n<=10;n++){
+        const pick={};
+        ['a','b'].forEach(s=>{
+          const r=h01('dr'+p+'-'+n+s);
+          if(n===1)pick[s]=r<0.45?'r':(r<0.75?'p':'s');
+          else if(prevRes[s]<0)pick[s]=r<0.8?T[(T.indexOf(last[s])+1+(r<0.4?0:1))%3]:last[s];
+          else if(prevRes[s]>0)pick[s]=r<0.55?last[s]:T[(T.indexOf(last[s])+1)%3];
+          else pick[s]=T[Math.floor(r*3)];
+        });
+        out.push(A+'|'+B+'|'+n+'|a|'+pick.a); out.push(A+'|'+B+'|'+n+'|b|'+pick.b);
+        prevRes.a=pick.a===pick.b?0:(beats(pick.a,pick.b)?1:-1); prevRes.b=-prevRes.a;
+        last=pick;
+      }
+    }
+    return out;
+  }
+  function stats(){
+    const lines=st.live?st.lines:demoLines();
+    const {joins,pairs}=parsePairLines(lines,/^[rps]$/);
+    const mix={r:0,p:0,s:0}, open={r:0,p:0,s:0}; let throws=0, lossN=0,lossSw=0, winN=0,winRep=0;
+    pairs.forEach(pr=>{
+      const seq={a:[],b:[]};
+      for(let n=1;n<=10;n++){const k=pr[n];if(!k||!k.a||!k.b)continue;
+        throws++; mix[k.a]++; mix[k.b]++;
+        if(n===1){open[k.a]++;open[k.b]++;}
+        const res=k.a===k.b?0:(beats(k.a,k.b)?1:-1);
+        seq.a.push({x:k.a,res}); seq.b.push({x:k.b,res:-res});
+      }
+      ['a','b'].forEach(s=>{for(let i=1;i<seq[s].length;i++){const prev=seq[s][i-1],cur=seq[s][i];
+        if(prev.res<0){lossN++;if(cur.x!==prev.x)lossSw++;}
+        if(prev.res>0){winN++;if(cur.x===prev.x)winRep++;}}});
+    });
+    const tot=mix.r+mix.p+mix.s, pct=(a,b)=>b?Math.round(a/b*100):null;
+    let topOpen='r';['p','s'].forEach(t=>{if(open[t]>open[topOpen])topOpen=t;});
+    const openTot=open.r+open.p+open.s;
+    return {pairs:joins.size,throws,mix:{r:pct(mix.r,tot),p:pct(mix.p,tot),s:pct(mix.s,tot)},
+      open:{name:{r:'Rock',p:'Paper',s:'Scissors'}[topOpen],share:pct(open[topOpen],openTot)},loss:pct(lossSw,lossN),win:pct(winRep,winN)};
+  }
+  function render(){
+    const s=stats();
+    ['rpsPairs0','rpsPairs'].forEach(id=>{document.getElementById(id).textContent=st.live?s.pairs:0;});
+    document.getElementById('rpsThrows').textContent=st.live?s.throws:0;
+    document.getElementById('rpsDemo').style.display=st.live?'none':'';
+    ['r','p','s'].forEach(t=>{const v=s.mix[t];document.getElementById('rb-'+t).style.width=(v||0)+'%';document.getElementById('rp-'+t).textContent=v===null?'–':v+'%';});
+    refreshShownCalls();
+  }
+  window.rpsTile=function(el,on){
+    const v=el.querySelector('.v');
+    if(!on){v.textContent='–';return;}
+    const s=stats(), t=el.dataset.t;
+    if(t==='open'){v.textContent=s.open.share===null?'–':s.open.name;el.querySelector('.x').textContent=s.open.share===null?'–':s.open.share+'%';}
+    else v.textContent=s[t]===null?'–':s[t];
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+
+/* ---- the penalty-kick mixed strategy widget ---- */
 (function(){
 const slider=document.getElementById('pkP');
 const EL=document.getElementById('pkEL'), ER=document.getElementById('pkER');
@@ -320,13 +748,76 @@ function update(){
   document.getElementById('pkDotR').setAttribute('cx',X(p));
   document.getElementById('pkDotR').setAttribute('cy',Y(r));
   const worst=Math.min(l,r);
-  if(Math.abs(l-r)<0.6){note.innerHTML='<b style="color:var(--red)">Indifference:</b> the goalie&rsquo;s guess no longer matters — expected success '+worst.toFixed(1)+'% either way.';}
-  else{note.textContent='A smart goalie dives '+(l<r?'left':'right')+', holding the kicker to '+worst.toFixed(1)+'%.';}
+  if(Math.abs(l-r)<0.6){note.innerHTML='<b>The goalie&rsquo;s guess no longer matters</b> &ndash; expected success '+worst.toFixed(1)+'% either way';}
+  else{note.textContent='A smart goalie dives '+(l<r?'left':'right')+', holding the kicker to '+worst.toFixed(1)+'%';}
 }
 baseChart();
 slider.addEventListener('input',update);
 document.getElementById('pkOpt').addEventListener('click',()=>{slider.value=38.3;update();});
 update();
+})();
+
+/* ---- the random-checks figure: ten cars, two red ---- */
+(function(){
+  const g=document.getElementById('cars'); let h='';
+  const red=new Set([3,7]);
+  for(let i=0;i<10;i++){
+    const x=20+(i%5)*70, y=40+Math.floor(i/5)*90, c=red.has(i)?'var(--red)':'var(--ink)';
+    h+='<g transform="translate('+x+' '+y+')"><path d="M4 34 L10 16 Q14 8 24 8 L40 8 Q50 8 54 16 L60 34 Z" fill="'+c+'"/><rect x="0" y="32" width="64" height="22" rx="5" fill="'+c+'"/>'+
+       '<circle cx="16" cy="56" r="8" fill="'+c+'" stroke="var(--paper)" stroke-width="3"/><circle cx="48" cy="56" r="8" fill="'+c+'" stroke="var(--paper)" stroke-width="3"/></g>';
+  }
+  g.innerHTML=h;
+})();
+
+/* ---- embedded clips: load YouTube only on click (the title spoils the punchline).
+   CLIP IDS TO ADD — paste the YouTube video ids here: */
+const CLIPS={pen1:'',pen2:'',pen3:'',carroll:''};
+function clipOnClick(btnId,wrapId,videoId,title){
+  const btn=document.getElementById(btnId);
+  if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
+  btn.addEventListener('click',()=>{
+    const wrap=document.getElementById(wrapId);
+    const f=document.createElement('iframe');
+    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    f.title=title;
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    f.allowFullscreen=true;
+    wrap.replaceChildren(f);
+  });
+}
+clipOnClick('pen1load','pen1wrap',CLIPS.pen1,'Penalty psychology, clip one');
+clipOnClick('pen2load','pen2wrap',CLIPS.pen2,'Penalty psychology, clip two');
+clipOnClick('pen3load','pen3wrap',CLIPS.pen3,'Penalty psychology, most famously');
+clipOnClick('carrollload','carrollwrap',CLIPS.carroll,'Super Bowl XLIX: the pass at the one');
+
+/* ---- top of the class: recomputed from the game rooms via /go/scores.js;
+   rows reveal fifth place first, one keypress each ---- */
+(function(){
+  const DEMO=[
+    {name:'Priya',byEvent:{shootout:5},total:19},
+    {name:'Marcus',byEvent:{shootout:5},total:17},
+    {name:'Elena',byEvent:{shootout:0},total:14},
+    {name:'Sam',byEvent:{shootout:5},total:13},
+    {name:'Tom',byEvent:{shootout:0},total:12}
+  ];
+  const EVS=['shootout'];
+  function fill(players,demo){
+    for(let i=0;i<5;i++){
+      const row=document.getElementById('scbr'+i), p=players[i];
+      row.querySelector('.nm').textContent=p?p.name:'—';
+      const pvs=row.querySelectorAll('.pv');
+      EVS.forEach((k,j)=>{pvs[j].textContent=p?(p.byEvent[k]||0):'';});
+      row.querySelector('.tt').textContent=p?p.total:'';
+    }
+    document.getElementById('scbD').style.display=demo?'':'none';
+  }
+  function refresh(){
+    GT_SCORES.load().then(d=>{
+      if(d.players.length)fill(d.players,false);
+      else fill(DEMO,true);
+    }).catch(()=>fill(DEMO,true));
+  }
+  setInterval(refresh,10000);refresh();
 })();
 </script>
 <script src="/teaching/exec/gt/deck.js"></script>
