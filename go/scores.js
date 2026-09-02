@@ -34,7 +34,14 @@
                   unscored — negotiation games never score, the m1
                   added-value precedent; modules aim at 10 points max.
      lastcard   — "winner|loser|leaves" lines, latest per pair; the
-                  winner earns 5 points. */
+                  winner earns 5 points.
+     enginegame — the m3 pitch lines; the side ahead over the pair's
+                  rounds earns winPoints, a dead heat pays nobody.
+     pricewars  — m4 lock-ins + the deck's "::shock|on" marker; each match
+                  scored on the LOWER of its two totals against bands
+                  (130→10, 80→3, 50→1), paid to every name that claimed
+                  the station in the teams room. Bands are revealed only
+                  after the game — the brief says "win as much as you can". */
 
 const GT_SCORES = (() => {
   const API = 'https://gt-poll.rlamare.workers.dev';
@@ -54,6 +61,29 @@ const GT_SCORES = (() => {
       events: [
         { key: 'lastcard', label: 'Take the last card', kind: 'lastcard', room: 'm2-lastcard' },
         { key: 'centipede', label: 'The centipede game', kind: 'centipede', room: 'm2-centipede' },
+      ],
+    },
+    {
+      id: 'm3',
+      title: 'Zero-Sum Games',
+      events: [
+        /* the Tapas engine game: whoever comes out ahead in their pair over
+           the four rounds takes 5; a dead heat pays nobody */
+        { key: 'engine', label: 'Engine game', kind: 'enginegame', room: 'm3-engine', winPoints: 5 },
+      ],
+    },
+    {
+      id: 'm4',
+      title: 'Prisoner\u2019s Dilemmas',
+      events: [
+        /* Price Wars: a match is scored on the LOWER of its two six-week
+           totals (so exploiting a partner collapses your own score), in
+           bands that are revealed only after the game. Under the week-5
+           shock the true best ending (hold, then take turns undercutting
+           in weeks 5 and 6) lands both stations on 134 and takes the full
+           ten. Team membership comes from the m4-teams room. */
+        { key: 'pricewars', label: 'Price Wars', kind: 'pricewars', room: 'm4-prices', teams: 'm4-teams',
+          bands: [[130, 10], [80, 3], [50, 1]] },
       ],
     },
     {
@@ -86,6 +116,8 @@ const GT_SCORES = (() => {
     { id: 'm2-ultimatum', label: 'The ultimatum game · Module 2' },
     { id: 'm2-centipede', label: 'The centipede game · Module 2' },
     { id: 'm2-tapasguess', label: 'How many ways? · Module 2', solo: true },
+    { id: 'm3-engine', label: 'The engine game · Module 3' },
+    { id: 'm4-prices', label: 'Price Wars · Module 4' },
     { id: 'm5-invest', label: 'The investment game · Module 5' },
   ];
 
@@ -276,6 +308,83 @@ const GT_SCORES = (() => {
     });
   }
 
+  /* the engine game: "aurora|borealis|r|a-or-b|p-t-s-c" lines (names ride
+     inside), latest per pair+round+seat; a pair's rounds add up Aurora's
+     share against 50 a round, and the side ahead takes winPoints */
+  const ENGINE_SHARE = [[50, 55, 40, 70], [45, 50, 45, 65], [60, 55, 50, 60], [30, 35, 40, 50]];
+  const ENGINE_MK = { p: 0, t: 1, s: 2, c: 3 };
+  async function scoreEngine(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const latest = new Map(); /* pair|round|seat -> move */
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p.length !== 5 || !p[0] || !p[1] || !/^\d{1,2}$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[ptsc]$/.test(p[4])) return;
+      const key = [norm(p[0]), norm(p[1])].sort().join('~');
+      latest.set(key + '|' + p[2] + '|' + p[3], { A: p[0], B: p[1], r: +p[2], seat: p[3], m: p[4] });
+    });
+    const pairs = new Map(); /* pair -> {A,B,rounds:{r:{a,b}}} */
+    latest.forEach(m => {
+      const key = [norm(m.A), norm(m.B)].sort().join('~');
+      if (!pairs.has(key)) pairs.set(key, { A: m.A, B: m.B, rounds: {} });
+      const pr = pairs.get(key);
+      if (pr.rounds[m.r] === undefined) pr.rounds[m.r] = {};
+      pr.rounds[m.r][m.seat] = m.m;
+    });
+    pairs.forEach(pr => {
+      let sum = 0, n = 0;
+      Object.values(pr.rounds).forEach(rd => { if (rd.a && rd.b) { sum += ENGINE_SHARE[ENGINE_MK[rd.a]][ENGINE_MK[rd.b]]; n++; } });
+      if (!n) return;
+      if (sum > 50 * n) addPoints(tally, pr.A, ev.key, ev.winPoints);
+      else if (sum < 50 * n) addPoints(tally, pr.B, ev.key, ev.winPoints);
+    });
+  }
+
+  /* Price Wars: "station|week|price" lines, latest per station+week, and
+     a "::shock|on" marker from the deck when the week-5 shock is in play.
+     Each match (a1+b1 … a4+b4) is scored on the lower of its two totals,
+     and every name that claimed a station in the teams room ("station|name")
+     takes that station's points */
+  function pwProfit(mine, theirs, week, shock) {
+    if (shock && week >= 5) {
+      if (mine === '1.40' && theirs === '1.50') return 72;
+      if (mine === '1.50' && theirs === '1.40') return 2;
+      return mine === '1.50' ? 12 : 9;
+    }
+    const dbl = (week === 3 || week === 6) ? 2 : 1;
+    if (mine === '1.50') return (theirs === '1.50' ? 12 : 2) * dbl;
+    return (theirs === '1.50' ? 18 : 9) * dbl;
+  }
+  async function scorePricewars(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const price = {}; let shock = false;
+    (d.answers || []).forEach(t => {
+      const s = String(t).trim().toLowerCase();
+      const sm = s.match(/^::shock\|(on|off)$/);
+      if (sm) { shock = sm[1] === 'on'; return; }
+      const m = s.match(/^([ab][1-4])\s*\|\s*([1-6])\s*\|\s*(1\.[45]0)$/);
+      if (m) price[m[1] + '|' + m[2]] = m[3];
+    });
+    const total = st => { let sum = 0, weeks = 0; const mate = (st[0] === 'a' ? 'b' : 'a') + st[1];
+      for (let w = 1; w <= 6; w++) { const mine = price[st + '|' + w], theirs = price[mate + '|' + w];
+        if (mine && theirs) { sum += pwProfit(mine, theirs, w, shock); weeks++; } }
+      return weeks ? sum : null; };
+    const pts = {};
+    for (let i = 1; i <= 4; i++) {
+      const a = total('a' + i), b = total('b' + i);
+      if (a === null || b === null) continue;
+      const floor = Math.min(a, b);
+      let p = 0; for (const [at, v] of ev.bands) { if (floor >= at) { p = v; break; } }
+      pts['a' + i] = p; pts['b' + i] = p;
+    }
+    const td = await j('/p/' + ev.teams + '/answers');
+    const member = new Map(); /* name -> station, latest wins */
+    (td.answers || []).forEach(t => {
+      const m = String(t).match(/^([ab][1-4])\s*\|\s*(.{1,40}?)$/i);
+      if (m) member.set(norm(m[2]), { name: m[2].trim(), st: m[1].toLowerCase() });
+    });
+    member.forEach(({ name, st }) => { if (pts[st]) addPoints(tally, name, ev.key, pts[st]); });
+  }
+
   /* -> {players:[{name, byEvent, total}] desc, events:[{key,label}]} */
   async function load() {
     const claims = await loadClaims();
@@ -291,6 +400,8 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'centipede') await scoreCentipede(ev, claims, tally);
         else if (ev.kind === 'lastcard') await scoreLastcard(ev, claims, tally);
         else if (ev.kind === 'mediandog') await scoreDog(ev, claims, tally);
+        else if (ev.kind === 'enginegame') await scoreEngine(ev, claims, tally);
+        else if (ev.kind === 'pricewars') await scorePricewars(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -303,6 +414,7 @@ const GT_SCORES = (() => {
     MODULES.forEach(mod => mod.events.forEach(ev => {
       if (ev.rooms) ev.rooms.forEach(r => ids.add(r.id));
       if (ev.room) ids.add(ev.room);
+      if (ev.teams) ids.add(ev.teams);
     }));
     return ids;
   }
@@ -310,6 +422,12 @@ const GT_SCORES = (() => {
   function gameLine(id, t, nkey) {
     const p = String(t).split('|').map(s => s.trim());
     if (id === 'm5-invest') return 'R' + p[1] + ': ' + (p[2] === 'i' ? 'invested' : 'sat out');
+    if (id === 'm3-engine') {
+      if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
+      const M = { p: 'cut the price', t: 'promised better terms', s: 'solved a concern', c: 'charmed the board' };
+      const mine = (norm(p[0]) === nkey) === (p[3] === 'a');
+      return 'round ' + p[2] + ': ' + (mine ? 'you ' : (norm(p[0]) === nkey ? p[1] : p[0]) + ' ') + (M[p[4]] || p[4]);
+    }
     if (id === 'm2-ultimatum') {
       const me = norm(p[0]) === nkey;
       return (me ? 'offered £' + p[2] + ' to ' + p[1] : 'offered £' + p[2] + ' by ' + p[0]) +

@@ -102,6 +102,9 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
 
 
 /* ---- price lock-in (inline; posts to the gt-poll room m4-prices) ---- */
+.lk-name{display:flex;gap:10px;margin-top:8px}
+.lk-name input{flex:1;min-width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:12px 14px}
+.lk-name button{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:12px 18px;cursor:pointer}
 .lockwrap{margin-top:6px}
 .lk-h{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--muted);margin:18px 0 8px}
 .lk-stations{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -319,6 +322,12 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
     </div>
     <button class="lk-go" id="lkGo" disabled>LOCK IT IN</button>
     <div class="lk-status" id="lkStatus">Pick your station, the week, and a price.</div>
+    <div class="lk-h" data-edit style="margin-top:18px">Who&rsquo;s on this phone</div>
+    <div class="lk-name" id="lkName">
+      <input type="text" id="lkNameIn" maxlength="30" placeholder="Your first name" autocomplete="off">
+      <button type="button" id="lkNameGo">THAT&rsquo;S ME</button>
+    </div>
+    <div class="lk-status" id="lkNameStatus">Everyone on the team taps their own name in, once, on their own phone.</div>
   </div>
 
   <div class="shead"><span class="sq"></span><h2>Your team ledger</h2></div>
@@ -350,6 +359,31 @@ table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-lef
 
 </main>
 <script>
+/* Team claim: each phone posts one "station|name" line into the room
+   m4-teams so the class points system can credit the station's result to
+   everyone on it. The lock-in below is unchanged. */
+(function(){
+const API='https://gt-poll.rlamare.workers.dev/p/m4-teams/say';
+const inp=document.getElementById('lkNameIn'), go=document.getElementById('lkNameGo'), st=document.getElementById('lkNameStatus');
+let voter=localStorage.getItem('pw-voter');
+if(!voter){voter=(crypto.randomUUID?crypto.randomUUID():('v'+Date.now()+'-'+Math.random().toString(36).slice(2,10)));localStorage.setItem('pw-voter',voter);}
+const LBL={a:'Aura',b:"Buco's"};
+try{const n=localStorage.getItem('pw-name');if(n)inp.value=n;}catch(_){}
+go.addEventListener('click',()=>{
+  const station=localStorage.getItem('pw-station')||'';
+  const name=inp.value.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+  if(!station){st.className='lk-status bad';st.textContent='Pick your station first, just above.';return;}
+  if(!name){st.className='lk-status bad';st.textContent='Type your name first.';return;}
+  go.disabled=true;
+  fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:station+'|'+name,v:voter+'-n'})})
+  .then(r=>r.json()).then(d=>{
+    go.disabled=false;
+    if(d.ok){try{localStorage.setItem('pw-name',name);}catch(_){}st.className='lk-status ok';st.textContent='Counted: '+name+' on '+LBL[station[0]]+' '+station[1]+'.';}
+    else{st.className='lk-status bad';st.textContent='That didn\u2019t go through. Try again.';}
+  }).catch(()=>{go.disabled=false;st.className='lk-status bad';st.textContent='No connection. Try again in a moment.';});
+});
+})();
+
 /* Price lock-in: posts one "station|week|price" line per lock into the
    gt-poll /say lane, room m4-prices. The deck's board and the
    facilitator's desk page read the same room; the latest line per
