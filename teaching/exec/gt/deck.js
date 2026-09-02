@@ -16,6 +16,16 @@ const slides=[...document.querySelectorAll('.slide')];
 const ticksEl=document.querySelector('.ticks');
 const built=slides.length;
 let cur=0, step=0;
+/* flex mode: slides carrying class "flex" are the pre-agreed cuts for a
+   session running long. Press F to skip them (and again to restore);
+   their ticks are hollow, and dim while skipped. The choice sticks per
+   deck in localStorage. #N in the URL still opens any slide directly. */
+const FLEXKEY='gt-flex-'+location.pathname;
+let skipFlex=false;try{skipFlex=localStorage.getItem(FLEXKEY)==='1';}catch(_){}
+slides.forEach((s,i)=>{if(s.classList.contains('flex')&&ticksEl.children[i])ticksEl.children[i].classList.add('flex');});
+function isFlex(i){return slides[i].classList.contains('flex');}
+function setSkip(on){skipFlex=on;ticksEl.classList.toggle('skipping',on);try{localStorage.setItem(FLEXKEY,on?'1':'0');}catch(_){}}
+setSkip(skipFlex);
 function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.documentElement.style.setProperty('--scale',s);}
 addEventListener('resize',fit);fit();
 function maxStep(i){const ds=[...slides[i].querySelectorAll('[data-step]')].map(e=>+e.dataset.step||0);return ds.length?Math.max(...ds):0;}
@@ -28,8 +38,12 @@ function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>{
 function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
   [...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));
   ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();}
-function next(){if(step<maxStep(cur)){step++;applySteps();}else if(cur<built-1){cur++;step=0;render();}}
-function prev(){if(step>0){step--;applySteps();}else if(cur>0){cur--;step=maxStep(cur);render();}}
+function next(){if(step<maxStep(cur)){step++;applySteps();return;}
+  let n=cur+1;while(skipFlex&&n<built&&isFlex(n))n++;
+  if(n<built){cur=n;step=0;render();}}
+function prev(){if(step>0){step--;applySteps();return;}
+  let n=cur-1;while(skipFlex&&n>=0&&isFlex(n))n--;
+  if(n>=0){cur=n;step=maxStep(cur);render();}}
 addEventListener('keydown',e=>{
   const t=document.activeElement;
   const inControl=t&&(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='BUTTON'||t.tagName==='A'||t.isContentEditable);
@@ -37,6 +51,7 @@ addEventListener('keydown',e=>{
   else if(e.key==='ArrowDown'){if(!inControl){next();e.preventDefault();}}
   else if(e.key===' '||e.key==='Spacebar'){if(!inControl){next();e.preventDefault();}}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){prev();e.preventDefault();}
+  else if((e.key==='f'||e.key==='F')&&!inControl){setSkip(!skipFlex);e.preventDefault();}
   else if(e.key==='ArrowUp'){if(!inControl){prev();e.preventDefault();}}
 });
 let tx=null,ty=null;

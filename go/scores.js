@@ -230,8 +230,9 @@ const GT_SCORES = (() => {
     }
   }
 
-  /* centipede: the live game posts the taker first, latest line per
-     (unordered) pair wins; the taker earns the pot ÷ 200 in points
+  /* centipede: the live game posts the taker first; the FIRST finished game
+     per (unordered) pair counts, so a replay after the solution can't farm
+     points; the taker earns the pot ÷ 200 in points
      (max 5) and the other player nothing — no negatives */
   async function scoreCentipede(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
@@ -239,20 +240,23 @@ const GT_SCORES = (() => {
     (d.answers || []).forEach(t => {
       const p = String(t).split('|').map(s => s.trim());
       if (p.length !== 3 || !p[0] || !p[1] || !/^(10|[1-9])$/.test(p[2])) return;
-      byPair.set([norm(p[0]), norm(p[1])].sort().join('~'), { taker: p[0], turn: +p[2] });
+      const k = [norm(p[0]), norm(p[1])].sort().join('~');
+      if (!byPair.has(k)) byPair.set(k, { taker: p[0], turn: +p[2] });
     });
     byPair.forEach(g => addPoints(tally, g.taker, ev.key, Math.max(1, Math.round(g.turn / 2))));
   }
 
-  /* take the last card: winner first, latest line per pair; a flat
-     5 points to the winner */
+  /* take the last card: winner first, the FIRST finished game per pair
+     counts (the solution slide follows the game, so replays don't score);
+     a flat 5 points to the winner */
   async function scoreLastcard(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
     const byPair = new Map();
     (d.answers || []).forEach(t => {
       const p = String(t).split('|').map(s => s.trim());
       if (p.length !== 3 || !p[0] || !p[1]) return;
-      byPair.set([norm(p[0]), norm(p[1])].sort().join('~'), p[0]);
+      const k = [norm(p[0]), norm(p[1])].sort().join('~');
+      if (!byPair.has(k)) byPair.set(k, p[0]);
     });
     byPair.forEach(winner => addPoints(tally, winner, ev.key, 5));
   }

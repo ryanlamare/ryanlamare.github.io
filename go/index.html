@@ -95,7 +95,9 @@ function renderChooser(cfg){
   const opts=document.getElementById('opts');
   opts.innerHTML='';
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='10px';
+  const paired=new Set(Object.values(cfg.polls).map(p=>p.pair).filter(Boolean));
   Object.entries(cfg.polls).forEach(([id,poll])=>{
+    if(paired.has(id))return; /* shown on its partner's screen */
     const b=document.createElement('button');
     b.className='pick';
     const mod=id.match(/^m(\d+)/);
@@ -163,6 +165,7 @@ function renderPoll(poll,id){
   document.getElementById('q').textContent=poll.q;
   const opts=document.getElementById('opts');
   opts.innerHTML='';
+  if(poll.type==='text'&&poll.pair&&CFG&&CFG.polls[poll.pair]){setupPair(opts,poll,CFG.polls[poll.pair],poll.pair);return;}
   if(poll.type==='text'){setupText(opts,poll);return;}
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
   poll.options.forEach((o,i)=>{
@@ -215,6 +218,38 @@ function setupText(opts,poll){
   btn.addEventListener('click',send);
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}});
   inp.focus();
+}
+/* a "pair": two write-in questions on ONE screen, one SEND, each answer
+   going to its own room — the questions are meant to be read together */
+function setupPair(opts,poll,poll2,id2){
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
+  const st=document.getElementById('status');
+  let said=false;
+  try{said=localStorage.getItem('gt-said-'+pollId)==='1'&&localStorage.getItem('gt-said-'+id2)==='1';}catch(_){}
+  if(said){st.innerHTML='<b>Answers received.</b> One per person on these!';showNext(poll);return;}
+  const mk=(ph)=>{const i=document.createElement('input');i.maxLength=80;i.placeholder=ph||'Type an answer…';i.autocomplete='off';return i;};
+  const inp1=mk(poll.ph), inp2=mk(poll2.ph);
+  const q2=document.createElement('h1');q2.textContent=poll2.q;q2.style.marginTop='6px';
+  const row=document.createElement('div');row.className='sayrow';
+  const btn=document.createElement('button');btn.textContent='SEND BOTH';
+  row.appendChild(btn);
+  opts.appendChild(inp1);opts.appendChild(q2);opts.appendChild(inp2);opts.appendChild(row);
+  function send(){
+    const t1=inp1.value.trim(), t2=inp2.value.trim();
+    if(!t1||!t2){st.textContent='Answer both, then send.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    const post=(id,t)=>fetch(API+'/p/'+id+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+    Promise.all([post(pollId,t1),post(id2,t2)]).then(()=>{
+      try{localStorage.setItem('gt-said-'+pollId,'1');localStorage.setItem('gt-said-'+id2,'1');}catch(_){}
+      [inp1,inp2].forEach(i=>i.disabled=true);row.remove();
+      st.innerHTML='<b>Answers received.</b> One per person on these!';
+      showNext(poll);})
+    .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';btn.disabled=false;});
+  }
+  btn.addEventListener('click',send);
+  [inp1,inp2].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}}));
+  inp1.focus();
 }
 function vote(i,btn,poll){
   const st=document.getElementById('status');
