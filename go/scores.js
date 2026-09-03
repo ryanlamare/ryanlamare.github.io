@@ -115,13 +115,11 @@ const GT_SCORES = (() => {
            programme's five-point module. Beat the keeper (m6-solo) and
            rock, paper, scissors (m6-rps) are played for what they show,
            not for points. */
-        /* the shootout is played for what it shows; set goalPoints to 1 to
-           pay a point per goal again */
-        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 0, savePoints: 0 },
-        /* the inspection game: regulator against maintenance shop, eight
-           rounds with the seats swapped after four; whoever comes out
-           ahead in their pair takes winPoints, a dead heat pays nobody */
-        { key: 'inspection', label: 'Inspection', kind: 'inspection', room: 'm6-inspect', winPoints: 5 },
+        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 1, savePoints: 0 },
+        /* the inspection game (m6-inspect) is deliberately unscored: it is
+           played to see what a regulator is up against, and a prize for
+           skipping safety steps would reward the wrong thing (Ryan, 5 Sep
+           2026). scoreInspection stays below in case that ever changes */
         /* the boss battle: the top scorers take one kick each against the
            instructor on the big screen; a goal is a bonus point (only a
            name's first kick counts) */
