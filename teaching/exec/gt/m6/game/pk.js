@@ -161,6 +161,10 @@ window.PK=(function(){
        stand(pos)             put the keeper a step to a side (-1..1)
        kick({kick,dive,goal,pos}) -> Promise, plays the kick
        reset()                everyone back to their marks */
+  /* the three zones of the live game: a keeper standing at |pos| > ZONE
+     is committed to that side; nearer the middle he is in the centre */
+  const ZONE=0.33;
+  const zoneOf=p=>p<-ZONE?'l':(p>ZONE?'r':'c');
   function Scene(container,opts){
     opts=opts||{};
     const svg=el('svg',{viewBox:'0 0 460 340',role:'img','aria-label':'A goal seen from the penalty spot: the keeper on the line, the kicker at the ball'});
@@ -176,6 +180,12 @@ window.PK=(function(){
       const lab={'font-family':'Jost, sans-serif','font-weight':'700','font-size':'15','letter-spacing':'1.5',fill:'#CE1E32','text-anchor':'middle'};
       el('text',Object.assign({x:70,y:26},lab),svg).textContent='LEFT';
       el('text',Object.assign({x:392,y:26},lab),svg).textContent='RIGHT';
+    }
+    /* zone dividers for the live game */
+    if(opts.zones){
+      const zg=el('g',{stroke:'#CE1E32','stroke-width':'2.5','stroke-dasharray':'8 8',opacity:'.55'},svg);
+      el('line',{x1:CX-40,y1:BAR,x2:CX-40,y2:LINE},zg);
+      el('line',{x1:CX+40,y1:BAR,x2:CX+40,y2:LINE},zg);
     }
     /* the keeper's standing spot, shown only when someone moves it */
     const spot=el('line',{x1:CX,y1:198,x2:CX,y2:202,stroke:'#CE1E32','stroke-width':'6','stroke-linecap':'round',opacity:'0'},svg);
@@ -214,9 +224,42 @@ window.PK=(function(){
         ball.setAttribute('cx',x);ball.setAttribute('cy',y);ball.setAttribute('r',11-(shrink?4*u:0));
       });
     }
+    /* the live game: the keeper is already where he chose to be (o.pos is
+       where he stood as the kick was taken, o.pos1 where he ended up); he
+       slides between the two and lunges toward his zone, or stays put in
+       the centre. A zone on the kick's side is a save, anything else a goal. */
+    async function kickLive(o){
+      const side=o.kick==='l'?-1:1, zone=o.dive, dside=zone==='l'?-1:(zone==='r'?1:0);
+      kicker.setAttribute('transform','translate(150 224)');
+      await tween(420,t=>{const u=ease(t);kicker.setAttribute('transform','translate('+(150+46*u)+' '+(224-10*u)+')');});
+      kicker.setAttribute('transform','translate(196 214) rotate(-10 220 300)');
+      const kx0=206+o.pos*120, kx1=206+(o.pos1===undefined?o.pos:o.pos1)*120;
+      const slide=tween(520,t=>{
+        const u=ease(t), x=kx0+(kx1-kx0)*u;
+        keeper.setAttribute('transform','translate('+(x+dside*30*u)+' '+(86+(dside?22*u:0))+') rotate('+(dside*44*u)+' 24 114)');
+      });
+      let flightP;
+      if(o.goal){
+        const tx=side<0?86:374, ty=118;
+        flightP=flight(tx,ty,560,true).then(()=>{
+          net.setAttribute('transform','translate('+(side*3)+' 0)');
+          return tween(180,t=>{net.setAttribute('transform','translate('+(side*3*(1-t))+' 0)');});
+        });
+      }else{
+        const tx=kx1+24+dside*66, ty=118;
+        flightP=flight(tx,ty,540,true).then(()=>tween(260,t=>{ball.setAttribute('cy',118+70*t*t);ball.setAttribute('cx',tx-dside*18*t);}));
+      }
+      await Promise.all([slide,flightP]);
+      kicker.setAttribute('transform','translate(196 214)');
+      pos=o.pos1===undefined?o.pos:o.pos1;
+      flash.textContent=o.goal?'GOAL':'SAVED';
+      flash.setAttribute('font-size','64');
+      await tween(220,t=>flash.setAttribute('opacity',t));
+    }
     async function kick(o){
       if(busy)return;busy=true;
       reset();busy=true;
+      if(o.live){try{await kickLive(o);}finally{busy=false;}return;}
       const side=o.kick==='l'?-1:1, dside=o.dive==='l'?-1:1;
       const sameWay=o.kick===o.dive;
       /* run-up */
@@ -254,9 +297,11 @@ window.PK=(function(){
       await tween(220,t=>flash.setAttribute('opacity',t));
       busy=false;
     }
+    /* a word across the goal, outside a kick (the live game's KICK TAKEN) */
+    function flashText(t){flash.textContent=t;flash.setAttribute('font-size','48');flash.setAttribute('opacity','1');}
     reset();
-    return {svg,kits,stand,kick,reset,get pos(){return pos;}};
+    return {svg,kits,stand,kick,reset,flashText,get pos(){return pos;}};
   }
 
-  return {RATE,h01,goal,readKicker,soloDive,soloStep,soloReplay,rateAt,goalAt,KITS,kit,keeperKit,Scene,wait};
+  return {RATE,h01,goal,readKicker,soloDive,soloStep,soloReplay,rateAt,goalAt,ZONE,zoneOf,KITS,kit,keeperKit,Scene,wait};
 })();
