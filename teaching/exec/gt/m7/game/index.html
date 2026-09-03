@@ -4,20 +4,22 @@
 <title>Module 7 · Games</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Participant page for the Module 7 game.
+/* Participant page for the Module 7 games — games the room has played before,
+   with one player handed a strategic move.
 
-     ?g=chicken  chicken in pairs — six rounds. Each round both drivers
-                 choose, at the same time, to swerve or go straight for
-                 Ren and Chuck's payoffs (0,0 / -10,+10 / +10,-10 /
-                 -100,-100). From round four a driver may first throw the
-                 steering wheel out of the window: that is a commitment to
-                 go straight, the other driver is told before they choose,
-                 and it cannot be undone. Both wheels out is a crash. The
-                 wire and the round logic live in chicken.js, shared with
-                 the deck's board (and mirrored in go/scores.js): join
-                 "A|B|0|a|j"; a move "A|B|n|seat|x" with x = s/g, or w/k
-                 for the wheel decision. Five points to whoever is ahead
-                 after six rounds; a dead heat pays nobody.
+     ?g=chicken  chicken in pairs, six rounds; from round four a driver may
+                 first throw the steering wheel out of the window. Rules in
+                 chicken.js. Five points to whoever is ahead.
+     ?g=gb       split or steal in pairs, two rounds, a £1,000 pot each. Talk
+                 first, then choose. In round two the partner who was picked
+                 (seat b) gets an extra option before choosing, and, if they
+                 steal against a split, the choice to hand over half
+                 afterwards. Rules in moves.js (GB). Scored — see scores.js.
+     ?g=stag     the stag hunt in pairs, two rounds, no talking. In round two
+                 seat b may send one assurance before either chooses. Rules
+                 in moves.js (STAG). Unscored.
+     ?g=auction  the whole room bids, anonymously, for a pot of points; the
+                 deck opens rounds. Rules in moves.js (AUCTION). Scored.
 
    Names come from the shared gt-name and are claimed into gt-names for
    the points system. ?room=<id> plays into a scratch room (rehearsals). */
@@ -36,6 +38,10 @@ button.opt:disabled{opacity:.55;cursor:default}
 .bigrow{display:flex;gap:12px}
 .bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:28px;padding:22px 10px;letter-spacing:.02em}
 .bigrow.words button.opt{font-size:19px;padding:22px 6px;line-height:1.15;font-family:var(--sans);font-weight:700}
+.bigrow.balls button.opt{padding:14px 6px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:22px}
+.ball{width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 32%,#ffe9a0 0,#e0b13a 45%,#a37a12 100%);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:900;font-size:13px;letter-spacing:.06em;color:var(--ink)}
+button.opt.mine .ball{box-shadow:0 0 0 4px var(--paper)}
 .namerow{display:flex;gap:10px}
 .namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
@@ -63,7 +69,7 @@ button.opt:disabled{opacity:.55;cursor:default}
 .role{font-family:var(--display);font-weight:900;font-size:24px;line-height:1.1;color:var(--ink);margin:4px 0 2px}
 .role.warn{color:var(--terracotta)}
 .bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center}
-.bigcard .head{font-family:var(--display);font-weight:900;font-size:40px;line-height:1}
+.bigcard .head{font-family:var(--display);font-weight:900;font-size:38px;line-height:1}
 .bigcard .head.good{color:var(--teal)} .bigcard .head.bad{color:var(--terracotta)} .bigcard .head.draw{color:var(--muted)}
 .bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.35}
 .score{display:flex;justify-content:center;gap:26px;margin-top:10px;font-weight:700;font-size:15px}
@@ -72,8 +78,26 @@ button.opt:disabled{opacity:.55;cursor:default}
 .score small{display:block;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
 button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
+button.send:disabled{opacity:.45;cursor:default}
 .wheelnote{border:2.5px solid var(--red);background:var(--card);padding:14px 16px;font-weight:600;font-size:15px;line-height:1.4;color:var(--ink)}
 .wheelnote b{color:var(--red)}
+.wheelnote q{font-style:italic}
+.msg{border-left:6px solid var(--teal);background:var(--card);padding:12px 16px;font-weight:600;font-size:16px;line-height:1.35;color:var(--ink);font-style:italic}
+/* the auction */
+.auc{border:2.5px solid var(--ink);background:var(--card);padding:16px}
+.auc .pot{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--ink)}
+.auc .pot small{font-size:16px;font-family:var(--sans);font-weight:700;letter-spacing:.08em;color:var(--muted);margin-left:8px}
+.auc .row{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-weight:600;font-size:15px;color:var(--muted)}
+.auc .row b{font-family:var(--display);font-weight:900;font-size:26px;color:var(--ink)}
+.auc .you{margin-top:12px;border-top:2px solid var(--rule);padding-top:12px;font-weight:600;font-size:15px;line-height:1.4;color:var(--ink)}
+.auc .you.high{color:var(--teal)} .auc .you.second{color:var(--terracotta)}
+.bidrow{display:flex;gap:10px;margin-top:12px}
+.bidrow input{flex:1;font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:center;
+  background:var(--card);border:2.5px solid var(--ink);padding:10px 12px;min-width:0}
+.bidrow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:12px 18px;cursor:pointer}
+.bidrow button.pass{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+.bidrow button:disabled{opacity:.45;cursor:default}
 </style>
 </head><body>
 <div class="wrap">
@@ -83,6 +107,7 @@ button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacin
   <div class="status" id="status"></div>
 </div>
 <script src="/teaching/exec/gt/m7/game/chicken.js"></script>
+<script src="/teaching/exec/gt/m7/game/moves.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
 const qs=new URLSearchParams(location.search);
@@ -92,7 +117,16 @@ const GAMES={
       wheel:[{k:'w',n:'THROW IT OUT'},{k:'k',n:'KEEP THE WHEEL'}],
       pairLead:'Pair up with the person next to you',
       seats:['I’ll pick my partner','My partner picks me'],
-      wait:'Keep this page open. The game starts when your partner picks you.'}
+      wait:'Keep this page open. The game starts when your partner picks you.'},
+  gb:{room:'m7-gb',title:'Split or steal',n:MOVES.GB.N,
+      pairLead:'Pair up with the person next to you',
+      seats:['I’ll pick my partner','My partner picks me'],
+      wait:'Keep this page open. The game starts when your partner picks you.'},
+  stag:{room:'m7-stag',title:'The stag hunt',n:MOVES.STAG.N,
+      pairLead:'Pair up with the person next to you. No talking once you start',
+      seats:['I’ll pick my partner','My partner picks me'],
+      wait:'Keep this page open. The game starts when your partner picks you.'},
+  auction:{room:'m7-auction',title:'The auction'}
 };
 let voter=null;
 try{
@@ -117,7 +151,7 @@ function claimOnce(){
   .catch(()=>{});
 }
 const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
-const norm=CHICKEN.norm, pairKey=CHICKEN.pairKey;
+const norm=MOVES.norm, pairKey=MOVES.pairKey;
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 let poller=null;
 function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
@@ -129,19 +163,22 @@ function say(line){
 }
 const answers=()=>fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
 const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+const money=v=>'£'+v.toLocaleString('en-GB');
+const sign=v=>(v>0?'+':'')+v;
 
 function render(){
   stopPolling();
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a><a class="pick" href="?g=gb">Split or steal</a><a class="pick" href="?g=stag">The stag hunt</a><a class="pick" href="?g=auction">The auction</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>{
     name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   });return;}
+  if(G===GAMES.auction)return renderAuction();
   /* rejoin a pair this phone already sat in */
   let saved=null;
   try{saved=JSON.parse(localStorage.getItem('m7-pair-'+ROOM)||'null');}catch(_){}
@@ -230,10 +267,11 @@ function renderWaitPick(){
   poller=setInterval(check,2000);check();
 }
 
+/* ================= the pair games ================= */
 function renderPlay(A,B,seat){
   stopPolling();
   try{localStorage.setItem('m7-pair-'+ROOM,JSON.stringify({A,B,seat}));}catch(_){}
-  const me=seat==='a'?A:B, them=seat==='a'?B:A, other=seat==='a'?'b':'a';
+  const me=seat==='a'?A:B, them=seat==='a'?B:A;
   const key=pairKey(A,B);
   q.textContent=G.title;
   app.innerHTML='';
@@ -245,11 +283,6 @@ function renderPlay(A,B,seat){
   app.appendChild(backBtn());
   let shownKey='', posting=false, ackN=0;
   try{ackN=+(localStorage.getItem('m7-ack-'+ROOM+'-'+key)||0);}catch(_){}
-  const sign=v=>(v>0?'+':'')+v;
-  function scoreRow(t){
-    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
-    return '<div class="score"><span class="me"><b>'+sign(mine)+'</b><small>you</small></span><span class="them"><b>'+sign(theirs)+'</b><small>'+esc(them)+'</small></span></div>';
-  }
   function post(n,x,btnRow,b){
     if(posting)return;posting=true;
     say(A+'|'+B+'|'+n+'|'+seat+'|'+x)
@@ -258,127 +291,318 @@ function renderPlay(A,B,seat){
         shownKey='';tick();})
       .catch(code=>{posting=false;st.textContent=failMsg(code);});
   }
-  function buttons(n,opts,words,picked){
-    const row=document.createElement('div');row.className='bigrow'+(words?' words':'');row.style.marginTop='10px';
+  function buttons(n,opts,cls,picked){
+    const row=document.createElement('div');row.className='bigrow'+(cls?' '+cls:'');row.style.marginTop='10px';
     opts.forEach(o=>{
-      const b=document.createElement('button');b.className='opt'+(picked===o.k?' mine':'');b.textContent=o.n;
+      const b=document.createElement('button');b.className='opt'+(picked===o.k?' mine':'');
+      if(o.ball)b.innerHTML='<span class="ball">'+o.ball+'</span>'+esc(o.n); else b.textContent=o.n;
       b.addEventListener('click',()=>post(n,o.k,row,b));
       row.appendChild(b);
     });
     return row;
   }
-  function head(n,pr){
+  function head(n,totalRow){
     stage.innerHTML='';
     const lead=document.createElement('div');lead.className='lbl';lead.textContent='Round '+n+' of '+G.n;
     stage.appendChild(lead);
-    if(n>1){const t=CHICKEN.totals(pr);const d=document.createElement('div');d.innerHTML=scoreRow(t);d.style.marginBottom='8px';stage.appendChild(d);}
+    if(totalRow){const d=document.createElement('div');d.innerHTML=totalRow;d.style.marginBottom='8px';stage.appendChild(d);}
   }
   function waiting(msg){
     const w=document.createElement('div');w.className='waitcard';w.style.marginTop='10px';
     w.innerHTML='<span class="pulse"></span>'+esc(msg);
     stage.appendChild(w);
   }
-  /* the wheel decision, rounds 4-6 */
-  function wheelUI(n,pr,mine){
-    head(n,pr);
-    const r=document.createElement('div');r.className='role';r.textContent='Before you drive';
-    stage.appendChild(r);
-    const note=document.createElement('div');note.className='wheelnote';
-    note.innerHTML=(n===CHICKEN.WHEEL_FROM?'<b>New from this round.</b> ':'')+'You can <b>throw your steering wheel out of the window</b>. If you do, you cannot swerve this round, and '+esc(them)+' will be told before they choose.';
-    stage.appendChild(note);
-    stage.appendChild(buttons(n,G.wheel,true,mine));
-  }
-  function driveUI(n,pr,rd,mine){
-    head(n,pr);
-    if(n>=CHICKEN.WHEEL_FROM){
-      const theyThrew=(seat==='a'?rd.cb:rd.ca)==='w';
-      const r=document.createElement('div');r.className='role'+(theyThrew?' warn':'');
-      r.textContent=theyThrew?esc(them)+' has thrown the wheel out':'Both wheels still in place';
-      stage.appendChild(r);
-      const hint=document.createElement('div');hint.className='status';
-      hint.textContent=theyThrew?'They cannot swerve. Swerve, or go straight?':'Swerve, or go straight?';
-      stage.appendChild(hint);
-    }else{
-      const hint=document.createElement('div');hint.className='status';hint.textContent='Swerve, or go straight?';
-      stage.appendChild(hint);
-    }
-    stage.appendChild(buttons(n,G.drive,false,mine));
-  }
-  function resultUI(n,pr){
-    const rd=CHICKEN.round(pr,n);
-    const mine=seat==='a'?rd.a:rd.b, theirs=seat==='a'?rd.b:rd.a;
-    const myPay=rd.pay[seat==='a'?0:1], theirPay=rd.pay[seat==='a'?1:0];
-    let h,cls;
-    if(mine==='g'&&theirs==='g'){h='CRASH';cls='bad';}
-    else if(mine==='s'&&theirs==='s'){h='BOTH SWERVED';cls='draw';}
-    else if(mine==='s'){h='YOU SWERVED';cls='bad';}
-    else{h='THEY SWERVED';cls='good';}
-    const did=x=>x==='s'?'swerved':'went straight';
-    let sub='You '+did(mine)+', '+them+' '+did(theirs)+'. This round: '+sign(myPay)+' you, '+sign(theirPay)+' '+them+'.';
-    if(n>=CHICKEN.WHEEL_FROM){
-      const iThrew=(seat==='a'?rd.ca:rd.cb)==='w', theyThrew=(seat==='a'?rd.cb:rd.ca)==='w';
-      if(iThrew&&theyThrew)sub+=' Both wheels were out of the window.';
-      else if(iThrew)sub+=' Your wheel was out of the window.';
-      else if(theyThrew)sub+=' Their wheel was out of the window.';
-    }
-    stage.innerHTML='';
-    const card=document.createElement('div');card.className='bigcard';
-    card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+scoreRow(CHICKEN.totals(pr));
-    stage.appendChild(card);
+  function ackBtn(n,last){
     const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
-    btn.textContent=n<G.n?'On to round '+(n+1):'See the final score';
+    btn.textContent=last?'See the final score':'On to round '+(n+1);
     btn.addEventListener('click',()=>{ackN=n;try{localStorage.setItem('m7-ack-'+ROOM+'-'+key,String(n));}catch(_){}shownKey='';tick();});
-    stage.appendChild(btn);
+    return btn;
   }
-  function finalUI(pr){
-    const t=CHICKEN.totals(pr);
-    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
-    stage.innerHTML='';
-    const card=document.createElement('div');card.className='bigcard';
-    const cls=mine>theirs?'good':(mine<theirs?'bad':'draw');
-    card.innerHTML='<div class="head '+cls+'">'+(mine>theirs?'YOU CAME OUT AHEAD':(mine<theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div>'+
-      '<div class="sub">Six rounds of chicken</div>'+scoreRow(t);
-    stage.appendChild(card);
+  function doneNote(){
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
     note.textContent='All done. Look up — the whole room is about to go on the big screen.';
-    stage.appendChild(note);
+    return note;
   }
+  const isChicken=G===GAMES.chicken, isGB=G===GAMES.gb, isStag=G===GAMES.stag;
+
+  /* ---------- chicken ---------- */
+  function chScore(t){
+    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+    return '<div class="score"><span class="me"><b>'+sign(mine)+'</b><small>you</small></span><span class="them"><b>'+sign(theirs)+'</b><small>'+esc(them)+'</small></span></div>';
+  }
+  function chTick(pr){
+    const t=CHICKEN.totals(pr), n=t.next;
+    document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
+    const last=n-1;
+    const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
+    let k;
+    if(last>=1&&ackN<last)k='res:'+last;
+    else if(n>G.n)k='final';
+    else if(n>=CHICKEN.WHEEL_FROM){
+      if(!mineSlot.c)k='wheel:'+n;
+      else if(!(rd.ca&&rd.cb))k='waitc:'+n;
+      else if(mineSlot.c==='w')k='thrown:'+n;
+      else if(!mineSlot.d)k='drive:'+n+':'+((seat==='a'?rd.cb:rd.ca)||'');
+      else k='waitd:'+n;
+    }else k=!mineSlot.d?'drive:'+n:'waitd:'+n;
+    if(k===shownKey)return;shownKey=k;st.textContent='';
+    const totalRow=n>1?chScore(t):'';
+    if(k.startsWith('res:')){
+      const rr=CHICKEN.round(pr,last);
+      const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
+      const myPay=rr.pay[seat==='a'?0:1], theirPay=rr.pay[seat==='a'?1:0];
+      let h,cls;
+      if(mine==='g'&&theirs==='g'){h='CRASH';cls='bad';}
+      else if(mine==='s'&&theirs==='s'){h='BOTH SWERVED';cls='draw';}
+      else if(mine==='s'){h='YOU SWERVED';cls='bad';}
+      else{h='THEY SWERVED';cls='good';}
+      const did=x=>x==='s'?'swerved':'went straight';
+      let sub='You '+did(mine)+', '+them+' '+did(theirs)+'. This round: '+sign(myPay)+' you, '+sign(theirPay)+' '+them+'.';
+      if(last>=CHICKEN.WHEEL_FROM){
+        const iThrew=(seat==='a'?rr.ca:rr.cb)==='w', theyThrew=(seat==='a'?rr.cb:rr.ca)==='w';
+        if(iThrew&&theyThrew)sub+=' Both wheels were out of the window.';
+        else if(iThrew)sub+=' Your wheel was out of the window.';
+        else if(theyThrew)sub+=' Their wheel was out of the window.';
+      }
+      stage.innerHTML='';
+      const card=document.createElement('div');card.className='bigcard';
+      card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+chScore(CHICKEN.totals(pr));
+      stage.appendChild(card);stage.appendChild(ackBtn(last,last>=G.n));
+    }else if(k==='final'){
+      const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+      stage.innerHTML='';
+      const card=document.createElement('div');card.className='bigcard';
+      const cls=mine>theirs?'good':(mine<theirs?'bad':'draw');
+      card.innerHTML='<div class="head '+cls+'">'+(mine>theirs?'YOU CAME OUT AHEAD':(mine<theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div><div class="sub">Six rounds of chicken</div>'+chScore(t);
+      stage.appendChild(card);stage.appendChild(doneNote());
+    }else if(k.startsWith('wheel:')||k.startsWith('waitc:')){
+      head(n,totalRow);
+      const r2=document.createElement('div');r2.className='role';r2.textContent='Before you drive';stage.appendChild(r2);
+      const note=document.createElement('div');note.className='wheelnote';
+      note.innerHTML=(n===CHICKEN.WHEEL_FROM?'<b>New from this round.</b> ':'')+'You can <b>throw your steering wheel out of the window</b>. If you do, you cannot swerve this round, and '+esc(them)+' will be told before they choose.';
+      stage.appendChild(note);
+      stage.appendChild(buttons(n,G.wheel,'words',mineSlot.c));
+      if(k.startsWith('waitc:'))st.textContent='Sent. Waiting for '+them+'…';
+    }else if(k.startsWith('thrown:')){
+      head(n,totalRow);waiting('Your wheel is out of the window. You are going straight. Waiting for '+them+' to choose…');
+    }else{
+      head(n,totalRow);
+      if(n>=CHICKEN.WHEEL_FROM){
+        const theyThrew=(seat==='a'?rd.cb:rd.ca)==='w';
+        const r2=document.createElement('div');r2.className='role'+(theyThrew?' warn':'');
+        r2.textContent=theyThrew?them+' has thrown the wheel out':'Both wheels still in place';stage.appendChild(r2);
+        const hint=document.createElement('div');hint.className='status';hint.textContent=theyThrew?'They cannot swerve. Swerve, or go straight?':'Swerve, or go straight?';stage.appendChild(hint);
+      }else{const hint=document.createElement('div');hint.className='status';hint.textContent='Swerve, or go straight?';stage.appendChild(hint);}
+      stage.appendChild(buttons(n,G.drive,'',mineSlot.d));
+      if(k.startsWith('waitd:'))st.textContent='Sent. Waiting for '+them+'…';
+    }
+  }
+
+  /* ---------- split or steal ---------- */
+  const GB=MOVES.GB;
+  const BALLS=[{k:'s',n:'SPLIT',ball:'SPLIT'},{k:'t',n:'STEAL',ball:'STEAL'}];
+  function gbScore(t){
+    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+    return '<div class="score"><span class="me"><b>'+money(mine)+'</b><small>you</small></span><span class="them"><b>'+money(theirs)+'</b><small>'+esc(them)+'</small></span></div>';
+  }
+  function gbTick(pr){
+    const t=GB.totals(pr), n=t.next, last=n-1;
+    document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
+    const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=GB.round(pr,n);
+    const iMove=seat===GB.mover&&n===GB.MOVE_ROUND;
+    let k;
+    if(last>=1&&ackN<last)k='res:'+last;
+    else if(n>G.n)k='final';
+    else if(iMove&&!mineSlot.c)k='move:'+n;
+    else if(n===GB.MOVE_ROUND&&!iMove&&!(r.b&&r.b.c))k='waitmove:'+n;
+    else if(!mineSlot.d)k='choose:'+n;
+    else if(iMove&&rd.a==='s'&&rd.b==='t'&&!mineSlot.e)k='hand:'+n;
+    else k='wait:'+n;
+    if(k===shownKey)return;shownKey=k;st.textContent='';
+    const totalRow=n>1?gbScore(t):'';
+    if(k.startsWith('res:')){
+      const rr=GB.round(pr,last);
+      const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
+      const myMoney=rr.money[seat==='a'?0:1];
+      let h,cls,sub;
+      if(mine==='s'&&theirs==='s'){h='YOU BOTH SPLIT';cls='good';sub='£500 each.';}
+      else if(mine==='t'&&theirs==='t'){h='YOU BOTH STOLE';cls='bad';sub='Nobody gets anything.';}
+      else if(mine==='t'){h=rr.hand==='h'?'YOU STOLE, THEN SHARED':'YOU STOLE';cls='good';sub=them+' split. '+(rr.hand==='h'?'You handed over half: £500 each.':'The whole £1,000 is yours.');}
+      else{h=rr.hand==='h'?'THEY STOLE, THEN SHARED':'THEY STOLE';cls=rr.hand==='h'?'draw':'bad';sub='You split. '+(rr.hand==='h'?them+' handed over half: £500 each.':them+' keeps the whole £1,000.');}
+      stage.innerHTML='';
+      const card=document.createElement('div');card.className='bigcard';
+      card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+gbScore(GB.totals(pr));
+      stage.appendChild(card);stage.appendChild(ackBtn(last,last>=G.n));
+    }else if(k==='final'){
+      const mine=seat==='a'?t.a:t.b;
+      stage.innerHTML='';
+      const card=document.createElement('div');card.className='bigcard';
+      card.innerHTML='<div class="head '+(mine>=1000?'good':(mine>0?'draw':'bad'))+'">'+money(mine)+'</div><div class="sub">Yours over the two rounds</div>'+gbScore(t);
+      stage.appendChild(card);stage.appendChild(doneNote());
+    }else if(k.startsWith('move:')){
+      head(n,totalRow);
+      const r2=document.createElement('div');r2.className='role';r2.textContent='Before you both choose';stage.appendChild(r2);
+      const note=document.createElement('div');note.className='wheelnote';
+      note.innerHTML='<b>You have an extra option this round.</b> You may tell '+esc(them)+': <q>I am going to steal, no matter what you do. If you split, I will give you half of the pot afterwards.</q> If you steal and they split, your phone will ask you whether to hand over half.';
+      stage.appendChild(note);
+      const hint=document.createElement('div');hint.className='status';hint.style.marginTop='10px';hint.textContent='Talk it over. Did you say it to them?';stage.appendChild(hint);
+      stage.appendChild(buttons(n,[{k:'n',n:'I SAID IT'},{k:'q',n:'I DIDN’T SAY IT'}],'words',mineSlot.c));
+    }else if(k.startsWith('waitmove:')){
+      head(n,totalRow);waiting('Talk it over with '+them+'. Your choice opens in a moment…');
+    }else if(k.startsWith('choose:')){
+      head(n,totalRow);
+      const hint=document.createElement('div');hint.className='status';hint.textContent=(n===1?'A £1,000 pot. Talk it over, then choose':'Another £1,000 pot. Talk it over, then choose');stage.appendChild(hint);
+      stage.appendChild(buttons(n,BALLS,'balls',mineSlot.d));
+    }else if(k.startsWith('hand:')){
+      head(n,totalRow);
+      const r2=document.createElement('div');r2.className='role';r2.textContent='You have the whole £1,000';stage.appendChild(r2);
+      const hint=document.createElement('div');hint.className='status';hint.textContent=them+' split. Hand over half?';stage.appendChild(hint);
+      stage.appendChild(buttons(n,[{k:'h',n:'HAND OVER HALF'},{k:'k',n:'KEEP IT ALL'}],'words',mineSlot.e));
+    }else{
+      head(n,totalRow);
+      stage.appendChild(buttons(n,BALLS,'balls',mineSlot.d));
+      st.textContent='Sent. Waiting for '+them+'…';
+    }
+  }
+
+  /* ---------- the stag hunt ---------- */
+  const STAG=MOVES.STAG;
+  const HUNT=[{k:'s',n:'STAG'},{k:'h',n:'HARE'}];
+  function stScore(t){
+    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+    return '<div class="score"><span class="me"><b>'+mine+'</b><small>you</small></span><span class="them"><b>'+theirs+'</b><small>'+esc(them)+'</small></span></div>';
+  }
+  function stTick(pr){
+    const t=STAG.totals(pr), n=t.next, last=n-1;
+    document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
+    const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{};
+    const iMove=seat===STAG.mover&&n===STAG.MOVE_ROUND;
+    const sent=n===STAG.MOVE_ROUND?(r.b&&r.b.c):undefined;
+    let k;
+    if(last>=1&&ackN<last)k='res:'+last;
+    else if(n>G.n)k='final';
+    else if(iMove&&!mineSlot.c)k='move:'+n;
+    else if(n===STAG.MOVE_ROUND&&!iMove&&!sent)k='waitmove:'+n;
+    else if(!mineSlot.d)k='choose:'+n+':'+(sent||'');
+    else k='wait:'+n;
+    if(k===shownKey)return;shownKey=k;st.textContent='';
+    const totalRow=n>1?stScore(t):'';
+    if(k.startsWith('res:')){
+      const rr=STAG.round(pr,last);
+      const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
+      let h,cls,sub;
+      if(mine==='s'&&theirs==='s'){h='YOU CAUGHT THE STAG';cls='good';sub='Both of you went for the stag: 3 each.';}
+      else if(mine==='h'&&theirs==='h'){h='TWO HARES';cls='draw';sub='Both of you played safe: 1 each.';}
+      else if(mine==='s'){h='LEFT ALONE';cls='bad';sub='You went for the stag, '+them+' took the hare: 0 for you, 1 for them.';}
+      else{h='YOU TOOK THE HARE';cls='draw';sub=them+' went for the stag alone: 1 for you, 0 for them.';}
+      stage.innerHTML='';
+      const card=document.createElement('div');card.className='bigcard';
+      card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+stScore(STAG.totals(pr));
+      stage.appendChild(card);stage.appendChild(ackBtn(last,last>=G.n));
+    }else if(k==='final'){
+      const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+      stage.innerHTML='';
+      const card=document.createElement('div');card.className='bigcard';
+      card.innerHTML='<div class="head '+(mine>=4?'good':(mine>=2?'draw':'bad'))+'">'+mine+' OF 6</div><div class="sub">Your two rounds</div>'+stScore(t);
+      stage.appendChild(card);stage.appendChild(doneNote());
+    }else if(k.startsWith('move:')){
+      head(n,totalRow);
+      const r2=document.createElement('div');r2.className='role';r2.textContent='Before you both choose';stage.appendChild(r2);
+      const note=document.createElement('div');note.className='wheelnote';
+      note.innerHTML='<b>You have an extra option this round.</b> You may send '+esc(them)+' one message before either of you chooses: <q>I am going for the stag.</q> It lands on their phone. Still no talking.';
+      stage.appendChild(note);
+      stage.appendChild(buttons(n,[{k:'m',n:'SEND IT'},{k:'q',n:'SEND NOTHING'}],'words',mineSlot.c));
+    }else if(k.startsWith('waitmove:')){
+      head(n,totalRow);waiting('No talking. Your choice opens in a moment…');
+    }else if(k.startsWith('choose:')||k.startsWith('wait:')){
+      head(n,totalRow);
+      if(n===STAG.MOVE_ROUND&&!iMove){
+        if(sent==='m'){const m=document.createElement('div');m.className='msg';m.textContent='Message from '+them+': “I am going for the stag.”';stage.appendChild(m);}
+        else{const hint=document.createElement('div');hint.className='status';hint.textContent='No message from '+them+'.';stage.appendChild(hint);}
+      }
+      const hint=document.createElement('div');hint.className='status';hint.style.marginTop='8px';hint.textContent='No talking. Stag, or hare?';stage.appendChild(hint);
+      stage.appendChild(buttons(n,HUNT,'',mineSlot.d));
+      if(k.startsWith('wait:'))st.textContent='Sent. Waiting for '+them+'…';
+    }
+  }
+
   function tick(){
     answers().then(lines=>{
-      const {pairs}=CHICKEN.parse(lines);
-      const pr=pairs.get(key)||{A,B,key,r:{}};
-      const t=CHICKEN.totals(pr);
-      const n=t.next;
-      document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
-      const last=n-1;
-      let k;
-      if(last>=1&&ackN<last)k='res:'+last;
-      else if(n>G.n)k='final';
-      else{
-        const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
-        if(n>=CHICKEN.WHEEL_FROM){
-          if(!mineSlot.c)k='wheel:'+n;
-          else if(!(rd.ca&&rd.cb))k='waitc:'+n;
-          else if(mineSlot.c==='w')k='thrown:'+n;
-          else if(!mineSlot.d)k='drive:'+n+':'+((seat==='a'?rd.cb:rd.ca)||'');
-          else k='waitd:'+n;
-        }else{
-          if(!mineSlot.d)k='drive:'+n;
-          else k='waitd:'+n;
-        }
-      }
-      if(k===shownKey)return;shownKey=k;st.textContent='';
-      const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
-      if(k.startsWith('res:'))resultUI(last,pr);
-      else if(k==='final')finalUI(pr);
-      else if(k.startsWith('wheel:'))wheelUI(n,pr,mineSlot.c);
-      else if(k.startsWith('waitc:')){wheelUI(n,pr,mineSlot.c);st.textContent='Sent. Waiting for '+them+'…';}
-      else if(k.startsWith('thrown:')){head(n,pr);waiting('Your wheel is out of the window. You are going straight. Waiting for '+them+' to choose…');}
-      else if(k.startsWith('drive:'))driveUI(n,pr,rd,mineSlot.d);
-      else {driveUI(n,pr,rd,mineSlot.d);st.textContent='Sent. Waiting for '+them+'…';}
+      if(isChicken){const {pairs}=CHICKEN.parse(lines);chTick(pairs.get(key)||{A,B,key,r:{}});}
+      else if(isGB){const {pairs}=GB.parse(lines);gbTick(pairs.get(key)||{A,B,key,r:{}});}
+      else if(isStag){const {pairs}=STAG.parse(lines);stTick(pairs.get(key)||{A,B,key,r:{}});}
     }).catch(()=>{});
   }
   poller=setInterval(tick,2000);tick();
+}
+
+/* ================= the auction ================= */
+function renderAuction(){
+  stopPolling();
+  const AU=MOVES.AUCTION;
+  q.textContent=G.title;
+  app.innerHTML='';
+  app.appendChild(meRow());
+  const box=document.createElement('div');box.className='auc';box.style.marginTop='10px';
+  box.innerHTML='<div class="pot">'+AU.POT+' points<small>THE POT</small></div>'+
+    '<div class="row"><span>Standing high bid</span><b id="auHigh">–</b></div>'+
+    '<div class="row"><span>Round</span><b id="auRound">–</b></div>'+
+    '<div class="you" id="auYou"></div>';
+  app.appendChild(box);
+  const form=document.createElement('div');form.className='bidrow';
+  form.innerHTML='<input id="auInp" type="number" inputmode="numeric" min="1" max="'+AU.MAX_BID+'" step="1" placeholder="–"><button id="auBid" type="button">BID</button><button id="auPass" type="button" class="pass">PASS</button>';
+  app.appendChild(form);
+  const note=document.createElement('div');note.className='lbl';note.style.marginTop='10px';
+  note.textContent='Bids are anonymous on the big screen. The highest bidder pays their bid and takes the pot. The second-highest pays their bid and gets nothing.';
+  app.appendChild(note);
+  const inp=document.getElementById('auInp'), bidBtn=document.getElementById('auBid'), passBtn=document.getElementById('auPass');
+  let state=null, shownKey='', posting=false;
+  function myBidThisRound(){
+    const r=state&&state.bids[state.round]; const b=r&&r[norm(name)];
+    return b?(b.amt===null?'pass':b.amt):null;
+  }
+  function paint(){
+    const s=state; if(!s)return;
+    document.getElementById('auHigh').textContent=s.high?s.high.amt:'–';
+    document.getElementById('auRound').textContent=s.sold?'SOLD':(s.round?s.round:'not open yet');
+    const o=AU.outcome(s,name), you=document.getElementById('auYou');
+    you.className='you '+o.role;
+    if(o.role==='high')you.textContent='You are the high bidder. If it ended now you would pay '+o.pay+' and take the '+AU.POT+'.';
+    else if(o.role==='second')you.textContent='You are second. If it ended now you would pay '+o.pay+' and get nothing.';
+    else you.textContent=s.high?'You are not paying anything right now.':'No bids yet.';
+    const mine=myBidThisRound();
+    const open=s.round>0&&!s.sold;
+    const minBid=(s.high?s.high.amt:0)+1;
+    inp.min=String(minBid);inp.placeholder=open?String(minBid)+'+':'–';
+    const locked=!open||mine!==null||posting;
+    inp.disabled=locked;bidBtn.disabled=locked;passBtn.disabled=locked;
+    if(s.sold)st.textContent='Sold. Look up.';
+    else if(!open)st.textContent='Waiting for the instructor to open a round…';
+    else if(mine==='pass')st.textContent='You passed this round.';
+    else if(mine!==null)st.textContent='Your bid of '+mine+' is in. Waiting for the round to close…';
+    else st.textContent='';
+  }
+  function post(x){
+    if(posting)return;posting=true;paint();
+    say(name+'|'+state.round+'|'+x).then(()=>{posting=false;tick();}).catch(code=>{posting=false;st.textContent=failMsg(code);paint();});
+  }
+  bidBtn.addEventListener('click',()=>{
+    const v=Math.round(Number(inp.value)); const minBid=(state.high?state.high.amt:0)+1;
+    if(!Number.isFinite(v)||v<minBid){st.textContent='A bid has to beat the standing high bid: '+minBid+' or more.';return;}
+    if(v>AU.MAX_BID){st.textContent='That is the most this auction takes: '+AU.MAX_BID+'.';return;}
+    post(String(v));
+  });
+  passBtn.addEventListener('click',()=>post('p'));
+  function tick(){
+    answers().then(lines=>{
+      state=AU.parse(lines);
+      const k=[state.round,state.sold,state.high&&state.high.amt,state.second&&state.second.amt,myBidThisRound()].join('|');
+      if(k===shownKey)return;shownKey=k;
+      if(!myBidThisRound())inp.value='';
+      paint();
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,1500);tick();
 }
 </script>
 </body></html>

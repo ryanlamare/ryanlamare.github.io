@@ -135,6 +135,20 @@ const GT_SCORES = (() => {
            nobody. The added value game (m1-av) is a negotiation game and
            stays unscored, as in Module 1 */
         { key: 'chicken', label: 'Chicken', kind: 'chicken', room: 'm7-chicken', winPoints: 5 },
+        /* split or steal: only round 2, the strategic-move round, counts.
+           Anyone who ends the round with half the pot (both split, or a
+           steal followed by handing over half) takes sharePoints; the
+           mover who used the move and then split anyway, or who stole and
+           handed over half, takes bonusPoints on top. A steal that keeps
+           the lot pays nothing on this board (Ryan's rule: never a reward
+           for the wrong thing) */
+        { key: 'gb', label: 'Split or steal', kind: 'goldenballs', room: 'm7-gb', sharePoints: 3, bonusPoints: 2 },
+        /* the stag hunt (m7-stag) is unscored: it is the control for the
+           split-or-steal lesson, and the module's points are spoken for */
+        /* the auction: the winner takes the pot and pays their bid, the
+           runner-up pays their bid for nothing — in POINTS, which is the
+           whole trap. minPoints caps how far one auction can drag anyone */
+        { key: 'auction', label: 'Auction', kind: 'auction', room: 'm7-auction', pot: 10, minPoints: -10 },
       ],
     },
   ];
@@ -158,6 +172,9 @@ const GT_SCORES = (() => {
     { id: 'm6-inspect', label: 'The inspection game · Module 6' },
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
     { id: 'm7-chicken', label: 'Chicken · Module 7' },
+    { id: 'm7-gb', label: 'Split or steal · Module 7' },
+    { id: 'm7-stag', label: 'The stag hunt · Module 7' },
+    { id: 'm7-auction', label: 'The auction · Module 7', solo: true },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -465,6 +482,60 @@ const GT_SCORES = (() => {
     });
   }
 
+  /* split or steal: "A|B|n|seat|x" lines, two rounds; s/t = split/steal,
+     seat b in round 2 first posts n/q (used the move or not) and, after a
+     steal against a split, h/k (handed over half or kept it). Latest per
+     pair, round, seat and phase. MUST match m7/game/moves.js (GB) */
+  async function scoreGoldenballs(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const PH = { s: 'd', t: 'd', n: 'c', q: 'c', h: 'e', k: 'e' };
+    const pairs = new Map();
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p.length !== 5 || !p[0] || !p[1] || !/^[12]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !PH[p[4]]) return;
+      const key = [norm(p[0]), norm(p[1])].sort().join('~');
+      if (!pairs.has(key)) pairs.set(key, { A: p[0], B: p[1], r: {} });
+      const pr = pairs.get(key), n = +p[2];
+      pr.r[n] = pr.r[n] || { a: {}, b: {} };
+      pr.r[n][p[3]][PH[p[4]]] = p[4];
+    });
+    const share = ev.sharePoints || 3, bonus = ev.bonusPoints || 2;
+    pairs.forEach(pr => {
+      const r = pr.r[2]; if (!r || !r.b.c || !r.a.d || !r.b.d) return;
+      let mA = 0, mB = 0, hand;
+      if (r.a.d === 's' && r.b.d === 's') { mA = 500; mB = 500; }
+      else if (r.a.d === 't' && r.b.d === 's') { mA = 1000; }
+      else if (r.a.d === 's' && r.b.d === 't') { if (!r.b.e) return; hand = r.b.e; if (hand === 'h') { mA = 500; mB = 500; } else mB = 1000; }
+      if (mA === 500) addPoints(tally, pr.A, ev.key, share);
+      if (mB === 500) addPoints(tally, pr.B, ev.key, share);
+      if (r.b.c === 'n' && r.b.d === 's') addPoints(tally, pr.B, ev.key, bonus);
+      if (r.b.d === 't' && hand === 'h') addPoints(tally, pr.B, ev.key, bonus);
+    });
+  }
+
+  /* the auction: "::open|n" markers from the deck, "name|n|amount" bids
+     and "name|n|p" passes; a name's standing bid is its highest; the top
+     standing bid wins the pot and pays the bid, the next name pays its bid
+     for nothing. Points can go negative here — that is the game — down to
+     ev.minPoints. MUST match m7/game/moves.js (AUCTION) */
+  async function scoreAuction(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const best = new Map();
+    (d.answers || []).forEach((t, idx) => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p.length !== 3 || !p[0] || p[0][0] === ':' || !/^\d{1,3}$/.test(p[1]) || !/^\d{1,3}$/.test(p[2])) return;
+      const amt = +p[2]; if (amt < 1 || amt > 50) return;
+      const cur = best.get(norm(p[0]));
+      if (!cur || amt > cur.amt) best.set(norm(p[0]), { name: p[0], amt, idx });
+    });
+    const standing = [...best.values()].sort((x, y) => y.amt - x.amt || x.idx - y.idx);
+    if (!standing.length) return;
+    const floor = ev.minPoints === undefined ? -10 : ev.minPoints;
+    const clamp = v => Math.max(floor, v);
+    addPoints(tally, standing[0].name, ev.key, clamp((ev.pot || 10) - standing[0].amt));
+    if (standing[1]) addPoints(tally, standing[1].name, ev.key, clamp(-standing[1].amt));
+  }
+
   /* the median dog: spans from the stroke data (bbox width, exactly as
      the deck's kennel computes it), median of spans (average of the two
      middles when even). The podium: the three distinct distances nearest
@@ -614,6 +685,8 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'bossbattle') await scoreBossBattle(ev, claims, tally);
         else if (ev.kind === 'inspection') await scoreInspection(ev, claims, tally);
         else if (ev.kind === 'chicken') await scoreChicken(ev, claims, tally);
+        else if (ev.kind === 'goldenballs') await scoreGoldenballs(ev, claims, tally);
+        else if (ev.kind === 'auction') await scoreAuction(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -667,6 +740,16 @@ const GT_SCORES = (() => {
       const W = { s: 'swerved', g: 'went straight', w: 'threw the wheel out', k: 'kept the wheel' };
       return 'round ' + p[2] + ': ' + (W[p[4]] || p[4]);
     }
+    if (id === 'm7-gb' || id === 'm7-stag') {
+      if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
+      const me = (norm(p[0]) === nkey) === (p[3] === 'a');
+      if (!me) return null;
+      const W = id === 'm7-gb'
+        ? { s: 'split', t: 'stole', n: 'used the move', q: 'did not use the move', h: 'handed over half', k: 'kept it all' }
+        : { s: 'went for the stag', h: 'took the hare', m: 'sent the assurance', q: 'sent nothing' };
+      return 'round ' + p[2] + ': ' + (W[p[4]] || p[4]);
+    }
+    if (id === 'm7-auction') return p[2] === 'p' ? 'round ' + p[1] + ': passed' : 'round ' + p[1] + ': bid ' + p[2];
     if (id === 'm2-tapasguess') return 'guessed ' + (+p[1]).toLocaleString('en-GB') + ' (the answer: 755,476)';
     if (id === 'm1-av') {
       if (p[1] === 'o') return 'offered to keep $' + p[2];
