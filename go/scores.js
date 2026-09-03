@@ -115,7 +115,13 @@ const GT_SCORES = (() => {
            programme's five-point module. Beat the keeper (m6-solo) and
            rock, paper, scissors (m6-rps) are played for what they show,
            not for points. */
-        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 1, savePoints: 0 },
+        /* the shootout is played for what it shows; set goalPoints to 1 to
+           pay a point per goal again */
+        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 0, savePoints: 0 },
+        /* the inspection game: regulator against maintenance shop, eight
+           rounds with the seats swapped after four; whoever comes out
+           ahead in their pair takes winPoints, a dead heat pays nobody */
+        { key: 'inspection', label: 'Inspection', kind: 'inspection', room: 'm6-inspect', winPoints: 5 },
         /* the boss battle: the top scorers take one kick each against the
            instructor on the big screen; a goal is a bonus point (only a
            name's first kick counts) */
@@ -140,7 +146,7 @@ const GT_SCORES = (() => {
     { id: 'm6-solo', label: 'Beat the keeper · Module 6', solo: true },
     { id: 'm6-pk', label: 'The penalty shootout · Module 6' },
     { id: 'm6-vs', label: 'Boss battle · Module 6', solo: true },
-    { id: 'm6-audit', label: 'The audit game · Module 6' },
+    { id: 'm6-inspect', label: 'The inspection game · Module 6' },
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
   ];
 
@@ -376,6 +382,41 @@ const GT_SCORES = (() => {
     });
   }
 
+  /* the inspection game: "A|B|n|seat|x" lines, eight rounds; seat a is the
+     regulator for rounds 1-4 and seat b for rounds 5-8 (i = inspect,
+     t = trust the paperwork); the other seat is the shop (f = full check,
+     k = skip a step). Payoffs regulator-first, MUST match m6/game/. The
+     name ahead on total payoff takes winPoints; a dead heat pays nobody */
+  const INSPECT_PAY = { if: [-1, 0], ik: [4, -8], tf: [0, 0], tk: [-5, 2] };
+  async function scoreInspection(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const latest = new Map();
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p.length !== 5 || !p[0] || !p[1] || !/^[1-8]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[itfk]$/.test(p[4])) return;
+      const key = [norm(p[0]), norm(p[1])].sort().join('~');
+      latest.set(key + '|' + p[2] + '|' + p[3], { A: p[0], B: p[1], key, n: +p[2], seat: p[3], x: p[4] });
+    });
+    const pairs = new Map();
+    latest.forEach(m => {
+      if (!pairs.has(m.key)) pairs.set(m.key, { A: m.A, B: m.B, r: {} });
+      const pr = pairs.get(m.key);
+      pr.r[m.n] = pr.r[m.n] || {};
+      pr.r[m.n][m.seat] = m.x;
+    });
+    pairs.forEach(pr => {
+      let tA = 0, tB = 0;
+      for (let n = 1; n <= 8; n++) {
+        const k = pr.r[n]; if (!k || !k.a || !k.b) continue;
+        const rs = n <= 4 ? 'a' : 'b', reg = k[rs], shop = k[rs === 'a' ? 'b' : 'a'];
+        const pay = INSPECT_PAY[reg + shop]; if (!pay) continue;
+        if (rs === 'a') { tA += pay[0]; tB += pay[1]; } else { tB += pay[0]; tA += pay[1]; }
+      }
+      if (tA > tB) addPoints(tally, pr.A, ev.key, ev.winPoints);
+      else if (tB > tA) addPoints(tally, pr.B, ev.key, ev.winPoints);
+    });
+  }
+
   /* the median dog: spans from the stroke data (bbox width, exactly as
      the deck's kennel computes it), median of spans (average of the two
      middles when even). The podium: the three distinct distances nearest
@@ -523,6 +564,7 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'pricewars') await scorePricewars(ev, claims, tally);
         else if (ev.kind === 'shootout') await scoreShootout(ev, claims, tally);
         else if (ev.kind === 'bossbattle') await scoreBossBattle(ev, claims, tally);
+        else if (ev.kind === 'inspection') await scoreInspection(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));

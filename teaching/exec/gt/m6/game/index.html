@@ -34,10 +34,12 @@
               pos0|pos1", zone l, r or c). A keeper in the zone the ball
               went to saves it; anywhere else is a goal.
      ?g=rps   rock, paper, scissors — ten throws, nothing random at all.
-     ?g=audit the audit game — eight rounds in pairs, head office (seat a:
-              i = inspect, t = trust) against a site manager (seat b:
-              s = play it straight, c = cut a corner); payoffs in AUDIT_PAY,
-              head office first. Unscored.
+     ?g=inspect the inspection game — eight rounds in pairs: the safety
+              regulator (i = inspect, t = trust the paperwork) against an
+              engine maintenance shop (f = the full check, k = skip a
+              step). Seat a is the regulator for rounds 1-4, seat b for
+              5-8. Payoffs in INSPECT_PAY, regulator first; whoever is
+              ahead over the eight takes five points (go/scores.js).
 
    Names come from the shared gt-name and are claimed into gt-names for
    the points system. ?room=<id> plays into a scratch room (rehearsals). */
@@ -130,12 +132,12 @@ const GAMES={
       seats:['I’ll kick first — I’ll pick my partner','My partner picks me'],
       wait:'Keep this page open. The shootout starts when your partner picks you.'},
   vs:{room:'m6-vs',title:'Boss battle',codes:/^[lr]$/},
-  audit:{room:'m6-audit',title:'The audit game',n:8,codes:/^[itsc]$/,
-      seatOpts:{a:[{k:'i',n:'INSPECT'},{k:'t',n:'TRUST'}],b:[{k:'s',n:'PLAY IT STRAIGHT'},{k:'c',n:'CUT A CORNER'}]},
-      opts:[{k:'i',n:'INSPECT'},{k:'t',n:'TRUST'},{k:'s',n:'PLAY IT STRAIGHT'},{k:'c',n:'CUT A CORNER'}],
+  inspect:{room:'m6-inspect',title:'The inspection game',n:8,codes:/^[itfk]$/,
+      roleOpts:{reg:[{k:'i',n:'INSPECT'},{k:'t',n:'TRUST THE PAPERWORK'}],shop:[{k:'f',n:'DO THE FULL CHECK'},{k:'k',n:'SKIP A STEP'}]},
+      opts:[{k:'i',n:'INSPECT'},{k:'t',n:'TRUST THE PAPERWORK'},{k:'f',n:'DO THE FULL CHECK'},{k:'k',n:'SKIP A STEP'}],
       pairLead:'Pair up with the person next to you',
-      seats:['I’m head office — I’ll pick my partner','I run the site — my partner picks me'],
-      wait:'Keep this page open. The game starts when head office picks you.'},
+      seats:['I’m the regulator first — I’ll pick my partner','I run the shop first — my partner picks me'],
+      wait:'Keep this page open. The game starts when your partner picks you.'},
   rps:{room:'m6-rps',title:'Rock, paper, scissors',n:10,codes:/^[rps]$/,
       opts:[{k:'r',n:'ROCK'},{k:'p',n:'PAPER'},{k:'s',n:'SCISSORS'}],
       pairLead:'Same partner as the shootout, or pair up again',
@@ -143,12 +145,15 @@ const GAMES={
       wait:'Keep this page open. The game starts when your partner picks you.'}
 };
 const isGoal=PK.goal, h01=PK.h01;
-/* the audit game's payoffs, head office then the site manager, keyed by
-   head office's move + the manager's: an inspection costs 1; a corner cut
-   nobody sees pays the manager 2 and costs head office 3; a corner cut
-   that is caught costs the manager 3 and the fine covers the inspection */
-const AUDIT_PAY={is:[-1,0],ic:[1,-3],ts:[0,0],tc:[-3,2]};
-const AUDIT_HEAD={is:['NOTHING TO SEE','CLEAN'],ic:['CAUGHT','CAUGHT'],ts:['QUIET ROUND','QUIET ROUND'],tc:['MISSED IT','GOT AWAY WITH IT']};
+/* the inspection game's payoffs, the regulator then the shop, keyed by
+   the regulator's move + the shop's: an inspection costs the regulator 1;
+   a skipped step nobody sees saves the shop 2 and costs the regulator 5
+   (an unsafe engine in service); a skipped step that is caught costs the
+   shop 8 (the fine, the grounding) and pays the regulator 4. MUST match
+   go/scores.js. Regulator = seat a in rounds 1-4, seat b in rounds 5-8. */
+const INSPECT_PAY={if:[-1,0],ik:[4,-8],tf:[0,0],tk:[-5,2]};
+const INSPECT_HEAD={if:['NOTHING TO FIND','ALL CLEAR'],ik:['CAUGHT IT','CAUGHT'],tf:['QUIET ROUND','QUIET ROUND'],tk:['MISSED IT','GOT AWAY WITH IT']};
+const regSeat=n=>n<=4?'a':'b';
 /* r beats s, s beats p, p beats r: 1 = first wins, -1 = second wins, 0 draw */
 const rpsWin=(a,b)=>a===b?0:((a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r')?1:-1);
 
@@ -206,14 +211,14 @@ function render(){
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Boss battle</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=audit">The audit game</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Boss battle</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=inspect">The inspection game</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>{
     name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   });return;}
-  if(G!==GAMES.rps&&G!==GAMES.audit&&!myKit()){renderKit();return;}
+  if(G!==GAMES.rps&&G!==GAMES.inspect&&!myKit()){renderKit();return;}
   if(G===GAMES.solo)return renderSolo();
   if(G===GAMES.vs)return renderVs();
   /* rejoin a pair this phone already sat in (the shootout pair carries into RPS) */
@@ -516,7 +521,8 @@ function renderPlay(A,B,seat,joined){
   try{localStorage.setItem('m6-pair-'+ROOM,JSON.stringify({A,B,seat,joined:!!joined}));}catch(_){}
   const me=seat==='a'?A:B, them=seat==='a'?B:A;
   const key=pairKey(A,B);
-  const isPK=G===GAMES.pk, isAudit=G===GAMES.audit;
+  const isPK=G===GAMES.pk, isAudit=G===GAMES.inspect;
+  const iAmReg=n=>regSeat(n)===seat;
   q.textContent=G.title;
   app.innerHTML='';
   const bar=document.createElement('div');bar.className='vsbar';
@@ -555,8 +561,8 @@ function renderPlay(A,B,seat,joined){
         if(g){if(ks===seat)mine++;else theirs++;}
         else{if(ks===seat)theirSaves++;else mySaves++;}
       }else if(isAudit){
-        const pay=AUDIT_PAY[k.a+k.b]||[0,0];
-        mine+=pay[seat==='a'?0:1];theirs+=pay[seat==='a'?1:0];
+        const rs=regSeat(n), pay=INSPECT_PAY[k[rs]+k[rs==='a'?'b':'a']]||[0,0];
+        mine+=pay[rs===seat?0:1];theirs+=pay[rs===seat?1:0];
       }else{
         const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
         if(w>0)mine++;else if(w<0)theirs++;else draws++;
@@ -589,14 +595,15 @@ function renderPlay(A,B,seat,joined){
       stage.appendChild(hint);
     }
     if(isAudit){
-      const r=document.createElement('div');r.className='role '+(seat==='a'?'keep':'kick');
-      r.textContent=seat==='a'?'You are head office':'You run the site';
+      const reg=iAmReg(n);
+      const r=document.createElement('div');r.className='role '+(reg?'keep':'kick');
+      r.textContent=reg?'You are the regulator':'You run the maintenance shop';
       stage.appendChild(r);
       const hint=document.createElement('div');hint.className='status';
-      hint.textContent=seat==='a'?'Inspect the site this round, or trust it?':'Play it straight this round, or cut a corner?';
+      hint.textContent=(n===5?'Seats swapped. ':'')+(reg?'Inspect the shop this round, or trust the paperwork?':'Do the full check this round, or skip a step?');
       stage.appendChild(hint);
     }
-    const myOpts=G.seatOpts?G.seatOpts[seat]:G.opts;
+    const myOpts=G.roleOpts?(iAmReg(n)?G.roleOpts.reg:G.roleOpts.shop):G.opts;
     const row=document.createElement('div');row.className='bigrow'+(myOpts.length>2?' three':'')+(isAudit?' words':'');row.style.marginTop='10px';
     myOpts.forEach(o=>{
       const b=document.createElement('button');b.className='opt'+(mine===o.k?' mine':'');b.textContent=o.n;
@@ -636,10 +643,10 @@ function renderPlay(A,B,seat,joined){
       sub=resultSub(iKick,them,kick,dive);
       if(animatedN<n){animatedN=n;stage.innerHTML='';sc.reset();paintKits(n);sc.kick({kick,dive,goal}).then(show);return;}
     }else if(isAudit){
-      const key2=k.a+k.b, pay=AUDIT_PAY[key2]||[0,0], me2=pay[seat==='a'?0:1];
-      head=AUDIT_HEAD[key2][seat==='a'?0:1];
+      const rs=regSeat(n), reg=k[rs], shop=k[rs==='a'?'b':'a'], key2=reg+shop, pay=INSPECT_PAY[key2]||[0,0], me2=pay[rs===seat?0:1];
+      head=INSPECT_HEAD[key2][rs===seat?0:1];
       cls=me2>0?'good':(me2<0?'bad':'draw');
-      sub=(k.a==='i'?'Head office inspected':'Head office trusted the site')+', the manager '+(k.b==='s'?'played it straight':'cut a corner')+'. This round: '+(pay[0]>0?'+':'')+pay[0]+' head office, '+(pay[1]>0?'+':'')+pay[1]+' the site';
+      sub=(reg==='i'?'The regulator inspected':'The regulator trusted the paperwork')+', the shop '+(shop==='f'?'did the full check':'skipped a step')+'. This round: '+(pay[0]>0?'+':'')+pay[0]+' regulator, '+(pay[1]>0?'+':'')+pay[1]+' shop';
     }else{
       const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
       head=w>0?'YOU WIN':(w<0?'THEY WIN':'DRAW');cls=w>0?'good':(w<0?'bad':'draw');
@@ -658,7 +665,7 @@ function renderPlay(A,B,seat,joined){
     }else if(isAudit){
       const cls=t.mine>t.theirs?'good':(t.mine<t.theirs?'bad':'draw');
       card.innerHTML='<div class="head '+cls+'">'+(t.mine>t.theirs?'YOU CAME OUT AHEAD':(t.mine<t.theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div>'+
-        '<div class="sub">Eight rounds, not for points</div>'+scoreRow(t);
+        '<div class="sub">Eight rounds, four in each seat</div>'+scoreRow(t);
     }else{
       const cls=t.mine>t.theirs?'good':(t.mine<t.theirs?'bad':'draw');
       card.innerHTML='<div class="head '+cls+'">'+(t.mine>t.theirs?'YOU WIN':(t.mine<t.theirs?'THEY WIN':'ALL SQUARE'))+'</div>'+
