@@ -34,6 +34,10 @@
               pos0|pos1", zone l, r or c). A keeper in the zone the ball
               went to saves it; anywhere else is a goal.
      ?g=rps   rock, paper, scissors — ten throws, nothing random at all.
+     ?g=audit the audit game — eight rounds in pairs, head office (seat a:
+              i = inspect, t = trust) against a site manager (seat b:
+              s = play it straight, c = cut a corner); payoffs in AUDIT_PAY,
+              head office first. Unscored.
 
    Names come from the shared gt-name and are claimed into gt-names for
    the points system. ?room=<id> plays into a scratch room (rehearsals). */
@@ -52,6 +56,7 @@ button.opt:disabled{opacity:.55;cursor:default}
 .bigrow{display:flex;gap:12px}
 .bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:30px;padding:22px 10px;letter-spacing:.02em}
 .bigrow.three button.opt{font-size:20px;padding:22px 6px}
+.bigrow.words button.opt{font-size:19px;padding:22px 6px;line-height:1.15}
 .namerow{display:flex;gap:10px}
 .namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
@@ -124,7 +129,13 @@ const GAMES={
       pairLead:'Pair up with the person next to you',
       seats:['I’ll kick first — I’ll pick my partner','My partner picks me'],
       wait:'Keep this page open. The shootout starts when your partner picks you.'},
-  vs:{room:'m6-vs',title:'Shoot against the keeper',codes:/^[lr]$/},
+  vs:{room:'m6-vs',title:'Boss battle',codes:/^[lr]$/},
+  audit:{room:'m6-audit',title:'The audit game',n:8,codes:/^[itsc]$/,
+      seatOpts:{a:[{k:'i',n:'INSPECT'},{k:'t',n:'TRUST'}],b:[{k:'s',n:'PLAY IT STRAIGHT'},{k:'c',n:'CUT A CORNER'}]},
+      opts:[{k:'i',n:'INSPECT'},{k:'t',n:'TRUST'},{k:'s',n:'PLAY IT STRAIGHT'},{k:'c',n:'CUT A CORNER'}],
+      pairLead:'Pair up with the person next to you',
+      seats:['I’m head office — I’ll pick my partner','I run the site — my partner picks me'],
+      wait:'Keep this page open. The game starts when head office picks you.'},
   rps:{room:'m6-rps',title:'Rock, paper, scissors',n:10,codes:/^[rps]$/,
       opts:[{k:'r',n:'ROCK'},{k:'p',n:'PAPER'},{k:'s',n:'SCISSORS'}],
       pairLead:'Same partner as the shootout, or pair up again',
@@ -132,6 +143,12 @@ const GAMES={
       wait:'Keep this page open. The game starts when your partner picks you.'}
 };
 const isGoal=PK.goal, h01=PK.h01;
+/* the audit game's payoffs, head office then the site manager, keyed by
+   head office's move + the manager's: an inspection costs 1; a corner cut
+   nobody sees pays the manager 2 and costs head office 3; a corner cut
+   that is caught costs the manager 3 and the fine covers the inspection */
+const AUDIT_PAY={is:[-1,0],ic:[1,-3],ts:[0,0],tc:[-3,2]};
+const AUDIT_HEAD={is:['NOTHING TO SEE','CLEAN'],ic:['CAUGHT','CAUGHT'],ts:['QUIET ROUND','QUIET ROUND'],tc:['MISSED IT','GOT AWAY WITH IT']};
 /* r beats s, s beats p, p beats r: 1 = first wins, -1 = second wins, 0 draw */
 const rpsWin=(a,b)=>a===b?0:((a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r')?1:-1);
 
@@ -189,14 +206,14 @@ function render(){
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Shoot against the keeper</a><a class="pick" href="?g=rps">Rock, paper, scissors</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Boss battle</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=audit">The audit game</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>{
     name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   });return;}
-  if(G!==GAMES.rps&&!myKit()){renderKit();return;}
+  if(G!==GAMES.rps&&G!==GAMES.audit&&!myKit()){renderKit();return;}
   if(G===GAMES.solo)return renderSolo();
   if(G===GAMES.vs)return renderVs();
   /* rejoin a pair this phone already sat in (the shootout pair carries into RPS) */
@@ -499,7 +516,7 @@ function renderPlay(A,B,seat,joined){
   try{localStorage.setItem('m6-pair-'+ROOM,JSON.stringify({A,B,seat,joined:!!joined}));}catch(_){}
   const me=seat==='a'?A:B, them=seat==='a'?B:A;
   const key=pairKey(A,B);
-  const isPK=G===GAMES.pk;
+  const isPK=G===GAMES.pk, isAudit=G===GAMES.audit;
   q.textContent=G.title;
   app.innerHTML='';
   const bar=document.createElement('div');bar.className='vsbar';
@@ -537,6 +554,9 @@ function renderPlay(A,B,seat,joined){
         const g=isGoal(key,n,kick,dive);
         if(g){if(ks===seat)mine++;else theirs++;}
         else{if(ks===seat)theirSaves++;else mySaves++;}
+      }else if(isAudit){
+        const pay=AUDIT_PAY[k.a+k.b]||[0,0];
+        mine+=pay[seat==='a'?0:1];theirs+=pay[seat==='a'?1:0];
       }else{
         const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
         if(w>0)mine++;else if(w<0)theirs++;else draws++;
@@ -544,6 +564,7 @@ function renderPlay(A,B,seat,joined){
     return {mine,theirs,draws,mySaves,theirSaves};
   }
   function scoreRow(t){
+    if(isAudit)return '<div class="score"><span class="me"><b>'+(t.mine>0?'+':'')+t.mine+'</b><small>you</small></span><span class="them"><b>'+(t.theirs>0?'+':'')+t.theirs+'</b><small>'+esc(them)+'</small></span></div>';
     if(isPK)return '<div class="score"><span class="me"><b>'+t.mine+'</b><small>your goals</small></span><span class="me"><b>'+t.mySaves+'</b><small>your saves</small></span><span class="them"><b>'+t.theirs+'</b><small>'+esc(them)+'’s goals</small></span><span class="them"><b>'+t.theirSaves+'</b><small>'+esc(them)+'’s saves</small></span></div>';
     return '<div class="score"><span class="me"><b>'+t.mine+'</b> you</span><span><b>'+t.draws+'</b> drawn</span><span class="them"><b>'+t.theirs+'</b> '+esc(them)+'</span></div>';
   }
@@ -557,7 +578,7 @@ function renderPlay(A,B,seat,joined){
     stage.innerHTML='';
     if(sc){sc.reset();paintKits(n);}
     const lead=document.createElement('div');lead.className='lbl';
-    lead.textContent=(isPK?'Kick ':'Throw ')+n+' of '+G.n;
+    lead.textContent=(isPK?'Kick ':(isAudit?'Round ':'Throw '))+n+' of '+G.n;
     stage.appendChild(lead);
     if(isPK){
       const r=document.createElement('div');r.className='role '+(kickerSeat(n)===seat?'kick':'keep');
@@ -567,8 +588,17 @@ function renderPlay(A,B,seat,joined){
       hint.textContent=kickerSeat(n)===seat?'Which side do you shoot?':'Which side do you dive?';
       stage.appendChild(hint);
     }
-    const row=document.createElement('div');row.className='bigrow'+(G.opts.length>2?' three':'');row.style.marginTop='10px';
-    G.opts.forEach(o=>{
+    if(isAudit){
+      const r=document.createElement('div');r.className='role '+(seat==='a'?'keep':'kick');
+      r.textContent=seat==='a'?'You are head office':'You run the site';
+      stage.appendChild(r);
+      const hint=document.createElement('div');hint.className='status';
+      hint.textContent=seat==='a'?'Inspect the site this round, or trust it?':'Play it straight this round, or cut a corner?';
+      stage.appendChild(hint);
+    }
+    const myOpts=G.seatOpts?G.seatOpts[seat]:G.opts;
+    const row=document.createElement('div');row.className='bigrow'+(myOpts.length>2?' three':'')+(isAudit?' words':'');row.style.marginTop='10px';
+    myOpts.forEach(o=>{
       const b=document.createElement('button');b.className='opt'+(mine===o.k?' mine':'');b.textContent=o.n;
       b.addEventListener('click',()=>{
         if(posting)return;
@@ -594,7 +624,7 @@ function renderPlay(A,B,seat,joined){
       card.innerHTML='<div class="head '+cls+'">'+head+'</div><div class="sub">'+esc(sub)+'</div>'+scoreRow(tally(per,n));
       stage.appendChild(card);
       const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
-      btn.textContent=n<G.n?('On to '+(isPK?'kick ':'throw ')+(n+1)):'See the final score';
+      btn.textContent=n<G.n?('On to '+(isPK?'kick ':(isAudit?'round ':'throw '))+(n+1)):'See the final score';
       btn.addEventListener('click',()=>{ackN=n;try{localStorage.setItem('m6-ack-'+ROOM+'-'+key,String(n));}catch(_){}shownKey='';tick();});
       stage.appendChild(btn);
     };
@@ -605,6 +635,11 @@ function renderPlay(A,B,seat,joined){
       cls=(goal===iKick)?'good':'bad';
       sub=resultSub(iKick,them,kick,dive);
       if(animatedN<n){animatedN=n;stage.innerHTML='';sc.reset();paintKits(n);sc.kick({kick,dive,goal}).then(show);return;}
+    }else if(isAudit){
+      const key2=k.a+k.b, pay=AUDIT_PAY[key2]||[0,0], me2=pay[seat==='a'?0:1];
+      head=AUDIT_HEAD[key2][seat==='a'?0:1];
+      cls=me2>0?'good':(me2<0?'bad':'draw');
+      sub=(k.a==='i'?'Head office inspected':'Head office trusted the site')+', the manager '+(k.b==='s'?'played it straight':'cut a corner')+'. This round: '+(pay[0]>0?'+':'')+pay[0]+' head office, '+(pay[1]>0?'+':'')+pay[1]+' the site';
     }else{
       const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
       head=w>0?'YOU WIN':(w<0?'THEY WIN':'DRAW');cls=w>0?'good':(w<0?'bad':'draw');
@@ -620,6 +655,10 @@ function renderPlay(A,B,seat,joined){
     if(isPK){
       card.innerHTML='<div class="head '+(t.mine>=4?'good':(t.mine>=3?'draw':'bad'))+'">'+t.mine+' OF 5</div>'+
         '<div class="sub">Goals from your five kicks. '+esc(them)+' scored '+t.theirs+' of 5.</div>'+scoreRow(t);
+    }else if(isAudit){
+      const cls=t.mine>t.theirs?'good':(t.mine<t.theirs?'bad':'draw');
+      card.innerHTML='<div class="head '+cls+'">'+(t.mine>t.theirs?'YOU CAME OUT AHEAD':(t.mine<t.theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div>'+
+        '<div class="sub">Eight rounds, not for points</div>'+scoreRow(t);
     }else{
       const cls=t.mine>t.theirs?'good':(t.mine<t.theirs?'bad':'draw');
       card.innerHTML='<div class="head '+cls+'">'+(t.mine>t.theirs?'YOU WIN':(t.mine<t.theirs?'THEY WIN':'ALL SQUARE'))+'</div>'+
@@ -633,7 +672,7 @@ function renderPlay(A,B,seat,joined){
   function tick(){
     answers().then(lines=>{
       const s=state(parseLines(lines));
-      document.getElementById('rdlbl').textContent=(isPK?'KICK ':'THROW ')+Math.min(s.n,G.n)+' OF '+G.n;
+      document.getElementById('rdlbl').textContent=(isPK?'KICK ':(isAudit?'ROUND ':'THROW '))+Math.min(s.n,G.n)+' OF '+G.n;
       /* show the last completed kick's result until it is acknowledged */
       const last=s.n-1;
       let k;

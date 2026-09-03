@@ -116,6 +116,10 @@ const GT_SCORES = (() => {
            rock, paper, scissors (m6-rps) are played for what they show,
            not for points. */
         { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 1, savePoints: 0 },
+        /* the boss battle: the top scorers take one kick each against the
+           instructor on the big screen; a goal is a bonus point (only a
+           name's first kick counts) */
+        { key: 'boss', label: 'Boss battle', kind: 'bossbattle', room: 'm6-vs', points: 1 },
       ],
     },
   ];
@@ -135,7 +139,8 @@ const GT_SCORES = (() => {
     { id: 'm5-invest', label: 'The investment game · Module 5' },
     { id: 'm6-solo', label: 'Beat the keeper · Module 6', solo: true },
     { id: 'm6-pk', label: 'The penalty shootout · Module 6' },
-    { id: 'm6-vs', label: 'Shoot against me · Module 6', solo: true },
+    { id: 'm6-vs', label: 'Boss battle · Module 6', solo: true },
+    { id: 'm6-audit', label: 'The audit game · Module 6' },
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
   ];
 
@@ -345,6 +350,32 @@ const GT_SCORES = (() => {
     });
   }
 
+  /* the boss battle: "::keeper|n|pos|name" calls a shooter up, "name|n|l-or-r"
+     is their kick, "::dive|n|zone|pos0|pos1" is where the keeper ended up
+     (the deck slides him in real time); a kick into any zone but the
+     keeper's is a goal. One kick each: a name's first resolved kick pays
+     ev.points if it went in, later kicks pay nothing */
+  async function scoreBossBattle(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const keeper = {}, dive = {}, shots = {};
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p[0] === '::keeper' && p.length === 4 && /^\d{1,3}$/.test(p[1])) keeper[+p[1]] = p[3];
+      else if (p[0] === '::dive' && p.length === 5 && /^\d{1,3}$/.test(p[1]) && /^[lrc]$/.test(p[2])) dive[+p[1]] = p[2];
+      else if (p.length === 3 && p[0] && p[0][0] !== ':' && /^[1-9]\d{0,2}$/.test(p[1]) && /^[lr]$/.test(p[2])) {
+        shots[+p[1]] = shots[+p[1]] || {}; shots[+p[1]][norm(p[0])] = { name: p[0], kick: p[2] };
+      }
+    });
+    const taken = new Set();
+    Object.keys(dive).map(Number).sort((a, b) => a - b).forEach(n => {
+      const who = keeper[n]; if (!who) return;
+      const sh = shots[n] && shots[n][norm(who)]; if (!sh) return;
+      if (taken.has(norm(who))) return;
+      taken.add(norm(who));
+      if (sh.kick !== dive[n]) addPoints(tally, who, ev.key, ev.points || 1);
+    });
+  }
+
   /* the median dog: spans from the stroke data (bbox width, exactly as
      the deck's kennel computes it), median of spans (average of the two
      middles when even). The podium: the three distinct distances nearest
@@ -491,6 +522,7 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'enginegame') await scoreEngine(ev, claims, tally);
         else if (ev.kind === 'pricewars') await scorePricewars(ev, claims, tally);
         else if (ev.kind === 'shootout') await scoreShootout(ev, claims, tally);
+        else if (ev.kind === 'bossbattle') await scoreBossBattle(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
