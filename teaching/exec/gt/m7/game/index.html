@@ -1,0 +1,384 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 7 · Games</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 7 game.
+
+     ?g=chicken  chicken in pairs — six rounds. Each round both drivers
+                 choose, at the same time, to swerve or go straight for
+                 Ren and Chuck's payoffs (0,0 / -10,+10 / +10,-10 /
+                 -100,-100). From round four a driver may first throw the
+                 steering wheel out of the window: that is a commitment to
+                 go straight, the other driver is told before they choose,
+                 and it cannot be undone. Both wheels out is a crash. The
+                 wire and the round logic live in chicken.js, shared with
+                 the deck's board (and mirrored in go/scores.js): join
+                 "A|B|0|a|j"; a move "A|B|n|seat|x" with x = s/g, or w/k
+                 for the wheel decision. Five points to whoever is ahead
+                 after six rounds; a dead heat pays nobody.
+
+   Names come from the shared gt-name and are claimed into gt-names for
+   the points system. ?room=<id> plays into a scratch room (rehearsals). */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer;text-decoration:none}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+button.opt:disabled{opacity:.55;cursor:default}
+.choices{display:flex;flex-direction:column;gap:11px}
+.bigrow{display:flex;gap:12px}
+.bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:28px;padding:22px 10px;letter-spacing:.02em}
+.bigrow.words button.opt{font-size:19px;padding:22px 6px;line-height:1.15;font-family:var(--sans);font-weight:700}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.vsbar{border:2.5px solid var(--ink);background:var(--card);padding:12px 16px;display:flex;
+  justify-content:space-between;align-items:baseline;gap:10px}
+.vsbar .side{font-weight:700;font-size:15px}
+.vsbar .side.me{color:var(--teal)} .vsbar .side.them{color:var(--terracotta)}
+.vsbar .rd{font-weight:700;font-size:13px;letter-spacing:.08em;color:var(--muted)}
+.role{font-family:var(--display);font-weight:900;font-size:24px;line-height:1.1;color:var(--ink);margin:4px 0 2px}
+.role.warn{color:var(--terracotta)}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center}
+.bigcard .head{font-family:var(--display);font-weight:900;font-size:40px;line-height:1}
+.bigcard .head.good{color:var(--teal)} .bigcard .head.bad{color:var(--terracotta)} .bigcard .head.draw{color:var(--muted)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.35}
+.score{display:flex;justify-content:center;gap:26px;margin-top:10px;font-weight:700;font-size:15px}
+.score .me{color:var(--teal)} .score .them{color:var(--terracotta)}
+.score b{font-family:var(--display);font-weight:900;font-size:26px;line-height:1}
+.score small{display:block;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
+.wheelnote{border:2.5px solid var(--red);background:var(--card);padding:14px 16px;font-weight:600;font-size:15px;line-height:1.4;color:var(--ink)}
+.wheelnote b{color:var(--red)}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 7</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/gt/m7/game/chicken.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+const qs=new URLSearchParams(location.search);
+const GAMES={
+  chicken:{room:'m7-chicken',title:'Chicken',n:CHICKEN.N,
+      drive:[{k:'s',n:'SWERVE'},{k:'g',n:'STRAIGHT'}],
+      wheel:[{k:'w',n:'THROW IT OUT'},{k:'k',n:'KEEP THE WHEEL'}],
+      pairLead:'Pair up with the person next to you',
+      seats:['I’ll pick my partner','My partner picks me'],
+      wait:'Keep this page open. The game starts when your partner picks you.'}
+};
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const G=GAMES[qs.get('g')];
+const ROOM=G?(qs.get('room')||G.room):null;
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=CHICKEN.norm, pairKey=CHICKEN.pairKey;
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+let sayN=0;
+function say(line){
+  sayN++;
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=()=>fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+function render(){
+  stopPolling();
+  st.textContent='';
+  if(!G){
+    q.textContent='Which game is on the screen?';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a></div>';
+    return;
+  }
+  if(!name){renderName('Who are you?',n=>{
+    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();render();
+  });return;}
+  /* rejoin a pair this phone already sat in */
+  let saved=null;
+  try{saved=JSON.parse(localStorage.getItem('m7-pair-'+ROOM)||'null');}catch(_){}
+  if(saved&&saved.A&&saved.B&&(norm(saved.seat==='a'?saved.A:saved.B)===norm(name))){
+    return renderPlay(saved.A,saved.B,saved.seat);
+  }
+  q.textContent=G.title;
+  app.innerHTML='';
+  app.appendChild(meRow());
+  const lead=document.createElement('div');lead.className='lbl';lead.style.marginTop='6px';
+  lead.textContent=G.pairLead;
+  app.appendChild(lead);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
+  [[G.seats[0],'a'],[G.seats[1],'b']].forEach(([label,seat])=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.style.borderColor=seat==='a'?'var(--teal)':'var(--terracotta)';
+    b.addEventListener('click',()=>seat==='a'?renderPickPartner():renderWaitPick());
+    ch.appendChild(b);
+  });
+  app.appendChild(ch);
+}
+function meRow(){
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  return me;
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>done(clean(n)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function backBtn(){
+  const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
+  b.addEventListener('click',()=>{try{localStorage.removeItem('m7-pair-'+ROOM);}catch(_){}render();});
+  return b;
+}
+function renderPickPartner(){
+  renderName('Who is your partner?',partner=>{
+    if(norm(partner)===norm(name)){st.textContent='That’s you — pick the person you’re playing with.';return;}
+    st.textContent='Pairing up…';
+    say(name+'|'+partner+'|0|a|j')
+      .then(()=>{st.textContent='';renderPlay(name,partner,'a');})
+      .catch(code=>{st.textContent=failMsg(code);});
+  });
+}
+function renderWaitPick(){
+  stopPolling();
+  q.textContent='Waiting for your partner';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>'+esc(G.wait);
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
+  hint.textContent='They need to pick exactly “'+name+'”';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    answers().then(lines=>{
+      let found=null;
+      lines.forEach(t=>{
+        const p=String(t).split('|').map(s=>s.trim());
+        if(p.length===5&&p[4]==='j'&&norm(p[1])===norm(name))found={A:p[0],B:p[1]};
+      });
+      if(found)renderPlay(found.A,found.B,'b');
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2000);check();
+}
+
+function renderPlay(A,B,seat){
+  stopPolling();
+  try{localStorage.setItem('m7-pair-'+ROOM,JSON.stringify({A,B,seat}));}catch(_){}
+  const me=seat==='a'?A:B, them=seat==='a'?B:A, other=seat==='a'?'b':'a';
+  const key=pairKey(A,B);
+  q.textContent=G.title;
+  app.innerHTML='';
+  const bar=document.createElement('div');bar.className='vsbar';
+  bar.innerHTML='<span class="side me">'+esc(me)+'</span><span class="rd" id="rdlbl"></span><span class="side them">vs '+esc(them)+'</span>';
+  app.appendChild(bar);
+  const stage=document.createElement('div');stage.style.marginTop='12px';
+  app.appendChild(stage);
+  app.appendChild(backBtn());
+  let shownKey='', posting=false, ackN=0;
+  try{ackN=+(localStorage.getItem('m7-ack-'+ROOM+'-'+key)||0);}catch(_){}
+  const sign=v=>(v>0?'+':'')+v;
+  function scoreRow(t){
+    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+    return '<div class="score"><span class="me"><b>'+sign(mine)+'</b><small>you</small></span><span class="them"><b>'+sign(theirs)+'</b><small>'+esc(them)+'</small></span></div>';
+  }
+  function post(n,x,btnRow,b){
+    if(posting)return;posting=true;
+    say(A+'|'+B+'|'+n+'|'+seat+'|'+x)
+      .then(()=>{posting=false;st.textContent='Sent. Waiting for '+them+'…';
+        if(btnRow){btnRow.querySelectorAll('.opt').forEach(el=>el.classList.remove('mine'));b.classList.add('mine');}
+        shownKey='';tick();})
+      .catch(code=>{posting=false;st.textContent=failMsg(code);});
+  }
+  function buttons(n,opts,words,picked){
+    const row=document.createElement('div');row.className='bigrow'+(words?' words':'');row.style.marginTop='10px';
+    opts.forEach(o=>{
+      const b=document.createElement('button');b.className='opt'+(picked===o.k?' mine':'');b.textContent=o.n;
+      b.addEventListener('click',()=>post(n,o.k,row,b));
+      row.appendChild(b);
+    });
+    return row;
+  }
+  function head(n,pr){
+    stage.innerHTML='';
+    const lead=document.createElement('div');lead.className='lbl';lead.textContent='Round '+n+' of '+G.n;
+    stage.appendChild(lead);
+    if(n>1){const t=CHICKEN.totals(pr);const d=document.createElement('div');d.innerHTML=scoreRow(t);d.style.marginBottom='8px';stage.appendChild(d);}
+  }
+  function waiting(msg){
+    const w=document.createElement('div');w.className='waitcard';w.style.marginTop='10px';
+    w.innerHTML='<span class="pulse"></span>'+esc(msg);
+    stage.appendChild(w);
+  }
+  /* the wheel decision, rounds 4-6 */
+  function wheelUI(n,pr,mine){
+    head(n,pr);
+    const r=document.createElement('div');r.className='role';r.textContent='Before you drive';
+    stage.appendChild(r);
+    const note=document.createElement('div');note.className='wheelnote';
+    note.innerHTML=(n===CHICKEN.WHEEL_FROM?'<b>New from this round.</b> ':'')+'You can <b>throw your steering wheel out of the window</b>. If you do, you cannot swerve this round, and '+esc(them)+' will be told before they choose.';
+    stage.appendChild(note);
+    stage.appendChild(buttons(n,G.wheel,true,mine));
+  }
+  function driveUI(n,pr,rd,mine){
+    head(n,pr);
+    if(n>=CHICKEN.WHEEL_FROM){
+      const theyThrew=(seat==='a'?rd.cb:rd.ca)==='w';
+      const r=document.createElement('div');r.className='role'+(theyThrew?' warn':'');
+      r.textContent=theyThrew?esc(them)+' has thrown the wheel out':'Both wheels still in place';
+      stage.appendChild(r);
+      const hint=document.createElement('div');hint.className='status';
+      hint.textContent=theyThrew?'They cannot swerve. Swerve, or go straight?':'Swerve, or go straight?';
+      stage.appendChild(hint);
+    }else{
+      const hint=document.createElement('div');hint.className='status';hint.textContent='Swerve, or go straight?';
+      stage.appendChild(hint);
+    }
+    stage.appendChild(buttons(n,G.drive,false,mine));
+  }
+  function resultUI(n,pr){
+    const rd=CHICKEN.round(pr,n);
+    const mine=seat==='a'?rd.a:rd.b, theirs=seat==='a'?rd.b:rd.a;
+    const myPay=rd.pay[seat==='a'?0:1], theirPay=rd.pay[seat==='a'?1:0];
+    let h,cls;
+    if(mine==='g'&&theirs==='g'){h='CRASH';cls='bad';}
+    else if(mine==='s'&&theirs==='s'){h='BOTH SWERVED';cls='draw';}
+    else if(mine==='s'){h='YOU SWERVED';cls='bad';}
+    else{h='THEY SWERVED';cls='good';}
+    const did=x=>x==='s'?'swerved':'went straight';
+    let sub='You '+did(mine)+', '+them+' '+did(theirs)+'. This round: '+sign(myPay)+' you, '+sign(theirPay)+' '+them+'.';
+    if(n>=CHICKEN.WHEEL_FROM){
+      const iThrew=(seat==='a'?rd.ca:rd.cb)==='w', theyThrew=(seat==='a'?rd.cb:rd.ca)==='w';
+      if(iThrew&&theyThrew)sub+=' Both wheels were out of the window.';
+      else if(iThrew)sub+=' Your wheel was out of the window.';
+      else if(theyThrew)sub+=' Their wheel was out of the window.';
+    }
+    stage.innerHTML='';
+    const card=document.createElement('div');card.className='bigcard';
+    card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+scoreRow(CHICKEN.totals(pr));
+    stage.appendChild(card);
+    const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
+    btn.textContent=n<G.n?'On to round '+(n+1):'See the final score';
+    btn.addEventListener('click',()=>{ackN=n;try{localStorage.setItem('m7-ack-'+ROOM+'-'+key,String(n));}catch(_){}shownKey='';tick();});
+    stage.appendChild(btn);
+  }
+  function finalUI(pr){
+    const t=CHICKEN.totals(pr);
+    const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
+    stage.innerHTML='';
+    const card=document.createElement('div');card.className='bigcard';
+    const cls=mine>theirs?'good':(mine<theirs?'bad':'draw');
+    card.innerHTML='<div class="head '+cls+'">'+(mine>theirs?'YOU CAME OUT AHEAD':(mine<theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div>'+
+      '<div class="sub">Six rounds of chicken</div>'+scoreRow(t);
+    stage.appendChild(card);
+    const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
+    note.textContent='All done. Look up — the whole room is about to go on the big screen.';
+    stage.appendChild(note);
+  }
+  function tick(){
+    answers().then(lines=>{
+      const {pairs}=CHICKEN.parse(lines);
+      const pr=pairs.get(key)||{A,B,key,r:{}};
+      const t=CHICKEN.totals(pr);
+      const n=t.next;
+      document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
+      const last=n-1;
+      let k;
+      if(last>=1&&ackN<last)k='res:'+last;
+      else if(n>G.n)k='final';
+      else{
+        const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
+        if(n>=CHICKEN.WHEEL_FROM){
+          if(!mineSlot.c)k='wheel:'+n;
+          else if(!(rd.ca&&rd.cb))k='waitc:'+n;
+          else if(mineSlot.c==='w')k='thrown:'+n;
+          else if(!mineSlot.d)k='drive:'+n+':'+((seat==='a'?rd.cb:rd.ca)||'');
+          else k='waitd:'+n;
+        }else{
+          if(!mineSlot.d)k='drive:'+n;
+          else k='waitd:'+n;
+        }
+      }
+      if(k===shownKey)return;shownKey=k;st.textContent='';
+      const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
+      if(k.startsWith('res:'))resultUI(last,pr);
+      else if(k==='final')finalUI(pr);
+      else if(k.startsWith('wheel:'))wheelUI(n,pr,mineSlot.c);
+      else if(k.startsWith('waitc:')){wheelUI(n,pr,mineSlot.c);st.textContent='Sent. Waiting for '+them+'…';}
+      else if(k.startsWith('thrown:')){head(n,pr);waiting('Your wheel is out of the window. You are going straight. Waiting for '+them+' to choose…');}
+      else if(k.startsWith('drive:'))driveUI(n,pr,rd,mineSlot.d);
+      else {driveUI(n,pr,rd,mineSlot.d);st.textContent='Sent. Waiting for '+them+'…';}
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2000);tick();
+}
+</script>
+</body></html>

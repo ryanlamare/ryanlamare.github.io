@@ -126,6 +126,17 @@ const GT_SCORES = (() => {
         { key: 'boss', label: 'Boss battle', kind: 'bossbattle', room: 'm6-vs', points: 1 },
       ],
     },
+    {
+      id: 'm7',
+      title: 'Credibility, Commitment, and Strategic Moves',
+      events: [
+        /* chicken in pairs, six rounds, the wheel from round four: the
+           driver ahead on total payoff takes winPoints; a dead heat pays
+           nobody. The added value game (m1-av) is a negotiation game and
+           stays unscored, as in Module 1 */
+        { key: 'chicken', label: 'Chicken', kind: 'chicken', room: 'm7-chicken', winPoints: 5 },
+      ],
+    },
   ];
 
   /* rooms that game pages write to directly (name-tagged /say lines, not
@@ -146,6 +157,7 @@ const GT_SCORES = (() => {
     { id: 'm6-vs', label: 'Boss battle · Module 6', solo: true },
     { id: 'm6-inspect', label: 'The inspection game · Module 6' },
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
+    { id: 'm7-chicken', label: 'Chicken · Module 7' },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -415,6 +427,44 @@ const GT_SCORES = (() => {
     });
   }
 
+  /* chicken: "A|B|n|seat|x" lines, six rounds. Rounds 1-3: s = swerve,
+     g = straight. Rounds 4-6: first w (throw the steering wheel out) or
+     k (keep it), then s/g for a driver who kept it — a thrown wheel is a
+     straight. Latest line per pair, round, seat and phase wins. Payoffs
+     0,0 / -10,+10 / +10,-10 / -100,-100; MUST match m7/game/chicken.js.
+     The driver ahead on total takes winPoints; a dead heat pays nobody */
+  const CHICKEN_PAY = { ss: [0, 0], sg: [-10, 10], gs: [10, -10], gg: [-100, -100] };
+  async function scoreChicken(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/answers');
+    const pairs = new Map();
+    (d.answers || []).forEach(t => {
+      const p = String(t).split('|').map(x => x.trim());
+      if (p.length !== 5 || !p[0] || !p[1] || !/^[1-6]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[sgwk]$/.test(p[4])) return;
+      const key = [norm(p[0]), norm(p[1])].sort().join('~');
+      if (!pairs.has(key)) pairs.set(key, { A: p[0], B: p[1], r: {} });
+      const pr = pairs.get(key), n = +p[2];
+      pr.r[n] = pr.r[n] || { a: {}, b: {} };
+      if (p[4] === 'w' || p[4] === 'k') pr.r[n][p[3]].c = p[4]; else pr.r[n][p[3]].d = p[4];
+    });
+    pairs.forEach(pr => {
+      let tA = 0, tB = 0;
+      for (let n = 1; n <= 6; n++) {
+        const r = pr.r[n]; if (!r) continue;
+        let a, b;
+        if (n < 4) { a = r.a.d; b = r.b.d; }
+        else {
+          if (!(r.a.c && r.b.c)) continue;
+          a = r.a.c === 'w' ? 'g' : r.a.d; b = r.b.c === 'w' ? 'g' : r.b.d;
+        }
+        if (!a || !b) continue;
+        const pay = CHICKEN_PAY[a + b]; if (!pay) continue;
+        tA += pay[0]; tB += pay[1];
+      }
+      if (tA > tB) addPoints(tally, pr.A, ev.key, ev.winPoints);
+      else if (tB > tA) addPoints(tally, pr.B, ev.key, ev.winPoints);
+    });
+  }
+
   /* the median dog: spans from the stroke data (bbox width, exactly as
      the deck's kennel computes it), median of spans (average of the two
      middles when even). The podium: the three distinct distances nearest
@@ -563,6 +613,7 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'shootout') await scoreShootout(ev, claims, tally);
         else if (ev.kind === 'bossbattle') await scoreBossBattle(ev, claims, tally);
         else if (ev.kind === 'inspection') await scoreInspection(ev, claims, tally);
+        else if (ev.kind === 'chicken') await scoreChicken(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -608,6 +659,13 @@ const GT_SCORES = (() => {
       if (id === 'm6-rps') return 'throw ' + p[2] + ': ' + (T[p[4]] || p[4]);
       const kicking = (+p[2] <= 8) === (p[3] === 'a');
       return 'kick ' + p[2] + ': ' + (kicking ? 'shot ' : 'dived ') + (W[p[4]] || p[4]);
+    }
+    if (id === 'm7-chicken') {
+      if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
+      const me = (norm(p[0]) === nkey) === (p[3] === 'a');
+      if (!me) return null;
+      const W = { s: 'swerved', g: 'went straight', w: 'threw the wheel out', k: 'kept the wheel' };
+      return 'round ' + p[2] + ': ' + (W[p[4]] || p[4]);
     }
     if (id === 'm2-tapasguess') return 'guessed ' + (+p[1]).toLocaleString('en-GB') + ' (the answer: 755,476)';
     if (id === 'm1-av') {

@@ -5,12 +5,13 @@
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
 <style>
-/* moved from Module 1 with the added value slides */
+/* Module-7-specific widgets (shared components live in deck.css) */
 .rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
-.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
-.sidefig{flex:none;height:420px;width:auto;overflow:visible}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none;min-width:0}
+.sidefig{flex:none;height:400px;width:auto;overflow:visible}
 .sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
 .mxside{display:flex;align-items:center;gap:54px}
+/* deterrence / compellence grid */
 .dc{display:grid;grid-template-columns:150px 320px 320px;grid-template-rows:56px 120px 120px;gap:0}
 .dc .hd{display:flex;align-items:center;justify-content:center;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--terracotta);border-bottom:3px solid var(--ink)}
 .dc .rh{display:flex;align-items:center;justify-content:flex-start;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px;color:var(--teal);border-right:3px solid var(--ink);padding-right:12px}
@@ -18,36 +19,149 @@
   font-weight:600;font-size:19px;text-align:center;padding:10px}
 .dc .cell .etc{font-weight:400;font-size:15px;color:var(--muted)}
 .dcprob{font-weight:700;font-size:18px;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+/* clips beside bullets, click-to-load (keeps YouTube's title off screen) */
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:560px;height:315px;border:0;display:block}
+.clipcover{width:560px;height:315px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans);padding:0 30px}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex:none}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px;line-height:1.35;text-align:center}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+.clipframe.mid iframe,.clipframe.mid .clipcover{width:480px;height:270px}
+.clipframe.big iframe,.clipframe.big .clipcover{width:640px;height:360px}
+.clipframe.half iframe,.clipframe.half .clipcover{width:500px;height:281px}
+.cliprow2{position:absolute;left:96px;right:96px;top:230px;display:flex;justify-content:center;gap:70px}
+.cliprow2 .clipcol{display:flex;flex-direction:column;align-items:center;gap:16px}
+.cliprow2 .cliplab{font-weight:600;font-size:19px;color:var(--ink);text-align:center;max-width:26ch;line-height:1.3}
+/* stacked labelled cards beside bullets (the three moves; the two conditions) */
+.cardstack{flex:none;display:flex;flex-direction:column;gap:16px;width:360px}
+.mcard{display:flex;align-items:center;gap:20px;border:2.5px solid var(--ink);background:var(--card);padding:14px 20px}
+.mcard .pg{height:58px;width:58px;flex:none;display:block}
+.mcard .mt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:19px;color:var(--ink)}
+.mcard .ms{font-weight:500;font-size:15px;color:var(--muted);line-height:1.35;margin-top:3px}
+.mcard.red{border-color:var(--red)}
+.mcard.red .mt{color:var(--red)}
+.fork{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.fork .fk{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:14px;border:2px solid var(--ink);background:var(--paper-soft);padding:10px 14px}
+.fork .fk .fa{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:14px;color:var(--red)}
+.fork .fk .fb{font-weight:600;font-size:16px;color:var(--ink);line-height:1.3}
+/* the smoking tree, lifted from Module 2 */
+.tree .paynote{font-weight:600;font-size:15px;fill:var(--muted)}
+.tree .owner{font-weight:700;font-size:16px;letter-spacing:.06em;fill:var(--muted)}
+.tree .rev{opacity:0;transition:opacity .35s}
+.tree .rev.on{opacity:1}
+/* quote bubbles for the two conditional moves */
+.condcards{flex:none;display:flex;flex-direction:column;gap:22px;width:400px}
+.condcard{border:2.5px solid var(--ink);background:var(--card);padding:18px 22px}
+.condcard .ck{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:14px;margin-bottom:8px}
+.condcard.threat{border-color:var(--terracotta)} .condcard.threat .ck{color:var(--terracotta)}
+.condcard.promise{border-color:var(--teal)} .condcard.promise .ck{color:var(--teal)}
+.condcard .cq{font-weight:500;font-style:italic;font-size:20px;line-height:1.35;color:var(--ink)}
+/* Module 4's marking scheme on the shirt matrix */
+.mx .cell.pareto::after{content:"";position:absolute;inset:3px;border:5px solid var(--green);pointer-events:none}
+.mx .cell.pareto .pa,.mx .cell.pareto .pb,.mx .cell.pareto .pc{color:var(--green)}
+/* the offers board (added value), as in Module 1 */
+.dstrip{display:block;width:100%;height:auto}
+.dstrip .axis{stroke:var(--ink);stroke-width:3}
+.dstrip .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
+.dstrip .meanline{stroke:var(--teal);stroke-width:4;stroke-dasharray:8 6}
+.dstrip .meanlab{font-family:var(--display);font-weight:900;font-size:22px;fill:var(--teal)}
+.dplotlbl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)}
+.gamechip{width:100%;background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;letter-spacing:.08em;text-align:center;padding:10px 0}
+.offq{display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;min-height:76px}
+.offcard{display:flex;align-items:center;gap:10px;border:2.5px solid var(--ink);background:var(--card);padding:8px 14px}
+.offcard .on2{font-weight:700;font-size:16px;max-width:12ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.offcard .oa{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink)}
+/* the chicken board: two rows of three tiles with a row label */
+.board{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:18px}
+.bbar{display:flex;align-items:center;gap:30px;justify-content:center}
+.stats{flex:1;display:grid;grid-template-columns:170px 1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:16px}
+.stat{border:2.5px solid var(--ink);background:var(--paper-soft);padding:14px 20px;display:flex;flex-direction:column;justify-content:center;gap:6px;position:relative}
+.stat .sl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13.5px;color:var(--red);line-height:1.25}
+.stat .sv{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--ink)}
+.stat .sv small{font-size:30px;color:var(--muted);margin-left:6px}
+.stat .sb{font-weight:600;font-size:16px;line-height:1.3;color:var(--ink)}
+.stat .sb b{color:var(--red)}
+.rowlab{display:flex;flex-direction:column;justify-content:center;gap:6px;border-left:6px solid var(--red);padding-left:16px}
+.rowlab .rn{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--ink)}
+.rowlab .rt{font-weight:600;font-size:15px;line-height:1.3;color:var(--muted)}
+/* the module scoreboard: five rows, revealed fifth place first */
+.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 150px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+/* the write-in wall (as in Modules 1 and 6) */
+.faded{opacity:.06 !important;pointer-events:none}
+#gwbul,#gwqr{transition:opacity .5s}
+.ywqr{position:absolute;right:96px;top:236px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:10px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .6s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+/* two film stills side by side with the quote beneath */
+.stills{position:absolute;left:96px;right:96px;top:196px;display:flex;flex-direction:column;align-items:center;gap:24px}
+.stills .pics{display:flex;gap:28px;justify-content:center}
+.stills .pics img{width:530px;height:298px;object-fit:cover;border:3px solid var(--ink);display:block}
+.stills .quote{max-width:900px;margin:0}
+/* the auction: rules left, the note right */
+.note20{flex:none;width:380px;height:200px;border:3px solid var(--ink);background:var(--paper-soft);position:relative;display:flex;align-items:center;justify-content:center;align-self:center}
+.note20 .amt{font-family:var(--display);font-weight:900;font-size:96px;color:var(--ink);line-height:1}
+.note20 .corner{position:absolute;font-family:var(--display);font-weight:900;font-size:22px;color:var(--red)}
+.note20 .c1{top:10px;left:14px} .note20 .c2{top:10px;right:14px} .note20 .c3{bottom:10px;left:14px} .note20 .c4{bottom:10px;right:14px}
+.note20 .ring{position:absolute;inset:14px;border:2px dashed var(--muted)}
 </style>
 </head><body>
 
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 7 — Credibility, Commitment, and Strategic Moves</h1>
 <p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 24: Title slide</h2><p>Credibility, commitment, and strategic moves. Module 7 of the Applied Game Theory executive programme.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 24: Introduction</h2><p>One of the most easily challengeable assumptions in strategic thinking is that we are rational. We now consider the value of commitment, credibility, and other strategic instruments or strategic moves that are geared toward overcoming irrationality. We'll then consider another major challengeable assumption in strategic thinking, which is that we always have perfect information.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 24: Strategic moves</h2><p>Recall sequential strategies. Smoking — my preferential outcome would be to smoke now, then quit. But Future Ryan is an addict and his preferential outcome is to keep smoking. Therefore, we concluded that I should never smoke in the first place. But what we were really saying was, I lack the willpower to overcome temptation. Instead of being stuck with irrationality, we can manipulate a game to our advantage.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 24: Strategic moves</h2><p>We cover three types of strategic moves: commitments, threats, and promises. We will also consider credibility — one must make strategic commitments, threats, and promises credible or else they will not be believed. While much of game theory is science, credibility lends itself more to art. And, there can be very dramatic consequences if some strategic moves are actually played out to their limits.</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 24: Strategic moves</h2><p>A necessary condition of strategic moves is that they are both observable and irreversible (or give the appearance of irreversibility). These conditions ensure that the entity is a true "first mover" — otherwise, if there is any doubt about either of these conditions, the respondent can become the first mover. There are two broad types of strategic moves: unconditional (commitment strategies) and conditional (threats, promises — efforts to induce compellence or deterrence).</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 24: Unconditional strategic moves: commitment</h2><p>Player A declares at the outset of a game, "In the game to follow, I will make a particular move, X". The declaration says that Player A's move is unconditional — A will do X irrespective of whatever B does. What are the effects of such a declaration? In sequential move games, it changes the order of the interaction, so that A has now moved first. In simultaneous move games, it limits options and changes Player B's beliefs about the consequences of his/her actions. We've seen this before, but have not explicitly modeled the effects of commitment strategies.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 24: Changing the rules of the game again</h2><p>Recall the added value card game from our first session: one white card for every yellow card, and $100 for a pair. Let's play it again under its original rules. Say there's a new stipulation: I'll let the first one of you who raises their hand leave the room and I'll guarantee that person the best deal given to any of the other people in the room. Does the rest of the room accept this deal or not? Think about your own self interest! On the right, a drawn figure: a person stepping out through a door with a red arrow, captioned first hand up gets the best deal.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 24: Why I became a fierce negotiator</h2><p>The debrief, after the third game. That deal looked tempting — except it turned me into a fierce negotiator with everyone. On the right, a drawn figure: a deal bar locked at fifty dollars each, with a padlock on the divider, captioned every deal, zero flexibility.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 24: Strategic moves and chicken</h2><p>How does Ren induce Chuck to swerve in Footloose? Was this the most effective commitment strategy Ren could have followed? Recall the two conditions of a commitment strategy. What other commitment strategies might Ren have used instead? Throw the steering wheel out or tie the wheel in place. Develop a reputation over the course of several games for never swerving.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 24: Chicken revisited</h2><p>The chicken matrix again — Ren against Chuck, swerve or straight, payoffs 0,0; minus 10, plus 10; plus 10, minus 10; minus 100, minus 100. A step adds the annotation: THROWS HIS STEERING WHEEL OUT THE WINDOW — Ren's straight row is now the only row, and Chuck's best response is to swerve.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 24: Commitment and sleep</h2><p>The resolute Night Self versus the weak-willed Morning Self. The Morning Self has second-mover advantage. We can express the Night Self's choice to set an alarm or not set an alarm at night against the Morning Self's options to stay in bed or get up.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 24: Commitment and sleep, the matrix</h2><p>Night Self (rows: no alarm, set alarm) against Morning Self (columns: stay in bed, get up). No alarm/stay in bed: 0, 10. No alarm/get up: 10, 0. Set alarm/stay in bed: minus 2, minus 5. Set alarm/get up: 8, minus 1.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 24: Commitment and sleep</h2><p>How can the Night Self change the game to get first-mover advantage? We've expressed the payoffs here as if the choices are simultaneous, in which case the Night Self should never set an alarm — but in reality, this is a sequential game. In the sequential game, the Night Self can deliberately limit its options so that it sets an alarm, therefore forcing the Morning Self to choose to Get Up.</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 24: Commitment and sleep, committed</h2><p>The same matrix with a speech bubble: HEY GOOGLE, SET AN ALARM FOR 7AM. The set-alarm row is highlighted and the morning self's get-up cell is ringed.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 24: Conditional strategic moves: threats and promises</h2><p>Conditional strategic moves require you to fix a response rule or reaction function: "If this, then that". By declaring a conditional move, Player A necessarily assumes the role of second-mover and thereby cedes the first move to the other side. Two conditional moves on which we focus: threats ("Unless you do what I want, I will respond in a way that will hurt you") and promises ("If you do what I want, I will respond in a way that will help you"). Your parents have probably played conditional strategic games with you!</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 24: Deterrence, compellence, threats, and promises</h2><p>A two-by-two grid: threat and promise rows against goals of compellence and deterrence. Threat aimed at compellence: hostage takers, etc. Threat aimed at deterrence: mutually assured destruction, etc. Promise aimed at compellence: prosecutors offering deals, etc. Promise aimed at deterrence: mob bosses offering deals, etc. Two problems appear beside the rows: PROBLEM: CONSEQUENCES! for threats and PROBLEM: COMPLIANCE! for promises.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 24: Conditional moves and the prisoner's dilemma</h2><p>Let's return to the example of J. Crew and Banana Republic in their effort to price a totally normal blue shirt. Recall that we have a PD situation — both BR and J. Crew are incentivized to cut their prices even though doing so is not optimal for either company. One solution is to introduce a "match or beat the competition" clause. Many argue that these clauses actually hurt customers because they are an implicit conditional move communicated by one company to another. "If you lower your prices, I'll match whatever price you set." And therefore, prices remain high and the incentive to defect is removed.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 24: Credibility</h2><p>Strategic moves are only as valuable as they are credible. Commitment devices don't work unless the other side actually believes them to be authentic. Think about strategic moves and sleep — my Night Self can set the alarm, which will force my Morning Self to wake up. Except…</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 24: Commitment and sleep, except</h2><p>The same matrix with two speech bubbles: the crisp HEY GOOGLE, SET AN ALARM FOR 7AM — and a trailing-off HEY GOOGLE, SET AN ALARM LIKE 9:35AM OR WHATE… The commitment device fails if it isn't credible.</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 24: Credibility and reputation</h2><p>Much more useful in repeated games than in single-play situations. Can be strategically advantageous to develop a certain reputation. But you can also get a reputation for not being credible! Contracts are designed to ensure credibility, but reputation can work both ways.</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 24: Is commitment always a good thing?</h2><p>Sometimes commitment strategies can be very beneficial — limiting options ensures that you will follow through with whatever position you've attached yourself to. But sometimes commitment can be detrimental. In the game of chicken — what if both Ren and Chuck threw the wheels out of the car simultaneously? Escalation of commitment can easily lead to brinkmanship.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 24: Commitment and brinkmanship</h2><p>If neither side is able to back down, we run into the problem of escalation of commitment. Parties may remain committed to their positions even though it's no longer in their self-interest to do so. "Throwing good money after bad."</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 24: Credibility and irreversibility</h2><p>Forcing yourself into a strategic move that you cannot undo is an extreme form of credibility. Cortes scuttles his ships. Polaroid's refusal to invest in anything other than instant cameras. Of course, the consequences of all of these actions are, deliberately, severe.</p></section>
-<section aria-label="Slide 24"><h2>Slide 24 of 24: Company slot</h2><p>A dashed placeholder card marking swappable client material: the client's own commitments, threats, and promises — contract clauses, capacity commitments, pricing rules — and how credible each one is. Written per engagement.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 30: Title slide</h2><p>Strategic moves. Credibility, commitment, and strategic moves. Module 7 of the Applied Game Theory executive programme, prepared for RRPF.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 30: Learning objectives</h2><p>One: change a game you would otherwise lose by making a strategic move, a commitment, a threat, or a promise. Two: play chicken with a steering wheel you can throw out of the window, and find out what the room does when both drivers can. Three: judge when a strategic move is credible, and what it costs to make it so. Four: spot where commitment helps in business, and where it turns into brinkmanship.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 30: Introduction</h2><p>One of the most easily challengeable assumptions in strategic thinking is that we are rational. We now consider the value of commitment, credibility, and other strategic instruments or strategic moves that are geared toward overcoming irrationality. We'll then consider another major challengeable assumption in strategic thinking, which is that we always have perfect information.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 30: Strategic moves</h2><p>Recall sequential strategies. Smoking: my preferential outcome would be to smoke now, then quit. But Future Ryan is an addict and his preferential outcome is to keep smoking. Therefore, we concluded that I should never smoke in the first place. But what we were really saying was, I lack the willpower to overcome temptation. Instead of being stuck with irrationality, we can manipulate a game to our advantage. On the right, the smoking game tree from the second session: Today's Ryan decides whether to smoke; if he does, Future Ryan decides whether to keep smoking. The quit branch is struck out, because Future Ryan keeps smoking, and the red path runs to never start.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 30: Strategic moves</h2><p>We cover three types of strategic moves: commitments, threats, and promises. We will also consider credibility: one must make strategic commitments, threats, and promises credible or else they will not be believed. While much of game theory is science, credibility lends itself more to art. And, there can be very dramatic consequences if some strategic moves are actually played out to their limits. On the right, three labelled cards: commitment, threat, promise.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 30: Strategic moves</h2><p>A necessary condition of strategic moves is that they are both observable and irreversible, or give the appearance of irreversibility. These conditions ensure that the entity is a true first mover; otherwise, if there is any doubt about either of these conditions, the respondent can become the first mover. There are two broad types of strategic moves: unconditional, meaning commitment strategies, and conditional, meaning threats and promises, efforts to induce compellence or deterrence. On the right, two condition cards, observable and irreversible, and beneath them the two types.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 30: Unconditional strategic moves: commitment</h2><p>Player A declares at the outset of a game, "In the game to follow, I will make a particular move, X". The declaration says that Player A's move is unconditional: A will do X irrespective of whatever B does. What are the effects of such a declaration? In sequential move games, it changes the order of the interaction, so that A has now moved first. In simultaneous move games, it limits options and changes Player B's beliefs about the consequences of his or her actions. We've seen this before, but have not explicitly modeled the effects of commitment strategies.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 30: Changing the rules of the game again</h2><p>Recall the added value card game from our first session: one white card for every yellow card, and $100 for a pair. Let's play it again under its original rules. Say there's a new stipulation: I'll let the first one of you who raises their hand leave the room and I'll guarantee that person the best deal given to any of the other people in the room. Does the rest of the room accept this deal or not? Think about your own self interest! On the right, a drawn figure: a person stepping out through a door with a red arrow, captioned first hand up gets the best deal.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 30: Make me one last offer</h2><p>The live offers board. A QR code takes phones to the offers page; each person offers how much of the $100 they keep, and the board answers on the spot. Three strips show every decided offer from the three versions of the game: equal cards, after I lose three, and one person leaves, accepted offers in teal and rejected ones in red, with the mean of the accepted deals.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 30: Why I became a fierce negotiator</h2><p>That deal looked tempting, except it turned me into a fierce negotiator with everyone. On the right, a drawn figure: a deal bar locked at fifty dollars each, with a padlock on the divider, captioned every deal, zero flexibility.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 30: Strategic moves and chicken</h2><p>How does Ren induce Chuck to swerve in Footloose? Was this the most effective commitment strategy Ren could have followed? Recall the two conditions of a commitment strategy. What other commitment strategies might Ren have used instead? Throw the steering wheel out or tie the wheel in place. Develop a reputation over the course of several games for never swerving. On the right, the Footloose clip, click to play.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 30: Chicken revisited</h2><p>The chicken matrix again: Ren against Chuck, swerve or straight, payoffs 0,0; minus 10, plus 10; plus 10, minus 10; minus 100, minus 100. A step adds the annotation: throws his steering wheel out the window. Ren's swerve row is now gone, and Chuck's best response is to swerve.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 30: Let's play chicken</h2><p>Pair up. You are two drivers heading straight at each other, and you play six rounds. Each round, at the same time, you swerve or you go straight, for the payoffs on the right. Whoever is ahead in the pair after six rounds takes five points; a dead heat pays nobody. A QR code takes phones to the game, with a count of pairs in.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 30: Who swerved?</h2><p>The live board for the chicken game. Two rows of three tiles. Rounds one to three, no wheel to throw: how often drivers swerved, how many rounds ended in a crash, how many rounds both swerved. Rounds four to six, when a driver could throw the steering wheel out of the window before the round: how many drivers threw it, how often a driver facing a thrown wheel swerved, and how many rounds both drivers threw the wheel, every one of them a crash.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 30: Commitment and sleep</h2><p>The resolute Night Self versus the weak-willed Morning Self. The Morning Self has second-mover advantage. We can express the Night Self's choice to set an alarm or not set an alarm at night against the Morning Self's options to stay in bed or get up. On the right, the matrix: Night Self rows, no alarm and set alarm, against Morning Self columns, stay in bed and get up. No alarm and stay in bed: 0, 10. No alarm and get up: 10, 0. Set alarm and stay in bed: minus 2, minus 5. Set alarm and get up: 8, minus 1.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 30: Commitment and sleep</h2><p>How can the Night Self change the game to get first-mover advantage? We've expressed the payoffs here as if the choices are simultaneous, in which case the Night Self should never set an alarm, but in reality this is a sequential game. In the sequential game, the Night Self can deliberately limit its options so that it sets an alarm, therefore forcing the Morning Self to choose to get up. On the right, the same matrix with a speech bubble, "Hey Google, set an alarm for 7am": the no-alarm row fades and the set-alarm, get-up cell is boxed.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 30: Conditional strategic moves: threats and promises</h2><p>Conditional strategic moves require you to fix a response rule or reaction function: "If this, then that". By declaring a conditional move, Player A necessarily assumes the role of second-mover and thereby cedes the first move to the other side. Two conditional moves on which we focus, shown as two cards on the right. Threats: "Unless you do what I want, I will respond in a way that will hurt you". Promises: "If you do what I want, I will respond in a way that will help you". Your parents have probably played conditional strategic games with you!</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 30: Deterrence, compellence, threats, and promises</h2><p>A two-by-two grid: threat and promise rows against goals of compellence and deterrence. Threat aimed at compellence: hostage takers, etc. Threat aimed at deterrence: mutually assured destruction, etc. Promise aimed at compellence: prosecutors offering deals, etc. Promise aimed at deterrence: mob bosses offering deals, etc. Two problems appear beneath: threats, problem: consequences! Promises, problem: compliance!</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 30: Conditional moves and the prisoner's dilemma</h2><p>Let's return to the example of J. Crew and Banana Republic in their effort to price a totally normal blue shirt. Recall that we have a PD situation: both BR and J. Crew are incentivized to cut their prices even though doing so is not optimal for either company. One solution is to introduce a "match or beat the competition" clause. Many argue that these clauses actually hurt customers because they are an implicit conditional move communicated by one company to another: "If you lower your prices, I'll match whatever price you set". And therefore, prices remain high and the incentive to defect is removed. On the right, the shirt matrix from Module 4, $80 or $70 each, with the $70, $70 price war boxed in red and, on the last step, the $80, $80 cell turning green.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 30: Credibility</h2><p>Strategic moves are only as valuable as they are credible. Commitment devices don't work unless the other side actually believes them to be authentic. Think about strategic moves and sleep: my Night Self can set the alarm, which will force my Morning Self to wake up. Except… On the right, the alarm matrix with two speech bubbles: the crisp "Hey Google, set an alarm for 7am", and a trailing-off "Hey Google, set an alarm like 9:35am or whate…". The commitment device fails if it isn't credible.</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 30: Introducing Clocky</h2><p>Clocky, the alarm that rolls off the nightstand and makes the Morning Self chase it. A clip, click to play.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 30: Credibility and reputation</h2><p>Much more useful in repeated games than in single-play situations. Can be strategically advantageous to develop a certain reputation. But you can also get a reputation for not being credible! Contracts are designed to ensure credibility, but reputation can work both ways.</p></section>
+<section aria-label="Slide 23"><h2>Slide 23 of 30: George Bush, not a game theorist</h2><p>Two clips side by side, click to play: George Bush in 1988, "Read my lips: no new taxes", and Bill Clinton's 1992 campaign ad attacking the broken pledge.</p></section>
+<section aria-label="Slide 24"><h2>Slide 24 of 30: Is commitment always a good thing?</h2><p>Sometimes commitment strategies can be very beneficial: limiting options ensures that you will follow through with whatever position you've attached yourself to. But sometimes commitment can be detrimental. In the game of chicken, what if both Ren and Chuck threw the wheels out of the car simultaneously? Escalation of commitment can easily lead to brinkmanship. On the right, the chicken matrix: on the step, both swerve options fade and only the minus 100, minus 100 crash is left.</p></section>
+<section aria-label="Slide 25"><h2>Slide 25 of 30: Commitment and brinkmanship</h2><p>If neither side is able to back down, we run into the problem of escalation of commitment. Parties may remain committed to their positions even though it's no longer in their self-interest to do so. "Throwing good money after bad". Robert Campeau versus Macy's for the purchase of Bloomingdale's. It often pays to give the other side an escape route in order to avoid escalation of commitment.</p></section>
+<section aria-label="Slide 26"><h2>Slide 26 of 30: Let's have an auction (flex)</h2><p>I am auctioning a twenty pound note. Bids go up in whole pounds, and anyone can bid at any time. The highest bidder pays their bid and takes the twenty pounds. The second-highest bidder also pays their bid, and gets nothing. On the right, a drawn twenty pound note.</p></section>
+<section aria-label="Slide 27"><h2>Slide 27 of 30: Credibility and irreversibility</h2><p>Forcing yourself into a strategic move that you cannot undo is an extreme form of credibility. Cortes scuttles his ships. Polaroid's refusal to invest in anything other than instant cameras. Dr. Strangelove and the Doomsday Device. Of course, the consequences of all of these actions are, deliberately, severe. Three pictogram tiles: scuttle the ships, only instant cameras, the doomsday device.</p></section>
+<section aria-label="Slide 28"><h2>Slide 28 of 30: White walkers, game theorists?</h2><p>Two stills from Game of Thrones, the army of the dead at Hardhome and the frozen lake beyond the Wall, above the quote: "When you surround an army, leave an outlet free. Do not press a desperate foe too hard", Sun Tzu, The Art of War.</p></section>
+<section aria-label="Slide 29"><h2>Slide 29 of 30: Back to Granito Air</h2><p>Several traders want Granito's five engines, and you are one of them. Everything you say to Granito is a strategic move: a commitment, a threat, or a promise. Which of yours would they actually believe? Send yours from your phones: what could you commit to, and what would it cost you to make it credible? A QR code and a count of responses; on a keypress the answers fill the screen as a wall of coloured chips.</p></section>
+<section aria-label="Slide 30"><h2>Slide 30 of 30: Top of the class</h2><p>The running scoreboard, revealed fifth place first: name, points from chicken, and the programme total. Top five only; everyone can check their own score at ryanlamare.com/go/points.</p></section>
 </section>
 
 <div class="viewport"><div class="stage">
@@ -62,68 +176,148 @@
 
 <section class="slide content" data-i="1">
   <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Introduction</h2>
-  <ul class="bullets">
-    <li>One of the most easily challengeable assumptions in strategic thinking is that we are rational</li>
-    <li data-step="1">We now consider the value of <b>commitment</b>, <b>credibility</b>, and other strategic instruments or <b>strategic moves</b> that are geared toward overcoming irrationality</li>
-    <li data-step="2">We&rsquo;ll then consider another major challengeable assumption in strategic thinking, which is that we always have perfect information</li>
-  </ul>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:1000px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Change a game you would otherwise lose by making a strategic move: a commitment, a threat, or a promise</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Play chicken with a steering wheel you can throw out of the window, and find out what the room does when both drivers can</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Judge when a strategic move is credible, and what it costs to make it so</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Spot where commitment helps in business, and where it turns into brinkmanship</div></div>
+  </div>
 </section>
 
 <section class="slide content" data-i="2">
   <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Strategic moves</h2>
+  <h2>Introduction</h2>
   <ul class="bullets">
-    <li>Recall sequential strategies</li>
-    <li data-step="1">Smoking &ndash; my preferential outcome would be to smoke now, then quit</li>
-    <li data-step="2">But Future Ryan is an addict and his preferential outcome is to keep smoking</li>
-    <li data-step="3">Therefore, we concluded that I should never smoke in the first place</li>
-    <li data-step="4">But what we were really saying was, I lack the willpower to overcome temptation</li>
-    <li data-step="5"><b>Instead of being stuck with irrationality, we can manipulate a game to our advantage</b></li>
+    <li>One of the most easily challengeable assumptions in strategic thinking is that we are <b>rational</b></li>
+    <li data-step="1">We now consider the value of <b>commitment</b>, <b>credibility</b>, and other strategic instruments or <b>strategic moves</b> that are geared toward overcoming irrationality</li>
+    <li data-step="2">We&rsquo;ll then consider another major challengeable assumption in strategic thinking, which is that we always have <b>perfect information</b></li>
   </ul>
 </section>
 
 <section class="slide content" data-i="3">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Strategic moves</h2>
-  <ul class="bullets">
-    <li>We cover three types of strategic moves: <b>commitments</b>, <b>threats</b>, and <b>promises</b></li>
-    <li data-step="1">We will also consider <b>credibility</b> &ndash; one must make strategic commitments, threats, and promises credible or else they will not be believed</li>
-    <li data-step="2">While much of game theory is science, credibility lends itself more to art</li>
-    <li data-step="3">And, there can be very dramatic consequences if some strategic moves are actually played out to their limits</li>
-  </ul>
+  <div class="rowfig" style="top:200px;gap:30px">
+    <ul class="bullets" style="margin-top:0;max-width:520px">
+      <li>Recall sequential strategies</li>
+      <li data-step="1">Smoking &ndash; my preferential outcome would be to smoke now, then quit</li>
+      <li data-step="2">But Future Ryan is an addict and his preferential outcome is to keep smoking</li>
+      <li data-step="3">Therefore, we concluded that I should never smoke in the first place</li>
+      <li data-step="4">But what we were really saying was, I lack the willpower to overcome temptation</li>
+      <li data-step="5"><b>Instead of being stuck with irrationality, we can manipulate a game to our advantage</b></li>
+    </ul>
+    <svg class="tree sidefig" style="height:auto;width:540px;align-self:center" viewBox="0 0 1080 470" role="img" aria-label="The smoking game tree from Module 2: today's Ryan decides whether to smoke, future Ryan decides whether to keep smoking">
+      <text class="owner" x="206" y="160" text-anchor="middle">TODAY&rsquo;S RYAN</text>
+      <text class="owner" x="565" y="64" text-anchor="middle">FUTURE RYAN</text>
+      <line class="edge" x1="216" y1="196" x2="430" y2="110"/>
+      <line class="edge" x1="216" y1="224" x2="860" y2="360"/>
+      <line class="edge" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="edge" id="smQuit" x1="640" y1="122" x2="860" y2="190"/>
+      <g id="smPlan" class="rev"><line class="path" x1="216" y1="196" x2="430" y2="110"/><line class="path" x1="640" y1="122" x2="860" y2="190"/></g>
+      <g id="smNever" class="rev"><line class="path" x1="216" y1="224" x2="860" y2="360"/></g>
+      <text class="elabel" x="300" y="130">YES</text>
+      <text class="elabel" x="490" y="330">NO</text>
+      <text class="elabel" x="736" y="58">YES</text>
+      <text class="elabel" x="690" y="176">NO</text>
+      <rect class="node" x="56" y="176" width="300" height="58" rx="6"/>
+      <text class="q" x="206" y="212" text-anchor="middle">Should you smoke?</text>
+      <rect class="node" x="410" y="80" width="310" height="58" rx="6"/>
+      <text class="q" x="565" y="116" text-anchor="middle">Do you keep smoking?</text>
+      <g id="smStrike" class="rev"><line x1="784" y1="150" x2="820" y2="190" stroke="var(--red)" stroke-width="7" stroke-linecap="round"/><line x1="820" y1="150" x2="784" y2="190" stroke="var(--red)" stroke-width="7" stroke-linecap="round"/></g>
+      <text class="pay" x="890" y="66">-1</text>
+      <text class="pay" x="890" y="200">1</text>
+      <text class="pay" x="890" y="372">0</text>
+      <text class="paynote" x="940" y="63">hooked for life</text>
+      <text class="paynote" x="940" y="197">you quit in time</text>
+      <text class="paynote" x="940" y="369">you never start</text>
+    </svg>
+    <span data-step="1" data-stepcall="smStep1" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="smStep2" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="smStep3" style="position:absolute;width:0;height:0"></span>
+  </div>
 </section>
 
 <section class="slide content" data-i="4">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Strategic moves</h2>
-  <ul class="bullets">
-    <li>A necessary condition of strategic moves is that they are both <b>observable</b> and <b>irreversible</b> (or give the appearance of irreversibility)</li>
-    <li data-step="1">These conditions ensure that the entity is a true &ldquo;first mover&rdquo; &ndash; otherwise, if there is any doubt about either of these conditions, the respondent can become the first mover</li>
-    <li data-step="2">There are two broad types of strategic moves</li>
-    <li class="sub" data-step="2">Unconditional (commitment strategies)</li>
-    <li class="sub" data-step="2">Conditional (threats, promises &ndash; efforts to induce compellence or deterrence)</li>
-  </ul>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:90px">
+    <ul class="bullets" style="margin-top:0">
+      <li>We cover three types of strategic moves: <b>commitments</b>, <b>threats</b>, and <b>promises</b></li>
+      <li data-step="1">We will also consider <b>credibility</b> &ndash; one must make strategic commitments, threats, and promises credible or else they will not be believed</li>
+      <li data-step="2">While much of game theory is science, credibility lends itself more to art</li>
+      <li data-step="3">And, there can be very dramatic consequences if some strategic moves are actually played out to their limits</li>
+    </ul>
+    <div class="cardstack">
+      <div class="mcard">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><circle fill="var(--ink)" cx="32" cy="10" r="6"/><circle fill="var(--paper)" cx="32" cy="10" r="2.5"/><rect fill="var(--ink)" x="29.5" y="14" width="5" height="38"/><rect fill="var(--ink)" x="20" y="22" width="24" height="5"/><path fill="var(--ink)" d="M12 40 Q12 56 32 58 Q52 56 52 40 L46 43 Q43 50 32 50 Q21 50 18 43 Z"/></svg>
+        <div><div class="mt">Commitment</div><div class="ms">&ldquo;I will do X, whatever you do&rdquo;</div></div>
+      </div>
+      <div class="mcard">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="var(--red)" d="M36 4 L14 36 L30 36 L26 60 L50 26 L34 26 Z"/></svg>
+        <div><div class="mt">Threat</div><div class="ms">&ldquo;Unless you do what I want, I will hurt you&rdquo;</div></div>
+      </div>
+      <div class="mcard">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M6 30 L20 18 L34 30 L26 38 L40 44 L54 30 L44 20"/><path fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" d="M26 38 L18 46 M34 44 L28 52 M40 44 L36 52"/></svg>
+        <div><div class="mt">Promise</div><div class="ms">&ldquo;If you do what I want, I will help you&rdquo;</div></div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="slide content" data-i="5">
   <div class="kicker"><i></i>MODULE 7</div>
+  <h2>Strategic moves</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px">
+    <ul class="bullets" style="margin-top:0">
+      <li>A necessary condition of strategic moves is that they are both <b>observable</b> and <b>irreversible</b> (or give the appearance of irreversibility)</li>
+      <li data-step="1">These conditions ensure that the entity is a true &ldquo;first mover&rdquo; &ndash; otherwise, if there is any doubt about either of these conditions, the respondent can become the first mover</li>
+      <li data-step="2">There are two broad types of strategic moves</li>
+      <li class="sub" data-step="2">Unconditional (commitment strategies)</li>
+      <li class="sub" data-step="2">Conditional (threats, promises &ndash; efforts to induce compellence or deterrence)</li>
+    </ul>
+    <div class="cardstack" style="width:380px">
+      <div class="mcard red">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="none" stroke="var(--ink)" stroke-width="5" d="M4 32 Q32 6 60 32 Q32 58 4 32 Z"/><circle fill="var(--ink)" cx="32" cy="32" r="11"/><circle fill="var(--paper)" cx="32" cy="32" r="4"/></svg>
+        <div><div class="mt">Observable</div><div class="ms">The other side has to see the move</div></div>
+      </div>
+      <div class="mcard red">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="none" stroke="var(--ink)" stroke-width="6" d="M20 30 v-10 a12 12 0 0 1 24 0 v10"/><rect fill="var(--ink)" x="12" y="30" width="40" height="30" rx="4"/><circle fill="var(--paper)" cx="32" cy="44" r="4"/></svg>
+        <div><div class="mt">Irreversible</div><div class="ms">And believe it cannot be undone</div></div>
+      </div>
+      <div class="fork" data-step="2">
+        <div class="fk"><span class="fa">Unconditional</span><span class="fb">Commitment</span></div>
+        <div class="fk"><span class="fa">Conditional</span><span class="fb">Threats and promises</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 7</div>
   <h2>Unconditional strategic moves: commitment</h2>
-  <ul class="bullets">
-    <li>Player A declares at the outset of a game, <b>&ldquo;In the game to follow, I will make a particular move, X&rdquo;</b></li>
-    <li data-step="1">The declaration says that Player A&rsquo;s move is unconditional &ndash; A will do X irrespective of whatever B does</li>
-    <li data-step="2">What are the effects of such a declaration?</li>
-    <li class="sub" data-step="3">In sequential move games, it changes the order of the interaction, so that A has now moved first</li>
-    <li class="sub" data-step="4">In simultaneous move games, it limits options and changes Player B&rsquo;s beliefs about the consequences of his/her actions</li>
-    <li data-step="5">We&rsquo;ve seen this before, but have not explicitly modeled the effects of commitment strategies</li>
-  </ul>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Player A declares at the outset of a game, <b>&ldquo;In the game to follow, I will make a particular move, X&rdquo;</b></li>
+      <li data-step="1">The declaration says that Player A&rsquo;s move is unconditional &ndash; A will do X irrespective of whatever B does</li>
+      <li data-step="2">What are the effects of such a declaration?</li>
+      <li class="sub" data-step="3">In sequential move games, it changes the order of the interaction, so that A has now moved first</li>
+      <li class="sub" data-step="4">In simultaneous move games, it limits options and changes Player B&rsquo;s beliefs about the consequences of his/her actions</li>
+      <li data-step="5">We&rsquo;ve seen this before, but have not explicitly modeled the effects of commitment strategies</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:300px">
+      <div class="bubble" style="max-width:300px">IN THE GAME TO FOLLOW, I WILL MAKE A PARTICULAR MOVE, X</div>
+      <svg viewBox="0 0 90 132" style="height:150px;width:auto" aria-hidden="true"><circle fill="var(--teal)" cx="45" cy="20" r="14"/><path fill="var(--teal)" d="M22 46 Q45 36 68 46 L60 92 L30 92 Z"/><rect fill="var(--teal)" x="31" y="92" width="12" height="36"/><rect fill="var(--teal)" x="47" y="92" width="12" height="36"/></svg>
+      <div style="font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--teal)">PLAYER A</div>
+    </div>
+  </div>
 </section>
 
 <!-- MOVED FROM MODULE 1 (2 Sep 2026): the third added value game, "one person leaves", is a
-     commitment story and belongs here. The live offers board that sits BETWEEN these two slides
-     (m1 data-i 26 at git 524ea5e, with the offers-board IIFE and rule 3 = accept exactly $50)
-     comes over in the m7 design pass. -->
-<section class="slide content" data-i="6">
+     commitment story and belongs here. The offers board between these two slides is the Module 1
+     board with its third rule (accept exactly $50); it reads and writes the same room, m1-av, so
+     the first two games' strips sit above it for comparison. -->
+<section class="slide content" data-i="7">
   <div class="kicker"><i></i>MODULE 7 · ADDED VALUE</div>
   <h2>Changing the rules of the game again</h2>
   <div class="rowfig" style="align-items:center;top:210px;bottom:80px">
@@ -149,7 +343,47 @@
   </div>
 </section>
 
-<section class="slide content" data-i="7">
+<section class="slide content" data-i="8" data-avphase="3">
+  <div class="kicker"><i></i>MODULE 7 · ADDED VALUE</div>
+  <h2>Make me one last offer</h2>
+  <div class="pollwrap" style="top:176px;bottom:56px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-offers.svg" alt="QR code for the offers page"></div>
+        <div class="ju">offer your share of the $100</div>
+      </div>
+      <div class="livecount"><span class="n" data-avn>0</span><span class="l">RESPONSES</span></div>
+      <div class="gamechip">ONE PERSON LEAVES</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="offq" data-avq></div>
+      <div style="margin-top:auto">
+        <div class="dplotlbl">The offers &middot; equal cards <span data-avr="1" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
+        <svg class="dstrip" viewBox="0 0 1000 130">
+          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
+          <g class="avticks"></g><g data-avdots="1"></g>
+        </svg>
+      </div>
+      <div>
+        <div class="dplotlbl">The offers &middot; after I lose three <span data-avr="2" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
+        <svg class="dstrip" viewBox="0 0 1000 130">
+          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
+          <g class="avticks"></g><g data-avdots="2"></g>
+        </svg>
+      </div>
+      <div>
+        <div class="dplotlbl" style="color:var(--ink)">The offers &middot; one person leaves <span data-avr="3" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
+        <svg class="dstrip" viewBox="0 0 1000 130">
+          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
+          <g class="avticks"></g><g data-avdots="3"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="demotag" data-avdemo style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="9">
   <div class="kicker"><i></i>MODULE 7 · ADDED VALUE</div>
   <h2>Why I became a fierce negotiator</h2>
   <div class="rowfig" style="align-items:center;top:230px;bottom:110px">
@@ -172,22 +406,29 @@
   </div>
 </section>
 
-
-<section class="slide content" data-i="8">
-  <div class="kicker"><i></i>MODULE 7</div>
+<section class="slide content" data-i="10">
+  <div class="kicker"><i></i>MODULE 7 · CHICKEN</div>
   <h2>Strategic moves and chicken</h2>
-  <ul class="bullets">
-    <li><b>How does Ren induce Chuck to swerve in Footloose?</b></li>
-    <li data-step="1">Was this the most effective commitment strategy Ren could have followed?</li>
-    <li class="sub" data-step="1">Recall the two conditions of a commitment strategy</li>
-    <li data-step="2">What other commitment strategies might Ren have used instead?</li>
-    <li class="sub" data-step="3">Throw the steering wheel out or tie the wheel in place</li>
-    <li class="sub" data-step="4">Develop a reputation over the course of several games for never swerving</li>
-  </ul>
+  <div class="rowfig" style="align-items:flex-start;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li><b>How does Ren induce Chuck to swerve in Footloose?</b></li>
+      <li data-step="1">Was this the most effective commitment strategy Ren could have followed?</li>
+      <li class="sub" data-step="1">Recall the two conditions of a commitment strategy</li>
+      <li data-step="2">What other commitment strategies might Ren have used instead?</li>
+      <li class="sub" data-step="3">Throw the steering wheel out or tie the wheel in place</li>
+      <li class="sub" data-step="4">Develop a reputation over the course of several games for never swerving</li>
+    </ul>
+    <div class="clipframe mid" id="ftwrap" style="align-self:center">
+      <button class="clipcover" id="ftload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Ren and Chuck, Footloose</span>
+      </button>
+    </div>
+  </div>
 </section>
 
-<section class="slide content" data-i="9">
-  <div class="kicker"><i></i>MODULE 7</div>
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 7 · CHICKEN</div>
   <h2>Chicken revisited</h2>
   <div class="fig" style="top:180px">
     <div class="mxside">
@@ -210,51 +451,97 @@
   </div>
 </section>
 
-<section class="slide content" data-i="10">
-  <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Commitment and sleep</h2>
-  <ul class="bullets">
-    <li>The resolute <b>Night Self</b> versus the weak-willed <b>Morning Self</b></li>
-    <li data-step="1">The Morning Self has second-mover advantage</li>
-    <li data-step="2">We can express the Night Self&rsquo;s choice to set an alarm or not set an alarm at night against the Morning Self&rsquo;s options to stay in bed or get up</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="11">
-  <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Commitment and sleep</h2>
-  <div class="fig" style="top:180px">
-    <div class="mx" style="--cols:2;--rows:2;--cw:230px;--rh:100px">
-      <div class="chead">MORNING SELF</div>
-      <div class="rhead">NIGHT SELF</div>
-      <div class="cl" style="grid-column:3">Stay In Bed</div>
-      <div class="cl" style="grid-column:4">Get Up</div>
-      <div class="rl" style="grid-row:3">No Alarm</div>
-      <div class="rl" style="grid-row:4">Set Alarm</div>
-      <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">10</span></div>
-      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">10</span><span class="pc">,</span><span class="pb">0</span></div>
-      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">-2</span><span class="pc">,</span><span class="pb">-5</span></div>
-      <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">8</span><span class="pc">,</span><span class="pb">-1</span></div>
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 7 · CHICKEN</div>
+  <h2>Let&rsquo;s play chicken</h2>
+  <div class="rowfig" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li><b>Pair up.</b> You are two drivers heading straight at each other, and you play six rounds</li>
+      <li data-step="1">Each round, at the same time: <b>swerve</b>, or <b>go straight</b>. The payoffs are the ones on the right</li>
+      <li data-step="2">Whoever is ahead in the pair after six rounds takes <b>five points</b>. A dead heat pays nobody</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="joinchip"><div class="qr"><img src="qr-chicken.svg" alt="QR code for the chicken game at ryanlamare.com/teaching/exec/gt/m7/game/?g=chicken"></div></div>
+        <div class="livecount"><span class="n" id="chPairs0">0</span><span class="l">PAIRS<br>IN</span></div>
+      </div>
+      <div class="mxwrap" style="gap:8px">
+        <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:58px">
+          <div class="chead">THE OTHER DRIVER</div>
+          <div class="rhead">YOU</div>
+          <div class="cl" style="grid-column:3">Swerve</div>
+          <div class="cl" style="grid-column:4">Straight</div>
+          <div class="rl" style="grid-row:3">Swerve</div>
+          <div class="rl" style="grid-row:4">Straight</div>
+          <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+          <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">&minus;10</span><span class="pc">,</span><span class="pb">+10</span></div>
+          <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">&minus;10</span></div>
+          <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">&minus;100</span><span class="pc">,</span><span class="pb">&minus;100</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="12">
-  <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Commitment and sleep</h2>
-  <ul class="bullets">
-    <li><b>How can the Night Self change the game to get FMA?</b></li>
-    <li data-step="1">We&rsquo;ve expressed the payoffs here as if the choices are simultaneous, in which case the Night Self should never set an alarm &ndash; but in reality, this is a sequential game</li>
-    <li data-step="2">In the sequential game, the Night Self can deliberately limit its options so that it sets an alarm, therefore forcing the Morning Self to choose to Get Up</li>
-  </ul>
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 7 · CHICKEN</div>
+  <h2>Who swerved?</h2>
+  <div class="board">
+    <div class="bbar">
+      <div class="livecount"><span class="n" id="chPairs">0</span><span class="l">PAIRS<br>IN</span></div>
+      <div class="livecount"><span class="n" id="chRounds">0</span><span class="l">ROUNDS<br>PLAYED</span></div>
+      <div class="demotag" id="chDemo" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="stats">
+      <div class="rowlab" data-step="1"><div class="rn">1&ndash;3</div><div class="rt">Rounds one to three. Two drivers, one road</div></div>
+      <div class="stat" data-step="1" data-stepcall="chTile" data-t="sw1"><div class="sl">Drivers swerved</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time</div></div>
+      <div class="stat" data-step="1" data-stepcall="chTile" data-t="cr1"><div class="sl">Crashes</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of rounds ended with both going straight</div></div>
+      <div class="stat" data-step="1" data-stepcall="chTile" data-t="bs1"><div class="sl">Both swerved</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of rounds</div></div>
+      <div class="rowlab" data-step="2"><div class="rn">4&ndash;6</div><div class="rt">Rounds four to six. <b>The steering wheel could go out of the window</b></div></div>
+      <div class="stat" data-step="2" data-stepcall="chTile" data-t="th2"><div class="sl">Threw the wheel out</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of drivers, each round</div></div>
+      <div class="stat" data-step="3" data-stepcall="chTile" data-t="fs2"><div class="sl">Facing a thrown wheel, swerved</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time <b>the commitment worked</b></div></div>
+      <div class="stat" data-step="4" data-stepcall="chTile" data-t="bt2"><div class="sl">Both threw the wheel</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of rounds &ndash; <b>every one of them a crash</b></div></div>
+    </div>
+  </div>
 </section>
 
-<section class="slide content" data-i="13">
+<section class="slide content" data-i="14">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Commitment and sleep</h2>
-  <div class="fig" style="top:180px">
-    <div class="mxside">
-      <div class="mx" style="--cols:2;--rows:2;--cw:230px;--rh:100px">
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>The resolute <b>Night Self</b> versus the weak-willed <b>Morning Self</b></li>
+      <li data-step="1">The Morning Self has second-mover advantage</li>
+      <li data-step="2">We can express the Night Self&rsquo;s choice to set an alarm or not set an alarm at night against the Morning Self&rsquo;s options to stay in bed or get up</li>
+    </ul>
+    <div class="mxwrap" style="flex:none" data-step="2">
+      <div class="mx" style="--cols:2;--rows:2;--cw:180px;--rh:90px">
+        <div class="chead">MORNING SELF</div>
+        <div class="rhead">NIGHT SELF</div>
+        <div class="cl" style="grid-column:3">Stay In Bed</div>
+        <div class="cl" style="grid-column:4">Get Up</div>
+        <div class="rl" style="grid-row:3">No Alarm</div>
+        <div class="rl" style="grid-row:4">Set Alarm</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">10</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">10</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">-2</span><span class="pc">,</span><span class="pb">-5</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">8</span><span class="pc">,</span><span class="pb">-1</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 7</div>
+  <h2>Commitment and sleep</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li><b>How can the Night Self change the game to get FMA?</b></li>
+      <li data-step="1">We&rsquo;ve expressed the payoffs here as if the choices are simultaneous, in which case the Night Self should never set an alarm &ndash; but in reality, this is a sequential game</li>
+      <li data-step="2">In the sequential game, the Night Self can deliberately limit its options so that it sets an alarm, therefore forcing the Morning Self to choose to Get Up</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:22px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:180px;--rh:90px">
         <div class="chead">MORNING SELF</div>
         <div class="rhead">NIGHT SELF</div>
         <div class="cl" style="grid-column:3">Stay In Bed</div>
@@ -266,28 +553,32 @@
         <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">-2</span><span class="pc">,</span><span class="pb">-5</span></div>
         <div class="cell" id="ac22" style="grid-row:4;grid-column:4"><span class="pa">8</span><span class="pc">,</span><span class="pb">-1</span></div>
       </div>
-      <div class="bubble" data-step="1" style="align-self:flex-start">HEY GOOGLE, SET AN ALARM<br>FOR 7AM</div>
+      <div class="bubble" data-step="2" style="max-width:380px">HEY GOOGLE, SET AN ALARM FOR 7AM</div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="ar1,ac11,ac12" data-cls="dead" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="ac22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="ar1,ac11,ac12" data-cls="dead" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="mxMark" data-cells="ac22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
-<section class="slide content" data-i="14">
+<section class="slide content" data-i="16">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Conditional strategic moves: threats and promises</h2>
-  <ul class="bullets">
-    <li>Conditional strategic moves require you to fix a <b>response rule</b> or reaction function</li>
-    <li class="sub">&ldquo;If this, then that&hellip;&rdquo;</li>
-    <li data-step="1">By declaring a conditional move, Player A necessarily assumes the role of second-mover and thereby cedes the first move to the other side</li>
-    <li data-step="2">Two conditional moves on which we focus:</li>
-    <li class="sub" data-step="2"><b>Threats</b> (&ldquo;Unless you do what I want, I will respond in a way that will hurt you&rdquo;)</li>
-    <li class="sub" data-step="2"><b>Promises</b> (&ldquo;If you do what I want, I will respond in a way that will help you&rdquo;)</li>
-    <li data-step="3">Your parents have probably played conditional strategic games with you!</li>
-  </ul>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Conditional strategic moves require you to fix a <b>response rule</b> or reaction function</li>
+      <li class="sub">&ldquo;If this, then that&hellip;&rdquo;</li>
+      <li data-step="1">By declaring a conditional move, Player A necessarily assumes the role of second-mover and thereby cedes the first move to the other side</li>
+      <li data-step="2">Two conditional moves on which we focus: <b>threats</b> and <b>promises</b></li>
+      <li data-step="3">Your parents have probably played conditional strategic games with you!</li>
+    </ul>
+    <div class="condcards">
+      <div class="condcard threat" data-step="2"><div class="ck">Threat</div><div class="cq">&ldquo;Unless you do what I want, I will respond in a way that will hurt you&rdquo;</div></div>
+      <div class="condcard promise" data-step="2"><div class="ck">Promise</div><div class="cq">&ldquo;If you do what I want, I will respond in a way that will help you&rdquo;</div></div>
+    </div>
+  </div>
 </section>
 
-<section class="slide content" data-i="15">
+<section class="slide content" data-i="17">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Deterrence, compellence, threats, and promises</h2>
   <div class="fig" style="top:190px">
@@ -304,43 +595,57 @@
         <div class="cell"><span data-step="4">Mob bosses offering deals</span><span class="etc" data-step="4">Etc</span></div>
       </div>
       <div style="display:flex;gap:120px">
-        <div class="dcprob" data-step="5">THREATS &mdash; PROBLEM: CONSEQUENCES!</div>
-        <div class="dcprob" data-step="5">PROMISES &mdash; PROBLEM: COMPLIANCE!</div>
+        <div class="dcprob" data-step="5">THREATS &ndash; PROBLEM: CONSEQUENCES!</div>
+        <div class="dcprob" data-step="5">PROMISES &ndash; PROBLEM: COMPLIANCE!</div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="16">
-  <div class="kicker"><i></i>MODULE 7</div>
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 7 · IN BUSINESS</div>
   <h2>Conditional moves and the prisoner&rsquo;s dilemma</h2>
-  <ul class="bullets">
-    <li>Let&rsquo;s return to the example of J. Crew and Banana Republic in their effort to price a totally normal blue shirt</li>
-    <li data-step="1">Recall that we have a PD situation &ndash; both BR and J. Crew are incentivized to cut their prices even though doing so is not optimal for either company</li>
-    <li data-step="2">One solution is to introduce a <b>&ldquo;match or beat the competition&rdquo;</b> clause</li>
-    <li data-step="3">Many argue that these clauses actually hurt customers because they are an implicit conditional move communicated by one company to another</li>
-    <li class="sub" data-step="3">&ldquo;If you lower your prices, I&rsquo;ll match whatever price you set&rdquo;</li>
-    <li data-step="4">And therefore, prices remain high and the incentive to defect is removed</li>
-  </ul>
+  <div class="rowfig" style="align-items:center;top:196px;bottom:70px;gap:34px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Let&rsquo;s return to the example of J. Crew and Banana Republic in their effort to price a totally normal blue shirt</li>
+      <li data-step="1">Recall that we have a PD situation &ndash; both BR and J. Crew are incentivized to cut their prices even though doing so is not optimal for either company</li>
+      <li data-step="2">One solution is to introduce a <b>&ldquo;match or beat the competition&rdquo;</b> clause</li>
+      <li data-step="3">Many argue that these clauses actually hurt customers because they are an implicit conditional move communicated by one company to another</li>
+      <li class="sub" data-step="3">&ldquo;If you lower your prices, I&rsquo;ll match whatever price you set&rdquo;</li>
+      <li data-step="4">And therefore, prices remain high and the incentive to defect is removed</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:20px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:80px">
+        <div class="chead">J. CREW</div>
+        <div class="rhead">BANANA REPUBLIC</div>
+        <div class="cl" style="grid-column:3">$80</div>
+        <div class="cl" style="grid-column:4">$70</div>
+        <div class="rl" style="grid-row:3">$80</div>
+        <div class="rl" style="grid-row:4">$70</div>
+        <div class="cell" id="s11" style="grid-row:3;grid-column:3"><span class="pa">$72k</span><span class="pc">,</span><span class="pb">$72k</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">$24k</span><span class="pc">,</span><span class="pb">$110k</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">$110k</span><span class="pc">,</span><span class="pb">$24k</span></div>
+        <div class="cell" id="s22" style="grid-row:4;grid-column:4"><span class="pa">$70k</span><span class="pc">,</span><span class="pb">$70k</span></div>
+      </div>
+      <div class="bubble red" data-step="3" style="max-width:330px">IF YOU LOWER YOUR PRICES, I&rsquo;LL MATCH WHATEVER PRICE YOU SET</div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="s22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="mxMark" data-cells="s11" data-cls="pareto" style="position:absolute;width:0;height:0"></span>
+  </div>
 </section>
 
-<section class="slide content" data-i="17">
+<section class="slide content" data-i="19">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Credibility</h2>
-  <ul class="bullets">
-    <li><b>Strategic moves are only as valuable as they are credible</b></li>
-    <li data-step="1">Commitment devices don&rsquo;t work unless the other side actually believes them to be authentic</li>
-    <li data-step="2">Think about strategic moves and sleep &ndash; my Night Self can set the alarm, which will force my Morning Self to wake up</li>
-    <li data-step="3"><b>Except&hellip;</b></li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="18">
-  <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Commitment and sleep</h2>
-  <div class="fig" style="top:180px">
-    <div class="mxside">
-      <div class="mx" style="--cols:2;--rows:2;--cw:230px;--rh:100px">
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li><b>Strategic moves are only as valuable as they are credible</b></li>
+      <li data-step="1">Commitment devices don&rsquo;t work unless the other side actually believes them to be authentic</li>
+      <li data-step="2">Think about strategic moves and sleep &ndash; my Night Self can set the alarm, which will force my Morning Self to wake up</li>
+      <li data-step="3"><b>Except&hellip;</b></li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:180px;--rh:90px">
         <div class="chead">MORNING SELF</div>
         <div class="rhead">NIGHT SELF</div>
         <div class="cl" style="grid-column:3">Stay In Bed</div>
@@ -352,15 +657,31 @@
         <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">-2</span><span class="pc">,</span><span class="pb">-5</span></div>
         <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">8</span><span class="pc">,</span><span class="pb">-1</span></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:34px">
-        <div class="bubble">HEY GOOGLE, SET AN ALARM<br>FOR 7AM</div>
-        <div class="bubble red" data-step="1" style="opacity:.9">HEY GOOGLE, SET AN ALARM<br>LIKE 9:35AM OR WHATE&hellip;.</div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div class="bubble" data-step="2" style="max-width:220px;font-size:16px">HEY GOOGLE, SET AN ALARM FOR 7AM</div>
+        <div class="bubble red" data-step="3" style="max-width:220px;font-size:16px">HEY GOOGLE, SET AN ALARM LIKE 9:35AM OR WHATE&hellip;.</div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="19">
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 7</div>
+  <h2>Introducing Clocky</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Clocky &ndash; the alarm that rolls off the nightstand and makes the Morning Self chase it</li>
+    </ul>
+    <div class="clipframe big" id="ckwrap">
+      <button class="clipcover" id="ckload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Clocky</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="21">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Credibility and reputation</h2>
   <ul class="bullets">
@@ -371,52 +692,469 @@
   </ul>
 </section>
 
-<section class="slide content" data-i="20">
+<section class="slide content" data-i="22">
   <div class="kicker"><i></i>MODULE 7</div>
-  <h2>Is commitment always a good thing?</h2>
-  <ul class="bullets">
-    <li>Sometimes commitment strategies can be very beneficial &ndash; limiting options ensures that you will follow through with whatever position you&rsquo;ve attached yourself to</li>
-    <li data-step="1">But sometimes commitment can be detrimental</li>
-    <li data-step="2"><b>In the game of chicken &ndash; what if both Ren and Chuck threw the wheels out of the car simultaneously?</b></li>
-    <li data-step="3">Escalation of commitment can easily lead to <b>brinkmanship</b></li>
-  </ul>
+  <h2>George Bush, <em>not</em> a game theorist</h2>
+  <div class="cliprow2">
+    <div class="clipcol">
+      <div class="clipframe half" id="gbwrap">
+        <button class="clipcover" id="gbload" type="button">
+          <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+          <span class="ct">1988: read my lips</span>
+        </button>
+      </div>
+      <div class="cliplab">George Bush accepts the nomination, 1988</div>
+    </div>
+    <div class="clipcol" data-step="1">
+      <div class="clipframe half" id="bcwrap">
+        <button class="clipcover" id="bcload" type="button">
+          <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+          <span class="ct">1992: the attack ad</span>
+        </button>
+      </div>
+      <div class="cliplab">Bill Clinton&rsquo;s campaign ad, 1992</div>
+    </div>
+  </div>
 </section>
 
-<section class="slide content" data-i="21">
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>MODULE 7 · CHICKEN</div>
+  <h2>Is commitment always a good thing?</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Sometimes commitment strategies can be very beneficial &ndash; limiting options ensures that you will follow through with whatever position you&rsquo;ve attached yourself to</li>
+      <li data-step="1">But sometimes commitment can be detrimental</li>
+      <li data-step="2"><b>In the game of chicken &ndash; what if both Ren and Chuck threw the wheels out of the car simultaneously?</b></li>
+      <li data-step="3">Escalation of commitment can easily lead to <b>brinkmanship</b></li>
+    </ul>
+    <div class="mxwrap" style="flex:none">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:80px">
+        <div class="chead">CHUCK</div>
+        <div class="rhead">REN</div>
+        <div class="cl" id="bwc1" style="grid-column:3">Swerve</div>
+        <div class="cl" style="grid-column:4">Straight</div>
+        <div class="rl" id="bwr1" style="grid-row:3">Swerve</div>
+        <div class="rl" style="grid-row:4">Straight</div>
+        <div class="cell" id="bw11" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" id="bw12" style="grid-row:3;grid-column:4"><span class="pa">-10</span><span class="pc">,</span><span class="pb">+10</span></div>
+        <div class="cell" id="bw21" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">-10</span></div>
+        <div class="cell" id="bw22" style="grid-row:4;grid-column:4"><span class="pa">-100</span><span class="pc">,</span><span class="pb">-100</span></div>
+      </div>
+      <div class="bubble red" data-step="2" style="max-width:330px">BOTH WHEELS OUT<br>OF THE WINDOW</div>
+    </div>
+    <span data-step="2" data-stepcall="mxMark" data-cells="bwr1,bwc1,bw11,bw12,bw21" data-cls="dead" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="bw22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="24">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Commitment and brinkmanship</h2>
   <ul class="bullets">
     <li>If neither side is able to back down, we run into the problem of <b>escalation of commitment</b></li>
     <li data-step="1">Parties may remain committed to their positions even though it&rsquo;s no longer in their self-interest to do so</li>
     <li data-step="2">&ldquo;Throwing good money after bad&rdquo;</li>
+    <li class="sub" data-step="3">Robert Campeau versus Macy&rsquo;s for the purchase of Bloomingdale&rsquo;s</li>
+    <li data-step="4"><b>It often pays to give the other side an escape route</b> in order to avoid escalation of commitment</li>
   </ul>
 </section>
 
-<section class="slide content" data-i="22">
+<!-- FLEX: a whole-room auction, no phones. Mine, for Ryan's veto. The classic
+     escalation-of-commitment game: once two bidders are in, the second-highest
+     bidder's best move is always one more pound. -->
+<section class="slide content flex" data-i="25">
+  <div class="kicker"><i></i>MODULE 7 · BRINKMANSHIP</div>
+  <h2>Let&rsquo;s have an auction</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:60px">
+    <ul class="bullets" style="margin-top:0">
+      <li>I am auctioning a <b>&pound;20 note</b></li>
+      <li data-step="1">Bids go up in whole pounds, and anyone can bid at any time</li>
+      <li data-step="2">The highest bidder pays their bid and takes the &pound;20</li>
+      <li data-step="3"><b>The second-highest bidder also pays their bid</b> &ndash; and gets nothing</li>
+    </ul>
+    <div class="note20" aria-hidden="true">
+      <div class="ring"></div>
+      <span class="corner c1">20</span><span class="corner c2">20</span><span class="corner c3">20</span><span class="corner c4">20</span>
+      <div class="amt">&pound;20</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="26">
   <div class="kicker"><i></i>MODULE 7</div>
   <h2>Credibility and irreversibility</h2>
-  <ul class="bullets">
-    <li>Forcing yourself into a strategic move that you cannot undo is an extreme form of credibility</li>
-    <li data-step="1">Cortes scuttles his ships</li>
-    <li data-step="2">Polaroid&rsquo;s refusal to invest in anything other than instant cameras</li>
-    <li data-step="3">Of course, the consequences of all of these actions are, deliberately, severe</li>
-  </ul>
+  <div class="leadline" style="margin-top:20px">Forcing yourself into a strategic move that you cannot undo is an <b>extreme form of credibility</b></div>
+  <div class="tiles" style="top:260px;gap:50px">
+    <div class="tile" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 120" aria-hidden="true"><g class="ink"><path d="M20 78 L150 78 L136 104 L34 104 Z"/><rect x="82" y="14" width="6" height="64"/><path d="M88 18 L136 48 L88 52 Z"/></g><g class="red"><path d="M8 104 Q30 90 52 104 Q74 118 96 104 Q118 90 140 104 Q152 112 164 104 L164 118 L8 118 Z"/></g></svg></div>
+      <div class="lbl">SCUTTLE THE SHIPS</div>
+      <div class="sent">Cortes scuttles his ships</div>
+    </div>
+    <div class="tile" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 120" aria-hidden="true"><g class="ink"><rect x="22" y="30" width="126" height="72" rx="8"/><rect x="60" y="18" width="40" height="16" rx="3"/></g><g class="knock"><circle cx="85" cy="64" r="22"/><rect x="34" y="88" width="102" height="8"/></g><g class="red"><circle cx="85" cy="64" r="12"/><rect x="128" y="40" width="10" height="10"/></g></svg></div>
+      <div class="lbl">ONLY INSTANT CAMERAS</div>
+      <div class="sent">Polaroid&rsquo;s refusal to invest in anything other than instant cameras</div>
+    </div>
+    <div class="tile" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 120" aria-hidden="true"><g class="ink"><rect x="30" y="50" width="110" height="60" rx="6"/></g><g class="knock"><rect x="44" y="64" width="82" height="10"/><rect x="44" y="82" width="50" height="10"/></g><g class="red"><circle cx="85" cy="30" r="20"/></g><path d="M85 20 v10 l7 7" fill="none" stroke="var(--paper)" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="lbl">THE DOOMSDAY DEVICE</div>
+      <div class="sent">Dr. Strangelove, and a deterrent that cannot be switched off</div>
+    </div>
+  </div>
+  <div class="chiprow" style="bottom:56px">
+    <div class="chips" data-step="4"><div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Of course, the consequences of all of these actions are, deliberately, severe</b></div></div>
+  </div>
 </section>
 
-<section class="slide content" data-i="23">
-  <div class="kicker"><i></i>MODULE 7 · COMPANY SLOT</div>
-  <h2>Your commitments, threats, and promises</h2>
-  <div class="fig">
-    <div class="slotcard">
-      <div class="sl">COMPANY SLOT · SWAPPABLE PER CLIENT</div>
-      <div class="st">[Client-specific discussion goes here: the client&rsquo;s own commitment devices &mdash; contract clauses, capacity commitments, pricing rules, public pledges &mdash; and how credible each one looks from the other side of the table. Written per engagement.]</div>
+<section class="slide content" data-i="27">
+  <div class="kicker"><i></i>MODULE 7</div>
+  <h2>White walkers, game theorists?</h2>
+  <div class="stills">
+    <div class="pics">
+      <img src="hardhome.jpg" alt="A still from Game of Thrones: the army of the dead pouring down onto the shore at Hardhome as a boat rows away">
+      <img src="lake.jpg" alt="A still from Game of Thrones: a small band trapped on an island in a frozen lake, surrounded on every side by the army of the dead">
     </div>
+    <div class="quote" data-step="1">&ldquo;When you surround an army, leave an outlet free. Do not press a desperate foe too hard&rdquo; <span class="op" style="font-style:normal;font-weight:700;color:var(--red)">&ndash; Sun Tzu, The Art of War</span></div>
+  </div>
+</section>
+
+<!-- COMPANY SLOT: the Granito Air beat for this module. The room supplies the domain
+     (as the Module 1 Tapas wall did); the game theory is Ryan's. Poll m7-granito. -->
+<section class="slide content" data-i="28">
+  <div class="kicker"><i></i>MODULE 7 · GAME THEORY IN YOUR WORLD</div>
+  <h2>Back to Granito Air</h2>
+  <ul class="bullets" id="gwbul" style="max-width:640px">
+    <li>Several traders want Granito&rsquo;s five engines, and <b>you are one of them</b></li>
+    <li data-step="1">Everything you say to Granito is a strategic move: a commitment, a threat, or a promise. <b>Which of yours would they actually believe?</b></li>
+    <li data-step="2">Send yours from your phones: what could you commit to, and what would it cost you to make it credible?</li>
+  </ul>
+  <div class="ywqr" id="gwqr">
+    <div class="joinchip"><div class="qr"><img src="qr-granito.svg" alt="QR code for the write-in poll at ryanlamare.com/go"></div></div>
+    <div class="livecount"><span class="n" id="gwN">0</span><span class="l">RESPONSES</span></div>
+  </div>
+  <div class="wall" id="gwwall"></div>
+  <div class="demotag" id="gwdemo" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+  <span data-step="3" data-stepcall="gwReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="29">
+  <div class="kicker"><i></i>MODULE 7 · TOP OF THE CLASS</div>
+  <h2>Top of the class</h2>
+  <div class="fig" style="top:200px;gap:30px">
+    <div class="scb">
+      <div class="scbrow head"><span class="rk"></span><span class="nm"></span><span class="pv">Chicken</span><span class="tt">Total</span></div>
+      <div class="scbrow" data-step="5" id="scbr0"><div class="demotag" id="scbD">DEMO DATA</div><span class="rk">1</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="4" id="scbr1"><span class="rk">2</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="3" id="scbr2"><span class="rk">3</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="2" id="scbr3"><span class="rk">4</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="1" id="scbr4"><span class="rk">5</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+    </div>
+    <div class="cap">Five points to whoever finished ahead in their pair at chicken. Top five only &ndash; check your own score any time at <b>ryanlamare.com/go/points</b>.</div>
   </div>
 </section>
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
+
+<script src="/go/scores.js"></script>
+<script src="/teaching/exec/gt/m7/game/chicken.js"></script>
+<script>
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const QS=new URLSearchParams(location.search);
+/* a tile that is already on screen recomputes as answers arrive */
+function refreshShownCalls(){
+  document.querySelectorAll('[data-stepcall]').forEach(el=>{
+    if(el.dataset.stepon==='1'&&el.dataset.stepcall==='chTile'){try{window.chTile(el,true);}catch(_){}}
+  });
+}
+
+/* ---- the smoking tree: Future Ryan strikes the quit branch, then the red
+   path moves to never starting ---- */
+window.smStep1=function(el,on){document.getElementById('smPlan').classList.toggle('on',on);};
+window.smStep2=function(el,on){
+  document.getElementById('smStrike').classList.toggle('on',on);
+  document.getElementById('smPlan').classList.toggle('on',!on);
+};
+window.smStep3=function(el,on){document.getElementById('smNever').classList.toggle('on',on);};
+
+/* ---- clips: click-to-load keeps YouTube's title off the screen ---- */
+const CLIPS={footloose:'Fn7d_a0pmio',clocky:'izWCU4Y61o4',bush:'RZtaZTEO3jA',clinton:'vnUv7y4U2T0'};
+function clipOnClick(btnId,wrapId,videoId,title){
+  const btn=document.getElementById(btnId);
+  if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
+  btn.addEventListener('click',()=>{
+    const wrap=document.getElementById(wrapId);
+    const f=document.createElement('iframe');
+    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    f.title=title;
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    f.allowFullscreen=true;
+    wrap.replaceChildren(f);
+  });
+}
+clipOnClick('ftload','ftwrap',CLIPS.footloose,'Ren and Chuck, Footloose');
+clipOnClick('ckload','ckwrap',CLIPS.clocky,'Clocky');
+clipOnClick('gbload','gbwrap',CLIPS.bush,'George Bush, 1988: read my lips');
+clipOnClick('bcload','bcwrap',CLIPS.clinton,'Bill Clinton’s 1992 campaign ad');
+
+/* ---- the offers board (added value, game 3): phones send "name|o|amt" into
+   m1-av — the SAME room as Module 1, so the first two games' strips sit above
+   this one — and the deck DECIDES EACH OFFER ITSELF against this game's rule:
+   after one person has left with the best deal guaranteed, only an exact $50
+   split is accepted. Decision lines are "name|d|amt|a-or-r|3"; the "=game|p|3"
+   marker tells phones a new game is on and unlocks their one offer. ---- */
+(function(){
+  const DEMO=[['Priya','50','a','1'],['Tom','55','a','1'],['Sam','40','a','1'],['Elena','65','r','1'],
+              ['Marcus','10','a','2'],['Nadia','5','a','2'],['Chris','20','r','2'],['Elena','8','a','2'],
+              ['Priya','50','a','3'],['Tom','40','r','3'],['Sam','50','a','3'],['Nadia','60','r','3']];
+  const st={live:false,lines:[]};
+  const X=v=>30+(v/100)*940;
+  document.querySelectorAll('.avticks').forEach(g=>{
+    [0,25,50,75,100].forEach(v=>{
+      g.insertAdjacentHTML('beforeend',
+        '<line x1="'+X(v)+'" y1="90" x2="'+X(v)+'" y2="102" stroke="var(--ink)" stroke-width="2.5"/>'+
+        '<text class="lab" x="'+X(v)+'" y="122" text-anchor="middle">$'+v+'</text>');
+    });
+  });
+  let postN=0, deckBase=null;
+  try{
+    deckBase=localStorage.getItem('gt-deck-voter');
+    if(!deckBase){deckBase='deck-'+Math.random().toString(36).slice(2,14);localStorage.setItem('gt-deck-voter',deckBase);}
+    postN=+(localStorage.getItem('m1-av-postn')||0);
+  }catch(_){deckBase='deck-fallback-000';}
+  function deckVoter(){return deckBase+'-'+Math.floor(postN/12);}
+  function phase(){
+    const a=document.querySelector('.slide.active');
+    return a&&a.dataset.avphase?+a.dataset.avphase:0;
+  }
+  function parsed(){
+    if(st.live)return st.lines.map(t=>String(t).split('|').map(s=>s.trim()));
+    return DEMO.map(([n,a,r,p])=>[n,'d',a,r,p]).concat([['Dana','o','50'],['Omar','o','45']]);
+  }
+  function render(){
+    const lines=parsed();
+    const state={};
+    lines.forEach((p,i)=>{
+      const k=(p[0]||'').toLowerCase();
+      if(!k||k[0]==='=')return;
+      if(!state[k])state[k]={name:p[0]};
+      if(p[1]==='o'){state[k].offer=+p[2];state[k].oIdx=i;}
+      if(p[1]==='d'){state[k].dIdx=i;}
+    });
+    const pending=Object.values(state).filter(s=>s.offer!==undefined&&(s.dIdx===undefined||s.dIdx<s.oIdx));
+    document.querySelectorAll('[data-avq]').forEach(q=>{
+      q.innerHTML='';
+      pending.forEach(s=>{
+        const card=document.createElement('div');card.className='offcard';
+        card.innerHTML='<span class="on2"></span><span class="oa">$'+s.offer+'</span>';
+        card.querySelector('.on2').textContent=s.name;
+        q.appendChild(card);
+      });
+    });
+    ensureMarker(lines);
+    autoDecide(pending);
+    const offers=lines.filter(p=>p[1]==='o'&&p.length===3).length||(st.live?0:DEMO.length);
+    document.querySelectorAll('[data-avn]').forEach(n=>n.textContent=offers);
+    [1,2,3].forEach(ph=>{
+      const dec=lines.filter(p=>p[1]==='d'&&+p[4]===ph&&Number.isFinite(+p[2]));
+      const acc=dec.filter(p=>p[3]==='a').map(p=>+p[2]);
+      const rej=dec.length-acc.length;
+      const stack={};let h='';
+      dec.forEach(p=>{
+        const v=+p[2];
+        const key=Math.round(v/5)*5;
+        stack[key]=(stack[key]||0)+1;
+        const cy=84-(stack[key]-1)*15;
+        h+='<circle cx="'+X(Math.min(100,Math.max(0,v)))+'" cy="'+Math.max(cy,8)+'" r="6.5" fill="'+(p[3]==='a'?'var(--teal)':'var(--red)')+'" opacity=".9"/>';
+      });
+      if(acc.length){
+        const mean=acc.reduce((a,b)=>a+b,0)/acc.length;
+        h+='<line class="meanline" x1="'+X(mean)+'" y1="18" x2="'+X(mean)+'" y2="92"/>'+
+           '<text class="meanlab" x="'+X(mean)+'" y="14" text-anchor="middle" style="font-size:18px">$'+Math.round(mean)+'</text>';
+      }
+      document.querySelectorAll('[data-avdots="'+ph+'"]').forEach(dots=>{dots.innerHTML=h;});
+      const note=acc.length||rej?('· '+acc.length+' deals, '+rej+' rejected'):'';
+      document.querySelectorAll('[data-avr="'+ph+'"]').forEach(el=>{el.textContent=note;});
+    });
+    document.querySelectorAll('[data-avdemo]').forEach(d=>{d.style.display=st.live?'none':'';});
+  }
+  /* this game's acceptance rule: exactly a 50/50 split, the deal the person
+     who left was guaranteed. Classroom-grade, in public source like every
+     game brief */
+  const RULE={3:a=>a===50};
+  const markerPosted={};
+  function ensureMarker(lines){
+    const ph=phase();
+    if(!st.live||!ph)return;
+    const seen=lines.some(p=>p[0]==='=game'&&p[1]==='p'&&+p[2]===ph);
+    if(seen||markerPosted[ph])return;
+    markerPosted[ph]=1;
+    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
+    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:'=game|p|'+ph,v:deckVoter()})})
+    .then(()=>fetchIt()).catch(()=>{});
+  }
+  const sched=new Set();
+  function autoDecide(pending){
+    const ph=phase();
+    if(!st.live||!ph||!RULE[ph])return;
+    pending.forEach(s=>{
+      const key=(s.name||'').toLowerCase()+'|'+s.offer+'|'+s.oIdx;
+      if(sched.has(key))return;
+      sched.add(key);
+      setTimeout(()=>{const p2=phase();if(RULE[p2])decide(s,RULE[p2](s.offer)?'a':'r',p2);},900);
+    });
+  }
+  function decide(s,code,ph){
+    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
+    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:s.name+'|d|'+s.offer+'|'+code+'|'+ph,v:deckVoter()})})
+    .then(()=>fetchIt()).catch(()=>{});
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m1-av/answers').then(r=>r.json()).then(d=>{
+      st.live=true;st.lines=d.answers||[];render();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  render();
+})();
+
+/* ---- the chicken board: room m7-chicken (?chroom= for rehearsals). The
+   wire, the payoffs and the round logic live in game/chicken.js, shared with
+   the phones (and mirrored in go/scores.js — the three MUST agree). ---- */
+(function(){
+  const ROOM=QS.get('chroom')||'m7-chicken';
+  const st={live:false,lines:[]};
+  function h01(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
+  /* a plausible demo room: ten pairs, cautious early, wheels flying later */
+  function demoLines(){
+    const names=['Demo Alex','Demo Bea','Demo Chris','Demo Dana','Demo Eli','Demo Fay','Demo Gus','Demo Hana','Demo Ivo','Demo Jo','Demo Kim','Demo Lou','Demo Max','Demo Nia','Demo Oli','Demo Pat','Demo Quin','Demo Rae','Demo Sol','Demo Tam'];
+    const out=[];
+    for(let p=0;p<10;p++){
+      const A=names[2*p],B=names[2*p+1]; out.push(A+'|'+B+'|0|a|j');
+      for(let n=1;n<=CHICKEN.N;n++){
+        const r={a:h01('da'+p+'-'+n),b:h01('db'+p+'-'+n)}, r2={a:h01('ea'+p+'-'+n),b:h01('eb'+p+'-'+n)};
+        if(n<CHICKEN.WHEEL_FROM){
+          ['a','b'].forEach(s=>out.push(A+'|'+B+'|'+n+'|'+s+'|'+(r[s]<0.6?'s':'g')));
+        }else{
+          const c={a:r.a<0.45?'w':'k',b:r.b<0.4?'w':'k'};
+          ['a','b'].forEach(s=>out.push(A+'|'+B+'|'+n+'|'+s+'|'+c[s]));
+          ['a','b'].forEach(s=>{
+            if(c[s]==='w')return;
+            const o=s==='a'?'b':'a';
+            const d=c[o]==='w'?(r2[s]<0.82?'s':'g'):(r2[s]<0.55?'s':'g');
+            out.push(A+'|'+B+'|'+n+'|'+s+'|'+d);
+          });
+        }
+      }
+    }
+    return out;
+  }
+  function stats(){
+    const lines=st.live?st.lines:demoLines();
+    const {joins,pairs}=CHICKEN.parse(lines);
+    let r1=0,sw1=0,cr1=0,bs1=0, r2=0,dec2=0,th2=0,face=0,fs=0,bt2=0;
+    pairs.forEach(pr=>{
+      for(let n=1;n<=CHICKEN.N;n++){
+        const rd=CHICKEN.round(pr,n); if(!rd.done)continue;
+        if(n<CHICKEN.WHEEL_FROM){
+          r1++; if(rd.a==='s')sw1++; if(rd.b==='s')sw1++;
+          if(rd.a==='g'&&rd.b==='g')cr1++; if(rd.a==='s'&&rd.b==='s')bs1++;
+        }else{
+          r2++; dec2+=2; if(rd.ca==='w')th2++; if(rd.cb==='w')th2++;
+          if(rd.ca==='w'&&rd.cb==='w')bt2++;
+          if(rd.ca==='w'&&rd.cb!=='w'){face++;if(rd.b==='s')fs++;}
+          if(rd.cb==='w'&&rd.ca!=='w'){face++;if(rd.a==='s')fs++;}
+        }
+      }
+    });
+    const pct=(a,b)=>b?Math.round(a/b*100):null;
+    return {pairs:joins.size,rounds:r1+r2,sw1:pct(sw1,2*r1),cr1:pct(cr1,r1),bs1:pct(bs1,r1),th2:pct(th2,dec2),fs2:pct(fs,face),bt2:pct(bt2,r2)};
+  }
+  function render(){
+    const s=stats();
+    ['chPairs0','chPairs'].forEach(id=>{document.getElementById(id).textContent=st.live?s.pairs:0;});
+    document.getElementById('chRounds').textContent=st.live?s.rounds:0;
+    document.getElementById('chDemo').style.display=st.live?'none':'';
+    refreshShownCalls();
+  }
+  window.chTile=function(el,on){
+    const v=el.querySelector('.v');
+    if(!on){v.textContent='–';return;}
+    const s=stats(), x=s[el.dataset.t];
+    v.textContent=x===null?'–':x;
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+
+/* ---- the Granito wall: room m7-granito (a polls.json write-in) ---- */
+(function(){
+  const DEMO=['A warranty on every part, in writing','Take the engines on consignment','Our name across the industry','Walk away if the price moves again','A fixed price, no renegotiation','Put a deposit down first','Sign for the whole fleet, not one engine','One offer, and it is final'];
+  const nEl=document.getElementById('gwN'), wall=document.getElementById('gwwall');
+  const demoTag=document.getElementById('gwdemo');
+  const st={live:false,answers:[],revealed:false};
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function render(){
+    const answers=st.live?st.answers:DEMO;
+    nEl.textContent=st.live?st.answers.length:0;
+    demoTag.style.display=(st.live||!st.revealed)?'none':'';
+    if(!st.revealed)return;
+    const groups=new Map();
+    answers.forEach(t=>{const k=t.toLowerCase();
+      if(!groups.has(k))groups.set(k,{t:t,n:0});
+      groups.get(k).n++;});
+    wall.classList.toggle('dense',groups.size>26);
+    let h='', i=0;
+    groups.forEach(g=>{h+='<span class="ex c'+(i++%7)+'">'+esc(g.t)+(g.n>1?'<span class="xn">&times;'+g.n+'</span>':'')+'</span>';});
+    wall.innerHTML=h;
+  }
+  window.gwReveal=function(el,on){
+    st.revealed=on;
+    document.getElementById('gwbul').classList.toggle('faded',on);
+    document.getElementById('gwqr').classList.toggle('faded',on);
+    wall.classList.toggle('on',on);
+    render();
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/m7-granito/answers').then(r=>r.json()).then(d=>{st.live=true;st.answers=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+
+/* ---- Top of the class: this module's game plus the programme total ---- */
+(function(){
+  const DEMO=[
+    {name:'Priya',byEvent:{chicken:5},total:24},
+    {name:'Marcus',byEvent:{chicken:5},total:22},
+    {name:'Elena',byEvent:{chicken:0},total:19},
+    {name:'Sam',byEvent:{chicken:5},total:18},
+    {name:'Tom',byEvent:{chicken:0},total:15}
+  ];
+  const EVS=['chicken'];
+  function fill(players,demo){
+    for(let i=0;i<5;i++){
+      const row=document.getElementById('scbr'+i), p=players[i];
+      row.querySelector('.nm').textContent=p?p.name:'—';
+      const pvs=row.querySelectorAll('.pv');
+      EVS.forEach((k,j)=>{pvs[j].textContent=p?(p.byEvent[k]||0):'';});
+      row.querySelector('.tt').textContent=p?p.total:'';
+    }
+    document.getElementById('scbD').style.display=demo?'':'none';
+  }
+  function refresh(){
+    GT_SCORES.load().then(d=>{
+      if(d.players.length)fill(d.players,false);
+      else fill(DEMO,true);
+    }).catch(()=>fill(DEMO,true));
+  }
+  setInterval(refresh,10000);refresh();
+})();
+</script>
 <script src="/teaching/exec/gt/deck.js"></script>
 </body></html>
