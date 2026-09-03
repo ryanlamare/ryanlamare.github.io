@@ -108,11 +108,14 @@ const GT_SCORES = (() => {
       id: 'm6',
       title: 'Mixed Strategies',
       events: [
-        /* the penalty shootout: whoever scored more goals as the kicker in
-           their pair (eight kicks each) takes 5; a dead heat pays nobody.
-           This is the programme's five-point module. Rock, paper, scissors
-           (m6-rps) is played for the pattern it leaves, not for points. */
-        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', winPoints: 5 },
+        /* the penalty shootout: five kicks each, taken in turns, a point
+           for every goal you score as the striker (goalPoints); savePoints
+           is what a kick you keep out is worth to the keeper, off for now.
+           Five is the most anyone can take, which makes this the
+           programme's five-point module. Beat the keeper (m6-solo) and
+           rock, paper, scissors (m6-rps) are played for what they show,
+           not for points. */
+        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 1, savePoints: 0 },
       ],
     },
   ];
@@ -130,7 +133,9 @@ const GT_SCORES = (() => {
     { id: 'm3-engine', label: 'The engine game · Module 3' },
     { id: 'm4-prices', label: 'Price Wars · Module 4' },
     { id: 'm5-invest', label: 'The investment game · Module 5' },
+    { id: 'm6-solo', label: 'Beat the keeper · Module 6', solo: true },
     { id: 'm6-pk', label: 'The penalty shootout · Module 6' },
+    { id: 'm6-vs', label: 'Shoot against me · Module 6', solo: true },
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
   ];
 
@@ -302,10 +307,12 @@ const GT_SCORES = (() => {
     byPair.forEach(winner => addPoints(tally, winner, ev.key, 5));
   }
 
-  /* the penalty shootout: "A|B|n|seat|l-or-r" lines, A kicking 1-8 and B
-     kicking 9-16; whether a kick went in is the same hash draw the phones
-     use (MUST match m6/game/ and the m6 deck), against the real success
-     rates; more goals as the kicker takes winPoints */
+  /* the penalty shootout: "A|B|n|seat|l-or-r" lines, ten kicks taken in
+     turns (A kicks the odd ones, B the even ones — five each); whether a
+     kick went in is the same hash draw the phones use (MUST match
+     m6/game/pk.js and the m6 deck), against the real success rates. A
+     goal pays goalPoints to the striker; a kick kept out pays savePoints
+     to the keeper. Join and kit lines (n = 0) carry no move. */
   const PK_RATE = { ll: 58, lr: 95, rl: 93, rr: 70 };
   function h01(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
   const pkGoal = (key, n, kick, dive) => h01(key + '|' + n + '|' + kick + '|' + dive) < PK_RATE[kick + dive] / 100;
@@ -314,7 +321,7 @@ const GT_SCORES = (() => {
     const latest = new Map(); /* pair|n|seat -> move */
     (d.answers || []).forEach(t => {
       const p = String(t).split('|').map(x => x.trim());
-      if (p.length !== 5 || !p[0] || !p[1] || !/^\d{1,2}$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[lr]$/.test(p[4])) return;
+      if (p.length !== 5 || !p[0] || !p[1] || !/^[1-9]\d?$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[lr]$/.test(p[4])) return;
       const key = [norm(p[0]), norm(p[1])].sort().join('~');
       latest.set(key + '|' + p[2] + '|' + p[3], { A: p[0], B: p[1], key, n: +p[2], seat: p[3], x: p[4] });
     });
@@ -325,15 +332,16 @@ const GT_SCORES = (() => {
       pr.kicks[m.n] = pr.kicks[m.n] || {};
       pr.kicks[m.n][m.seat] = m.x;
     });
+    const gp = ev.goalPoints || 0, sp = ev.savePoints || 0;
     pairs.forEach(pr => {
-      let gA = 0, gB = 0;
-      for (let n = 1; n <= 16; n++) {
+      const key = [norm(pr.A), norm(pr.B)].sort().join('~');
+      for (let n = 1; n <= 10; n++) {
         const k = pr.kicks[n]; if (!k || !k.a || !k.b) continue;
-        const ks = n <= 8 ? 'a' : 'b', kick = k[ks], dive = k[ks === 'a' ? 'b' : 'a'];
-        if (pkGoal([norm(pr.A), norm(pr.B)].sort().join('~'), n, kick, dive)) { if (ks === 'a') gA++; else gB++; }
+        const ks = n % 2 ? 'a' : 'b', kick = k[ks], dive = k[ks === 'a' ? 'b' : 'a'];
+        const striker = ks === 'a' ? pr.A : pr.B, keeper = ks === 'a' ? pr.B : pr.A;
+        if (pkGoal(key, n, kick, dive)) { if (gp) addPoints(tally, striker, ev.key, gp); }
+        else if (sp) addPoints(tally, keeper, ev.key, sp);
       }
-      if (gA > gB) addPoints(tally, pr.A, ev.key, ev.winPoints);
-      else if (gB > gA) addPoints(tally, pr.B, ev.key, ev.winPoints);
     });
   }
 
