@@ -25,6 +25,9 @@
      Payoffs from Module 5: stag/stag 3,3; stag/hare 0,1; hare/stag 1,0;
      hare/hare 1,1.
 
+   GRANITO AIR (room m7-granito-deal) and THE COMMITTED PENALTY (room
+   m7-commit) are documented beside their rules further down.
+
    THE AUCTION (room m7-auction), the whole room, points for a pot of
    POT points. The deck opens rounds with "::open|n" (latest marker wins);
    in a round each phone posts one bid "name|n|amount" (whole points,
@@ -135,5 +138,90 @@
     return {role:'out',pay:0,get:0};
   };
 
-  root.MOVES={norm,pairKey,parsePairs,GB,STAG,AUCTION};
+  /* ---------- Granito Air: one strategic move each, then talk ----------
+     Room m7-granito-deal, one round. Seat a is RRPF Materials (the buyer),
+     seat b is Granito Air (the seller). Before the pair talks, each seat
+     picks ONE move off its own menu (or no move); the code is the move's
+     key, and it lands on the partner's phone the moment it is posted.
+     After five minutes face to face each seat posts an outcome, d (we
+     have a deal) or n, and, if the partner made a move, whether they
+     believed it: y or x. A deal is a deal only when both seats say so.
+     Unscored: it is played for what it shows. The menus are the only
+     client-specific part of this file (COMPANY SLOT). */
+  const GRANITO={N:1,TYPE:{c:'Commitment',t:'Threat',p:'Promise',q:'No move'}};
+  GRANITO.MENU={
+    a:[{k:'ac1',t:'c',n:'All five engines, or none'},
+       {k:'ac2',t:'c',n:'One offer, and it is final'},
+       {k:'at1',t:'t',n:'The offer expires when this meeting ends'},
+       {k:'ap1',t:'p',n:'A six-month warranty on every part we sell you'},
+       {k:'ap2',t:'p',n:'Consignment: you are paid as the parts sell'},
+       {k:'aq', t:'q',n:'No move. Just talk'}],
+    b:[{k:'bc1',t:'c',n:'The five engines go as one lot'},
+       {k:'bc2',t:'c',n:'We have a floor price, and we will not go under it'},
+       {k:'bt1',t:'t',n:'Two meetings, and then we decide'},
+       {k:'bp1',t:'p',n:'Do this deal, and the next retirements come to you'},
+       {k:'bp2',t:'p',n:'We will take pool credits instead of cash'},
+       {k:'bq', t:'q',n:'No move. Just talk'}]};
+  GRANITO.ROLE={a:'RRPF Materials',b:'Granito Air'};
+  GRANITO.BY_KEY={};
+  ['a','b'].forEach(s=>GRANITO.MENU[s].forEach(m=>{GRANITO.BY_KEY[m.k]=m;}));
+  (function(){
+    const ph={d:'o',n:'o',y:'b',x:'b'};
+    Object.keys(GRANITO.BY_KEY).forEach(k=>{ph[k]='m';});
+    GRANITO.parse=lines=>parsePairs(lines,ph,GRANITO.N);
+  })();
+  /* the one round: ma/mb = move keys, ta/tb = move types, oa/ob = outcomes,
+     ba/bb = beliefs (only asked when the partner made a move), talking =
+     both moves are in, deal = both said d, done = every answer is in */
+  GRANITO.round=function(pr){
+    const r=(pr.r&&pr.r[1])||{a:{},b:{}}, A=r.a||{}, B=r.b||{};
+    const ma=GRANITO.BY_KEY[A.m]?A.m:undefined, mb=GRANITO.BY_KEY[B.m]?B.m:undefined;
+    const out={ma,mb,ta:ma?GRANITO.BY_KEY[ma].t:undefined,tb:mb?GRANITO.BY_KEY[mb].t:undefined,
+      oa:A.o,ob:B.o,ba:A.b,bb:B.b,talking:!!(ma&&mb),deal:false,done:false};
+    if(!out.talking)return out;
+    const needBa=out.tb&&out.tb!=='q', needBb=out.ta&&out.ta!=='q';
+    out.deal=A.o==='d'&&B.o==='d';
+    out.done=!!(A.o&&B.o&&(!needBa||A.b)&&(!needBb||B.b));
+    return out;
+  };
+
+  /* ---------- the committed penalty (room m7-commit) ----------
+     Solo, the Module 6 keeper and rates (pk.js must be loaded). Before the
+     first kick the kicker commits to one side, "name|0|c-l" or "name|0|c-r",
+     and every kick after that goes that way: "name|n|l" for n = 1..KICKS.
+     The keeper KNOWS: it dives to the committed side READ_P of the time,
+     decided by a hash of the name and the kick number, so every device
+     replays the same game from the commitment and the kick count alone. */
+  const COMMIT={KICKS:5,READ_P:0.9};
+  COMMIT.h01=function(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;};
+  COMMIT.dive=function(name,n,side){
+    const other=side==='l'?'r':'l';
+    return COMMIT.h01('commit|'+norm(name)+'|'+n)<COMMIT.READ_P?side:other;
+  };
+  /* one kick's result; PK.goal is the Module 6 hash draw against the real rates */
+  COMMIT.step=function(name,n,side){
+    const dive=COMMIT.dive(name,n,side);
+    const PK=root.PK;
+    return {n,kick:side,dive,goal:PK?PK.goal('commit|'+norm(name),n,side,dive):false};
+  };
+  COMMIT.replay=function(name,side,nKicks){
+    const out=[];for(let n=1;n<=Math.min(nKicks,COMMIT.KICKS);n++)out.push(COMMIT.step(name,n,side));return out;
+  };
+  /* -> Map name -> {name, side, kicks (count), hist} */
+  COMMIT.parse=function(lines){
+    const per=new Map();
+    lines.forEach(t=>{
+      const p=String(t).split('|').map(s=>s.trim());
+      if(p.length!==3||!p[0]||p[0][0]===':')return;
+      const k=norm(p[0]);
+      if(!per.has(k))per.set(k,{name:p[0],side:null,kicks:0});
+      const pl=per.get(k);
+      if(p[1]==='0'&&/^c-[lr]$/.test(p[2])){pl.side=p[2][2];return;}
+      if(/^[1-9]$/.test(p[1])&&/^[lr]$/.test(p[2])&&+p[1]<=COMMIT.KICKS)pl.kicks=Math.max(pl.kicks,+p[1]);
+    });
+    per.forEach(pl=>{pl.hist=pl.side?COMMIT.replay(pl.name,pl.side,pl.kicks):[];});
+    return per;
+  };
+
+  root.MOVES={norm,pairKey,parsePairs,GB,STAG,AUCTION,GRANITO,COMMIT};
 })(typeof window!=='undefined'?window:globalThis);
