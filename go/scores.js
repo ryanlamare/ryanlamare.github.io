@@ -143,14 +143,13 @@ const GT_SCORES = (() => {
            the lot pays nothing on this board (Ryan's rule: never a reward
            for the wrong thing) */
         { key: 'gb', label: 'Split or steal', kind: 'goldenballs', room: 'm7-gb', sharePoints: 3, bonusPoints: 2 },
-        /* Granito Air (m7-granito-deal) is unscored: played for what it
-           shows. The committed penalty is played by the instructor on the
-           big screen, no room. The stag hunt (m7-stag) was built as a
-           control for split or steal and cut from the deck */
+        /* the committed penalty is played by the instructor on the big
+           screen, no room. The stag hunt (m7-stag) was built as a control
+           for split or steal and cut from the deck */
         /* the auction: the winner takes the pot and pays their bid, the
            runner-up pays their bid for nothing — in POINTS, which is the
            whole trap. minPoints caps how far one auction can drag anyone */
-        { key: 'auction', label: 'Auction', kind: 'auction', room: 'm7-auction', pot: 10, minPoints: -10 },
+        { key: 'auction', label: 'Engines', kind: 'auction', room: 'm7-auction', pot: 10, minPoints: -10 },
       ],
     },
   ];
@@ -175,8 +174,7 @@ const GT_SCORES = (() => {
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
     { id: 'm7-chicken', label: 'Chicken · Module 7' },
     { id: 'm7-gb', label: 'Split or steal · Module 7' },
-    { id: 'm7-granito-deal', label: 'Granito Air · Module 7' },
-    { id: 'm7-auction', label: 'The auction · Module 7', solo: true },
+    { id: 'm7-auction', label: 'Granito’s engines go to bid · Module 7', solo: true },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -741,15 +739,6 @@ const GT_SCORES = (() => {
       if (!me) return null;
       const W = { s: 'swerved', g: 'went straight', w: 'threw the wheel out', k: 'kept the wheel' };
       return 'round ' + p[2] + ': ' + (W[p[4]] || p[4]);
-    }
-    if (id === 'm7-granito-deal') {
-      if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
-      const me = (norm(p[0]) === nkey) === (p[3] === 'a');
-      if (!me) return null;
-      const W = { d: 'we have a deal', n: 'no deal', y: 'believed their move', x: 'did not believe their move' };
-      if (W[p[4]]) return W[p[4]];
-      const T = { c: 'made a commitment', t: 'made a threat', p: 'made a promise', q: 'made no move' };
-      return T[p[4][1]] || p[4];
     }
     if (id === 'm7-gb' || id === 'm7-stag') {
       if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);

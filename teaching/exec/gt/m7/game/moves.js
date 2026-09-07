@@ -25,11 +25,8 @@
      Payoffs from Module 5: stag/stag 3,3; stag/hare 0,1; hare/stag 1,0;
      hare/hare 1,1.
 
-   GRANITO AIR (room m7-granito-deal) is documented beside its rules
-   further down.
-
-   THE AUCTION (room m7-auction), the whole room, live, for a pot of POT
-   points. A phone posts a bid "name|amount" whenever it likes (whole
+   THE AUCTION (room m7-auction): Granito's five engines go to bid, the
+   whole room, live, for a pot of POT points. A phone posts a bid "name|amount" whenever it likes (whole
    points, above the standing high bid); the deck posts "::sold" to end it.
    Standing bid = a name's highest bid so far. Winner = the highest standing
    bid (ties: the earlier line); runner-up = the next name. The winner pays
@@ -127,52 +124,5 @@
     return {role:'out',pay:0,get:0};
   };
 
-  /* ---------- Granito Air: one strategic move each, then talk ----------
-     Room m7-granito-deal, one round. Seat a is RRPF Materials (the buyer),
-     seat b is Granito Air (the seller). Before the pair talks, each seat
-     picks ONE move off its own menu (or no move); the code is the move's
-     key, and it lands on the partner's phone the moment it is posted.
-     After five minutes face to face each seat posts an outcome, d (we
-     have a deal) or n, and, if the partner made a move, whether they
-     believed it: y or x. A deal is a deal only when both seats say so.
-     Unscored: it is played for what it shows. The menus are the only
-     client-specific part of this file (COMPANY SLOT). */
-  const GRANITO={N:1,TYPE:{c:'Commitment',t:'Threat',p:'Promise',q:'No move'}};
-  GRANITO.MENU={
-    a:[{k:'ac1',t:'c',n:'All five engines, or none'},
-       {k:'ac2',t:'c',n:'One offer, and it is final'},
-       {k:'at1',t:'t',n:'The offer expires when this meeting ends'},
-       {k:'ap1',t:'p',n:'A six-month warranty on every part we sell you'},
-       {k:'ap2',t:'p',n:'Consignment: you are paid as the parts sell'},
-       {k:'aq', t:'q',n:'No move. Just talk'}],
-    b:[{k:'bc1',t:'c',n:'The five engines go as one lot'},
-       {k:'bc2',t:'c',n:'We have a floor price, and we will not go under it'},
-       {k:'bt1',t:'t',n:'Two meetings, and then we decide'},
-       {k:'bp1',t:'p',n:'Do this deal, and the next retirements come to you'},
-       {k:'bp2',t:'p',n:'We will take pool credits instead of cash'},
-       {k:'bq', t:'q',n:'No move. Just talk'}]};
-  GRANITO.ROLE={a:'RRPF Materials',b:'Granito Air'};
-  GRANITO.BY_KEY={};
-  ['a','b'].forEach(s=>GRANITO.MENU[s].forEach(m=>{GRANITO.BY_KEY[m.k]=m;}));
-  (function(){
-    const ph={d:'o',n:'o',y:'b',x:'b'};
-    Object.keys(GRANITO.BY_KEY).forEach(k=>{ph[k]='m';});
-    GRANITO.parse=lines=>parsePairs(lines,ph,GRANITO.N);
-  })();
-  /* the one round: ma/mb = move keys, ta/tb = move types, oa/ob = outcomes,
-     ba/bb = beliefs (only asked when the partner made a move), talking =
-     both moves are in, deal = both said d, done = every answer is in */
-  GRANITO.round=function(pr){
-    const r=(pr.r&&pr.r[1])||{a:{},b:{}}, A=r.a||{}, B=r.b||{};
-    const ma=GRANITO.BY_KEY[A.m]?A.m:undefined, mb=GRANITO.BY_KEY[B.m]?B.m:undefined;
-    const out={ma,mb,ta:ma?GRANITO.BY_KEY[ma].t:undefined,tb:mb?GRANITO.BY_KEY[mb].t:undefined,
-      oa:A.o,ob:B.o,ba:A.b,bb:B.b,talking:!!(ma&&mb),deal:false,done:false};
-    if(!out.talking)return out;
-    const needBa=out.tb&&out.tb!=='q', needBb=out.ta&&out.ta!=='q';
-    out.deal=A.o==='d'&&B.o==='d';
-    out.done=!!(A.o&&B.o&&(!needBa||A.b)&&(!needBb||B.b));
-    return out;
-  };
-
-  root.MOVES={norm,pairKey,parsePairs,GB,STAG,AUCTION,GRANITO};
+  root.MOVES={norm,pairKey,parsePairs,GB,STAG,AUCTION};
 })(typeof window!=='undefined'?window:globalThis);
