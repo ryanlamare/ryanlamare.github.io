@@ -143,9 +143,10 @@ const GT_SCORES = (() => {
            the lot pays nothing on this board (Ryan's rule: never a reward
            for the wrong thing) */
         { key: 'gb', label: 'Split or steal', kind: 'goldenballs', room: 'm7-gb', sharePoints: 3, bonusPoints: 2 },
-        /* Granito Air (m7-granito-deal) and the committed penalty (m7-commit)
-           are unscored: played for what they show. The stag hunt (m7-stag)
-           was built as a control for split or steal and cut from the deck */
+        /* Granito Air (m7-granito-deal) is unscored: played for what it
+           shows. The committed penalty is played by the instructor on the
+           big screen, no room. The stag hunt (m7-stag) was built as a
+           control for split or steal and cut from the deck */
         /* the auction: the winner takes the pot and pays their bid, the
            runner-up pays their bid for nothing — in POINTS, which is the
            whole trap. minPoints caps how far one auction can drag anyone */
@@ -175,7 +176,6 @@ const GT_SCORES = (() => {
     { id: 'm7-chicken', label: 'Chicken · Module 7' },
     { id: 'm7-gb', label: 'Split or steal · Module 7' },
     { id: 'm7-granito-deal', label: 'Granito Air · Module 7' },
-    { id: 'm7-commit', label: 'The committed penalty · Module 7', solo: true },
     { id: 'm7-auction', label: 'The auction · Module 7', solo: true },
   ];
 
@@ -515,18 +515,18 @@ const GT_SCORES = (() => {
     });
   }
 
-  /* the auction: "::open|n" markers from the deck, "name|n|amount" bids
-     and "name|n|p" passes; a name's standing bid is its highest; the top
-     standing bid wins the pot and pays the bid, the next name pays its bid
-     for nothing. Points can go negative here — that is the game — down to
-     ev.minPoints. MUST match m7/game/moves.js (AUCTION) */
+  /* the auction, live: "name|amount" bids in the order they landed and a
+     "::sold" marker from the deck; a name's standing bid is its highest; the
+     top standing bid wins the pot and pays the bid, the next name pays its
+     bid for nothing. Points can go negative here — that is the game — down
+     to ev.minPoints. MUST match m7/game/moves.js (AUCTION) */
   async function scoreAuction(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
     const best = new Map();
     (d.answers || []).forEach((t, idx) => {
       const p = String(t).split('|').map(x => x.trim());
-      if (p.length !== 3 || !p[0] || p[0][0] === ':' || !/^\d{1,3}$/.test(p[1]) || !/^\d{1,3}$/.test(p[2])) return;
-      const amt = +p[2]; if (amt < 1 || amt > 50) return;
+      if (p.length !== 2 || !p[0] || p[0][0] === ':' || !/^\d{1,3}$/.test(p[1])) return;
+      const amt = +p[1]; if (amt < 1 || amt > 50) return;
       const cur = best.get(norm(p[0]));
       if (!cur || amt > cur.amt) best.set(norm(p[0]), { name: p[0], amt, idx });
     });
@@ -751,10 +751,6 @@ const GT_SCORES = (() => {
       const T = { c: 'made a commitment', t: 'made a threat', p: 'made a promise', q: 'made no move' };
       return T[p[4][1]] || p[4];
     }
-    if (id === 'm7-commit') {
-      if (p[1] === '0') return 'committed to the ' + (p[2] === 'c-l' ? 'left' : 'right');
-      return 'kick ' + p[1] + ': shot ' + (p[2] === 'l' ? 'left' : 'right');
-    }
     if (id === 'm7-gb' || id === 'm7-stag') {
       if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
       const me = (norm(p[0]) === nkey) === (p[3] === 'a');
@@ -764,7 +760,7 @@ const GT_SCORES = (() => {
         : { s: 'went for the stag', h: 'took the hare', m: 'sent the assurance', q: 'sent nothing' };
       return 'round ' + p[2] + ': ' + (W[p[4]] || p[4]);
     }
-    if (id === 'm7-auction') return p[2] === 'p' ? 'round ' + p[1] + ': passed' : 'round ' + p[1] + ': bid ' + p[2];
+    if (id === 'm7-auction') return 'bid ' + p[1];
     if (id === 'm2-tapasguess') return 'guessed ' + (+p[1]).toLocaleString('en-GB') + ' (the answer: 755,476)';
     if (id === 'm1-av') {
       if (p[1] === 'o') return 'offered to keep $' + p[2];

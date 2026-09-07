@@ -15,15 +15,13 @@
                  (seat b) gets an extra option before choosing, and, if they
                  steal against a split, the choice to hand over half
                  afterwards. Rules in moves.js (GB). Scored — see scores.js.
-     ?g=auction  the whole room bids, anonymously, for a pot of points; the
-                 deck opens rounds. Rules in moves.js (AUCTION). Scored.
+     ?g=auction  the whole room bids, live, for a pot of points; every bid
+                 goes on the big screen with its name. Rules in moves.js
+                 (AUCTION). Scored.
      ?g=granito  Granito Air in pairs: RRPF Materials buys five engines from
                  Granito. Each seat picks one strategic move before the pair
                  talks, then reports a deal or not and whether they believed
                  the other side's move. Rules in moves.js (GRANITO). Unscored.
-     ?g=commit   the committed penalty, solo: pick a side once, every kick
-                 goes that way, and the keeper knows. Module 6's keeper and
-                 rates (pk.js). Rules in moves.js (COMMIT). Unscored.
      ?g=stag     the stag hunt (built, then cut from the deck; still playable)
 
    Names come from the shared gt-name and are claimed into gt-names for
@@ -44,7 +42,8 @@ button.opt:disabled{opacity:.55;cursor:default}
 .bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:28px;padding:22px 10px;letter-spacing:.02em}
 .bigrow.words button.opt{font-size:19px;padding:22px 6px;line-height:1.15;font-family:var(--sans);font-weight:700}
 .bigrow.balls button.opt{padding:14px 6px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:22px}
-.ball{width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 32%,#ffe9a0 0,#e0b13a 45%,#a37a12 100%);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;
+.ball{width:84px;height:84px;border-radius:50%;background:var(--ochre);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  box-shadow:inset -6px -6px 0 rgba(27,28,25,.14),inset 0 0 0 5px var(--paper-soft);
   font-family:var(--display);font-weight:900;font-size:13px;letter-spacing:.06em;color:var(--ink)}
 button.opt.mine .ball{box-shadow:0 0 0 4px var(--paper)}
 .namerow{display:flex;gap:10px}
@@ -103,7 +102,6 @@ button.send:disabled{opacity:.45;cursor:default}
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:12px 18px;cursor:pointer}
 .bidrow button.pass{background:var(--paper);color:var(--ink);border-color:var(--ink)}
 .bidrow button:disabled{opacity:.45;cursor:default}
-.scene{border:2.5px solid var(--ink);background:var(--paper-soft);padding:10px 8px 0}
 .menu{display:flex;flex-direction:column;gap:9px;margin-top:10px}
 .menu button.opt{display:flex;align-items:center;gap:12px;padding:12px 14px;font-size:15px}
 .menu button.opt .ty{flex:none;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:10px;padding:4px 7px;border:2px solid currentColor;min-width:82px;text-align:center}
@@ -123,7 +121,6 @@ button.send:disabled{opacity:.45;cursor:default}
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
-<script src="/teaching/exec/gt/m6/game/pk.js"></script>
 <script src="/teaching/exec/gt/m7/game/chicken.js"></script>
 <script src="/teaching/exec/gt/m7/game/moves.js"></script>
 <script>
@@ -148,8 +145,7 @@ const GAMES={
   granito:{room:'m7-granito-deal',title:'Granito Air',n:MOVES.GRANITO.N,
       pairLead:'Pair up with the person next to you. One of you buys, one of you sells',
       seats:['I am RRPF Materials — I’ll pick my partner','I am Granito Air — my partner picks me'],
-      wait:'Keep this page open. The game starts when your partner picks you.'},
-  commit:{room:'m7-commit',title:'The committed penalty',n:MOVES.COMMIT.KICKS}
+      wait:'Keep this page open. The game starts when your partner picks you.'}
 };
 let voter=null;
 try{
@@ -194,7 +190,7 @@ function render(){
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a><a class="pick" href="?g=gb">Split or steal</a><a class="pick" href="?g=auction">The auction</a><a class="pick" href="?g=granito">Granito Air</a><a class="pick" href="?g=commit">The committed penalty</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a><a class="pick" href="?g=gb">Split or steal</a><a class="pick" href="?g=auction">The auction</a><a class="pick" href="?g=granito">Granito Air</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>{
@@ -202,7 +198,6 @@ function render(){
     claimOnce();render();
   });return;}
   if(G===GAMES.auction)return renderAuction();
-  if(G===GAMES.commit)return renderCommit();
   /* rejoin a pair this phone already sat in */
   let saved=null;
   try{saved=JSON.parse(localStorage.getItem('m7-pair-'+ROOM)||'null');}catch(_){}
@@ -630,93 +625,8 @@ function renderPlay(A,B,seat){
   poller=setInterval(tick,2000);tick();
 }
 
-/* ================= the committed penalty (solo) ================= */
-function renderCommit(){
-  stopPolling();
-  const CM=MOVES.COMMIT;
-  q.textContent=G.title;
-  app.innerHTML='';
-  app.appendChild(meRow());
-  let game=null;
-  try{game=JSON.parse(localStorage.getItem('m7-commit-'+ROOM)||'null');}catch(_){}
-  if(!game||!/^[lr]$/.test(game.side)){
-    const card=document.createElement('div');card.className='waitcard';card.style.borderStyle='solid';card.style.color='var(--ink)';
-    card.innerHTML='<b>Five kicks against the same keeper as before.</b> This time you pick a side once, before the first kick, and every kick goes that way. <b>The keeper knows.</b>';
-    app.appendChild(card);
-    const lbl=document.createElement('div');lbl.className='lbl';lbl.style.marginTop='10px';lbl.textContent='Commit to a side';
-    app.appendChild(lbl);
-    const row=document.createElement('div');row.className='bigrow';row.style.marginTop='8px';
-    [{k:'l',n:'LEFT'},{k:'r',n:'RIGHT'}].forEach(o=>{
-      const b=document.createElement('button');b.className='opt';b.textContent=o.n;
-      b.addEventListener('click',()=>{
-        row.querySelectorAll('.opt').forEach(x=>{x.disabled=true;});b.classList.add('mine');
-        game={side:o.k,kicks:0};
-        try{localStorage.setItem('m7-commit-'+ROOM,JSON.stringify(game));}catch(_){}
-        say(name+'|0|c-'+o.k).then(()=>renderCommit()).catch(code=>{st.textContent=failMsg(code);row.querySelectorAll('.opt').forEach(x=>{x.disabled=false;});b.classList.remove('mine');game=null;});
-      });
-      row.appendChild(b);
-    });
-    app.appendChild(row);
-    return;
-  }
-  const box=document.createElement('div');box.className='scene';
-  const sc=PK.Scene(box);
-  app.appendChild(box);
-  const stage=document.createElement('div');app.appendChild(stage);
-  const back=document.createElement('button');back.className='back';back.type='button';back.textContent='← start over';
-  back.addEventListener('click',()=>{try{localStorage.removeItem('m7-commit-'+ROOM);}catch(_){}render();});
-  app.appendChild(back);
-  const side=game.side, lab=side==='l'?'left':'right';
-  const hist=()=>CM.replay(name,side,game.kicks);
-  function scoreLine(h){
-    const goals=h.filter(x=>x.goal).length;
-    return '<div class="score"><span class="me"><b>'+goals+'</b><small>goals</small></span><span class="them"><b>'+(h.length-goals)+'</b><small>kept out</small></span></div>';
-  }
-  function choice(){
-    const n=game.kicks+1;
-    stage.innerHTML='<div class="lbl">Kick '+n+' of '+CM.KICKS+'</div><div class="status">You committed to the '+lab+'. The keeper knows.</div>';
-    const row=document.createElement('div');row.className='bigrow';row.style.marginTop='10px';
-    const b=document.createElement('button');b.className='opt';b.textContent='SHOOT '+lab.toUpperCase();
-    let posting=false;
-    b.addEventListener('click',()=>{
-      if(posting)return;posting=true;b.disabled=true;b.classList.add('mine');
-      const step=CM.step(name,n,side);
-      game.kicks=n;
-      try{localStorage.setItem('m7-commit-'+ROOM,JSON.stringify(game));}catch(_){}
-      say(name+'|'+n+'|'+side).catch(code=>{st.textContent=failMsg(code);});
-      sc.kick({kick:side,dive:step.dive,goal:step.goal}).then(()=>result(n,step));
-    });
-    row.appendChild(b);
-    stage.appendChild(row);
-    if(n>1){const d=document.createElement('div');d.innerHTML=scoreLine(hist());stage.appendChild(d);}
-  }
-  function result(n,step){
-    stage.innerHTML='';
-    const card=document.createElement('div');card.className='bigcard';
-    const same=step.dive===step.kick;
-    card.innerHTML='<div class="head '+(step.goal?'good':'bad')+'">'+(step.goal?'GOAL':(same?'SAVED':'OFF THE POST'))+'</div>'+
-      '<div class="sub">'+esc('You shot '+lab+', the keeper dived '+(step.dive==='l'?'left':'right')+(same?' — the same way':' — the other way'))+'</div>'+scoreLine(hist());
-    stage.appendChild(card);
-    const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
-    btn.textContent=n<CM.KICKS?'On to kick '+(n+1):'See how you did';
-    btn.addEventListener('click',()=>{sc.reset();n<CM.KICKS?choice():final();});
-    stage.appendChild(btn);
-  }
-  function final(){
-    const h=hist(), goals=h.filter(x=>x.goal).length, read=h.filter(x=>x.dive===x.kick).length;
-    stage.innerHTML='';
-    const card=document.createElement('div');card.className='bigcard';
-    card.innerHTML='<div class="head '+(goals>=4?'good':(goals>=3?'draw':'bad'))+'">'+goals+' OF '+CM.KICKS+'</div>'+
-      '<div class="sub">Every kick went '+lab+'. The keeper went that way on '+read+' of them.</div>'+scoreLine(h);
-    stage.appendChild(card);
-    const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-    note.textContent='All done. Look up — the room’s kicks are about to go on the big screen.';
-    stage.appendChild(note);
-  }
-  if(game.kicks>=CM.KICKS)final();else choice();
-}
 
-/* ================= the auction ================= */
+/* ================= the auction, live ================= */
 function renderAuction(){
   stopPolling();
   const AU=MOVES.AUCTION;
@@ -726,63 +636,52 @@ function renderAuction(){
   const box=document.createElement('div');box.className='auc';box.style.marginTop='10px';
   box.innerHTML='<div class="pot">'+AU.POT+' points<small>THE POT</small></div>'+
     '<div class="row"><span>Standing high bid</span><b id="auHigh">–</b></div>'+
-    '<div class="row"><span>Round</span><b id="auRound">–</b></div>'+
+    '<div class="row"><span id="auWhoL">Held by</span><b id="auWho" style="font-size:18px">–</b></div>'+
     '<div class="you" id="auYou"></div>';
   app.appendChild(box);
   const form=document.createElement('div');form.className='bidrow';
-  form.innerHTML='<input id="auInp" type="number" inputmode="numeric" min="1" max="'+AU.MAX_BID+'" step="1" placeholder="–"><button id="auBid" type="button">BID</button><button id="auPass" type="button" class="pass">PASS</button>';
+  form.innerHTML='<input id="auInp" type="number" inputmode="numeric" min="1" max="'+AU.MAX_BID+'" step="1" placeholder="–"><button id="auBid" type="button">BID</button>';
   app.appendChild(form);
   const note=document.createElement('div');note.className='lbl';note.style.marginTop='10px';
-  note.textContent='Bids are anonymous on the big screen. The highest bidder pays their bid and takes the pot. The second-highest pays their bid and gets nothing.';
+  note.textContent='Every bid goes on the big screen with your name. The highest bidder pays their bid and takes the pot. The second-highest pays their bid and gets nothing.';
   app.appendChild(note);
-  const inp=document.getElementById('auInp'), bidBtn=document.getElementById('auBid'), passBtn=document.getElementById('auPass');
+  const inp=document.getElementById('auInp'), bidBtn=document.getElementById('auBid');
   let state=null, shownKey='', posting=false;
-  function myBidThisRound(){
-    const r=state&&state.bids[state.round]; const b=r&&r[norm(name)];
-    return b?(b.amt===null?'pass':b.amt):null;
-  }
   function paint(){
     const s=state; if(!s)return;
     document.getElementById('auHigh').textContent=s.high?s.high.amt:'–';
-    document.getElementById('auRound').textContent=s.sold?'SOLD':(s.round?s.round:'not open yet');
+    document.getElementById('auWho').textContent=s.high?s.high.name:'–';
     const o=AU.outcome(s,name), you=document.getElementById('auYou');
     you.className='you '+o.role;
-    if(o.role==='high')you.textContent='You are the high bidder. If it ended now you would pay '+o.pay+' and take the '+AU.POT+'.';
+    if(s.sold)you.textContent=o.role==='high'?'Sold to you. You pay '+o.pay+' and take the '+AU.POT+'.':(o.role==='second'?'Sold. You pay '+o.pay+' and get nothing.':'Sold.');
+    else if(o.role==='high')you.textContent='You are the high bidder. If it ended now you would pay '+o.pay+' and take the '+AU.POT+'.';
     else if(o.role==='second')you.textContent='You are second. If it ended now you would pay '+o.pay+' and get nothing.';
     else you.textContent=s.high?'You are not paying anything right now.':'No bids yet.';
-    const mine=myBidThisRound();
-    const open=s.round>0&&!s.sold;
     const minBid=(s.high?s.high.amt:0)+1;
-    inp.min=String(minBid);inp.placeholder=open?String(minBid)+'+':'–';
-    const locked=!open||mine!==null||posting;
-    inp.disabled=locked;bidBtn.disabled=locked;passBtn.disabled=locked;
-    if(s.sold)st.textContent='Sold. Look up.';
-    else if(!open)st.textContent='Waiting for the instructor to open a round…';
-    else if(mine==='pass')st.textContent='You passed this round.';
-    else if(mine!==null)st.textContent='Your bid of '+mine+' is in. Waiting for the round to close…';
-    else st.textContent='';
+    inp.min=String(minBid);inp.placeholder=s.sold?'–':String(minBid)+'+';
+    const locked=s.sold||posting;
+    inp.disabled=locked;bidBtn.disabled=locked;
+    st.textContent=s.sold?'Sold. Look up.':'';
   }
   function post(x){
     if(posting)return;posting=true;paint();
-    say(name+'|'+state.round+'|'+x).then(()=>{posting=false;tick();}).catch(code=>{posting=false;st.textContent=failMsg(code);paint();});
+    say(name+'|'+x).then(()=>{posting=false;inp.value='';tick();}).catch(code=>{posting=false;st.textContent=failMsg(code);paint();});
   }
   bidBtn.addEventListener('click',()=>{
-    const v=Math.round(Number(inp.value)); const minBid=(state.high?state.high.amt:0)+1;
+    const v=Math.round(Number(inp.value)); const minBid=(state&&state.high?state.high.amt:0)+1;
     if(!Number.isFinite(v)||v<minBid){st.textContent='A bid has to beat the standing high bid: '+minBid+' or more.';return;}
     if(v>AU.MAX_BID){st.textContent='That is the most this auction takes: '+AU.MAX_BID+'.';return;}
     post(String(v));
   });
-  passBtn.addEventListener('click',()=>post('p'));
   function tick(){
     answers().then(lines=>{
       state=AU.parse(lines);
-      const k=[state.round,state.sold,state.high&&state.high.amt,state.second&&state.second.amt,myBidThisRound()].join('|');
+      const k=[state.sold,state.high&&state.high.amt,state.high&&state.high.name,state.second&&state.second.amt,posting].join('|');
       if(k===shownKey)return;shownKey=k;
-      if(!myBidThisRound())inp.value='';
       paint();
     }).catch(()=>{});
   }
-  poller=setInterval(tick,1500);tick();
+  poller=setInterval(tick,1200);tick();
 }
 </script>
 </body></html>

@@ -25,17 +25,16 @@
      Payoffs from Module 5: stag/stag 3,3; stag/hare 0,1; hare/stag 1,0;
      hare/hare 1,1.
 
-   GRANITO AIR (room m7-granito-deal) and THE COMMITTED PENALTY (room
-   m7-commit) are documented beside their rules further down.
+   GRANITO AIR (room m7-granito-deal) is documented beside its rules
+   further down.
 
-   THE AUCTION (room m7-auction), the whole room, points for a pot of
-   POT points. The deck opens rounds with "::open|n" (latest marker wins);
-   in a round each phone posts one bid "name|n|amount" (whole points,
-   above the standing high bid) or a pass "name|n|p"; latest line per name
-   per round wins. Standing bid = a name's highest bid so far. Winner = the
-   highest standing bid (ties: the earlier line); runner-up = the next
-   name. The winner pays their bid and takes the pot; the runner-up pays
-   their bid and gets nothing. */
+   THE AUCTION (room m7-auction), the whole room, live, for a pot of POT
+   points. A phone posts a bid "name|amount" whenever it likes (whole
+   points, above the standing high bid); the deck posts "::sold" to end it.
+   Standing bid = a name's highest bid so far. Winner = the highest standing
+   bid (ties: the earlier line); runner-up = the next name. The winner pays
+   their bid and takes the pot; the runner-up pays their bid and gets
+   nothing. */
 (function(root){
   const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
   const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
@@ -102,33 +101,23 @@
     return {a,b,rounds,next};
   };
 
-  /* ---------- the auction ---------- */
+  /* ---------- the auction, live ---------- */
   const AUCTION={POT:10,MAX_BID:50};
-  /* -> {round, bids:{round:[{name,amt,idx}]}, standing:[{name,amt,idx}] desc,
-         high, second, sold} */
+  /* -> {sold, bids:[{name,amt,idx,n}] in the order they landed,
+         standing:[{name,amt,idx}] desc, high, second} */
   AUCTION.parse=function(lines){
-    let round=0; const bids={}, best=new Map();
+    const bids=[], best=new Map(); let sold=false;
     lines.forEach((t,idx)=>{
       const p=String(t).split('|').map(s=>s.trim());
-      if(p[0]==='::open'&&p.length===2&&/^\d{1,3}$/.test(p[1])){round=Math.max(round,+p[1]);return;}
-      if(p[0]==='::sold'){round=-Math.abs(round||1);return;}
-      if(p.length!==3||!p[0]||p[0][0]===':'||!/^\d{1,3}$/.test(p[1]))return;
-      const n=+p[1]; if(n<1)return;
-      if(p[2]==='p'){bids[n]=bids[n]||{};bids[n][norm(p[0])]={name:p[0],amt:null,idx};return;}
-      if(!/^\d{1,3}$/.test(p[2]))return;
-      const amt=+p[2]; if(amt<1||amt>AUCTION.MAX_BID)return;
-      bids[n]=bids[n]||{};bids[n][norm(p[0])]={name:p[0],amt,idx};
-    });
-    const sold=round<0; round=Math.abs(round);
-    Object.keys(bids).map(Number).sort((x,y)=>x-y).forEach(n=>{
-      Object.values(bids[n]).forEach(b=>{
-        if(b.amt===null)return;
-        const cur=best.get(norm(b.name));
-        if(!cur||b.amt>cur.amt)best.set(norm(b.name),{name:b.name,amt:b.amt,idx:b.idx,round:n});
-      });
+      if(p[0]==='::sold'){sold=true;return;}
+      if(p.length!==2||!p[0]||p[0][0]===':'||!/^\d{1,3}$/.test(p[1]))return;
+      const amt=+p[1]; if(amt<1||amt>AUCTION.MAX_BID)return;
+      const b={name:p[0],amt,idx,n:bids.length+1}; bids.push(b);
+      const cur=best.get(norm(p[0]));
+      if(!cur||amt>cur.amt)best.set(norm(p[0]),b);
     });
     const standing=[...best.values()].sort((x,y)=>y.amt-x.amt||x.idx-y.idx);
-    return {round,sold,bids,standing,high:standing[0]||null,second:standing[1]||null};
+    return {sold,bids,standing,high:standing[0]||null,second:standing[1]||null};
   };
   /* what a name pays and gets if the auction ended now */
   AUCTION.outcome=function(state,name){
@@ -185,43 +174,5 @@
     return out;
   };
 
-  /* ---------- the committed penalty (room m7-commit) ----------
-     Solo, the Module 6 keeper and rates (pk.js must be loaded). Before the
-     first kick the kicker commits to one side, "name|0|c-l" or "name|0|c-r",
-     and every kick after that goes that way: "name|n|l" for n = 1..KICKS.
-     The keeper KNOWS: it dives to the committed side READ_P of the time,
-     decided by a hash of the name and the kick number, so every device
-     replays the same game from the commitment and the kick count alone. */
-  const COMMIT={KICKS:5,READ_P:0.9};
-  COMMIT.h01=function(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;};
-  COMMIT.dive=function(name,n,side){
-    const other=side==='l'?'r':'l';
-    return COMMIT.h01('commit|'+norm(name)+'|'+n)<COMMIT.READ_P?side:other;
-  };
-  /* one kick's result; PK.goal is the Module 6 hash draw against the real rates */
-  COMMIT.step=function(name,n,side){
-    const dive=COMMIT.dive(name,n,side);
-    const PK=root.PK;
-    return {n,kick:side,dive,goal:PK?PK.goal('commit|'+norm(name),n,side,dive):false};
-  };
-  COMMIT.replay=function(name,side,nKicks){
-    const out=[];for(let n=1;n<=Math.min(nKicks,COMMIT.KICKS);n++)out.push(COMMIT.step(name,n,side));return out;
-  };
-  /* -> Map name -> {name, side, kicks (count), hist} */
-  COMMIT.parse=function(lines){
-    const per=new Map();
-    lines.forEach(t=>{
-      const p=String(t).split('|').map(s=>s.trim());
-      if(p.length!==3||!p[0]||p[0][0]===':')return;
-      const k=norm(p[0]);
-      if(!per.has(k))per.set(k,{name:p[0],side:null,kicks:0});
-      const pl=per.get(k);
-      if(p[1]==='0'&&/^c-[lr]$/.test(p[2])){pl.side=p[2][2];return;}
-      if(/^[1-9]$/.test(p[1])&&/^[lr]$/.test(p[2])&&+p[1]<=COMMIT.KICKS)pl.kicks=Math.max(pl.kicks,+p[1]);
-    });
-    per.forEach(pl=>{pl.hist=pl.side?COMMIT.replay(pl.name,pl.side,pl.kicks):[];});
-    return per;
-  };
-
-  root.MOVES={norm,pairKey,parsePairs,GB,STAG,AUCTION,GRANITO,COMMIT};
+  root.MOVES={norm,pairKey,parsePairs,GB,STAG,AUCTION,GRANITO};
 })(typeof window!=='undefined'?window:globalThis);
