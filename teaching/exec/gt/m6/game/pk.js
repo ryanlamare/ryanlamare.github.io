@@ -15,7 +15,12 @@
    Sides are always the KICKER's left and right, which is also screen
    left and right (the scene looks at the goal from behind the ball). */
 window.PK=(function(){
-  const RATE={ll:58,lr:95,rl:93,rr:70};
+  /* the table the whole programme plays on (his call, 7 Sep 2026): a keeper
+     who guesses right saves more than the real-world data allowed, and the
+     mixed-strategy story still holds — kicker left 37%, goalie left 39%,
+     about 70% go in at the equilibrium. Copies in go/scores.js and the m6
+     deck's table, slider and text MUST match. */
+  const RATE={ll:30,lr:95,rl:93,rr:55};
   function h01(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
   const goal=(key,n,kick,dive)=>h01(key+'|'+n+'|'+kick+'|'+dive)<RATE[kick+dive]/100;
 

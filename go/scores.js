@@ -353,7 +353,7 @@ const GT_SCORES = (() => {
      m6/game/pk.js and the m6 deck), against the real success rates. A
      goal pays goalPoints to the striker; a kick kept out pays savePoints
      to the keeper. Join and kit lines (n = 0) carry no move. */
-  const PK_RATE = { ll: 58, lr: 95, rl: 93, rr: 70 };
+  const PK_RATE = { ll: 30, lr: 95, rl: 93, rr: 55 };
   function h01(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
   const pkGoal = (key, n, kick, dive) => h01(key + '|' + n + '|' + kick + '|' + dive) < PK_RATE[kick + dive] / 100;
   async function scoreShootout(ev, claims, tally) {

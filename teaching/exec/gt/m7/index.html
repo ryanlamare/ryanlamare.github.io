@@ -1539,10 +1539,9 @@ clipOnClick('gbload','gbwrap',CLIPS.goldenballs,'Golden Balls: Nick and Ibrahim'
    left and dives left READ_P of the time. Live random, no room, no replay.
    The "when this room could choose" line reads the Module 6 solo room. ---- */
 (function(){
-  /* toy rates for this demonstration (his call, 7 Sep): when the keeper
-     guesses right nine kicks in ten are saved; when he guesses wrong the
-     kick goes in 95% of the time. Not the Module 6 rates. */
-  const READ_P=0.9, SAVE_WHEN_RIGHT=0.9, GOAL_WHEN_WRONG=0.95, KICKS=10, ROOM6=QS.get('soloroom')||'m6-solo';
+  /* the same table the whole programme plays on (PK.RATE); the keeper knows
+     the kick is going left and dives left READ_P of the time */
+  const READ_P=0.9, KICKS=10, ROOM6=QS.get('soloroom')||'m6-solo';
   const box=document.getElementById('penScene');
   const sc=PK.Scene(box);
   /* shade the right half of the goal */
@@ -1568,7 +1567,7 @@ clipOnClick('gbload','gbwrap',CLIPS.goldenballs,'Golden Balls: Nick and Ibrahim'
   $('penShoot').addEventListener('click',()=>{
     if(busy||kicks>=KICKS)return;busy=true;paint();
     const dive=Math.random()<READ_P?'l':'r';
-    const goal=dive==='l'?Math.random()>=SAVE_WHEN_RIGHT:Math.random()<GOAL_WHEN_WRONG;
+    const goal=Math.random()<PK.RATE['l'+dive]/100;
     sc.kick({kick:'l',dive,goal}).then(()=>{kicks++;if(goal)goals++;if(dive==='l')read++;busy=false;paint();setTimeout(()=>{if(kicks<KICKS)sc.reset();},900);});
   });
   $('penReset').addEventListener('click',()=>{kicks=0;goals=0;read=0;busy=false;sc.reset();paint();});
