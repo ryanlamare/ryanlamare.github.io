@@ -7,7 +7,7 @@ Never edit those generated regions by hand — they will be overwritten.
 """
 
 ME = "J. Ryan Lamare"
-UPDATED = "August 2026"
+UPDATED = "September 2026"
 
 PROFILE = dict(
   name="J. Ryan Lamare",
@@ -28,8 +28,8 @@ PROFILE = dict(
 #            ic-megaphone ic-briefcase
 #   award    optional badge shown on the site
 #   featured True -> also appears in the site's Featured Publications block
-#   replication  DOI/URL of the replication package; small link on the site,
-#            plain text on the CV
+#   replication  DOI/URL of the replication package; small link on the site
+#            only (not printed on the CV)
 #   eds/etal editor-volume / 'et al.' author-list markers
 
 PUB_GROUPS = [
@@ -76,6 +76,7 @@ PUB_GROUPS = [
     dict(y="2010", authors=["Anthony McDonnell", "J. Ryan Lamare", "Patrick Gunnigle", "Jonathan Lavelle"], t="Developing Tomorrow’s Leaders — Evidence of Global Talent Management in Multinational Enterprises", u="https://doi.org/10.1016/j.jwb.2009.09.015", venue_cv="<i>Journal of World Business</i> 45(2): 150–160.", venue_home="Journal of World Business, 45(2), 150–160.", icon="ic-briefcase"),
   ]),
   ("Articles Under Review", [
+    dict(raw="Cherise Regier and J. Ryan Lamare. “Recognition without Power? Decomposing the Union–Job Satisfaction Puzzle in Post-Thatcher Britain.” R&R, <i>ILR Review</i>.", y="", u=None),
     dict(raw="J. Ryan Lamare and John W. Budd. “The Role of Political Parties in Shaping Women’s Labor Market Policies and Outcomes: A Longitudinal Analysis of Party Characteristics, Positions, and Effects.” R&R, <i>Industrial Relations</i>.", y="", u=None),
   ]),
   ("Working Papers", [
@@ -127,20 +128,22 @@ BLOCKS = [
   ["row", "2024–", "Faculty Group Lead, Employment Relations and Human Resource Management", None],
   ["row", "2024–", "PhD Programme Director", None],
   ["h3", "Previous Positions", None],
-  ["note", "University of Illinois Urbana-Champaign — School of Labor and Employment Relations", " style=\"margin:0 0 4pt\""],
+  ["note", "University of Illinois Urbana-Champaign — School of Labor and Employment Relations", None],
   ["row", "2022–2024", "Reuben G. Soderstrom International Labor Relations Professor", None],
   ["row", "2021–2022", "Professor", None],
   ["row", "2017–2021", "Associate Professor", None],
   ["row", "2015–2017", "Assistant Professor", None],
-  ["note", "Pennsylvania State University — School of Labor and Employment Relations", " style=\"margin:5pt 0 4pt\""],
+  ["note", "Pennsylvania State University — School of Labor and Employment Relations", None],
   ["row", "2012–2015", "Assistant Professor", None],
-  ["note", "University of Manchester — People, Management, and Organisations Division", " style=\"margin:5pt 0 4pt\""],
+  ["note", "University of Manchester — People, Management, and Organisations Division", None],
   ["row", "2010–2011", "Lecturer (equivalent to Assistant Professor)", None],
-  ["note", "University of Limerick — Department of Personnel and Employment Relations", " style=\"margin:5pt 0 4pt\""],
+  ["note", "University of Limerick — Department of Personnel and Employment Relations", None],
   ["row", "2008–2010", "Research Scholar", None],
   ["h2", "Education", ""],
-  ["note", "Cornell University — School of Industrial and Labor Relations", " style=\"margin:0 0 4pt\""],
-  ["row", "2008", "<span class=\"ecell\">PhD</span><span class=\"ecell eyr\">2005</span><span class=\"ecell\">MS</span><span class=\"ecell eyr\">2004</span><span>BS</span>", None],
+  ["note", "Cornell University — School of Industrial and Labor Relations", None],
+  ["row", "2008", "PhD", None],
+  ["row", "2005", "MS", None],
+  ["row", "2004", "BS", None],
   ["h2", "Editorial Positions", ""],
   ["row", "2024–", "Editor-in-Chief, <i>British Journal of Industrial Relations</i>", None],
   ["row", "2020–2024", "Editor-in-Chief, Labor and Employment Relations Association (LERA)", None],
@@ -158,7 +161,7 @@ BLOCKS = [
   ["row", "2018", "Luis Aparicio Prize, runner-up (ILERA)", None],
   ["row", "2015", "John T. Dunlop Outstanding Scholar (LERA)", None],
   ["row", "2010", "Thomas A. Kochan &amp; Stephen R. Sleigh Best Dissertation, honourable mention (LERA)", None],
-  ["h2", "Publications", " class=\"pagebreak\""],
+  ["h2", "Publications", ""],
   ["PUBS"],
   ["h2", "Research Grants", ""],
   ["row", "2026", "National Academy of Arbitrators — British employment tribunal effectiveness and fairness in resolving public disputes (with William Fleming)", None],

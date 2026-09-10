@@ -2,41 +2,43 @@
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>J. Ryan Lamare — Curriculum Vitae</title>
 <!-- EDIT TIP: this single file is the source for BOTH the web CV and the PDF.
-     Edit text/data in build_cv.py, run `python3 build_cv.py` to regenerate
-     cv.html, and (optionally) make the downloadable PDF with:
-       weasyprint cv.html Lamare-CV.pdf
+     Edit text/data in cv_data.py, run `python3 build_cv.py` to regenerate
+     cv/index.html, and (optionally) make the downloadable PDF with:
+       weasyprint cv/index.html Lamare-CV.pdf
      Screen uses @media screen; the PDF uses @media print/@page — one file. -->
 <style>
 /* ONE source, TWO renderings:
-     @media screen        -> the web CV (on-brand, responsive) — the primary version
+     @media screen        -> the web CV (responsive) — the primary version
      @media print / @page -> the downloadable PDF (weasyprint reads these)
-   Fonts: Source Serif 4 (body/name) + Arimo (labels/years), a standard academic
-   pairing. Colours mirror brand.css; /brand.css is also linked in <head> so the
-   served page stays in sync with the rest of the site (the inline values below let
-   the PDF render even when that file isn't reachable, e.g. local weasyprint). */
-/* Screen uses Source Serif 4 + Arimo; the PDF uses Archivo + IBM Plex Mono.
+
+   Typography (restyled Sept 2026 for legibility): ONE typeface, Source Serif 4,
+   for everything in the CV proper — text, years, headings. Headings are plain
+   bold with a hairline rule, like a classic economics / industrial relations
+   CV; no tracked sans labels, no monospace, no ornaments. The only colour is
+   the red rule under the name. The site nav (screen only) keeps the site's
+   label face from /brand.css.
    The `ital,` entries matter: without real italic faces, <i> renders upright. */
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Arimo:wght@400;500;700&family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 
 :root{
-  --paper:#E9E2D2; --paper-soft:#F0EAD9; --card:#DFD6C2; --rule:#CDBFA6;
-  --ink:#1B1C19; --muted:#6A5F59; --red:#CE1E32;
+  --paper:#E9E2D2; --ink:#1B1C19; --red:#CE1E32;
   --accent:var(--red); --soft:#5C554E;
+  --cvrule:#1B1C19; --hair:rgba(27,28,25,.22);
   --line:rgba(27,28,25,.14);
-  --serif:'Source Serif 4','Georgia',serif;
-  --label:'Arimo','Arial',sans-serif;
-  --maxw:56rem;
+  --serif:'Source Serif 4','Georgia','Times New Roman',serif;
+  --label:'Jost','Arial',sans-serif;
+  --maxw:52rem;
 }
 
 *{ box-sizing:border-box; margin:0; padding:0; }
-body{ font-family:var(--serif); color:var(--ink); line-height:1.5; background:var(--paper); }
+body{ font-family:var(--serif); color:var(--ink); background:var(--paper); }
 a{ color:inherit; text-decoration:none; }
 .it .me{ font-weight:700; }
 .pagebreak{ break-before:page; }
 
 /* ===================== SCREEN: the web CV ===================== */
 @media screen{
-  body{ background:#FDFCFA; font-size:1.02rem; }
+  body{ background:#FDFCFA; font-size:1.08rem; line-height:1.5; }
   .site-nav{ position:sticky; top:0; z-index:20; background:rgba(253,252,250,.9);
              -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
              border-bottom:1px solid var(--line); }
@@ -52,40 +54,34 @@ a{ color:inherit; text-decoration:none; }
 
   .cv{ max-width:var(--maxw); margin:0 auto; padding:3rem 2rem 3.5rem; }
 
-  .head{ display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap; }
-  .name{ font-family:var(--serif); font-weight:700; font-size:2.6rem; letter-spacing:.005em;
-         line-height:1; text-transform:uppercase; border-bottom:3px solid var(--accent);
-         padding-bottom:.5rem; }
-  .updated{ font-family:var(--label); font-weight:500; font-size:.7rem; letter-spacing:.14em;
-            text-transform:uppercase; color:var(--soft); padding-bottom:.55rem; }
-  .role{ font-weight:600; font-size:1.2rem; margin-top:1rem; }
-  .dept{ color:var(--soft); font-size:1rem; margin-top:.15rem; }
-  .contact{ font-family:var(--label); font-size:.9rem; margin-top:.7rem; line-height:1.55; }
-  .contact a{ border-bottom:1px solid var(--line); }
+  .head{ display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap;
+         border-bottom:3px solid var(--accent); padding-bottom:.6rem; }
+  .name{ font-weight:700; font-size:2.4rem; letter-spacing:.01em; line-height:1; text-transform:uppercase; }
+  .updated{ font-size:.85rem; color:var(--soft); padding-bottom:.2rem; }
+  .role{ font-weight:600; font-size:1.15rem; margin-top:1rem; }
+  .dept{ font-size:1.05rem; margin-top:.1rem; }
+  .contact{ font-size:1rem; margin-top:.55rem; line-height:1.6; color:var(--soft); }
+  .contact a{ border-bottom:1px solid var(--hair); }
   .contact a:hover{ color:var(--accent); border-bottom-color:var(--accent); }
 
-  h2{ font-family:var(--label); font-size:.8rem; font-weight:700; letter-spacing:.16em;
-      text-transform:uppercase; margin:2.3rem 0 .9rem; padding-bottom:.4rem;
-      border-bottom:1px solid var(--rule); display:flex; align-items:center; gap:.6rem; }
-  h2::before{ content:""; width:.55rem; height:.55rem; background:var(--accent); flex:0 0 auto; }
-  h3{ font-family:var(--label); font-size:.82rem; font-weight:700; letter-spacing:.1em;
-      text-transform:uppercase; color:var(--soft); margin:1.3rem 0 .5rem; }
+  h2{ font-size:1rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+      margin:2.4rem 0 .8rem; padding-bottom:.3rem; border-bottom:1px solid var(--cvrule); }
+  h3{ font-size:1.05rem; font-weight:700; margin:1.3rem 0 .45rem; }
+  .note{ font-weight:600; margin:.9rem 0 .3rem; }
+  .note:first-of-type{ margin-top:.3rem; }
 
-  .row{ display:flex; gap:1rem; margin:0 0 .5rem; }
-  .yr{ font-family:var(--label); font-size:.98rem; color:var(--soft); flex:0 0 6rem; padding-top:.05rem; }
+  .row{ display:flex; gap:1.2rem; margin:0 0 .5rem; }
+  .yr{ flex:0 0 6.2rem; color:var(--soft); white-space:nowrap; }
   .it{ flex:1; }
-  .rowlink .lt{ text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px; text-decoration-color:rgba(27,28,25,.32); }
+  .rowlink .lt{ text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; text-decoration-color:var(--hair); }
   .rowlink:hover .lt{ color:var(--accent); text-decoration-color:var(--accent); }
-  .note{ color:var(--ink); font-weight:500; font-size:1rem; margin-top:.3rem; }
-  .ecell{ display:inline-block; min-width:5.5rem; }
-  .eyr{ font-family:var(--label); font-size:.98rem; color:var(--soft); }
 
   .web-footer{ max-width:var(--maxw); margin:0 auto; padding:2rem; border-top:1px solid var(--line);
                font-family:var(--label); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
                color:var(--soft); display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
 }
 @media screen and (max-width:640px){
-  .name{ font-size:2rem; }
+  .name{ font-size:1.9rem; }
   .cv{ padding:2rem 1.2rem 3rem; }
   .nav-inner{ padding:.8rem 1.2rem; }
   .row{ flex-direction:column; gap:.05rem; }
@@ -94,49 +90,41 @@ a{ color:inherit; text-decoration:none; }
 
 /* ===================== PRINT: the PDF (weasyprint) ===================== */
 @page{
-  size:A4; margin:13mm 16mm 15mm 16mm;
-  @bottom-left{ content:"J. Ryan Lamare \00B7 Curriculum Vitae"; font-family:'IBM Plex Mono','Menlo',monospace; font-size:7.5pt; color:#9a9a9a; }
-  @bottom-right{ content:counter(page) " / " counter(pages); font-family:'IBM Plex Mono','Menlo',monospace; font-size:7.5pt; color:#9a9a9a; }
+  size:A4; margin:16mm 18mm 17mm 18mm;
+  @bottom-left{ content:"J. Ryan Lamare \00B7 Curriculum Vitae"; font-family:'Source Serif 4','Georgia',serif; font-size:8pt; color:#777; }
+  @bottom-right{ content:counter(page) " / " counter(pages); font-family:'Source Serif 4','Georgia',serif; font-size:8pt; color:#777; }
 }
 @media print{
-  /* The PDF deliberately does NOT match the site's theme: it is a print-oriented
-     document — white ground, Archivo for text, IBM Plex Mono for labels/years.
-     Re-pointing these two variables flips every rule below in one place. */
-  :root{ --serif:'Archivo','Helvetica Neue',Arial,sans-serif;
-         --label:'IBM Plex Mono','Menlo',monospace; }
-  body{ background:#fff; color:#1c1c1c; font-size:9.3pt; line-height:1.4; }
+  /* Same face as the screen. Black text on white, 10pt, the classic CV page.
+     Sizes are in pt; nothing here is inherited from the screen block. */
+  body{ background:#fff; color:#111; font-size:10pt; line-height:1.35; }
+  a{ color:inherit; }
   .site-nav, .web-footer{ display:none !important; }
   .cv{ max-width:none; margin:0; padding:0; }
-  .head{ display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:3pt; }
-  .name{ font-family:var(--serif); font-weight:700; font-size:25pt; letter-spacing:.01em;
-         text-transform:uppercase; line-height:.95; border-bottom:3pt solid var(--accent);
-         padding-bottom:6pt; padding-right:30pt; }
-  .updated{ font-family:var(--label); font-weight:500; font-size:8pt; letter-spacing:.08em;
-            text-transform:uppercase; color:#7a7a7a; padding-bottom:3pt; }
+  .head{ display:flex; justify-content:space-between; align-items:flex-end;
+         border-bottom:2.5pt solid var(--accent); padding-bottom:5pt; }
+  .name{ font-weight:700; font-size:21pt; letter-spacing:.01em; text-transform:uppercase; line-height:1; }
+  .updated{ font-size:8.5pt; color:#666; padding-bottom:1pt; }
   .role{ font-weight:600; font-size:11pt; margin-top:7pt; }
-  .dept{ color:#7a7a7a; font-size:9.5pt; margin-top:1pt; }
-  /* --serif here, not --label: the contact line reads as text, not as a label. */
-  .contact{ font-family:var(--serif); font-size:8.8pt; margin-top:5pt; line-height:1.3; }
-  h2{ font-family:var(--label); font-size:8.2pt; font-weight:700; letter-spacing:.14em;
-      text-transform:uppercase; color:#1c1c1c; margin:11pt 0 5pt; padding-bottom:3pt;
-      border-bottom:.6pt solid #d9d9d9; display:flex; align-items:center; gap:7pt; }
-  h2::before{ content:""; width:6pt; height:6pt; background:var(--accent); display:inline-block; flex:0 0 auto; }
-  h3{ font-family:var(--label); font-size:7.8pt; font-weight:700; letter-spacing:.1em;
-      text-transform:uppercase; color:#7a7a7a; margin:8pt 0 3pt; }
-  .row{ display:flex; gap:9pt; margin:0 0 3pt; }
-  .yr{ font-family:var(--label); font-size:8.8pt; color:#7a7a7a; flex:0 0 5.5em; padding-top:.6pt; white-space:nowrap; }
+  .dept{ font-size:10pt; margin-top:1pt; }
+  .contact{ font-size:9.5pt; margin-top:4pt; line-height:1.4; color:#444; }
+  h2{ font-size:10pt; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+      margin:13pt 0 5pt; padding-bottom:2pt; border-bottom:.7pt solid #111; }
+  h3{ font-size:10pt; font-weight:700; margin:8pt 0 3pt; }
+  .note{ font-weight:600; margin:6pt 0 2pt; }
+  .note:first-of-type{ margin-top:2pt; }
+  .row{ display:flex; gap:9pt; margin:0 0 3.5pt; }
+  .yr{ flex:0 0 5.3em; color:#555; white-space:nowrap; }
   .it{ flex:1; }
-  .note{ color:#1c1c1c; font-weight:500; font-size:8.8pt; margin-top:2pt; }
-  .ecell{ display:inline-block; width:51.9pt; }
-  .eyr{ font-family:var(--label); font-size:8.8pt; color:#7a7a7a; }
-  h2, h3, .row{ break-inside:avoid; }
+  h2, h3, .note, .row{ break-inside:avoid; }
+  h2, h3, .note{ break-after:avoid; }
 }
 </style>
 <link rel="stylesheet" href="/brand.css">
 </head><body>
 <nav class="site-nav"><div class="nav-inner"><a class="nav-home" href="/">&larr; Back to site</a><a class="nav-dl" href="#" onclick="event.preventDefault();window.print();">Save as PDF</a></div></nav>
 <main class="cv">
-<div class="head"><div class="name">J. Ryan Lamare</div><div class="updated">Updated August 2026</div></div>
+<div class="head"><div class="name">J. Ryan Lamare</div><div class="updated">Updated September 2026</div></div>
 <div class="role">Professor of Employment Relations and Human Resource Management</div>
 <div class="dept">Department of Management, London School of Economics and Political Science</div>
 <div class="contact"><a href="mailto:r.lamare@lse.ac.uk">r.lamare@lse.ac.uk</a> · <a href="https://ryanlamare.com">ryanlamare.com</a><br><a href="https://orcid.org/0000-0003-4935-2341">ORCID 0000-0003-4935-2341</a> · <a href="https://scholar.google.com/citations?user=tLTPGScAAAAJ">Google Scholar</a> · <a href="https://www.linkedin.com/in/ryanlamare">LinkedIn</a></div>
@@ -146,20 +134,22 @@ a{ color:inherit; text-decoration:none; }
 <div class="row"><div class="yr">2024–</div><div class="it">Faculty Group Lead, Employment Relations and Human Resource Management</div></div>
 <div class="row"><div class="yr">2024–</div><div class="it">PhD Programme Director</div></div>
 <h3>Previous Positions</h3>
-<div class="note" style="margin:0 0 4pt">University of Illinois Urbana-Champaign — School of Labor and Employment Relations</div>
+<div class="note">University of Illinois Urbana-Champaign — School of Labor and Employment Relations</div>
 <div class="row"><div class="yr">2022–2024</div><div class="it">Reuben G. Soderstrom International Labor Relations Professor</div></div>
 <div class="row"><div class="yr">2021–2022</div><div class="it">Professor</div></div>
 <div class="row"><div class="yr">2017–2021</div><div class="it">Associate Professor</div></div>
 <div class="row"><div class="yr">2015–2017</div><div class="it">Assistant Professor</div></div>
-<div class="note" style="margin:5pt 0 4pt">Pennsylvania State University — School of Labor and Employment Relations</div>
+<div class="note">Pennsylvania State University — School of Labor and Employment Relations</div>
 <div class="row"><div class="yr">2012–2015</div><div class="it">Assistant Professor</div></div>
-<div class="note" style="margin:5pt 0 4pt">University of Manchester — People, Management, and Organisations Division</div>
+<div class="note">University of Manchester — People, Management, and Organisations Division</div>
 <div class="row"><div class="yr">2010–2011</div><div class="it">Lecturer (equivalent to Assistant Professor)</div></div>
-<div class="note" style="margin:5pt 0 4pt">University of Limerick — Department of Personnel and Employment Relations</div>
+<div class="note">University of Limerick — Department of Personnel and Employment Relations</div>
 <div class="row"><div class="yr">2008–2010</div><div class="it">Research Scholar</div></div>
 <h2>Education</h2>
-<div class="note" style="margin:0 0 4pt">Cornell University — School of Industrial and Labor Relations</div>
-<div class="row"><div class="yr">2008</div><div class="it"><span class="ecell">PhD</span><span class="ecell eyr">2005</span><span class="ecell">MS</span><span class="ecell eyr">2004</span><span>BS</span></div></div>
+<div class="note">Cornell University — School of Industrial and Labor Relations</div>
+<div class="row"><div class="yr">2008</div><div class="it">PhD</div></div>
+<div class="row"><div class="yr">2005</div><div class="it">MS</div></div>
+<div class="row"><div class="yr">2004</div><div class="it">BS</div></div>
 <h2>Editorial Positions</h2>
 <div class="row"><div class="yr">2024–</div><div class="it">Editor-in-Chief, <i>British Journal of Industrial Relations</i></div></div>
 <div class="row"><div class="yr">2020–2024</div><div class="it">Editor-in-Chief, Labor and Employment Relations Association (LERA)</div></div>
@@ -177,11 +167,11 @@ a{ color:inherit; text-decoration:none; }
 <div class="row"><div class="yr">2018</div><div class="it">Luis Aparicio Prize, runner-up (ILERA)</div></div>
 <div class="row"><div class="yr">2015</div><div class="it">John T. Dunlop Outstanding Scholar (LERA)</div></div>
 <div class="row"><div class="yr">2010</div><div class="it">Thomas A. Kochan &amp; Stephen R. Sleigh Best Dissertation, honourable mention (LERA)</div></div>
-<h2 class="pagebreak">Publications</h2>
+<h2>Publications</h2>
 <h3>Books</h3>
 <a class="row rowlink" href="https://www.cornellpress.cornell.edu/book/9780913447277/the-evolution-of-workplace-dispute-resolution/"><div class="yr">2023</div><div class="it">Ariel C. Avgar, Deborah Hann, J. Ryan Lamare, and David Nash, eds. <span class="lt"><i>The Evolution of Workplace Dispute Resolution: International Perspectives</i></span>. LERA Annual Research Volume.</div></a>
 <h3>Journal Articles</h3>
-<div class="row"><div class="yr">2026</div><div class="it">J. Ryan Lamare, Margaret M. Huizinga, and Jeffrey P. Thomas. “<span class="lt">Punching Upward and Outward: The Mitigating Effects of Employment Conditions on Democratic Discontent</span>”. <i>ILR Review</i> (forthcoming). Replication: doi.org/10.5281/zenodo.22049135.</div></div>
+<div class="row"><div class="yr">2026</div><div class="it">J. Ryan Lamare, Margaret M. Huizinga, and Jeffrey P. Thomas. “<span class="lt">Punching Upward and Outward: The Mitigating Effects of Employment Conditions on Democratic Discontent</span>”. <i>ILR Review</i> (forthcoming).</div></div>
 <a class="row rowlink" href="https://doi.org/10.1111/irj.70028"><div class="yr">2026</div><div class="it">Kwon Hee Han, Tingting Zhang, and J. Ryan Lamare. “<span class="lt">Methods for Studying Union Effects: A Review and Comparative Analysis of Empirical Industrial Relations Literature</span>”. <i>Industrial Relations Journal</i> 57(3): 205–231.</div></a>
 <a class="row rowlink" href="https://doi.org/10.1111/bjir.12860"><div class="yr">2025</div><div class="it">John W. Budd and J. Ryan Lamare. “<span class="lt">Organizational Governance and Trade-Offs Between Pay and Subjective Employee Well-Being: A Comparative Analysis</span>”. <i>British Journal of Industrial Relations</i> 63(2): 305–322.</div></a>
 <a class="row rowlink" href="https://doi.org/10.1177/00197939241246510"><div class="yr">2024</div><div class="it">J. Ryan Lamare, Richard A. Benton, and Patricia Michel Tabarani. “<span class="lt">An Empirical Analysis of Race and Political Partisanship Effects on Workplace Mobility Outcomes during Lockdown, Reopening, and Endemic COVID-19</span>”. <i>ILR Review</i> 77(4): 475–505.</div></a>
@@ -219,6 +209,7 @@ a{ color:inherit; text-decoration:none; }
 <a class="row rowlink" href="https://doi.org/10.1177/001979391006300305"><div class="yr">2010</div><div class="it">J. Ryan Lamare. “<span class="lt">Union Influence on Voter Turnout: Results from Three Los Angeles County Elections</span>”. <i>ILR Review</i> 63(3): 454–470.</div></a>
 <a class="row rowlink" href="https://doi.org/10.1016/j.jwb.2009.09.015"><div class="yr">2010</div><div class="it">Anthony McDonnell, J. Ryan Lamare, Patrick Gunnigle, and Jonathan Lavelle. “<span class="lt">Developing Tomorrow’s Leaders — Evidence of Global Talent Management in Multinational Enterprises</span>”. <i>Journal of World Business</i> 45(2): 150–160.</div></a>
 <h3>Articles Under Review</h3>
+<div class="row"><div class="yr"></div><div class="it">Cherise Regier and J. Ryan Lamare. “Recognition without Power? Decomposing the Union–Job Satisfaction Puzzle in Post-Thatcher Britain.” R&R, <i>ILR Review</i>.</div></div>
 <div class="row"><div class="yr"></div><div class="it">J. Ryan Lamare and John W. Budd. “The Role of Political Parties in Shaping Women’s Labor Market Policies and Outcomes: A Longitudinal Analysis of Party Characteristics, Positions, and Effects.” R&R, <i>Industrial Relations</i>.</div></div>
 <h3>Working Papers</h3>
 <div class="row"><div class="yr"></div><div class="it">Cherise Regier, J. Ryan Lamare, and Faraz Shahidi. “Employee Voice and Workplace Wellbeing in the Age of AI: Cross-National Empirical Evidence.” To be submitted to <i>ILR Review</i>.</div></div>

@@ -127,10 +127,7 @@ def cv_pub_it(rec):
     else:
         title = f'“<span class="lt">{rec["t"]}</span>”'
     v = f' {rec["venue_cv"]}' if rec["venue_cv"] else ""
-    s = f"{a}. {title}.{v}"
-    if rec.get("replication"):
-        s += f' Replication: {rec["replication"].removeprefix("https://")}.'
-    return s
+    return f"{a}. {title}.{v}"
 
 
 def render_cv_body():
