@@ -28,7 +28,6 @@ Nothing in m7 is flex any more. Estimated running time about 75 minutes.
 
 ## Open items
 
-- **Clip id.** Module 5's chicken slide now uses Rebel Without a Cause; the YouTube id is empty (`CLIP_REBEL` at the bottom of `m5/index.html`) and the cover says CLIP LINK TO ADD until it is filled.
 - **Wording still to veto** (all Claude's): the auction slides, the reputation slide's two chips, the brinkmanship figure, the Sun Tzu copy and its toy numbers, the cautionary slide's bullets after the opening question, the penalty widget's bullets, the airtime slide (facts unchecked against the 550 source), the Rebel bullets in m5, and the m6 rules bullet that now reads "the odds in the table".
 - **The penalty table** is now 30 / 95 / 93 / 55 across m6 and m7 (`m6/game/pk.js`, mirrored in `go/scores.js`): a keeper who guesses right saves more, the mixed-strategy story holds (kicker left 37%, goalie left 39%, about seven in ten go in). These are no longer the real-world figures, and the m6 rules bullet no longer claims they are.
 - **Before any real session:** reset the seeded and test rooms in Poll Desk, and fill `go/roster.json` with the participants' first names.
