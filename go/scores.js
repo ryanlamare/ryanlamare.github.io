@@ -149,7 +149,7 @@ const GT_SCORES = (() => {
         /* the auction: the winner takes the pot and pays their bid, the
            runner-up pays their bid for nothing — in POINTS, which is the
            whole trap. minPoints caps how far one auction can drag anyone */
-        { key: 'auction', label: 'Engines', kind: 'auction', room: 'm7-auction', pot: 10, minPoints: -10 },
+        { key: 'auction', label: 'Auction', kind: 'auction', room: 'm7-auction', pot: 10, minPoints: -10 },
       ],
     },
   ];
@@ -174,7 +174,7 @@ const GT_SCORES = (() => {
     { id: 'm6-rps', label: 'Rock, paper, scissors · Module 6' },
     { id: 'm7-chicken', label: 'Chicken · Module 7' },
     { id: 'm7-gb', label: 'Split or steal · Module 7' },
-    { id: 'm7-auction', label: 'Granito’s engines go to bid · Module 7', solo: true },
+    { id: 'm7-auction', label: 'The auction · Module 7', solo: true },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');

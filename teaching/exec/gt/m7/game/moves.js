@@ -25,8 +25,8 @@
      Payoffs from Module 5: stag/stag 3,3; stag/hare 0,1; hare/stag 1,0;
      hare/hare 1,1.
 
-   THE AUCTION (room m7-auction): Granito's five engines go to bid, the
-   whole room, live, for a pot of POT points. A phone posts a bid "name|amount" whenever it likes (whole
+   THE AUCTION (room m7-auction), the whole room, live, for a pot of POT
+   points. A phone posts a bid "name|amount" whenever it likes (whole
    points, above the standing high bid); the deck posts "::sold" to end it.
    Standing bid = a name's highest bid so far. Winner = the highest standing
    bid (ties: the earlier line); runner-up = the next name. The winner pays

@@ -15,9 +15,9 @@
                  (seat b) gets an extra option before choosing, and, if they
                  steal against a split, the choice to hand over half
                  afterwards. Rules in moves.js (GB). Scored — see scores.js.
-     ?g=auction  Granito's five engines go to bid: the whole room bids, live,
-                 for a pot of points; every bid goes on the big screen with
-                 its name. Rules in moves.js (AUCTION). Scored.
+     ?g=auction  the whole room bids, live, for a pot of points; every bid
+                 goes on the big screen with its name. Rules in moves.js
+                 (AUCTION). Scored.
      ?g=stag     the stag hunt (built, then cut from the deck; still playable)
 
    Names come from the shared gt-name and are claimed into gt-names for
@@ -126,7 +126,7 @@ const GAMES={
       pairLead:'Pair up with the person next to you. No talking once you start',
       seats:['I’ll pick my partner','My partner picks me'],
       wait:'Keep this page open. The game starts when your partner picks you.'},
-  auction:{room:'m7-auction',title:'Granito’s engines go to bid'}
+  auction:{room:'m7-auction',title:'The auction'}
 };
 let voter=null;
 try{
@@ -171,7 +171,7 @@ function render(){
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a><a class="pick" href="?g=gb">Split or steal</a><a class="pick" href="?g=auction">Granito’s engines</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a><a class="pick" href="?g=gb">Split or steal</a><a class="pick" href="?g=auction">The auction</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>{
@@ -546,7 +546,7 @@ function renderAuction(){
   app.innerHTML='';
   app.appendChild(meRow());
   const box=document.createElement('div');box.className='auc';box.style.marginTop='10px';
-  box.innerHTML='<div class="pot">'+AU.POT+' points<small>THE FIVE ENGINES</small></div>'+
+  box.innerHTML='<div class="pot">'+AU.POT+' points<small>THE POT</small></div>'+
     '<div class="row"><span>Standing high bid</span><b id="auHigh">–</b></div>'+
     '<div class="row"><span id="auWhoL">Held by</span><b id="auWho" style="font-size:18px">–</b></div>'+
     '<div class="you" id="auYou"></div>';
@@ -555,7 +555,7 @@ function renderAuction(){
   form.innerHTML='<input id="auInp" type="number" inputmode="numeric" min="1" max="'+AU.MAX_BID+'" step="1" placeholder="–"><button id="auBid" type="button">BID</button>';
   app.appendChild(form);
   const note=document.createElement('div');note.className='lbl';note.style.marginTop='10px';
-  note.textContent='Every bid goes on the big screen with your name. The highest bidder pays their bid and takes the engines. The second-highest pays their bid and gets no engines.';
+  note.textContent='Every bid goes on the big screen with your name. The highest bidder pays their bid and takes the pot. The second-highest pays their bid and gets nothing.';
   app.appendChild(note);
   const inp=document.getElementById('auInp'), bidBtn=document.getElementById('auBid');
   let state=null, shownKey='', posting=false;
@@ -565,9 +565,9 @@ function renderAuction(){
     document.getElementById('auWho').textContent=s.high?s.high.name:'–';
     const o=AU.outcome(s,name), you=document.getElementById('auYou');
     you.className='you '+o.role;
-    if(s.sold)you.textContent=o.role==='high'?'The engines are yours. You pay '+o.pay+' for engines worth '+AU.POT+'.':(o.role==='second'?'Sold. You pay '+o.pay+' and get no engines.':'Sold.');
-    else if(o.role==='high')you.textContent='You are the high bidder. If it ended now you would pay '+o.pay+' for engines worth '+AU.POT+'.';
-    else if(o.role==='second')you.textContent='You are second. If it ended now you would pay '+o.pay+' and get no engines.';
+    if(s.sold)you.textContent=o.role==='high'?'Sold to you. You pay '+o.pay+' and take the '+AU.POT+'.':(o.role==='second'?'Sold. You pay '+o.pay+' and get nothing.':'Sold.');
+    else if(o.role==='high')you.textContent='You are the high bidder. If it ended now you would pay '+o.pay+' and take the '+AU.POT+'.';
+    else if(o.role==='second')you.textContent='You are second. If it ended now you would pay '+o.pay+' and get nothing.';
     else you.textContent=s.high?'You are not paying anything right now.':'No bids yet.';
     const minBid=(s.high?s.high.amt:0)+1;
     inp.min=String(minBid);inp.placeholder=s.sold?'–':String(minBid)+'+';
