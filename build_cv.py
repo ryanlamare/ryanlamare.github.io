@@ -111,8 +111,11 @@ def venue_home(rec):
 
 
 # ------------------------------------------------------------------ CV rendering
-def cv_row(year, it, url):
-    cells = f'<div class="yr">{year}</div><div class="it">{it}</div>'
+def cv_row(year, it, url, dated=True):
+    """An undated line (dated=False) runs flush instead of leaving an empty
+    year column; publications always keep the column so their groups align."""
+    yr = f'<div class="yr">{year}</div>' if dated else ""
+    cells = f'{yr}<div class="it">{it}</div>'
     if url:
         return f'<a class="row rowlink" href="{url}">{cells}</a>'
     return f'<div class="row">{cells}</div>'
@@ -147,7 +150,7 @@ def render_cv_body():
         elif kind == "note":
             out.append(f'<div class="note"{b[2] or ""}>{b[1]}</div>')
         elif kind == "row":
-            out.append(cv_row(b[1], b[2], b[3]))
+            out.append(cv_row(b[1], b[2], b[3], dated=bool(b[1])))
         elif kind == "PUBS":
             for gtitle, items in D.PUB_GROUPS:
                 out.append(f"<h3>{gtitle}</h3>")
