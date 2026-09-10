@@ -111,23 +111,22 @@ def venue_home(rec):
 
 
 # ------------------------------------------------------------------ CV rendering
-def cv_row(year, it, url, cls="yr"):
-    """cls: "yr" for a dated line; "num" for a numbered publication."""
-    cells = f'<div class="{cls}">{year}</div><div class="it">{it}</div>'
+def cv_row(year, it, url):
+    cells = f'<div class="yr">{year}</div><div class="it">{it}</div>'
     if url:
         return f'<a class="row rowlink" href="{url}">{cells}</a>'
     return f'<div class="row">{cells}</div>'
 
 
 def cv_pub_it(rec):
-    """Author-date form: Authors. Year. "Title." Venue."""
+    """Year sits in the left column; the line is Authors. "Title." Venue."""
     a = authors_cv(rec)
     if rec.get("book"):
         title = f'<span class="lt"><i>{rec["t"]}</i></span>.'
     else:
         title = f'“<span class="lt">{rec["t"]}</span>.”'
     v = f' {rec["venue_cv"]}' if rec["venue_cv"] else ""
-    return f"{a}. {rec['y']}. {title}{v}"
+    return f"{a}. {title}{v}"
 
 
 def render_cv_body():
@@ -150,12 +149,11 @@ def render_cv_body():
         elif kind == "row":
             out.append(cv_row(b[1], b[2], b[3]))
         elif kind == "PUBS":
-            # Numbered per group, newest highest, so the count reads at once.
             for gtitle, items in D.PUB_GROUPS:
                 out.append(f"<h3>{gtitle}</h3>")
-                for n, rec in zip(range(len(items), 0, -1), items):
+                for rec in items:
                     it = rec["raw"] if "raw" in rec else cv_pub_it(rec)
-                    out.append(cv_row(f"{n}.", it, rec["u"], cls="num"))
+                    out.append(cv_row(rec["y"], it, rec["u"]))
         else:
             raise ValueError(f"unknown block: {kind}")
     return "\n" + "\n".join(out) + "\n"
