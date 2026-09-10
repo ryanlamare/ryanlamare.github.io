@@ -111,16 +111,8 @@ def venue_home(rec):
 
 
 # ------------------------------------------------------------------ CV rendering
-# Publication groups whose entries are numbered on the CV, newest = highest.
-NUMBERED = {"Journal Articles"}
-
-
-def cv_row(year, it, url, num=None):
-    """num: None outside Publications; "" for an unnumbered publication row
-    (keeps the number column so the years still align); "12." otherwise."""
-    cells = (f'<div class="num">{num}</div>' if num is not None else "") + (
-        f'<div class="yr">{year}</div><div class="it">{it}</div>'
-    )
+def cv_row(year, it, url):
+    cells = f'<div class="yr">{year}</div><div class="it">{it}</div>'
     if url:
         return f'<a class="row rowlink" href="{url}">{cells}</a>'
     return f'<div class="row">{cells}</div>'
@@ -158,13 +150,9 @@ def render_cv_body():
         elif kind == "PUBS":
             for gtitle, items in D.PUB_GROUPS:
                 out.append(f"<h3>{gtitle}</h3>")
-                n = len(items) if gtitle in NUMBERED else None
                 for rec in items:
-                    num = f"{n}." if n else ""
-                    if n:
-                        n -= 1
                     it = rec["raw"] if "raw" in rec else cv_pub_it(rec)
-                    out.append(cv_row(rec["y"], it, rec["u"], num))
+                    out.append(cv_row(rec["y"], it, rec["u"]))
         else:
             raise ValueError(f"unknown block: {kind}")
     return "\n" + "\n".join(out) + "\n"
