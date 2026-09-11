@@ -10,7 +10,7 @@ to pick the work up on another computer.
 |---|---|
 | m1–m6 | Shipped and live. m6's penalty table changed on 7 Sep (see below). |
 | m7 | Rebuilt around four game classes, 30 slides, live. Redlined through three passes; the wording flagged below still awaits a final veto. |
-| m8 | BUILT 11 Sep, first cut, local commit, awaiting Ryan's redlines. 34 slides: cover, objectives, the car market game (his 590GT three-round card game, on phones), the 550 spine, the m1 wall re-shown and sorted aloud into ask / jam / screen, then **Closed Session** (the 565 week-5 werewolf reskin) at two tables at once, the Tapas committee and the Granito management team, four fictional bidders per table and RRPF on neither list, roles dealt to phones behind the admin secret, nights on phones with pointing printed as the fallback, one big-screen clock for both tables, the phones' nightly notes drawn as a suspicion spectrum with three honours per table, the recommendation against the Backers' secret bidder, ten points to the winning side, and the final Top of the class. |
+| m8 | BUILT 11 Sep, first cut, local commit, awaiting Ryan's redlines. 34 slides: cover, objectives, the car market game (his 590GT three-round card game, on phones), the 550 spine, then **Closed Session** (the 565 week-5 werewolf reskin) at two tables at once, the Tapas committee and the Granito management team, four fictional bidders per table and RRPF on neither list, roles dealt to phones behind the admin secret, nights on phones with pointing printed as the fallback, one big-screen clock for both tables, the phones' nightly notes drawn as a suspicion spectrum with three honours per table, the recommendation against the Backers' secret bidder, ten points to the winning side, and the final Top of the class. |
 
 ## m7 as it stands
 
@@ -34,7 +34,7 @@ Nothing in m7 is flex any more. Estimated running time about 75 minutes.
 - **Keys on the deck.** Market board: 1, 2, 3 open the rounds on every phone. The two committees: D starts a five-minute day, N a ninety-second night, P pauses.
 - **Roles.** Committee Member, Backer, Auditor, General Counsel (renamed from the 565 Booster, Compliance Officer and Chair). Two Backers at ten or eleven, three from twelve.
 - **The car market (built 11 Sep, evening).** Everyone is a buyer; the lot on the lot slide is the sellers, one car per buyer, drawn from the joins and frozen when round one opens. Keys on that slide: 1, 2, 3 open rounds, C closes, W opens the rule change (warranties). The deck posts only the open and close markers; every phone runs `m8/game/lot.js` over the same lines and seed, so results are never posted. A sale washes the whole phone peach or lemon. Sold cars are replaced by arrivals (lemons only while the average price is under 3000); peaches unsold after round two withdraw and lemon owners take their spots; the warranty round brings the peaches back with a badge and asks for two prices. Rehearse with `?market=<room>` on the deck and `?room=` on the phones.
-- **Not yet decided.** The programme-wide honours for the wrap-up (what to award, physical prizes or not); whether a second round is held in reserve; JN and BJ's parameters for the bidder cards.
+- **Not yet decided.** The programme-wide honours for the wrap-up (what to award, physical prizes or not). Settled 11 Sep: one round only, no reserve; the bidders stay exactly even and nothing is needed from JN and BJ for the cards; the module one wall is cut from m8, the game stands alone.
 
 ## Day two, a first timing
 
