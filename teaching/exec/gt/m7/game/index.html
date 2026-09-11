@@ -106,6 +106,7 @@ button.send:disabled{opacity:.45;cursor:default}
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
+<script src="/go/names.js"></script>
 <script src="/teaching/exec/gt/m7/game/chicken.js"></script>
 <script src="/teaching/exec/gt/m7/game/moves.js"></script>
 <script>
@@ -174,10 +175,10 @@ function render(){
     app.innerHTML='<div class="choices"><a class="pick" href="?g=chicken">Chicken</a><a class="pick" href="?g=gb">Split or steal</a><a class="pick" href="?g=auction">The auction</a></div>';
     return;
   }
-  if(!name){renderName('Who are you?',n=>{
-    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
+    name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
-  });return;}
+  },app,{clean}));return;}
   if(G===GAMES.auction)return renderAuction();
   /* rejoin a pair this phone already sat in */
   let saved=null;

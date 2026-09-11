@@ -119,6 +119,7 @@ button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacin
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
+<script src="/go/names.js"></script>
 <script src="/teaching/exec/gt/m6/game/pk.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
@@ -213,10 +214,10 @@ function render(){
     app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Boss battle</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=inspect">The inspection game</a></div>';
     return;
   }
-  if(!name){renderName('Who are you?',n=>{
-    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
+    name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
-  });return;}
+  },app,{clean}));return;}
   if(G!==GAMES.rps&&G!==GAMES.inspect&&!myKit()){renderKit();return;}
   if(G===GAMES.solo)return renderSolo();
   if(G===GAMES.vs)return renderVs();

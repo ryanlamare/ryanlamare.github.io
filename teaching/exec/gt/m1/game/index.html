@@ -69,6 +69,7 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
   <div class="status" id="status"></div>
   <div class="rules" id="rules"></div>
 </div>
+<script src="/go/names.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
 let voter=null;
@@ -112,12 +113,13 @@ function meRow(){
 function renderName(){
   q.textContent='Who are you?';
   app.innerHTML='';
-  const pick=n=>{
-    name=n.trim().replace(/\s+/g,' ').slice(0,40);
-    if(!name)return;
+  const clean=n=>n.trim().replace(/\s+/g,' ').slice(0,40);
+  const commit=n=>{
+    name=n;
     try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   };
+  const pick=n=>{const v=clean(n);if(v)GT_NAMES.guard(v,voter,commit,app,{clean});};
   const list=document.createElement('div');list.className='choices';
   roster.forEach(n=>{
     const b=document.createElement('button');b.className='pick';b.textContent=n;

@@ -79,6 +79,7 @@ button.go{display:block;width:100%;font-family:var(--sans);font-weight:700;font-
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
+<script src="/go/names.js"></script>
 <script src="/teaching/exec/gt/m4/tapas/schedule.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
@@ -138,10 +139,10 @@ const failMsg=code=>code===429?'That’s plenty from one phone — flag the inst
 function render(){
   stopPolling();
   st.textContent='';
-  if(!name){renderName('Who are you?',n=>{
-    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
+    name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
-  });return;}
+  },app,{clean}));return;}
   let joined=false;
   try{joined=localStorage.getItem('m4tapas-joined')===voter;}catch(_){}
   if(joined)return renderWait();

@@ -106,6 +106,7 @@ body.washing .tag,body.washing h1{color:var(--ink)}
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
+<script src="/go/names.js"></script>
 <script src="/teaching/exec/gt/m8/game/cs.js"></script>
 <script src="/teaching/exec/gt/m8/game/lot.js"></script>
 <script>
@@ -175,7 +176,7 @@ function render(){
     app.innerHTML='<div class="choices"><a class="pick" href="?g=market">The car market</a><a class="pick" href="?g=cs">Hidden Agenda</a></div>';
     return;
   }
-  if(!name){renderName('Who are you?',n=>{name=n;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();});return;}
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean}));return;}
   if(GAME==='market')return renderMarket();
   return renderCS();
 }
@@ -307,8 +308,17 @@ function renderCS(){
     else{r.className='r hidden';r.textContent='Your role is on this phone';b.textContent='SHOW';}
   }
   function seat(){
-    return post('/p/'+ROOM+'/cs/seat',{v:voter,n:name}).then(r=>{if(!r.ok&&r.status!==409)throw r.status;seated=true;});
+    /* ok: seated (or moved onto a released seat). taken: someone at this table already has this name.
+       late: the table has started and no seat is released for this name — keep trying, the moderator may release one */
+    return post('/p/'+ROOM+'/cs/seat',{v:voter,n:name}).then(r=>{
+      if(r.ok){seated=true;return {};}
+      if(r.status===409&&r.d&&r.d.error==='taken')return {taken:true};
+      if(r.status===409)return {late:true};
+      throw r.status;
+    });
   }
+  function showCard(k,html){if(shown===k)return;shown=k;stage.innerHTML='<div class="waitcard">'+html+'</div>';}
+  const takenCard=()=>showCard('taken','Someone at this table is already <b>'+esc(name)+'</b>. Tap <b>change</b> above and add your last initial.');
   const others=()=>S.seats.filter(s=>s.n!==name);
   const alive=()=>S.seats.filter(s=>s.alive);
   function nameBtns(list,cur,onPick,disabledFn){
@@ -322,8 +332,15 @@ function renderCS(){
   function tick(){
     fetch(API+'/p/'+ROOM+'/cs/me?v='+encodeURIComponent(voter)).then(r=>r.json()).then(d=>{
       S=d;
-      if(!d.me){ if(d.phase==='lobby'){ if(!seated){seat().then(()=>{shown='';tick();}).catch(()=>{st.textContent='Couldn’t take a seat — try again.';});} }
-        else{const k='late';if(shown===k)return;shown=k;stage.innerHTML='<div class="waitcard">This table has already started. Watch the big screen, and join the next one.</div>';}
+      if(!d.me){
+        seat().then(r=>{
+          if(r.taken)takenCard();
+          else if(r.late)showCard('late','This table has already started. Watch the big screen, and join the next one. (If your old phone died, the moderator can move your seat to this one: pick the same name.)');
+          else{shown='';tick();}
+        }).catch(()=>{st.textContent='Couldn’t take a seat — try again.';});
+        return; }
+      if(d.phase==='lobby'&&d.me.n!==name){ /* the name changed on this phone: rename the seat */
+        seat().then(r=>{if(r.taken)takenCard();else{shown='';tick();}}).catch(()=>{});
         return; }
       drawBar();
       const me=d.me, role=me.role;

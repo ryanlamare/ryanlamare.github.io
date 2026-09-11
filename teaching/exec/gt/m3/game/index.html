@@ -74,6 +74,7 @@ button.opt.mine .def{color:color-mix(in srgb, var(--paper) 82%, transparent)}
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
+<script src="/go/names.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
 const ROOM='m3-engine', ROUNDS=4;
@@ -133,10 +134,10 @@ function parseLines(lines){
 function render(){
   stopPolling();
   st.textContent='';
-  if(!name){renderName('Who are you?',n=>{
-    name=n;try{localStorage.setItem('gt-name',name);}catch(_){}
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
+    name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
-  });return;}
+  },app,{clean}));return;}
   /* rejoin a pair this phone already sat in */
   let saved=null;
   try{saved=JSON.parse(localStorage.getItem('m3eng-pair')||'null');}catch(_){}

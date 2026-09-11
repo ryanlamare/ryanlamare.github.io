@@ -35,10 +35,10 @@ button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)
 .sent{display:flex;flex-direction:column;gap:8px}
 .sent .s{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:15px;padding:9px 14px}
 /* hand-typed /go: pick the question that is on the screen */
-button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);
+button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);
   background:var(--card);border:2.5px solid var(--ink);padding:13px 16px;cursor:pointer}
-button.pick .pm{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:4px}
-button.pick .pq{display:block;font-weight:600;font-size:15.5px;line-height:1.35;color:var(--ink)}
+button.pick .pm,a.pick .pm{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:4px}
+button.pick .pq,a.pick .pq{display:block;font-weight:600;font-size:15.5px;line-height:1.35;color:var(--ink)}
 /* chained polls: once you've answered, the next question is one tap away */
 button.pick.nextq{border-color:var(--red);margin-top:6px}
 button.pick.nextq .pm{color:var(--red)}
@@ -48,6 +48,10 @@ button.pick.nextq .pm::after{content:" →"}
   font-size:11px;color:var(--muted);text-decoration:none;margin-top:6px}
 .ptslink:hover{color:var(--red)}
 .links{display:flex;justify-content:flex-end;gap:22px}
+/* the game pages, listed under the polls on a hand-typed /go */
+.games{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.games .gh{font-weight:700;font-size:16px;color:var(--red);margin-bottom:2px}
+a.pick{text-decoration:none}
 </style>
 </head><body>
 <div class="wrap">
@@ -57,6 +61,7 @@ button.pick.nextq .pm::after{content:" →"}
   <div class="status" id="status"></div>
   <div class="links"><a class="ptslink" href="deals/">THE TWO DEALS &rarr;</a><a class="ptslink" href="points/">MY POINTS &rarr;</a></div>
 </div>
+<script src="names.js"></script>
 <script src="scores.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
@@ -111,7 +116,27 @@ function renderChooser(cfg){
     });
     opts.appendChild(b);
   });
+  /* the game pages, so ryanlamare.com/go is the one address anyone ever types */
+  const gl=document.createElement('div');gl.className='games';
+  gl.innerHTML='<div class="gh">Or, which game is on the screen?</div>';
+  GAMES.forEach(([mod,label,href])=>{
+    const a=document.createElement('a');a.className='pick';a.href=href;
+    a.innerHTML='<span class="pm">Module '+mod+'</span><span class="pq"></span>';
+    a.querySelector('.pq').textContent=label;
+    gl.appendChild(a);
+  });
+  opts.appendChild(gl);
 }
+const GAMES=[
+  [1,'The median dog, the number game, the offers','/teaching/exec/gt/m1/game/'],
+  [2,'The centipede, last card, the ultimatum','/teaching/exec/gt/m2/game/'],
+  [3,'Bidding for Tapas’s engine business','/teaching/exec/gt/m3/game/'],
+  [4,'The Tapas price war','/teaching/exec/gt/m4/tapas/'],
+  [5,'The investment game','/teaching/exec/gt/m5/game/'],
+  [6,'Penalties, the inspection game, rock paper scissors','/teaching/exec/gt/m6/game/'],
+  [7,'Chicken, split or steal, the auction','/teaching/exec/gt/m7/game/'],
+  [8,'The car market, Hidden Agenda','/teaching/exec/gt/m8/game/'],
+];
 /* a "named" poll makes sure this phone has claimed a class name first —
    the join key for the points system. One picker, once per phone. */
 let myName=null;
@@ -129,14 +154,15 @@ function renderNamePicker(poll,id){
   const opts=document.getElementById('opts');
   opts.innerHTML='';
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='10px';
-  const pick=n=>{
-    myName=n.trim().replace(/\s+/g,' ').slice(0,40);
-    if(!myName)return;
+  const clean=n=>n.trim().replace(/\s+/g,' ').slice(0,40);
+  const commit=n=>{
+    myName=n;
     try{localStorage.setItem('gt-name',myName);}catch(_){}
     claimOnce();
     document.getElementById('status').textContent='';
     renderPoll(poll,id);
   };
+  const pick=n=>{const v=clean(n);if(v)GT_NAMES.guard(v,voter,commit,opts,{clean});};
   fetch('roster.json').then(r=>r.json()).then(d=>(d.names||[])).catch(()=>[]).then(names=>{
     names.forEach(n=>{
       const b=document.createElement('button');

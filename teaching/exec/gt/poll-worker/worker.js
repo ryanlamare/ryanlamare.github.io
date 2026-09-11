@@ -277,7 +277,9 @@ export class PollRoom {
        nights {r: {picks:{voter:target}, check:{v,target,role}|null,
                    clear:{v,target}|null, notes:{voter:{s:[..],a,c}},
                    result:{target, cleared, removed}}}
-       days   {r: {accused, votes:{voter:'y'|'n'}, result:{yes,no,recused}}}
+       days   {r: {accused, votes:{voter:'y'|'n'}, hand:{yes,no}|absent, result:{yes,no,recused}}}
+              seats may carry open:true while the moderator has released
+              one for a new phone (see /seat and /release)
        recos  {voter: letter}
        winner committee | backers | null
        log    [{r, when:'night'|'day', text}]
@@ -295,6 +297,23 @@ export class PollRoom {
     const aliveIds = () => Object.keys(cs.seats).filter(v => cs.seats[v].alive);
     const backersAlive = () => aliveIds().filter(v => cs.seats[v].role === 'b');
     const nameOf = v => (cs.seats[v] ? cs.seats[v].n : null);
+    const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    /* a seat moves to a new phone: the seat and every reference to it in the
+       nights, days and recommendations take the new voter id, so history,
+       role and removal come along */
+    const rekey = (from, to) => {
+      const sw = x => (x === from ? to : x);
+      cs.seats[to] = cs.seats[from]; delete cs.seats[from];
+      Object.values(cs.nights).forEach(n => {
+        n.picks = Object.fromEntries(Object.entries(n.picks).map(([k, t]) => [sw(k), sw(t)]));
+        if (n.check) { n.check.v = sw(n.check.v); n.check.target = sw(n.check.target); }
+        if (n.clear) { n.clear.v = sw(n.clear.v); n.clear.target = sw(n.clear.target); }
+        n.notes = Object.fromEntries(Object.entries(n.notes).map(([k, x]) => [sw(k), { s: (x.s || []).map(sw), a: sw(x.a), c: sw(x.c) }]));
+        if (n.result) { n.result.target = sw(n.result.target); n.result.removed = sw(n.result.removed); }
+      });
+      Object.values(cs.days).forEach(d => { d.accused = sw(d.accused); d.votes = Object.fromEntries(Object.entries(d.votes).map(([k, y]) => [sw(k), y])); });
+      cs.recos = Object.fromEntries(Object.entries(cs.recos).map(([k, b]) => [sw(k), b]));
+    };
     const checkWin = () => {
       if (cs.winner || cs.phase === 'lobby') return;
       const a = aliveIds().length, b = backersAlive().length;
@@ -310,7 +329,21 @@ export class PollRoom {
     if (req.method === 'POST' && sub === 'seat') {
       const v = String(body.v || ''), n = cleanName(body.n);
       if (!okVoter(v) || !n) return json({ error: 'bad seat' }, 400);
-      if (cs.phase !== 'lobby' && !cs.seats[v]) return json({ error: 'started' }, 409);
+      const sameName = id => id !== v && norm(cs.seats[id].n) === norm(n);
+      if (!cs.seats[v]) {
+        /* a seat the moderator has released for a new phone: the same name
+           from an unknown phone takes it over, history and all */
+        const open = Object.keys(cs.seats).find(id => cs.seats[id].open && sameName(id));
+        if (open) {
+          rekey(open, v); delete cs.seats[v].open;
+          cs.log.push({ r: cs.round, when: cs.phase === 'night' ? 'night' : 'day', text: cs.seats[v].n + ' moved to a new phone' }); /* the seat keeps its own spelling */
+          await save();
+          return json({ ok: true, moved: true });
+        }
+        if (cs.phase !== 'lobby') return json({ error: 'started' }, 409);
+      }
+      /* one name per table: two Mikes would be one button on every phone's list */
+      if (Object.keys(cs.seats).some(sameName)) return json({ error: 'taken' }, 409);
       if (!cs.seats[v]) {
         if (Object.keys(cs.seats).length >= 30) return json({ error: 'full' }, 429);
         cs.seats[v] = { n, role: null, alive: true, out: null };
@@ -417,7 +450,7 @@ export class PollRoom {
       const seats = Object.entries(cs.seats).map(([id, s]) => ({ n: s.n, alive: s.alive, out: s.out, role: cs.phase === 'over' ? s.role : undefined }));
       const day = cs.days[cs.round] || null;
       const out = { phase: cs.phase, round: cs.round, seats, log: cs.log, winner: cs.winner, seated: seats.length, alive: seats.filter(s => s.alive).length };
-      if (day) out.vote = { accused: nameOf(day.accused), yes: Object.entries(day.votes).filter(([, y]) => y === 'y').map(([id]) => nameOf(id)), no: Object.entries(day.votes).filter(([, y]) => y === 'n').map(([id]) => nameOf(id)), open: cs.phase === 'vote', result: day.result || null };
+      if (day) out.vote = { accused: nameOf(day.accused), yes: Object.entries(day.votes).filter(([, y]) => y === 'y').map(([id]) => nameOf(id)), no: Object.entries(day.votes).filter(([, y]) => y === 'n').map(([id]) => nameOf(id)), open: cs.phase === 'vote', result: day.result || null, hand: day.hand || { yes: 0, no: 0 } };
       if (cs.phase === 'night') {
         const n = cs.nights[cs.round];
         out.night = { backersIn: Object.keys(n.picks).filter(id => cs.seats[id] && cs.seats[id].alive).length, backersAlive: backersAlive().length, checkDone: !!n.check, clearDone: !!n.clear, notesIn: Object.keys(n.notes).length };
@@ -504,12 +537,13 @@ export class PollRoom {
     if (req.method === 'POST' && sub === 'tally') {
       const day = cs.days[cs.round];
       if (cs.phase !== 'vote' || !day) return json({ error: 'no vote' }, 409);
-      const yes = Object.values(day.votes).filter(y => y === 'y').length, no = Object.values(day.votes).filter(y => y === 'n').length;
+      const hand = day.hand || { yes: 0, no: 0 }; /* votes the moderator entered for phones that could not */
+      const yes = Object.values(day.votes).filter(y => y === 'y').length + hand.yes, no = Object.values(day.votes).filter(y => y === 'n').length + hand.no;
       const recused = yes > no;
       if (recused) cs.seats[day.accused] = { ...cs.seats[day.accused], alive: false, out: { how: 'recused', r: cs.round } };
       day.result = { yes, no, recused };
       cs.phase = 'day';
-      cs.log.push({ r: cs.round, when: 'day', text: nameOf(day.accused) + (recused ? ' voted off, ' : ' stays, ') + yes + ' to ' + no });
+      cs.log.push({ r: cs.round, when: 'day', text: nameOf(day.accused) + (recused ? ' voted off, ' : ' stays, ') + yes + ' to ' + no + (hand.yes + hand.no ? ' (' + (hand.yes + hand.no) + ' by hand)' : '') });
       checkWin();
       await save();
       return json({ ok: true, result: day.result, winner: cs.winner });
@@ -522,6 +556,24 @@ export class PollRoom {
       checkWin();
       await save();
       return json({ ok: true, winner: cs.winner });
+    }
+    if (req.method === 'POST' && sub === 'release') {
+      /* open a seat for a new phone (a dead one): the next unknown phone that
+         picks this seat's name takes it over. off:true cancels. */
+      const v = String(body.v || '');
+      if (!cs.seats[v]) return json({ error: 'bad' }, 400);
+      if (body.off) delete cs.seats[v].open; else cs.seats[v].open = true;
+      await save();
+      return json({ ok: true });
+    }
+    if (req.method === 'POST' && sub === 'hand') {
+      /* votes counted by hand for phones that cannot vote, added at the tally */
+      const day = cs.days[cs.round];
+      if (cs.phase !== 'vote' || !day) return json({ error: 'no vote' }, 409);
+      const clip = x => Math.max(0, Math.min(30, Number.isInteger(x) ? x : 0));
+      day.hand = { yes: clip(body.yes), no: clip(body.no) };
+      await save();
+      return json({ ok: true, hand: day.hand });
     }
     if (req.method === 'POST' && sub === 'restore') {
       const v = String(body.v || '');

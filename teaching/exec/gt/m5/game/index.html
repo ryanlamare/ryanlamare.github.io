@@ -50,6 +50,7 @@ button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)
   <div class="status" id="status"></div>
   <div class="rules">Invest and you put <b>$100</b> in the pot. If <b>90% of the room</b> invests too, you get it back plus <b>$50</b>; if not, your $100 is gone. Sit a round out and you get nothing, and lose nothing. Three rounds &mdash; your wins and losses add up. Answer the round the instructor calls; you can change your mind until the reveal.</div>
 </div>
+<script src="/go/names.js"></script>
 <script>
 const API='https://gt-poll.rlamare.workers.dev';
 let voter=null;
@@ -65,12 +66,16 @@ if(name)claimOnce();
 let roster=[];
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
 function saveMine(){try{localStorage.setItem('gt-invest',JSON.stringify(mine));}catch(_){}}
+const cleanName=n=>n.trim().replace(/\s+/g,' ').slice(0,40);
 function setName(n){
-  name=n.trim().replace(/\s+/g,' ').slice(0,40);
-  if(!name)return;
-  try{localStorage.setItem('gt-name',name);}catch(_){}
-  claimOnce();
-  render();
+  const v=cleanName(n);
+  if(!v)return;
+  GT_NAMES.guard(v,voter,m=>{
+    name=m;
+    try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();
+    render();
+  },app,{clean:cleanName});
 }
 /* register name<->voter in the gt-names room, the points system's join table */
 function claimOnce(){
