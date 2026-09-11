@@ -54,6 +54,17 @@ About five and a half hours of content. With a 45-minute lunch and two 15-minute
 - **The penalty table** is back to the real 58 / 95 / 93 / 70 across m6 and m7 (`m6/game/pk.js`, mirrored in `go/scores.js`) since 11 Sep; the m7 committed keeper goes left every time.
 - **Before any real session:** reset the seeded and test rooms in Poll Desk, and fill `go/roster.json` with the participants' first names.
 
+
+## If things go wrong (contingencies, 11 Sep)
+
+- **A phone dies.** Every page is a plain web page: a laptop, tablet or borrowed phone works, and the person picks their name again; scores merge by name. Mid-game in Hidden Agenda, the seat belongs to the dead phone: that player whispers to the moderator, who uses remove / restore on the moderator page. TO BUILD: a moderator control to move a seat to a new device, and a hand-vote adjustment on the tally.
+- **Addresses.** Print one short address under every QR, `ryanlamare.com/go`, and add the game pages to that page's list so it is the one place to type. (Reverses the QR-only rule of 1 Sep, on Ryan's call.)
+- **Spotty wifi.** Phones talk to Cloudflare, not the venue network, so mobile data is a full substitute. Only the deck laptop needs a connection, for the live boards: bring a hotspot. Decks work offline; live widgets fall back to marked demo data.
+- **The Worker is down.** Paper versions: Hidden Agenda by the printed script, pointing and printed role cards; the car market by index cards marked lemon or peach (one round by hand) or skip to the chart; polls and walls by hands and flipchart. Scores recompute when the connection returns.
+- **The laptop dies.** The decks are on the web; any browser presents them. Keep the admin secret written down and a USB copy of the repo.
+- **People.** Same first names collide in the roster: use a last initial. Wrong table: leave and rejoin before the deal, not after. Latecomers to a started table watch.
+- **The day before.** Pay for Workers Paid (the free plan's 100,000 requests a day is not enough for a full room), reset the test rooms in Poll Desk, fill `go/roster.json`, print both scripts, both shortlists and role cards, pack index cards, charge a hotspot, run one phone through one game end to end.
+
 ## Working from another machine
 
 - Clone the repo from GitHub; do not put it in OneDrive or Google Drive.
