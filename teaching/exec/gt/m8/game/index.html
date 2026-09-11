@@ -1,0 +1,420 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 8 · Games</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 8 games.
+
+     ?g=market   the car market game: half the room sells, half buys, three
+                 rounds run from the deck. A seller's phone deals the card
+                 (lemon or peach) and records the deal; a buyer's phone shows
+                 what a car is worth to them. Lines in room m8-market:
+                   join|name|S-or-B          card|r|seller|L-or-P
+                   deal|r|seller|buyer|price|L-or-P
+                 and the deck posts ::round|r when a round opens. Unscored.
+     ?g=cs       Closed Session, the capstone: pick your table, take a seat,
+                 and the Worker deals you a role only this phone can read.
+                 Nights are played here; the day vote is here; the reveal is
+                 on the big screen. Scored: ten to the winning side.
+
+   Names come from the shared gt-name and are claimed into gt-names for the
+   points system. ?room=<id> plays into a scratch room (rehearsals) and
+   ?api=<url> points at a local Worker. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer;text-decoration:none}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+button.opt:disabled{opacity:.55;cursor:default}
+.choices{display:flex;flex-direction:column;gap:11px}
+.bigrow{display:flex;gap:12px}
+.bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:26px;padding:22px 10px;letter-spacing:.02em}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
+button.send:disabled{opacity:.45;cursor:default}
+button.send.quiet{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+.card{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px}
+.card .head{font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:var(--ink)}
+.card .head.red{color:var(--red)} .card .head.teal{color:var(--teal)} .card .head.terra{color:var(--terracotta)}
+.card .sub{font-weight:600;font-size:15px;color:var(--ink);margin-top:10px;line-height:1.4}
+.card .sub b{color:var(--red)}
+.card .small{font-weight:500;font-size:13px;color:var(--muted);margin-top:8px;line-height:1.35}
+.rule{border-left:6px solid var(--red);background:var(--card);padding:12px 16px;font-weight:600;font-size:15px;line-height:1.4}
+.rule b{color:var(--red)}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.plist button{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2px solid var(--ink);padding:9px 14px;cursor:pointer}
+.plist button.on{background:var(--red);border-color:var(--red);color:var(--paper)}
+.plist button:disabled{opacity:.4;cursor:default}
+.plist button.dim{opacity:.4;text-decoration:line-through}
+.res{border-left:6px solid var(--red);padding:10px 14px;font-weight:600;font-size:16px;background:var(--card)}
+.res b{color:var(--red)}
+.hist{font-weight:500;font-size:13.5px;color:var(--muted);line-height:1.5}
+.hist b{color:var(--ink)}
+.rolebar{display:flex;justify-content:space-between;align-items:center;gap:10px;border:2px solid var(--ink);background:var(--paper-soft);padding:10px 14px}
+.rolebar .r{font-family:var(--display);font-weight:900;font-size:20px;color:var(--ink);min-width:0}
+.rolebar .r.hidden{color:var(--muted);font-family:var(--sans);font-weight:600;font-size:14px}
+.rolebar button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;padding:8px 12px;cursor:pointer;flex:none}
+.priceRow{display:flex;gap:10px}
+.priceRow input{flex:1;font-family:var(--display);font-weight:900;font-size:28px;color:var(--ink);text-align:center;background:var(--card);border:2.5px solid var(--ink);padding:10px 12px;min-width:0}
+.deals{display:flex;flex-direction:column;gap:6px}
+.deals .d{border:2px solid var(--rule);background:var(--card);font-weight:600;font-size:14px;padding:8px 12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 8</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/gt/m8/game/cs.js"></script>
+<script>
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
+let voter=qs.get('v')||null; /* ?v= is a rehearsal override, never used in the room */
+try{
+  if(!voter)voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    if(!qs.get('v'))localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const GAME=qs.get('g');
+let name=qs.get('n')||null, roster=[]; /* ?n= is a rehearsal override, never used in the room */
+try{if(!name)name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=s=>String(s||'').trim().toLowerCase();
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+const post=(path,body)=>fetch(API+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json().then(d=>({ok:r.ok,status:r.status,d})));
+
+function meRow(){
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  return me;
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>done(clean(n)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function render(){
+  stopPolling();st.textContent='';
+  if(GAME!=='market'&&GAME!=='cs'){
+    q.textContent='Which game is on the screen?';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=market">The car market</a><a class="pick" href="?g=cs">Closed Session</a></div>';
+    return;
+  }
+  if(!name){renderName('Who are you?',n=>{name=n;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();});return;}
+  if(GAME==='market')return renderMarket();
+  return renderCS();
+}
+
+/* ================= the car market ================= */
+const MROOM=qs.get('room')||'m8-market';
+const RULES={
+  1:'Sellers, show buyers what is written on your card when they approach you. Try to make a deal!',
+  2:'Sellers, do not reveal what is written on your card, no matter how persistent the buyer is. Nothing else changes.',
+  3:'Sellers still keep their cards to themselves. Buyers may now ask sellers for more information beyond what is on the card.'
+};
+let sayN=0;
+function say(room,line){sayN++;return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});}
+const answers=room=>fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+function mState(lines){
+  const s={round:0,sellers:[],buyers:[],cards:{},deals:[]};
+  lines.forEach(t=>{
+    const p=String(t).split('|').map(x=>x.trim());
+    if(p[0]==='::round'&&/^[0-3]$/.test(p[1]))s.round=+p[1];
+    else if(p[0]==='join'&&p[1]){(p[2]==='B'?s.buyers:s.sellers).push(p[1]);}
+    else if(p[0]==='card'&&p[1]&&p[2])s.cards[p[1]+'|'+norm(p[2])]=p[3];
+    else if(p[0]==='deal'&&p.length===6)s.deals.push({r:+p[1],seller:p[2],buyer:p[3],price:+p[4],type:p[5]});
+  });
+  s.sellers=[...new Set(s.sellers)];s.buyers=[...new Set(s.buyers)];
+  return s;
+}
+function renderMarket(){
+  q.textContent='The car market';
+  app.innerHTML='';app.appendChild(meRow());
+  let side=null;try{side=localStorage.getItem('m8-market-side');}catch(_){}
+  const stage=document.createElement('div');stage.style.marginTop='6px';stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';app.appendChild(stage);
+  let shown='';
+  function join(s){
+    const nS=s.sellers.filter(n=>norm(n)!==norm(name)).length, nB=s.buyers.filter(n=>norm(n)!==norm(name)).length;
+    side=nB<nS?'B':'S';
+    say(MROOM,'join|'+name+'|'+side).then(()=>{try{localStorage.setItem('m8-market-side',side);}catch(_){}shown='';tick();}).catch(c=>{st.textContent=failMsg(c);});
+  }
+  function cardFor(r){
+    let c=null;try{c=localStorage.getItem('m8-market-card-'+r);}catch(_){}
+    if(!c){c=Math.random()<0.5?'L':'P';try{localStorage.setItem('m8-market-card-'+r,c);}catch(_){}
+      say(MROOM,'card|'+r+'|'+name+'|'+c).catch(()=>{});}
+    return c;
+  }
+  function tick(){
+    answers(MROOM).then(lines=>{
+      const s=mState(lines);
+      if(!side){const k='join';if(shown===k)return;shown=k;
+        stage.innerHTML='<div class="waitcard"><span class="pulse"></span>Joining the market…</div>';join(s);return;}
+      const mine=side==='S';
+      const key=side+':'+s.round+':'+s.deals.filter(d=>norm(mine?d.seller:d.buyer)===norm(name)).length;
+      if(key===shown)return;shown=key;
+      stage.innerHTML='';
+      const lbl=document.createElement('div');lbl.className='lbl';lbl.textContent=mine?'You are a seller':'You are a buyer';stage.appendChild(lbl);
+      if(!s.round){const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>Keep this page open. The market opens from the big screen.';stage.appendChild(w);return;}
+      const rl=document.createElement('div');rl.className='rule';rl.innerHTML='<b>Round '+s.round+'.</b> '+esc(RULES[s.round]);stage.appendChild(rl);
+      const card=document.createElement('div');card.className='card';
+      if(mine){
+        const c=cardFor(s.round);
+        card.innerHTML='<div class="head '+(c==='P'?'terra':'teal')+'">'+(c==='P'?'A PEACH':'A LEMON')+'</div><div class="sub">Your car is '+(c==='P'?'good quality. You will not sell it for less than <b>$3000</b>.':'bad quality. You will not sell it for less than <b>$1000</b>.')+'</div><div class="small">A new card every round. Get as much as you can, whatever the card says.</div>';
+        stage.appendChild(card);
+        const done=s.deals.find(d=>d.r===s.round&&norm(d.seller)===norm(name));
+        if(done){const r=document.createElement('div');r.className='res';r.innerHTML='Sold to <b>'+esc(done.buyer)+'</b> for <b>$'+done.price+'</b> this round.';stage.appendChild(r);return;}
+        const l2=document.createElement('div');l2.className='lbl';l2.textContent='Made a deal? Record it: who bought, and for how much';stage.appendChild(l2);
+        const pl=document.createElement('div');pl.className='plist';let buyer=null;
+        s.buyers.forEach(b=>{const bt=document.createElement('button');bt.textContent=b;bt.addEventListener('click',()=>{buyer=b;pl.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===bt));});pl.appendChild(bt);});
+        stage.appendChild(pl);
+        const pr=document.createElement('div');pr.className='priceRow';
+        const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.placeholder='$';inp.min=0;inp.max=9999;
+        const go=document.createElement('button');go.className='send';go.style.width='auto';go.textContent='RECORD';
+        go.addEventListener('click',()=>{const p=Math.round(+inp.value);if(!buyer){st.textContent='Tap the buyer’s name first.';return;}if(!(p>0&&p<10000)){st.textContent='Enter the price you agreed.';return;}
+          go.disabled=true;say(MROOM,'deal|'+s.round+'|'+name+'|'+buyer+'|'+p+'|'+c).then(()=>{st.textContent='';shown='';tick();}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
+        pr.appendChild(inp);pr.appendChild(go);stage.appendChild(pr);
+      }else{
+        card.innerHTML='<div class="head">BUYER</div><div class="sub">A car is worth up to <b>$1500</b> to you if it is a lemon, and up to <b>$4000</b> if it is a peach.</div><div class="small">Half the cars in the market are lemons. Pay as little as you can for a car worth having.</div>';
+        stage.appendChild(card);
+        const mineDeals=s.deals.filter(d=>norm(d.buyer)===norm(name));
+        if(mineDeals.length){const l2=document.createElement('div');l2.className='lbl';l2.textContent='Deals recorded with you';stage.appendChild(l2);
+          const dl=document.createElement('div');dl.className='deals';mineDeals.forEach(d=>{const e=document.createElement('div');e.className='d';e.textContent='Round '+d.r+': bought from '+d.seller+' for $'+d.price;dl.appendChild(e);});stage.appendChild(dl);}
+        else{const w=document.createElement('div');w.className='waitcard';w.textContent='Find a seller and make a deal. The seller records it on their phone.';stage.appendChild(w);}
+      }
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2500);tick();
+}
+
+/* ================= Closed Session ================= */
+function renderCS(){
+  let table=qs.get('t');
+  try{table=table||localStorage.getItem('m8-cs-table');}catch(_){}
+  if(!table||!CS_TABLES[table]){
+    q.textContent='Which table are you at?';
+    app.innerHTML='';app.appendChild(meRow());
+    const ch=document.createElement('div');ch.className='bigrow';ch.style.marginTop='8px';
+    [['TAPAS','tapas'],['GRANITO','granito']].forEach(([l,k])=>{const b=document.createElement('button');b.className='opt';b.textContent=l;b.addEventListener('click',()=>{try{localStorage.setItem('m8-cs-table',k);}catch(_){}renderCS();});ch.appendChild(b);});
+    app.appendChild(ch);return;
+  }
+  const T=CS_TABLES[table], ROOM=qs.get('room')||T.room;
+  const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
+  q.textContent=T.title;
+  app.innerHTML='';app.appendChild(meRow());
+  const bar=document.createElement('div');bar.className='rolebar';bar.style.display='none';
+  bar.innerHTML='<span class="r hidden">Your role is dealt to this phone</span><button type="button">SHOW</button>';
+  app.appendChild(bar);
+  const stage=document.createElement('div');stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';app.appendChild(stage);
+  const leave=document.createElement('button');leave.className='back';leave.type='button';leave.textContent='← change table';
+  leave.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/unseat',{v:voter}).finally(()=>{try{localStorage.removeItem('m8-cs-table');}catch(_){}renderCS();});});
+  app.appendChild(leave);
+  let seated=false, shown='', roleShown=false, roleTimer=null, S=null;
+  bar.querySelector('button').addEventListener('click',()=>{roleShown=!roleShown;drawBar();clearTimeout(roleTimer);if(roleShown)roleTimer=setTimeout(()=>{roleShown=false;drawBar();},8000);});
+  function drawBar(){
+    if(!S||!S.me||!S.me.role){bar.style.display='none';return;}
+    bar.style.display='';
+    const r=bar.querySelector('.r'), b=bar.querySelector('button');
+    if(roleShown){r.className='r';r.textContent=CS_ROLES[S.me.role].title+(S.me.role==='b'?' · '+bidderName(S.bidder):'');b.textContent='HIDE';}
+    else{r.className='r hidden';r.textContent='Your role is on this phone';b.textContent='SHOW';}
+  }
+  function seat(){
+    return post('/p/'+ROOM+'/cs/seat',{v:voter,n:name}).then(r=>{if(!r.ok&&r.status!==409)throw r.status;seated=true;});
+  }
+  const others=()=>S.seats.filter(s=>s.n!==name);
+  const alive=()=>S.seats.filter(s=>s.alive);
+  function nameBtns(list,cur,onPick,disabledFn){
+    const pl=document.createElement('div');pl.className='plist';
+    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(cur&&norm(cur)===norm(s.n))b.classList.add('on');
+      if(disabledFn&&disabledFn(s)){b.disabled=true;b.classList.add('dim');}
+      b.addEventListener('click',()=>onPick(s,b,pl));pl.appendChild(b);});
+    return pl;
+  }
+  const idOf=n=>{const s=S.seats.find(x=>x.n===n);return s?s.v:null;};
+  function tick(){
+    fetch(API+'/p/'+ROOM+'/cs/me?v='+encodeURIComponent(voter)).then(r=>r.json()).then(d=>{
+      S=d;
+      if(!d.me){ if(d.phase==='lobby'){ if(!seated){seat().then(()=>{shown='';tick();}).catch(()=>{st.textContent='Couldn’t take a seat — try again.';});} }
+        else{const k='late';if(shown===k)return;shown=k;stage.innerHTML='<div class="waitcard">This table has already started. Watch the big screen, and join the next one.</div>';}
+        return; }
+      drawBar();
+      const me=d.me, role=me.role;
+      const key=[d.phase,d.round,role,me.alive,JSON.stringify(d.night||null),JSON.stringify(d.day||null),d.reco,(d.mates||[]).map(m=>m.pick).join(',')].join('#');
+      if(key===shown)return;shown=key;
+      stage.innerHTML='';
+      const put=el=>stage.appendChild(el);
+      const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
+      const wait=t=>{const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>'+esc(t);return w;};
+      if(d.phase==='lobby'){
+        if(!role){put(lbl('Seated · '+d.seats.length+' at this table'));put(wait('You have a seat. Keep this page open; your role is dealt from the moderator’s phone.'));return;}
+        roleCard();put(wait('Everyone introduces themselves. The first night starts from the big screen.'));return;
+      }
+      if(d.phase==='over'){
+        const c=document.createElement('div');c.className='card';
+        const won=(d.winner==='backers')===(role==='b');
+        c.innerHTML='<div class="head '+(won?'teal':'terra')+'">'+(d.winner==='backers'?'THE BACKERS WIN':'THE COMMITTEE WINS')+'</div><div class="sub">'+(won?'Your side won. Ten points.':'Your side lost this one.')+' You were the <b>'+CS_ROLES[role].title+'</b>'+(role==='b'?', backing '+esc(bidderName(d.bidder)):'')+'.</div>';
+        put(c);
+        put(lbl('Last thing: which bidder should '+T.airline+' choose?'));
+        const pl=document.createElement('div');pl.className='choices';
+        T.bidders.forEach(b=>{const bt=document.createElement('button');bt.className='opt'+(d.reco===b.k?' mine':'');bt.innerHTML='<b>'+esc(b.name)+'</b><br><span style="font-weight:500;font-size:14px">'+esc(b.arch)+'</span>';
+          bt.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'reco',b:b.k}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});pl.appendChild(bt);});
+        put(pl);
+        if(d.reco)put(wait('Recorded. Look up — the reveal is on the big screen.'));
+        return;
+      }
+      if(!me.alive){
+        put(lbl((me.out&&me.out.how==='recused'?'Recused on day ':'Removed on night ')+(me.out?me.out.r:'')+' · you keep watching'));
+        if(d.phase==='night')notesPage(d,true);
+        else put(wait('You are off the committee, but your read still counts: your notes go into the reveal.'));
+        return;
+      }
+      if(d.phase==='night'){
+        put(lbl('Night '+d.round+' · phones only, no talking'));
+        if(role==='b'){
+          const mates=d.mates||[];
+          const c=document.createElement('div');c.className='rule';
+          c.innerHTML='You back <b>'+esc(bidderName(d.bidder))+'</b>. '+(mates.length?'Your fellow Backer'+(mates.length>1?'s':'')+': <b>'+mates.map(m=>esc(m.n)+(m.alive?'':' (out)')).join(', ')+'</b>. Agree on one name to complain about.':'You are the last Backer at the table. Name one person to complain about.');
+          put(c);
+          const mateNames=new Set(mates.map(m=>norm(m.n)));
+          const targets=alive().filter(s=>s.n!==name&&!mateNames.has(norm(s.n)));
+          put(nameBtns(targets,d.night&&d.night.myPick,(s,b,pl)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'pick',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
+          const live=mates.filter(m=>m.alive);
+          if(live.length){const h=document.createElement('div');h.className='hist';h.innerHTML=live.map(m=>'<b>'+esc(m.n)+'</b> has picked '+(m.pick?'<b>'+esc(m.pick)+'</b>':'nobody yet')).join(' · ');put(h);}
+          const myPick=d.night&&d.night.myPick;
+          if(myPick&&live.every(m=>m.pick&&norm(m.pick)===norm(myPick)))put(wait('Agreed on '+myPick+'. Wait for the morning.'));
+          else if(myPick)put(wait('You picked '+myPick+'. The complaint needs every Backer on the same name, or nobody is removed tonight.'));
+          return;
+        }
+        if(role==='a'){
+          const c=d.night&&d.night.myCheck;
+          put(lbl('Auditor · run a conflicts check on one colleague'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> is '+(c.role==='b'?'a <b>Backer</b>':'honest, '+CS_ROLES[c.role].title.toLowerCase())+'.';put(r);}
+          else put(nameBtns(others().filter(s=>s.alive),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'check',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
+          const past=(d.checks||[]).filter(x=>x.r<d.round);
+          if(past.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your checks so far: '+past.map(x=>'night '+x.r+', <b>'+esc(x.target)+'</b>, '+(x.role==='b'?'a Backer':'honest')).join(' · ');put(h);}
+          if(c)notesPage(d,false);
+          return;
+        }
+        if(role==='c'){
+          const c=d.night&&d.night.myClear;
+          put(lbl('General Counsel · clear one member tonight'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='You have cleared <b>'+esc(c)+'</b>. Any complaint against them tonight is dismissed.';put(r);}
+          else{
+            const lastV=d.lastClear;
+            put(nameBtns(alive(),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'clear',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=cd===409?'Not the same person two nights running.':failMsg(cd);});},s=>lastV&&s.v===lastV));
+            if(lastV){const h=document.createElement('div');h.className='hist';h.textContent='Not the same person as last night. You may clear yourself.';put(h);}
+          }
+          if(c)notesPage(d,false);
+          return;
+        }
+        notesPage(d,false);return;
+      }
+      /* day */
+      put(lbl('Day '+d.round+' · the committee is in session'));
+      if(d.lastNotes&&d.lastNotes.s&&d.lastNotes.s.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your notes from last night: <b>'+d.lastNotes.s.map(v=>esc((d.seats.find(x=>x.v===v)||{}).n||'')).join(', ')+'</b>'+(d.lastNotes.a?' · Auditor? '+esc((d.seats.find(x=>x.v===d.lastNotes.a)||{}).n||''):'')+(d.lastNotes.c?' · Counsel? '+esc((d.seats.find(x=>x.v===d.lastNotes.c)||{}).n||''):'');put(h);}
+      const day=d.day;
+      if(day&&day.open){
+        if(day.accusedV===voter){put(wait('The vote is about you. Thirty seconds to make your case, then the committee decides.'));return;}
+        const c=document.createElement('div');c.className='rule';c.innerHTML='The committee has moved to recuse <b>'+esc(day.accused)+'</b>. Your vote:';put(c);
+        const row=document.createElement('div');row.className='bigrow';
+        [['RECUSE','y'],['KEEP','n']].forEach(([l,y])=>{const b=document.createElement('button');b.className='opt'+(day.myVote===y?' mine':'');b.textContent=l;
+          b.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'vote',y}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});row.appendChild(b);});
+        put(row);
+        if(day.myVote)put(wait('Vote in. It lands on the big screen by name.'));
+        return;
+      }
+      if(day&&day.result){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(day.accused)+'</b> '+(day.result.recused?'was recused':'stays')+', '+day.result.yes+' to '+day.result.no+'.';put(r);}
+      put(wait('Debate. Accuse someone, get it seconded, and the vote comes to this phone.'));
+      function roleCard(){
+        const c=document.createElement('div');c.className='card';
+        c.innerHTML='<div class="head '+(role==='b'?'red':'')+'">'+esc(CS_ROLES[role].title.toUpperCase())+'</div><div class="sub">'+esc(CS_ROLES[role].line)+'</div>'+(role==='b'?'<div class="sub">You back <b>'+esc(bidderName(d.bidder))+'</b>.'+((d.mates||[]).length?' Your fellow Backer'+(d.mates.length>1?'s':'')+': <b>'+d.mates.map(m=>esc(m.n)).join(', ')+'</b>.':'')+'</div>':'')+'<div class="small">Keep this to yourself. Tap HIDE and nobody beside you sees it.</div>';
+        put(c);
+        const hb=document.createElement('button');hb.className='send quiet';hb.textContent='HIDE MY ROLE';hb.addEventListener('click',()=>{c.style.display='none';hb.style.display='none';roleShown=false;drawBar();});put(hb);
+      }
+    }).catch(()=>{});
+  }
+  function notesPage(d,spectator){
+    const n=(d.night&&d.night.myNotes)||{s:[],a:null,c:null};
+    const sel=new Set(n.s||[]);let a=n.a,c=n.c;
+    const put=el=>stage.appendChild(el);
+    const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
+    put(lbl(spectator?'Your notes still count · who do you suspect?':'Your notes for the morning · who do you suspect? Up to three'));
+    const list=others().filter(s=>s.alive);
+    const pl=document.createElement('div');pl.className='plist';
+    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(sel.has(s.v))b.classList.add('on');
+      b.addEventListener('click',()=>{if(sel.has(s.v))sel.delete(s.v);else{if(sel.size>=3){st.textContent='Three at most. Untap one first.';return;}sel.add(s.v);}b.classList.toggle('on',sel.has(s.v));});pl.appendChild(b);});
+    put(pl);
+    put(lbl('Who is the Auditor?'));
+    const pa=document.createElement('div');pa.className='plist';
+    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(a===s.v)b.classList.add('on');b.addEventListener('click',()=>{a=a===s.v?null:s.v;pa.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b&&a));});pa.appendChild(b);});
+    put(pa);
+    put(lbl('Who is General Counsel?'));
+    const pc=document.createElement('div');pc.className='plist';
+    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(c===s.v)b.classList.add('on');b.addEventListener('click',()=>{c=c===s.v?null:s.v;pc.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b&&c));});pc.appendChild(b);});
+    put(pc);
+    const go=document.createElement('button');go.className='send';go.textContent=n.s&&n.s.length?'UPDATE MY NOTES':'SAVE MY NOTES';
+    go.addEventListener('click',()=>{go.disabled=true;post('/p/'+ROOM+'/cs/act',{v:voter,kind:'notes',s:[...sel],a,c}).then(r=>{if(!r.ok)throw r.status;st.textContent='Saved. You’ll see this again in the morning.';go.disabled=false;go.textContent='UPDATE MY NOTES';}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
+    put(go);
+  }
+  poller=setInterval(tick,2000);tick();
+}
+</script>
+</body></html>

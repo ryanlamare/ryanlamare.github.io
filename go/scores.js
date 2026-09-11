@@ -152,6 +152,19 @@ const GT_SCORES = (() => {
         { key: 'auction', label: 'Auction', kind: 'auction', room: 'm7-auction', pot: 10, minPoints: -10 },
       ],
     },
+    {
+      id: 'm8',
+      title: 'Information Asymmetries',
+      events: [
+        /* Closed Session, the capstone: two tables play at once (one room
+           each), and everyone on the winning side of their table takes
+           winPoints — the same ten as Price Wars, because it is the last
+           game of the programme. The car market (m8-market) is played for
+           what it shows and stays unscored. Roles come from the Worker's
+           /cs/board, which only reveals them once a table is over. */
+        { key: 'closed', label: 'Closed Session', kind: 'closedsession', rooms: [{ id: 'm8-cs-tapas' }, { id: 'm8-cs-granito' }], winPoints: 10 },
+      ],
+    },
   ];
 
   /* rooms that game pages write to directly (name-tagged /say lines, not
@@ -175,6 +188,9 @@ const GT_SCORES = (() => {
     { id: 'm7-chicken', label: 'Chicken · Module 7' },
     { id: 'm7-gb', label: 'Split or steal · Module 7' },
     { id: 'm7-auction', label: 'The auction · Module 7', solo: true },
+    { id: 'm8-market', label: 'The car market · Module 8', kind: 'market' },
+    { id: 'm8-cs-tapas', label: 'Closed Session, the Tapas table · Module 8', kind: 'cs' },
+    { id: 'm8-cs-granito', label: 'Closed Session, the Granito table · Module 8', kind: 'cs' },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -664,6 +680,22 @@ const GT_SCORES = (() => {
     member.forEach(({ name, st }) => { if (pts[st]) addPoints(tally, name, ev.key, pts[st]); });
   }
 
+  /* Closed Session: once a table is over, its board carries every seat's
+     role and the winner; the winning side's names each take winPoints */
+  async function scoreClosedSession(ev, claims, tally) {
+    for (const room of ev.rooms) {
+      try {
+        const d = await j('/p/' + room.id + '/cs/board');
+        if (d.phase !== 'over' || !d.winner) continue;
+        d.seats.forEach(s => {
+          if (!s.role || !s.n) return;
+          const side = s.role === 'b' ? 'backers' : 'committee';
+          if (side === d.winner) addPoints(tally, s.n, ev.key, ev.winPoints);
+        });
+      } catch (_) { /* a table that isn't there yet scores nobody */ }
+    }
+  }
+
   /* -> {players:[{name, byEvent, total}] desc, events:[{key,label}]} */
   async function load() {
     const claims = await loadClaims();
@@ -687,6 +719,7 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'chicken') await scoreChicken(ev, claims, tally);
         else if (ev.kind === 'goldenballs') await scoreGoldenballs(ev, claims, tally);
         else if (ev.kind === 'auction') await scoreAuction(ev, claims, tally);
+        else if (ev.kind === 'closedsession') await scoreClosedSession(ev, claims, tally);
       }
     }
     const players = [...tally.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
@@ -790,6 +823,23 @@ const GT_SCORES = (() => {
               const parts = mine.map(x => x.g + (x.r === 'correct' ? ' (correct!)' : (x.r === 'high' ? ' (too high)' : ' (too low)')));
               items.push({ id: g.id, q: g.label, answer: parts.join(' · '), scored: scoring.has(g.id) });
             }
+            continue;
+          }
+          if (g.kind === 'cs') {
+            const d = await j('/p/' + g.id + '/cs/me?v=' + encodeURIComponent(voter));
+            if (d && d.me && d.me.role) {
+              const R = { m: 'Committee Member', b: 'Backer', a: 'Auditor', c: 'General Counsel' };
+              let a = 'played as ' + (R[d.me.role] || d.me.role);
+              if (d.me.out) a += ', ' + (d.me.out.how === 'recused' ? 'recused on day ' : 'removed on night ') + d.me.out.r;
+              if (d.winner) a += ' — ' + (d.winner === 'committee' ? 'the committee won' : 'the Backers won');
+              items.push({ id: g.id, q: g.label, answer: a, scored: scoring.has(g.id) });
+            }
+            continue;
+          }
+          if (g.kind === 'market') {
+            const d = await j('/p/' + g.id + '/answers');
+            const mine = (d.answers || []).filter(t => { const p = String(t).split('|').map(x => x.trim()); return p[0] === 'deal' && (norm(p[2]) === nkey || norm(p[3]) === nkey); });
+            if (mine.length) items.push({ id: g.id, q: g.label, answer: mine.map(t => { const p = String(t).split('|').map(x => x.trim()); return 'round ' + p[1] + ': ' + (norm(p[2]) === nkey ? 'sold to ' + p[3] : 'bought from ' + p[2]) + ' for $' + p[4]; }).join(' · '), scored: false });
             continue;
           }
           if (g.kind === 'draw') {

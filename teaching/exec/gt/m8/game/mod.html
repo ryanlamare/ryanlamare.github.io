@@ -1,0 +1,176 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Closed Session · Moderator</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* The moderator's phone for one Closed Session table (?t=tapas or
+   ?t=granito). Everything here needs the admin secret (shared with Poll
+   Desk, kept in localStorage gt-admin). The page is the night checklist,
+   the day's vote control and the log; nothing is written down by hand.
+   The buttons in the FALLBACK section are for a table played by pointing
+   and cards: enter roles, remove and restore by hand. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.phase{display:flex;justify-content:space-between;align-items:baseline;border:2.5px solid var(--ink);background:var(--card);padding:14px 16px}
+.phase .p{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--ink)}
+.phase .p.night{color:var(--blue)} .phase .p.vote{color:var(--red)} .phase .p.over{color:var(--teal)}
+.phase .n{font-weight:600;font-size:13px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+button.act{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:13px 16px;cursor:pointer;flex:1;min-width:140px}
+button.act.quiet{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+button.act:disabled{opacity:.35;cursor:default}
+.check{display:flex;flex-direction:column;gap:6px}
+.check .c{display:flex;justify-content:space-between;align-items:center;border:2px solid var(--ink);background:var(--card);padding:10px 14px;font-weight:600;font-size:15px}
+.check .c.done{border-color:var(--teal);background:color-mix(in srgb, var(--teal) 18%, var(--card))}
+.check .c small{font-weight:600;font-size:12px;color:var(--muted)}
+.seats{display:flex;flex-direction:column;gap:6px}
+.seat{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:2px solid var(--ink);background:var(--card);padding:8px 12px;font-weight:600;font-size:15px}
+.seat.out{opacity:.5;text-decoration:line-through}
+.seat .role{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.seat .role.b{color:var(--red)}
+.seat .mini{display:flex;gap:6px}
+.seat .mini button,.seat select{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);color:var(--ink);padding:5px 8px;cursor:pointer}
+.res{border-left:6px solid var(--red);padding:10px 14px;font-weight:600;font-size:16px;background:var(--card);line-height:1.4}
+.res b{color:var(--red)}
+.log{font-weight:500;font-size:14px;line-height:1.5;color:var(--ink)}
+.log b{color:var(--red)}
+.status{font-weight:600;font-size:14px;color:var(--muted);min-height:1.4em}
+.secret{display:flex;gap:8px}
+.secret input{flex:1;font-family:var(--sans);font-weight:600;font-size:15px;background:var(--card);border:2.5px solid var(--ink);padding:10px 12px;min-width:0}
+.secret button{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.08em;background:var(--ink);color:var(--paper);border:none;padding:10px 14px;cursor:pointer}
+details{border:2px dashed var(--muted);padding:10px 14px}
+summary{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);cursor:pointer}
+.votes{display:flex;gap:14px;font-weight:600;font-size:14px}
+.votes b{font-family:var(--display);font-weight:900;font-size:24px}
+a.pick{display:block;text-align:center;font-weight:700;font-size:16px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px;text-decoration:none}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>CLOSED SESSION · MODERATOR</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/gt/m8/game/cs.js"></script>
+<script>
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const table=qs.get('t');
+if(!table||!CS_TABLES[table]){
+  q.textContent='Which table are you running?';
+  app.innerHTML='<a class="pick" href="?t=tapas">The Tapas committee</a><br><a class="pick" href="?t=granito">The Granito management team</a>';
+}else{
+  const T=CS_TABLES[table], ROOM=qs.get('room')||T.room;
+  q.textContent=T.title;
+  let secret=qs.get('s')||''; /* ?s= is a rehearsal override */
+  try{if(!secret)secret=localStorage.getItem('gt-admin')||'';}catch(_){}
+  const post=(sub,body)=>fetch(API+'/p/'+ROOM+'/cs/'+sub,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:secret,...body})}).then(r=>r.json().then(d=>({ok:r.ok,status:r.status,d})));
+  const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
+  const RN={m:'Member',b:'Backer',a:'Auditor',c:'Counsel'};
+  let S=null, shown='', lastResult=null;
+  function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+  function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
+  function act(sub,body,after){
+    return post(sub,body||{}).then(r=>{
+      if(r.status===403){secret='';try{localStorage.removeItem('gt-admin');}catch(_){}st.textContent='Secret refused. Paste it again.';shown='';render();return null;}
+      if(!r.ok){st.textContent='Refused: '+(r.d.error||r.status);return null;}
+      st.textContent='';if(after)after(r.d);shown='';tick();return r.d;
+    }).catch(()=>{st.textContent='Didn’t reach the Worker. Try again.';return null;});
+  }
+  function askSecret(){
+    app.innerHTML='';
+    app.appendChild(el('div','lbl','Paste the admin secret (the same one as Poll Desk)'));
+    const row=el('div','secret');const inp=document.createElement('input');inp.type='password';inp.autocomplete='off';
+    const b=el('button','','SAVE');b.addEventListener('click',()=>{secret=inp.value.trim();try{localStorage.setItem('gt-admin',secret);}catch(_){}shown='';tick();});
+    row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+  }
+  function tick(){
+    if(!secret){if(shown!=='secret'){shown='secret';askSecret();}return;}
+    fetch(API+'/p/'+ROOM+'/cs/mod?s='+encodeURIComponent(secret)).then(r=>{if(r.status===403){secret='';try{localStorage.removeItem('gt-admin');}catch(_){}shown='';return null;}return r.json();}).then(d=>{if(!d){tick();return;}S=d;render();}).catch(()=>{});
+  }
+  function render(){
+    if(!S)return;
+    const key=JSON.stringify([S.phase,S.round,Object.values(S.seats).map(s=>[s.n,s.role,s.alive]),S.nights[S.round],S.days[S.round],S.log.length,lastResult]);
+    if(key===shown)return;shown=key;
+    app.innerHTML='';
+    const seats=Object.entries(S.seats).map(([v,s])=>({v,...s}));
+    const alive=seats.filter(s=>s.alive), backers=alive.filter(s=>s.role==='b');
+    const ph=el('div','phase');
+    const P={lobby:'LOBBY',night:'NIGHT '+S.round,day:'DAY '+S.round,vote:'VOTE · DAY '+S.round,over:'GAME OVER'};
+    ph.innerHTML='<span class="p '+S.phase+'">'+P[S.phase]+'</span><span class="n">'+seats.length+' seated · '+alive.length+' still in · '+backers.length+' Backer'+(backers.length===1?'':'s')+' left</span>';
+    app.appendChild(ph);
+    if(S.bidder)app.appendChild(el('div','lbl','The Backers are backing '+esc(bidderName(S.bidder))+' (only you and they know)'));
+    if(lastResult){app.appendChild(el('div','res',lastResult));}
+    const btns=el('div','btns');
+    const B=(t,fn,quiet,dis)=>{const b=el('button','act'+(quiet?' quiet':''),t);b.disabled=!!dis;b.addEventListener('click',fn);btns.appendChild(b);return b;};
+    const undealt=seats.some(s=>!s.role);
+    if(S.phase==='lobby'){
+      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(!undealt&&!confirm('Roles are dealt. Deal again?'))return;act('deal',{},d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Backers.';});},false,seats.length<5);
+      B('START NIGHT 1',()=>act('phase',{to:'night'},()=>{lastResult=null;}),true,undealt);
+    }else if(S.phase==='night'){
+      const n=S.nights[S.round]||{picks:{},notes:{}};
+      const picks=backers.map(b=>n.picks[b.v]).filter(Boolean);
+      const agreed=backers.length>0&&picks.length===backers.length&&picks.every(p=>p===picks[0]);
+      const ck=el('div','check');
+      const nm=v=>S.seats[v]?S.seats[v].n:'—';
+      ck.appendChild(el('div','c'+(agreed?' done':''),'<span>Backers '+(agreed?'agreed on <b>'+esc(nm(picks[0]))+'</b>':'still deciding')+'</span><small>'+picks.length+' of '+backers.length+' picked'+(picks.length&&!agreed?': '+[...new Set(picks)].map(nm).map(esc).join(' / '):'')+'</small>'));
+      ck.appendChild(el('div','c'+(n.check?' done':''),'<span>Auditor '+(n.check?'checked <b>'+esc(nm(n.check.target))+'</b>':'has not checked yet')+'</span>'));
+      ck.appendChild(el('div','c'+(n.clear?' done':''),'<span>General Counsel '+(n.clear?'cleared <b>'+esc(nm(n.clear.target))+'</b>':'has not cleared anyone yet')+'</span>'));
+      ck.appendChild(el('div','c','<span>Notes in</span><small>'+Object.keys(n.notes).length+' phones</small>'));
+      app.appendChild(ck);
+      B('END NIGHT · ANNOUNCE THE MORNING',()=>act('phase',{to:'day'},d=>{const r=d.result||{};lastResult=r.removed?'Overnight an anonymous complaint was filed against <b>'+esc(r.removed)+'</b>. Under the conflict rules they leave the committee. They keep their phone.':(r.target?'A complaint was filed against '+esc(r.target)+', but General Counsel had cleared them, so it is <b>dismissed</b>. Nobody leaves. (Do not say who was named.)':'No complaint was agreed overnight. <b>Nobody leaves.</b>');if(d.winner)lastResult+=' <b>'+(d.winner==='committee'?'The committee wins.':'The Backers win.')+'</b>';}));
+    }else if(S.phase==='day'){
+      const day=S.days[S.round];
+      if(day&&day.result)app.appendChild(el('div','res','Today’s vote is done: <b>'+esc(S.seats[day.accused].n)+'</b> '+(day.result.recused?'recused':'stays')+', '+day.result.yes+' to '+day.result.no+'.'));
+      else{
+        app.appendChild(el('div','lbl','Accusation seconded? Pick the accused and open the vote'));
+        const pl=el('div','btns');
+        alive.forEach(s=>{const b=el('button','act quiet',esc(s.n));b.style.flex='0 0 auto';b.style.minWidth='0';b.addEventListener('click',()=>{if(confirm('Open the vote to recuse '+s.n+'?'))act('vote',{accused:s.v},()=>{lastResult=null;});});pl.appendChild(b);});
+        app.appendChild(pl);
+      }
+      B('START NIGHT '+(S.round+1),()=>act('phase',{to:'night'},()=>{lastResult=null;}),true);
+      B('GAME OVER',()=>{if(confirm('End the game now?'))act('phase',{to:'over'},d=>{lastResult='<b>'+(d.winner==='committee'?'The committee wins.':'The Backers win.')+'</b> Send everyone to the big screen.';});},true);
+    }else if(S.phase==='vote'){
+      const day=S.days[S.round];
+      const yes=Object.entries(day.votes).filter(([,y])=>y==='y').map(([v])=>S.seats[v].n), no=Object.entries(day.votes).filter(([,y])=>y==='n').map(([v])=>S.seats[v].n);
+      app.appendChild(el('div','res','Vote open: recuse <b>'+esc(S.seats[day.accused].n)+'</b>?'));
+      app.appendChild(el('div','votes','<span>Recuse <b>'+yes.length+'</b></span><span>Keep <b>'+no.length+'</b></span><span style="color:var(--muted)">'+(alive.length-1-yes.length-no.length)+' still to vote</span>'));
+      app.appendChild(el('div','log',(yes.length?'Recuse: '+yes.map(esc).join(', ')+'. ':'')+(no.length?'Keep: '+no.map(esc).join(', ')+'.':'')));
+      B('CLOSE THE VOTE',()=>act('tally',{},d=>{lastResult='<b>'+esc(S.seats[day.accused].n)+'</b> '+(d.result.recused?'is recused, ':'stays, ')+d.result.yes+' to '+d.result.no+'.'+(d.winner?' <b>'+(d.winner==='committee'?'The committee wins.':'The Backers win.')+'</b>':'');}));
+    }else{
+      app.appendChild(el('div','res','<b>'+(S.winner==='committee'?'The committee wins.':'The Backers win.')+'</b> Send everyone to the big screen for the reveal. Their phones are asking for a recommendation.'));
+    }
+    app.appendChild(btns);
+    /* the table */
+    app.appendChild(el('div','lbl','The table'));
+    const sl=el('div','seats');
+    seats.sort((a,b)=>a.n.localeCompare(b.n)).forEach(s=>{
+      const row=el('div','seat'+(s.alive?'':' out'));
+      row.innerHTML='<span>'+esc(s.n)+' <span class="role '+(s.role||'')+'">'+(s.role?RN[s.role]:'undealt')+(s.out?' · '+(s.out.how==='recused'?'recused day ':'removed night ')+s.out.r:'')+'</span></span>';
+      const mini=el('div','mini');
+      if(S.phase==='lobby'){
+        const sel=document.createElement('select');['','m','b','a','c'].forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r?RN[r]:'role…';if(r===s.role)o.selected=true;sel.appendChild(o);});
+        sel.addEventListener('change',()=>{if(sel.value)act('setrole',{v:s.v,role:sel.value});});mini.appendChild(sel);
+      }else if(s.alive){
+        const b=el('button','','remove');b.addEventListener('click',()=>{if(confirm('Remove '+s.n+' by hand? Only for a table played by pointing.'))act('remove',{v:s.v,how:S.phase==='night'?'complaint':'recused'});});mini.appendChild(b);
+      }else{
+        const b=el('button','','restore');b.addEventListener('click',()=>{if(confirm('Put '+s.n+' back at the table?'))act('restore',{v:s.v});});mini.appendChild(b);
+      }
+      row.appendChild(mini);sl.appendChild(row);
+    });
+    app.appendChild(sl);
+    const dt=document.createElement('details');dt.innerHTML='<summary>Log</summary>';
+    const lg=el('div','log',S.log.slice().reverse().map(l=>'<b>'+(l.when==='night'?'Night ':'Day ')+l.r+'</b> '+esc(l.text)).join('<br>')||'Nothing yet.');dt.appendChild(lg);app.appendChild(dt);
+    const help=document.createElement('details');help.innerHTML='<summary>Printed script</summary><div class="log">The full script, including the pointing fallback, is at <b>/teaching/exec/gt/m8/game/moderator-script.html?t='+table+'</b>. Print it before the day.</div>';app.appendChild(help);
+  }
+  setInterval(tick,2000);tick();
+}
+</script>
+</body></html>

@@ -10,7 +10,7 @@ to pick the work up on another computer.
 |---|---|
 | m1–m6 | Shipped and live. m6's penalty table changed on 7 Sep (see below). |
 | m7 | Rebuilt around four game classes, 30 slides, live. Redlined through three passes; the wording flagged below still awaits a final veto. |
-| m8 | In design (11 Sep). Agreed shape: the 590GT car market game on phones opens; the 550 spine; the m1 wall re-shown and sorted into ask / jam / screen; then the capstone, **Closed Session** (the 565 week 5 werewolf reskin) at two tables at once, Tapas committee and Granito management, JN and BJ moderating, roles dealt to phones behind the admin secret, nights on phones with pointing printed as the fallback, one big-screen clock for both tables, ten points to the winning side; then the awards. A sample block (slides 15–25) and `m8/game/moderator-script.html` are built for Ryan's redlines; nothing is wired yet. |
+| m8 | BUILT 11 Sep, first cut, local commit, awaiting Ryan's redlines. 34 slides: cover, objectives, the car market game (his 590GT three-round card game, on phones), the 550 spine, the m1 wall re-shown and sorted aloud into ask / jam / screen, then **Closed Session** (the 565 week-5 werewolf reskin) at two tables at once, the Tapas committee and the Granito management team, four fictional bidders per table and RRPF on neither list, roles dealt to phones behind the admin secret, nights on phones with pointing printed as the fallback, one big-screen clock for both tables, the phones' nightly notes drawn as a suspicion spectrum with three honours per table, the recommendation against the Backers' secret bidder, ten points to the winning side, and the final Top of the class. |
 
 ## m7 as it stands
 
@@ -25,6 +25,26 @@ Cover, objectives, what a strategic move is, then:
 7. Top of the class (Chicken, Split or steal, Engines).
 
 Nothing in m7 is flex any more. Estimated running time about 75 minutes.
+
+## m8 as it stands
+
+- **Pages.** `m8/game/?g=market` and `?g=cs` (participants), `m8/game/mod.html?t=tapas|granito` (the moderator's phone, admin secret), `m8/game/moderator-script.html?t=` and `m8/game/bidders.html?t=` (printable), `m8/game/cs.js` (both tables' setting and bidders: the one file to edit after the pre-meeting with JN and BJ).
+- **Worker.** The Closed Session lane (`/p/:id/cs/...`) is deployed (11 Sep, version 23f22dfb). Roles live only on the server; a phone can read only its own; the Auditor's answer is computed there. Tested locally with a scripted 12-seat game (68 checks) and the legacy routes; the live routes were probed with a scratch room.
+- **Rooms.** `m8-market` (unscored), `m8-cs-tapas` and `m8-cs-granito` (SCORING, ten to the winning side). Poll Desk lists all three. Rehearse in scratch rooms with `?room=` on the pages and `?tapas=&granito=&market=` on the deck; `?api=` points everything at a local Worker.
+- **Keys on the deck.** Market board: 1, 2, 3 open the rounds on every phone. The two committees: D starts a five-minute day, N a ninety-second night, P pauses.
+- **Roles.** Committee Member, Backer, Auditor, General Counsel (renamed from the 565 Booster, Compliance Officer and Chair). Two Backers at ten or eleven, three from twelve.
+- **Not yet decided.** The programme-wide honours for the wrap-up (what to award, physical prizes or not); whether a second round is held in reserve; JN and BJ's parameters for the bidder cards.
+
+## Day two, a first timing
+
+| Module | Estimate |
+|---|---|
+| m5 Coordination | 60–75 min |
+| m6 Mixed strategies | 60 min |
+| m7 Strategic moves | 75 min |
+| m8 Information asymmetries | 120 min: market 15, spine 30, the wall 10, Closed Session rules and dealing 10, one round of play 35–40, reveal and debrief 15, awards 10 |
+
+About five and a half hours of content. With a 45-minute lunch and two 15-minute breaks that is 9:00 to 4:15 or 10:00 to 5:15. A second round of Closed Session does not fit without cutting elsewhere.
 
 ## Open items
 
