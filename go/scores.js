@@ -156,13 +156,13 @@ const GT_SCORES = (() => {
       id: 'm8',
       title: 'Information Asymmetries',
       events: [
-        /* Closed Session, the capstone: two tables play at once (one room
+        /* Hidden Agenda, the capstone: two tables play at once (one room
            each), and everyone on the winning side of their table takes
            winPoints — the same ten as Price Wars, because it is the last
            game of the programme. The car market (m8-market) is played for
            what it shows and stays unscored. Roles come from the Worker's
            /cs/board, which only reveals them once a table is over. */
-        { key: 'closed', label: 'Closed Session', kind: 'closedsession', rooms: [{ id: 'm8-cs-tapas' }, { id: 'm8-cs-granito' }], winPoints: 10 },
+        { key: 'closed', label: 'Hidden Agenda', kind: 'closedsession', rooms: [{ id: 'm8-cs-tapas' }, { id: 'm8-cs-granito' }], winPoints: 10 },
       ],
     },
   ];
@@ -189,8 +189,8 @@ const GT_SCORES = (() => {
     { id: 'm7-gb', label: 'Split or steal · Module 7' },
     { id: 'm7-auction', label: 'The auction · Module 7', solo: true },
     { id: 'm8-market', label: 'The car market · Module 8', kind: 'market' },
-    { id: 'm8-cs-tapas', label: 'Closed Session, the Tapas table · Module 8', kind: 'cs' },
-    { id: 'm8-cs-granito', label: 'Closed Session, the Granito table · Module 8', kind: 'cs' },
+    { id: 'm8-cs-tapas', label: 'Hidden Agenda, the Tapas table · Module 8', kind: 'cs' },
+    { id: 'm8-cs-granito', label: 'Hidden Agenda, the Granito table · Module 8', kind: 'cs' },
   ];
 
   const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, ' ');
@@ -680,7 +680,7 @@ const GT_SCORES = (() => {
     member.forEach(({ name, st }) => { if (pts[st]) addPoints(tally, name, ev.key, pts[st]); });
   }
 
-  /* Closed Session: once a table is over, its board carries every seat's
+  /* Hidden Agenda: once a table is over, its board carries every seat's
      role and the winner; the winning side's names each take winPoints */
   async function scoreClosedSession(ev, claims, tally) {
     for (const room of ev.rooms) {
@@ -828,10 +828,10 @@ const GT_SCORES = (() => {
           if (g.kind === 'cs') {
             const d = await j('/p/' + g.id + '/cs/me?v=' + encodeURIComponent(voter));
             if (d && d.me && d.me.role) {
-              const R = { m: 'Committee Member', b: 'Backer', a: 'Auditor', c: 'General Counsel' };
+              const R = { m: 'Committee Member', b: 'Manipulator', a: 'Auditor', c: 'General Counsel' };
               let a = 'played as ' + (R[d.me.role] || d.me.role);
-              if (d.me.out) a += ', ' + (d.me.out.how === 'recused' ? 'recused on day ' : 'removed on night ') + d.me.out.r;
-              if (d.winner) a += ' — ' + (d.winner === 'committee' ? 'the committee won' : 'the Backers won');
+              if (d.me.out) a += ', ' + (d.me.out.how === 'recused' ? 'voted off on day ' : 'removed on night ') + d.me.out.r;
+              if (d.winner) a += ' — ' + (d.winner === 'committee' ? 'the committee won' : 'the Manipulators won');
               items.push({ id: g.id, q: g.label, answer: a, scored: scoring.has(g.id) });
             }
             continue;

@@ -11,7 +11,7 @@
                  the round and every phone computes its own result from the
                  same bids and seed (lot.js), so nothing is posted back. A
                  sale washes the whole screen peach or lemon. Unscored.
-     ?g=cs       Closed Session, the capstone: pick your table, take a seat,
+     ?g=cs       Hidden Agenda, the capstone: pick your table, take a seat,
                  and the Worker deals you a role only this phone can read.
                  Nights are played here; the day vote is here; the reveal is
                  on the big screen. Scored: ten to the winning side.
@@ -172,7 +172,7 @@ function render(){
   stopPolling();st.textContent='';
   if(GAME!=='market'&&GAME!=='cs'){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=market">The car market</a><a class="pick" href="?g=cs">Closed Session</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=market">The car market</a><a class="pick" href="?g=cs">Hidden Agenda</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>{name=n;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();});return;}
@@ -273,7 +273,7 @@ function renderMarket(){
   poller=setInterval(tick,2000);tick();
 }
 
-/* ================= Closed Session ================= */
+/* ================= Hidden Agenda ================= */
 function renderCS(){
   let table=qs.get('t');
   try{table=table||localStorage.getItem('m8-cs-table');}catch(_){}
@@ -288,6 +288,8 @@ function renderCS(){
   const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
   q.textContent=T.title;
   app.innerHTML='';app.appendChild(meRow());
+  const sl=document.createElement('a');sl.className='pick';sl.style.textAlign='center';sl.style.fontSize='14px';sl.style.padding='10px';sl.href='/teaching/exec/gt/m8/game/bidders.html?t='+table;sl.target='_blank';sl.textContent='OPEN THE SHORTLIST \u2197';
+  app.appendChild(sl);
   const bar=document.createElement('div');bar.className='rolebar';bar.style.display='none';
   bar.innerHTML='<span class="r hidden">Your role is dealt to this phone</span><button type="button">SHOW</button>';
   app.appendChild(bar);
@@ -338,7 +340,7 @@ function renderCS(){
       if(d.phase==='over'){
         const c=document.createElement('div');c.className='card';
         const won=(d.winner==='backers')===(role==='b');
-        c.innerHTML='<div class="head '+(won?'teal':'terra')+'">'+(d.winner==='backers'?'THE BACKERS WIN':'THE COMMITTEE WINS')+'</div><div class="sub">'+(won?'Your side won. Ten points.':'Your side lost this one.')+' You were the <b>'+CS_ROLES[role].title+'</b>'+(role==='b'?', backing '+esc(bidderName(d.bidder)):'')+'.</div>';
+        c.innerHTML='<div class="head '+(won?'teal':'terra')+'">'+(d.winner==='backers'?'THE MANIPULATORS WIN':'THE COMMITTEE WINS')+'</div><div class="sub">'+(won?'Your side won. Ten points.':'Your side lost this one.')+' You were the <b>'+CS_ROLES[role].title+'</b>'+(role==='b'?', backing '+esc(bidderName(d.bidder)):'')+'.</div>';
         put(c);
         put(lbl('Last thing: which bidder should '+T.airline+' choose?'));
         const pl=document.createElement('div');pl.className='choices';
@@ -349,7 +351,7 @@ function renderCS(){
         return;
       }
       if(!me.alive){
-        put(lbl((me.out&&me.out.how==='recused'?'Recused on day ':'Removed on night ')+(me.out?me.out.r:'')+' · you keep watching'));
+        put(lbl((me.out&&me.out.how==='recused'?'Voted off on day ':'Removed on night ')+(me.out?me.out.r:'')+' · you keep watching'));
         if(d.phase==='night')notesPage(d,true);
         else put(wait('You are off the committee, but your read still counts: your notes go into the reveal.'));
         return;
@@ -359,7 +361,7 @@ function renderCS(){
         if(role==='b'){
           const mates=d.mates||[];
           const c=document.createElement('div');c.className='rule';
-          c.innerHTML='You back <b>'+esc(bidderName(d.bidder))+'</b>. '+(mates.length?'Your fellow Backer'+(mates.length>1?'s':'')+': <b>'+mates.map(m=>esc(m.n)+(m.alive?'':' (out)')).join(', ')+'</b>. Agree on one name to complain about.':'You are the last Backer at the table. Name one person to complain about.');
+          c.innerHTML='You back <b>'+esc(bidderName(d.bidder))+'</b>. '+(mates.length?'Your fellow Manipulator'+(mates.length>1?'s':'')+': <b>'+mates.map(m=>esc(m.n)+(m.alive?'':' (out)')).join(', ')+'</b>. Agree on one name for tonight\u2019s allegation.':'You are the last Manipulator at the table. Name one person for tonight\u2019s allegation.');
           put(c);
           const mateNames=new Set(mates.map(m=>norm(m.n)));
           const targets=alive().filter(s=>s.n!==name&&!mateNames.has(norm(s.n)));
@@ -368,23 +370,23 @@ function renderCS(){
           if(live.length){const h=document.createElement('div');h.className='hist';h.innerHTML=live.map(m=>'<b>'+esc(m.n)+'</b> has picked '+(m.pick?'<b>'+esc(m.pick)+'</b>':'nobody yet')).join(' · ');put(h);}
           const myPick=d.night&&d.night.myPick;
           if(myPick&&live.every(m=>m.pick&&norm(m.pick)===norm(myPick)))put(wait('Agreed on '+myPick+'. Wait for the morning.'));
-          else if(myPick)put(wait('You picked '+myPick+'. The complaint needs every Backer on the same name, or nobody is removed tonight.'));
+          else if(myPick)put(wait('You picked '+myPick+'. The allegation needs every Manipulator on the same name, or nobody is removed tonight.'));
           return;
         }
         if(role==='a'){
           const c=d.night&&d.night.myCheck;
-          put(lbl('Auditor · run a conflicts check on one colleague'));
-          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> is '+(c.role==='b'?'a <b>Backer</b>':'honest, '+CS_ROLES[c.role].title.toLowerCase())+'.';put(r);}
+          put(lbl('Auditor · check one committee member for a hidden agenda'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> '+(c.role==='b'?'has a <b>hidden agenda</b>: a Manipulator':'is honest, '+CS_ROLES[c.role].title.toLowerCase())+'.';put(r);}
           else put(nameBtns(others().filter(s=>s.alive),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'check',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
           const past=(d.checks||[]).filter(x=>x.r<d.round);
-          if(past.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your checks so far: '+past.map(x=>'night '+x.r+', <b>'+esc(x.target)+'</b>, '+(x.role==='b'?'a Backer':'honest')).join(' · ');put(h);}
+          if(past.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your checks so far: '+past.map(x=>'night '+x.r+', <b>'+esc(x.target)+'</b>, '+(x.role==='b'?'a Manipulator':'honest')).join(' · ');put(h);}
           if(c)notesPage(d,false);
           return;
         }
         if(role==='c'){
           const c=d.night&&d.night.myClear;
-          put(lbl('General Counsel · clear one member tonight'));
-          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='You have cleared <b>'+esc(c)+'</b>. Any complaint against them tonight is dismissed.';put(r);}
+          put(lbl('General Counsel · clear one committee member tonight'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='You have cleared <b>'+esc(c)+'</b>. Any allegation against them tonight is dismissed.';put(r);}
           else{
             const lastV=d.lastClear;
             put(nameBtns(alive(),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'clear',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=cd===409?'Not the same person two nights running.':failMsg(cd);});},s=>lastV&&s.v===lastV));
@@ -397,49 +399,41 @@ function renderCS(){
       }
       /* day */
       put(lbl('Day '+d.round+' · the committee is in session'));
-      if(d.lastNotes&&d.lastNotes.s&&d.lastNotes.s.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your notes from last night: <b>'+d.lastNotes.s.map(v=>esc((d.seats.find(x=>x.v===v)||{}).n||'')).join(', ')+'</b>'+(d.lastNotes.a?' · Auditor? '+esc((d.seats.find(x=>x.v===d.lastNotes.a)||{}).n||''):'')+(d.lastNotes.c?' · Counsel? '+esc((d.seats.find(x=>x.v===d.lastNotes.c)||{}).n||''):'');put(h);}
+      if(d.lastNotes&&d.lastNotes.s&&d.lastNotes.s.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Last night you suspected <b>'+d.lastNotes.s.map(v=>esc((d.seats.find(x=>x.v===v)||{}).n||'')).join(', ')+'</b>';put(h);}
       const day=d.day;
       if(day&&day.open){
         if(day.accusedV===voter){put(wait('The vote is about you. Thirty seconds to make your case, then the committee decides.'));return;}
-        const c=document.createElement('div');c.className='rule';c.innerHTML='The committee has moved to recuse <b>'+esc(day.accused)+'</b>. Your vote:';put(c);
+        const c=document.createElement('div');c.className='rule';c.innerHTML='The committee has moved to remove <b>'+esc(day.accused)+'</b>. Your vote:';put(c);
         const row=document.createElement('div');row.className='bigrow';
-        [['RECUSE','y'],['KEEP','n']].forEach(([l,y])=>{const b=document.createElement('button');b.className='opt'+(day.myVote===y?' mine':'');b.textContent=l;
+        [['REMOVE','y'],['KEEP','n']].forEach(([l,y])=>{const b=document.createElement('button');b.className='opt'+(day.myVote===y?' mine':'');b.textContent=l;
           b.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'vote',y}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});row.appendChild(b);});
         put(row);
         if(day.myVote)put(wait('Vote in. It lands on the big screen by name.'));
         return;
       }
-      if(day&&day.result){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(day.accused)+'</b> '+(day.result.recused?'was recused':'stays')+', '+day.result.yes+' to '+day.result.no+'.';put(r);}
+      if(day&&day.result){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(day.accused)+'</b> '+(day.result.recused?'was removed':'stays')+', '+day.result.yes+' to '+day.result.no+'.';put(r);}
       put(wait('Debate. Accuse someone, get it seconded, and the vote comes to this phone.'));
       function roleCard(){
         const c=document.createElement('div');c.className='card';
-        c.innerHTML='<div class="head '+(role==='b'?'red':'')+'">'+esc(CS_ROLES[role].title.toUpperCase())+'</div><div class="sub">'+esc(CS_ROLES[role].line)+'</div>'+(role==='b'?'<div class="sub">You back <b>'+esc(bidderName(d.bidder))+'</b>.'+((d.mates||[]).length?' Your fellow Backer'+(d.mates.length>1?'s':'')+': <b>'+d.mates.map(m=>esc(m.n)).join(', ')+'</b>.':'')+'</div>':'')+'<div class="small">Keep this to yourself. Tap HIDE and nobody beside you sees it.</div>';
+        c.innerHTML='<div class="head '+(role==='b'?'red':'')+'">'+esc(CS_ROLES[role].title.toUpperCase())+'</div><div class="sub">'+esc(CS_ROLES[role].line)+'</div>'+(role==='b'?'<div class="sub">You back <b>'+esc(bidderName(d.bidder))+'</b>.'+((d.mates||[]).length?' Your fellow Manipulator'+(d.mates.length>1?'s':'')+': <b>'+d.mates.map(m=>esc(m.n)).join(', ')+'</b>.':'')+'</div>':'')+'<div class="small">Keep this to yourself. Tap HIDE and nobody beside you sees it.</div>';
         put(c);
         const hb=document.createElement('button');hb.className='send quiet';hb.textContent='HIDE MY ROLE';hb.addEventListener('click',()=>{c.style.display='none';hb.style.display='none';roleShown=false;drawBar();});put(hb);
       }
     }).catch(()=>{});
   }
   function notesPage(d,spectator){
-    const n=(d.night&&d.night.myNotes)||{s:[],a:null,c:null};
-    const sel=new Set(n.s||[]);let a=n.a,c=n.c;
+    const n=(d.night&&d.night.myNotes)||{s:[]};
+    const sel=new Set(n.s||[]);
     const put=el=>stage.appendChild(el);
     const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
-    put(lbl(spectator?'Your notes still count · who do you suspect?':'Your notes for the morning · who do you suspect? Up to three'));
+    put(lbl(spectator?'You still get a say · who do you suspect?':'Who do you suspect? Up to three'));
     const list=others().filter(s=>s.alive);
     const pl=document.createElement('div');pl.className='plist';
     list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(sel.has(s.v))b.classList.add('on');
       b.addEventListener('click',()=>{if(sel.has(s.v))sel.delete(s.v);else{if(sel.size>=3){st.textContent='Three at most. Untap one first.';return;}sel.add(s.v);}b.classList.toggle('on',sel.has(s.v));});pl.appendChild(b);});
     put(pl);
-    put(lbl('Who is the Auditor?'));
-    const pa=document.createElement('div');pa.className='plist';
-    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(a===s.v)b.classList.add('on');b.addEventListener('click',()=>{a=a===s.v?null:s.v;pa.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b&&a));});pa.appendChild(b);});
-    put(pa);
-    put(lbl('Who is General Counsel?'));
-    const pc=document.createElement('div');pc.className='plist';
-    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(c===s.v)b.classList.add('on');b.addEventListener('click',()=>{c=c===s.v?null:s.v;pc.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b&&c));});pc.appendChild(b);});
-    put(pc);
-    const go=document.createElement('button');go.className='send';go.textContent=n.s&&n.s.length?'UPDATE MY NOTES':'SAVE MY NOTES';
-    go.addEventListener('click',()=>{go.disabled=true;post('/p/'+ROOM+'/cs/act',{v:voter,kind:'notes',s:[...sel],a,c}).then(r=>{if(!r.ok)throw r.status;st.textContent='Saved. You’ll see this again in the morning.';go.disabled=false;go.textContent='UPDATE MY NOTES';}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
+    const go=document.createElement('button');go.className='send';go.textContent=n.s&&n.s.length?'UPDATE':'SAVE';
+    go.addEventListener('click',()=>{go.disabled=true;post('/p/'+ROOM+'/cs/act',{v:voter,kind:'notes',s:[...sel],a:null,c:null}).then(r=>{if(!r.ok)throw r.status;st.textContent='Saved. It comes back to you in the morning.';go.disabled=false;go.textContent='UPDATE';}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
     put(go);
   }
   poller=setInterval(tick,2000);tick();

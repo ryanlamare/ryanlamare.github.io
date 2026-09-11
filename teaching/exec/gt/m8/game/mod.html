@@ -1,10 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Closed Session · Moderator</title>
+<title>Hidden Agenda · Moderator</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* The moderator's phone for one Closed Session table (?t=tapas or
+/* The moderator's phone for one Hidden Agenda table (?t=tapas or
    ?t=granito). Everything here needs the admin secret (shared with Poll
    Desk, kept in localStorage gt-admin). The page is the night checklist,
    the day's vote control and the log; nothing is written down by hand.
@@ -52,7 +52,7 @@ a.pick{display:block;text-align:center;font-weight:700;font-size:16px;color:var(
 </style>
 </head><body>
 <div class="wrap">
-  <div class="tag"><i></i>CLOSED SESSION · MODERATOR</div>
+  <div class="tag"><i></i>HIDDEN AGENDA · MODERATOR</div>
   <h1 id="q">&hellip;</h1>
   <div id="app"></div>
   <div class="status" id="status"></div>
@@ -73,7 +73,7 @@ if(!table||!CS_TABLES[table]){
   try{if(!secret)secret=localStorage.getItem('gt-admin')||'';}catch(_){}
   const post=(sub,body)=>fetch(API+'/p/'+ROOM+'/cs/'+sub,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:secret,...body})}).then(r=>r.json().then(d=>({ok:r.ok,status:r.status,d})));
   const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
-  const RN={m:'Member',b:'Backer',a:'Auditor',c:'Counsel'};
+  const RN={m:'Member',b:'Manipulator',a:'Auditor',c:'Counsel'};
   let S=null, shown='', lastResult=null;
   function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
   function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
@@ -104,15 +104,15 @@ if(!table||!CS_TABLES[table]){
     const alive=seats.filter(s=>s.alive), backers=alive.filter(s=>s.role==='b');
     const ph=el('div','phase');
     const P={lobby:'LOBBY',night:'NIGHT '+S.round,day:'DAY '+S.round,vote:'VOTE · DAY '+S.round,over:'GAME OVER'};
-    ph.innerHTML='<span class="p '+S.phase+'">'+P[S.phase]+'</span><span class="n">'+seats.length+' seated · '+alive.length+' still in · '+backers.length+' Backer'+(backers.length===1?'':'s')+' left</span>';
+    ph.innerHTML='<span class="p '+S.phase+'">'+P[S.phase]+'</span><span class="n">'+seats.length+' seated · '+alive.length+' still in · '+backers.length+' Manipulator'+(backers.length===1?'':'s')+' left</span>';
     app.appendChild(ph);
-    if(S.bidder)app.appendChild(el('div','lbl','The Backers are backing '+esc(bidderName(S.bidder))+' (only you and they know)'));
+    if(S.bidder)app.appendChild(el('div','lbl','The Manipulators are backing '+esc(bidderName(S.bidder))+' (only you and they know)'));
     if(lastResult){app.appendChild(el('div','res',lastResult));}
     const btns=el('div','btns');
     const B=(t,fn,quiet,dis)=>{const b=el('button','act'+(quiet?' quiet':''),t);b.disabled=!!dis;b.addEventListener('click',fn);btns.appendChild(b);return b;};
     const undealt=seats.some(s=>!s.role);
     if(S.phase==='lobby'){
-      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(!undealt&&!confirm('Roles are dealt. Deal again?'))return;act('deal',{},d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Backers.';});},false,seats.length<5);
+      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(!undealt&&!confirm('Roles are dealt. Deal again?'))return;act('deal',{},d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Manipulators.';});},false,seats.length<5);
       B('START NIGHT 1',()=>act('phase',{to:'night'},()=>{lastResult=null;}),true,undealt);
     }else if(S.phase==='night'){
       const n=S.nights[S.round]||{picks:{},notes:{}};
@@ -120,32 +120,32 @@ if(!table||!CS_TABLES[table]){
       const agreed=backers.length>0&&picks.length===backers.length&&picks.every(p=>p===picks[0]);
       const ck=el('div','check');
       const nm=v=>S.seats[v]?S.seats[v].n:'—';
-      ck.appendChild(el('div','c'+(agreed?' done':''),'<span>Backers '+(agreed?'agreed on <b>'+esc(nm(picks[0]))+'</b>':'still deciding')+'</span><small>'+picks.length+' of '+backers.length+' picked'+(picks.length&&!agreed?': '+[...new Set(picks)].map(nm).map(esc).join(' / '):'')+'</small>'));
+      ck.appendChild(el('div','c'+(agreed?' done':''),'<span>Manipulators '+(agreed?'agreed on <b>'+esc(nm(picks[0]))+'</b>':'still deciding')+'</span><small>'+picks.length+' of '+backers.length+' picked'+(picks.length&&!agreed?': '+[...new Set(picks)].map(nm).map(esc).join(' / '):'')+'</small>'));
       ck.appendChild(el('div','c'+(n.check?' done':''),'<span>Auditor '+(n.check?'checked <b>'+esc(nm(n.check.target))+'</b>':'has not checked yet')+'</span>'));
       ck.appendChild(el('div','c'+(n.clear?' done':''),'<span>General Counsel '+(n.clear?'cleared <b>'+esc(nm(n.clear.target))+'</b>':'has not cleared anyone yet')+'</span>'));
       ck.appendChild(el('div','c','<span>Notes in</span><small>'+Object.keys(n.notes).length+' phones</small>'));
       app.appendChild(ck);
-      B('END NIGHT · ANNOUNCE THE MORNING',()=>act('phase',{to:'day'},d=>{const r=d.result||{};lastResult=r.removed?'Overnight an anonymous complaint was filed against <b>'+esc(r.removed)+'</b>. Under the conflict rules they leave the committee. They keep their phone.':(r.target?'A complaint was filed against '+esc(r.target)+', but General Counsel had cleared them, so it is <b>dismissed</b>. Nobody leaves. (Do not say who was named.)':'No complaint was agreed overnight. <b>Nobody leaves.</b>');if(d.winner)lastResult+=' <b>'+(d.winner==='committee'?'The committee wins.':'The Backers win.')+'</b>';}));
+      B('END NIGHT · ANNOUNCE THE MORNING',()=>act('phase',{to:'day'},d=>{const r=d.result||{};lastResult=r.removed?'Overnight an anonymous allegation was made against <b>'+esc(r.removed)+'</b>. The airline has pulled them off the committee while it is investigated. They keep their phone.':(r.target?'An allegation was made against '+esc(r.target)+', but General Counsel had cleared them, so it is <b>dismissed</b>. Nobody leaves. (Do not say who was named.)':'No allegation was agreed overnight. <b>Nobody leaves.</b>');if(d.winner)lastResult+=' <b>'+(d.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b>';}));
     }else if(S.phase==='day'){
       const day=S.days[S.round];
-      if(day&&day.result)app.appendChild(el('div','res','Today’s vote is done: <b>'+esc(S.seats[day.accused].n)+'</b> '+(day.result.recused?'recused':'stays')+', '+day.result.yes+' to '+day.result.no+'.'));
+      if(day&&day.result)app.appendChild(el('div','res','Today’s vote is done: <b>'+esc(S.seats[day.accused].n)+'</b> '+(day.result.recused?'removed':'stays')+', '+day.result.yes+' to '+day.result.no+'.'));
       else{
         app.appendChild(el('div','lbl','Accusation seconded? Pick the accused and open the vote'));
         const pl=el('div','btns');
-        alive.forEach(s=>{const b=el('button','act quiet',esc(s.n));b.style.flex='0 0 auto';b.style.minWidth='0';b.addEventListener('click',()=>{if(confirm('Open the vote to recuse '+s.n+'?'))act('vote',{accused:s.v},()=>{lastResult=null;});});pl.appendChild(b);});
+        alive.forEach(s=>{const b=el('button','act quiet',esc(s.n));b.style.flex='0 0 auto';b.style.minWidth='0';b.addEventListener('click',()=>{if(confirm('Open the vote to remove '+s.n+'?'))act('vote',{accused:s.v},()=>{lastResult=null;});});pl.appendChild(b);});
         app.appendChild(pl);
       }
       B('START NIGHT '+(S.round+1),()=>act('phase',{to:'night'},()=>{lastResult=null;}),true);
-      B('GAME OVER',()=>{if(confirm('End the game now?'))act('phase',{to:'over'},d=>{lastResult='<b>'+(d.winner==='committee'?'The committee wins.':'The Backers win.')+'</b> Send everyone to the big screen.';});},true);
+      B('GAME OVER',()=>{if(confirm('End the game now?'))act('phase',{to:'over'},d=>{lastResult='<b>'+(d.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b> Send everyone to the big screen.';});},true);
     }else if(S.phase==='vote'){
       const day=S.days[S.round];
       const yes=Object.entries(day.votes).filter(([,y])=>y==='y').map(([v])=>S.seats[v].n), no=Object.entries(day.votes).filter(([,y])=>y==='n').map(([v])=>S.seats[v].n);
-      app.appendChild(el('div','res','Vote open: recuse <b>'+esc(S.seats[day.accused].n)+'</b>?'));
-      app.appendChild(el('div','votes','<span>Recuse <b>'+yes.length+'</b></span><span>Keep <b>'+no.length+'</b></span><span style="color:var(--muted)">'+(alive.length-1-yes.length-no.length)+' still to vote</span>'));
-      app.appendChild(el('div','log',(yes.length?'Recuse: '+yes.map(esc).join(', ')+'. ':'')+(no.length?'Keep: '+no.map(esc).join(', ')+'.':'')));
-      B('CLOSE THE VOTE',()=>act('tally',{},d=>{lastResult='<b>'+esc(S.seats[day.accused].n)+'</b> '+(d.result.recused?'is recused, ':'stays, ')+d.result.yes+' to '+d.result.no+'.'+(d.winner?' <b>'+(d.winner==='committee'?'The committee wins.':'The Backers win.')+'</b>':'');}));
+      app.appendChild(el('div','res','Vote open: remove <b>'+esc(S.seats[day.accused].n)+'</b>?'));
+      app.appendChild(el('div','votes','<span>Remove <b>'+yes.length+'</b></span><span>Keep <b>'+no.length+'</b></span><span style="color:var(--muted)">'+(alive.length-1-yes.length-no.length)+' still to vote</span>'));
+      app.appendChild(el('div','log',(yes.length?'Remove: '+yes.map(esc).join(', ')+'. ':'')+(no.length?'Keep: '+no.map(esc).join(', ')+'.':'')));
+      B('CLOSE THE VOTE',()=>act('tally',{},d=>{lastResult='<b>'+esc(S.seats[day.accused].n)+'</b> '+(d.result.recused?'is removed, ':'stays, ')+d.result.yes+' to '+d.result.no+'.'+(d.winner?' <b>'+(d.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b>':'');}));
     }else{
-      app.appendChild(el('div','res','<b>'+(S.winner==='committee'?'The committee wins.':'The Backers win.')+'</b> Send everyone to the big screen for the reveal. Their phones are asking for a recommendation.'));
+      app.appendChild(el('div','res','<b>'+(S.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b> Send everyone to the big screen for the reveal. Their phones are asking for a recommendation.'));
     }
     app.appendChild(btns);
     /* the table */
@@ -153,7 +153,7 @@ if(!table||!CS_TABLES[table]){
     const sl=el('div','seats');
     seats.sort((a,b)=>a.n.localeCompare(b.n)).forEach(s=>{
       const row=el('div','seat'+(s.alive?'':' out'));
-      row.innerHTML='<span>'+esc(s.n)+' <span class="role '+(s.role||'')+'">'+(s.role?RN[s.role]:'undealt')+(s.out?' · '+(s.out.how==='recused'?'recused day ':'removed night ')+s.out.r:'')+'</span></span>';
+      row.innerHTML='<span>'+esc(s.n)+' <span class="role '+(s.role||'')+'">'+(s.role?RN[s.role]:'undealt')+(s.out?' · '+(s.out.how==='recused'?'voted off day ':'removed night ')+s.out.r:'')+'</span></span>';
       const mini=el('div','mini');
       if(S.phase==='lobby'){
         const sel=document.createElement('select');['','m','b','a','c'].forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r?RN[r]:'role…';if(r===s.role)o.selected=true;sel.appendChild(o);});

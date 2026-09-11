@@ -1,4 +1,4 @@
-/* Closed Session — the two tables, in one place.
+/* Hidden Agenda — the two tables, in one place.
 
    Everything client-specific about the capstone game lives here: which
    airline each table is, who the four bidders are, and what the Backers
@@ -10,10 +10,11 @@
    layer only: each one strong on one axis and weak on another, no numbers,
    no instruments, and RRPF itself is not on either list on purpose (a room
    of RRPF people would take its side, and the honest committee's job is to
-   read each other, not to defend their employer). The Backers' bidder is
-   dealt at random by the Worker unless the moderator picks one.
+   read each other, not to defend their employer). The Manipulators' bidder is
+   dealt at random by the Worker unless the moderator picks one. Bidders are
+   exactly even: two strengths and two watch-outs each, and no numbers.
 
-   Roles: m committee member, b backer, a auditor, c general counsel. */
+   Roles: m committee member, b manipulator, a auditor, c general counsel. */
 const CS_TABLES = {
   tapas: {
     id: 'tapas',
@@ -25,17 +26,17 @@ const CS_TABLES = {
     lead: 'Tapas Airways is choosing who will finance its spare engine. You are the committee that recommends a bidder to the board.',
     bidders: [
       { k: 'A', name: 'Banco Meridiano', arch: 'The bank',
-        strong: ['Lowest headline cost', 'A clean, familiar deal the board understands'],
-        weak: ['Rigid on everything but the price', 'No interest in the airline beyond this engine'] },
+        strong: ['Lowest cost by a distance', 'The board knows banks and trusts them'],
+        weak: ['Take it or leave it: nothing on the terms moves', 'Walks away at the first sign of trouble'] },
       { k: 'B', name: 'Northlake Leasing', arch: 'The lessor',
-        strong: ['Flexible on structure, quick to say yes', 'Has done this for airlines like Tapas before'],
-        weak: ['Costs more than the bank', 'Wants more security from the airline'] },
-      { k: 'C', name: 'The manufacturer’s finance arm', arch: 'The maker',
-        strong: ['Knows the engine better than anyone', 'Offers support around the engine, not just money'],
-        weak: ['Slow to decide', 'Ties the airline closer to one supplier'] },
+        strong: ['Reshapes the deal as the airline\u2019s needs change', 'Says yes fast'],
+        weak: ['The most expensive of the four', 'Wants a claim on more of the airline\u2019s assets'] },
+      { k: 'C', name: 'Kestrel Aero Finance', arch: 'The manufacturer',
+        strong: ['Knows the engine better than anyone', 'Support around the engine, not just money'],
+        weak: ['Slow to decide', 'Locks the airline into one supplier for years'] },
       { k: 'D', name: 'Castellane Capital', arch: 'The fund',
-        strong: ['Fastest to close', 'Asks the fewest questions'],
-        weak: ['Unknown to the airline', 'Gone the moment the deal is signed'] },
+        strong: ['Deep pockets: could fund the next five engines too', 'Asks the fewest questions'],
+        weak: ['Nobody at the airline has ever dealt with them', 'Their money may not be there next year'] },
     ],
   },
   granito: {
@@ -53,7 +54,7 @@ const CS_TABLES = {
       { k: 'B', name: 'Skyline Engine Trading', arch: 'The partner',
         strong: ['Wants a long-term arrangement across both fleets', 'Shares the upside if the parts sell well'],
         weak: ['Less cash up front', 'Ties the airline in for years'] },
-      { k: 'C', name: 'Tramontane Aviation Parts', arch: 'The quick one',
+      { k: 'C', name: 'Tramontane Aviation Parts', arch: 'The fast mover',
         strong: ['Fastest turnaround, least hassle', 'Collects the engines and handles the paperwork'],
         weak: ['Pays less for the trouble it saves', 'Smaller than the others'] },
       { k: 'D', name: 'Halden Aero Materials', arch: 'The guarantor',
@@ -63,9 +64,10 @@ const CS_TABLES = {
   },
 };
 const CS_ROLES = {
-  m: { title: 'Committee Member', line: 'You’re here in good faith. Find the Backers before they take the committee over.' },
-  b: { title: 'Backer', line: 'You secretly back one bidder, whatever the offers say. Never reveal it.' },
-  a: { title: 'Auditor', line: 'Each night you can check one colleague’s true loyalty. You can’t prove what you learn.' },
-  c: { title: 'General Counsel', line: 'Each night you can clear one colleague. A complaint against them that night is dismissed.' },
+  m: { title: 'Committee Member', line: 'You\u2019re here in good faith. Find the Manipulators before they take the committee over.' },
+  b: { title: 'Manipulator', line: 'You secretly back one bidder, whatever the offers say. Never reveal your agenda.' },
+  a: { title: 'Auditor', line: 'Each night you can check one committee member for a hidden agenda. You can\u2019t prove what you learn.' },
+  c: { title: 'General Counsel', line: 'Each night you can clear one committee member. An allegation against them that night is dismissed.' },
 };
-if (typeof module !== 'undefined') module.exports = { CS_TABLES, CS_ROLES };
+const CS_GAME = 'Hidden Agenda';
+if (typeof module !== 'undefined') module.exports = { CS_TABLES, CS_ROLES, CS_GAME };

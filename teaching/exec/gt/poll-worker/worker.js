@@ -21,7 +21,7 @@
 //   GET  /p/:id/guesses                                -> {guesses:[{v,n,g,r,rd}], total}
 //   POST /p/:id/reset    {s: "<ADMIN_SECRET>"}         -> {ok:true}
 //
-//   The Closed Session lane (Module 8's capstone, a hidden-role game at one
+//   The Hidden Agenda lane (Module 8's capstone, a hidden-role game at one
 //   table; one room per table). Roles are a secret the server holds — a
 //   phone can fetch ONLY its own role, and the Auditor's check is answered
 //   here, so nothing a phone can read gives the game away:
@@ -267,13 +267,13 @@ export class PollRoom {
     return json({ error: 'not found' }, 404);
   }
 
-  /* ================= Closed Session =================
+  /* ================= Hidden Agenda =================
      One table of a hidden-role game. State is one object under 'cs':
        phase  lobby | night | day | vote | over
        round  the night number (1 on the first night)
        seats  {voter: {n, role: m|b|a|c, alive, out:{how, r}|null}}
-              m committee member, b backer, a auditor, c general counsel
-       bidder the Backers' secret bidder, a letter A-D
+              m committee member, b manipulator, a auditor, c general counsel
+       bidder the Manipulators' secret bidder, a letter A-D
        nights {r: {picks:{voter:target}, check:{v,target,role}|null,
                    clear:{v,target}|null, notes:{voter:{s:[..],a,c}},
                    result:{target, cleared, removed}}}
@@ -300,7 +300,7 @@ export class PollRoom {
       const a = aliveIds().length, b = backersAlive().length;
       if (b === 0) cs.winner = 'committee';
       else if (b * 2 >= a) cs.winner = 'backers';
-      if (cs.winner) { cs.phase = 'over'; cs.log.push({ r: cs.round, when: 'day', text: cs.winner === 'committee' ? 'Every Backer recused. The committee wins' : 'The Backers are half the table. The Backers win' }); }
+      if (cs.winner) { cs.phase = 'over'; cs.log.push({ r: cs.round, when: 'day', text: cs.winner === 'committee' ? 'Every Manipulator removed. The committee wins' : 'The Manipulators are half the table. The Manipulators win' }); }
     };
     let body = {};
     if (req.method === 'POST') { try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); } }
@@ -479,14 +479,14 @@ export class PollRoom {
           if (removed) cs.seats[removed] = { ...cs.seats[removed], alive: false, out: { how: 'complaint', r: cs.round } };
           n.result = { target, cleared, removed };
           result = { target: nameOf(target), cleared, removed: nameOf(removed) };
-          cs.log.push({ r: cs.round, when: 'night', text: removed ? nameOf(removed) + ' removed after an anonymous complaint' : (cleared ? 'A complaint was filed and dismissed' + (n.clear ? ', General Counsel had cleared ' + nameOf(n.clear.target) : '') : 'No complaint tonight') });
+          cs.log.push({ r: cs.round, when: 'night', text: removed ? nameOf(removed) + ' pulled off the committee after an anonymous allegation' : (cleared ? 'An allegation was made and dismissed' + (n.clear ? ', General Counsel had cleared ' + nameOf(n.clear.target) : '') : 'No allegation tonight') });
         }
         cs.phase = 'day';
         checkWin();
       } else {
         cs.phase = 'over';
         if (!cs.winner) { const a = aliveIds().length, b = backersAlive().length; cs.winner = b === 0 ? 'committee' : (b * 2 >= a ? 'backers' : (body.winner === 'backers' ? 'backers' : 'committee')); }
-        cs.log.push({ r: cs.round, when: 'day', text: 'Game over. ' + (cs.winner === 'committee' ? 'The committee wins' : 'The Backers win') });
+        cs.log.push({ r: cs.round, when: 'day', text: 'Game over. ' + (cs.winner === 'committee' ? 'The committee wins' : 'The Manipulators win') });
       }
       await save();
       return json({ ok: true, phase: cs.phase, round: cs.round, result, winner: cs.winner });
@@ -509,7 +509,7 @@ export class PollRoom {
       if (recused) cs.seats[day.accused] = { ...cs.seats[day.accused], alive: false, out: { how: 'recused', r: cs.round } };
       day.result = { yes, no, recused };
       cs.phase = 'day';
-      cs.log.push({ r: cs.round, when: 'day', text: nameOf(day.accused) + (recused ? ' recused, ' : ' stays, ') + yes + ' to ' + no });
+      cs.log.push({ r: cs.round, when: 'day', text: nameOf(day.accused) + (recused ? ' voted off, ' : ' stays, ') + yes + ' to ' + no });
       checkWin();
       await save();
       return json({ ok: true, result: day.result, winner: cs.winner });
@@ -518,7 +518,7 @@ export class PollRoom {
       const v = String(body.v || ''), how = body.how === 'recused' ? 'recused' : 'complaint';
       if (!cs.seats[v] || !cs.seats[v].alive) return json({ error: 'bad' }, 400);
       cs.seats[v] = { ...cs.seats[v], alive: false, out: { how, r: Math.max(1, cs.round) } };
-      cs.log.push({ r: cs.round, when: how === 'recused' ? 'day' : 'night', text: nameOf(v) + (how === 'recused' ? ' recused' : ' removed after an anonymous complaint') + ' (entered by the moderator)' });
+      cs.log.push({ r: cs.round, when: how === 'recused' ? 'day' : 'night', text: nameOf(v) + (how === 'recused' ? ' voted off' : ' pulled off the committee overnight') + ' (entered by the moderator)' });
       checkWin();
       await save();
       return json({ ok: true, winner: cs.winner });
