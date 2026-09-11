@@ -6,13 +6,11 @@
 <style>
 /* Participant page for the Module 8 games.
 
-     ?g=market   the car market game: half the room sells, half buys, three
-                 rounds run from the deck. A seller's phone deals the card
-                 (lemon or peach) and records the deal; a buyer's phone shows
-                 what a car is worth to them. Lines in room m8-market:
-                   join|name|S-or-B          card|r|seller|L-or-P
-                   deal|r|seller|buyer|price|L-or-P
-                 and the deck posts ::round|r when a round opens. Unscored.
+     ?g=market   the car market: everyone is a buyer, the lot on the big
+                 screen is the sellers. Each round one bid; the deck closes
+                 the round and every phone computes its own result from the
+                 same bids and seed (lot.js), so nothing is posted back. A
+                 sale washes the whole screen peach or lemon. Unscored.
      ?g=cs       Closed Session, the capstone: pick your table, take a seat,
                  and the Worker deals you a role only this phone can read.
                  Nights are played here; the day vote is here; the reveal is
@@ -83,6 +81,23 @@ button.send.quiet{background:var(--paper);color:var(--ink);border-color:var(--in
 .priceRow input{flex:1;font-family:var(--display);font-weight:900;font-size:28px;color:var(--ink);text-align:center;background:var(--card);border:2.5px solid var(--ink);padding:10px 12px;min-width:0}
 .deals{display:flex;flex-direction:column;gap:6px}
 .deals .d{border:2px solid var(--rule);background:var(--card);font-weight:600;font-size:14px;padding:8px 12px}
+
+/* the market: the whole screen washes peach or lemon on a sale */
+body{transition:background .9s ease}
+body.wash-P.washing{background:var(--terracotta)}
+body.wash-L.washing{background:var(--ochre)}
+body.washing .tag,body.washing h1{color:var(--ink)}
+.card.result{background:var(--paper);text-align:center}
+.card.result .head{font-size:40px}
+.card.result .head small{display:block;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.16em;margin-top:6px;color:var(--muted)}
+.card.result.P .head{color:var(--terracotta)} .card.result.L .head{color:var(--ochre)}
+.rcar{width:180px;height:auto;display:block;margin:14px auto 6px;animation:drivein .9s ease-out}
+.rcar .win{fill:var(--paper-soft)} .rcar .tyre{fill:var(--ink)} .rcar .hub{fill:var(--paper)}
+.card.result.P .rcar .body{fill:var(--terracotta)} .card.result.L .rcar .body{fill:var(--ochre)}
+@keyframes drivein{from{transform:translateX(-140%)}to{transform:translateX(0)}}
+.card .gain{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--green);margin-top:10px}
+.card .gain.neg{color:var(--red)}
+.rolebar .r.neg{color:var(--red)}
 </style>
 </head><body>
 <div class="wrap">
@@ -92,6 +107,7 @@ button.send.quiet{background:var(--paper);color:var(--ink);border-color:var(--in
   <div class="status" id="status"></div>
 </div>
 <script src="/teaching/exec/gt/m8/game/cs.js"></script>
+<script src="/teaching/exec/gt/m8/game/lot.js"></script>
 <script>
 const qs=new URLSearchParams(location.search);
 const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
@@ -166,83 +182,95 @@ function render(){
 
 /* ================= the car market ================= */
 const MROOM=qs.get('room')||'m8-market';
-const RULES={
-  1:'Sellers, show buyers what is written on your card when they approach you. Try to make a deal!',
-  2:'Sellers, do not reveal what is written on your card, no matter how persistent the buyer is. Nothing else changes.',
-  3:'Sellers still keep their cards to themselves. Buyers may now ask sellers for more information beyond what is on the card.'
-};
+const money=v=>'$'+Math.abs(v).toLocaleString('en-GB');
 let sayN=0;
 function say(room,line){sayN++;return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});}
 const answers=room=>fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
-function mState(lines){
-  const s={round:0,sellers:[],buyers:[],cards:{},deals:[]};
-  lines.forEach(t=>{
-    const p=String(t).split('|').map(x=>x.trim());
-    if(p[0]==='::round'&&/^[0-3]$/.test(p[1]))s.round=+p[1];
-    else if(p[0]==='join'&&p[1]){(p[2]==='B'?s.buyers:s.sellers).push(p[1]);}
-    else if(p[0]==='card'&&p[1]&&p[2])s.cards[p[1]+'|'+norm(p[2])]=p[3];
-    else if(p[0]==='deal'&&p.length===6)s.deals.push({r:+p[1],seller:p[2],buyer:p[3],price:+p[4],type:p[5]});
-  });
-  s.sellers=[...new Set(s.sellers)];s.buyers=[...new Set(s.buyers)];
-  return s;
-}
 function renderMarket(){
   q.textContent='The car market';
   app.innerHTML='';app.appendChild(meRow());
-  let side=null;try{side=localStorage.getItem('m8-market-side');}catch(_){}
   const stage=document.createElement('div');stage.style.marginTop='6px';stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';app.appendChild(stage);
-  let shown='';
-  function join(s){
-    const nS=s.sellers.filter(n=>norm(n)!==norm(name)).length, nB=s.buyers.filter(n=>norm(n)!==norm(name)).length;
-    side=nB<nS?'B':'S';
-    say(MROOM,'join|'+name+'|'+side).then(()=>{try{localStorage.setItem('m8-market-side',side);}catch(_){}shown='';tick();}).catch(c=>{st.textContent=failMsg(c);});
+  let joined=false, shown='', lastWash='';
+  function put(el){stage.appendChild(el);}
+  const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
+  const wait=t=>{const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>'+esc(t);return w;};
+  function wash(kind){ /* the whole screen turns peach or lemon; kind '' clears it */
+    document.body.classList.remove('wash-P','wash-L','washing');
+    if(kind){void document.body.offsetWidth;document.body.classList.add('wash-'+kind);requestAnimationFrame(()=>document.body.classList.add('washing'));}
   }
-  function cardFor(r){
-    let c=null;try{c=localStorage.getItem('m8-market-card-'+r);}catch(_){}
-    if(!c){c=Math.random()<0.5?'L':'P';try{localStorage.setItem('m8-market-card-'+r,c);}catch(_){}
-      say(MROOM,'card|'+r+'|'+name+'|'+c).catch(()=>{});}
-    return c;
+  function bidUI(r,cur,warranty){
+    const box=document.createElement('div');box.style.display='flex';box.style.flexDirection='column';box.style.gap='10px';
+    const row=(label,key,val)=>{
+      const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.flexDirection='column';wrap.style.gap='8px';
+      if(label)wrap.appendChild(lbl(label));
+      const chips=document.createElement('div');chips.className='plist';
+      const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.placeholder='$';inp.min=0;inp.max=9999;inp.dataset.key=key;
+      if(val!==null&&val!==undefined)inp.value=val;
+      [1000,1500,2000,2500,3000,3500,4000].forEach(v=>{const b=document.createElement('button');b.textContent='$'+v.toLocaleString('en-GB');if(+inp.value===v)b.classList.add('on');b.addEventListener('click',()=>{inp.value=v;chips.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});chips.appendChild(b);});
+      const pr=document.createElement('div');pr.className='priceRow';pr.appendChild(inp);
+      wrap.appendChild(chips);wrap.appendChild(pr);
+      return {wrap,inp};
+    };
+    const a=row(warranty?'For a car WITH a warranty':null,'p',cur?cur.wprice!==null&&warranty?cur.wprice:cur.price:null);
+    let b=null;
+    if(warranty){ b=row('For a car WITHOUT a warranty','w',cur?cur.price:null); }
+    const go=document.createElement('button');go.className='send';go.textContent=cur?'CHANGE MY BID':'BID';
+    go.addEventListener('click',()=>{
+      const pw=Math.round(+a.inp.value), pp=warranty?Math.round(+b.inp.value):pw;
+      if(!(pp>=0&&pp<10000)||(warranty&&!(pw>=0&&pw<10000))){st.textContent='Enter a price.';return;}
+      go.disabled=true;
+      say(MROOM,'bid|'+r+'|'+name+'|'+pp+(warranty?'|'+pw:'')).then(()=>{st.textContent='';shown='';tick();}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});
+    });
+    if(warranty){box.appendChild(a.wrap);box.appendChild(b.wrap);}else box.appendChild(a.wrap);
+    box.appendChild(go);
+    return box;
   }
   function tick(){
     answers(MROOM).then(lines=>{
-      const s=mState(lines);
-      if(!side){const k='join';if(shown===k)return;shown=k;
-        stage.innerHTML='<div class="waitcard"><span class="pulse"></span>Joining the market…</div>';join(s);return;}
-      const mine=side==='S';
-      const key=side+':'+s.round+':'+s.deals.filter(d=>norm(mine?d.seller:d.buyer)===norm(name)).length;
+      const S=LOT.parse(lines), sim=LOT.simulate(S);
+      const me=S.joins.find(n=>LOT.norm(n)===LOT.norm(name));
+      if(!me&&!joined){joined=true;say(MROOM,'join|'+name).then(()=>{shown='';tick();}).catch(c=>{joined=false;st.textContent=failMsg(c);});return;}
+      const results=LOT.mine(sim,name);
+      const total=results.reduce((a,x)=>a+(x.outcome==='sold'?x.profit:0),0);
+      const bought=results.filter(x=>x.outcome==='sold');
+      const r=sim.round, open=sim.open, myBid=(S.bids[r]||{})[LOT.norm(name)];
+      const last=results.length?results[results.length-1]:null;
+      const key=[r,open,myBid?myBid.price+'/'+myBid.wprice:'',results.length,total,S.joins.length].join('#');
       if(key===shown)return;shown=key;
       stage.innerHTML='';
-      const lbl=document.createElement('div');lbl.className='lbl';lbl.textContent=mine?'You are a seller':'You are a buyer';stage.appendChild(lbl);
-      if(!s.round){const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>Keep this page open. The market opens from the big screen.';stage.appendChild(w);return;}
-      const rl=document.createElement('div');rl.className='rule';rl.innerHTML='<b>Round '+s.round+'.</b> '+esc(RULES[s.round]);stage.appendChild(rl);
-      const card=document.createElement('div');card.className='card';
-      if(mine){
-        const c=cardFor(s.round);
-        card.innerHTML='<div class="head '+(c==='P'?'terra':'teal')+'">'+(c==='P'?'A PEACH':'A LEMON')+'</div><div class="sub">Your car is '+(c==='P'?'good quality. You will not sell it for less than <b>$3000</b>.':'bad quality. You will not sell it for less than <b>$1000</b>.')+'</div><div class="small">A new card every round. Get as much as you can, whatever the card says.</div>';
-        stage.appendChild(card);
-        const done=s.deals.find(d=>d.r===s.round&&norm(d.seller)===norm(name));
-        if(done){const r=document.createElement('div');r.className='res';r.innerHTML='Sold to <b>'+esc(done.buyer)+'</b> for <b>$'+done.price+'</b> this round.';stage.appendChild(r);return;}
-        const l2=document.createElement('div');l2.className='lbl';l2.textContent='Made a deal? Record it: who bought, and for how much';stage.appendChild(l2);
-        const pl=document.createElement('div');pl.className='plist';let buyer=null;
-        s.buyers.forEach(b=>{const bt=document.createElement('button');bt.textContent=b;bt.addEventListener('click',()=>{buyer=b;pl.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===bt));});pl.appendChild(bt);});
-        stage.appendChild(pl);
-        const pr=document.createElement('div');pr.className='priceRow';
-        const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.placeholder='$';inp.min=0;inp.max=9999;
-        const go=document.createElement('button');go.className='send';go.style.width='auto';go.textContent='RECORD';
-        go.addEventListener('click',()=>{const p=Math.round(+inp.value);if(!buyer){st.textContent='Tap the buyer’s name first.';return;}if(!(p>0&&p<10000)){st.textContent='Enter the price you agreed.';return;}
-          go.disabled=true;say(MROOM,'deal|'+s.round+'|'+name+'|'+buyer+'|'+p+'|'+c).then(()=>{st.textContent='';shown='';tick();}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
-        pr.appendChild(inp);pr.appendChild(go);stage.appendChild(pr);
-      }else{
-        card.innerHTML='<div class="head">BUYER</div><div class="sub">A car is worth up to <b>$1500</b> to you if it is a lemon, and up to <b>$4000</b> if it is a peach.</div><div class="small">Half the cars in the market are lemons. Pay as little as you can for a car worth having.</div>';
-        stage.appendChild(card);
-        const mineDeals=s.deals.filter(d=>norm(d.buyer)===norm(name));
-        if(mineDeals.length){const l2=document.createElement('div');l2.className='lbl';l2.textContent='Deals recorded with you';stage.appendChild(l2);
-          const dl=document.createElement('div');dl.className='deals';mineDeals.forEach(d=>{const e=document.createElement('div');e.className='d';e.textContent='Round '+d.r+': bought from '+d.seller+' for $'+d.price;dl.appendChild(e);});stage.appendChild(dl);}
-        else{const w=document.createElement('div');w.className='waitcard';w.textContent='Find a seller and make a deal. The seller records it on their phone.';stage.appendChild(w);}
+      if(!r){wash('');put(lbl('You are a buyer · '+S.joins.length+' in the market'));put(wait('Keep this page open. The lot opens from the big screen.'));return;}
+      const tot=document.createElement('div');tot.className='rolebar';tot.innerHTML='<span class="r'+(total<0?' neg':'')+'">'+(total<0?'−':'')+money(total)+'</span><span style="font-weight:600;font-size:12px;letter-spacing:.1em;color:var(--muted)">SO FAR · '+bought.length+' CAR'+(bought.length===1?'':'S')+'</span>';
+      put(tot);
+      if(open){
+        /* a new round: clear the wash and ask for a bid */
+        wash('');
+        put(lbl((sim.warranty?'The rule change · round 4':'Round '+r)+' · bid for a car off the lot'));
+        if(sim.warranty){const c=document.createElement('div');c.className='rule';c.innerHTML='The peach owners are back, and they now offer a <b>warranty</b>. A warranty would cost a lemon owner more than the car is worth, so only peach owners offer one. Bid two prices.';put(c);}
+        else if(last&&last.r===r-1){const c=document.createElement('div');c.className='hist';c.innerHTML=last.outcome==='sold'?'Last round: '+(last.type==='P'?'a peach':'a lemon')+' for '+money(last.price)+', '+(last.profit<0?'−':'+')+money(last.profit):(last.outcome==='refused'?'Last round: the owner wouldn’t sell at '+money(last.price):'Last round: no car left for you');put(c);}
+        put(bidUI(r,myBid,sim.warranty));
+        if(myBid)put(wait('Bid in: '+money(myBid.price)+(myBid.wprice!==null?' without, '+money(myBid.wprice)+' with a warranty':'')+'. You can change it until the round closes.'));
+        return;
       }
+      /* the round is closed: my result */
+      const res=results.find(x=>x.r===r);
+      if(!res){wash('');put(lbl('Round '+r+' closed'));put(wait('You didn’t bid this round. The next one opens from the big screen.'));return;}
+      if(res.outcome==='sold'){
+        const k=r+':'+res.type; if(lastWash!==k){lastWash=k;wash(res.type);}
+        const c=document.createElement('div');c.className='card result '+res.type;
+        c.innerHTML='<div class="head">'+(res.type==='P'?'A PEACH':'A LEMON')+(res.warranty?' <small>WITH A WARRANTY</small>':'')+'</div>'+
+          '<svg class="rcar" viewBox="0 0 120 60"><path class="body" d="M6 40 Q6 28 18 27 L30 27 L42 14 Q45 11 50 11 L80 11 Q85 11 88 14 L98 27 L108 28 Q114 29 114 36 L114 42 Q114 46 110 46 L10 46 Q6 46 6 42 Z"/><path class="win" d="M46 16 L55 16 L55 27 L36 27 Z"/><path class="win" d="M60 16 L78 16 L86 27 L60 27 Z"/><circle class="tyre" cx="30" cy="46" r="9"/><circle class="tyre" cx="90" cy="46" r="9"/><circle class="hub" cx="30" cy="46" r="3.5"/><circle class="hub" cx="90" cy="46" r="3.5"/></svg>'+
+          '<div class="sub">You paid <b>'+money(res.price)+'</b>. It is worth <b>'+money(res.value)+'</b> to you.</div><div class="gain'+(res.profit<0?' neg':'')+'">'+(res.profit<0?'−':'+')+money(res.profit)+'</div>';
+        put(c);
+      }else{
+        wash('');
+        const c=document.createElement('div');c.className='card';
+        c.innerHTML=res.outcome==='refused'?'<div class="head">NO SALE</div><div class="sub">The owner wouldn’t sell at <b>'+money(res.price)+'</b>. You keep your money, and you never find out what the car was.</div>':'<div class="head">NO CAR</div><div class="sub">The lot is thinning. There was no car left for you this round.</div>';
+        put(c);
+      }
+      put(wait('The next round opens from the big screen.'));
     }).catch(()=>{});
   }
-  poller=setInterval(tick,2500);tick();
+  poller=setInterval(tick,2000);tick();
 }
 
 /* ================= Closed Session ================= */
