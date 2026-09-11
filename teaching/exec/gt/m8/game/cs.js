@@ -67,7 +67,7 @@ const CS_ROLES = {
   m: { title: 'Committee Member', line: 'You\u2019re here in good faith. Find the Manipulators before they take the committee over.' },
   b: { title: 'Manipulator', line: 'You secretly back one bidder, whatever the offers say. Never reveal your agenda.' },
   a: { title: 'Auditor', line: 'Each night you can check one committee member for a hidden agenda. You can\u2019t prove what you learn.' },
-  c: { title: 'General Counsel', line: 'Each night you can clear one committee member. An allegation against them that night is dismissed.' },
+  c: { title: 'General Counsel', line: 'Each night you can shield one committee member. An allegation against them that night is dismissed.' },
 };
 const CS_GAME = 'Hidden Agenda';
 if (typeof module !== 'undefined') module.exports = { CS_TABLES, CS_ROLES, CS_GAME };

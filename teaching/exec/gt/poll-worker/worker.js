@@ -479,7 +479,7 @@ export class PollRoom {
           if (removed) cs.seats[removed] = { ...cs.seats[removed], alive: false, out: { how: 'complaint', r: cs.round } };
           n.result = { target, cleared, removed };
           result = { target: nameOf(target), cleared, removed: nameOf(removed) };
-          cs.log.push({ r: cs.round, when: 'night', text: removed ? nameOf(removed) + ' pulled off the committee after an anonymous allegation' : (cleared ? 'An allegation was made and dismissed' + (n.clear ? ', General Counsel had cleared ' + nameOf(n.clear.target) : '') : 'No allegation tonight') });
+          cs.log.push({ r: cs.round, when: 'night', text: removed ? nameOf(removed) + ' pulled off the committee after an anonymous allegation' : (cleared ? 'An allegation was made and dismissed' + (n.clear ? ', General Counsel had shielded ' + nameOf(n.clear.target) : '') : 'No allegation tonight') });
         }
         cs.phase = 'day';
         checkWin();
