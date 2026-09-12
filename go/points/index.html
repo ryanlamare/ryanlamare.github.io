@@ -31,7 +31,7 @@ h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
 .hitem .ha{font-weight:700;font-size:16px;color:var(--ink);margin-top:3px}
 .hitem .sc{position:absolute;top:8px;right:10px;font-weight:700;font-size:9px;letter-spacing:.12em;
   color:var(--paper);background:var(--red);padding:2px 7px}
-.who{font-weight:600;font-size:14px;color:var(--muted)}
+.who{font-weight:600;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .who b{color:var(--ink)}
 .who button{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
   background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;margin-left:8px}
@@ -48,11 +48,30 @@ h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
 const head=document.getElementById('head'), app=document.getElementById('app'), st=document.getElementById('status');
 let name=null, voter=null;
 try{name=localStorage.getItem('gt-name');voter=localStorage.getItem('gt-voter');}catch(_){}
+/* the name row shows at once, before the scores load, so "not you?" is always there */
+function nameRow(){
+  const w=document.createElement('div');w.className='who';
+  w.innerHTML='Playing as <b></b><button type="button" id="chg">not you?</button><button type="button" id="fresh">start over on this phone</button>';
+  w.querySelector('b').textContent=name||'nobody yet';
+  w.querySelector('#chg').addEventListener('click',()=>{
+    try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}
+    location.href='/go/';
+  });
+  /* forget every answer, game and name this phone has given, and become a new person (a new voter id); the deck and editor keys are left alone */
+  w.querySelector('#fresh').addEventListener('click',()=>{
+    if(!confirm('Forget everything this phone has answered and start as someone new?'))return;
+    try{Object.keys(localStorage).filter(k=>/^(gt-(?!admin|deck)|m[1-8]|pw-)/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(_){}
+    location.href='/go/';
+  });
+  return w;
+}
 if(!name){
   head.textContent='No name on this phone yet';
+  app.appendChild(nameRow());
   st.textContent='Join one of the named games first — pick your name there and your points will show up here.';
 }else{
   head.textContent='Your points';
+  app.appendChild(nameRow());
   render();
   setInterval(render,15000);
 }
@@ -61,8 +80,7 @@ function render(){
   Promise.all([GT_SCORES.load(),GT_SCORES.myHistory(voter,name)]).then(([d,hist])=>{
     const key=name.trim().toLowerCase().replace(/\s+/g,' ');
     const me=d.players.find(p=>p.name.trim().toLowerCase().replace(/\s+/g,' ')===key);
-    let h='<div class="who">Playing as <b></b><button type="button" id="chg">not you?</button></div>';
-    h+='<div class="total"><span class="n">'+(me?me.total:0)+'</span><span class="l">points<br>so far</span></div>';
+    let h='<div class="total"><span class="n">'+(me?me.total:0)+'</span><span class="l">points<br>so far</span></div>';
     h+='<div class="rows">';
     d.events.forEach(ev=>{
       const p=me?(me.byEvent[ev.key]||0):0;
@@ -78,12 +96,8 @@ function render(){
       h+='</div>';
     }
     app.innerHTML=h;
-    app.querySelector('.who b').textContent=name;
+    app.insertBefore(nameRow(),app.firstChild);
     [...app.querySelectorAll('.row .e')].forEach((e,i)=>{e.textContent=d.events[i].label;});
-    app.querySelector('#chg').addEventListener('click',()=>{
-      try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}
-      location.href='/go/';
-    });
     st.textContent='Scores update as the games run. Red-tagged items count for points. Only you can see this page’s detail.';
   }).catch(()=>{st.textContent='Could not reach the score server — try again in a moment.';});
 }

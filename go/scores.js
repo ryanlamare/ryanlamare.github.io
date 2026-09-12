@@ -747,7 +747,7 @@ const GT_SCORES = (() => {
 
   function gameLine(id, t, nkey) {
     const p = String(t).split('|').map(s => s.trim());
-    if (id === 'm5-invest') return 'R' + p[1] + ': ' + (p[2] === 'i' ? 'invested' : 'sat out');
+    if (id === 'm5-invest') return 'R' + p[1] + ': ' + (p[2] === 'i' ? 'invested' : 'didn’t invest');
     if (id === 'm3-engine') {
       if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
       const M = { p: 'cut the price', t: 'promised better terms', s: 'solved a concern', c: 'charmed the board' };

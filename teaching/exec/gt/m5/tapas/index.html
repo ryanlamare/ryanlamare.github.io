@@ -50,14 +50,14 @@ button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)
 const API='https://gt-poll.rlamare.workers.dev';
 /* every word below is Ryan's to redline */
 const GAMES={
-  bos:{room:'m5-bos',title:'Whose system?',rounds:1,side:{r:'Atlantic',t:'Pacific'},
-    brief:{r:'The two airlines have merged and must run one booking system. Yours is Atlantic’s, and everyone on your side already knows it.',
-           t:'The two airlines have merged and must run one booking system. Yours is Pacific’s, and everyone on your side already knows it.'},
-    rule:'If both sides back the same system, you switch to it. If not, you keep running two, and both sides lose.',
-    opts:[{k:'a',n:'Atlantic’s system'},{k:'b',n:'Pacific’s system'}]},
-  chicken:{room:'m5-chicken',title:'The hub lease',side:{r:'The airline',t:'The airport'},
-    brief:{r:'You run your hub out of this airport and the lease is up. Your board has said it will not renew without a big cut in gate and landing fees.',
-           t:'You run the airport and the airline’s hub lease is up. Your board has said it cannot afford the cut the airline is demanding.'},
+  bos:{room:'m5-bos',title:'Whose system?',side:{r:'Northeast Airlines',t:'Dalta Air Lines'},
+    brief:{r:'Northeast and Dalta have merged and must run one booking system. Yours is Northeast’s, the one everyone on your side is used to.',
+           t:'Northeast and Dalta have merged and must run one booking system. Yours is Dalta’s, the one everyone on your side is used to.'},
+    rule:'If both sides back the same system, you switch to it. If not, the merger is delayed.',
+    opts:[{k:'a',n:'Northeast’s system'},{k:'b',n:'Dalta’s system'}]},
+  chicken:{room:'m5-chicken',title:'The hub lease',side:{r:'USA Air',t:'Plattsburgh Airport'},
+    brief:{r:'You run your hub out of Plattsburgh and the lease is up. Your board has said it will not renew without a big cut in gate and landing fees.',
+           t:'You run Plattsburgh Airport and USA Air’s hub lease is up. Your board has said it cannot afford the cut the airline is demanding.'},
     rule:'If one side gives ground, the other gets its way. If both give, you split the difference. If both hold firm, the hub goes.',
     opts:[{k:'a',n:'Give ground'},{k:'b',n:'Hold firm'}]}
 };
@@ -98,7 +98,7 @@ if(!g){
     if(key===shown)return; shown=key;
     stage.innerHTML='';
     const lead=document.createElement('div');lead.className='lbl';lead.style.margin='6px 0 8px';
-    lead.textContent=g.rounds===1?'After the volunteer — what do you push for?':(round===1?'Round 1 — what do you push for?':'Round 2 — after the volunteer. What do you push for now?');
+    lead.textContent=round===1?'Round 1 — what do you push for?':'Round 2 — what do you push for now?';
     stage.appendChild(lead);
     const ch=document.createElement('div');ch.className='choices';
     g.opts.forEach(o=>{
@@ -106,7 +106,7 @@ if(!g){
       b.addEventListener('click',()=>{
         say(g.room,'v|'+voter+'|'+side+'|'+round+'|'+o.k).then(()=>{
           mine[round]=o.k;save();shown='';ui();
-          st.innerHTML='<b>Sent.</b> '+(g.rounds===1?'You can change it until the big screen reveals the vote.':(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.'));
+          st.innerHTML='<b>Sent.</b> '+(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.');
         }).catch(code=>{st.textContent=failMsg(code);});
       });
       ch.appendChild(b);
@@ -116,7 +116,7 @@ if(!g){
   function tick(){
     fetch(API+'/p/'+g.room+'/answers').then(r=>r.json()).then(d=>{
       const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
-      const nr=(open2&&g.rounds!==1)?2:1;
+      const nr=open2?2:1;
       if(nr!==round){round=nr;st.textContent='';}
       ui();
     }).catch(()=>{ui();});
