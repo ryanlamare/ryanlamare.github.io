@@ -8,7 +8,7 @@ to pick the work up on another computer.
 
 | Module | State |
 |---|---|
-| m1–m6 | Shipped and live. m6's penalty table changed on 7 Sep (see below). |
+| m1–m6 | Shipped and live. m5 and m6 redlined from Ryan's solo rehearsal on 12–13 Sep (quiz, phones, the vote games off Tapas, penalties as pure guessing, the CBA negotiating table); he will review both once more. Next: m7 rehearsal and cleanup, then m8, then m1–m4. |
 | m7 | Rebuilt around four game classes, 30 slides, live. Redlined through three passes; the wording flagged below still awaits a final veto. |
 | m8 | BUILT 11 Sep, first cut, local commit, awaiting Ryan's redlines. 34 slides: cover, objectives, the car market game (his 590GT three-round card game, on phones), the 550 spine, then **Hidden Agenda** (the 565 week-5 werewolf reskin, renamed 11 Sep) at two tables at once, the Tapas committee and the Granito management team, four fictional bidders per table and RRPF on neither list, roles dealt to phones behind the admin secret, nights on phones with pointing printed as the fallback, one big-screen clock for both tables, the phones' nightly notes drawn as a suspicion spectrum with three honours per table, the recommendation against the Backers' secret bidder, ten points to the winning side, and the final Top of the class. |
 
