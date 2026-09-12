@@ -90,19 +90,19 @@ function claimOnce(){
 function render(){
   st.textContent='';
   if(!name){renderName();return;}
-  q.textContent='What do you choose?';
+  q.textContent='Round '+round+': what do you choose?';
   app.innerHTML='';
   const me=document.createElement('div');me.className='me';
   me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
   me.querySelector('b').textContent=name;
   me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
   app.appendChild(me);
+  /* one round at a time: round 2 opens from the big screen */
   const rd=document.createElement('div');rd.className='rounds';
-  for(let r=1;r<=3;r++){
-    const b=document.createElement('button');
-    b.innerHTML='Round '+r+'<span class="done">'+(mine[r]==='i'?'INVESTED':(mine[r]==='d'?'DIDN’T INVEST':'&nbsp;'))+'</span>';
+  for(let r=1;r<=2;r++){
+    const b=document.createElement('button');b.disabled=true;
+    b.innerHTML='Round '+r+'<span class="done">'+(mine[r]==='i'?'INVESTED':(mine[r]==='d'?'DIDN’T INVEST':(r>round?'NOT YET':'&nbsp;')))+'</span>';
     if(r===round)b.classList.add('cur');
-    b.addEventListener('click',()=>{round=r;render();});
     rd.appendChild(b);
   }
   app.appendChild(rd);
@@ -115,8 +115,18 @@ function render(){
     ch.appendChild(b);
   });
   app.appendChild(ch);
-  if(mine[round])st.innerHTML='<b>Round '+round+' received.</b> Tap the other option to change it.';
+  if(mine[round])st.innerHTML=received();
 }
+const received=()=>'<b>Round '+round+' received.</b> Tap the other option to change it.'+(round===1?' Round 2 opens from the big screen.':'');
+/* round 2 opens when the deck posts its marker into the room */
+function tick(){
+  fetch(API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
+    const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
+    const nr=open2?2:1;
+    if(nr!==round){round=nr;if(name){st.textContent='';render();}}
+  }).catch(()=>{});
+}
+setInterval(tick,2500);tick();
 function renderName(){
   q.textContent='Who are you?';
   app.innerHTML='';
@@ -144,7 +154,7 @@ function send(code,btn){
   .then(r=>{if(!r.ok)throw r.status;
     mine[round]=code;saveMine();
     render();
-    st.innerHTML='<b>Round '+round+' received.</b> Tap the other option to change it.';})
+    st.innerHTML=received();})
   .catch(code=>{st.textContent=code===429?'That’s plenty of changes for one round — flag the instructor if you’re stuck.':'That didn’t send — try again.';});
 }
 </script>
