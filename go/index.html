@@ -40,8 +40,8 @@ button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sa
 button.pick .pm,a.pick .pm{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:4px}
 button.pick .pq,a.pick .pq{display:block;font-weight:600;font-size:15.5px;line-height:1.35;color:var(--ink)}
 /* chained polls: once you've answered, the next question is one tap away */
-button.pick.nextq{border-color:var(--red);margin-top:6px}
-button.pick.nextq .pm{color:var(--red)}
+button.pick.nextq{background:var(--red);border-color:var(--red);margin-top:6px;padding:22px 18px}
+button.pick.nextq .pm{color:var(--paper);font-size:16px;margin:0}
 button.pick.nextq .pm::after{content:" →"}
 /* the points system's participant view */
 .ptslink{align-self:flex-end;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
@@ -59,7 +59,7 @@ a.pick{text-decoration:none}
   <h1 id="q">&hellip;</h1>
   <div id="opts"></div>
   <div class="status" id="status"></div>
-  <div class="links"><a class="ptslink" href="deals/">THE TWO DEALS &rarr;</a><a class="ptslink" href="points/">MY POINTS &rarr;</a></div>
+  <div class="links"><a class="ptslink" id="dealsLink" href="deals/" hidden>THE TWO DEALS &rarr;</a><a class="ptslink" href="points/">MY POINTS &rarr;</a></div>
 </div>
 <script src="names.js"></script>
 <script src="scores.js"></script>
@@ -87,16 +87,16 @@ function showNext(poll){
   const nid=poll.next, np=CFG.polls[nid];
   const b=document.createElement('button');
   b.className='pick nextq';
-  b.innerHTML='<span class="pm">Next question</span><span class="pq"></span>';
-  b.querySelector('.pq').textContent=np.q;
+  b.innerHTML='<span class="pm">Next question</span>'; /* the question itself waits for the tap */
   b.addEventListener('click',()=>{
     history.replaceState(null,'','?p='+nid);
     document.getElementById('status').textContent='';
     renderPoll(np,nid);
   });
-  document.querySelector('.wrap').appendChild(b);
+  const wrap=document.querySelector('.wrap');wrap.insertBefore(b,wrap.querySelector('.links')); /* above the points link */
 }
 function renderChooser(cfg){
+  document.getElementById('dealsLink').hidden=true;
   document.getElementById('q').textContent='Which question is on the screen?';
   const opts=document.getElementById('opts');
   opts.innerHTML='';
@@ -186,6 +186,7 @@ function renderNamePicker(poll,id){
 }
 function renderPoll(poll,id){
   pollId=id;
+  document.getElementById('dealsLink').hidden=!poll.deals; /* the two deals belong only to the case polls */
   document.querySelectorAll('.nextq').forEach(b=>b.remove());
   if(poll.named&&!myName){renderNamePicker(poll,id);return;}
   if(poll.named)claimOnce();
@@ -206,15 +207,16 @@ function renderPoll(poll,id){
   let mine=null;
   try{mine=localStorage.getItem('gt-vote-'+pollId);}catch(_){}
   if(mine!==null&&opts.children[+mine]){opts.children[+mine].classList.add('mine');
-    document.getElementById('status').innerHTML='<b>Answer received.</b> Tap another option to change it.';
+    document.getElementById('status').innerHTML='<b>Response recorded.</b> Results on the screen soon. Tap another option to change it.';
     showNext(poll);}
 }
+const RECORDED='<b>Response recorded.</b> Results on the screen soon.';
 function setupText(opts,poll){
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
   const st=document.getElementById('status');
   let said=false;
   try{said=poll.once&&localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
-  if(said){st.innerHTML='<b>Answer received.</b> One per person on this one!';showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
   const row=document.createElement('div');row.className='sayrow';
   const inp=document.createElement('input');
   inp.maxLength=80;inp.placeholder=poll.ph||'Type an example…';inp.autocomplete='off';
@@ -233,7 +235,7 @@ function setupText(opts,poll){
       if(poll.once){
         try{localStorage.setItem('gt-said-'+pollId,'1');}catch(_){}
         row.remove();
-        st.innerHTML='<b>Answer received.</b> One per person on this one!';
+        st.innerHTML=RECORDED;
       }else{
         inp.value='';inp.focus();
         st.innerHTML='<b>Sent.</b> Keep them coming — send as many as you can think of.';
@@ -253,14 +255,15 @@ function setupPair(opts,poll,poll2,id2){
   const st=document.getElementById('status');
   let said=false;
   try{said=localStorage.getItem('gt-said-'+pollId)==='1'&&localStorage.getItem('gt-said-'+id2)==='1';}catch(_){}
-  if(said){st.innerHTML='<b>Answers received.</b> One per person on these!';showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
   const mk=(ph)=>{const i=document.createElement('input');i.maxLength=80;i.placeholder=ph||'Type an answer…';i.autocomplete='off';return i;};
   const inp1=mk(poll.ph), inp2=mk(poll2.ph);
+  const wrap=i=>{const w=document.createElement('div');w.className='sayrow';w.appendChild(i);return w;};
   const q2=document.createElement('h1');q2.textContent=poll2.q;q2.style.marginTop='6px';
   const row=document.createElement('div');row.className='sayrow';
-  const btn=document.createElement('button');btn.textContent='SEND BOTH';
+  const btn=document.createElement('button');btn.textContent='SEND BOTH';btn.style.flex='1';
   row.appendChild(btn);
-  opts.appendChild(inp1);opts.appendChild(q2);opts.appendChild(inp2);opts.appendChild(row);
+  opts.appendChild(wrap(inp1));opts.appendChild(q2);opts.appendChild(wrap(inp2));opts.appendChild(row);
   function send(){
     const t1=inp1.value.trim(), t2=inp2.value.trim();
     if(!t1||!t2){st.textContent='Answer both, then send.';return;}
@@ -270,7 +273,7 @@ function setupPair(opts,poll,poll2,id2){
     Promise.all([post(pollId,t1),post(id2,t2)]).then(()=>{
       try{localStorage.setItem('gt-said-'+pollId,'1');localStorage.setItem('gt-said-'+id2,'1');}catch(_){}
       [inp1,inp2].forEach(i=>i.disabled=true);row.remove();
-      st.innerHTML='<b>Answers received.</b> One per person on these!';
+      st.innerHTML=RECORDED;
       showNext(poll);})
     .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';btn.disabled=false;});
   }
@@ -287,7 +290,7 @@ function vote(i,btn,poll){
     document.querySelectorAll('.opt').forEach(b=>b.classList.remove('mine'));
     btn.classList.add('mine');
     try{localStorage.setItem('gt-vote-'+pollId,String(i));}catch(_){}
-    st.innerHTML='<b>Answer received.</b> Tap another option to change it.';
+    st.innerHTML='<b>Response recorded.</b> Results on the screen soon. Tap another option to change it.';
     showNext(poll);})
   .catch(()=>{st.textContent='That didn’t send — try again.';});
 }

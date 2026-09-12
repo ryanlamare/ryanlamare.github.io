@@ -48,7 +48,7 @@ button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)
   <h1 id="q">&hellip;</h1>
   <div id="app"></div>
   <div class="status" id="status"></div>
-  <div class="rules">Invest and you put <b>$100</b> in the pot. If <b>90% of the room</b> invests too, you get it back plus <b>$50</b>; if not, your $100 is gone. Sit a round out and you get nothing, and lose nothing. Three rounds &mdash; your wins and losses add up. Answer the round the instructor calls; you can change your mind until the reveal.</div>
+  <div class="rules"><b>Invest:</b> you put $100 in the pot. If 90% of the room invests, you get it back plus $50. If not, it&rsquo;s gone.<br><b>Don&rsquo;t invest:</b> nothing gained, nothing lost.<br><b>Gains and losses are cumulative!</b></div>
 </div>
 <script src="/go/names.js"></script>
 <script>
@@ -90,7 +90,7 @@ function claimOnce(){
 function render(){
   st.textContent='';
   if(!name){renderName();return;}
-  q.textContent='So, will you choose to invest or not invest?';
+  q.textContent='What do you choose?';
   app.innerHTML='';
   const me=document.createElement('div');me.className='me';
   me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
@@ -100,17 +100,17 @@ function render(){
   const rd=document.createElement('div');rd.className='rounds';
   for(let r=1;r<=3;r++){
     const b=document.createElement('button');
-    b.innerHTML='R'+r+'<span class="done">'+(mine[r]==='i'?'INVESTED':(mine[r]==='d'?'SAT OUT':'&nbsp;'))+'</span>';
+    b.innerHTML='Round '+r+'<span class="done">'+(mine[r]==='i'?'INVESTED':(mine[r]==='d'?'SAT OUT':'&nbsp;'))+'</span>';
     if(r===round)b.classList.add('cur');
     b.addEventListener('click',()=>{round=r;render();});
     rd.appendChild(b);
   }
   app.appendChild(rd);
   const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='14px';
-  [['i','Invest $100'],['d','Don’t invest']].forEach(([code,label])=>{
+  [['i','Invest'],['d','Don’t invest']].forEach(([code,label])=>{
     const b=document.createElement('button');
     b.className='opt'+(mine[round]===code?' mine':'');
-    b.textContent=label+'  —  round '+round;
+    b.textContent=label;
     b.addEventListener('click',()=>send(code,b));
     ch.appendChild(b);
   });

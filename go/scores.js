@@ -96,7 +96,7 @@ const GT_SCORES = (() => {
             { id: 'm5-k4', type: 'c' }, { id: 'm5-k5', type: 't' }, { id: 'm5-k6', type: 't' },
             { id: 'm5-k7', type: 't' }, { id: 'm5-k8', type: 't' }, { id: 'm5-k9', type: 't' },
             { id: 'm5-k10', type: 'c' }, { id: 'm5-k11', type: 't' }, { id: 'm5-k12', type: 'c' },
-            { id: 'm5-k13', type: 't' }, { id: 'm5-k14', type: 'c' }, { id: 'm5-k15', type: 'c' },
+            { id: 'm5-k13', type: 'c' }, { id: 'm5-k14', type: 'c' }, { id: 'm5-k15', type: 'c' },
           ] },
         { key: 'twothirds', label: 'Two-thirds', kind: 'twothirds', room: 'm5-twothirds', winPoints: 5 },
         /* the investment game (m5-invest) is deliberately unscored: it is a
@@ -199,10 +199,18 @@ const GT_SCORES = (() => {
    dropped, a leading "the" ignored, digit-only answers compared without
    spaces ("50 - 50" is "50/50"), and a shorter answer joins a longer one
    that contains it as whole words ("Kelce" joins "Travis Kelce") */
-  function fuzzyKey(t){
+  function fuzzyKey(t,room){
   let s=String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   s=s.replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
   s=s.replace(/^(the|a|an) /,'');
+  /* the two piles: "50 50", "50/50", "50-50", "fifty fifty", "50 and 50" and a bare "50"
+     are all the same split; the pair is keyed larger pile first */
+  if(room==='m5-k11'){
+    const w=s.replace(/\bfifty\b/g,'50').replace(/\bhundred\b/g,'100').replace(/\bzero\b/g,'0');
+    const nums=(w.match(/\d+/g)||[]).map(Number);
+    if(nums.length===2&&nums[0]+nums[1]===100)return Math.max(...nums)+'-'+Math.min(...nums);
+    if(nums.length===1&&nums[0]>=0&&nums[0]<=100)return Math.max(nums[0],100-nums[0])+'-'+Math.min(nums[0],100-nums[0]);
+  }
   if(/^[\d\s]+$/.test(s))s=s.replace(/\s/g,'');
   return s;
 }
@@ -253,7 +261,7 @@ const GT_SCORES = (() => {
         perVoter = new Map(Object.entries(d.votes || {}).map(([v, o]) => [v, 'o' + o]));
       } else {
         const d = await j('/p/' + room.id + '/entries');
-        perVoter = new Map([...latestPerVoter(d.entries)].map(([v, t]) => [v, fuzzyKey(t)]).filter(([, t]) => t));
+        perVoter = new Map([...latestPerVoter(d.entries)].map(([v, t]) => [v, fuzzyKey(t, room.id)]).filter(([, t]) => t));
         /* spellings that mean the same answer count as one (see fuzzyKey) */
         const raw = new Map();
         perVoter.forEach(a => raw.set(a, (raw.get(a) || 0) + 1));
@@ -881,5 +889,5 @@ const GT_SCORES = (() => {
     });
   }
 
-  return { load, claimName, myHistory, scoringRoomIds, MODULES, GAME_ROOMS, API };
+  return { load, claimName, myHistory, scoringRoomIds, MODULES, GAME_ROOMS, API, fuzzyKey, fuzzyGroups };
 })();
