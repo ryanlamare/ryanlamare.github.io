@@ -70,5 +70,5 @@ About five and a half hours of content. With a 45-minute lunch and two 15-minute
 
 - Clone the repo from GitHub; do not put it in OneDrive or Google Drive.
 - Preview with `./serve.sh`, never by opening a deck file directly.
-- The case documents (Tapas, Granito, the 550 quiz) are deliberately untracked and stay on the home machine. Never commit them.
+- The case documents (Tapas, Granito, the 550 quiz) are untracked and stay on the home machine; `.gitignore` now keeps `.docx`/`.pptx` under `exec/gt` out. The 550 quiz docx slipped into one commit's history on 12 Sep; Ryan is fine with that and it was not purged.
 - Claude Code's project memory (the design record, case notes, game answers) lives outside the repo on the home Mac, under `~/.claude/projects/-Users-rlamare-Sites-ryanlamare-github-io/memory/`. Copy that folder by hand to the same path on another Mac if the same context is wanted there.

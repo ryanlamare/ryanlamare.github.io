@@ -96,7 +96,7 @@ const GT_SCORES = (() => {
             { id: 'm5-k4', type: 'c' }, { id: 'm5-k5', type: 't' }, { id: 'm5-k6', type: 't' },
             { id: 'm5-k7', type: 't' }, { id: 'm5-k8', type: 't' }, { id: 'm5-k9', type: 't' },
             { id: 'm5-k10', type: 'c' }, { id: 'm5-k11', type: 't' }, { id: 'm5-k12', type: 'c' },
-            { id: 'm5-k13', type: 'c' }, { id: 'm5-k14', type: 'c' }, { id: 'm5-k15', type: 'c' },
+            { id: 'm5-k13', type: 'c' }, { id: 'm5-k14', type: 'c' }, { id: 'm5-k15', type: 'c' }, { id: 'm5-k16', type: 'c' },
           ] },
         { key: 'twothirds', label: 'Two-thirds', kind: 'twothirds', room: 'm5-twothirds', winPoints: 5 },
         /* the investment game (m5-invest) is deliberately unscored: it is a
