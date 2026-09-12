@@ -1421,9 +1421,15 @@ update();
 /* ---- embedded clips: load YouTube only on click (the title spoils the punchline).
    CLIP IDS TO ADD — paste the YouTube video ids here: */
 const CLIPS={krul:'XMF6uu_HpZk',carroll:'6d90ijd2Cx0'};
+/* FIFA's upload of the Krul clip only embeds on sites FIFA has allowed, so on
+   this site the frame says "blocked from display". Clips listed here open on
+   YouTube itself in a new window instead of in the slide. */
+const NEWTAB={krul:true};
 function clipOnClick(btnId,wrapId,videoId,title){
   const btn=document.getElementById(btnId);
   if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
+  const key=Object.keys(CLIPS).find(k=>CLIPS[k]===videoId);
+  if(NEWTAB[key]){btn.addEventListener('click',()=>{window.open('https://www.youtube.com/watch?v='+videoId,'_blank','noopener');});return;}
   btn.addEventListener('click',()=>{
     const wrap=document.getElementById(wrapId);
     const f=document.createElement('iframe');
