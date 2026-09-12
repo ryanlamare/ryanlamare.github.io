@@ -32,6 +32,10 @@ button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
 .sayrow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.sayrow.long{flex-direction:column}
+.sayrow textarea{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-height:120px;width:100%;resize:vertical}
+.sayrow.long button{align-self:flex-end}
 .sent{display:flex;flex-direction:column;gap:8px}
 .sent .s{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:15px;padding:9px 14px}
 /* hand-typed /go: pick the question that is on the screen */
@@ -217,9 +221,11 @@ function setupText(opts,poll){
   let said=false;
   try{said=poll.once&&localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
   if(said){st.innerHTML=RECORDED;showNext(poll);return;}
-  const row=document.createElement('div');row.className='sayrow';
-  const inp=document.createElement('input');
-  inp.maxLength=80;inp.placeholder=poll.ph||'Type an example…';inp.autocomplete='off';
+  const row=document.createElement('div');row.className='sayrow'+(poll.long?' long':'');
+  /* a "long" poll wants a sentence or two: a bigger box, Enter makes a new line, the button sends */
+  const inp=document.createElement(poll.long?'textarea':'input');
+  if(poll.long)inp.rows=3;
+  inp.maxLength=poll.long?200:80;inp.placeholder=poll.ph||(poll.long?'Type a sentence or two…':'Type an example…');inp.autocomplete='off';
   const btn=document.createElement('button');btn.textContent='SEND';
   row.appendChild(inp);row.appendChild(btn);opts.appendChild(row);
   const sent=document.createElement('div');sent.className='sent';opts.appendChild(sent);
@@ -245,7 +251,7 @@ function setupText(opts,poll){
     .finally(()=>{btn.disabled=false;});
   }
   btn.addEventListener('click',send);
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&(!poll.long||e.metaKey||e.ctrlKey)){e.preventDefault();send();}});
   inp.focus();
 }
 /* a "pair": two write-in questions on ONE screen, one SEND, each answer

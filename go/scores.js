@@ -108,14 +108,12 @@ const GT_SCORES = (() => {
       id: 'm6',
       title: 'Mixed Strategies',
       events: [
-        /* the penalty shootout: five kicks each, taken in turns, a point
-           for every goal you score as the striker (goalPoints); savePoints
-           is what a kick you keep out is worth to the keeper, off for now.
-           Five is the most anyone can take, which makes this the
-           programme's five-point module. Beat the keeper (m6-solo) and
-           rock, paper, scissors (m6-rps) are played for what they show,
-           not for points. */
-        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalPoints: 1, savePoints: 0 },
+        /* the penalty shootout: ten kicks each, taken in turns, a point for
+           every two goals you score as the striker (goalsPerPoint); five is
+           the most anyone can take, which makes this the programme's
+           five-point module. Beat the keeper (m6-solo) and rock, paper,
+           scissors (m6-rps) are played for what they show, not for points. */
+        { key: 'shootout', label: 'Shootout', kind: 'shootout', room: 'm6-pk', goalsPerPoint: 2 },
         /* the inspection game (m6-inspect) is deliberately unscored: it is
            played to see what a regulator is up against, and a prize for
            skipping safety steps would reward the wrong thing (Ryan, 5 Sep
@@ -369,15 +367,13 @@ const GT_SCORES = (() => {
     byPair.forEach(winner => addPoints(tally, winner, ev.key, 5));
   }
 
-  /* the penalty shootout: "A|B|n|seat|l-or-r" lines, ten kicks taken in
-     turns (A kicks the odd ones, B the even ones — five each); whether a
-     kick went in is the same hash draw the phones use (MUST match
-     m6/game/pk.js and the m6 deck), against the real success rates. A
-     goal pays goalPoints to the striker; a kick kept out pays savePoints
-     to the keeper. Join and kit lines (n = 0) carry no move. */
-  const PK_RATE = { ll: 58, lr: 95, rl: 93, rr: 70 };
+  /* the penalty shootout: "A|B|n|seat|l-or-r" lines, twenty kicks taken in
+     turns (A kicks the odd ones, B the even ones — ten each). The rule is
+     the phones' rule (MUST match m6/game/pk.js): a keeper who dives the
+     way the ball goes saves it, otherwise it is a goal. The striker earns a
+     point per goalsPerPoint goals. Join and kit lines (n = 0) carry no move. */
   function h01(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
-  const pkGoal = (key, n, kick, dive) => h01(key + '|' + n + '|' + kick + '|' + dive) < PK_RATE[kick + dive] / 100;
+  const pkGoal = (key, n, kick, dive) => kick !== dive;
   async function scoreShootout(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
     const latest = new Map(); /* pair|n|seat -> move */
@@ -394,16 +390,18 @@ const GT_SCORES = (() => {
       pr.kicks[m.n] = pr.kicks[m.n] || {};
       pr.kicks[m.n][m.seat] = m.x;
     });
-    const gp = ev.goalPoints || 0, sp = ev.savePoints || 0;
+    const per = ev.goalsPerPoint || 2;
     pairs.forEach(pr => {
       const key = [norm(pr.A), norm(pr.B)].sort().join('~');
-      for (let n = 1; n <= 10; n++) {
+      const goals = { a: 0, b: 0 };
+      for (let n = 1; n <= 20; n++) {
         const k = pr.kicks[n]; if (!k || !k.a || !k.b) continue;
         const ks = n % 2 ? 'a' : 'b', kick = k[ks], dive = k[ks === 'a' ? 'b' : 'a'];
-        const striker = ks === 'a' ? pr.A : pr.B, keeper = ks === 'a' ? pr.B : pr.A;
-        if (pkGoal(key, n, kick, dive)) { if (gp) addPoints(tally, striker, ev.key, gp); }
-        else if (sp) addPoints(tally, keeper, ev.key, sp);
+        if (pkGoal(key, n, kick, dive)) goals[ks]++;
       }
+      const pa = Math.floor(goals.a / per), pb = Math.floor(goals.b / per);
+      if (pa) addPoints(tally, pr.A, ev.key, pa);
+      if (pb) addPoints(tally, pr.B, ev.key, pb);
     });
   }
 

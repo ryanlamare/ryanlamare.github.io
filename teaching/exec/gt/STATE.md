@@ -51,7 +51,7 @@ About five and a half hours of content. With a 45-minute lunch and two 15-minute
 ## Open items
 
 - **Wording still to veto** (all Claude's): the auction slides, the reputation slide's two chips, the brinkmanship figure, the Sun Tzu copy and its toy numbers, the cautionary slide's bullets after the opening question, the penalty widget's bullets, the airtime slide (facts unchecked against the 550 source), the Rebel bullets in m5, and the m6 rules bullet that now reads "the odds in the table".
-- **The penalty table** is back to the real 58 / 95 / 93 / 70 across m6 and m7 (`m6/game/pk.js`, mirrored in `go/scores.js`) since 11 Sep; the m7 committed keeper goes left every time.
+- **The penalty games** (12 Sep): guess right is a save, otherwise a goal, no dice; fifteen kicks solo, ten each in the shootout, a point per two goals. The real 58 / 95 / 93 / 70 table stays on the slides after the games and still drives the boss battle's odds and m7's committed keeper.
 - **Before any real session:** reset the seeded and test rooms in Poll Desk, and fill `go/roster.json` with the participants' first names.
 
 

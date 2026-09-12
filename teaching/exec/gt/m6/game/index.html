@@ -8,14 +8,14 @@
    animated by pk.js, which the deck shares, so every phone and the big
    screen show the same keeper and the same ball.
 
-     ?g=solo  beat the keeper — ten kicks on your own against a keeper
+     ?g=solo  beat the keeper — fifteen kicks on your own against a keeper
               that remembers every kick you have taken and leans the way
               you lean (the page never says so: the room finds out on the
               big screen). Your kicks go to the room as "name|n|l-or-r"
               (a kit line "name|0|k-<kit>" first); the dive and the
               result are a hash of your name and your history, so the
               deck replays your game from the kicks alone.
-     ?g=pk    the penalty shootout in pairs — ten kicks taken in turns,
+     ?g=pk    the penalty shootout in pairs — twenty kicks taken in turns,
               five each (the first kicker takes the odd ones). Both
               phones choose left or right at the same time; whether the
               ball goes in is a draw against the real success rates
@@ -125,8 +125,8 @@ button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacin
 const API='https://gt-poll.rlamare.workers.dev';
 const qs=new URLSearchParams(location.search);
 const GAMES={
-  solo:{room:'m6-solo',title:'Beat the keeper',n:10,codes:/^[lr]$/},
-  pk:{room:'m6-pk',title:'The penalty shootout',n:10,codes:/^[lr]$/,
+  solo:{room:'m6-solo',title:'Beat the keeper',n:15,codes:/^[lr]$/},
+  pk:{room:'m6-pk',title:'The penalty shootout',n:20,codes:/^[lr]$/,
       opts:[{k:'l',n:'LEFT'},{k:'r',n:'RIGHT'}],
       pairLead:'Pair up with the person next to you',
       seats:['I’ll kick first — I’ll pick my partner','My partner picks me'],
@@ -327,7 +327,7 @@ function renderSolo(){
   try{game=JSON.parse(localStorage.getItem('m6-solo-'+ROOM)||'null');}catch(_){}
   if(!game||!Array.isArray(game.kicks)){
     const card=document.createElement('div');card.className='waitcard';card.style.borderStyle='solid';card.style.color='var(--ink)';
-    card.innerHTML='<b>Ten kicks against the keeper.</b> Left or right each time. Score as many as you can.';
+    card.innerHTML='<b>Fifteen kicks against the keeper.</b> Left or right each time. If the keeper dives the way you shoot, it’s saved. Score as many as you can.';
     app.appendChild(card);
     const go=document.createElement('button');go.className='send';go.style.marginTop='4px';go.textContent='Take the first kick';
     go.addEventListener('click',()=>{
@@ -373,7 +373,7 @@ function renderSolo(){
   function result(n,kick,dive,goal){
     stage.innerHTML='';
     const card=document.createElement('div');card.className='bigcard';
-    card.innerHTML='<div class="head '+(goal?'good':'bad')+'">'+(goal?'GOAL':(kick===dive?'SAVED':'OFF THE POST'))+'</div>'+
+    card.innerHTML='<div class="head '+(goal?'good':'bad')+'">'+(goal?'GOAL':'SAVED')+'</div>'+
       '<div class="sub">'+esc(resultSub(true,'the keeper',kick,dive))+'</div>'+scoreLine(hist());
     stage.appendChild(card);
     const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
@@ -386,11 +386,11 @@ function renderSolo(){
     const left=h.filter(x=>x.kick==='l').length;
     stage.innerHTML='';
     const card=document.createElement('div');card.className='bigcard';
-    card.innerHTML='<div class="head '+(goals>=8?'good':(goals>=6?'draw':'bad'))+'">'+goals+' OF 10</div>'+
-      '<div class="sub">You went left '+left+' times in ten. The keeper went the right way on '+read+' of your kicks.</div>'+scoreLine(h);
+    card.innerHTML='<div class="head '+(goals>=9?'good':(goals>=7?'draw':'bad'))+'">'+goals+' OF 15</div>'+
+      '<div class="sub">You went left '+left+' times in fifteen. The keeper went the right way on '+read+' of your kicks.</div>'+scoreLine(h);
     stage.appendChild(card);
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-    note.textContent='All done. Look up — the room’s kicks are about to go on the big screen.';
+    note.textContent='Response recorded. Results on the screen soon.';
     stage.appendChild(note);
   }
   if(game.kicks.length>=G.n)final();else choice();
@@ -638,7 +638,7 @@ function renderPlay(A,B,seat,joined){
     if(isPK){
       const ks=kickerSeat(n), kick=k[ks], dive=k[ks==='a'?'b':'a'], goal=isGoal(key,n,kick,dive);
       const iKick=ks===seat;
-      head=goal?'GOAL':(kick===dive?'SAVED':'OFF THE POST');
+      head=goal?'GOAL':'SAVED';
       cls=(goal===iKick)?'good':'bad';
       sub=resultSub(iKick,them,kick,dive);
       if(animatedN<n){animatedN=n;stage.innerHTML='';sc.reset();paintKits(n);sc.kick({kick,dive,goal}).then(show);return;}
@@ -660,8 +660,8 @@ function renderPlay(A,B,seat,joined){
     if(sc)sc.reset();
     const card=document.createElement('div');card.className='bigcard';
     if(isPK){
-      card.innerHTML='<div class="head '+(t.mine>=4?'good':(t.mine>=3?'draw':'bad'))+'">'+t.mine+' OF 5</div>'+
-        '<div class="sub">Goals from your five kicks. '+esc(them)+' scored '+t.theirs+' of 5.</div>'+scoreRow(t);
+      card.innerHTML='<div class="head '+(t.mine>=6?'good':(t.mine>=5?'draw':'bad'))+'">'+t.mine+' OF 10</div>'+
+        '<div class="sub">Goals from your ten kicks. '+esc(them)+' scored '+t.theirs+' of 10.</div>'+scoreRow(t);
     }else if(isAudit){
       const cls=t.mine>t.theirs?'good':(t.mine<t.theirs?'bad':'draw');
       card.innerHTML='<div class="head '+cls+'">'+(t.mine>t.theirs?'YOU CAME OUT AHEAD':(t.mine<t.theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div>'+
@@ -673,7 +673,7 @@ function renderPlay(A,B,seat,joined){
     }
     stage.appendChild(card);
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-    note.textContent='All done. Look up — the whole room is about to go on the big screen.';
+    note.textContent='Response recorded. Results on the screen soon.';
     stage.appendChild(note);
   }
   function tick(){

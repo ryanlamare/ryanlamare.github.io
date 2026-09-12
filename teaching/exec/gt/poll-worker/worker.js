@@ -156,7 +156,7 @@ export class PollRoom {
       const v = String(body.v || '');
       if (!/^[A-Za-z0-9-]{8,64}$/.test(v)) return json({ error: 'bad voter' }, 400);
       // eslint-disable-next-line no-control-regex
-      const t = String(body.t || '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+      const t = String(body.t || '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); /* the write-in walls take a sentence or two */
       if (!t) return json({ error: 'bad text' }, 400);
       const answers = (await this.storage.get('answers')) || [];
       if (answers.length >= 400) return json({ error: 'full' }, 429);

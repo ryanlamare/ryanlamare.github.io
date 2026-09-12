@@ -20,7 +20,12 @@ window.PK=(function(){
      deck's table, slider and text MUST match. */
   const RATE={ll:58,lr:95,rl:93,rr:70};
   function h01(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
-  const goal=(key,n,kick,dive)=>h01(key+'|'+n+'|'+kick+'|'+dive)<RATE[kick+dive]/100;
+  /* the games' rule (Ryan, 12 Sep 2026): if the keeper dives the way you shoot
+     it is saved, otherwise it is a goal. Pure guessing, no dice, so the only
+     way to score is to be unpredictable. The real table above is shown after
+     the games, and still drives the "shoot against me" odds (rateAt). A copy
+     of this rule lives in /go/scores.js — keep them identical. */
+  const goal=(key,n,kick,dive)=>kick!==dive;
 
   /* ---- the solo keeper --------------------------------------------
      It remembers every kick you have taken. Two things it watches: how
