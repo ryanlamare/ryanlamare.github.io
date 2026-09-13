@@ -665,20 +665,20 @@ function renderPlay(A,B,seat){
       const T=replayed?1:0.35;
       const pot=gs.querySelector('#pot'), hA=gs.querySelector('#halfA'), hB=gs.querySelector('#halfB');
       const wrap=gs.querySelector('.potwrap');
-      const reach=()=>wrap.getBoundingClientRect().width/2+34; /* to the edge of a ball */
-      const slide=(el,dx,extra)=>{el.style.transform='translate(calc(-50% + '+dx+'px),-50%)'+(extra||'');};
+      /* a chip slides to the edge of the pot area, short of the ball */
+      const reach=el=>Math.max(20,wrap.getBoundingClientRect().width/2-el.offsetWidth/2-4);
+      const slide=(el,sign)=>{el.style.transform='translate(calc(-50% + '+(sign*reach(el))+'px),-50%)';};
       at(400,()=>{gs.querySelector('#myBall').classList.add('open');moves.children[0].classList.add('on');});
       at(1800*T+400,()=>{gs.querySelector('#theirBall').classList.add('open');moves.children[1].classList.add('on');});
       at(3400*T+500,()=>{
-        const d=reach();
-        if(!iStole&&!theyStole){pot.classList.add('gone');hA.classList.remove('gone');hB.classList.remove('gone');slide(hA,-d);slide(hB,d);}
+        if(!iStole&&!theyStole){pot.classList.add('gone');hA.classList.remove('gone');hB.classList.remove('gone');slide(hA,-1);slide(hB,1);}
         else if(iStole&&theyStole){pot.classList.add('nothing');pot.textContent='NOTHING';}
-        else slide(pot,iStole?-d:d);
+        else slide(pot,iStole?-1:1);
       });
       const handAt=4900*T+600;
       if(rr.hand){at(handAt,()=>{
         if(moves.children[2])moves.children[2].classList.add('on');
-        if(handed){const d=reach();pot.textContent='£500';hA.classList.remove('gone');hA.textContent='£500';slide(hA,iStole?d:-d);}
+        if(handed){pot.textContent='£500';hA.classList.remove('gone');hA.textContent='£500';slide(hA,iStole?1:-1);}
       });}
       at((rr.hand?6400:4900)*T+700,()=>{card.hidden=false;ack.hidden=false;});
     }else if(k==='final'){

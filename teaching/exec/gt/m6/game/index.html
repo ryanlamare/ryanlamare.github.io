@@ -93,6 +93,38 @@ button.opt:disabled{opacity:.55;cursor:default}
 .score .me{color:var(--teal)} .score .them{color:var(--terracotta)}
 .score b{font-family:var(--display);font-weight:900;font-size:26px;line-height:1}
 .score small{display:block;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+/* rock, paper, scissors: two hands face each other, pump three times, then show */
+.hands{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:14px 10px 26px;border:2.5px solid var(--ink);background:var(--card);position:relative}
+.hand{position:relative;flex:none;width:120px;height:120px;display:flex;align-items:center;justify-content:center}
+.hand svg{width:104px;height:104px;display:block;transition:transform .5s,opacity .5s}
+.hand svg .ink{fill:var(--paper-soft);stroke:var(--ink);stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
+.hand .fist{position:absolute;inset:8px;opacity:1;transition:opacity .35s}
+.hand .shape{opacity:0;transform:scale(.6);transition:opacity .45s,transform .45s}
+.hand.show .fist{opacity:0} .hand.show .shape{opacity:1;transform:none}
+.hand.pump .fist{animation:pump .45s ease-in-out 3}
+.hand.them svg{transform:scaleX(-1)} .hand.them.show .shape{transform:scaleX(-1)}
+.hand.win .shape .ink{stroke:var(--teal);fill:rgba(31,108,110,.16)} .hand.lose .shape{opacity:.35}
+.hand .who{position:absolute;top:100%;left:-10px;right:-10px;text-align:center;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.hands .vs{font-family:var(--display);font-weight:900;font-size:22px;color:var(--muted)}
+@keyframes pump{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.beats{font-weight:700;font-size:16px;color:var(--ink);margin-top:10px;min-height:1.4em;opacity:0;transition:opacity .4s}
+.beats.on{opacity:1}
+/* the inspection game: the matrix, with the round's cell lighting up */
+.pm{display:grid;grid-template-columns:22px 92px 1fr 1fr;grid-template-rows:auto auto 1fr 1fr;gap:6px;margin-top:10px;border:2.5px solid var(--ink);background:var(--card);padding:12px}
+.pm .ch{grid-row:1;grid-column:3/5;text-align:center;font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--terracotta)}
+.pm .rh{grid-row:3/5;grid-column:1;writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);align-self:center;justify-self:center}
+.pm .cl:nth-of-type(1){grid-row:2;grid-column:3} .pm .cl:nth-of-type(2){grid-row:2;grid-column:4}
+.pm .rl[data-r="i"]{grid-row:3;grid-column:2} .pm .rl[data-r="t"]{grid-row:4;grid-column:2}
+.pm .cell[data-k="if"]{grid-row:3;grid-column:3} .pm .cell[data-k="ik"]{grid-row:3;grid-column:4}
+.pm .cell[data-k="tf"]{grid-row:4;grid-column:3} .pm .cell[data-k="tk"]{grid-row:4;grid-column:4}
+.pm .cl{font-weight:700;font-size:12px;line-height:1.2;text-align:center;color:var(--ink);padding:4px 2px;border-bottom:2.5px solid transparent;transition:border-color .4s,color .4s}
+.pm .rl{font-weight:700;font-size:12px;line-height:1.2;color:var(--ink);padding:4px 6px 4px 0;align-self:center;border-right:2.5px solid transparent;transition:border-color .4s}
+.pm .cl.on{border-bottom-color:var(--terracotta)} .pm .rl.on{border-right-color:var(--teal)}
+.pm .cell{border:2.5px solid var(--rule);background:var(--paper-soft);padding:12px 6px;text-align:center;font-family:var(--display);font-weight:900;font-size:20px;transition:background .5s,border-color .5s,opacity .5s}
+.pm .cell .a{color:var(--teal)} .pm .cell .b{color:var(--terracotta)} .pm .cell .c{color:var(--muted);margin:0 3px}
+.pm .cell.lit{border-color:var(--ink);background:var(--card);transform:scale(1.04)}
+.pm.done .cell:not(.lit){opacity:.35}
+.pm .cell.lit.good{background:rgba(31,108,110,.16)} .pm .cell.lit.bad{background:rgba(178,80,52,.14)}
 button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
 /* the pitch */
@@ -648,10 +680,71 @@ function renderPlay(A,B,seat,joined){
       head=INSPECT_HEAD[key2][rs===seat?0:1];
       cls=me2>0?'good':(me2<0?'bad':'draw');
       sub=(reg==='i'?'The regulator inspected':'The regulator trusted the paperwork')+', the shop '+(shop==='f'?'did the full check':'skipped a step')+'. This round: '+(pay[0]>0?'+':'')+pay[0]+' regulator, '+(pay[1]>0?'+':'')+pay[1]+' shop';
+      /* the playback: the matrix, your move lights its row or column, then
+         theirs, then the cell where they meet, then the card */
+      const T=animatedN<n?1:0.3;animatedN=n;
+      stage.innerHTML='';
+      const lead=document.createElement('div');lead.className='lbl';lead.textContent='Round '+n+' of '+G.n;stage.appendChild(lead);
+      const iReg=rs===seat;
+      const m=document.createElement('div');m.className='pm';
+      const cell=(r,c)=>{const p=INSPECT_PAY[r+c];return '<div class="cell" data-k="'+r+c+'"><span class="a">'+(p[0]>0?'+':'')+p[0]+'</span><span class="c">,</span><span class="b">'+(p[1]>0?'+':'')+p[1]+'</span></div>';};
+      m.innerHTML='<div class="ch">The shop'+(iReg?' · '+esc(them):' · you')+'</div>'+
+        '<div class="rh">The regulator'+(iReg?' · you':' · '+esc(them))+'</div><div class="cl" data-c="f">Full check</div><div class="cl" data-c="k">Skip a step</div>'+
+        '<div class="rl" data-r="i">Inspect</div>'+cell('i','f')+cell('i','k')+
+        '<div class="rl" data-r="t">Trust the paperwork</div>'+cell('t','f')+cell('t','k');
+      stage.appendChild(m);
+      const at=(ms,f)=>setTimeout(f,ms);
+      const myLine=iReg?m.querySelector('[data-r="'+reg+'"]'):m.querySelector('[data-c="'+shop+'"]');
+      const theirLine=iReg?m.querySelector('[data-c="'+shop+'"]'):m.querySelector('[data-r="'+reg+'"]');
+      at(400,()=>myLine.classList.add('on'));
+      at(1500*T+400,()=>theirLine.classList.add('on'));
+      at(2700*T+500,()=>{const c=m.querySelector('[data-k="'+key2+'"]');c.classList.add('lit',cls==='draw'?'':cls);m.classList.add('done');});
+      at(3800*T+600,()=>{const card=document.createElement('div');card.className='bigcard';card.style.marginTop='10px';
+        card.innerHTML='<div class="head '+cls+'">'+head+'</div><div class="sub">'+esc(sub)+'</div>'+scoreRow(tally(per,n));
+        stage.appendChild(card);
+        const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
+        btn.textContent=n<G.n?'On to round '+(n+1):'See the final score';
+        btn.addEventListener('click',()=>{ackN=n;try{localStorage.setItem('m6-ack-'+ROOM+'-'+key,String(n));}catch(_){}shownKey='';tick();});
+        stage.appendChild(btn);});
+      return;
     }else{
-      const w=rpsWin(k[seat],k[seat==='a'?'b':'a']);
+      const mineX=k[seat], theirsX=k[seat==='a'?'b':'a'];
+      const w=rpsWin(mineX,theirsX);
       head=w>0?'YOU WIN':(w<0?'THEY WIN':'DRAW');cls=w>0?'good':(w<0?'bad':'draw');
-      sub='You threw '+label(k[seat])+', '+them+' threw '+label(k[seat==='a'?'b':'a']);
+      sub='You threw '+label(mineX)+', '+them+' threw '+label(theirsX);
+      /* the playback: both fists pump three times, your hand shows, then
+         theirs, then the winner, then the card */
+      const T=animatedN<n?1:0.3;animatedN=n;
+      stage.innerHTML='';
+      const lead=document.createElement('div');lead.className='lbl';lead.textContent='Throw '+n+' of '+G.n;stage.appendChild(lead);
+      const SH={
+        r:'<path class="ink" d="M24 62 C16 46 26 34 38 36 C40 22 56 18 64 28 C78 26 86 40 80 52 C90 62 82 78 68 78 L36 80 C24 80 20 72 24 62 Z"/>',
+        p:'<path class="ink" d="M28 14 H62 L76 28 V86 H28 Z"/><path class="ink" d="M62 14 V28 H76"/>',
+        s:'<path class="ink" d="M34 30 L70 68"/><path class="ink" d="M66 30 L30 68"/><circle class="ink" cx="26" cy="78" r="9"/><circle class="ink" cx="74" cy="78" r="9"/>'
+      };
+      const hand=(x,cls2,who)=>'<div class="hand '+cls2+'"><svg class="fist" viewBox="0 0 100 100">'+SH.r+'</svg><svg class="shape" viewBox="0 0 100 100">'+SH[x]+'</svg><div class="who">'+esc(who)+'</div></div>';
+      const hs=document.createElement('div');hs.className='hands';
+      hs.innerHTML=hand(mineX,'me','you')+'<div class="vs">VS</div>'+hand(theirsX,'them',them);
+      stage.appendChild(hs);
+      const beats=document.createElement('div');beats.className='beats';
+      const NAME={r:'Rock',p:'Paper',s:'Scissors'};
+      const win=w>0?mineX:theirsX, lose=w>0?theirsX:mineX;
+      beats.textContent=w===0?'A draw: '+NAME[mineX].toLowerCase()+' against '+NAME[mineX].toLowerCase():NAME[win]+(win==='s'?' beat ':' beats ')+NAME[lose].toLowerCase();
+      stage.appendChild(beats);
+      const at=(ms,f)=>setTimeout(f,ms);
+      const my=hs.querySelector('.hand.me'), th=hs.querySelector('.hand.them');
+      at(100,()=>{my.classList.add('pump');th.classList.add('pump');});
+      at(1500*T+300,()=>my.classList.add('show'));
+      at(2600*T+400,()=>th.classList.add('show'));
+      at(3700*T+500,()=>{if(w>0){my.classList.add('win');th.classList.add('lose');}else if(w<0){th.classList.add('win');my.classList.add('lose');}beats.classList.add('on');});
+      at(4700*T+600,()=>{const card=document.createElement('div');card.className='bigcard';card.style.marginTop='10px';
+        card.innerHTML='<div class="head '+cls+'">'+head+'</div>'+scoreRow(tally(per,n));
+        stage.appendChild(card);
+        const btn=document.createElement('button');btn.className='send';btn.style.marginTop='12px';
+        btn.textContent=n<G.n?'On to throw '+(n+1):'See the final score';
+        btn.addEventListener('click',()=>{ackN=n;try{localStorage.setItem('m6-ack-'+ROOM+'-'+key,String(n));}catch(_){}shownKey='';tick();});
+        stage.appendChild(btn);});
+      return;
     }
     show();
   }
