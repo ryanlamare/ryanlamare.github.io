@@ -466,35 +466,34 @@ const GT_SCORES = (() => {
     });
   }
 
-  /* chicken: "A|B|n|seat|x" lines, six rounds. Rounds 1-3: s = swerve,
-     g = straight. Rounds 4-6: first w (throw the steering wheel out) or
-     k (keep it), then s/g for a driver who kept it — a thrown wheel is a
-     straight. Latest line per pair, round, seat and phase wins. Payoffs
-     0,0 / -10,+10 / +10,-10 / -100,-100; MUST match m7/game/chicken.js.
-     The driver ahead on total takes winPoints; a dead heat pays nobody */
+  /* chicken: "A|B|n|seat|x|t" lines, six rounds on a thirty-second clock:
+     s = swerve, g = straight, and from round 4 w = the steering wheel
+     thrown out of the window, which is a straight whatever else that
+     driver sent. Not throwing needs no line (the retired k line is
+     ignored). t = seconds taken, never a rule. Five-field lines are read
+     without a time. Latest line per pair, round, seat and phase wins.
+     Payoffs 0,0 / -10,+10 / +10,-10 / -100,-100; MUST match
+     m7/game/chicken.js. The driver ahead on total takes winPoints; a dead
+     heat pays nobody */
   const CHICKEN_PAY = { ss: [0, 0], sg: [-10, 10], gs: [10, -10], gg: [-100, -100] };
   async function scoreChicken(ev, claims, tally) {
     const d = await j('/p/' + ev.room + '/answers');
     const pairs = new Map();
     (d.answers || []).forEach(t => {
       const p = String(t).split('|').map(x => x.trim());
-      if (p.length !== 5 || !p[0] || !p[1] || !/^[1-6]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[sgwk]$/.test(p[4])) return;
+      if ((p.length !== 5 && p.length !== 6) || !p[0] || !p[1] || !/^[1-6]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[sgw]$/.test(p[4])) return;
+      if (p[4] === 'w' && +p[2] < 4) return;
       const key = [norm(p[0]), norm(p[1])].sort().join('~');
       if (!pairs.has(key)) pairs.set(key, { A: p[0], B: p[1], r: {} });
       const pr = pairs.get(key), n = +p[2];
       pr.r[n] = pr.r[n] || { a: {}, b: {} };
-      if (p[4] === 'w' || p[4] === 'k') pr.r[n][p[3]].c = p[4]; else pr.r[n][p[3]].d = p[4];
+      if (p[4] === 'w') pr.r[n][p[3]].w = true; else pr.r[n][p[3]].d = p[4];
     });
     pairs.forEach(pr => {
       let tA = 0, tB = 0;
       for (let n = 1; n <= 6; n++) {
         const r = pr.r[n]; if (!r) continue;
-        let a, b;
-        if (n < 4) { a = r.a.d; b = r.b.d; }
-        else {
-          if (!(r.a.c && r.b.c)) continue;
-          a = r.a.c === 'w' ? 'g' : r.a.d; b = r.b.c === 'w' ? 'g' : r.b.d;
-        }
+        const a = r.a.w ? 'g' : r.a.d, b = r.b.w ? 'g' : r.b.d;
         if (!a || !b) continue;
         const pay = CHICKEN_PAY[a + b]; if (!pay) continue;
         tA += pay[0]; tB += pay[1];
@@ -702,6 +701,49 @@ const GT_SCORES = (() => {
     }
   }
 
+  /* decision times under a clock, for the Quick draw and Careful marksman
+     awards: every scored game that runs on a clock is listed here, with
+     how its lines carry the seconds. A name needs `min` timed decisions
+     to qualify; the shortest mean wins Quick draw, the longest Careful
+     marksman, ties share, and with fewer than two qualifiers neither is
+     given. Latest line per pair, round, seat and phase, as the rules read
+     them, so a retry never counts twice.
+     -> {fastest:[names], slowest:[names], rows:[{name, mean, n}] asc} */
+  const TIMED = [
+    /* chicken: "A|B|n|seat|x|t", the driver is seat a = A, seat b = B */
+    { room: 'm7-chicken', min: 3, read: p => {
+        if (p.length !== 6 || !/^[1-6]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[sgw]$/.test(p[4]) || !/^\d{1,3}$/.test(p[5])) return null;
+        const key = [norm(p[0]), norm(p[1])].sort().join('~');
+        return { name: p[3] === 'a' ? p[0] : p[1], slot: key + '~' + p[2] + '~' + p[3] + '~' + (p[4] === 'w' ? 'w' : 'd'), secs: Math.min(+p[5], 30) };
+      } },
+  ];
+  async function decisionTimes() {
+    const latest = new Map();
+    for (const t of TIMED) {
+      try {
+        const d = await j('/p/' + t.room + '/answers');
+        (d.answers || []).forEach(line => {
+          const r = t.read(String(line).split('|').map(x => x.trim()));
+          if (r) latest.set(t.room + '~' + r.slot, { name: r.name, secs: r.secs, min: t.min });
+        });
+      } catch (_) { /* a room that isn't there yet times nobody */ }
+    }
+    const per = new Map();
+    latest.forEach(({ name, secs }) => {
+      const k = norm(name);
+      if (!per.has(k)) per.set(k, { name: name.trim(), secs: [] });
+      per.get(k).secs.push(secs);
+    });
+    const min = TIMED.reduce((m, t) => Math.min(m, t.min), Infinity);
+    const rows = [...per.values()].filter(p => p.secs.length >= min)
+      .map(p => ({ name: p.name, n: p.secs.length, mean: p.secs.reduce((a, b) => a + b, 0) / p.secs.length }))
+      .sort((a, b) => a.mean - b.mean || a.name.localeCompare(b.name));
+    if (rows.length < 2) return { fastest: [], slowest: [], rows };
+    const lo = rows[0].mean, hi = rows[rows.length - 1].mean;
+    if (lo === hi) return { fastest: [], slowest: [], rows };
+    return { fastest: rows.filter(r => r.mean === lo).map(r => r.name), slowest: rows.filter(r => r.mean === hi).map(r => r.name), rows };
+  }
+
   /* -> {players:[{name, byEvent, total}] desc, events:[{key,label}]} */
   async function load() {
     const claims = await loadClaims();
@@ -777,7 +819,8 @@ const GT_SCORES = (() => {
       const me = (norm(p[0]) === nkey) === (p[3] === 'a');
       if (!me) return null;
       const W = { s: 'swerved', g: 'went straight', w: 'threw the wheel out', k: 'kept the wheel' };
-      return 'round ' + p[2] + ': ' + (W[p[4]] || p[4]);
+      const froze = p[4] === 'g' && p.length === 6 && +p[5] >= 30;
+      return 'round ' + p[2] + ': ' + (froze ? 'froze, and went straight' : (W[p[4]] || p[4])) + (p.length === 6 && !froze ? ' after ' + p[5] + 's' : '');
     }
     if (id === 'm7-gb' || id === 'm7-stag') {
       if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
@@ -887,5 +930,5 @@ const GT_SCORES = (() => {
     });
   }
 
-  return { load, claimName, myHistory, scoringRoomIds, MODULES, GAME_ROOMS, API, fuzzyKey, fuzzyGroups };
+  return { load, decisionTimes, claimName, myHistory, scoringRoomIds, MODULES, GAME_ROOMS, API, fuzzyKey, fuzzyGroups };
 })();

@@ -189,7 +189,9 @@ offers a change; the deck takes a snapshot at the reveal keypress and stops
 refreshing that tally, so nothing can move the bars once the room has seen
 them. The Worker stays last-vote-wins — the lock lives in the phone and the
 deck, and a Poll Desk reset of a room unlocks the phones that voted in it.
-Write-in polls stay open on purpose. The `/reset` admin secret is a
+Write-in polls stay open on purpose. The exception is a game on a clock
+(chicken, from 13 Sep 2026): there one tap commits, because the clock is
+the commitment device and a confirm step under a countdown would be cruel. The `/reset` admin secret is a
 Wrangler secret, deliberately not in this repo.
 
 ### Preview while editing

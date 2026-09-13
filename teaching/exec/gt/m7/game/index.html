@@ -7,9 +7,16 @@
 /* Participant page for the Module 7 games — games the room has played before,
    with one player handed a strategic move.
 
-     ?g=chicken  chicken in pairs, six rounds; from round four a driver may
-                 first throw the steering wheel out of the window. Rules in
-                 chicken.js. Five points to whoever is ahead.
+     ?g=chicken  chicken in pairs, six rounds, each on a thirty-second
+                 clock: two cars close over the clock, swerve or straight
+                 is one tap, and a driver who has not chosen when it runs
+                 out goes straight (their own phone sends it). From round
+                 four a driver may, at any moment before choosing, hold to
+                 throw the steering wheel out of the window; the other
+                 driver is told at once. The reveal plays the round back:
+                 your car, their car, the outcome, then the money. Rules
+                 in chicken.js. Five points to whoever is ahead.
+                 ?clock=<seconds> shortens the clock for a rehearsal.
      ?g=gb       split or steal in pairs, two rounds, a £1,000 pot each. Talk
                  first, then choose. In round two the partner who was picked
                  (seat b) gets an extra option before choosing, and, if they
@@ -79,6 +86,36 @@ button.opt.mine .ball{box-shadow:0 0 0 4px var(--paper)}
 button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
 button.send:disabled{opacity:.45;cursor:default}
+/* the chicken road: the deck's own drawing, cropped to the road, the two
+   cars closing over the clock. Car transforms are set from JS so a reload
+   mid-round resumes where the cars were */
+.proad{width:100%;height:auto;display:block;overflow:visible;margin-top:8px}
+.proad .car{transition:transform 30s linear}
+.proad .wheelfly{transition:transform 1.2s cubic-bezier(.2,.6,.3,1),opacity 1.2s;transform-box:fill-box;transform-origin:center}
+.proad .wheelfly.go{transform:translate(-90px,-150px) rotate(-260deg);opacity:0}
+.proad .wheelfly.go.r{transform:translate(90px,-150px) rotate(260deg)}
+.proad .boom{opacity:0;transition:opacity .2s}
+.proad .boom.on{opacity:1}
+.proad.shake{animation:shake .5s linear}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(4px,-2px)}}
+.clockrow{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
+.clock{font-family:var(--display);font-weight:900;font-size:46px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.clock.low{color:var(--terracotta)}
+.clock.over{color:var(--muted)}
+.clockrow .cl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+button.hold{position:relative;overflow:hidden;width:100%;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--card);border:2.5px solid var(--terracotta);color:var(--terracotta);padding:16px 18px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px}
+button.hold .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--terracotta);opacity:.28;transition:width 0s}
+button.hold.holding .fill{width:100%;transition:width 1s linear}
+button.hold span{position:relative}
+.throwline{border-left:6px solid var(--terracotta);background:var(--card);padding:12px 16px;font-weight:600;font-size:16px;line-height:1.35;color:var(--ink);margin-top:10px}
+.throwline b{color:var(--terracotta)}
+.moves{display:flex;flex-direction:column;gap:6px;margin-top:10px;min-height:52px}
+.moves .mv{font-weight:700;font-size:16px;color:var(--ink);opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s}
+.moves .mv.on{opacity:1;transform:none}
+.moves .mv.me{color:var(--teal)} .moves .mv.them{color:var(--terracotta)}
+.bigcard.enter{animation:cardin .45s ease-out}
+@keyframes cardin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .wheelnote{border:2.5px solid var(--red);background:var(--card);padding:14px 16px;font-weight:600;font-size:15px;line-height:1.4;color:var(--ink)}
 .wheelnote b{color:var(--red)}
 .wheelnote q{font-style:italic}
@@ -115,7 +152,6 @@ const qs=new URLSearchParams(location.search);
 const GAMES={
   chicken:{room:'m7-chicken',title:'Chicken',n:CHICKEN.N,
       drive:[{k:'s',n:'SWERVE'},{k:'g',n:'STRAIGHT'}],
-      wheel:[{k:'w',n:'THROW IT OUT'},{k:'k',n:'KEEP THE WHEEL'}],
       pairLead:'Pair up with the person next to you',
       seats:['I’ll pick my partner','My partner picks me'],
       wait:'Keep this page open. The game starts when your partner picks you.'},
@@ -155,7 +191,7 @@ const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
 const norm=MOVES.norm, pairKey=MOVES.pairKey;
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 let poller=null;
-function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}if(typeof stopChickenGlobal==='function')stopChickenGlobal();}
 let sayN=0;
 function say(line){
   sayN++;
@@ -284,13 +320,13 @@ function renderPlay(A,B,seat){
   app.appendChild(backBtn());
   let shownKey='', posting=false, ackN=0;
   try{ackN=+(localStorage.getItem('m7-ack-'+ROOM+'-'+key)||0);}catch(_){}
-  function post(n,x,btnRow,b){
+  function post(n,x,btnRow,b,extra){
     if(posting)return;posting=true;
-    say(A+'|'+B+'|'+n+'|'+seat+'|'+x)
+    say(A+'|'+B+'|'+n+'|'+seat+'|'+x+(extra!=null?'|'+extra:''))
       .then(()=>{posting=false;st.textContent='Sent. Waiting for '+them+'…';
         if(btnRow){btnRow.querySelectorAll('.opt').forEach(el=>el.classList.remove('mine'));b.classList.add('mine');}
         shownKey='';tick();})
-      .catch(code=>{posting=false;st.textContent=failMsg(code);});
+      .catch(code=>{posting=false;st.textContent=failMsg(code);shownKey='';tick();});
   }
   function buttons(n,opts,cls,picked){
     const row=document.createElement('div');row.className='bigrow'+(cls?' '+cls:'');row.style.marginTop='10px';
@@ -327,48 +363,117 @@ function renderPlay(A,B,seat){
   const isChicken=G===GAMES.chicken, isGB=G===GAMES.gb, isStag=G===GAMES.stag;
 
   /* ---------- chicken ---------- */
+  const CLOCK=Math.max(3,Math.min(CHICKEN.CLOCK,+(qs.get('clock')||CHICKEN.CLOCK)||CHICKEN.CLOCK));
+  const CLOSE=58; /* how far each car travels over a full clock, in road units */
+  let clockTimer=null, revealTimer=[];
+  function stopChicken(){if(clockTimer){clearInterval(clockTimer);clockTimer=null;}revealTimer.forEach(clearTimeout);revealTimer=[];}
+  window.stopChickenGlobal=stopChicken;
   function chScore(t){
     const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
     return '<div class="score"><span class="me"><b>'+sign(mine)+'</b><small>you</small></span><span class="them"><b>'+sign(theirs)+'</b><small>'+esc(them)+'</small></span></div>';
   }
+  /* the clock for round n starts the first time this phone shows the round,
+     and survives a reload */
+  function clockStart(n){
+    const k='m7-clk-'+ROOM+'-'+key+'-'+n;
+    let t=null;try{t=+localStorage.getItem(k)||null;}catch(_){}
+    if(!t){t=Date.now();try{localStorage.setItem(k,String(t));}catch(_){}}
+    return t;
+  }
+  const elapsed=n=>Math.max(0,(Date.now()-clockStart(n))/1000);
+  const secsTaken=n=>Math.min(CLOCK,Math.round(elapsed(n)));
+  /* the road: you on the left in teal, them on the right in terracotta */
+  function road(n){
+    const lab=s=>esc(String(s).toUpperCase().slice(0,9));
+    const wheel=(cx,id,cls)=>'<g id="'+id+'" class="wheelfly'+cls+'"><circle cx="'+cx+'" cy="140" r="13" fill="none" stroke="var(--red)" stroke-width="5"/><circle cx="'+cx+'" cy="140" r="3.5" fill="var(--red)"/><line x1="'+cx+'" y1="127" x2="'+cx+'" y2="153" stroke="var(--red)" stroke-width="3"/><line x1="'+(cx-13)+'" y1="140" x2="'+(cx+13)+'" y2="140" stroke="var(--red)" stroke-width="3"/></g>';
+    const d=document.createElement('div');
+    d.innerHTML='<svg class="proad" viewBox="0 100 440 120" role="img" aria-label="Two cars head to head on a road">'+
+      '<rect x="0" y="120" width="440" height="90" fill="var(--ink)" opacity=".85"/>'+
+      '<line x1="10" y1="165" x2="430" y2="165" stroke="var(--paper)" stroke-width="4" stroke-dasharray="26 18"/>'+
+      '<g id="myCar" class="car"><rect x="30" y="140" width="120" height="44" rx="10" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><rect x="62" y="128" width="58" height="24" rx="8" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><circle cx="56" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="126" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="90" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;fill:var(--paper)">YOU</text>'+wheel(104,'myWheel','')+'</g>'+
+      '<g id="theirCar" class="car"><rect x="290" y="140" width="120" height="44" rx="10" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><rect x="320" y="128" width="58" height="24" rx="8" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><circle cx="314" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="384" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="350" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;fill:var(--paper)">'+lab(them)+'</text>'+wheel(336,'theirWheel',' r')+'</g>'+
+      '<g id="boom" class="boom"><polygon points="220,118 232,140 258,132 244,152 268,166 242,172 248,198 224,184 206,204 204,178 178,176 200,160 182,142 208,146" fill="var(--ochre)" stroke="var(--ink)" stroke-width="3"/><text x="220" y="170" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:22px;fill:var(--ink)">CRASH</text></g>'+
+      '</svg>';
+    return d.firstChild;
+  }
+  /* place the cars at the clock's current progress, then let them close
+     over what is left; a finished clock parks them nose to nose */
+  function driveCars(svg,n){
+    const mine=svg.querySelector('#myCar'), theirs=svg.querySelector('#theirCar');
+    const e=Math.min(CLOCK,elapsed(n)), x=CLOSE*e/CLOCK;
+    [mine,theirs].forEach(c=>c.style.transition='none');
+    mine.style.transform='translateX('+x+'px)';theirs.style.transform='translateX('+(-x)+'px)';
+    void svg.getBoundingClientRect();
+    const left=Math.max(0,CLOCK-e);
+    if(left>0){[mine,theirs].forEach(c=>c.style.transition='transform '+left+'s linear');
+      mine.style.transform='translateX('+CLOSE+'px)';theirs.style.transform='translateX('+(-CLOSE)+'px)';}
+  }
+  function carMove(car,x,dir,how,secs){
+    car.style.transition='transform '+secs+'s cubic-bezier(.4,0,.2,1)';
+    if(how==='s')car.style.transform='translate('+(x-dir*16)+'px,80px) rotate('+(dir*28)+'deg)';
+    else if(how==='through')car.style.transform='translateX('+(dir*330)+'px)';
+    else car.style.transform='translateX('+x+'px)';
+  }
+  const did=(x,froze,threw)=>threw?'threw the wheel out':(froze?'froze, and went straight':(x==='s'?'swerved':'went straight'));
   function chTick(pr){
     const t=CHICKEN.totals(pr), n=t.next;
     document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
     const last=n-1;
     const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
+    const iThrew=!!mineSlot.w, theyThrew=n>=CHICKEN.WHEEL_FROM&&!!(seat==='a'?rd.wb:rd.wa);
     let k;
     if(last>=1&&ackN<last)k='res:'+last;
     else if(n>G.n)k='final';
-    else if(n>=CHICKEN.WHEEL_FROM){
-      if(!mineSlot.c)k='wheel:'+n;
-      else if(!(rd.ca&&rd.cb))k='waitc:'+n;
-      else if(mineSlot.c==='w')k='thrown:'+n;
-      else if(!mineSlot.d)k='drive:'+n+':'+((seat==='a'?rd.cb:rd.ca)||'');
-      else k='waitd:'+n;
-    }else k=!mineSlot.d?'drive:'+n:'waitd:'+n;
-    if(k===shownKey)return;shownKey=k;st.textContent='';
+    else if(iThrew)k='thrown:'+n+':'+theyThrew;
+    else if(mineSlot.d)k='waitd:'+n+':'+theyThrew;
+    else k='drive:'+n+':'+theyThrew;
+    if(k===shownKey)return;
+    const prev=shownKey; shownKey=k;st.textContent='';
+    stopChicken();
     const totalRow=n>1?chScore(t):'';
     if(k.startsWith('res:')){
       const rr=CHICKEN.round(pr,last);
       const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
+      const iT=!!(seat==='a'?rr.wa:rr.wb), theyT=!!(seat==='a'?rr.wb:rr.wa);
+      const iF=seat==='a'?rr.fa:rr.fb, theyF=seat==='a'?rr.fb:rr.fa;
       const myPay=rr.pay[seat==='a'?0:1], theirPay=rr.pay[seat==='a'?1:0];
       let h,cls;
       if(mine==='g'&&theirs==='g'){h='CRASH';cls='bad';}
       else if(mine==='s'&&theirs==='s'){h='BOTH SWERVED';cls='draw';}
       else if(mine==='s'){h='YOU SWERVED';cls='bad';}
       else{h='THEY SWERVED';cls='good';}
-      const did=x=>x==='s'?'swerved':'went straight';
-      let sub='You '+did(mine)+', '+them+' '+did(theirs)+'. This round: '+sign(myPay)+' you, '+sign(theirPay)+' '+them+'.';
-      if(last>=CHICKEN.WHEEL_FROM){
-        const iThrew=(seat==='a'?rr.ca:rr.cb)==='w', theyThrew=(seat==='a'?rr.cb:rr.ca)==='w';
-        if(iThrew&&theyThrew)sub+=' Both wheels were out of the window.';
-        else if(iThrew)sub+=' Your wheel was out of the window.';
-        else if(theyThrew)sub+=' Their wheel was out of the window.';
-      }
-      stage.innerHTML='';
-      const card=document.createElement('div');card.className='bigcard';
+      const sub='You '+did(mine,iF,iT)+', '+them+' '+did(theirs,theyF,theyT)+'. This round: '+sign(myPay)+' you, '+sign(theirPay)+' '+them+'.';
+      head(last,totalRow);
+      const svg=road(last);stage.appendChild(svg);
+      const myCar=svg.querySelector('#myCar'), theirCar=svg.querySelector('#theirCar');
+      /* the cars sit where the clock left them: nose to nose, or short of it */
+      const mySecs=(seat==='a'?rr.ta:rr.tb), theirSecs=(seat==='a'?rr.tb:rr.ta);
+      const x=CLOSE*Math.min(CLOCK,Math.max(mySecs==null?CLOCK:mySecs,theirSecs==null?CLOCK:theirSecs))/CLOCK;
+      [myCar,theirCar].forEach(c=>c.style.transition='none');
+      myCar.style.transform='translateX('+x+'px)';theirCar.style.transform='translateX('+(-x)+'px)';
+      if(iT)svg.querySelector('#myWheel').classList.add('go');
+      if(theyT)svg.querySelector('#theirWheel').classList.add('go');
+      void svg.getBoundingClientRect();
+      const moves=document.createElement('div');moves.className='moves';
+      moves.innerHTML='<div class="mv me">You '+esc(did(mine,iF,iT))+'</div><div class="mv them">'+esc(them)+' '+esc(did(theirs,theyF,theyT))+'</div>';
+      stage.appendChild(moves);
+      const card=document.createElement('div');card.className='bigcard enter';card.style.marginTop='10px';card.hidden=true;
       card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+chScore(CHICKEN.totals(pr));
-      stage.appendChild(card);stage.appendChild(ackBtn(last,last>=G.n));
+      stage.appendChild(card);
+      const ack=ackBtn(last,last>=G.n);ack.hidden=true;stage.appendChild(ack);
+      /* the playback, in order: your car, their car, the outcome, the money */
+      const at=(ms,f)=>revealTimer.push(setTimeout(f,ms));
+      const replayed=prev.startsWith('waitd:'+last)||prev.startsWith('thrown:'+last)||prev.startsWith('drive:'+last);
+      const T=replayed?1:0.35; /* a reload after the round shows it again, briskly */
+      at(100,()=>{moves.children[0].classList.add('on');if(mine==='s')carMove(myCar,x,1,'s',1.1*T);});
+      at(1000*T+200,()=>{moves.children[1].classList.add('on');if(theirs==='s')carMove(theirCar,-x,-1,'s',1.1*T);});
+      at(2000*T+300,()=>{
+        if(mine==='g'&&theirs==='g'){carMove(myCar,CLOSE+8,1,'g',0.4*T);carMove(theirCar,-CLOSE-8,-1,'g',0.4*T);
+          at(400*T,()=>{svg.querySelector('#boom').classList.add('on');svg.classList.add('shake');});}
+        else if(mine==='g')carMove(myCar,x,1,'through',1.3*T);
+        else if(theirs==='g')carMove(theirCar,-x,-1,'through',1.3*T);
+      });
+      at(2900*T+400,()=>{card.hidden=false;ack.hidden=false;});
     }else if(k==='final'){
       const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
       stage.innerHTML='';
@@ -376,27 +481,68 @@ function renderPlay(A,B,seat){
       const cls=mine>theirs?'good':(mine<theirs?'bad':'draw');
       card.innerHTML='<div class="head '+cls+'">'+(mine>theirs?'YOU CAME OUT AHEAD':(mine<theirs?'THEY CAME OUT AHEAD':'ALL SQUARE'))+'</div><div class="sub">Six rounds of chicken</div>'+chScore(t);
       stage.appendChild(card);stage.appendChild(doneNote());
-    }else if(k.startsWith('wheel:')||k.startsWith('waitc:')){
-      head(n,totalRow);
-      const r2=document.createElement('div');r2.className='role';r2.textContent='Before you drive';stage.appendChild(r2);
-      const note=document.createElement('div');note.className='wheelnote';
-      note.innerHTML=(n===CHICKEN.WHEEL_FROM?'<b>New from this round.</b> ':'')+'You can <b>throw your steering wheel out of the window</b>. If you do, you cannot swerve this round, and '+esc(them)+' will be told before they choose.';
-      stage.appendChild(note);
-      stage.appendChild(buttons(n,G.wheel,'words',mineSlot.c));
-      if(k.startsWith('waitc:'))st.textContent='Sent. Waiting for '+them+'…';
-    }else if(k.startsWith('thrown:')){
-      head(n,totalRow);waiting('Your wheel is out of the window. You are going straight. Waiting for '+them+' to choose…');
     }else{
+      /* the approach: the clock runs, the cars close, you choose */
       head(n,totalRow);
-      if(n>=CHICKEN.WHEEL_FROM){
-        const theyThrew=(seat==='a'?rd.cb:rd.ca)==='w';
-        const r2=document.createElement('div');r2.className='role'+(theyThrew?' warn':'');
-        r2.textContent=theyThrew?them+' has thrown the wheel out':'Both wheels still in place';stage.appendChild(r2);
-        const hint=document.createElement('div');hint.className='status';hint.textContent=theyThrew?'They cannot swerve. Swerve, or go straight?':'Swerve, or go straight?';stage.appendChild(hint);
-      }else{const hint=document.createElement('div');hint.className='status';hint.textContent='Swerve, or go straight?';stage.appendChild(hint);}
-      stage.appendChild(buttons(n,G.drive,'',mineSlot.d));
-      if(k.startsWith('waitd:'))st.textContent='Sent. Waiting for '+them+'…';
+      const svg=road(n);stage.appendChild(svg);
+      driveCars(svg,n);
+      if(iThrew)svg.querySelector('#myWheel').classList.add('go');
+      if(theyThrew)svg.querySelector('#theirWheel').classList.add('go');
+      const row=document.createElement('div');row.className='clockrow';
+      row.innerHTML='<span class="cl">'+(k.startsWith('drive:')?'Swerve, or go straight?':'Locked in')+'</span><span class="clock" id="chClock"></span>';
+      stage.appendChild(row);
+      if(theyThrew){const tl=document.createElement('div');tl.className='throwline';tl.innerHTML='<b>'+esc(them)+' threw the wheel out</b> and is locked in to going straight';stage.appendChild(tl);}
+      if(k.startsWith('thrown:')){
+        waiting('Your wheel is out of the window. You are going straight. Waiting for '+them+' to choose…');
+      }else if(k.startsWith('waitd:')){
+        waiting('You '+(mineSlot.d==='s'?'swerved':'went straight')+'. Waiting for '+them+' to choose…');
+      }else{
+        if(n===CHICKEN.WHEEL_FROM){
+          const note=document.createElement('div');note.className='wheelnote';note.style.marginTop='10px';
+          note.innerHTML='<b>New from this round.</b> At any moment before you choose, you can <b>throw your steering wheel out of the window</b>. If you do, you cannot swerve, and '+esc(them)+' is told the moment it happens.';
+          stage.appendChild(note);
+        }
+        const btns=buttonsTimed(n,G.drive);stage.appendChild(btns);
+        if(n>=CHICKEN.WHEEL_FROM)stage.appendChild(holdButton(n,svg));
+      }
+      /* the clock: at zero, a driver who has not chosen is going straight */
+      const cEl=document.getElementById('chClock');
+      let fired=false;
+      const paint=()=>{
+        const left=Math.max(0,CLOCK-elapsed(n));
+        cEl.textContent=Math.ceil(left);
+        cEl.classList.toggle('low',left<=5&&left>0);cEl.classList.toggle('over',left<=0);
+        /* a frozen driver always writes the real full clock, whatever a rehearsal clock was, so the rules read it as frozen */
+        if(k.startsWith('drive:')&&left<=0&&!fired&&!posting){fired=true;stage.querySelectorAll('button').forEach(b=>b.disabled=true);post(n,'g',null,null,CHICKEN.CLOCK);}
+      };
+      paint();
+      clockTimer=setInterval(paint,200);
     }
+  }
+  /* swerve or straight: one tap commits, and carries the seconds it took */
+  function buttonsTimed(n,opts){
+    const row=document.createElement('div');row.className='bigrow';row.style.marginTop='10px';
+    opts.forEach(o=>{
+      const b=document.createElement('button');b.className='opt';b.textContent=o.n;
+      b.addEventListener('click',()=>{if(posting)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);post(n,o.k,row,b,secsTaken(n));});
+      row.appendChild(b);
+    });
+    return row;
+  }
+  /* press and hold for a second to throw the wheel: the act of commitment,
+     and a wrong finger cannot do it */
+  function holdButton(n,svg){
+    const b=document.createElement('button');b.className='hold';b.type='button';
+    b.innerHTML='<i class="fill"></i><span>Hold to throw the wheel out</span>';
+    let timer=null;
+    const start=e=>{if(posting||b.disabled)return;e.preventDefault();b.classList.add('holding');
+      timer=setTimeout(()=>{timer=null;b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
+        svg.querySelector('#myWheel').classList.add('go');post(n,'w',null,null,secsTaken(n));},1000);};
+    const stop=()=>{b.classList.remove('holding');if(timer){clearTimeout(timer);timer=null;}};
+    b.addEventListener('pointerdown',start);
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
+    b.addEventListener('contextmenu',e=>e.preventDefault());
+    return b;
   }
 
   /* ---------- split or steal ---------- */
@@ -535,7 +681,7 @@ function renderPlay(A,B,seat){
     }).catch(()=>{});
   }
 
-  poller=setInterval(tick,2000);tick();
+  poller=setInterval(tick,isChicken?1000:2000);tick();
 }
 
 
