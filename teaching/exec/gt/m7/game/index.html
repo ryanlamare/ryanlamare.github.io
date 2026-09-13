@@ -411,7 +411,7 @@ function renderPlay(A,B,seat){
       '<line x1="10" y1="165" x2="430" y2="165" stroke="var(--paper)" stroke-width="4" stroke-dasharray="26 18"/>'+
       '<g id="myCar" class="car"><rect x="30" y="140" width="120" height="44" rx="10" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><rect x="62" y="128" width="58" height="24" rx="8" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><circle cx="56" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="126" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="90" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;fill:var(--paper)">YOU</text>'+wheel(104,'myWheel','')+'</g>'+
       '<g id="theirCar" class="car"><rect x="290" y="140" width="120" height="44" rx="10" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><rect x="320" y="128" width="58" height="24" rx="8" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><circle cx="314" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="384" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="350" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;fill:var(--paper)">'+lab(them)+'</text>'+wheel(336,'theirWheel',' r')+'</g>'+
-      '<g id="boom" class="boom"><polygon points="220,92 238,128 280,110 262,150 306,160 266,176 282,222 234,196 214,236 204,196 158,204 190,170 142,142 196,146" fill="var(--ochre)" stroke="var(--ink)" stroke-width="3"/><text x="220" y="176" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.04em;fill:var(--red)">CRASH</text></g>'+
+      '<g id="boom" class="boom"><polygon points="220,90 240,126 286,106 270,146 322,152 282,172 300,222 244,196 222,238 204,198 148,212 184,172 122,150 190,144" fill="var(--ochre)" stroke="var(--ink)" stroke-width="3"/><text x="220" y="178" text-anchor="middle" textLength="112" lengthAdjust="spacingAndGlyphs" style="font-family:var(--display);font-weight:900;font-size:30px;fill:var(--red)">CRASH</text></g>'+
       '</svg>';
     return d.firstChild;
   }
@@ -455,11 +455,7 @@ function renderPlay(A,B,seat){
       const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
       const iT=!!(seat==='a'?rr.wa:rr.wb), theyT=!!(seat==='a'?rr.wb:rr.wa);
       const iF=seat==='a'?rr.fa:rr.fb, theyF=seat==='a'?rr.fb:rr.fa;
-      let h,cls;
-      if(mine==='g'&&theirs==='g'){h='CRASH';cls='bad';}
-      else if(mine==='s'&&theirs==='s'){h='BOTH SWERVED';cls='draw';}
-      else if(mine==='s'){h='YOU SWERVED';cls='bad';}
-      else{h='THEY SWERVED';cls='good';}
+      const myPay=rr.pay[seat==='a'?0:1], theirPay=rr.pay[seat==='a'?1:0];
       head(last,totalRow);
       const svg=road(last);stage.appendChild(svg);
       const myCar=svg.querySelector('#myCar'), theirCar=svg.querySelector('#theirCar');
@@ -475,7 +471,7 @@ function renderPlay(A,B,seat){
       moves.innerHTML='<div class="mv me">You '+esc(did(mine,iF,iT))+'</div><div class="mv them">'+esc(them)+' '+esc(did(theirs,theyF,theyT))+'</div>';
       stage.appendChild(moves);
       const card=document.createElement('div');card.className='bigcard enter';card.style.marginTop='10px';card.hidden=true;
-      card.innerHTML='<div class="head '+cls+'">'+h+'</div>'+chScore(CHICKEN.totals(pr));
+      card.innerHTML='<div class="score" style="margin-top:0"><span class="me"><b>'+sign(myPay)+'</b><small>you</small></span><span class="them"><b>'+sign(theirPay)+'</b><small>'+esc(them)+'</small></span></div><div class="sub" style="margin-top:6px">this round</div>';
       stage.appendChild(card);
       const ack=ackBtn(last,last>=G.n);ack.hidden=true;stage.appendChild(ack);
       /* the playback, in order: your car, their car, the outcome, the money */
