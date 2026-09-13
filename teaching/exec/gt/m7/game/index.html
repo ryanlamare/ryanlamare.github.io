@@ -131,6 +131,25 @@ button.hold span{position:relative}
 .wheelnote b{color:var(--red)}
 .wheelnote q{font-style:italic}
 .msg{border-left:6px solid var(--teal);background:var(--card);padding:12px 16px;font-weight:600;font-size:16px;line-height:1.35;color:var(--ink);font-style:italic}
+/* split or steal: the two golden balls open in turn, then the pot moves */
+.gbstage{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:10px;padding:16px 8px 30px;border:2.5px solid var(--ink);background:var(--card);position:relative;overflow:hidden}
+.gball2{position:relative;flex:none;width:92px;height:92px;border-radius:50%;background:var(--paper-soft);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.06em;color:var(--ink);overflow:visible}
+.gball2 .lid{position:absolute;top:-3px;bottom:-3px;width:calc(50% + 3px);background:var(--ochre);border:3px solid var(--ink);z-index:2;transition:transform 1s cubic-bezier(.4,0,.2,1),opacity 1s;box-shadow:inset -6px -6px 0 rgba(27,28,25,.14)}
+.gball2 .lid.l{left:-3px;border-radius:92px 0 0 92px;border-right:none;transform-origin:left center}
+.gball2 .lid.r{right:-3px;border-radius:0 92px 92px 0;border-left:none;transform-origin:right center}
+.gball2.open .lid.l{transform:translateX(-46px) rotate(-18deg);opacity:.9}
+.gball2.open .lid.r{transform:translateX(46px) rotate(18deg);opacity:.9}
+.gball2 .inner{position:relative;z-index:1;opacity:0;transition:opacity .5s .5s}
+.gball2.open .inner{opacity:1}
+.gball2 .inner.t{color:var(--terracotta)} .gball2 .inner.s{color:var(--teal)}
+.gball2 .who{position:absolute;top:100%;left:-20px;right:-20px;text-align:center;font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.potwrap{flex:1;min-width:70px;position:relative;height:64px;display:flex;align-items:center;justify-content:center}
+.chip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--display);font-weight:900;font-size:17px;background:var(--teal);color:var(--paper);border:2.5px solid var(--ink);padding:8px 12px;border-radius:30px;white-space:nowrap;
+  transition:transform 1.1s cubic-bezier(.4,0,.2,1),opacity .8s,background .4s}
+.chip.half{font-size:14px;padding:6px 10px}
+.chip.gone{opacity:0;transform:translate(-50%,-50%) scale(.3)}
+.chip.nothing{background:var(--ink);opacity:.35}
 /* the auction */
 .auc{border:2.5px solid var(--ink);background:var(--card);padding:16px}
 .auc .pot{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--ink)}
@@ -614,21 +633,54 @@ function renderPlay(A,B,seat){
     else if(!mineSlot.d)k='choose:'+n;
     else if(iMove&&rd.a==='s'&&rd.b==='t'&&!mineSlot.e)k='hand:'+n;
     else k='wait:'+n;
-    if(k===shownKey)return;shownKey=k;st.textContent='';
+    if(k===shownKey)return;
+    const prev=shownKey;shownKey=k;st.textContent='';
+    stopChicken(); /* any playback still running */
     const totalRow=n>1?gbScore(t):'';
     if(k.startsWith('res:')){
+      /* the playback: your ball opens, then theirs, then the pot moves, then the money */
       const rr=GB.round(pr,last);
       const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
-      const myMoney=rr.money[seat==='a'?0:1];
-      let h,cls,sub;
-      if(mine==='s'&&theirs==='s'){h='YOU BOTH SPLIT';cls='good';sub='£500 each.';}
-      else if(mine==='t'&&theirs==='t'){h='YOU BOTH STOLE';cls='bad';sub='Nobody gets anything.';}
-      else if(mine==='t'){h=rr.hand==='h'?'YOU STOLE, THEN SHARED':'YOU STOLE';cls='good';sub=them+' split. '+(rr.hand==='h'?'You handed over half: £500 each.':'The whole £1,000 is yours.');}
-      else{h=rr.hand==='h'?'THEY STOLE, THEN SHARED':'THEY STOLE';cls=rr.hand==='h'?'draw':'bad';sub='You split. '+(rr.hand==='h'?them+' handed over half: £500 each.':them+' keeps the whole £1,000.');}
-      stage.innerHTML='';
-      const card=document.createElement('div');card.className='bigcard';
-      card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+gbScore(GB.totals(pr));
-      stage.appendChild(card);stage.appendChild(ackBtn(last,last>=G.n));
+      const myMoney=rr.money[seat==='a'?0:1], theirMoney=rr.money[seat==='a'?1:0];
+      const iStole=mine==='t', theyStole=theirs==='t';
+      const handed=rr.hand==='h', kept=rr.hand==='k';
+      head(last,totalRow);
+      const gs=document.createElement('div');gs.className='gbstage';
+      const ball=(id,x,who)=>'<div class="gball2" id="'+id+'"><div class="lid l"></div><div class="lid r"></div><div class="inner '+x+'">'+(x==='t'?'STEAL':'SPLIT')+'</div><div class="who">'+esc(who)+'</div></div>';
+      gs.innerHTML=ball('myBall',mine,'you')+'<div class="potwrap"><div class="chip" id="pot">£1,000</div><div class="chip half gone" id="halfA">£500</div><div class="chip half gone" id="halfB">£500</div></div>'+ball('theirBall',theirs,them);
+      stage.appendChild(gs);
+      const moves=document.createElement('div');moves.className='moves';
+      const line=(who,x)=>who+' '+(x==='t'?'stole':'split');
+      let h3='';
+      if(iStole&&!theyStole&&rr.hand)h3='<div class="mv me">You '+(handed?'handed over half':'kept it all')+'</div>';
+      if(theyStole&&!iStole&&rr.hand)h3='<div class="mv them">'+esc(them)+' '+(handed?'handed over half':'kept it all')+'</div>';
+      moves.innerHTML='<div class="mv me">'+esc(line('You',mine))+'</div><div class="mv them">'+esc(line(them,theirs))+'</div>'+h3;
+      stage.appendChild(moves);
+      const card=document.createElement('div');card.className='bigcard enter';card.style.marginTop='10px';card.hidden=true;
+      card.innerHTML='<div class="score" style="margin-top:0"><span class="me"><b>'+money(myMoney)+'</b><small>you</small></span><span class="them"><b>'+money(theirMoney)+'</b><small>'+esc(them)+'</small></span></div><div class="sub" style="margin-top:6px">this round</div>';
+      stage.appendChild(card);
+      const ack=ackBtn(last,last>=G.n);ack.hidden=true;stage.appendChild(ack);
+      const at=(ms,f)=>revealTimer.push(setTimeout(f,ms));
+      const replayed=prev.startsWith('wait:'+last)||prev.startsWith('choose:'+last)||prev.startsWith('hand:'+last);
+      const T=replayed?1:0.35;
+      const pot=gs.querySelector('#pot'), hA=gs.querySelector('#halfA'), hB=gs.querySelector('#halfB');
+      const wrap=gs.querySelector('.potwrap');
+      const reach=()=>wrap.getBoundingClientRect().width/2+34; /* to the edge of a ball */
+      const slide=(el,dx,extra)=>{el.style.transform='translate(calc(-50% + '+dx+'px),-50%)'+(extra||'');};
+      at(400,()=>{gs.querySelector('#myBall').classList.add('open');moves.children[0].classList.add('on');});
+      at(1800*T+400,()=>{gs.querySelector('#theirBall').classList.add('open');moves.children[1].classList.add('on');});
+      at(3400*T+500,()=>{
+        const d=reach();
+        if(!iStole&&!theyStole){pot.classList.add('gone');hA.classList.remove('gone');hB.classList.remove('gone');slide(hA,-d);slide(hB,d);}
+        else if(iStole&&theyStole){pot.classList.add('nothing');pot.textContent='NOTHING';}
+        else slide(pot,iStole?-d:d);
+      });
+      const handAt=4900*T+600;
+      if(rr.hand){at(handAt,()=>{
+        if(moves.children[2])moves.children[2].classList.add('on');
+        if(handed){const d=reach();pot.textContent='£500';hA.classList.remove('gone');hA.textContent='£500';slide(hA,iStole?d:-d);}
+      });}
+      at((rr.hand?6400:4900)*T+700,()=>{card.hidden=false;ack.hidden=false;});
     }else if(k==='final'){
       const mine=seat==='a'?t.a:t.b;
       stage.innerHTML='';
