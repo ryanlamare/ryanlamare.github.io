@@ -82,6 +82,25 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
   letter-spacing:.1em;font-size:11px;color:var(--muted);margin-bottom:14px}
 .split input[type=range]{width:100%;accent-color:var(--red);height:34px}
 /* the landed offer */
+/* the ultimatum's ending: the £1,000 splits into the two shares, or goes to nobody */
+.ubar{border:2.5px solid var(--ink);background:var(--card);padding:16px}
+.ubar .track{display:flex;height:54px;border:2.5px solid var(--ink);background:var(--paper-soft);overflow:hidden}
+.ubar .track i{display:block;height:100%;transition:width 1.2s cubic-bezier(.4,0,.2,1),opacity .8s}
+.ubar .track i.pro{background:var(--ink);width:100%} .ubar .track i.res{background:var(--red);width:0}
+.ubar.gone .track i{width:0!important;opacity:0}
+.ubar .ul{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-weight:700;font-size:15px}
+.ubar .ul span{opacity:0;transition:opacity .5s}
+.ubar .ul span.on{opacity:1}
+.ubar .ul .a{color:var(--ink)} .ubar .ul .b{color:var(--red)}
+.ubar .whole{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-bottom:8px}
+/* the turn games' ending: the pot, or the last card, goes to the taker */
+.ustage{border:2.5px solid var(--ink);background:var(--card);padding:18px 12px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.ustage .nm{flex:none;width:96px;text-align:center;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.ustage .nm.me{color:var(--teal)} .ustage .nm.them{color:var(--terracotta)}
+.ustage .mid{flex:1;position:relative;height:56px}
+.ustage .chip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:700;font-size:22px;background:var(--red);color:var(--paper);border:2.5px solid var(--ink);padding:8px 14px;border-radius:30px;white-space:nowrap;transition:transform 1.2s cubic-bezier(.4,0,.2,1),opacity .8s,background .4s}
+.ustage .chip.card{border-radius:4px;padding:14px 12px;font-size:14px;background:var(--ink)}
+.ustage .chip.nothing{background:var(--ink);opacity:.35}
 .offercard{border:2.5px solid var(--ink);background:var(--card);padding:18px}
 .offercard .from{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
 .offercard .amt{font-weight:700;font-size:40px;color:var(--red);margin:6px 0 2px}
@@ -465,7 +484,14 @@ function gameScreen(id,A,B,g,meIsA){
       cls=mine?'good':'bad';
       sub=s.ran?esc(s.taker)+' was up next and takes it all.':(mine?esc(s.other)+' walks away with nothing.':'You walk away with nothing.');
     }
-    show('<div class="bigcard"><div class="head '+cls+'">'+head+'</div><div class="sub">'+sub+'</div></div>');
+    /* the playback: the pot, or the last card, slides to whoever took it */
+    const meLeft=true, takerIsMe=id==='cards'?norm(s.winner)===norm(name):norm(s.taker)===norm(name);
+    const chipText=id==='cards'?'THE LAST CARD':'&pound;'+(s.ran?1000:s.pot);
+    show('<div class="ustage"><div class="nm me">you</div><div class="mid"><div class="chip'+(id==='cards'?' card':'')+'">'+chipText+'</div></div><div class="nm them">'+esc(opp)+'</div></div>'+
+      '<div class="bigcard" hidden style="margin-top:12px"><div class="head '+cls+'">'+head+'</div><div class="sub">'+sub+'</div></div>');
+    const chip=stage.querySelector('.chip'), mid=stage.querySelector('.mid');
+    setTimeout(()=>{const d=Math.max(20,mid.getBoundingClientRect().width/2-chip.offsetWidth/2-4);chip.style.transform='translate(calc(-50% + '+((takerIsMe?-1:1)*d)+'px),-50%)';},400);
+    setTimeout(()=>{stage.querySelector('.bigcard').hidden=false;},2000);
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
     note.textContent='Response recorded. Results on the screen soon. Play again any time — your first game is the one that counts for points.';
     stage.appendChild(note);
@@ -507,6 +533,41 @@ function gameScreen(id,A,B,g,meIsA){
     }).catch(()=>{});
   }
   poller=setInterval(tick,2000);tick();
+}
+
+/* ================= how many ways (solo) ================= */
+/* one guess, locked in: "name|N" to m2-tapasguess. The deck's slide plots
+   every guess on a log axis and names the closest. */
+function renderGuess(){
+  stopPolling();
+  q.textContent='How many ways?';
+  st.textContent='';
+  app.innerHTML='';
+  let locked=null;
+  try{locked=localStorage.getItem('m2-guess-'+norm(name));}catch(_){}
+  const lead=document.createElement('div');lead.className='solohead';
+  lead.textContent='You have just played it. How many different ways could one full game have run, start to finish?';
+  app.appendChild(lead);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop='14px';
+  const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.min=1;inp.max=999999999;inp.placeholder='Your guess';inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='LOCK IT IN';
+  row.appendChild(inp);row.appendChild(btn);app.appendChild(row);
+  const doneUI=v=>{row.remove();const big=document.createElement('div');big.className='bigcard';
+    big.innerHTML='<div class="head">'+(+v).toLocaleString('en-GB')+'</div><div class="sub">Response locked in. Results on the screen soon.</div>';
+    app.appendChild(big);};
+  if(locked){doneUI(locked);app.appendChild(backBtn());return;}
+  const go=()=>{
+    const v=Math.round(+inp.value);
+    if(!(v>=1&&v<=999999999)){st.textContent='A whole number, up to nine digits.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    say('m2-tapasguess',name+'|'+v)
+      .then(()=>{st.textContent='';try{localStorage.setItem('m2-guess-'+norm(name),String(v));}catch(_){}doneUI(v);})
+      .catch(code=>{btn.disabled=false;st.textContent=failMsg(code);});
+  };
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  app.appendChild(backBtn());
+  inp.focus();
 }
 
 /* ================= ultimatum ================= */
@@ -571,7 +632,8 @@ function renderUltAwaitReply(partner,offer,finalsBefore){
       const f=mine[mine.length-1];
       renderUltDone(f.res==='a',
         f.res==='a'?'You keep &pound;'+(1000-f.offer)+' and '+esc(partner)+' takes &pound;'+f.offer+'.'
-                   :esc(partner)+' rejected the &pound;'+f.offer+', so nobody gets anything.');
+                   :esc(partner)+' rejected the &pound;'+f.offer+', so nobody gets anything.',
+        {offer:f.offer,iPropose:true,other:partner});
     }).catch(()=>{});
   };
   poller=setInterval(check,2500);check();
@@ -639,18 +701,31 @@ function renderUltRespond(o){
     say('m2-ultimatum',o.prop+'|'+name+'|'+o.offer+'|'+res)
       .then(()=>renderUltDone(res==='a',
         res==='a'?'You take &pound;'+o.offer+' and '+esc(o.prop)+' keeps &pound;'+(1000-o.offer)+'.'
-                 :'You rejected the &pound;'+o.offer+', so nobody gets anything.'))
+                 :'You rejected the &pound;'+o.offer+', so nobody gets anything.',
+        {offer:o.offer,iPropose:false,other:o.prop}))
       .catch(code=>{send.disabled=false;st.textContent=failMsg(code);});
   });
   app.appendChild(send);
   app.appendChild(backBtn());
 }
-function renderUltDone(accepted,detail){
+function renderUltDone(accepted,detail,x){
   stopPolling();
   q.textContent='The deal is done';
   st.textContent='';
   app.innerHTML='';
-  const big=document.createElement('div');big.className='bigcard';
+  /* the playback: the whole £1,000, then the split, or nothing */
+  if(x){
+    const u=document.createElement('div');u.className='ubar';
+    const keep=1000-x.offer;
+    u.innerHTML='<div class="whole">The &pound;1,000 on the table</div><div class="track"><i class="pro"></i><i class="res"></i></div>'+
+      '<div class="ul"><span class="a">'+(x.iPropose?'You keep':esc(x.other)+' keeps')+' &pound;'+keep+'</span><span class="b">'+(x.iPropose?esc(x.other)+' takes':'You take')+' &pound;'+x.offer+'</span></div>';
+    app.appendChild(u);
+    setTimeout(()=>{u.querySelector('.pro').style.width=(keep/10)+'%';u.querySelector('.res').style.width=(x.offer/10)+'%';u.querySelectorAll('.ul span').forEach(e=>e.classList.add('on'));},400);
+    if(!accepted)setTimeout(()=>{u.classList.add('gone');u.querySelector('.ul').innerHTML='<span class="on" style="color:var(--muted)">Rejected: nobody gets anything</span>';},2200);
+  }
+  const big=document.createElement('div');big.className='bigcard';big.style.marginTop='12px';
+  big.hidden=!!x;
+  setTimeout(()=>{big.hidden=false;},accepted?2200:3600);
   big.innerHTML='<div class="head '+(accepted?'good':'bad')+'">'+(accepted?'Accepted':'Rejected')+'</div>'+
     '<div class="sub">'+detail+'</div>';
   app.appendChild(big);
