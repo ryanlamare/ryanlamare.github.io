@@ -4,9 +4,10 @@
 <title>Answer</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Participant page for live polls in the exec sessions. One tap to answer;
-   tapping again changes the answer. Results never show here — the reveal
-   happens on the room screen. Poll definitions live in ./polls.json;
+/* Participant page for live polls in the exec sessions. Tap an option,
+   then LOCK IT IN: the answer is sent once and cannot be changed — the
+   two taps are there so a wrong finger can be fixed before it counts.
+   Results never show here — the reveal happens on the room screen. Poll definitions live in ./polls.json;
    ?p=<id> picks a poll (every slide QR carries one), and a hand-typed
    bare /go shows a pick-your-question list instead — so nothing ever
    needs switching on. */
@@ -24,6 +25,12 @@ button.opt .sw.ink{background:var(--ink)}
 button.opt .sw.red{background:var(--red)}
 button.opt.mine .sw{outline:3px solid var(--paper);outline-offset:-6px}
 button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* choice polls: pick, then lock — one send, no changes after */
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer;margin-top:4px}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+#opts.locked button.opt{pointer-events:none}
+#opts.locked button.opt:not(.mine){opacity:.4}
 .status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
 .status b{color:var(--red)}
 /* write-in polls (type:"text"): send as many answers as you like */
@@ -190,6 +197,7 @@ function renderNamePicker(poll,id){
 }
 function renderPoll(poll,id){
   pollId=id;
+  document.getElementById('opts').classList.remove('locked');
   document.getElementById('dealsLink').hidden=!poll.deals; /* the two deals belong only to the case polls */
   document.querySelectorAll('.nextq').forEach(b=>b.remove());
   if(poll.named&&!myName){renderNamePicker(poll,id);return;}
@@ -200,19 +208,44 @@ function renderPoll(poll,id){
   if(poll.type==='text'&&poll.pair&&CFG&&CFG.polls[poll.pair]){setupPair(opts,poll,CFG.polls[poll.pair],poll.pair);return;}
   if(poll.type==='text'){setupText(opts,poll);return;}
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
+  let picked=null;
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
   poll.options.forEach((o,i)=>{
     const b=document.createElement('button');
     b.className='opt';
     b.innerHTML=(o.c?'<span class="sw '+(o.c==='red'?'red':'ink')+'"></span>':'')+'<span></span>';
     b.lastChild.textContent=o.t;
-    b.addEventListener('click',()=>vote(i,b,poll));
+    b.addEventListener('click',()=>{
+      picked=i;
+      document.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));
+      b.classList.add('mine');
+      lock.disabled=false;
+    });
     opts.appendChild(b);
   });
+  opts.appendChild(lock);
+  lock.addEventListener('click',()=>{if(picked!==null)vote(picked,lock,poll);});
   let mine=null;
   try{mine=localStorage.getItem('gt-vote-'+pollId);}catch(_){}
-  if(mine!==null&&opts.children[+mine]){opts.children[+mine].classList.add('mine');
-    document.getElementById('status').innerHTML='<b>Response recorded.</b> Results on the screen soon. Tap another option to change it.';
-    showNext(poll);}
+  if(mine!==null&&opts.children[+mine]){
+    opts.children[+mine].classList.add('mine');lockDone(poll);
+    /* a reset room forgets the vote: then this phone may answer again */
+    fetch(API+'/p/'+pollId+'/votes').then(r=>r.json()).then(d=>{
+      if(pollId!==id||(d.votes&&d.votes[voter]!==undefined))return;
+      try{localStorage.removeItem('gt-vote-'+pollId);}catch(_){}
+      document.getElementById('status').textContent='';
+      renderPoll(poll,id);
+    }).catch(()=>{});
+  }
+}
+/* the locked state: the chosen option stays red, the rest fade, the button goes */
+const LOCKED='<b>Response locked in.</b> Results on the screen soon.';
+function lockDone(poll){
+  const opts=document.getElementById('opts');
+  opts.classList.add('locked');
+  const lk=opts.querySelector('button.lock');if(lk)lk.remove();
+  document.getElementById('status').innerHTML=LOCKED;
+  showNext(poll);
 }
 const RECORDED='<b>Response recorded.</b> Results on the screen soon.';
 function setupText(opts,poll){
@@ -287,18 +320,16 @@ function setupPair(opts,poll,poll2,id2){
   [inp1,inp2].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}}));
   inp1.focus();
 }
-function vote(i,btn,poll){
+function vote(i,lock,poll){
   const st=document.getElementById('status');
+  lock.disabled=true;
   st.textContent='Sending…';
   fetch(API+'/p/'+pollId+'/vote',{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({o:i,v:voter})})
   .then(r=>{if(!r.ok)throw 0;
-    document.querySelectorAll('.opt').forEach(b=>b.classList.remove('mine'));
-    btn.classList.add('mine');
     try{localStorage.setItem('gt-vote-'+pollId,String(i));}catch(_){}
-    st.innerHTML='<b>Response recorded.</b> Results on the screen soon. Tap another option to change it.';
-    showNext(poll);})
-  .catch(()=>{st.textContent='That didn’t send — try again.';});
+    lockDone(poll);})
+  .catch(()=>{lock.disabled=false;st.textContent='That didn’t send — try again.';});
 }
 </script>
 </body></html>

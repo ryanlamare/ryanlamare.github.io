@@ -1108,8 +1108,10 @@ clipOnClick('gbload','gbwrap',CLIPS.goldenballs,'Golden Balls: Nick and Ibrahim'
     document.getElementById('avDemo').style.display=st.live?'none':'';
   }
   function fetchIt(){
-    Object.values(Q).forEach(q=>{
+    Object.entries(Q).forEach(([k,q])=>{
+      if(st.revealed[k])return; /* the reveal is a snapshot: a phone cannot move the bars afterwards */
       fetch(POLL_API+'/p/'+q.id).then(r=>r.json()).then(d=>{
+        if(st.revealed[k])return;
         st.live=true;q.counts=q.rows.map((_,i)=>(d.counts&&d.counts[i])||0);
         if(q===Q.take){st.total=d.total||0;nEl.textContent=st.total;}
         render();
@@ -1343,7 +1345,9 @@ clipOnClick('gbload','gbwrap',CLIPS.goldenballs,'Golden Balls: Nick and Ibrahim'
     document.getElementById('stVDemo').style.display=st.live?'none':'';
   }
   function fetchIt(){
+    if(st.revealed)return; /* the reveal is a snapshot: a phone cannot move the bars afterwards */
     fetch(POLL_API+'/p/m7-suntzu').then(r=>r.json()).then(d=>{
+      if(st.revealed)return;
       st.live=true;st.counts=rows.map((_,i)=>(d.counts&&d.counts[i])||0);st.total=d.total||0;nEl.textContent=st.total;render();
     }).catch(()=>{});
   }

@@ -215,7 +215,7 @@ function renderMarket(){
     const a=row(warranty?'For a car WITH a warranty':null,'p',cur?cur.wprice!==null&&warranty?cur.wprice:cur.price:null);
     let b=null;
     if(warranty){ b=row('For a car WITHOUT a warranty','w',cur?cur.price:null); }
-    const go=document.createElement('button');go.className='send';go.textContent=cur?'CHANGE MY BID':'BID';
+    const go=document.createElement('button');go.className='send';go.textContent='LOCK IT IN';
     go.addEventListener('click',()=>{
       const pw=Math.round(+a.inp.value), pp=warranty?Math.round(+b.inp.value):pw;
       if(!(pp>=0&&pp<10000)||(warranty&&!(pw>=0&&pw<10000))){st.textContent='Enter a price.';return;}
@@ -248,8 +248,9 @@ function renderMarket(){
         put(lbl((sim.warranty?'The rule change · round 4':'Round '+r)+' · bid for a car off the lot'));
         if(sim.warranty){const c=document.createElement('div');c.className='rule';c.innerHTML='The peach owners are back, and they now offer a <b>warranty</b>. A warranty would cost a lemon owner more than the car is worth, so only peach owners offer one. Bid two prices.';put(c);}
         else if(last&&last.r===r-1){const c=document.createElement('div');c.className='hist';c.innerHTML=last.outcome==='sold'?'Last round: '+(last.type==='P'?'a peach':'a lemon')+' for '+money(last.price)+', '+(last.profit<0?'−':'+')+money(last.profit):(last.outcome==='refused'?'Last round: the owner wouldn’t sell at '+money(last.price):'Last round: no car left for you');put(c);}
-        put(bidUI(r,myBid,sim.warranty));
-        if(myBid)put(wait('Bid in: '+money(myBid.price)+(myBid.wprice!==null?' without, '+money(myBid.wprice)+' with a warranty':'')+'. You can change it until the round closes.'));
+        /* one bid per round: once it is in, it is in */
+        if(myBid)put(wait('Response locked in: '+money(myBid.price)+(myBid.wprice!==null?' without, '+money(myBid.wprice)+' with a warranty':'')+'. The round closes from the big screen.'));
+        else put(bidUI(r,myBid,sim.warranty));
         return;
       }
       /* the round is closed: my result */

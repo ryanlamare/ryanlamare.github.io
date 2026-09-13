@@ -1078,7 +1078,7 @@ function refreshShownCalls(){
 (function(){
   const R=2;
   const DEMO=[['Alex','i','i'],['Sam','d','i'],['Priya','i','i'],['Marcus','d','i'],['Elena','i','i'],['Tom','d','i'],['Nadia','i','i'],['Chris','d','i'],['Dara','i','i'],['Kai','i','i']];
-  const st={live:false,players:new Map(),open2:false,opened:false,revealed:[false,false],demo:null};
+  const st={live:false,players:new Map(),open2:false,opened:false,revealed:[false,false],frozen:[null,null],demo:null};
   let deckN=0; const dvBase='m5inv-'+Math.random().toString(36).slice(2,8);
   const post=line=>fetch(POLL_API+'/p/m5-invest/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:dvBase+'-'+((++deckN)%9)})});
   function data(){
@@ -1103,7 +1103,12 @@ function refreshShownCalls(){
       document.getElementById('inv-'+r+'-v').innerHTML=on?(x.part?Math.round(x.rate*100)+'% invested &ndash; '+(x.pays?'<b>it pays out: $50 on top for every investor</b>':'<b>under 90%: every investor loses their $100</b>'):'Nobody answered'):'';
     }
   }
-  window.invReveal=function(r,on){st.revealed[r-1]=on;render();};
+  window.invReveal=function(r,on){
+    st.revealed[r-1]=on;
+    if(on&&st.live){const snap=new Map();st.players.forEach((p,key)=>{if(p.rounds[r-1])snap.set(key,{name:p.name,choice:p.rounds[r-1]});});st.frozen[r-1]=snap;}
+    else st.frozen[r-1]=null;
+    render();
+  };
   window.invOpenRound=function(on){st.opened=on;if(on&&st.live&&!st.open2)post('::open|2').then(()=>fetchIt()).catch(()=>{});render();};
   function fetchIt(){
     return fetch(POLL_API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
@@ -1116,6 +1121,15 @@ function refreshShownCalls(){
         const key=m[1].trim().toLowerCase();
         if(!st.players.has(key))st.players.set(key,{name:m[1].trim(),rounds:['','']});
         st.players.get(key).rounds[+m[2]-1]=m[3].toLowerCase();
+      });
+      /* a revealed round is a snapshot: a phone cannot move the crowd afterwards */
+      st.frozen.forEach((snap,i)=>{
+        if(!snap)return;
+        st.players.forEach(p=>{p.rounds[i]='';});
+        snap.forEach((c,key)=>{
+          if(!st.players.has(key))st.players.set(key,{name:c.name,rounds:['','']});
+          st.players.get(key).rounds[i]=c.choice;
+        });
       });
       render();
     }).catch(()=>{render();});
@@ -1199,6 +1213,7 @@ function fuzzyGroups(counts){
 
 window.krRow=function(el,on){
   const k=KROWS[el.dataset.k];
+  if(k)k.frozen=on; /* the reveal is a snapshot: the row stops taking new answers from the room */
   const qa=el.querySelector('.qa'), bar=el.querySelector('.qbar i'),
         qp=el.querySelector('.qp'), qm=el.querySelector('.qm');
   if(!on||!k){qa.textContent='';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
@@ -1217,6 +1232,7 @@ window.krRow=function(el,on){
   const keys=Object.keys(KROWS);
   function fetchOne(){
     const k=KROWS[keys[i%keys.length]];i++;
+    if(k.frozen)return;
     const url=POLL_API+'/p/'+k.id+(k.type==='t'?'/answers':'');
     fetch(url).then(r=>r.json()).then(d=>{
       k.live=true;

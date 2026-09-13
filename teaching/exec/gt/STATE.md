@@ -51,6 +51,7 @@ About five and a half hours of content. With a 45-minute lunch and two 15-minute
 ## Open items
 
 - **Wording still to veto** (all Claude's): the auction slides, the reputation slide's two chips, the brinkmanship figure, the Sun Tzu copy and its toy numbers, the cautionary slide's bullets after the opening question, the penalty widget's bullets, the airtime slide (facts unchecked against the 550 source), the Rebel bullets in m5, and the m6 rules bullet that now reads "the odds in the table".
+- **Answers lock in** (13 Sep, Ryan's rule from the m7 check): every choice poll and vote is pick, then LOCK IT IN, sent once, no changes; the status reads "Response locked in. Results on the screen soon." The decks freeze a tally at the reveal keypress (m1 familiarity, m2 smoke and quit, m3 truel, m5 quiz rows and investment rounds, m7 deal vote and Sun Tzu). The m2 ballot unlocks itself when the deck opens the next move, the m5 phone per round, the m8 car market locks a bid per round. Write-in polls stay open. A Poll Desk reset unlocks the phones that voted in that room, so rehearsal phones are not stuck.
 - **The penalty games** (12 Sep): guess right is a save, otherwise a goal, no dice; fifteen kicks solo, ten each in the shootout, a point per two goals. The real 58 / 95 / 93 / 70 table stays on the slides after the games and still drives the boss battle's odds and m7's committed keeper.
 - **Before any real session:** reset the seeded and test rooms in Poll Desk, and fill `go/roster.json` with the participants' first names.
 

@@ -10,7 +10,7 @@
    every named game), then invest or sit out each round as the instructor
    calls it. Choices post to the gt-poll /say lane, room m5-invest, as
    "name|round|i-or-d" lines; the latest line per name and round wins, so a
-   change of heart before the reveal is always allowed. */
+   answer is picked, then locked in: one choice per round, no changes. */
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
 .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
@@ -23,6 +23,12 @@ button.opt,button.pick{display:block;text-align:left;width:100%;font-family:var(
   font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
   padding:16px 18px;cursor:pointer}
 button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* pick, then lock: one send per round, no changes after */
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+.choices.locked button.opt{pointer-events:none}
+.choices.locked button.opt:not(.mine){opacity:.4}
 .namerow{display:flex;gap:10px}
 .namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
@@ -106,18 +112,22 @@ function render(){
     rd.appendChild(b);
   }
   app.appendChild(rd);
-  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='14px';
+  const ch=document.createElement('div');ch.className='choices'+(mine[round]?' locked':'');ch.style.marginTop='14px';
+  let picked=null;
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
   [['i','Invest'],['d','Don’t invest']].forEach(([code,label])=>{
     const b=document.createElement('button');
     b.className='opt'+(mine[round]===code?' mine':'');
     b.textContent=label;
-    b.addEventListener('click',()=>send(code,b));
+    b.addEventListener('click',()=>{picked=code;ch.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));b.classList.add('mine');lock.disabled=false;});
     ch.appendChild(b);
   });
+  if(!mine[round])ch.appendChild(lock);
+  lock.addEventListener('click',()=>{if(picked)send(picked,lock);});
   app.appendChild(ch);
   if(mine[round])st.innerHTML=received();
 }
-const received=()=>'<b>Round '+round+' received.</b> Tap the other option to change it.'+(round===1?' Round 2 opens from the big screen.':'');
+const received=()=>'<b>Response locked in.</b> Results on the screen soon.'+(round===1?' Round 2 opens from the big screen.':'');
 /* round 2 opens when the deck posts its marker into the room */
 function tick(){
   fetch(API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
@@ -147,7 +157,8 @@ function renderName(){
   row.appendChild(inp);row.appendChild(btn);
   app.appendChild(row);
 }
-function send(code,btn){
+function send(code,lock){
+  lock.disabled=true;
   st.textContent='Sending…';
   fetch(API+'/p/m5-invest/say',{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({t:name+'|'+round+'|'+code,v:voter})})
@@ -155,7 +166,7 @@ function send(code,btn){
     mine[round]=code;saveMine();
     render();
     st.innerHTML=received();})
-  .catch(code=>{st.textContent=code===429?'That’s plenty of changes for one round — flag the instructor if you’re stuck.':'That didn’t send — try again.';});
+  .catch(code=>{lock.disabled=false;st.textContent=code===429?'That’s plenty from one phone — flag the instructor if you’re stuck.':'That didn’t send — try again.';});
 }
 </script>
 </body></html>

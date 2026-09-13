@@ -114,6 +114,12 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
 .abrow button{flex:1;font-family:var(--display);font-weight:900;font-size:64px;line-height:1;
   color:var(--ink);background:var(--card);border:3px solid var(--ink);padding:34px 0 30px;cursor:pointer}
 .abrow button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.abrow.locked button{pointer-events:none}
+.abrow.locked button:not(.mine){opacity:.4}
+/* pick, then lock: one vote, no changes after */
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer;margin-top:12px}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
 </style>
 </head><body>
 <div class="wrap">
@@ -269,35 +275,59 @@ function soloDone(head,sub,againLabel,again){
   app.appendChild(backBtn());
 }
 /* the long-term deal ballot. The question lives on the big
-   screen; this page is two buttons. Votes post as "name|a" with a
-   rotating voter-id suffix; the deck counts only votes after its
-   latest ::open marker, latest per name. */
-let decadeN=0, decadeMine=null;
+   screen; this page is two buttons and LOCK IT IN. Votes post as
+   "name|a" with a rotating voter-id suffix; the deck counts only votes
+   after its latest ::open marker, latest per name. The lock holds for
+   one vote: the deck posts a fresh ::open marker for each move of the
+   game, and a newer marker than the one this phone locked under opens
+   the buttons again. */
+let decadeN=0, decadeMine=null, decadeLockedAt=null, decadeMarker=null;
 function renderDecade(){
   stopPolling();
+  const markerOf=lines=>{for(let i=lines.length-1;i>=0;i--){if(String(lines[i]).startsWith('::open|'))return String(lines[i]);}return null;};
+  const watch=()=>answers('m2-decade').then(lines=>{
+    decadeMarker=markerOf(lines);
+    if(decadeMine===null)return;
+    if(decadeLockedAt==='?'){decadeLockedAt=decadeMarker;return;} /* locked before the first fetch: adopt the vote that was open */
+    if(decadeMarker!==decadeLockedAt){decadeMine=null;decadeLockedAt=null;renderDecade();} /* a new vote has opened */
+  }).catch(()=>{});
+  poller=setInterval(watch,2000);watch();
   q.textContent='The long-term Tapas deal';
   st.textContent='';
   app.innerHTML='';
   const lead=document.createElement('div');lead.className='solohead';
-  lead.textContent='Debate with the room first. Then vote for the option on the big screen. You can change your vote until the reveal.';
+  lead.textContent='Debate with the room first. Then pick the option on the big screen and lock it in.';
   app.appendChild(lead);
-  const row=document.createElement('div');row.className='abrow';
+  const row=document.createElement('div');row.className='abrow'+(decadeMine?' locked':'');
   const btns={};
+  let picked=null;
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
   ['a','b'].forEach(x=>{
     const b=document.createElement('button');b.textContent=x.toUpperCase();
     b.addEventListener('click',()=>{
-      say2('m2-decade',name+'|'+x)
-        .then(()=>{
-          decadeMine=x;
-          Object.entries(btns).forEach(([k,el])=>el.classList.toggle('mine',k===x));
-          st.textContent='Vote sent. Tap the other letter to change it before the reveal.';
-        })
-        .catch(code=>{st.textContent=failMsg(code);});
+      picked=x;
+      Object.entries(btns).forEach(([k,el])=>el.classList.toggle('mine',k===x));
+      lock.disabled=false;
     });
     btns[x]=b;row.appendChild(b);
   });
   if(decadeMine)btns[decadeMine].classList.add('mine');
   app.appendChild(row);
+  if(decadeMine)st.innerHTML='<b>Response locked in.</b> Results on the screen soon.';
+  else{
+    app.appendChild(lock);
+    lock.addEventListener('click',()=>{
+      if(!picked)return;
+      lock.disabled=true;st.textContent='Sending…';
+      say2('m2-decade',name+'|'+picked)
+        .then(()=>{
+          decadeMine=picked;decadeLockedAt=decadeMarker||'?';
+          row.classList.add('locked');lock.remove();
+          st.innerHTML='<b>Response locked in.</b> Results on the screen soon.';
+        })
+        .catch(code=>{lock.disabled=false;st.textContent=failMsg(code);});
+    });
+  }
   app.appendChild(backBtn());
 }
 /* rotate the voter-id suffix so a whole game of votes never trips the

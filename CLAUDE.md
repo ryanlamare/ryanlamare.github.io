@@ -183,7 +183,13 @@ answer at **`/go/`** (site root for a short URL, same reasoning as
 `/pavilion/`); poll questions live in `/go/polls.json`, so a new poll or quiz
 is a JSON entry plus a deck slide. The deck fetches counts and reveals only on
 a keypress — hidden-until-reveal is client-side, and the slide falls back to
-marked DEMO DATA if the Worker is unreachable. The `/reset` admin secret is a
+marked DEMO DATA if the Worker is unreachable. **Answers lock** (Ryan, 13 Sep
+2026): a choice is picked, then sent once with LOCK IT IN, and the phone never
+offers a change; the deck takes a snapshot at the reveal keypress and stops
+refreshing that tally, so nothing can move the bars once the room has seen
+them. The Worker stays last-vote-wins — the lock lives in the phone and the
+deck, and a Poll Desk reset of a room unlocks the phones that voted in it.
+Write-in polls stay open on purpose. The `/reset` admin secret is a
 Wrangler secret, deliberately not in this repo.
 
 ### Preview while editing
