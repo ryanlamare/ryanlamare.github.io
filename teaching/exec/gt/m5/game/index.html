@@ -10,7 +10,12 @@
    every named game), then invest or sit out each round as the instructor
    calls it. Choices post to the gt-poll /say lane, room m5-invest, as
    "name|round|i-or-d" lines; the latest line per name and round wins, so a
-   answer is picked, then locked in: one choice per round, no changes. */
+   answer is picked, then locked in: one choice per round, no changes.
+   When the deck reveals a round (it posts "::reveal|n" into the room),
+   this phone plays the outcome for that round from the lines that came
+   before the marker, the same snapshot the big screen took: your $100
+   pays $50 on top when nine in ten invested, or is gone when they did
+   not; money you kept stays as it was. */
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
 .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
@@ -47,6 +52,18 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 .status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
 .status b{color:var(--red)}
 .choices{display:flex;flex-direction:column;gap:12px}
+/* the round's outcome: your money, then what happened to it */
+.inv{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center}
+.inv .rate{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);min-height:1.4em;opacity:0;transition:opacity .5s}
+.inv .rate.on{opacity:1}
+.inv .cash{display:inline-block;margin:14px 0 6px;font-family:var(--display);font-weight:900;font-size:46px;line-height:1;color:var(--ink);padding:10px 22px;border:3px solid var(--ink);border-radius:40px;background:var(--paper-soft);transition:transform .9s cubic-bezier(.4,0,.2,1),background .6s,color .6s,opacity .9s,border-color .6s}
+.inv .cash.grow{transform:scale(1.18);background:var(--teal);color:var(--paper);border-color:var(--teal)}
+.inv .cash.lost{transform:scale(.7) rotate(-8deg);opacity:.25;background:var(--terracotta);color:var(--paper);border-color:var(--terracotta)}
+.inv .cash.kept{background:var(--card);color:var(--muted)}
+.inv .verdict{font-weight:700;font-size:17px;line-height:1.35;color:var(--ink);margin-top:8px;min-height:1.4em;opacity:0;transition:opacity .5s}
+.inv .verdict.on{opacity:1}
+.inv .verdict.good{color:var(--teal)} .inv .verdict.bad{color:var(--terracotta)}
+button.ok{width:100%;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;margin-top:12px}
 </style>
 </head><body>
 <div class="wrap">
@@ -66,8 +83,9 @@ try{
     localStorage.setItem('gt-voter',voter);}
 }catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
 const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
-let name=null, round=1, mine={};
-try{name=localStorage.getItem('gt-name');mine=JSON.parse(localStorage.getItem('gt-invest')||'{}');}catch(_){}
+let name=null, round=1, mine={}, seen={}, outcomes={};
+try{name=localStorage.getItem('gt-name');mine=JSON.parse(localStorage.getItem('gt-invest')||'{}');seen=JSON.parse(localStorage.getItem('gt-invest-seen')||'{}');}catch(_){}
+function saveSeen(){try{localStorage.setItem('gt-invest-seen',JSON.stringify(seen));}catch(_){}}
 if(name)claimOnce();
 let roster=[];
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
@@ -96,6 +114,9 @@ function claimOnce(){
 function render(){
   st.textContent='';
   if(!name){renderName();return;}
+  /* a revealed round you answered and have not yet seen plays its outcome first */
+  const due=[1,2].find(r=>outcomes[r]&&mine[r]&&!seen[r]);
+  if(due){renderOutcome(due);return;}
   q.textContent='Round '+round+': what do you choose?';
   app.innerHTML='';
   const me=document.createElement('div');me.className='me';
@@ -128,12 +149,47 @@ function render(){
   if(mine[round])st.innerHTML=received();
 }
 const received=()=>'<b>Response locked in.</b> Results on the screen soon.'+(round===1?' Round 2 opens from the big screen.':'');
-/* round 2 opens when the deck posts its marker into the room */
+/* the round's outcome, played back: the rate, then your money grows, goes, or stays */
+function renderOutcome(r){
+  const o=outcomes[r], invested=mine[r]==='i';
+  q.textContent='Round '+r+': the reveal';
+  app.innerHTML='';
+  const box=document.createElement('div');box.className='inv';
+  box.innerHTML='<div class="rate">'+Math.round(o.rate*100)+'% of the room invested</div><div class="cash">$100</div><div class="verdict"></div>';
+  app.appendChild(box);
+  const cash=box.querySelector('.cash'), v=box.querySelector('.verdict');
+  const ok=document.createElement('button');ok.className='ok';ok.textContent=r===1?'OK':'See my total';ok.hidden=true;
+  ok.addEventListener('click',()=>{seen[r]=true;saveSeen();render();});
+  app.appendChild(ok);
+  setTimeout(()=>box.querySelector('.rate').classList.add('on'),400);
+  setTimeout(()=>{
+    if(!invested){cash.classList.add('kept');v.textContent='You kept your $100';}
+    else if(o.pays){cash.textContent='$150';cash.classList.add('grow');v.textContent='It paid out: $50 on top';v.classList.add('good');}
+    else{cash.classList.add('lost');v.textContent='Under 90%: your $100 is gone';v.classList.add('bad');}
+    v.classList.add('on');
+  },1700);
+  setTimeout(()=>{ok.hidden=false;},3000);
+}
+/* round 2 opens when the deck posts its marker into the room; a reveal
+   marker means the big screen has shown that round, from the lines that
+   came before it */
 function tick(){
   fetch(API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
-    const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
+    const lines=(d.answers||[]).map(t=>String(t).trim());
+    const open2=lines.some(t=>t==='::open|2');
+    let changed=false;
+    [1,2].forEach(r=>{
+      const at=lines.indexOf('::reveal|'+r);
+      if(at<0||outcomes[r])return;
+      const latest=new Map();
+      lines.slice(0,at).forEach(t=>{const m=t.match(/^(.{1,40}?)\s*\|\s*([12])\s*\|\s*([id])$/i);if(m&&+m[2]===r)latest.set(m[1].trim().toLowerCase(),m[3].toLowerCase());});
+      let inN=0,part=0;latest.forEach(c=>{part++;if(c==='i')inN++;});
+      outcomes[r]={rate:part?inN/part:0,pays:part?inN/part>=0.9:false};
+      changed=true;
+    });
     const nr=open2?2:1;
-    if(nr!==round){round=nr;if(name){st.textContent='';render();}}
+    if(nr!==round){round=nr;changed=true;}
+    if(changed&&name){st.textContent='';render();}
   }).catch(()=>{});
 }
 setInterval(tick,2500);tick();
