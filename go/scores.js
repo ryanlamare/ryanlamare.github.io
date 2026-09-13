@@ -816,6 +816,7 @@ const GT_SCORES = (() => {
     }
     if (id === 'm7-chicken') {
       if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
+      if (p[4] === 'r') return null; /* ready for the round: not a move */
       const me = (norm(p[0]) === nkey) === (p[3] === 'a');
       if (!me) return null;
       const W = { s: 'swerved', g: 'went straight', w: 'threw the wheel out', k: 'kept the wheel' };

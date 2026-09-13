@@ -18,6 +18,8 @@
      any round       x = s (swerve) or g (go straight)
      rounds 4-6      x = w (throw the wheel out); a thrown wheel IS a
                      straight, and no drive line is read for that driver
+     ready           x = r: this driver has pressed to start round n; the
+                     phones start the clock once both are in. Never a rule.
    Latest line per pair, round, seat and phase wins; a throw beats a drive
    line. Lines with five fields (no time) and the retired "k" (keep the
    wheel) line are read for what they say and otherwise ignored. Payoffs
