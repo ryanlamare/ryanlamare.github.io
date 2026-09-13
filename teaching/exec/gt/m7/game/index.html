@@ -475,9 +475,9 @@ function renderPlay(A,B,seat){
   }
   const did=(x,froze,threw)=>threw?'threw the wheel out':(froze?'froze, and went straight':(x==='s'?'swerved':'went straight'));
   const RULE={
-    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>five seconds</b> to <b>throw your steering wheel out of the window</b>: hold the red button. If you do, you cannot swerve this round, and the other driver is told, before the cars set off, that you are locked in to going straight.',
-    5:'<div class="rl">Round 5</div>Five seconds first: the wheel can go out of the window again. Hold the red button to throw it.',
-    6:'<div class="rl">Round 6, the last</div>Five seconds first: the wheel can go out of the window again. Hold the red button to throw it.'
+    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>five seconds</b> to decide whether to <b>throw your steering wheel out of the window</b>. To throw it out, hold the red button. If you do, you cannot swerve this round, and the other driver is told that you are locked in to going straight.',
+    5:'<div class="rl">Round 5</div>Five seconds to decide again, do you throw the steering wheel out or not?',
+    6:'<div class="rl">Round 6, the last</div>Five seconds to decide again, do you throw the steering wheel out or not?'
   };
   function chTick(pr,ready){
     const t=CHICKEN.totals(pr), n=t.next;
@@ -581,8 +581,11 @@ function renderPlay(A,B,seat){
       row.innerHTML='<span class="cl">Throw the wheel out?</span><span class="clock" id="chClock"></span>';
       stage.appendChild(row);
       stage.appendChild(holdButton(n,svg));
-      const note=document.createElement('div');note.className='lbl';note.style.marginTop='10px';
-      note.textContent='Keep it, and the cars set off when the five seconds are up';stage.appendChild(note);
+      /* not throwing is a tap, so the pair need not wait out the window */
+      const keep=document.createElement('button');keep.className='opt';keep.style.marginTop='10px';keep.style.textAlign='center';keep.style.fontWeight='700';
+      keep.textContent='Don’t throw the wheel out';
+      keep.addEventListener('click',()=>{if(posting)return;stage.querySelectorAll('button').forEach(b=>b.disabled=true);keep.classList.add('mine');setTimeout(()=>post(n,'k',null,null,Math.min(WCLOCK,Math.round(wElapsed(n)))),600);});
+      stage.appendChild(keep);
       const cEl=document.getElementById('chClock');
       let fired=false;
       const paint=()=>{
@@ -649,7 +652,7 @@ function renderPlay(A,B,seat){
      and a wrong finger cannot do it */
   function holdButton(n,svg){
     const b=document.createElement('button');b.className='hold';b.type='button';
-    b.innerHTML='<i class="fill"></i><span>Hold to throw the wheel out</span>';
+    b.innerHTML='<i class="fill"></i><span>Throw the wheel out (hold)</span>';
     let timer=null;
     const start=e=>{if(posting||b.disabled)return;e.preventDefault();b.classList.add('holding');
       timer=setTimeout(()=>{timer=null;b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
