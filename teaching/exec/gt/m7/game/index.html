@@ -40,6 +40,7 @@ button.opt,button.pick,a.pick{display:block;text-align:left;width:100%;font-fami
   padding:15px 18px;cursor:pointer;text-decoration:none}
 button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
 button.opt:disabled{opacity:.55;cursor:default}
+button.opt.mine:disabled{opacity:1}
 .choices{display:flex;flex-direction:column;gap:11px}
 .bigrow{display:flex;gap:12px}
 .bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:28px;padding:22px 10px;letter-spacing:.02em}
@@ -80,6 +81,7 @@ button.opt.mine .ball{box-shadow:0 0 0 4px var(--paper)}
 .bigcard .head.good{color:var(--teal)} .bigcard .head.bad{color:var(--terracotta)} .bigcard .head.draw{color:var(--muted)}
 .bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.35}
 .score{display:flex;justify-content:center;gap:26px;margin-top:10px;font-weight:700;font-size:15px}
+.score .me,.score .them{display:block;text-align:center}
 .score .me{color:var(--teal)} .score .them{color:var(--terracotta)}
 .score b{font-family:var(--display);font-weight:900;font-size:26px;line-height:1}
 .score small{display:block;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
@@ -106,7 +108,7 @@ button.send:disabled{opacity:.45;cursor:default}
 button.hold{position:relative;overflow:hidden;width:100%;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
   background:var(--card);border:2.5px solid var(--terracotta);color:var(--terracotta);padding:16px 18px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px}
 button.hold .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--terracotta);opacity:.28;transition:width 0s}
-button.hold.holding .fill{width:100%;transition:width 1s linear}
+button.hold.holding .fill{width:100%;transition:width 1.4s linear}
 button.hold span{position:relative}
 .throwline{border-left:6px solid var(--terracotta);background:var(--card);padding:12px 16px;font-weight:600;font-size:16px;line-height:1.35;color:var(--ink);margin-top:10px}
 .throwline b{color:var(--terracotta)}
@@ -402,14 +404,14 @@ function renderPlay(A,B,seat){
   /* the road: you on the left in teal, them on the right in terracotta */
   function road(n){
     const lab=s=>esc(String(s).toUpperCase().slice(0,9));
-    const wheel=(cx,id,cls)=>'<g id="'+id+'" class="wheelfly'+cls+'"><circle cx="'+cx+'" cy="140" r="13" fill="none" stroke="var(--red)" stroke-width="5"/><circle cx="'+cx+'" cy="140" r="3.5" fill="var(--red)"/><line x1="'+cx+'" y1="127" x2="'+cx+'" y2="153" stroke="var(--red)" stroke-width="3"/><line x1="'+(cx-13)+'" y1="140" x2="'+(cx+13)+'" y2="140" stroke="var(--red)" stroke-width="3"/></g>';
+    const wheel=(cx,id,cls)=>'<g id="'+id+'" class="wheelfly'+cls+'"><circle cx="'+cx+'" cy="140" r="13" fill="none" stroke="var(--paper)" stroke-width="5"/><circle cx="'+cx+'" cy="140" r="3.5" fill="var(--paper)"/><line x1="'+cx+'" y1="127" x2="'+cx+'" y2="153" stroke="var(--paper)" stroke-width="3"/><line x1="'+(cx-13)+'" y1="140" x2="'+(cx+13)+'" y2="140" stroke="var(--paper)" stroke-width="3"/></g>';
     const d=document.createElement('div');
     d.innerHTML='<svg class="proad" viewBox="0 100 440 120" role="img" aria-label="Two cars head to head on a road">'+
       '<rect x="0" y="120" width="440" height="90" fill="var(--ink)" opacity=".85"/>'+
       '<line x1="10" y1="165" x2="430" y2="165" stroke="var(--paper)" stroke-width="4" stroke-dasharray="26 18"/>'+
       '<g id="myCar" class="car"><rect x="30" y="140" width="120" height="44" rx="10" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><rect x="62" y="128" width="58" height="24" rx="8" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><circle cx="56" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="126" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="90" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;fill:var(--paper)">YOU</text>'+wheel(104,'myWheel','')+'</g>'+
       '<g id="theirCar" class="car"><rect x="290" y="140" width="120" height="44" rx="10" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><rect x="320" y="128" width="58" height="24" rx="8" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><circle cx="314" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="384" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="350" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;fill:var(--paper)">'+lab(them)+'</text>'+wheel(336,'theirWheel',' r')+'</g>'+
-      '<g id="boom" class="boom"><polygon points="220,118 232,140 258,132 244,152 268,166 242,172 248,198 224,184 206,204 204,178 178,176 200,160 182,142 208,146" fill="var(--ochre)" stroke="var(--ink)" stroke-width="3"/><text x="220" y="170" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:22px;fill:var(--ink)">CRASH</text></g>'+
+      '<g id="boom" class="boom"><polygon points="220,92 238,128 280,110 262,150 306,160 266,176 282,222 234,196 214,236 204,196 158,204 190,170 142,142 196,146" fill="var(--ochre)" stroke="var(--ink)" stroke-width="3"/><text x="220" y="176" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.04em;fill:var(--red)">CRASH</text></g>'+
       '</svg>';
     return d.firstChild;
   }
@@ -453,13 +455,11 @@ function renderPlay(A,B,seat){
       const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
       const iT=!!(seat==='a'?rr.wa:rr.wb), theyT=!!(seat==='a'?rr.wb:rr.wa);
       const iF=seat==='a'?rr.fa:rr.fb, theyF=seat==='a'?rr.fb:rr.fa;
-      const myPay=rr.pay[seat==='a'?0:1], theirPay=rr.pay[seat==='a'?1:0];
       let h,cls;
       if(mine==='g'&&theirs==='g'){h='CRASH';cls='bad';}
       else if(mine==='s'&&theirs==='s'){h='BOTH SWERVED';cls='draw';}
       else if(mine==='s'){h='YOU SWERVED';cls='bad';}
       else{h='THEY SWERVED';cls='good';}
-      const sub='You '+did(mine,iF,iT)+', '+them+' '+did(theirs,theyF,theyT)+'. This round: '+sign(myPay)+' you, '+sign(theirPay)+' '+them+'.';
       head(last,totalRow);
       const svg=road(last);stage.appendChild(svg);
       const myCar=svg.querySelector('#myCar'), theirCar=svg.querySelector('#theirCar');
@@ -475,22 +475,22 @@ function renderPlay(A,B,seat){
       moves.innerHTML='<div class="mv me">You '+esc(did(mine,iF,iT))+'</div><div class="mv them">'+esc(them)+' '+esc(did(theirs,theyF,theyT))+'</div>';
       stage.appendChild(moves);
       const card=document.createElement('div');card.className='bigcard enter';card.style.marginTop='10px';card.hidden=true;
-      card.innerHTML='<div class="head '+cls+'">'+h+'</div><div class="sub">'+esc(sub)+'</div>'+chScore(CHICKEN.totals(pr));
+      card.innerHTML='<div class="head '+cls+'">'+h+'</div>'+chScore(CHICKEN.totals(pr));
       stage.appendChild(card);
       const ack=ackBtn(last,last>=G.n);ack.hidden=true;stage.appendChild(ack);
       /* the playback, in order: your car, their car, the outcome, the money */
       const at=(ms,f)=>revealTimer.push(setTimeout(f,ms));
       const replayed=prev.startsWith('waitd:'+last)||prev.startsWith('thrown:'+last)||prev.startsWith('drive:'+last);
       const T=replayed?1:0.35; /* a reload after the round shows it again, briskly */
-      at(100,()=>{moves.children[0].classList.add('on');if(mine==='s')carMove(myCar,x,1,'s',1.1*T);});
-      at(1000*T+200,()=>{moves.children[1].classList.add('on');if(theirs==='s')carMove(theirCar,-x,-1,'s',1.1*T);});
-      at(2000*T+300,()=>{
-        if(mine==='g'&&theirs==='g'){carMove(myCar,CLOSE+8,1,'g',0.4*T);carMove(theirCar,-CLOSE-8,-1,'g',0.4*T);
-          at(400*T,()=>{svg.querySelector('#boom').classList.add('on');svg.classList.add('shake');});}
-        else if(mine==='g')carMove(myCar,x,1,'through',1.3*T);
-        else if(theirs==='g')carMove(theirCar,-x,-1,'through',1.3*T);
+      at(400,()=>{moves.children[0].classList.add('on');if(mine==='s')carMove(myCar,x,1,'s',1.4*T);});
+      at(1800*T+400,()=>{moves.children[1].classList.add('on');if(theirs==='s')carMove(theirCar,-x,-1,'s',1.4*T);});
+      at(3400*T+500,()=>{
+        if(mine==='g'&&theirs==='g'){carMove(myCar,CLOSE+8,1,'g',0.9*T);carMove(theirCar,-CLOSE-8,-1,'g',0.9*T);
+          at(900*T,()=>{svg.querySelector('#boom').classList.add('on');svg.classList.add('shake');});}
+        else if(mine==='g')carMove(myCar,x,1,'through',1.6*T);
+        else if(theirs==='g')carMove(theirCar,-x,-1,'through',1.6*T);
       });
-      at(2900*T+400,()=>{card.hidden=false;ack.hidden=false;});
+      at(5200*T+600,()=>{card.hidden=false;ack.hidden=false;});
     }else if(k==='final'){
       const mine=seat==='a'?t.a:t.b, theirs=seat==='a'?t.b:t.a;
       stage.innerHTML='';
@@ -541,7 +541,9 @@ function renderPlay(A,B,seat){
     const row=document.createElement('div');row.className='bigrow';row.style.marginTop='10px';
     opts.forEach(o=>{
       const b=document.createElement('button');b.className='opt';b.textContent=o.n;
-      b.addEventListener('click',()=>{if(posting)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);post(n,o.k,row,b,secsTaken(n));});
+      b.addEventListener('click',()=>{if(posting)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);b.classList.add('mine');
+        const secs=secsTaken(n);
+        setTimeout(()=>post(n,o.k,row,b,secs),900);});
       row.appendChild(b);
     });
     return row;
@@ -554,7 +556,7 @@ function renderPlay(A,B,seat){
     let timer=null;
     const start=e=>{if(posting||b.disabled)return;e.preventDefault();b.classList.add('holding');
       timer=setTimeout(()=>{timer=null;b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
-        svg.querySelector('#myWheel').classList.add('go');post(n,'w',null,null,secsTaken(n));},1000);};
+        svg.querySelector('#myWheel').classList.add('go');post(n,'w',null,null,secsTaken(n));},1400);};
     const stop=()=>{b.classList.remove('holding');if(timer){clearTimeout(timer);timer=null;}};
     b.addEventListener('pointerdown',start);
     ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
