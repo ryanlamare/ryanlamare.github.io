@@ -6,28 +6,31 @@
    Every round runs on a clock (CLOCK seconds): the two cars close over
    the whole clock, and a driver who has not chosen when it runs out is
    going straight — their own phone sends the straight. From WHEEL_FROM
-   a driver may, at any moment before choosing, throw the steering wheel
-   out of the window: an irreversible straight the other driver is shown
-   at once. Not throwing needs no line; a driver who keeps the wheel just
-   swerves or goes straight.
+   each round opens with a WHEEL_CLOCK-second window in which a driver
+   may throw the steering wheel out of the window: an irreversible
+   straight. A driver who does not throw sends k (kept) when the window
+   closes, and the cars set off only when both wheel lines are in, so
+   both drivers are told the same thing at the same moment. The k line
+   is a gate for the phones, never a rule: the outcome reads only s, g
+   and w.
 
    Wire, room m7-chicken, one line per move: "A|B|n|seat|x|t", the first
    driver's name always first, seat a = A, seat b = B, t = the seconds
    that driver took (a full clock is a driver who froze).
      join            "A|B|0|a|j"
      any round       x = s (swerve) or g (go straight)
-     rounds 4-6      x = w (throw the wheel out); a thrown wheel IS a
-                     straight, and no drive line is read for that driver
+     rounds 4-6      x = w (throw the wheel out) or k (kept it) in the
+                     window; a thrown wheel IS a straight, and no drive
+                     line is read for that driver
      ready           x = r: this driver has pressed to start round n; the
                      phones start the clock once both are in. Never a rule.
    Latest line per pair, round, seat and phase wins; a throw beats a drive
-   line. Lines with five fields (no time) and the retired "k" (keep the
-   wheel) line are read for what they say and otherwise ignored. Payoffs
+   line. Lines with five fields (no time) are read without a time. Payoffs
    are Ren and Chuck's: both swerve 0,0; swerve v straight -10,+10; both
    straight -100,-100. The time field is never a rule: it feeds the board's
    frozen count and the Quick draw / Careful marksman awards. */
 (function(root){
-  const N=6, WHEEL_FROM=4, CLOCK=30;
+  const N=6, WHEEL_FROM=4, CLOCK=20, WHEEL_CLOCK=5;
   const PAY={ss:[0,0],sg:[-10,10],gs:[10,-10],gg:[-100,-100]};
   const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
   const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
@@ -38,9 +41,9 @@
       if((p.length!==5&&p.length!==6)||!p[0]||!p[1]||!/^\d{1,2}$/.test(p[2])||!/^[ab]$/.test(p[3]))return;
       const key=pairKey(p[0],p[1]);
       if(p[4]==='j'){joins.add(key);if(!pairs.has(key))pairs.set(key,{A:p[0],B:p[1],key,r:{}});return;}
-      if(!/^[sgw]$/.test(p[4]))return;
+      if(!/^[sgwk]$/.test(p[4]))return;
       const n=+p[2]; if(n<1||n>N)return;
-      if(p[4]==='w'&&n<WHEEL_FROM)return;
+      if((p[4]==='w'||p[4]==='k')&&n<WHEEL_FROM)return;
       joins.add(key);
       if(!pairs.has(key))pairs.set(key,{A:p[0],B:p[1],key,r:{}});
       const pr=pairs.get(key);
@@ -48,6 +51,7 @@
       const slot=pr.r[n][p[3]];
       const secs=p.length===6&&/^\d{1,3}$/.test(p[5])?Math.min(+p[5],CLOCK):null;
       if(p[4]==='w'){slot.w=true;slot.wt=secs;}
+      else if(p[4]==='k'){slot.k=true;}
       else{slot.d=p[4];slot.dt=secs;}
     });
     return {joins,pairs};
@@ -80,5 +84,5 @@
     }
     return {a,b,rounds,next};
   }
-  root.CHICKEN={N,WHEEL_FROM,CLOCK,PAY,norm,pairKey,parse,round,totals};
+  root.CHICKEN={N,WHEEL_FROM,CLOCK,WHEEL_CLOCK,PAY,norm,pairKey,parse,round,totals};
 })(typeof window!=='undefined'?window:globalThis);

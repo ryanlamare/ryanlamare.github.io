@@ -466,11 +466,11 @@ const GT_SCORES = (() => {
     });
   }
 
-  /* chicken: "A|B|n|seat|x|t" lines, six rounds on a thirty-second clock:
+  /* chicken: "A|B|n|seat|x|t" lines, six rounds on a twenty-second clock:
      s = swerve, g = straight, and from round 4 w = the steering wheel
      thrown out of the window, which is a straight whatever else that
-     driver sent. Not throwing needs no line (the retired k line is
-     ignored). t = seconds taken, never a rule. Five-field lines are read
+     driver sent (k = kept it, a gate for the phones, ignored here).
+     t = seconds taken, never a rule. Five-field lines are read
      without a time. Latest line per pair, round, seat and phase wins.
      Payoffs 0,0 / -10,+10 / +10,-10 / -100,-100; MUST match
      m7/game/chicken.js. The driver ahead on total takes winPoints; a dead
@@ -714,7 +714,7 @@ const GT_SCORES = (() => {
     { room: 'm7-chicken', min: 3, read: p => {
         if (p.length !== 6 || !/^[1-6]$/.test(p[2]) || !/^[ab]$/.test(p[3]) || !/^[sgw]$/.test(p[4]) || !/^\d{1,3}$/.test(p[5])) return null;
         const key = [norm(p[0]), norm(p[1])].sort().join('~');
-        return { name: p[3] === 'a' ? p[0] : p[1], slot: key + '~' + p[2] + '~' + p[3] + '~' + (p[4] === 'w' ? 'w' : 'd'), secs: Math.min(+p[5], 30) };
+        return { name: p[3] === 'a' ? p[0] : p[1], slot: key + '~' + p[2] + '~' + p[3] + '~' + (p[4] === 'w' ? 'w' : 'd'), secs: Math.min(+p[5], 20) };
       } },
   ];
   async function decisionTimes() {
@@ -816,11 +816,11 @@ const GT_SCORES = (() => {
     }
     if (id === 'm7-chicken') {
       if (p[4] === 'j') return 'paired with ' + (norm(p[0]) === nkey ? p[1] : p[0]);
-      if (p[4] === 'r') return null; /* ready for the round: not a move */
+      if (p[4] === 'r' || p[4] === 'k') return null; /* ready, or kept the wheel: not a move */
       const me = (norm(p[0]) === nkey) === (p[3] === 'a');
       if (!me) return null;
       const W = { s: 'swerved', g: 'went straight', w: 'threw the wheel out', k: 'kept the wheel' };
-      const froze = p[4] === 'g' && p.length === 6 && +p[5] >= 30;
+      const froze = p[4] === 'g' && p.length === 6 && +p[5] >= 20;
       return 'round ' + p[2] + ': ' + (froze ? 'froze, and went straight' : (W[p[4]] || p[4])) + (p.length === 6 && !froze ? ' after ' + p[5] + 's' : '');
     }
     if (id === 'm7-gb' || id === 'm7-stag') {

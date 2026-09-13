@@ -7,20 +7,22 @@
 /* Participant page for the Module 7 games — games the room has played before,
    with one player handed a strategic move.
 
-     ?g=chicken  chicken in pairs, six rounds, each on a thirty-second
+     ?g=chicken  chicken in pairs, six rounds, each on a twenty-second
                  clock: two cars close over the clock, swerve or straight
                  is one tap, and a driver who has not chosen when it runs
                  out goes straight (their own phone sends it). From round
-                 four a driver may, at any moment before choosing, hold to
-                 throw the steering wheel out of the window; the other
-                 driver is told at once. The reveal plays the round back:
-                 your car, their car, the outcome, then the money. Rules
-                 in chicken.js. Five points to whoever is ahead. A round
-                 starts only when both drivers have pressed to proceed
-                 ("A|B|n|seat|r" lines, ignored by the rules), so the two
-                 clocks start together; rounds four to six put the wheel
-                 rule on that screen, so the road looks the same every
-                 round. ?clock=<seconds> shortens the clock for a rehearsal.
+                 four each round opens with a five-second window to hold
+                 the red button and throw the steering wheel out; a driver
+                 who does not sends k when it closes, and the cars set off
+                 only when both wheel lines are in, so both drivers read
+                 the same announcement at the same moment. The reveal
+                 plays the round back: your car, their car, the outcome,
+                 then the money. Rules in chicken.js. Five points to
+                 whoever is ahead. A round starts only when both drivers
+                 have pressed to proceed ("A|B|n|seat|r" lines, ignored by
+                 the rules); rounds four to six put the wheel rule on that
+                 screen. ?clock=<seconds> shortens the approach for a
+                 rehearsal.
      ?g=gb       split or steal in pairs, two rounds, a £1,000 pot each. Talk
                  first, then choose. In round two the partner who was picked
                  (seat b) gets an extra option before choosing, and, if they
@@ -112,7 +114,7 @@ button.send:disabled{opacity:.45;cursor:default}
 button.hold{position:relative;overflow:hidden;width:100%;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;margin-top:10px}
 button.hold .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ink);opacity:.45;transition:width 0s}
-button.hold.holding .fill{width:100%;transition:width 2s linear}
+button.hold.holding .fill{width:100%;transition:width 1s linear}
 button.hold:disabled{opacity:.5}
 /* the screen before a round: the rule, then proceed */
 .rulecard{border:2.5px solid var(--red);background:var(--card);padding:16px;font-weight:600;font-size:16px;line-height:1.45;color:var(--ink);margin-top:10px}
@@ -303,7 +305,7 @@ function backBtn(){
       localStorage.removeItem('m7-pair-'+ROOM);
       /* and this phone's clocks and round acknowledgements for the room, so a
          re-pairing does not inherit a clock that has already run out */
-      Object.keys(localStorage).filter(k=>k.startsWith('m7-clk-'+ROOM+'-')||k.startsWith('m7-ack-'+ROOM+'-')).forEach(k=>localStorage.removeItem(k));
+      Object.keys(localStorage).filter(k=>k.startsWith('m7-clk-'+ROOM+'-')||k.startsWith('m7-wclk-'+ROOM+'-')||k.startsWith('m7-ack-'+ROOM+'-')).forEach(k=>localStorage.removeItem(k));
     }catch(_){}
     render();});
   return b;
@@ -370,7 +372,7 @@ function renderPlay(A,B,seat){
   function post(n,x,btnRow,b,extra){
     if(posting)return;posting=true;
     say(A+'|'+B+'|'+n+'|'+seat+'|'+x+(extra!=null?'|'+extra:''))
-      .then(()=>{posting=false;st.textContent=x==='r'?'':'Sent. Waiting for '+them+'…';
+      .then(()=>{posting=false;st.textContent=(x==='r'||x==='k')?'':'Sent. Waiting for '+them+'…';
         if(btnRow){btnRow.querySelectorAll('.opt').forEach(el=>el.classList.remove('mine'));b.classList.add('mine');}
         shownKey='';tick();})
       .catch(code=>{posting=false;st.textContent=failMsg(code);shownKey='';tick();});
@@ -411,7 +413,9 @@ function renderPlay(A,B,seat){
 
   /* ---------- chicken ---------- */
   const CLOCK=Math.max(3,Math.min(CHICKEN.CLOCK,+(qs.get('clock')||CHICKEN.CLOCK)||CHICKEN.CLOCK));
-  const CLOSE=58; /* how far each car travels over a full clock, in road units */
+  const START=-34, CLOSE=58; /* each car runs from START to CLOSE over a full clock, in road units */
+  const posAt=t=>START+(CLOSE-START)*Math.min(CLOCK,Math.max(0,t))/CLOCK;
+  const WCLOCK=CHICKEN.WHEEL_CLOCK;
   let clockTimer=null, revealTimer=[];
   function stopChicken(){if(clockTimer){clearInterval(clockTimer);clockTimer=null;}revealTimer.forEach(clearTimeout);revealTimer=[];}
   window.stopChickenGlobal=stopChicken;
@@ -429,6 +433,14 @@ function renderPlay(A,B,seat){
   }
   const elapsed=n=>Math.max(0,(Date.now()-clockStart(n))/1000);
   const secsTaken=n=>Math.min(CLOCK,Math.round(elapsed(n)));
+  /* the wheel window has its own clock, kept the same way */
+  function wheelStart(n){
+    const k='m7-wclk-'+ROOM+'-'+key+'-'+n;
+    let t=null;try{t=+localStorage.getItem(k)||null;}catch(_){}
+    if(!t){t=Date.now();try{localStorage.setItem(k,String(t));}catch(_){}}
+    return t;
+  }
+  const wElapsed=n=>Math.max(0,(Date.now()-wheelStart(n))/1000);
   /* the road: you on the left in teal, them on the right in terracotta */
   function road(n){
     const lab=s=>esc(String(s).toUpperCase().slice(0,9));
@@ -447,7 +459,7 @@ function renderPlay(A,B,seat){
      over what is left; a finished clock parks them nose to nose */
   function driveCars(svg,n){
     const mine=svg.querySelector('#myCar'), theirs=svg.querySelector('#theirCar');
-    const e=Math.min(CLOCK,elapsed(n)), x=CLOSE*e/CLOCK;
+    const e=Math.min(CLOCK,elapsed(n)), x=posAt(e);
     [mine,theirs].forEach(c=>c.style.transition='none');
     mine.style.transform='translateX('+x+'px)';theirs.style.transform='translateX('+(-x)+'px)';
     void svg.getBoundingClientRect();
@@ -463,22 +475,27 @@ function renderPlay(A,B,seat){
   }
   const did=(x,froze,threw)=>threw?'threw the wheel out':(froze?'froze, and went straight':(x==='s'?'swerved':'went straight'));
   const RULE={
-    4:'<div class="rl">New rule for rounds 4 to 6</div>At any moment as your cars approach each other, you can hold the red button to <b>throw your steering wheel out of the window</b>. If you do, you cannot swerve this round, and the other driver is told that you are locked in to going straight.',
-    5:'<div class="rl">Round 5</div>The wheel can still go out of the window. Hold the red button to throw it.',
-    6:'<div class="rl">Round 6, the last</div>The wheel can still go out of the window. Hold the red button to throw it.'
+    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>five seconds</b> to <b>throw your steering wheel out of the window</b>: hold the red button. If you do, you cannot swerve this round, and the other driver is told, before the cars set off, that you are locked in to going straight.',
+    5:'<div class="rl">Round 5</div>Five seconds first: the wheel can go out of the window again. Hold the red button to throw it.',
+    6:'<div class="rl">Round 6, the last</div>Five seconds first: the wheel can go out of the window again. Hold the red button to throw it.'
   };
   function chTick(pr,ready){
     const t=CHICKEN.totals(pr), n=t.next;
     document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
     const last=n-1;
     const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
+    const theirSlot=r[seat==='a'?'b':'a']||{};
     const iThrew=!!mineSlot.w, theyThrew=n>=CHICKEN.WHEEL_FROM&&!!(seat==='a'?rd.wb:rd.wa);
     const iReady=!!ready[n+seat], theyReady=!!ready[n+(seat==='a'?'b':'a')];
+    const wheelRound=n>=CHICKEN.WHEEL_FROM;
+    const myWheelIn=!wheelRound||iThrew||!!mineSlot.k, theirWheelIn=!wheelRound||!!theirSlot.w||!!theirSlot.k;
     let k;
     if(last>=1&&ackN<last)k='res:'+last;
     else if(n>G.n)k='final';
     else if(!iReady)k='ready:'+n;
     else if(!theyReady)k='theirs:'+n;
+    else if(!myWheelIn)k='wheel:'+n;
+    else if(!theirWheelIn)k='wwait:'+n+':'+iThrew;
     else if(iThrew)k='thrown:'+n+':'+theyThrew;
     else if(mineSlot.d)k='waitd:'+n+':'+theyThrew;
     else k='drive:'+n+':'+theyThrew;
@@ -496,8 +513,8 @@ function renderPlay(A,B,seat){
       const svg=road(last);stage.appendChild(svg);
       const myCar=svg.querySelector('#myCar'), theirCar=svg.querySelector('#theirCar');
       /* the cars sit where the clock left them: nose to nose, or short of it */
-      const mySecs=(seat==='a'?rr.ta:rr.tb), theirSecs=(seat==='a'?rr.tb:rr.ta);
-      const x=CLOSE*Math.min(CLOCK,Math.max(mySecs==null?CLOCK:mySecs,theirSecs==null?CLOCK:theirSecs))/CLOCK;
+      const ts=[[iT,seat==='a'?rr.ta:rr.tb],[theyT,seat==='a'?rr.tb:rr.ta]].filter(([threw,t])=>!threw&&t!=null).map(([,t])=>t);
+      const x=posAt(ts.length?Math.max(...ts):CLOCK);
       [myCar,theirCar].forEach(c=>c.style.transition='none');
       myCar.style.transform='translateX('+x+'px)';theirCar.style.transform='translateX('+(-x)+'px)';
       if(iT)svg.querySelector('#myWheel').classList.add('go');
@@ -552,6 +569,37 @@ function renderPlay(A,B,seat){
     }else if(k.startsWith('theirs:')){
       head(n,totalRow);
       waiting('Waiting for '+them+' to proceed. The clock starts when you both have…');
+    }else if(k.startsWith('wheel:')){
+      /* five seconds: throw the wheel, or keep it. Keeping needs no tap;
+         the phone sends k when the window closes */
+      head(n,totalRow);
+      const svg=road(n);stage.appendChild(svg);
+      const mine=svg.querySelector('#myCar'), theirs=svg.querySelector('#theirCar');
+      [mine,theirs].forEach(c=>c.style.transition='none');
+      mine.style.transform='translateX('+START+'px)';theirs.style.transform='translateX('+(-START)+'px)';
+      const row=document.createElement('div');row.className='clockrow';
+      row.innerHTML='<span class="cl">Throw the wheel out?</span><span class="clock" id="chClock"></span>';
+      stage.appendChild(row);
+      stage.appendChild(holdButton(n,svg));
+      const note=document.createElement('div');note.className='lbl';note.style.marginTop='10px';
+      note.textContent='Keep it, and the cars set off when the five seconds are up';stage.appendChild(note);
+      const cEl=document.getElementById('chClock');
+      let fired=false;
+      const paint=()=>{
+        const left=Math.max(0,WCLOCK-wElapsed(n));
+        cEl.textContent=Math.ceil(left);
+        cEl.classList.toggle('low',left<=2&&left>0);cEl.classList.toggle('over',left<=0);
+        if(left<=0&&!fired&&!posting){fired=true;stage.querySelectorAll('button').forEach(b=>b.disabled=true);post(n,'k',null,null,WCLOCK);}
+      };
+      paint();clockTimer=setInterval(paint,200);
+    }else if(k.startsWith('wwait:')){
+      head(n,totalRow);
+      const svg=road(n);stage.appendChild(svg);
+      const mine=svg.querySelector('#myCar'), theirs=svg.querySelector('#theirCar');
+      [mine,theirs].forEach(c=>c.style.transition='none');
+      mine.style.transform='translateX('+START+'px)';theirs.style.transform='translateX('+(-START)+'px)';
+      if(iThrew)svg.querySelector('#myWheel').classList.add('go');
+      waiting((iThrew?'Your wheel is out of the window. ':'You kept the wheel. ')+'Waiting for '+them+'’s decision. The cars set off when it is in…');
     }else{
       /* the approach: the clock runs, the cars close, you choose */
       head(n,totalRow);
@@ -563,13 +611,13 @@ function renderPlay(A,B,seat){
       row.innerHTML='<span class="cl">'+(k.startsWith('drive:')?'Swerve, or go straight?':'Locked in')+'</span><span class="clock" id="chClock"></span>';
       stage.appendChild(row);
       if(theyThrew){const tl=document.createElement('div');tl.className='throwline';tl.innerHTML='<b>'+esc(them)+' threw the wheel out</b> and is locked in to going straight';stage.appendChild(tl);}
+      else if(wheelRound&&!iThrew){const tl=document.createElement('div');tl.className='lbl';tl.style.marginTop='10px';tl.textContent='Both wheels stayed in place';stage.appendChild(tl);}
       if(k.startsWith('thrown:')){
         waiting('Your wheel is out of the window. You are going straight. Waiting for '+them+' to choose…');
       }else if(k.startsWith('waitd:')){
         waiting('You '+(mineSlot.d==='s'?'swerved':'went straight')+'. Waiting for '+them+' to choose…');
       }else{
         const btns=buttonsTimed(n,G.drive);stage.appendChild(btns);
-        if(n>=CHICKEN.WHEEL_FROM)stage.appendChild(holdButton(n,svg));
       }
       /* the clock: at zero, a driver who has not chosen is going straight */
       const cEl=document.getElementById('chClock');
@@ -605,7 +653,7 @@ function renderPlay(A,B,seat){
     let timer=null;
     const start=e=>{if(posting||b.disabled)return;e.preventDefault();b.classList.add('holding');
       timer=setTimeout(()=>{timer=null;b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
-        svg.querySelector('#myWheel').classList.add('go');post(n,'w',null,null,secsTaken(n));},2000);};
+        svg.querySelector('#myWheel').classList.add('go');post(n,'w',null,null,Math.min(WCLOCK,Math.round(wElapsed(n))));},1000);};
     const stop=()=>{b.classList.remove('holding');if(timer){clearTimeout(timer);timer=null;}};
     b.addEventListener('pointerdown',start);
     ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
