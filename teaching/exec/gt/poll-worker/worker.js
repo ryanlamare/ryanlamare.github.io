@@ -159,7 +159,10 @@ export class PollRoom {
       const t = String(body.t || '').replace(/[\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200); /* the write-in walls take a sentence or two */
       if (!t) return json({ error: 'bad text' }, 400);
       const answers = (await this.storage.get('answers')) || [];
-      if (answers.length >= 400) return json({ error: 'full' }, 429);
+      /* Workers Paid since 13 Sep 2026: room for forty pairs of chicken. The
+         array is one storage value, and a value holds 128 KiB, so the write-in
+         walls (200-character lines) are capped by size, the games by count */
+      if (answers.length >= 2000 || JSON.stringify(answers).length + t.length + 80 > 110000) return json({ error: 'full' }, 429);
       if (answers.filter(a => a.v === v).length >= 15) return json({ error: 'enough' }, 429);
       answers.push({ v, t });
       await this.storage.put('answers', answers);
