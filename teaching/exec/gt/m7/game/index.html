@@ -228,6 +228,7 @@ function render(){
   const lead=document.createElement('div');lead.className='lbl';lead.style.marginTop='6px';
   lead.textContent=G.pairLead;
   app.appendChild(lead);
+  const rn=roomNote();if(rn)app.appendChild(rn);
   const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='8px';
   [[G.seats[0],'a'],[G.seats[1],'b']].forEach(([label,seat])=>{
     const b=document.createElement('button');b.className='opt';b.textContent=label;
@@ -267,8 +268,23 @@ function renderName(title,done){
 }
 function backBtn(){
   const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
-  b.addEventListener('click',()=>{try{localStorage.removeItem('m7-pair-'+ROOM);}catch(_){}render();});
+  b.addEventListener('click',()=>{
+    try{
+      localStorage.removeItem('m7-pair-'+ROOM);
+      /* and this phone's clocks and round acknowledgements for the room, so a
+         re-pairing does not inherit a clock that has already run out */
+      Object.keys(localStorage).filter(k=>k.startsWith('m7-clk-'+ROOM+'-')||k.startsWith('m7-ack-'+ROOM+'-')).forEach(k=>localStorage.removeItem(k));
+    }catch(_){}
+    render();});
   return b;
+}
+/* a rehearsal room (?room=) is named on the pairing screens, because both
+   phones have to be in the same one and the address is the only way in */
+function roomNote(){
+  if(!G||!ROOM||ROOM===G.room)return null;
+  const d=document.createElement('div');d.className='lbl';d.style.marginTop='10px';d.style.color='var(--terracotta)';
+  d.textContent='Rehearsal room “'+ROOM+'” · your partner’s phone must use the same address';
+  return d;
 }
 function renderPickPartner(){
   renderName('Who is your partner?',partner=>{
@@ -290,6 +306,7 @@ function renderWaitPick(){
   const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
   hint.textContent='They need to pick exactly “'+name+'”';
   app.appendChild(hint);
+  const rn=roomNote();if(rn)app.appendChild(rn);
   app.appendChild(backBtn());
   const check=()=>{
     answers().then(lines=>{
