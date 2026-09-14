@@ -13,9 +13,8 @@
    replies as that person, reject or counter (accept is locked on the
    first ask), with a line in their voice. Round two: the asker sees the
    reply and moves again; the partner replies, and now can accept. Only a
-   yes ends it. Two rounds, then one more on offer or stop. Last, the road
-   not taken: the partner answers one of the asker's pruned openings, so
-   the tree's second branch carries a real reply.
+   yes ends it. Two rounds, then one more on offer or stop.
+
    Wire: every line goes into room m2-branch as "A|B|g|key|payload",
    A the asker, B the partner, g the pair's game number (the pair's
    finished games, e lines, plus one), key one of o (the yes), p (who the
@@ -223,9 +222,8 @@ function drawSap(G,cand,xcand){
     });
     s+='<circle class="node '+nd.side+'" cx="'+X+'" cy="'+y+'" r="5.5"/>';
   });
-  /* the road not taken: the other side's reply to one of the pruned openings */
-  const X1=xcand||G.x;
-  if(X1&&nodes.length>=1&&G.rounds[0]&&G.rounds[0].y){
+  const X1=null;
+  if(X1){
     const o1=G.rounds[0].y, j=Math.min(X1.j,o1.opts.length-1), y=yAt(1), dy=(j-(o1.opts.length-1)/2)*15, sx=X-26, sy=y+dy, ex=sx-30, ey=sy-30;
     s+='<path class="twig them" style="stroke-dasharray:4 3;opacity:'+(xcand?'.55':'.9')+'" d="M'+sx+' '+sy+' Q'+(sx-22)+' '+(sy-6)+' '+ex+' '+ey+'"/>';
     s+='<text class="lab" x="6" y="'+(ey-8)+'" style="fill:var(--terracotta)">TO THAT OPENING: '+(KINDS[X1.k]||'').toUpperCase()+'</text>';
@@ -301,7 +299,7 @@ function screen(G){
   const meA=cur.role==='a', r=G.rounds.length, last=r?G.rounds[r-1]:null;
   let key;
   if(!G.o)key=meA?'need':'wait-need';
-  else if(G.over)key=G.x?'over':(meA?'wait-x':'x');
+  else if(G.over)key='over';
   else if(!last||(last.t&&last.t.k!=='a')){ /* the asker moves next, or decides */
     if(r>=MAXROUNDS)key='autostop';
     else if(r>=ROUNDS)key=meA?'more':'wait-more';
@@ -370,7 +368,7 @@ function screen(G){
     q.textContent=G.reached?'They said yes':'No yes in the moves you had';
     hint.textContent='Your branch is on the tree. Look up at the screen.';
     const big=document.createElement('div');big.className='bigcard';
-    big.innerHTML='<div class="head '+(G.reached?'good':'bad')+'">'+(G.reached?'Reached':'Stopped without a yes')+'</div><div class="sub">'+esc(G.A)+' needed '+esc(G.o)+' from '+esc(role)+'.'+(G.x?' The road not taken has a reply too.':'')+'</div>';
+    big.innerHTML='<div class="head '+(G.reached?'good':'bad')+'">'+(G.reached?'Reached':'Stopped without a yes')+'</div><div class="sub">'+esc(G.A)+' needed '+esc(G.o)+' from '+esc(role)+'.</div>';
     app.appendChild(big);
     const again=btn('PLAY AGAIN, SWAP ROLES','lock');again.addEventListener('click',()=>{cur=null;saveCur();shown='';render();});app.appendChild(again);
   }else{ /* the waits */
