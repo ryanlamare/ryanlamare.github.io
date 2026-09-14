@@ -114,6 +114,23 @@
 .urow .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
 .urow.revealed .u svg{opacity:1;transform:scale(1)}
 .uunit{font-weight:500;font-size:14px;color:var(--muted);margin-left:230px}
+/* the last card, dressed as the m1 hand: mini cards in the four suit colours with their pips */
+.mcard{display:inline-block;width:34px;height:48px;border-radius:5px;border:2px solid var(--ink);background:var(--suit);position:relative;box-shadow:0 2px 0 rgba(0,0,0,.12);--suit:var(--red)}
+.mcard.s0{--suit:var(--red)} .mcard.s1{--suit:var(--teal)} .mcard.s2{--suit:var(--ochre)} .mcard.s3{--suit:var(--terracotta)}
+.mcard::before{content:"";position:absolute;inset:4px;border:1.5px solid rgba(255,255,255,.55);border-radius:3px}
+.mcard svg{position:absolute;left:50%;top:50%;width:20px;height:20px;transform:translate(-50%,-50%);color:var(--paper)}
+.mcard.s2 svg{color:var(--ink)}
+.mcard.up{background:var(--paper)} .mcard.up::before{border-color:var(--suit)} .mcard.up svg{color:var(--suit)}
+.mcard.up .n{position:absolute;left:4px;top:1px;font-family:var(--display);font-weight:900;font-size:13px;color:var(--suit)}
+.cardlane .u{width:38px;display:flex;align-items:flex-end;justify-content:center}
+.cardlane .u .mcard{opacity:0;transform:scale(.6) rotate(-6deg);transition:opacity .3s,transform .3s}
+.cardlane.revealed .u .mcard{opacity:1;transform:scale(1) rotate(0)}
+.cardlane .u:nth-child(odd) .mcard{transform:scale(1) rotate(-3deg)} .cardlane .u:nth-child(even) .mcard{transform:scale(1) rotate(3deg)}
+.cardstrip{display:flex;gap:6px;justify-content:center;align-items:flex-end;margin-bottom:6px}
+.cardstrip .mcard{width:30px;height:42px}
+.cardstrip .mcard.leave{outline:3px solid var(--red);outline-offset:2px}
+.cardstrip .mcard.up svg{display:none}
+.cardstrip .mcard.up .n{left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:17px}
 /* the smoking poll: each option keeps its place, the count sits beside it and the figures run to the right, so the reveal moves nothing (as m1's familiarity poll) */
 .units.fixed{gap:26px}
 .units.fixed .urow{align-items:center;gap:14px;min-height:50px}
@@ -307,7 +324,7 @@
 .rreplay:hover{border-color:var(--ink);color:var(--ink)}
 /* one branch, legible: a vertical stem, your leaves to the left, theirs to
    the right, the pruned options under the taken one; the outcome leaf on top */
-.bfront{position:absolute;left:100px;right:100px;top:44px;bottom:76px;background:var(--paper-soft);border:3px solid var(--ink);border-radius:14px;padding:16px 36px 12px;display:flex;flex-direction:column;opacity:0;transform:scale(.965);transition:opacity .4s,transform .4s;pointer-events:none}
+.bfront{position:absolute;left:56px;right:56px;top:40px;bottom:76px;background:var(--paper-soft);border:3px solid var(--ink);border-radius:14px;padding:16px 36px 12px;display:flex;flex-direction:column;opacity:0;transform:scale(.965);transition:opacity .4s,transform .4s;pointer-events:none}
 .bfront.on{opacity:1;transform:none}
 .bhead{display:flex;justify-content:space-between;align-items:baseline;gap:30px;margin-bottom:6px}
 .bhead .bk{font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--muted)}
@@ -354,6 +371,9 @@
 .brow .bstate{font-weight:700;letter-spacing:.14em;font-size:11.5px;color:var(--muted);margin-top:4px}
 .brow.got .bstate{color:var(--red)}
 .bview.model{justify-content:flex-start}
+.bview.tall .brow{min-height:40px} .bview.tall .brow .bs{min-height:40px}
+.bview.tall .bopt{font-size:15px;line-height:1.15} .bview.tall .bopt.pruned{font-size:12.5px} .bview.tall .bwho{font-size:10.5px;margin-bottom:0}
+.bview.tall .bwhatif{font-size:12.5px;margin:1px 0 2px} .bview.tall .brow.goal .bopt{font-size:17px}
 .bview.model .brow{min-height:58px}
 .bview.model .brow .bs{min-height:58px}
 .bsetup{position:absolute;left:96px;top:274px;width:700px;display:flex;flex-direction:column;gap:18px}
@@ -373,6 +393,11 @@
 </head><body>
 
 <svg style="display:none" aria-hidden="true">
+<symbol id="pip0" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="13" cy="9" r="5"/><path d="M5 18 Q13 14 21 18 L18 33 L8 33 Z"/><circle cx="29" cy="9" r="5"/><path d="M21 18 Q29 14 37 18 L34 33 L24 33 Z" opacity=".55"/></g></symbol>
+<symbol id="pip1" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="8" cy="8" r="4"/><path d="M2 15 Q8 12 14 15 L12 26 L4 26 Z"/><circle cx="20" cy="8" r="4"/><path d="M14 15 Q20 12 26 15 L24 26 L16 26 Z"/><circle cx="32" cy="8" r="4"/><path d="M26 15 Q32 12 38 15 L36 26 L28 26 Z"/><circle cx="14" cy="26" r="4"/><path d="M8 33 Q14 30 20 33 L18 40 L10 40 Z"/><circle cx="26" cy="26" r="4"/><path d="M20 33 Q26 30 32 33 L30 40 L22 40 Z"/></g></symbol>
+<symbol id="pip2" viewBox="0 0 40 40"><text x="20" y="34" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="38" fill="currentColor">?</text></symbol>
+<symbol id="pip3" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="22" cy="14" rx="15" ry="11"/><circle cx="9" cy="28" r="3"/><circle cx="4" cy="35" r="1.8"/></g><g fill="currentColor"><circle cx="22" cy="10" r="3.6"/><path d="M16 20 Q22 17 28 20 L27 23 L17 23 Z"/></g></symbol>
+
 <symbol id="im-screen" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="20" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="32" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="44" cy="10" r="3.2"></circle><path fill="var(--ink,#1B1C19)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="59" r="4.2"></circle></symbol>
 <symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"></circle><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"></circle><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">£</text></symbol>
 <symbol id="im-non-zero-sum" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="30" cy="34" r="15"></circle><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" d="M30 13 A21 21 0 0 1 51 34"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M30 13 l8 1.5 m-8 -1.5 l1.5 8"></path></symbol>
@@ -395,8 +420,8 @@
 <section aria-label="Slide 9"><h2>Slide 9 of 23: The first-mover advantage</h2><p>The first-mover advantage represents the benefits an entity receives from being the first to enter a space: market share, goodwill, a rare resource. Three cards: Radiohead, first mover — In Rainbows, pay-what-you-want; what do other bands do in response? CVS, first mover — dropped cigarettes in 2014; what do Walgreens and Rite-Aid do in response? "Hey Siri" versus "OK Google" — is the first-mover always at an advantage? We know it isn't!</p></section>
 <section aria-label="Slide 10"><h2>Slide 10 of 23: Charting a complete course of action</h2><p>To form a strategy, all players must devise a complete course of action for all possible interactions. Three rows build from chartable to impossible, each with the game's pictogram, a headline number, and one line of reading. Tic-Tac-Toe: 255,168 possible games — nine first moves, then eight, then seven, and played perfectly it is always a draw. Checkers: five times ten to the twentieth positions — a computer finally charted them all in 2007, after eighteen years of computing, and played perfectly it is also a draw. Chess: ten to the one-hundred-twentieth possible games — more games than there are atoms in the observable universe; no computer has solved it, and none is close. On the right, the Game of Thrones clip, loaded on a click: Littlefinger counsels Sansa, fight every battle, everywhere, always, in your mind.</p></section>
 <section aria-label="Slide 11"><h2>Slide 11 of 23: Three games</h2><p>Three pictogram tiles introducing the games ahead, by their game-theory names: a game of backward reasoning — take the last card. The ultimatum game — one offer, split a thousand pounds. The centipede game — take the pot, or let it grow.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 23: A game of backward reasoning</h2><p>The rules, revealed one at a time: twenty-three cards are on the table between you and your neighbor. You take turns removing one, two, or three cards. Whoever takes the last card wins. Play it on your phones — whoever's first name is nearest to A goes first. A QR code joins the game page, and a figure is added to an Isotype row for every pair that finishes, with a rising games-done counter. If the poll server is unreachable the slide runs on marked demo data.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 23: Solving the game</h2><p>A number line from 0 to 23 with backward arcs: remove three first to leave 20, then answer every removal by landing on 16, 12, 8, then 4 — a shaded band marks the positions of one to three left, where your opponent must hand you the last card. Caption: think forward and reason backward — whoever faces four cards loses, so leave 20 after your first move, then answer every removal back to 16, 12, 8, and 4, and the last card is yours. A final keypress adds a computed line from the room's own phone games: how many of the winners were already leaving multiples of four.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 23: A game of backward reasoning</h2><p>The rules, revealed one at a time: twenty-three cards are on the table between you and your neighbor. You take turns removing one, two, or three cards. Whoever takes the last card wins. Play it on your phones — whoever's first name is nearest to A goes first. A QR code joins the game page, and a card is added to a row for every pair that finishes, in the four suit colours of the module 1 hand, with a rising games-done counter. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 23: Solving the game</h2><p>The twenty-three cards laid out in a strip above a number line, face down in the four suit colours, with the cards at four, eight, twelve, sixteen and twenty face up in red, the positions to leave. A number line from 0 to 23 with backward arcs: remove three first to leave 20, then answer every removal by landing on 16, 12, 8, then 4 — a shaded band marks the positions of one to three left, where your opponent must hand you the last card. Caption: think forward and reason backward — whoever faces four cards loses, so leave 20 after your first move, then answer every removal back to 16, 12, 8, and 4, and the last card is yours. A final keypress adds a computed line from the room's own phone games: how many of the winners were already leaving multiples of four.</p></section>
 <section aria-label="Slide 14"><h2>Slide 14 of 23: The ultimatum game</h2><p>A draggable split bar over one pot of one thousand pounds: the divider slides between ninety-nine to one and one to ninety-nine, starting at five hundred each, with the proposer's share in teal on the left and the responder's share in terracotta on the right. The rules, in full: there is one thousand pounds to split between you and the person next to you. The person whose first name is nearest to A proposes a split from their phone. The second person sees the offer land and accepts or rejects. If they reject, nobody gets anything. A QR code beside the rules joins the game page: the game is played live between the pair's two phones — the proposer picks their partner and sends an offer, and the partner's phone receives it.</p></section>
 <section aria-label="Slide 15"><h2>Slide 15 of 23: The ultimatum game: theory vs your results</h2><p>The room's real play, streaming in live as each pair finishes their game on their phones (QR code shown for anyone still joining) with a rising pairs counter. A keypress reveals every offer as a dot on a zero-to-one-thousand-pound axis — accepted offers in teal, rejected in red — with a dashed marker at the average offer. Further keypresses walk the reading: rollback theory says offer a token amount, it's accepted; a computed line gives the room's average offer and how many were rejected; and the lesson — a "rational" lowball can cost you the deal. If the poll server is unreachable the slide runs on marked demo data.</p></section>
 <section aria-label="Slide 16"><h2>Slide 16 of 23: The centipede game</h2><p>A strip of ten turns, players one and two alternating, the pot growing from one hundred pounds to a capped thousand. The rules, in full: one hundred pounds is on the table. Player 1 can take it, or pass. Each pass adds another hundred, and the choice switches sides. At one thousand pounds the game ends, and whoever's turn it is takes it all. Played in pairs, on your phones, live between the two devices; this time whoever's first name is nearest to Z is Player 1 and moves first.</p></section>
@@ -721,11 +746,11 @@
   <div style="position:absolute;left:96px;right:96px;top:508px;bottom:64px;display:flex;gap:30px;align-items:center">
     <div class="livecount"><span class="n" id="lcN">0</span><span class="l">GAMES<br>DONE</span></div>
     <div class="units" style="flex:1"><div class="demotag" id="lcD">DEMO DATA</div>
-      <div class="urow revealed" id="lcRow">
+      <div class="urow revealed cardlane" id="lcRow">
         <div class="uhead"><div class="ulbl">Finished games</div></div>
-        <div class="ulane" style="color:var(--red)" id="lcLane"></div>
+        <div class="ulane" id="lcLane"></div>
       </div>
-      <div class="uunit" style="margin-left:230px">Each figure is one pair&rsquo;s finished game</div>
+      <div class="uunit" style="margin-left:230px">Each card is one pair&rsquo;s finished game</div>
     </div>
   </div>
 </section>
@@ -733,7 +758,8 @@
 <section class="slide content" data-i="12">
   <div class="kicker"><i></i>MODULE 2 · TAKE THE LAST CARD</div>
   <h2>Solving the game</h2>
-  <div class="fig" style="top:200px"><div class="numstack">
+  <div class="fig" style="top:176px"><div class="numstack">
+  <div class="cardstrip" aria-hidden="true"><span class="mcard s0"><svg viewBox="0 0 40 40"><use href="#pip0"/></svg></span><span class="mcard s1"><svg viewBox="0 0 40 40"><use href="#pip1"/></svg></span><span class="mcard s2"><svg viewBox="0 0 40 40"><use href="#pip2"/></svg></span><span class="mcard s3 up leave"><span class="n">4</span><svg viewBox="0 0 40 40"><use href="#pip3"/></svg></span><span class="mcard s0"><svg viewBox="0 0 40 40"><use href="#pip0"/></svg></span><span class="mcard s1"><svg viewBox="0 0 40 40"><use href="#pip1"/></svg></span><span class="mcard s2"><svg viewBox="0 0 40 40"><use href="#pip2"/></svg></span><span class="mcard s3 up leave"><span class="n">8</span><svg viewBox="0 0 40 40"><use href="#pip3"/></svg></span><span class="mcard s0"><svg viewBox="0 0 40 40"><use href="#pip0"/></svg></span><span class="mcard s1"><svg viewBox="0 0 40 40"><use href="#pip1"/></svg></span><span class="mcard s2"><svg viewBox="0 0 40 40"><use href="#pip2"/></svg></span><span class="mcard s3 up leave"><span class="n">12</span><svg viewBox="0 0 40 40"><use href="#pip3"/></svg></span><span class="mcard s0"><svg viewBox="0 0 40 40"><use href="#pip0"/></svg></span><span class="mcard s1"><svg viewBox="0 0 40 40"><use href="#pip1"/></svg></span><span class="mcard s2"><svg viewBox="0 0 40 40"><use href="#pip2"/></svg></span><span class="mcard s3 up leave"><span class="n">16</span><svg viewBox="0 0 40 40"><use href="#pip3"/></svg></span><span class="mcard s0"><svg viewBox="0 0 40 40"><use href="#pip0"/></svg></span><span class="mcard s1"><svg viewBox="0 0 40 40"><use href="#pip1"/></svg></span><span class="mcard s2"><svg viewBox="0 0 40 40"><use href="#pip2"/></svg></span><span class="mcard s3 up leave"><span class="n">20</span><svg viewBox="0 0 40 40"><use href="#pip3"/></svg></span><span class="mcard s0"><svg viewBox="0 0 40 40"><use href="#pip0"/></svg></span><span class="mcard s1"><svg viewBox="0 0 40 40"><use href="#pip1"/></svg></span><span class="mcard s2 up"><span class="n">23</span><svg viewBox="0 0 40 40"><use href="#pip2"/></svg></span></div>
     <svg class="numline" viewBox="0 0 1000 200">
       <line class="axis" x1="60" y1="120" x2="940" y2="120"/>
       <line class="tick" x1="60" y1="110" x2="60" y2="130"/><text class="endlbl" x="60" y="158" text-anchor="middle">0</text>
@@ -1248,7 +1274,7 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
     const want=Math.min(n,60);
     if(lane.children.length!==want){
       let h='';
-      for(let i=0;i<want;i++)h+='<span class="u">'+PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"')+'</span>';
+      for(let i=0;i<want;i++)h+='<span class="u"><span class="mcard s'+(i%4)+'" style="transition-delay:'+(i*35)+'ms"><svg viewBox="0 0 40 40"><use href="#pip'+(i%4)+'"/></svg></span></span>';
       lane.innerHTML=h;void lane.offsetWidth;
     }
   }
@@ -1529,6 +1555,7 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
       else if(limbs.length)limb=limbs.reduce((a,b)=>b.first>a.first?b:a);
       const sig=JSON.stringify(limb);
       if(sig===lastSig)return;lastSig=sig;
+      sv.classList.toggle('tall',!!limb&&nodesOf(limb).length>4);
       sv.innerHTML=limb?branchHTML(limb):'<div class="brow root"><div class="bl"><div class="bwho">WAITING FOR THE FIRST BRANCH</div></div><div class="bs"><i class="dot"></i></div><div class="br"></div></div>';
       E('sampleD').style.display=live?'none':'';
     }
@@ -1557,7 +1584,7 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
     room.classList.toggle('all',all);
     [...room.querySelectorAll('.limb,.ghosts')].forEach(g=>g.classList.toggle('hot',showing&&+g.dataset.k===f));
     if(showing){
-      front.innerHTML='<div class="bhead"><div class="bk">BRANCH '+f+' OF '+n+' · '+esc(L[f-1].A.toUpperCase())+' AND '+esc(L[f-1].B.toUpperCase())+'</div><div class="bk">DID THEY REPLY THE WAY YOU EXPECTED?</div></div><div class="bview">'+branchHTML(L[f-1])+'</div>';}
+      front.innerHTML='<div class="bhead"><div class="bk">BRANCH '+f+' OF '+n+' · '+esc(L[f-1].A.toUpperCase())+' AND '+esc(L[f-1].B.toUpperCase())+'</div><div class="bk">DID THEY REPLY THE WAY YOU EXPECTED?</div></div><div class="bview'+(nodesOf(L[f-1]).length>4?' tall':'')+'">'+branchHTML(L[f-1])+'</div>';}
     front.classList.toggle('on',showing);
     if(all){const G=geom(L), left=[], right=[];
       G.forEach((gm,i)=>{const row='<div'+(gm.limb.mine?' class="mine"':'')+'>'+(gm.a<0?'<b>'+(i+1)+'</b>':'')+esc(gm.limb.A)+': '+esc(cut(gm.limb.o,48))+(gm.a>=0?'<b>'+(i+1)+'</b>':'')+'</div>';
