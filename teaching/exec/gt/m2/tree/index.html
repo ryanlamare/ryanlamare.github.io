@@ -10,10 +10,11 @@
    partner who they are playing; the partner plays that other side, in
    role. Round one: the asker writes two or three ways to open and taps
    the one they take; the move lands on the partner's phone; the partner
-   replies as that person, reject or counter (accept is locked on the
-   first ask), with a line in their voice. Round two: the asker sees the
-   reply and moves again; the partner replies, and now can accept. Only a
-   yes ends it. Two rounds, then one more on offer or stop.
+   replies as that person, with a line in their voice: a counter keeps the
+   game going, a reject ends the branch there, and accept is locked on the
+   first ask. Round two: the asker sees the counter and moves again; the
+   partner replies, and now can accept. A yes reaches it. Two rounds, then
+   one more on offer or stop.
 
    Wire: every line goes into room m2-branch as "A|B|g|key|payload",
    A the asker, B the partner, g the pair's game number (the pair's
@@ -167,10 +168,10 @@ function gameOf(parsed,A,B,g){
   const yn=s=>{if(!s)return null;const p=s.split('‖');const pick=+p[0];const opts=p.slice(1).map(x=>x.trim()).filter(Boolean);if(!opts.length||isNaN(pick))return null;return {opts,pick:Math.min(Math.max(pick,0),opts.length-1)};};
   const tn=s=>{if(!s)return null;const m=/^([arc])‖([\s\S]*)$/.exec(s);if(!m)return null;return {k:m[1],text:m[2].trim()};};
   const G={o:L.o||'',p:L.p||'',rounds:[],end:L.e==='1'?1:L.e==='0'?0:null,x:null};
-  for(let i=1;i<=MAXROUNDS;i++){const y=yn(L['y'+i]),t=tn(L['t'+i]);if(!y)break;const r={y};if(t)r.t=t;G.rounds.push(r);if(!t||t.k==='a')break;}
-  if(L.x){const m=/^(\d)‖([arc])‖([\s\S]*)$/.exec(L.x);if(m)G.x={j:+m[1],k:m[2],text:m[3].trim()};}
+  for(let i=1;i<=MAXROUNDS;i++){const y=yn(L['y'+i]),t=tn(L['t'+i]);if(!y)break;const r={y};if(t)r.t=t;G.rounds.push(r);if(!t||t.k!=='c')break;}
   G.reached=G.rounds.some(r=>r.t&&r.t.k==='a');
-  G.over=G.reached||G.end===0;
+  G.rejected=G.rounds.some(r=>r.t&&r.t.k==='r');
+  G.over=G.reached||G.rejected||G.end===0;
   return G;
 }
 /* finished games for a pair = e lines */
@@ -191,7 +192,7 @@ function drawSap(G,cand,xcand){
   const P=40,n=nodes.length,rows=Math.max(n,ROUNDS*2);
   const H=70+(rows+1)*P,X=175,y0=H-38;
   const yAt=k=>y0-k*P, gy=yAt(rows+1)+4;
-  const got=G.reached, lost=G.end===0;
+  const got=G.reached, lost=G.rejected||G.end===0;
   let s='';
   s+='<path class="stem" d="M'+X+' '+y0+' L'+X+' '+(n?yAt(n):y0)+'"/>';
   s+='<path class="stem'+(got?'':' todo')+'" d="M'+X+' '+(n?yAt(n):y0)+' L'+X+' '+(gy+14)+'"/>';
@@ -332,9 +333,9 @@ function screen(G){
   }else if(key==='t'){
     const n=r;
     q.textContent='Round '+n+': you are '+role;
-    hint.textContent=(n===1?G.A+' opens. Reply as '+role+' would, honestly. Nobody gets a yes on the first ask.':G.A+'’s next move. Reply as '+role+' would; you can say yes now.');
+    hint.textContent=(n===1?G.A+' opens. Reply as '+role+' would, honestly. Nobody gets a yes on the first ask, and a reject ends the branch.':G.A+'’s next move. Reply as '+role+' would; you can say yes now.');
     app.appendChild(saidCard({k:null,text:last.y.opts[last.y.pick]},G.A,null,true));
-    replyCard(n,G,(k,text)=>line('t'+n,k+'‖'+text).then(()=>k==='a'?line('e','1'):null).then(()=>{shown='';play();}));
+    replyCard(n,G,(k,text)=>line('t'+n,k+'‖'+text).then(()=>k==='a'?line('e','1'):k==='r'?line('e','0'):null).then(()=>{shown='';play();}));
   }else if(key==='more'){
     q.textContent='Two rounds, and no yes yet';hint.textContent=role+' '+replyWord(last.t)+'. One more move, or stop here?';
     app.appendChild(saidCard(last.t,role,G.B));
@@ -365,7 +366,7 @@ function screen(G){
       line('x',j+'‖'+k+'‖'+t).then(()=>{shown='';play();}).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=inp.disabled=false;});});
     c.appendChild(inp);app.appendChild(c);app.appendChild(lk);
   }else if(key==='over'){
-    q.textContent=G.reached?'They said yes':'No yes in the moves you had';
+    q.textContent=G.reached?'They said yes':G.rejected?'They said no, and that was that':'No yes in the moves you had';
     hint.textContent='Your branch is on the tree. Look up at the screen.';
     const big=document.createElement('div');big.className='bigcard';
     big.innerHTML='<div class="head '+(G.reached?'good':'bad')+'">'+(G.reached?'Reached':'Stopped without a yes')+'</div><div class="sub">'+esc(G.A)+' needed '+esc(G.o)+' from '+esc(role)+'.</div>';
@@ -418,7 +419,7 @@ function optionsCard(n,G,onLock){
 function replyCard(n,G,onLock){
   const c=card('them','YOUR REPLY, AS '+cut(G.p||'THE OTHER SIDE',26).toUpperCase(),null);
   const picks=document.createElement('div');picks.className='picks';picks.innerHTML='<div class="plab">Tap your reply</div>';
-  const defs=[['a','Accept',n===1?'Not on the first ask':'You say yes: the branch is done'],['r','Reject','A no, and nothing on the table'],['c','Counter','A no, but here is what would work']];
+  const defs=[['a','Accept',n===1?'Not on the first ask':'You say yes: the branch is reached'],['r','Reject','A flat no: the branch ends here'],['c','Counter','A no, but here is what would work: the game goes on']];
   const pb=[];let k=null;
   defs.forEach(([kk,label,note])=>{const b=document.createElement('button');b.className='opt';b.innerHTML='<span class="k"></span><span class="note"></span>';b.querySelector('.k').textContent=label;b.querySelector('.note').textContent=note;
     if(kk==='a'&&n===1)b.disabled=true;b.addEventListener('click',()=>{k=kk;pb.forEach(x=>x.classList.toggle('mine',x===b));sync();});picks.appendChild(b);pb.push(b);});
