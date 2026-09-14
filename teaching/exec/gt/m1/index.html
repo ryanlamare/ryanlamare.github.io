@@ -6,8 +6,63 @@
 <link rel="stylesheet" href="/teaching/exec/gt/deck.css">
 <style>
 /* Module-1-specific widgets (shared components live in deck.css) */
+/* the hands: the module's closing exercise. Each group deals itself four
+   cards, one per question (four suits, the poll colours), typed on one
+   phone. The table slide is full screen like the sanctuary: hands land
+   face down as they arrive; each arrow press brings the next hand to the
+   front face up, big enough to read from the back, and returns the last
+   one to the table face up; the final press leaves every hand face up. */
+.hcard{position:relative;width:250px;height:360px;box-sizing:border-box;border:3px solid var(--ink);border-radius:14px;background:var(--paper);
+  padding:18px 18px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 5px 0 rgba(0,0,0,.07);--suit:var(--red)}
+.hcard.s0{--suit:var(--red)} .hcard.s1{--suit:var(--teal)} .hcard.s2{--suit:var(--ochre)} .hcard.s3{--suit:var(--terracotta)}
+.hcard{border-color:var(--suit)}
+.hcard .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12.5px;color:var(--suit);padding-bottom:8px;border-bottom:2px solid var(--suit)}
+.hcard.s2 .suit{color:var(--ink)}
+.hcard .txt{font-weight:600;font-size:19px;line-height:1.32;color:var(--ink);flex:1;overflow:hidden;overflow-wrap:anywhere}
+.hcard .pip{position:absolute;right:14px;bottom:12px;width:36px;height:36px;color:var(--suit)}
+.hcard.s2 .pip{color:var(--ink)}
+/* the back */
+.hcard.down{background:var(--suit);border-color:var(--ink)}
+.hcard.down .suit,.hcard.down .txt{visibility:hidden}
+.hcard.down::before{content:"";position:absolute;inset:11px;border:2.5px solid rgba(255,255,255,.6);border-radius:8px;
+  background:repeating-linear-gradient(45deg,transparent 0 9px,rgba(255,255,255,.14) 9px 11px)}
+.hcard.down .pip{right:auto;bottom:auto;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%);color:var(--paper)}
+.hcard.down.s2 .pip{color:var(--ink)}
+/* the setup slide: the four questions as a hand, face up */
+.setuphand{position:absolute;left:96px;top:270px;display:flex;gap:16px}
+.setuphand .hcard{width:176px;height:262px;padding:14px 14px 16px;border-radius:11px}
+.setuphand .hcard .suit{font-size:10.5px;letter-spacing:.12em}
+.setuphand .hcard .txt{font-size:16px;line-height:1.3}
+.setuphand .hcard .pip{width:26px;height:26px;right:11px;bottom:9px}
+/* the table */
+.tableau{position:absolute;left:60px;right:60px;top:52px;bottom:48px;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:42px 34px;transition:opacity .4s}
+.tableau.dim{opacity:.22}
+.hand{position:relative;width:291px;height:152px;flex:none;transition:opacity .3s}
+.hand.lifted{opacity:.12}
+.hand .hn{position:absolute;left:0;top:-24px;font-weight:700;font-size:12px;letter-spacing:.16em;color:var(--muted)}
+.hand .hcard{position:absolute;top:0;transform:scale(.42);transform-origin:0 0;transition:none}
+.hand .hcard:nth-child(2){left:0} .hand .hcard:nth-child(3){left:62px} .hand .hcard:nth-child(4){left:124px} .hand .hcard:nth-child(5){left:186px}
+/* on the table a face-up card shows its suit mark only: the text is for the front */
+.hand .hcard .suit,.hand .hcard .txt{visibility:hidden}
+.hand .hcard .pip{right:auto;bottom:auto;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%)}
+.tableau.dense{gap:30px 24px}
+.tableau.dense .hand{width:207px;height:108px}
+.tableau.dense .hand .hcard{transform:scale(.3)}
+.tableau.dense .hand .hcard:nth-child(3){left:44px} .tableau.dense .hand .hcard:nth-child(4){left:88px} .tableau.dense .hand .hcard:nth-child(5){left:132px}
+/* the hand at the front */
+.front{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+.front.on{opacity:1;visibility:visible}
+.front .fh{position:absolute;left:96px;top:40px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--muted)}
+.front .fcards{display:flex;gap:22px;align-items:center}
+.front .fcards .hcard:nth-child(1){transform:rotate(-4deg) translateY(10px)}
+.front .fcards .hcard:nth-child(2){transform:rotate(-1.3deg)}
+.front .fcards .hcard:nth-child(3){transform:rotate(1.3deg)}
+.front .fcards .hcard:nth-child(4){transform:rotate(4deg) translateY(10px)}
+.hcount{position:absolute;right:60px;bottom:38px;display:flex;align-items:baseline;gap:10px}
+.hcount .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
+.hcount .l{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted)}
 /* What did we learn? five lesson tiles */
-.learn .tiles{top:236px;gap:22px;left:64px;right:64px}
+.learn .tiles{top:256px;gap:22px;left:64px;right:64px}
 .learn .tile{width:206px;gap:14px}
 .learn .tile .pgwrap{height:96px}
 .learn .tile .pgwrap .pg{height:92px}
@@ -213,37 +268,43 @@
 <section class="sr-only" aria-label="Full text of all slides">
 <h1>Applied Game Theory, Module 1 — Introduction to Game Theory and Strategic Thinking</h1>
 <p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 29: Title slide</h2><p>Game Theory. Introduction to game theory and strategic thinking. Module 1 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 29: How the next two days will run</h2><p>The programme opener. Two columns headed Day one and Day two, four numbered modules in each, with this module in red: one, introduction to game theory and strategic thinking; two, sequential strategies; three, simultaneous zero-sum games; four, prisoner's dilemmas and how to overcome them; five, coordination games; six, mixed strategies; seven, credibility, commitment, and strategic moves; eight, information asymmetries. Three lines revealed one at a time underneath: every module has games, and you play them on your phones; some games score points, and after each module we'll see the top of the table; awards at the end of day two (and not just for highest points!).</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 29: Learning objectives</h2><p>Four numbered objectives: one, understand core game theory and strategy concepts. Two, explain common knowledge and equilibrium. Three, recognize when a choice is a decision and when it's a game. Four, play three games of strategic thinking.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 29: How familiar are you with game theory as a strategic concept?</h2><p>A live poll answered on phones at ryanlamare.com/go (QR code shown). Before answering, each phone picks its owner's name once — the class points system runs on these names for the rest of the programme. Four options: I have no idea what game theory is and I am a little terrified right now. I've dabbled in game theory but I don't think about it very much. You know, I'm something of a game theorist myself. Call me John Nash, I spend my life working to reach equilibrium. A response counter rises while the distribution stays hidden; a keypress reveals the count beside each option and a row of small human figures to its right, one per answer; the options themselves stay where they were. If the poll server is unreachable the slide runs on marked demo data.</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 29: A few basic ideas</h2><p>Some core beliefs I will bring into these sessions. Three pictogram tiles: Strategy is everywhere — strategic thinking can be found everywhere, and we all do it, all the time. You must consider others — strategic thinking requires a consideration of others' behaviors as well as our own. Self-interest is rational — we are at least reasonably rational actors (or are aware of the limits of our rationality).</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 29: Different ways to think about strategy</h2><p>A two-circle Venn diagram — business schools and economics — with this programme at the red centre. Business schools teach courses on strategic management (differentiation; competitive advantage; added value; etc.). Economics departments teach courses dedicated entirely to mathematical applications of strategic thinking (Nash equilibrium; zero-sum and non-zero-sum games; payoff matrices; etc.). This programme can be thought of as a hybrid of these different approaches.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 29: Defining game theory</h2><p>Three quoted definitions revealed one at a time, operative phrases in red: a model of optimality taking into consideration not only benefits less costs, but also the interaction between participants; a set of concepts aimed at strategic decision making in situations of competition and conflict (as well as of cooperation and interdependence) under specified rules; a mathematical theory that deals with strategies for maximizing gains and minimizing losses within prescribed constraints, as in the rules of a card game, widely applied in the solution of various decision-making problems, as those of military strategy and business policy.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 29: Is an act a singular decision or a broader game?</h2><p>Two columns: a decision involves a unilateral choice made without regard to others' behaviors; a game involves considerations of how the other side will react to the choices made. Below: we care about broader games, and assume — everyone has strategies, everyone has payoffs, everyone is behaving in their own self-interest.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 29: Types of games we'll cover</h2><p>Four opposed pairs: sequential versus simultaneous; zero-sum versus non-zero sum; single play / single opponent versus repeat play / repeat opponent; fixed rules / complete info versus dynamic rules / incomplete info.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 29: A game of drawing</h2><p>Everyone draws, on your phones — a QR code opens the drawing page and a counter shows dogs arriving. Your task is to draw the median dog (based on size). The winning drawing will be that which best represents the median dog. Dog sizes will be measured from snout to tail to determine the winner. You have 100 seconds to draw the median dog, on an on-screen countdown timer.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 29: The median dog</h2><p>A full-screen dog sanctuary with no title or other text: every submitted drawing at true relative size, sorted small to big, each housed in its own cartoon doghouse — an overhanging gable roof with a small bone on the front, a picket fence, and a nameplate reading the artist's name and snout-to-tail span. A full room of 21 makes three rows of seven. The houses appear one after another on a keypress; a second keypress computes the median span and pins medals on the three dogs nearest it — gold, silver and bronze discs on ribbons, ties sharing a medal — and the gold dog's house turns red. The medals are the announcement. If the poll server is unreachable the sanctuary shows marked demo stick-dogs.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 29: NOT the median dogs</h2><p>A photograph of two real dogs in bandanas looking up expectantly. The title says: NOT the median dogs. A caption then appears under the photo, the game's one-line debrief: to draw the median dog, you had to draw what you thought everyone else would draw.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 29: The first rule of game theory: it's not (just) about you!</h2><p>Bullets on the left: whatever action one entity does must affect the other side, and vice versa — you cannot think one-dimensionally. Everything you do has consequences for both you and your opponent. Equally, everything your opponent does has consequences for both you and your opponent. AND, you both know this to be true! This can be thought of as the requirement for common knowledge. On the right, the Common Knowledge video is embedded behind a click-to-play cover.</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 29: Common knowledge and equilibrium</h2><p>Bullets on the left: the ultimate goal in GT is usually to identify an equilibrium point — where each player's strategy is their best response to the strategies of the other players. There doesn't have to be only one! And an equilibrium point won't always be the most optimal solution! But at its core, game theory explores and finds strategies that generate equilibria. On the right, a first look at a payoff matrix, titled two cars reach a junction: you on the rows, the other driver on the columns, each choosing go or stop. Both go: minus 5 each, the crash. You go, they stop: 1 for you, 0 for them. You stop, they go: 0 for you, 1 for them. Both stop: minus 1 each, the standstill. With the second bullet, red boxes mark the two cells where one goes and the other stops, and a key reads: an equilibrium, and there are two. The next slide says what picks between them.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 29: A typical example of using common knowledge to find equilibrium</h2><p>A news photograph of traffic lights. I know to stop on red and go on green. You know that I know to stop on red and go on green. So when the light turns green for you, you proceed safely by using common knowledge. And, therefore, we get a nice equilibrium of stop/go traffic.</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 29: Except sometimes GT sucks</h2><p>The same photograph zoomed close: each light shows red and green lit at the same time. Look a little closer at the traffic lights. You can actually file lawsuits over this equilibrium failure.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 29: I'm thinking of a number</h2><p>I'm thinking of a number between 1 and 100. Everyone plays, on your phones — the game runs in five rounds, one guess per round. After each guess, your phone tells you if you need to go higher or lower. Between rounds, the board shows the whole room's guesses — and how they move. On the right, a drawn number line from 1 to 100 with a large red question mark over the middle.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 29: Lock in your guesses</h2><p>The whole room plays by phone — a QR code opens the guessing page, and the server answers each guess too high, too low, or correct; the secret number never leaves the server. The board shows five strips, one per round, each a 1-to-100 line: a counter rises as guesses arrive in the open round, and a facilitator button, close round and show, reveals that round's guesses as neutral ink dots (verdict colours mid-game would give the number away) and opens the next round on everyone's phones, so the room watches the distribution tighten round by round. When the game ends the dots recolour — too low in teal, too high in terracotta, correct in red — and a keypress counts the solvers and names the first. The secret number is preset on the server — nothing to set on the day. If the poll server is unreachable the slide runs on marked demo data.</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 29: How to guess the correct number</h2><p>Let's work through one series of efficient guesses. An interactive number line from 1 to 100: tapping anywhere makes that guess, the excluded range shades out, and each guess logs as too high or too low. A button plays the efficient sequence — 50 too high, 25 too low, 37 too low, 43 too low — narrowing the range. A step then shows: you've narrowed your last guess down to 44, 45, 46, 47, 48, or 49. So what is the answer?</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 29: How to guess the correct number</h2><p>This is actually a game about common knowledge, not about guessing the right number. Remember — I am strategic too! The game actually started when you were sent the pre-course reading (if you read it, that is!). If I know that you've done the reading, how should I play this game? If you know that I know that you've done the reading, how should you play this game? On the right, a drawn figure: me on the left and you on the right, either side of the pre-course reading, each with a thought bubble holding the other's head. Under it, a tower of four cards builds one by one, each indented deeper: you might know something; but I know that you know it; and you should know that I know that you know it; and I should know that you know that I know that you kn…!</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 29: Lessons from the "I'm thinking of a number" game</h2><p>Bullets on the left: of course, you already know to always put yourself in the other person's shoes! But also know that, people are not random in their strategies! A good strategist must always be thinking multidimensionally! On the right, The Princess Bride battle of wits is embedded behind a click-to-play cover.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 29: Added value game</h2><p>Bullets on the left: game theory can result in paradoxical or unusual strategic choices that benefit players' self-interest. Let's consider the idea of added value. I have one white card for every person in this session, and each of you has one yellow card. Senior management has agreed to pay anyone who turns in a pair of white and yellow cards £100. You can negotiate with me individually, but you cannot band together (this is key!). Make me one offer for my card. On the right, a drawn figure: a fan of three white cards labeled mine, one per person, a plus sign, one yellow card labeled yours, and underneath, equals £100 a pair.</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 29: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones send offers in pounds for their share of the £100 (QR code shown, with a rising offers counter); each pending offer appears as a card with the sender's name and amount, and the deck decides it automatically against this game's rule — a share between £40 and £60 is accepted, anything else rejected. The phone shows a big ACCEPTED or REJECTED — one offer per player per game, no second tries — and every decided offer lands as a dot on a zero-to-one-hundred-pound strip — accepted teal, rejected red — with the mean accepted deal and a count of deals and rejections. If the poll server is unreachable the board shows marked demo data.</p></section>
-<section aria-label="Slide 24"><h2>Slide 24 of 29: What happens if I "lose" three cards?</h2><p>The rule change only — no analysis yet, so the game isn't given away. Say I "lose" three cards: now we have fewer white cards, but each of you still has 1 yellow card. Let's play again. On the right, a drawn figure: the fan of three white cards each crossed out in red, labeled three of mine, gone, and the yellow card untouched, labeled still one each.</p></section>
-<section aria-label="Slide 25"><h2>Slide 25 of 29: Make me another offer</h2><p>The live offers board again, second game: after I lose three. New offers are decided the same way, now against a harder rule — only a share of £10 or less is accepted — and land on a second strip labeled after I lose three, shown under the equal-cards strip so the room can compare the two distributions. If the poll server is unreachable the board shows marked demo data.</p></section>
-<section aria-label="Slide 26"><h2>Slide 26 of 29: Added value matters</h2><p>The debrief, after the second game has been played. Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction whenever I want — so you're lucky if I give you even £10! The key stipulation was that you could not band together — what would the difference have been if you could have collectively interacted with me? The crossed-out-cards figure sits on the right.</p></section>
-<section aria-label="Slide 27"><h2>Slide 27 of 29: What do you need to know about the other players?</h2><p>A write-in exercise on the room's own world. Think of a situation at work where what the other side does matters to you. What would you want to know about them, your competitors, or anyone else at the table? Questions are sent from phones — a QR code links to the write-in page at ryanlamare.com/go, and a counter shows how many questions are in. When the instructor calls time, a keypress fades the setup and fills the screen with everyone's questions as a wall of coloured cards, identical questions grouped with a times-N marker. The spoken debrief sorts the wall into what everyone in the deal already knows — common knowledge — and what only the other side knows. If the poll server is unreachable the wall shows marked demo data.</p></section>
-<section aria-label="Slide 28"><h2>Slide 28 of 29: What did we learn?</h2><p>The module's debrief as five pictogram tiles, revealed one at a time. Decision or game? Does the other side react to what you choose? It's not (just) about you: everything you do has consequences for both of you, and you both know it. Common knowledge: you might know something, but I know that you know it. Equilibrium: usually the goal, and not always the most optimal solution. Added value: when the other side can walk away, you're lucky to get even £10. A closing red chip asks the room: where does this show up in your world?</p></section>
-<section aria-label="Slide 29"><h2>Slide 29 of 29: Top of the table</h2><p>The break scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time, then left on screen through the break. Columns show each player's points from the median dog game and the number game, plus the total. Top five only, never a full ranking; each participant can check their own running total privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 1"><h2>Slide 1 of 30: Title slide</h2><p>Game Theory. Introduction to game theory and strategic thinking. Module 1 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 30: How the next two days will run</h2><p>The programme opener. Two columns headed Day one and Day two, four numbered modules in each, with this module in red: one, introduction to game theory and strategic thinking; two, sequential strategies; three, simultaneous zero-sum games; four, prisoner's dilemmas and how to overcome them; five, coordination games; six, mixed strategies; seven, credibility, commitment, and strategic moves; eight, information asymmetries. Three lines revealed one at a time underneath: every module has games, and you play them on your phones; some games score points, and after each module we'll see the top of the table; awards at the end of day two (and not just for highest points!).</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 30: Learning objectives</h2><p>Four numbered objectives: one, understand core game theory and strategy concepts. Two, explain common knowledge and equilibrium. Three, recognize when a choice is a decision and when it's a game. Four, play three games of strategic thinking.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 30: How familiar are you with game theory as a strategic concept?</h2><p>A live poll answered on phones at ryanlamare.com/go (QR code shown). Before answering, each phone picks its owner's name once — the class points system runs on these names for the rest of the programme. Four options: I have no idea what game theory is and I am a little terrified right now. I've dabbled in game theory but I don't think about it very much. You know, I'm something of a game theorist myself. Call me John Nash, I spend my life working to reach equilibrium. A response counter rises while the distribution stays hidden; a keypress reveals the count beside each option and a row of small human figures to its right, one per answer; the options themselves stay where they were. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 30: A few basic ideas</h2><p>Some core beliefs I will bring into these sessions. Three pictogram tiles: Strategy is everywhere — strategic thinking can be found everywhere, and we all do it, all the time. You must consider others — strategic thinking requires a consideration of others' behaviors as well as our own. Self-interest is rational — we are at least reasonably rational actors (or are aware of the limits of our rationality).</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 30: Different ways to think about strategy</h2><p>A two-circle Venn diagram — business schools and economics — with this programme at the red centre. Business schools teach courses on strategic management (differentiation; competitive advantage; added value; etc.). Economics departments teach courses dedicated entirely to mathematical applications of strategic thinking (Nash equilibrium; zero-sum and non-zero-sum games; payoff matrices; etc.). This programme can be thought of as a hybrid of these different approaches.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 30: Defining game theory</h2><p>Three quoted definitions revealed one at a time, operative phrases in red: a model of optimality taking into consideration not only benefits less costs, but also the interaction between participants; a set of concepts aimed at strategic decision making in situations of competition and conflict (as well as of cooperation and interdependence) under specified rules; a mathematical theory that deals with strategies for maximizing gains and minimizing losses within prescribed constraints, as in the rules of a card game, widely applied in the solution of various decision-making problems, as those of military strategy and business policy.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 30: Is an act a singular decision or a broader game?</h2><p>Two columns: a decision involves a unilateral choice made without regard to others' behaviors; a game involves considerations of how the other side will react to the choices made. Below: we care about broader games, and assume — everyone has strategies, everyone has payoffs, everyone is behaving in their own self-interest.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 30: Types of games we'll cover</h2><p>Four opposed pairs: sequential versus simultaneous; zero-sum versus non-zero sum; single play / single opponent versus repeat play / repeat opponent; fixed rules / complete info versus dynamic rules / incomplete info.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 30: A game of drawing</h2><p>Everyone draws, on your phones — a QR code opens the drawing page and a counter shows dogs arriving. Your task is to draw the median dog (based on size). The winning drawing will be that which best represents the median dog. Dog sizes will be measured from snout to tail to determine the winner. You have 100 seconds to draw the median dog, on an on-screen countdown timer.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 30: The median dog</h2><p>A full-screen dog sanctuary with no title or other text: every submitted drawing at true relative size, sorted small to big, each housed in its own cartoon doghouse — an overhanging gable roof with a small bone on the front, a picket fence, and a nameplate reading the artist's name and snout-to-tail span. A full room of 21 makes three rows of seven. The houses appear one after another on a keypress; a second keypress computes the median span and pins medals on the three dogs nearest it — gold, silver and bronze discs on ribbons, ties sharing a medal — and the gold dog's house turns red. The medals are the announcement. If the poll server is unreachable the sanctuary shows marked demo stick-dogs.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 30: NOT the median dogs</h2><p>A photograph of two real dogs in bandanas looking up expectantly. The title says: NOT the median dogs. A caption then appears under the photo, the game's one-line debrief: to draw the median dog, you had to draw what you thought everyone else would draw.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 30: The first rule of game theory: it's not (just) about you!</h2><p>Bullets on the left: whatever action one entity does must affect the other side, and vice versa — you cannot think one-dimensionally. Everything you do has consequences for both you and your opponent. Equally, everything your opponent does has consequences for both you and your opponent. AND, you both know this to be true! This can be thought of as the requirement for common knowledge. On the right, the Common Knowledge video is embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 30: Common knowledge and equilibrium</h2><p>Bullets on the left: the ultimate goal in GT is usually to identify an equilibrium point — where each player's strategy is their best response to the strategies of the other players. There doesn't have to be only one! And an equilibrium point won't always be the most optimal solution! But at its core, game theory explores and finds strategies that generate equilibria. On the right, a first look at a payoff matrix, titled two cars reach a junction: you on the rows, the other driver on the columns, each choosing go or stop. Both go: minus 5 each, the crash. You go, they stop: 1 for you, 0 for them. You stop, they go: 0 for you, 1 for them. Both stop: minus 1 each, the standstill. With the second bullet, red boxes mark the two cells where one goes and the other stops, and a key reads: an equilibrium, and there are two. The next slide says what picks between them.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 30: A typical example of using common knowledge to find equilibrium</h2><p>A news photograph of traffic lights. I know to stop on red and go on green. You know that I know to stop on red and go on green. So when the light turns green for you, you proceed safely by using common knowledge. And, therefore, we get a nice equilibrium of stop/go traffic.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 30: Except sometimes GT sucks</h2><p>The same photograph zoomed close: each light shows red and green lit at the same time. Look a little closer at the traffic lights. You can actually file lawsuits over this equilibrium failure.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 30: I'm thinking of a number</h2><p>I'm thinking of a number between 1 and 100. Everyone plays, on your phones — the game runs in five rounds, one guess per round. After each guess, your phone tells you if you need to go higher or lower. Between rounds, the board shows the whole room's guesses — and how they move. On the right, a drawn number line from 1 to 100 with a large red question mark over the middle.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 30: Lock in your guesses</h2><p>The whole room plays by phone — a QR code opens the guessing page, and the server answers each guess too high, too low, or correct; the secret number never leaves the server. The board shows five strips, one per round, each a 1-to-100 line: a counter rises as guesses arrive in the open round, and a facilitator button, close round and show, reveals that round's guesses as neutral ink dots (verdict colours mid-game would give the number away) and opens the next round on everyone's phones, so the room watches the distribution tighten round by round. When the game ends the dots recolour — too low in teal, too high in terracotta, correct in red — and a keypress counts the solvers and names the first. The secret number is preset on the server — nothing to set on the day. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 30: How to guess the correct number</h2><p>Let's work through one series of efficient guesses. An interactive number line from 1 to 100: tapping anywhere makes that guess, the excluded range shades out, and each guess logs as too high or too low. A button plays the efficient sequence — 50 too high, 25 too low, 37 too low, 43 too low — narrowing the range. A step then shows: you've narrowed your last guess down to 44, 45, 46, 47, 48, or 49. So what is the answer?</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 30: How to guess the correct number</h2><p>This is actually a game about common knowledge, not about guessing the right number. Remember — I am strategic too! The game actually started when you were sent the pre-course reading (if you read it, that is!). If I know that you've done the reading, how should I play this game? If you know that I know that you've done the reading, how should you play this game? On the right, a drawn figure: me on the left and you on the right, either side of the pre-course reading, each with a thought bubble holding the other's head. Under it, a tower of four cards builds one by one, each indented deeper: you might know something; but I know that you know it; and you should know that I know that you know it; and I should know that you know that I know that you kn…!</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 30: Lessons from the "I'm thinking of a number" game</h2><p>Bullets on the left: of course, you already know to always put yourself in the other person's shoes! But also know that, people are not random in their strategies! A good strategist must always be thinking multidimensionally! On the right, The Princess Bride battle of wits is embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 30: Added value game</h2><p>Bullets on the left: game theory can result in paradoxical or unusual strategic choices that benefit players' self-interest. Let's consider the idea of added value. I have one white card for every person in this session, and each of you has one yellow card. Senior management has agreed to pay anyone who turns in a pair of white and yellow cards £100. You can negotiate with me individually, but you cannot band together (this is key!). Make me one offer for my card. On the right, a drawn figure: a fan of three white cards labeled mine, one per person, a plus sign, one yellow card labeled yours, and underneath, equals £100 a pair.</p></section>
+<section aria-label="Slide 23"><h2>Slide 23 of 30: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones send offers in pounds for their share of the £100 (QR code shown, with a rising offers counter); each pending offer appears as a card with the sender's name and amount, and the deck decides it automatically against this game's rule — a share between £40 and £60 is accepted, anything else rejected. The phone shows a big ACCEPTED or REJECTED — one offer per player per game, no second tries — and every decided offer lands as a dot on a zero-to-one-hundred-pound strip — accepted teal, rejected red — with the mean accepted deal and a count of deals and rejections. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 24"><h2>Slide 24 of 30: What happens if I "lose" three cards?</h2><p>The rule change only — no analysis yet, so the game isn't given away. Say I "lose" three cards: now we have fewer white cards, but each of you still has 1 yellow card. Let's play again. On the right, a drawn figure: the fan of three white cards each crossed out in red, labeled three of mine, gone, and the yellow card untouched, labeled still one each.</p></section>
+<section aria-label="Slide 25"><h2>Slide 25 of 30: Make me another offer</h2><p>The live offers board again, second game: after I lose three. New offers are decided the same way, now against a harder rule — only a share of £10 or less is accepted — and land on a second strip labeled after I lose three, shown under the equal-cards strip so the room can compare the two distributions. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 26"><h2>Slide 26 of 30: Added value matters</h2><p>The debrief, after the second game has been played. Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction whenever I want — so you're lucky if I give you even £10! The key stipulation was that you could not band together — what would the difference have been if you could have collectively interacted with me? The crossed-out-cards figure sits on the right.</p></section>
+<section aria-label="Slide 27"><h2>Slide 27 of 30: Build your hand</h2><p>The module's closing exercise, in groups of two or three. In twos and threes: pick one real situation from someone's work, then deal yourselves four cards; one phone per group. The four questions are shown as four playing cards face up, each in its own suit colour with a small pictogram: the situation (red), what is a situation where you cannot act unilaterally to get what you want? The players (teal), who are the other players in the game? What you need to know (ochre), what do you need to know about them to achieve your objective? What they know about you (terracotta), what do you think they know about you that matters in this game? A QR code links to the phone page at ryanlamare.com/go and a counter shows how many hands are in.</p></section>
+<section aria-label="Slide 28"><h2>Slide 28 of 30: The table</h2><p>A full-screen table with no title, like the dog sanctuary. Each group's hand of four cards lands face down as it arrives, backs in the four suit colours, dealt into a grid labelled Hand 1, Hand 2 and so on, with a counter of hands in. Each arrow press brings the next hand to the front, face up and fanned across the full width, big enough to read: the situation, the players, what they need to know, what the others know about them; the instructor puts a question to that group. The next press returns it to the table face up as the following hand comes forward. After the last hand, one more press leaves every hand face up on the table, the deck the room built. If the poll server is unreachable the table shows eight marked demo hands.</p></section>
+<section aria-label="Slide 29"><h2>Slide 29 of 30: What did we learn?</h2><p>The module's debrief as five pictogram tiles, revealed one at a time. Decision or game? Does the other side react to what you choose? It's not (just) about you: everything you do has consequences for both of you, and you both know it. Common knowledge: you might know something, but I know that you know it. Equilibrium: usually the goal, and not always the most optimal solution. Added value: when the other side can walk away, you're lucky to get even £10. </p></section>
+<section aria-label="Slide 30"><h2>Slide 30 of 30: Top of the table</h2><p>The break scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time, then left on screen through the break. Columns show each player's points from the median dog game and the number game, plus the total. Top five only, never a full ranking; each participant can check their own running total privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
 </section>
 
+<svg style="display:none" aria-hidden="true"><symbol id="pip0" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="13" cy="9" r="5"/><path d="M5 18 Q13 14 21 18 L18 33 L8 33 Z"/><circle cx="29" cy="9" r="5"/><path d="M21 18 Q29 14 37 18 L34 33 L24 33 Z" opacity=".55"/></g></symbol>
+<symbol id="pip1" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="8" cy="8" r="4"/><path d="M2 15 Q8 12 14 15 L12 26 L4 26 Z"/><circle cx="20" cy="8" r="4"/><path d="M14 15 Q20 12 26 15 L24 26 L16 26 Z"/><circle cx="32" cy="8" r="4"/><path d="M26 15 Q32 12 38 15 L36 26 L28 26 Z"/><circle cx="14" cy="26" r="4"/><path d="M8 33 Q14 30 20 33 L18 40 L10 40 Z"/><circle cx="26" cy="26" r="4"/><path d="M20 33 Q26 30 32 33 L30 40 L22 40 Z"/></g></symbol>
+<symbol id="pip2" viewBox="0 0 40 40"><text x="20" y="34" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="38" fill="currentColor">?</text></symbol>
+<symbol id="pip3" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="22" cy="14" rx="15" ry="11"/><circle cx="9" cy="28" r="3"/><circle cx="4" cy="35" r="1.8"/></g><g fill="currentColor"><circle cx="22" cy="10" r="3.6"/><path d="M16 20 Q22 17 28 20 L27 23 L17 23 Z"/></g></symbol>
+</svg>
 <div class="viewport"><div class="stage">
 
 <section class="slide cover active" data-i="0">
@@ -804,24 +865,34 @@
 </section>
 
 <section class="slide content" data-i="26">
-  <div class="kicker"><i></i>MODULE 1 · GAME THEORY IN YOUR WORLD</div>
-  <h2 style="max-width:40ch">What do you need to know about the other players?</h2>
-  <ul class="bullets" id="twbul" style="max-width:620px">
-    <li>Think of a situation at work where what the other side does matters to you. What would you want to know about <b>them</b>, <b>your competitors</b>, or anyone else at the table? Send your questions from your phones</li>
-  </ul>
-  <div class="qrpanel" id="twqr" style="top:236px">
+  <div class="kicker"><i></i>MODULE 1 · YOUR HAND</div>
+  <h2>Build your hand</h2>
+  <div class="leadline" style="text-align:left;max-width:720px;margin-top:18px">In twos and threes: pick one real situation from someone&rsquo;s work, then deal yourselves four cards. One phone per group.</div>
+  <div class="setuphand">
+    <div class="hcard s0 "><div class="suit">THE SITUATION</div><div class="txt">What is a situation where you cannot act unilaterally to get what you want?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip0"/></svg></div>
+    <div class="hcard s1 "><div class="suit">THE PLAYERS</div><div class="txt">Who are the other players in the game?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip1"/></svg></div>
+    <div class="hcard s2 "><div class="suit">WHAT YOU NEED TO KNOW</div><div class="txt">What do you need to know about them to achieve your objective?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip2"/></svg></div>
+    <div class="hcard s3 "><div class="suit">WHAT THEY KNOW ABOUT YOU</div><div class="txt">What do you think they know about you that matters in this game?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip3"/></svg></div>
+  </div>
+  <div class="qrpanel" style="top:236px">
     <div class="joinchip">
-      <div class="qr"><img src="qr-tapas.svg" alt="QR code for the write-in poll at ryanlamare.com/go"></div>
+      <div class="qr"><img src="qr-tapas.svg" alt="QR code for the hand page at ryanlamare.com/go"></div>
       <div class="ju">ryanlamare.com/go</div>
     </div>
-    <div class="livecount"><span class="n" id="twN">0</span><span class="l">RESPONSES</span></div>
+    <div class="livecount"><span class="n" data-handn>0</span><span class="l">HANDS IN</span></div>
   </div>
-  <div class="wall" id="twwall"></div>
-  <div class="demotag" id="twdemo" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
-  <span data-step="1" data-stepcall="twReveal" style="position:absolute;width:0;height:0"></span>
 </section>
 
-<section class="slide content learn" data-i="27">
+<section class="slide content" data-i="27">
+  <div class="tableau" id="tableau"></div>
+  <div class="front" id="hfront"><div class="fh" id="hfh"></div><div class="fcards" id="hfcards"></div></div>
+  <div class="hcount"><span class="n" data-handn>0</span><span class="l">HANDS IN</span></div>
+  <div class="demotag" id="handD" style="position:absolute;top:20px;left:40px;right:auto">DEMO DATA</div>
+  <span id="hsteps"></span>
+</section>
+
+
+<section class="slide content learn" data-i="28">
   <div class="kicker"><i></i>MODULE 1 · WHAT DID WE LEARN</div>
   <h2>What did we learn?</h2>
   <div class="tiles">
@@ -851,14 +922,9 @@
       <div class="sent">When the other side can walk away, you&rsquo;re lucky to get even &pound;10</div>
     </div>
   </div>
-  <div class="chiprow" style="bottom:64px">
-    <div class="chips" data-step="5">
-      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Where does this show up in your world?</b></div>
-    </div>
-  </div>
 </section>
 
-<section class="slide content" data-i="28">
+<section class="slide content" data-i="29">
   <div class="kicker"><i></i>MODULE 1 · TOP OF THE TABLE</div>
   <h2>Top of the table</h2>
   <div class="fig" style="top:200px;gap:30px">
@@ -876,7 +942,7 @@
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
 
 <script src="/go/scores.js"></script>
@@ -1364,41 +1430,80 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
   window.dogVerdict=function(el,on){st.marked=on;render();};
 })();
 
-/* ---- Tapas questions wall: phones write in via /go?p=m1-tapas, the wall
-   populates when the instructor calls time (a keypress) ---- */
+/* ---- the hands: phones send one line per group into m1-hands, four
+   fields joined with "‖" (situation ‖ players ‖ need to know ‖ they know
+   about you). Hands land on the table face down as they arrive; the walk
+   starts on the first arrow press, and from then on the list is frozen so
+   nothing changes under the room. The step spans are written by this
+   script once the count is known, so the arrow keys walk exactly N hands
+   and one more press leaves everything face up. ---- */
 (function(){
-  const DEMO=['What will the bank offer them?','When does the engine actually arrive?','How soon are their payments due?','Do they already own spare engines?','What can they pledge as security?','Are more aircraft on the way?','How healthy is their cash position?','Who signs off on the final decision?'];
-  const nEl=document.getElementById('twN'), wall=document.getElementById('twwall');
-  const demoTag=document.getElementById('twdemo');
-  const st={live:false,answers:[],revealed:false};
-  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function render(){
-    const answers=st.live?st.answers:DEMO;
-    nEl.textContent=st.live?st.answers.length:0;
-    demoTag.style.display=(st.live||!st.revealed)?'none':'';
-    if(!st.revealed)return;
-    const groups=new Map();
-    answers.forEach(t=>{const k=t.toLowerCase();
-      if(!groups.has(k))groups.set(k,{t:t,n:0});
-      groups.get(k).n++;});
-    wall.classList.toggle('dense',groups.size>26);
-    let h='', i=0;
-    groups.forEach(g=>{h+='<span class="ex c'+(i++%7)+'">'+esc(g.t)+(g.n>1?'<span class="xn">&times;'+g.n+'</span>':'')+'</span>';});
-    wall.innerHTML=h;
+  const SUIT=['THE SITUATION','THE PLAYERS','WHAT YOU NEED TO KNOW','WHAT THEY KNOW ABOUT YOU'];
+  const DEMO=[
+    ['Getting sign-off on a new hire when the budget sits with another director','My director, the finance director, the two other heads competing for the same headcount','Whether finance has already decided the headcount is going elsewhere','That I have asked twice before, and that my team is carrying the most work'],
+    ['Renewing a supplier contract that runs out in three months','The supplier, their sales lead, our procurement team, one rival supplier','What their order book looks like and whether they need us as much as we need them','That switching would cost us six months, and they know it'],
+    ['Agreeing a launch date with the product team when we share the same engineers','The product lead, the engineering manager, the marketing team waiting on both of us','Which of their deadlines is real and which is a negotiating position','That our date was set by the board, so we cannot move it far'],
+    ['Asking for a promotion when the role has not been created yet','My manager, her manager, HR, a colleague who wants the same role','Whether they are hiring externally, and what the colleague has already been told','That I have had an approach from outside, which I mentioned once'],
+    ['Merging two teams’ processes after a reorganisation','The other team lead, both teams, the head of department who set it up','Whether the other lead wants this to work or is waiting for it to fail','That my process is the one the department head used to run'],
+    ['A tender against two rivals for a client we already serve','The client’s buying team, the two rivals, our own delivery team','Whether the client is running the tender to get a better price from us or to leave','That we have missed two deliveries this year'],
+    ['Persuading the board to fund a pilot they turned down last year','The chair, the finance director, the one board member who backed it, my own boss','Which objection actually killed it last time, money or timing','That the numbers I showed last time were optimistic'],
+    ['Splitting a shared office between three teams after a move','The three team leads, facilities, the people who arrive earliest','Whether the other leads have already agreed something between themselves','That my team has the most people in the office on any given day']
+  ];
+  const tab=document.getElementById('tableau'), front=document.getElementById('hfront');
+  const fh=document.getElementById('hfh'), fcards=document.getElementById('hfcards');
+  const stepsEl=document.getElementById('hsteps'), demoTag=document.getElementById('handD');
+  const nEls=document.querySelectorAll('[data-handn]');
+  const st={live:false,hands:[],frozen:null,front:0};
+  const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const hands=()=>st.frozen||(st.live?st.hands:DEMO);
+  function cardHTML(i,text,down){
+    return '<div class="hcard s'+i+(down?' down':'')+'"><div class="suit">'+SUIT[i]+'</div><div class="txt">'+esc(text)+'</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip'+i+'"/></svg></div>';
   }
+  function ensureSteps(n){
+    const want=n+1;
+    if(stepsEl.children.length===want)return;
+    stepsEl.innerHTML='';
+    for(let k=1;k<=want;k++){const sp=document.createElement('span');sp.dataset.step=k;sp.dataset.stepcall='handStep';sp.dataset.k=k;sp.style.cssText='position:absolute;width:0;height:0';stepsEl.appendChild(sp);}
+  }
+  function renderTable(){
+    const H=hands();
+    tab.classList.toggle('dense',H.length>9);
+    tab.innerHTML=H.map((h,k)=>'<div class="hand" id="hand'+k+'"><div class="hn">HAND '+(k+1)+'</div>'+h.map((t,i)=>cardHTML(i,t,true)).join('')+'</div>').join('');
+    ensureSteps(H.length);
+    applyState();
+  }
+  function applyState(){
+    const H=hands(), n=H.length, f=st.front;
+    nEls.forEach(e=>e.textContent=st.live?st.hands.length:0);
+    demoTag.style.display=st.live?'none':'';
+    [...tab.children].forEach((el,k)=>{
+      const up=f>k+1;
+      el.classList.toggle('lifted',f===k+1);
+      [...el.querySelectorAll('.hcard')].forEach(c=>c.classList.toggle('down',!up));
+    });
+    const showing=f>=1&&f<=n;
+    tab.classList.toggle('dim',showing);
+    front.classList.toggle('on',showing);
+    if(showing){
+      fh.textContent='HAND '+f+' OF '+n;
+      fcards.innerHTML=H[f-1].map((t,i)=>cardHTML(i,t,false)).join('');
+    }
+  }
+  function parse(line){const p=String(line).split('‖');while(p.length<4)p.push('');return p.slice(0,4).map(x=>x.trim());}
   function fetchIt(){
-    fetch(POLL_API+'/p/m1-tapas/answers').then(r=>r.json()).then(d=>{
-      st.live=true;st.answers=d.answers||[];render();
+    fetch(POLL_API+'/p/m1-hands/answers').then(r=>r.json()).then(d=>{
+      st.live=true;st.hands=(d.answers||[]).map(parse);
+      if(!st.frozen)renderTable();else applyState();
     }).catch(()=>{});
   }
-  setInterval(fetchIt,2500);fetchIt();
-  render();
-  window.twReveal=function(el,on){
-    st.revealed=on;
-    document.getElementById('twbul').classList.toggle('faded',on);
-    document.getElementById('twqr').classList.toggle('faded',on);
-    wall.classList.toggle('on',on);
-    if(on)render();
+  /* ?demo=1 on the deck URL keeps this table on its demo hands (a look at the design without a room) */
+  if(!/[?&]demo=1/.test(location.search)){setInterval(fetchIt,2500);fetchIt();}
+  renderTable();
+  window.handStep=function(el,on){
+    const k=+el.dataset.k;
+    if(on){if(!st.frozen)st.frozen=hands().slice();st.front=Math.max(st.front,k);}
+    else{st.front=Math.min(st.front,k-1);if(st.front===0)st.frozen=null;}
+    applyState();
   };
 })();
 
