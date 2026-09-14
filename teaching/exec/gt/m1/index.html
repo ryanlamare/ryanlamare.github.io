@@ -42,22 +42,26 @@
 .hand .hn{position:absolute;left:0;top:-24px;font-weight:700;font-size:12px;letter-spacing:.16em;color:var(--muted)}
 .hand .hcard{position:absolute;top:0;transform:scale(.42);transform-origin:0 0;transition:none}
 .hand .hcard:nth-child(2){left:0} .hand .hcard:nth-child(3){left:62px} .hand .hcard:nth-child(4){left:124px} .hand .hcard:nth-child(5){left:186px}
-/* on the table a face-up card shows its suit mark only: the text is for the front */
-.hand .hcard .suit,.hand .hcard .txt{visibility:hidden}
-.hand .hcard .pip{right:auto;bottom:auto;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%)}
+/* on the table a face-up card keeps its text: not legible at that size, but the room's ideas all on one screen */
+.hand .hcard.hidden-while-flying{visibility:hidden}
 .tableau.dense{gap:30px 24px}
 .tableau.dense .hand{width:207px;height:108px}
 .tableau.dense .hand .hcard{transform:scale(.3)}
 .tableau.dense .hand .hcard:nth-child(3){left:44px} .tableau.dense .hand .hcard:nth-child(4){left:88px} .tableau.dense .hand .hcard:nth-child(5){left:132px}
 /* the hand at the front */
-.front{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
-.front.on{opacity:1;visibility:visible}
-.front .fh{position:absolute;left:96px;top:40px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--muted)}
+/* two front layers, so a hand can fly back to the table while the next one
+   flies up; each card sits in a .fly wrapper that carries the flight
+   (translate + scale from its slot, then the fan), and the card itself
+   carries the flip */
+.front{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;visibility:hidden}
+.front.on{visibility:visible}
+.fh{position:absolute;left:96px;top:58px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--muted);opacity:0;transition:opacity .3s}
+.fh.on{opacity:1}
 .front .fcards{display:flex;gap:22px;align-items:center}
-.front .fcards .hcard:nth-child(1){transform:rotate(-4deg) translateY(10px)}
-.front .fcards .hcard:nth-child(2){transform:rotate(-1.3deg)}
-.front .fcards .hcard:nth-child(3){transform:rotate(1.3deg)}
-.front .fcards .hcard:nth-child(4){transform:rotate(4deg) translateY(10px)}
+.fly{transform-origin:50% 50%;transition:transform .75s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.fly .hcard{transition:transform .22s ease-in;transform-origin:50% 50%}
+.fly .hcard.edge{transform:rotateY(90deg)}
+@media (prefers-reduced-motion: reduce){.fly,.fly .hcard{transition:none}}
 .hcount{position:absolute;right:60px;bottom:38px;display:flex;align-items:baseline;gap:10px}
 .hcount .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
 .hcount .l{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted)}
@@ -294,8 +298,8 @@
 <section aria-label="Slide 24"><h2>Slide 24 of 30: What happens if I "lose" three cards?</h2><p>The rule change only — no analysis yet, so the game isn't given away. Say I "lose" three cards: now we have fewer white cards, but each of you still has 1 yellow card. Let's play again. On the right, a drawn figure: the fan of three white cards each crossed out in red, labeled three of mine, gone, and the yellow card untouched, labeled still one each.</p></section>
 <section aria-label="Slide 25"><h2>Slide 25 of 30: Make me another offer</h2><p>The live offers board again, second game: after I lose three. New offers are decided the same way, now against a harder rule — only a share of £10 or less is accepted — and land on a second strip labeled after I lose three, shown under the equal-cards strip so the room can compare the two distributions. If the poll server is unreachable the board shows marked demo data.</p></section>
 <section aria-label="Slide 26"><h2>Slide 26 of 30: Added value matters</h2><p>The debrief, after the second game has been played. Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction whenever I want — so you're lucky if I give you even £10! The key stipulation was that you could not band together — what would the difference have been if you could have collectively interacted with me? The crossed-out-cards figure sits on the right.</p></section>
-<section aria-label="Slide 27"><h2>Slide 27 of 30: Build your hand</h2><p>The module's closing exercise, in groups of two or three. In twos and threes: pick one real situation from someone's work, then deal yourselves four cards; one phone per group. The four questions are shown as four playing cards face up, each in its own suit colour with a small pictogram: the situation (red), what is a situation where you cannot act unilaterally to get what you want? The players (teal), who are the other players in the game? Need to know (ochre), what do you need to know about them to achieve your objective? What they know (terracotta), what do you think they know about you that matters in this game? A QR code links to the phone page at ryanlamare.com/go and a counter shows how many hands are in.</p></section>
-<section aria-label="Slide 28"><h2>Slide 28 of 30: The table</h2><p>A full-screen table with no title, like the dog sanctuary. Each group's hand of four cards lands face down as it arrives, backs in the four suit colours, dealt into a grid labelled Hand 1, Hand 2 and so on, with a counter of hands in. Each arrow press brings the next hand to the front, face up and fanned across the full width, big enough to read: the situation, the players, need to know, what they know; the instructor puts a question to that group. The next press returns it to the table face up as the following hand comes forward. After the last hand, one more press leaves every hand face up on the table, the deck the room built. If the poll server is unreachable the table shows eight marked demo hands.</p></section>
+<section aria-label="Slide 27"><h2>Slide 27 of 30: Build your hand</h2><p>The module's closing exercise, in groups of three. In groups of three: pick one real situation from someone's work, then deal yourselves four cards; one phone per group. The four questions are shown as four playing cards face up, each in its own suit colour with a small pictogram: the situation (red), what is a situation where you cannot act unilaterally to get what you want? The players (teal), who are the other players in the game? Need to know (ochre), what do you need to know about them to achieve your objective? What they know (terracotta), what do you think they know about you that matters in this game? A QR code links to the phone page at ryanlamare.com/go and a counter shows how many hands are in.</p></section>
+<section aria-label="Slide 28"><h2>Slide 28 of 30: The table</h2><p>A full-screen table with no title, like the dog sanctuary. Each group's hand of four cards lands face down as it arrives, backs in the four suit colours, dealt into a grid labelled Hand 1, Hand 2 and so on, with a counter of hands in. Each arrow press flies the next hand's four cards from their place on the table to the front, one after another, each flipping face up in flight, until they sit fanned across the full width, big enough to read: the situation, the players, need to know, what they know; the instructor puts a question to that group. The next press flies them back to their place, now face up with their text showing small, as the following hand flies forward. After the last hand, one more press leaves every hand face up on the table, all the room's ideas on one screen. If the poll server is unreachable the table shows eight marked demo hands.</p></section>
 <section aria-label="Slide 29"><h2>Slide 29 of 30: What did we learn?</h2><p>The module's debrief as five pictogram tiles, revealed one at a time. Decision or game? Does the other side react to what you choose? It's not (just) about you: everything you do has consequences for both of you, and you both know it. Common knowledge: you might know something, but I know that you know it. Equilibrium: usually the goal, and not always the most optimal solution. Added value: when the other side can walk away, you're lucky to get even £10. </p></section>
 <section aria-label="Slide 30"><h2>Slide 30 of 30: Top of the table</h2><p>The break scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time, then left on screen through the break. Columns show each player's points from the median dog game and the number game, plus the total. Top five only, never a full ranking; each participant can check their own running total privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
 </section>
@@ -867,7 +871,7 @@
 <section class="slide content" data-i="26">
   <div class="kicker"><i></i>MODULE 1 · YOUR HAND</div>
   <h2>Build your hand</h2>
-  <div class="leadline" style="text-align:left;max-width:720px;margin-top:18px">In twos and threes: pick one real situation from someone&rsquo;s work, then deal yourselves four cards. One phone per group.</div>
+  <div class="leadline" style="text-align:left;max-width:720px;margin-top:18px">In groups of three: pick one real situation from someone&rsquo;s work, then deal yourselves four cards. One phone per group.</div>
   <div class="setuphand">
     <div class="hcard s0 "><div class="suit">THE SITUATION</div><div class="txt">What is a situation where you cannot act unilaterally to get what you want?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip0"/></svg></div>
     <div class="hcard s1 "><div class="suit">THE PLAYERS</div><div class="txt">Who are the other players in the game?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip1"/></svg></div>
@@ -885,7 +889,9 @@
 
 <section class="slide content" data-i="27">
   <div class="tableau" id="tableau"></div>
-  <div class="front" id="hfront"><div class="fh" id="hfh"></div><div class="fcards" id="hfcards"></div></div>
+  <div class="fh" id="hfh"></div>
+  <div class="front" id="hfrontA"><div class="fcards"></div></div>
+  <div class="front" id="hfrontB"><div class="fcards"></div></div>
   <div class="hcount"><span class="n" data-handn>0</span><span class="l">HANDS IN</span></div>
   <div class="demotag" id="handD" style="position:absolute;top:20px;left:40px;right:auto">DEMO DATA</div>
   <span id="hsteps"></span>
@@ -1449,11 +1455,13 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
     ['Persuading the board to fund a pilot they turned down last year','The chair, the finance director, the one board member who backed it, my own boss','Which objection actually killed it last time, money or timing','That the numbers I showed last time were optimistic'],
     ['Splitting a shared office between three teams after a move','The three team leads, facilities, the people who arrive earliest','Whether the other leads have already agreed something between themselves','That my team has the most people in the office on any given day']
   ];
-  const tab=document.getElementById('tableau'), front=document.getElementById('hfront');
-  const fh=document.getElementById('hfh'), fcards=document.getElementById('hfcards');
+  const tab=document.getElementById('tableau'), fh=document.getElementById('hfh');
+  const layers=[document.getElementById('hfrontA'),document.getElementById('hfrontB')];
+  let layerOf={}; /* hand index -> layer holding its flown cards */
   const stepsEl=document.getElementById('hsteps'), demoTag=document.getElementById('handD');
   const nEls=document.querySelectorAll('[data-handn]');
-  const st={live:false,hands:[],frozen:null,front:0};
+  const st={live:false,hands:[],frozen:null,front:0,armed:false};
+  setTimeout(()=>{st.armed=true;},1200); /* steps applied at load (a #27.5 link) jump, they don't fly */
   const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const hands=()=>st.frozen||(st.live?st.hands:DEMO);
   function cardHTML(i,text,down){
@@ -1472,21 +1480,80 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
     ensureSteps(H.length);
     applyState();
   }
-  function applyState(){
+  const scale=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scale'))||1;
+  const FAN=['rotate(-4deg) translateY(10px)','rotate(-1.3deg)','rotate(1.3deg)','rotate(4deg) translateY(10px)'];
+  function slotCards(k){const h=tab.children[k];return h?[...h.querySelectorAll('.hcard')]:[];}
+  /* the transform that puts a front card exactly over its small twin on the table */
+  function toSlot(fly,mini){
+    const a=fly.getBoundingClientRect(), b=mini.getBoundingClientRect(), sc=scale();
+    const dx=((b.left+b.width/2)-(a.left+a.width/2))/sc, dy=((b.top+b.height/2)-(a.top+a.height/2))/sc;
+    return 'translate('+dx+'px,'+dy+'px) scale('+(b.width/a.width)+')';
+  }
+  function freeLayer(){return layers.find(l=>!Object.values(layerOf).includes(l))||layers[0];}
+  /* hand k (1-based) flies up from its slot: cards start face down (or face up if it was already shown), flip in flight, land in the fan */
+  function liftHand(k,H,wasUp){
+    const layer=freeLayer(); layerOf[k]=layer;
+    const fc=layer.querySelector('.fcards');
+    fc.innerHTML=H[k-1].map((t,i)=>'<div class="fly">'+cardHTML(i,t,!wasUp)+'</div>').join('');
+    layer.classList.add('on');
+    const flies=[...fc.children], minis=slotCards(k-1);
+    flies.forEach(f=>{f.style.transition='none';f.style.transform='none';});
+    const starts=flies.map((f,i)=>minis[i]?toSlot(f,minis[i]):'scale(.4)');
+    flies.forEach((f,i)=>{f.style.transform=starts[i];});
+    minis.forEach(c=>c.classList.add('hidden-while-flying'));
+    void fc.offsetWidth;
+    flies.forEach((f,i)=>{
+      f.style.transition='';f.style.transitionDelay=(i*90)+'ms';f.style.transform=FAN[i];
+      if(!wasUp){const c=f.querySelector('.hcard');
+        setTimeout(()=>{c.classList.add('edge');},i*90+220);
+        setTimeout(()=>{c.style.transition='none';c.classList.remove('down');c.style.transform='rotateY(-90deg)';void c.offsetWidth;c.style.transition='';c.classList.remove('edge');c.style.transform='';},i*90+450);}
+    });
+  }
+  /* hand k flies back to its slot; the slot shows the cards face up (or face down again if the walk went backwards) */
+  function returnHand(k,up){
+    const layer=layerOf[k]; if(!layer)return; delete layerOf[k];
+    const fc=layer.querySelector('.fcards'), flies=[...fc.children], minis=slotCards(k-1);
+    minis.forEach(c=>{c.classList.toggle('down',!up);c.classList.add('hidden-while-flying');});
+    flies.forEach((f,i)=>{
+      const c=f.querySelector('.hcard');
+      if(!up){setTimeout(()=>{c.classList.add('edge');},i*60+150);
+        setTimeout(()=>{c.style.transition='none';c.classList.add('down');c.style.transform='rotateY(-90deg)';void c.offsetWidth;c.style.transition='';c.classList.remove('edge');c.style.transform='';},i*60+380);}
+      f.style.transitionDelay=(i*60)+'ms';
+      f.style.transform=minis[i]?toSlot(f,minis[i]):'scale(.4)';
+    });
+    setTimeout(()=>{minis.forEach(c=>c.classList.remove('hidden-while-flying'));
+      if(!Object.values(layerOf).includes(layer)){layer.classList.remove('on');fc.innerHTML='';}},1000);
+  }
+  function applyState(animateFrom){
     const H=hands(), n=H.length, f=st.front;
     nEls.forEach(e=>e.textContent=st.live?st.hands.length:0);
     demoTag.style.display=st.live?'none':'';
-    [...tab.children].forEach((el,k)=>{
-      const up=f>k+1;
-      el.classList.toggle('lifted',f===k+1);
-      [...el.querySelectorAll('.hcard')].forEach(c=>c.classList.toggle('down',!up));
-    });
     const showing=f>=1&&f<=n;
     tab.classList.toggle('dim',showing);
-    front.classList.toggle('on',showing);
+    fh.classList.toggle('on',showing);
+    if(showing)fh.textContent='HAND '+f+' OF '+n;
+    const fly=st.armed&&animateFrom!==undefined&&Math.abs(animateFrom-f)===1&&document.querySelector('.slide.active')===tab.closest('.slide');
+    if(fly){
+      const old=animateFrom;
+      if(showing)liftHand(f,H,f<old); /* claims the free layer first, so the hand on its way back keeps its own */
+      if(old>=1&&old<=n)returnHand(old,f>old);
+      [...tab.children].forEach((el,k)=>{
+        const held=(k+1===old)||(k+1===f);
+        el.classList.toggle('lifted',k+1===f);
+        if(!held)[...el.querySelectorAll('.hcard')].forEach(c=>c.classList.toggle('down',!(f>k+1)));
+      });
+      return;
+    }
+    /* no flight: settle everything at once */
+    Object.keys(layerOf).forEach(k=>delete layerOf[k]);
+    layers.forEach(l=>{l.classList.remove('on');l.querySelector('.fcards').innerHTML='';});
+    [...tab.children].forEach((el,k)=>{
+      el.classList.toggle('lifted',f===k+1);
+      [...el.querySelectorAll('.hcard')].forEach(c=>{c.classList.toggle('down',!(f>k+1));c.classList.remove('hidden-while-flying');});
+    });
     if(showing){
-      fh.textContent='HAND '+f+' OF '+n;
-      fcards.innerHTML=H[f-1].map((t,i)=>cardHTML(i,t,false)).join('');
+      const layer=layers[0]; layerOf[f]=layer; layer.classList.add('on');
+      layer.querySelector('.fcards').innerHTML=H[f-1].map((t,i)=>'<div class="fly" style="transform:'+FAN[i]+'">'+cardHTML(i,t,false)+'</div>').join('');
     }
   }
   /* each phone sends four lines, "k‖text"; group them by phone in arrival order, the last line per card wins */
@@ -1502,14 +1569,19 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
       if(!st.frozen)renderTable();else applyState();
     }).catch(()=>{});
   }
+  /* ?walk=<ms> on the deck URL walks the table by itself, one arrow press every <ms> milliseconds once the
+     table slide is up: a self-running look at the flights, for a rehearsal or a screenshot */
+  const walk=+(location.search.match(/[?&]walk=(\d+)/)||[])[1];
+  if(walk){setInterval(()=>{if(document.querySelector('.slide.active')===tab.closest('.slide'))
+    dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight'}));},walk);}
   /* ?demo=1 on the deck URL keeps this table on its demo hands (a look at the design without a room) */
   if(!/[?&]demo=1/.test(location.search)){setInterval(fetchIt,2500);fetchIt();}
   renderTable();
   window.handStep=function(el,on){
-    const k=+el.dataset.k;
+    const k=+el.dataset.k, was=st.front;
     if(on){if(!st.frozen)st.frozen=hands().slice();st.front=Math.max(st.front,k);}
     else{st.front=Math.min(st.front,k-1);if(st.front===0)st.frozen=null;}
-    applyState();
+    applyState(was);
   };
 })();
 
