@@ -44,6 +44,8 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-height:120px;width:100%;resize:vertical}
 .sayrow.long button{align-self:flex-end}
 .sent{display:flex;flex-direction:column;gap:8px}
+.flab{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:-8px}
+.fcnt{align-self:flex-end;font-weight:600;font-size:12px;color:var(--muted);margin-top:-6px}
 .sent .s{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:15px;padding:9px 14px}
 /* hand-typed /go: pick the question that is on the screen */
 button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);
@@ -206,6 +208,7 @@ function renderPoll(poll,id){
   const opts=document.getElementById('opts');
   opts.innerHTML='';
   if(poll.type==='text'&&poll.pair&&CFG&&CFG.polls[poll.pair]){setupPair(opts,poll,CFG.polls[poll.pair],poll.pair);return;}
+  if(poll.type==='form'){setupForm(opts,poll);return;}
   if(poll.type==='text'){setupText(opts,poll);return;}
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
   let picked=null;
@@ -286,6 +289,47 @@ function setupText(opts,poll){
   btn.addEventListener('click',send);
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&(!poll.long||e.metaKey||e.ctrlKey)){e.preventDefault();send();}});
   inp.focus();
+}
+/* a "form": several short answers on ONE screen (the m1 hand: four cards
+   from one group on one phone), one LOCK IT IN. Each field goes to the room
+   as its own line, "k‖text", so the Worker's 200-character cap holds per
+   card; the deck reads /entries and groups the lines by phone. Answers lock:
+   the phone never offers a change afterwards. */
+function setupForm(opts,poll){
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='16px';
+  const st=document.getElementById('status');
+  let said=false;
+  try{said=localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
+  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  const max=poll.max||110, inputs=[];
+  poll.fields.forEach(([label,q],i)=>{
+    const h=document.createElement('h1');h.textContent=q;h.style.fontSize='18px';h.style.marginTop=i?'4px':'0';
+    const lab=document.createElement('div');lab.className='flab';lab.textContent=label;
+    const w=document.createElement('div');w.className='sayrow long';
+    const ta=document.createElement('textarea');ta.rows=2;ta.maxLength=max;ta.placeholder='A line or two…';ta.autocomplete='off';
+    const cnt=document.createElement('div');cnt.className='fcnt';cnt.textContent='0 / '+max;
+    ta.addEventListener('input',()=>{cnt.textContent=ta.value.length+' / '+max;});
+    w.appendChild(ta);w.appendChild(cnt);
+    opts.appendChild(lab);opts.appendChild(h);opts.appendChild(w);inputs.push(ta);
+  });
+  const row=document.createElement('div');row.className='sayrow';
+  const btn=document.createElement('button');btn.textContent='LOCK IT IN';btn.style.flex='1';
+  row.appendChild(btn);opts.appendChild(row);
+  function send(){
+    const vals=inputs.map(i=>i.value.trim());
+    if(vals.some(v=>!v)){st.textContent='Fill all four cards, then lock it in.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    const post=(k,t)=>fetch(API+'/p/'+pollId+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:(k+1)+'‖'+t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+    vals.reduce((chain,t,k)=>chain.then(()=>post(k,t)),Promise.resolve()).then(()=>{
+      try{localStorage.setItem('gt-said-'+pollId,'1');}catch(_){}
+      inputs.forEach(i=>i.disabled=true);row.remove();
+      st.innerHTML='<b>Your hand is in.</b> It lands on the screen face down.';
+      showNext(poll);})
+    .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';btn.disabled=false;});
+  }
+  btn.addEventListener('click',send);
+  inputs[0].focus();
 }
 /* a "pair": two write-in questions on ONE screen, one SEND, each answer
    going to its own room — the questions are meant to be read together */
