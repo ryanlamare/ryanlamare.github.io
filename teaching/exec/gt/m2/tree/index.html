@@ -5,17 +5,18 @@
 <link rel="stylesheet" href="/brand.css">
 <style>
 /* Module 2's closing exercise, one phone per group: a branch of the
-   room's tree. The group names an outcome it wants at work and cannot
-   reach on its own, names the other player, then grows a pruned game
-   tree toward the outcome, one move at a time: what could you do (two or
-   three options, tap the one you take, the rest are pruned), what could
-   they do back (tap the one you expect), until the last response reaches
-   the outcome or the moves run out. Each locked node is one line into
-   room m2-tree, "key‖text", so the deck's tree grows while the room
-   writes; the deck reads /entries and groups the lines by phone. Nothing
-   locked can be changed, as with every poll. Lines per phone stay under
-   the Worker's cap of fifteen: outcome, player, up to four moves of two
-   lines, and the ending. */
+   room's tree. The group names a yes it needs at work and cannot get
+   alone ("I need ___ from ___"), then grows a pruned game tree toward
+   it, one round at a time: how do you open (two or three ways, tap the
+   one you take, the rest are pruned); they accept, reject or counter (the
+   group taps the reply it expects and writes what it sounds like; accept
+   is locked on the first ask); given that reply, what do you do; and so
+   on. Only a yes ends it. Two rounds, then one more on offer or stop.
+   Each locked node is one line into room m2-branch, "key‖text", so the
+   deck's tree grows while the room writes; the deck reads /entries and
+   groups the lines by phone. Nothing locked can be changed, as with every
+   poll. A phone sends at most nine lines: the yes, the player, three
+   rounds of two, and a stop marker. */
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
 .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
@@ -24,7 +25,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
 .hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
 /* the sapling: a vertical stem, your leaves to the left, theirs to the
-   right, pruned options as faded twigs, the outcome as the leaf at the top */
+   right, pruned options as faded twigs, the yes as the leaf at the top;
+   the four nodes of two rounds stand empty on the stem from the start */
 .sap{width:100%;display:block;background:var(--paper-soft);border:2.5px solid var(--ink);border-radius:12px}
 .sap text{font-family:var(--sans);font-weight:600;font-size:11.5px;fill:var(--ink)}
 .sap text.lab{font-weight:700;font-size:9.5px;letter-spacing:.14em;fill:var(--muted)}
@@ -37,6 +39,7 @@ h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
 .sap text.pruned{text-decoration:line-through}
 .sap .node{fill:var(--paper-soft);stroke:var(--ink);stroke-width:2.5}
 .sap .node.you{stroke:var(--teal)} .sap .node.them{stroke:var(--terracotta)}
+.sap .node.ghost{stroke:var(--rule);stroke-dasharray:2 3}
 .sap .leaf{fill:none;stroke:var(--rule);stroke-width:2.5;stroke-dasharray:3 4}
 .sap .leaf.got{fill:var(--red);stroke:var(--red);stroke-dasharray:none}
 .sap .leaf.lost{fill:none;stroke:var(--muted);stroke-dasharray:none}
@@ -46,13 +49,12 @@ h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
 .card.you{--side:var(--teal)} .card.them{--side:var(--terracotta)} .card.goal{--side:var(--red)}
 .card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
 .card .pq{font-weight:600;font-size:16px;line-height:1.35}
-.card textarea,.card input{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;resize:vertical;outline:none}
-.card textarea{min-height:76px}
-.card textarea:focus,.card input:focus{border-bottom-color:var(--side)}
+.card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+.card input{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input:focus{border-bottom-color:var(--side)}
 .card ::placeholder{color:var(--muted);font-weight:500}
-.card .fcnt{font-weight:600;font-size:12px;color:var(--muted);text-align:right}
 .optrow{display:flex;align-items:center;gap:10px}
-.optrow .on{flex:none;font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--muted);width:18px}
+.optrow .on{flex:none;font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--muted);width:44px}
 .optrow input{flex:1}
 .picks{display:flex;flex-direction:column;gap:8px}
 .picks .plab{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--side)}
@@ -61,6 +63,9 @@ button.opt .sw{flex:none;width:26px;height:26px;background:var(--ink)}
 button.opt.mine{background:var(--side);border-color:var(--side);color:var(--paper)}
 button.opt.mine .sw{background:var(--paper)}
 button.opt:disabled{opacity:.35;cursor:default}
+button.opt .note{display:block;font-weight:500;font-size:12.5px;color:var(--muted);letter-spacing:0;margin-top:2px}
+button.opt.mine .note{color:var(--paper)}
+button.opt .k{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px}
 button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
 button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
 button.lock.quiet{background:var(--card);border-color:var(--ink);color:var(--ink)}
@@ -68,29 +73,30 @@ button.lock.quiet{background:var(--card);border-color:var(--ink);color:var(--ink
 .status b{color:var(--red)}
 .links{display:flex;justify-content:flex-end;gap:22px}
 .ptslink{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--red);text-decoration:none}
-a.small{align-self:center;font-weight:600;font-size:13px;color:var(--muted);text-decoration:underline;cursor:pointer}
 </style>
 </head><body>
 <div class="wrap">
   <div class="tag"><i></i>APPLIED GAME THEORY · LIVE</div>
   <h1 id="q">Build your branch</h1>
-  <div class="hint" id="hint">One phone per group. Your branch grows on the screen as you lock each step.</div>
+  <div class="hint" id="hint"></div>
   <svg class="sap" id="sap" viewBox="0 0 340 200" aria-hidden="true"></svg>
   <div id="opts"></div>
   <div class="status" id="status"></div>
   <div class="links"><a class="ptslink" href="/go/points/">MY POINTS &rarr;</a></div>
 </div>
 <script>
-const API='https://gt-poll.rlamare.workers.dev', ROOM='m2-tree', KEY='gt-tree-'+ROOM;
-const MAXMOVES=4, OPTMAX=48, LONGMAX=110;
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m2-branch', KEY='gt-tree-'+ROOM;
+const ROUNDS=2, MAXROUNDS=3, OPTMAX=48, SAYMAX=60, NEEDMAX=80;
+const KINDS={a:'Accept',r:'Reject',c:'Counter'};
 let voter=null;
 try{
   voter=localStorage.getItem('gt-voter');
   if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
     localStorage.setItem('gt-voter',voter);}
 }catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
-/* the branch so far; stage is what the phone is asking for next */
-let T={o:'',p:'',moves:[],end:null,stage:'o'};
+/* the branch so far; stage is what the phone is asking for next:
+   need -> y (round r) -> t (round r) -> y … ; more (a third round, or stop) ; done */
+let T={o:'',p:'',rounds:[],end:null,stage:'need'};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stage)T=s;}catch(_){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(T));}catch(_){}};
 const E=id=>document.getElementById(id);
@@ -101,36 +107,39 @@ function say(line){
     body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
 }
 const fail=code=>{E('status').textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';};
+const reached=()=>T.rounds.some(r=>r.t&&r.t.k==='a');
 
 /* ---- the sapling ---- */
-/* candidates: options being typed at the node not yet locked, drawn faint */
-function drawSap(cand){
+function nodeList(cand){
   const nodes=[];
-  T.moves.forEach((m,i)=>{
-    if(m.y)nodes.push({side:'you',opts:m.y.opts,pick:m.y.pick,n:i+1});
-    if(m.t)nodes.push({side:'them',opts:m.t.opts,pick:m.t.pick,n:i+1});
+  T.rounds.forEach((r,i)=>{
+    if(r.y)nodes.push({side:'you',opts:r.y.opts,pick:r.y.pick,n:i+1});
+    if(r.t)nodes.push({side:'them',opts:['Accept','Reject','Counter'],pick:'arc'.indexOf(r.t.k),text:r.t.text,n:i+1,first:i===0});
   });
   if(cand)nodes.push(cand);
-  const P=40, n=nodes.length, rows=Math.max(n,2);
+  return nodes;
+}
+function drawSap(cand){
+  const nodes=nodeList(cand);
+  const P=40, n=nodes.length, rows=Math.max(n,ROUNDS*2);
   const H=70+(rows+1)*P, X=175, y0=H-38;
   const yAt=k=>y0-k*P;
   const gy=yAt(rows+1)+4;
+  const got=reached(), lost=T.end===0;
   let s='';
-  const done=T.stage==='done';
-  /* stem: solid up to the last node, then dashed to the leaf */
   s+='<path class="stem" d="M'+X+' '+y0+' L'+X+' '+(n?yAt(n):y0)+'"/>';
-  s+='<path class="stem todo'+(T.end===1?' got':'')+'" d="M'+X+' '+(n?yAt(n):y0)+' L'+X+' '+(gy+14)+'"/>';
-  if(T.end===1)s+='<path class="stem" d="M'+X+' '+yAt(n)+' L'+X+' '+(gy+14)+'"/>';
-  /* root */
+  s+='<path class="stem'+(got?'':' todo')+'" d="M'+X+' '+(n?yAt(n):y0)+' L'+X+' '+(gy+14)+'"/>';
   s+='<circle class="node" cx="'+X+'" cy="'+y0+'" r="6"/>';
   s+='<text class="lab" x="'+(X+14)+'" y="'+(y0+4)+'">YOU, TODAY</text>';
-  if(T.p)s+='<text class="lab" x="'+X+'" y="'+(y0+24)+'" text-anchor="middle">VS '+esc(cut(T.p,30).toUpperCase())+'</text>';
-  /* the leaf at the top */
-  const lc=T.end===1?'got':T.end===0?'lost':'';
+  const lc=got?'got':lost?'lost':'';
   s+='<path class="leaf '+lc+'" d="M'+X+' '+(gy+14)+' C'+(X-22)+' '+(gy+2)+' '+(X-14)+' '+(gy-22)+' '+X+' '+(gy-24)+' C'+(X+14)+' '+(gy-22)+' '+(X+22)+' '+(gy+2)+' '+X+' '+(gy+14)+' Z"/>';
-  const ol=T.o?wrap(T.o,24,2):['the outcome'];
-  s+='<text class="lab" x="'+(X+30)+'" y="'+(gy-14)+'">THE OUTCOME</text>';
-  ol.forEach((ln,i)=>{s+='<text x="'+(X+30)+'" y="'+(gy+2+i*14)+'" style="'+(T.o?'':'fill:var(--muted);font-weight:500')+'">'+esc(ln)+'</text>';});
+  const ol=T.o?wrap('I need '+T.o,24,2):['the yes you need'];
+  s+='<text class="lab" x="'+(X+30)+'" y="'+(gy-22)+'">THE YES</text>';
+  ol.forEach((ln,i)=>{s+='<text x="'+(X+30)+'" y="'+(gy-6+i*14)+'" style="'+(T.o?'':'fill:var(--muted);font-weight:500')+'">'+esc(ln)+'</text>';});
+  if(T.p)s+='<text class="lab" x="'+X+'" y="'+(y0+24)+'" text-anchor="middle">FROM '+esc(cut(T.p,30).toUpperCase())+'</text>';
+  for(let k=n;k<rows;k++){const y=yAt(k+1);const you=k%2===0;
+    s+='<circle class="node ghost" cx="'+X+'" cy="'+y+'" r="5.5"/>';
+    s+='<text class="lab" x="'+(X+(you?-30:30))+'" y="'+(y+4)+'" text-anchor="'+(you?'end':'start')+'" style="opacity:.6">'+(you?(k===0?'YOU OPEN':'YOUR NEXT MOVE'):'THEY REPLY')+'</text>';}
   nodes.forEach((nd,k)=>{
     const y=yAt(k+1), left=nd.side==='you', dir=left?-1:1, isCand=nd===cand;
     const tx=X+dir*30, anchor=left?'end':'start';
@@ -138,10 +147,10 @@ function drawSap(cand){
       const chosen=nd.pick===j, dy=(j-(nd.opts.length-1)/2)*15;
       const cls='twig '+nd.side+(isCand?' cand':chosen?'':' pruned');
       s+='<path class="'+cls+'" d="M'+X+' '+y+' Q'+(X+dir*14)+' '+(y+dy)+' '+(X+dir*26)+' '+(y+dy)+'"/>';
-      s+='<text class="'+(isCand?'cand':chosen?nd.side:'pruned')+'" x="'+tx+'" y="'+(y+dy+4)+'" text-anchor="'+anchor+'" style="font-size:'+(chosen&&!isCand?'11':'9.5')+'px">'+esc(cut(o,chosen&&!isCand?24:20))+'</text>';
+      let label=o; if(nd.side==='them'){label=chosen?(KINDS[('arc')[j]]+(nd.text?': '+nd.text:'')):(j===0&&nd.first?'Accept (not on the first ask)':o);}
+      s+='<text class="'+(isCand?'cand':chosen?nd.side:'pruned')+'" x="'+tx+'" y="'+(y+dy+4)+'" text-anchor="'+anchor+'" style="font-size:'+(chosen&&!isCand?'11':'9.5')+'px">'+esc(cut(label,chosen&&!isCand?24:20))+'</text>';
     });
     s+='<circle class="node '+nd.side+'" cx="'+X+'" cy="'+y+'" r="5.5"/>';
-    if(!nd.opts.length)s+='<text class="lab" x="'+tx+'" y="'+(y+4)+'" text-anchor="'+anchor+'">'+(left?'MOVE '+nd.n:esc(cut(T.p,14).toUpperCase()))+'</text>';
   });
   const sap=E('sap');sap.setAttribute('viewBox','0 0 340 '+H);sap.innerHTML=s;
 }
@@ -151,112 +160,94 @@ function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 /* ---- the questions, one stage at a time ---- */
 function render(){
-  const opts=E('opts');opts.innerHTML='';
+  const opts=E('opts');opts.innerHTML='';opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
   const q=E('q'), hint=E('hint');
   const st=E('status');st.textContent='';
-  if(T.stage==='o'){
+  const r=T.rounds.length, last=r?T.rounds[r-1]:null;
+  if(T.stage==='need'){
     q.textContent='Build your branch';
-    hint.textContent='One phone per group. Your branch grows on the screen as you lock each step.';
-    longCard(opts,'goal','THE OUTCOME','What is an outcome you want at work that you cannot get to on your own?',t=>{
-      T.o=t;return say('o‖'+t).then(()=>{T.stage='p';save();render();});
-    });
-  }else if(T.stage==='p'){
-    q.textContent='The other player';
-    hint.textContent='The person, or the side, whose moves decide whether you get there.';
-    shortCard(opts,'them','THE OTHER PLAYER','Who is the other player in this game?',60,t=>{
-      T.p=t;return say('p‖'+t).then(()=>{T.moves.push({});T.stage='y';save();render();});
-    });
-  }else if(T.stage==='y'||T.stage==='t'){
-    const i=T.moves.length, you=T.stage==='y';
-    q.textContent='Move '+i+(you?': your move':': their move');
-    hint.textContent=you?'Write two or three things you could do here. Then tap the one you would actually do; the others are pruned.'
-                        :'Write two or three things '+T.p+' could do back. Then tap the one you expect; the others are pruned.';
-    optionsCard(opts,you?'you':'them',you?'WHAT COULD YOU DO?':'WHAT COULD '+cut(T.p,24).toUpperCase()+' DO BACK?',you,(list,pick)=>{
-      const key=(you?'y':'t')+i;
-      return say(key+'‖'+pick+'|'+list.join('|')).then(()=>{
-        T.moves[i-1][you?'y':'t']={opts:list,pick};
-        T.stage=you?'t':'after';save();render();
-      });
-    });
-  }else if(T.stage==='after'){
-    const i=T.moves.length;
-    q.textContent='Does that get you there?';
-    hint.textContent='If '+T.p+' does what you expect, are you at your outcome?';
-    const b1=btn('YES, THAT REACHES THE OUTCOME','lock',()=>{b1.disabled=true;st.textContent='Sending…';
-      say('e‖1').then(()=>{T.end=1;T.stage='done';save();render();}).catch(c=>{fail(c);b1.disabled=false;});});
-    opts.appendChild(b1);
-    if(i<MAXMOVES){
-      const b2=btn('NOT YET: ANOTHER MOVE','lock quiet',()=>{T.moves.push({});T.stage='y';save();render();});
-      opts.appendChild(b2);
-    }else{
-      const b3=btn('WE RUN OUT OF MOVES BEFORE WE GET THERE','lock quiet',()=>{b3.disabled=true;st.textContent='Sending…';
-        say('e‖0').then(()=>{T.end=0;T.stage='done';save();render();}).catch(c=>{fail(c);b3.disabled=false;});});
-      opts.appendChild(b3);
-    }
-    if(i<MAXMOVES){
-      const a=document.createElement('a');a.className='small';a.textContent='We can’t get there from here';
-      a.addEventListener('click',()=>{st.textContent='Sending…';
-        say('e‖0').then(()=>{T.end=0;T.stage='done';save();render();}).catch(fail);});
-      opts.appendChild(a);
-    }
-    opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
+    hint.textContent='One phone per group. Something in your work that only somebody else can give you.';
+    needCard(opts);
+  }else if(T.stage==='y'){
+    q.textContent=r===1?'Round 1: how do you open?':'Round '+r+': your next move';
+    hint.textContent=r===1?'Write two or three ways you could open. Then tap the one you would actually take; the others are pruned.'
+                        :'They '+replyWord(T.rounds[r-2].t)+'. Write two or three things you could do now, then tap the one you would do.';
+    optionsCard(opts,r,(list,pick)=>say('y'+r+'‖'+pick+'|'+list.join('|')).then(()=>{T.rounds[r-1].y={opts:list,pick};T.stage='t';save();render();}));
+  }else if(T.stage==='t'){
+    q.textContent='Round '+r+': what does '+T.p+' say?';
+    hint.textContent=r===1?'Tap the reply you expect, and write what it sounds like. Nobody gets a yes on the first ask.':'Tap the reply you expect, and write what it sounds like.';
+    replyCard(opts,r,(k,text)=>say('t'+r+'‖'+k+'|'+text).then(()=>{T.rounds[r-1].t={k,text};
+      if(k==='a'){T.stage='done';}
+      else if(r<ROUNDS){T.rounds.push({});T.stage='y';}
+      else if(r<MAXROUNDS){T.stage='more';}
+      else{T.stage='done';T.end=0;save();render();return say('e‖0').catch(()=>{});}
+      save();render();}));
+  }else if(T.stage==='more'){
+    q.textContent='Two rounds, and no yes yet';
+    hint.textContent='They '+replyWord(last.t)+'. Do you make one more move, or stop here?';
+    const b1=btn('ONE MORE MOVE','lock',()=>{T.rounds.push({});T.stage='y';save();render();});
+    const b2=btn('STOP HERE','lock quiet',()=>{b1.disabled=b2.disabled=true;st.textContent='Sending…';
+      say('e‖0').then(()=>{T.end=0;T.stage='done';save();render();}).catch(c=>{fail(c);b1.disabled=b2.disabled=false;});});
+    opts.appendChild(b1);opts.appendChild(b2);
   }else{
     q.textContent='Your branch is on the tree';
-    hint.textContent=T.end===1?'Your last move reaches the outcome. Look up at the screen.':'Your branch stops short of the outcome. That is worth talking about; look up at the screen.';
+    hint.textContent=reached()?'They said yes. Look up at the screen.':'No yes in the moves you had. That is worth talking about; look up at the screen.';
   }
   drawSap(null);
 }
+function replyWord(t){return t.k==='r'?'rejected it':t.k==='c'?'countered':'accepted';}
 function btn(label,cls,fn){const b=document.createElement('button');b.className=cls;b.textContent=label;b.addEventListener('click',fn);return b;}
-function lockBtn(){return btn('LOCK IT IN','lock',null);}
-function longCard(opts,side,suit,question,onLock){
-  const c=card(side,suit,question);
-  const ta=document.createElement('textarea');ta.maxLength=LONGMAX;ta.placeholder='Write it here…';ta.autocomplete='off';
-  const cnt=document.createElement('div');cnt.className='fcnt';cnt.textContent='0 / '+LONGMAX;
-  ta.addEventListener('input',()=>{cnt.textContent=ta.value.length+' / '+LONGMAX;lk.disabled=!clean(ta.value);});
-  const lk=lockBtn();lk.disabled=true;
-  lk.addEventListener('click',()=>{const t=clean(ta.value);if(!t)return;lk.disabled=true;ta.disabled=true;E('status').textContent='Sending…';
-    onLock(t).catch(c=>{fail(c);lk.disabled=false;ta.disabled=false;});});
-  c.appendChild(ta);c.appendChild(cnt);opts.appendChild(c);opts.appendChild(lk);ta.focus();
+function card(side,suit,question,sub){
+  const c=document.createElement('div');c.className='card '+side;
+  c.innerHTML='<div class="suit"></div>'+(question?'<div class="pq"></div>':'');
+  c.querySelector('.suit').textContent=suit;
+  if(question){c.querySelector('.pq').textContent=question;if(sub){const s=document.createElement('small');s.textContent=sub;c.querySelector('.pq').appendChild(s);}}
+  return c;
 }
-function shortCard(opts,side,suit,question,max,onLock){
-  const c=card(side,suit,question);
-  const inp=document.createElement('input');inp.maxLength=max;inp.placeholder='A name, or a role…';inp.autocomplete='off';
-  const lk=lockBtn();lk.disabled=true;
-  inp.addEventListener('input',()=>{lk.disabled=!clean(inp.value);});
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!lk.disabled)lk.click();}});
-  lk.addEventListener('click',()=>{const t=clean(inp.value);if(!t)return;lk.disabled=true;inp.disabled=true;E('status').textContent='Sending…';
-    onLock(t).catch(c=>{fail(c);lk.disabled=false;inp.disabled=false;});});
-  c.appendChild(inp);opts.appendChild(c);opts.appendChild(lk);inp.focus();
+/* I need ___ from ___ */
+function needCard(opts){
+  const c=card('goal','THE YES YOU NEED','I need…','A signature, a sign-off, a price, a person, a date');
+  const what=document.createElement('input');what.maxLength=NEEDMAX;what.placeholder='the two-year renewal signed…';what.autocomplete='off';
+  const fromLab=document.createElement('div');fromLab.className='pq';fromLab.textContent='…from…';
+  const whom=document.createElement('input');whom.maxLength=SAYMAX;whom.placeholder='their head of procurement';whom.autocomplete='off';
+  const lk=btn('LOCK IT IN','lock',null);lk.disabled=true;
+  const sync=()=>{lk.disabled=!(clean(what.value)&&clean(whom.value));};
+  [what,whom].forEach(i=>i.addEventListener('input',sync));
+  whom.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!lk.disabled)lk.click();}});
+  lk.addEventListener('click',()=>{const o=clean(what.value),p=clean(whom.value);if(!o||!p)return;
+    lk.disabled=what.disabled=whom.disabled=true;E('status').textContent='Sending…';
+    say('o‖'+o).then(()=>say('p‖'+p)).then(()=>{T.o=o;T.p=p;T.rounds.push({});T.stage='y';save();render();})
+      .catch(cd=>{fail(cd);lk.disabled=what.disabled=whom.disabled=false;});});
+  c.appendChild(what);c.appendChild(fromLab);c.appendChild(whom);opts.appendChild(c);opts.appendChild(lk);what.focus();
 }
-/* two or three options typed, then one tapped: the sapling shows the
+/* two or three moves typed, then one tapped: the sapling shows the
    candidates as they are typed and prunes the others on the tap */
-function optionsCard(opts,side,suit,you,onLock){
-  const c=card(side,suit,null);
+function optionsCard(opts,r,onLock){
+  const c=card('you',r===1?'HOW DO YOU OPEN?':'WHAT DO YOU DO NOW?',null);
   const inputs=[];
   for(let j=0;j<3;j++){
     const row=document.createElement('div');row.className='optrow';
-    row.innerHTML='<span class="on">'+(j+1)+'</span>';
-    const inp=document.createElement('input');inp.maxLength=OPTMAX;inp.placeholder=j<2?'Option '+(j+1)+'…':'Option 3 (if you have one)…';inp.autocomplete='off';
+    row.innerHTML='<span class="on">'+(j<2?'MOVE '+(j+1):'OR')+'</span>';
+    const inp=document.createElement('input');inp.maxLength=OPTMAX;inp.placeholder=j<2?'One thing you could do…':'A third, if you have one…';inp.autocomplete='off';
     row.appendChild(inp);c.appendChild(row);inputs.push(inp);
   }
   const picks=document.createElement('div');picks.className='picks';
-  picks.innerHTML='<div class="plab">'+(you?'Tap the one you would do':'Tap the one you expect')+'</div>';
+  picks.innerHTML='<div class="plab">Tap the one you would do</div>';
   const pbtns=[];
   for(let j=0;j<3;j++){
     const b=document.createElement('button');b.className='opt';b.innerHTML='<span class="sw"></span><span></span>';b.disabled=true;
-    b.addEventListener('click',()=>{pick=j;pbtns.forEach((x,k)=>x.classList.toggle('mine',k===j));sync();});
+    b.addEventListener('click',()=>{pick=j;sync();});
     picks.appendChild(b);pbtns.push(b);
   }
   let pick=-1;
-  const lk=lockBtn();lk.disabled=true;
+  const lk=btn('LOCK IT IN','lock',null);lk.disabled=true;
   const list=()=>inputs.map(i=>clean(i.value));
   function sync(){
     const L=list();
     pbtns.forEach((b,j)=>{b.lastChild.textContent=L[j]||'…';b.disabled=!L[j];if(!L[j]&&pick===j)pick=-1;b.classList.toggle('mine',pick===j);});
     const filled=L.filter(Boolean);
     lk.disabled=!(filled.length>=2&&pick>=0&&L[pick]);
-    const cand={side:you?'you':'them',opts:filled,pick:-1,n:T.moves.length};
-    drawSap(filled.length?cand:null);
+    drawSap(filled.length?{side:'you',opts:filled,pick:-1,n:r}:null);
   }
   inputs.forEach(i=>i.addEventListener('input',sync));
   lk.addEventListener('click',()=>{
@@ -267,14 +258,32 @@ function optionsCard(opts,side,suit,you,onLock){
     onLock(kept,p).catch(cd=>{fail(cd);lk.disabled=false;inputs.forEach(i=>i.disabled=false);pbtns.forEach((b,j)=>b.disabled=!clean(inputs[j].value));});
   });
   c.appendChild(picks);opts.appendChild(c);opts.appendChild(lk);inputs[0].focus();
-  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
 }
-function card(side,suit,question){
-  const c=document.createElement('div');c.className='card '+side;
-  c.innerHTML='<div class="suit"></div>'+(question?'<div class="pq"></div>':'');
-  c.querySelector('.suit').textContent=suit;if(question)c.querySelector('.pq').textContent=question;
-  E('opts').style.display='flex';E('opts').style.flexDirection='column';E('opts').style.gap='12px';
-  return c;
+/* their reply: accept, reject or counter (accept locked in round one), and what it sounds like */
+function replyCard(opts,r,onLock){
+  const c=card('them','THEIR REPLY',null);
+  const picks=document.createElement('div');picks.className='picks';
+  picks.innerHTML='<div class="plab">Tap the reply you expect</div>';
+  const defs=[['a','Accept',r===1?'Not on the first ask':'They say yes: the branch is done'],['r','Reject','A no, and nothing on the table'],['c','Counter','A no, but here is what would work']];
+  const pbtns=[];let pick=null;
+  defs.forEach(([k,label,note])=>{
+    const b=document.createElement('button');b.className='opt';b.innerHTML='<span class="sw"></span><span><span class="k"></span><span class="note"></span></span>';
+    b.querySelector('.k').textContent=label;b.querySelector('.note').textContent=note;
+    if(k==='a'&&r===1)b.disabled=true;
+    b.addEventListener('click',()=>{pick=k;pbtns.forEach(x=>x.classList.toggle('mine',x===b));sync();});
+    picks.appendChild(b);pbtns.push(b);
+  });
+  const sayLab=document.createElement('div');sayLab.className='pq';sayLab.textContent='What does it sound like?';
+  const inp=document.createElement('input');inp.maxLength=SAYMAX;inp.placeholder='A few words, in their voice…';inp.autocomplete='off';
+  const lk=btn('LOCK IT IN','lock',null);lk.disabled=true;
+  function sync(){const t=clean(inp.value);lk.disabled=!(pick&&(t||pick==='a'));
+    drawSap(pick?{side:'them',opts:['Accept','Reject','Counter'],pick:'arc'.indexOf(pick),text:t,n:r,first:r===1,cand:true}:null);}
+  inp.addEventListener('input',sync);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!lk.disabled)lk.click();}});
+  lk.addEventListener('click',()=>{const t=clean(inp.value);if(!pick)return;
+    lk.disabled=inp.disabled=true;pbtns.forEach(b=>b.disabled=true);E('status').textContent='Sending…';
+    onLock(pick,t).catch(cd=>{fail(cd);lk.disabled=inp.disabled=false;pbtns.forEach((b,i)=>b.disabled=(i===0&&r===1));});});
+  c.appendChild(picks);c.appendChild(sayLab);c.appendChild(inp);opts.appendChild(c);opts.appendChild(lk);
 }
 render();
 </script>
