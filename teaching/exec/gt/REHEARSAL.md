@@ -21,7 +21,7 @@ Poll Desk resets them, and the last step here is that reset.
 - **When a slide shows a QR:** in every student window, on /go, tap the poll or game that matches the slide. Answer from three or four of them, then press the arrow on the deck for the reveal. Look at what each student window shows *after* answering, and what the deck shows before and after the reveal.
 - **Pair games** (m2 centipede, last card and the ultimatum; m3 engines; m6 penalties, the boss battle and the inspection game, and rock paper scissors; m7 chicken and split or steal): Student 1 picks Student 2 as partner, Student 3 picks Student 4. Play one pair to the end and leave the other pair mid-game to see what an unfinished pair looks like on the deck.
 - **Whole-room games** (m1 dog, number game and offers; m5 investment rounds; m7 auction; m8 car market): join from all five windows and your phone *before* pressing the key that opens the round on the deck. m8's market keys are 1, 2, 3 to open rounds, C to close, W for the warranty rule.
-- **After the Top of the class slide** of each module open **ryanlamare.com/go/points** in Student 1's window and check the number matches the board.
+- **After the Top of the table slide** of each module open **ryanlamare.com/go/points** in Student 1's window and check the number matches the board.
 - Once per module, tap **change** on a student's name and pick it again, to see the name-guard panel and the "that's me, on another phone" path.
 
 ## Hidden Agenda, the drills, and the run with your wife
