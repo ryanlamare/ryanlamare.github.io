@@ -44,8 +44,21 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
   background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-height:120px;width:100%;resize:vertical}
 .sayrow.long button{align-self:flex-end}
 .sent{display:flex;flex-direction:column;gap:8px}
-.flab{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:-8px}
-.fcnt{align-self:flex-end;font-weight:600;font-size:12px;color:var(--muted);margin-top:-6px}
+/* the hand (type:"form"): each question is a card face to write on, the
+   same four suits and pips as the deck's cards */
+.pcard{position:relative;border:3px solid var(--suit);border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;box-shadow:0 4px 0 rgba(0,0,0,.07);display:flex;flex-direction:column;gap:8px;--suit:var(--red)}
+.pcard.s0{--suit:var(--red)} .pcard.s1{--suit:var(--teal)} .pcard.s2{--suit:var(--ochre)} .pcard.s3{--suit:var(--terracotta)}
+.pcard .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--suit);padding-bottom:7px;border-bottom:2px solid var(--suit)}
+.pcard.s2 .suit{color:var(--ink)}
+.pcard .pq{font-weight:600;font-size:16px;line-height:1.35;color:var(--ink)}
+.pcard textarea{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;min-height:84px;width:100%;resize:vertical;outline:none}
+.pcard textarea:focus{border-bottom-color:var(--suit)}
+.pcard textarea::placeholder{color:var(--muted);font-weight:500}
+.pcard .foot{display:flex;justify-content:space-between;align-items:flex-end;min-height:30px}
+.pcard .fcnt{font-weight:600;font-size:12px;color:var(--muted)}
+.pcard .pip{width:32px;height:32px;color:var(--suit)}
+.pcard.s2 .pip{color:var(--ink)}
+.pcard.done{opacity:.85}
 .sent .s{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:15px;padding:9px 14px}
 /* hand-typed /go: pick the question that is on the screen */
 button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);
@@ -67,6 +80,12 @@ button.pick.nextq .pm::after{content:" →"}
 a.pick{text-decoration:none}
 </style>
 </head><body>
+<svg style="display:none" aria-hidden="true">
+<symbol id="pip0" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="13" cy="9" r="5"/><path d="M5 18 Q13 14 21 18 L18 33 L8 33 Z"/><circle cx="29" cy="9" r="5"/><path d="M21 18 Q29 14 37 18 L34 33 L24 33 Z" opacity=".55"/></g></symbol>
+<symbol id="pip1" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="8" cy="8" r="4"/><path d="M2 15 Q8 12 14 15 L12 26 L4 26 Z"/><circle cx="20" cy="8" r="4"/><path d="M14 15 Q20 12 26 15 L24 26 L16 26 Z"/><circle cx="32" cy="8" r="4"/><path d="M26 15 Q32 12 38 15 L36 26 L28 26 Z"/><circle cx="14" cy="26" r="4"/><path d="M8 33 Q14 30 20 33 L18 40 L10 40 Z"/><circle cx="26" cy="26" r="4"/><path d="M20 33 Q26 30 32 33 L30 40 L22 40 Z"/></g></symbol>
+<symbol id="pip2" viewBox="0 0 40 40"><text x="20" y="34" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="38" fill="currentColor">?</text></symbol>
+<symbol id="pip3" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="22" cy="14" rx="15" ry="11"/><circle cx="9" cy="28" r="3"/><circle cx="4" cy="35" r="1.8"/></g><g fill="currentColor"><circle cx="22" cy="10" r="3.6"/><path d="M16 20 Q22 17 28 20 L27 23 L17 23 Z"/></g></symbol>
+</svg>
 <div class="wrap">
   <div class="tag"><i></i>APPLIED GAME THEORY · LIVE</div>
   <h1 id="q">&hellip;</h1>
@@ -301,16 +320,19 @@ function setupForm(opts,poll){
   let said=false;
   try{said=localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
   if(said){st.innerHTML=RECORDED;showNext(poll);return;}
-  const max=poll.max||110, inputs=[];
+  const max=poll.max||110, inputs=[], cards=[];
   poll.fields.forEach(([label,q],i)=>{
-    const h=document.createElement('h1');h.textContent=q;h.style.fontSize='18px';h.style.marginTop=i?'4px':'0';
-    const lab=document.createElement('div');lab.className='flab';lab.textContent=label;
-    const w=document.createElement('div');w.className='sayrow long';
-    const ta=document.createElement('textarea');ta.rows=2;ta.maxLength=max;ta.placeholder='A line or two…';ta.autocomplete='off';
+    const card=document.createElement('div');card.className='pcard s'+i;
+    card.innerHTML='<div class="suit"></div><div class="pq"></div>';
+    card.querySelector('.suit').textContent=label;card.querySelector('.pq').textContent=q;
+    const ta=document.createElement('textarea');ta.rows=3;ta.maxLength=max;ta.placeholder='Write on the card…';ta.autocomplete='off';
+    const foot=document.createElement('div');foot.className='foot';
     const cnt=document.createElement('div');cnt.className='fcnt';cnt.textContent='0 / '+max;
+    foot.innerHTML='<svg class="pip" viewBox="0 0 40 40"><use href="#pip'+i+'"/></svg>';
+    foot.insertBefore(cnt,foot.firstChild);
     ta.addEventListener('input',()=>{cnt.textContent=ta.value.length+' / '+max;});
-    w.appendChild(ta);w.appendChild(cnt);
-    opts.appendChild(lab);opts.appendChild(h);opts.appendChild(w);inputs.push(ta);
+    card.appendChild(ta);card.appendChild(foot);
+    opts.appendChild(card);inputs.push(ta);cards.push(card);
   });
   const row=document.createElement('div');row.className='sayrow';
   const btn=document.createElement('button');btn.textContent='LOCK IT IN';btn.style.flex='1';
@@ -323,7 +345,7 @@ function setupForm(opts,poll){
       body:JSON.stringify({t:(k+1)+'‖'+t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
     vals.reduce((chain,t,k)=>chain.then(()=>post(k,t)),Promise.resolve()).then(()=>{
       try{localStorage.setItem('gt-said-'+pollId,'1');}catch(_){}
-      inputs.forEach(i=>i.disabled=true);row.remove();
+      inputs.forEach(i=>i.disabled=true);cards.forEach(c=>c.classList.add('done'));row.remove();
       st.innerHTML='<b>Your hand is in.</b> It lands on the screen face down.';
       showNext(poll);})
     .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';btn.disabled=false;});
