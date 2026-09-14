@@ -72,11 +72,15 @@ button.opt.mine .note{color:var(--paper)}
 .sap .node.ghost{stroke:var(--rule);stroke-dasharray:2 3}
 .sap .leaf{fill:none;stroke:var(--rule);stroke-width:2.5;stroke-dasharray:3 4}
 .sap .leaf.got{fill:var(--red);stroke:var(--red);stroke-dasharray:none}
+.sap .apple{fill:var(--red)} .sap .stalk{stroke:#5A3A1E;stroke-width:2;fill:none;stroke-linecap:round} .sap .shine{stroke:#fff;stroke-opacity:.55;stroke-width:1.8;fill:none;stroke-linecap:round}
+.sap .lf1{fill:#6E9E4A} .sap .lf2{fill:#9DBB6A}
+.sap text.yes{fill:var(--green);font-weight:700}
+.sap .yesbox{fill:var(--green)}
 .sap .leaf.lost{fill:none;stroke:var(--muted);stroke-dasharray:none}
 .sap .cand{opacity:.55}
 /* the cards */
 .card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
-.card.you{--side:var(--teal)} .card.them{--side:var(--terracotta)} .card.goal{--side:var(--red)}
+.card.you{--side:var(--teal)} .card.them{--side:var(--terracotta)} .card.goal{--side:var(--green)}
 .card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
 .card .pq{font-weight:600;font-size:16px;line-height:1.35}
 .card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
@@ -195,10 +199,14 @@ function drawSap(G,cand,xcand){
   s+='<circle class="node" cx="'+X+'" cy="'+y0+'" r="6"/>';
   s+='<text class="lab" x="'+(X+14)+'" y="'+(y0+4)+'">'+esc(cut(G.A||'THE ASKER',16).toUpperCase())+', TODAY</text>';
   const lc=got?'got':lost?'lost':'';
-  s+='<path class="leaf '+lc+'" d="M'+X+' '+(gy+14)+' C'+(X-22)+' '+(gy+2)+' '+(X-14)+' '+(gy-22)+' '+X+' '+(gy-24)+' C'+(X+14)+' '+(gy-22)+' '+(X+22)+' '+(gy+2)+' '+X+' '+(gy+14)+' Z"/>';
+  if(got){const ax=X,ay=gy-2;
+    s+='<path class="lf1" transform="translate('+ax+' '+(ay-6)+') rotate(-32) scale(.7)" d="M0 0 C-7 -5 -8 -16 0 -22 C8 -16 7 -5 0 0 Z"/><path class="lf2" transform="translate('+ax+' '+(ay-6)+') rotate(32) scale(.7)" d="M0 0 C-7 -5 -8 -16 0 -22 C8 -16 7 -5 0 0 Z"/>';
+    s+='<path class="stalk" d="M'+ax+' '+(ay-8)+' C'+(ax-1)+' '+(ay-12)+' '+(ax+2)+' '+(ay-15)+' '+(ax+4)+' '+(ay-16)+'"/><circle class="apple" cx="'+ax+'" cy="'+ay+'" r="10"/><path class="shine" d="M'+(ax-4)+' '+(ay-5)+' C'+(ax-2)+' '+(ay-8)+' '+(ax+1)+' '+(ay-9)+' '+(ax+3)+' '+(ay-8)+'"/>';}
+  else s+='<path class="leaf '+lc+'" d="M'+X+' '+(gy+14)+' C'+(X-22)+' '+(gy+2)+' '+(X-14)+' '+(gy-22)+' '+X+' '+(gy-24)+' C'+(X+14)+' '+(gy-22)+' '+(X+22)+' '+(gy+2)+' '+X+' '+(gy+14)+' Z"/>';
   const ol=G.o?wrap('I need '+G.o,24,2):['the yes you need'];
-  s+='<text class="lab" x="'+(X+30)+'" y="'+(gy-22)+'">THE YES</text>';
-  ol.forEach((ln,i)=>{s+='<text x="'+(X+30)+'" y="'+(gy-6+i*14)+'" style="'+(G.o?'':'fill:var(--muted);font-weight:500')+'">'+esc(ln)+'</text>';});
+  s+='<text class="lab" x="'+(X+30)+'" y="'+(gy-22)+'" style="fill:var(--green)">THE YES</text>';
+  if(G.o){const w=Math.max(...ol.map(l=>l.length))*6.4+16;s+='<rect class="yesbox" x="'+(X+24)+'" y="'+(gy-17)+'" width="'+Math.min(w,140)+'" height="'+(ol.length*14+10)+'" rx="5"/>';}
+  ol.forEach((ln,i)=>{s+='<text x="'+(X+30)+'" y="'+(gy-6+i*14)+'" style="'+(G.o?'fill:var(--paper)':'fill:var(--muted);font-weight:500')+'">'+esc(ln)+'</text>';});
   if(G.p)s+='<text class="lab" x="'+X+'" y="'+(y0+24)+'" text-anchor="middle">FROM '+esc(cut(G.p,24).toUpperCase())+(G.B?' ('+esc(cut(G.B,12).toUpperCase())+')':'')+'</text>';
   for(let k=n;k<rows;k++){const y=yAt(k+1);const you=k%2===0;
     s+='<circle class="node ghost" cx="'+X+'" cy="'+y+'" r="5.5"/>';
