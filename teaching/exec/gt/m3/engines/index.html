@@ -1,0 +1,176 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Your own engine</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 3's closing exercise: one phone per group of three, one real
+   zero-sum situation from their world, drawn on the deck as one engine
+   whose fan is the pie. The group writes what was being divided, who was
+   on the other side, one move they would have made whatever the other
+   side did (or would never have made, whatever they did), and sets how it
+   was divided in the end as a percentage between them and the other
+   party; the fan on this page follows the slider. One LOCK IT IN.
+
+   Wire: four lines into room m3-engines, one per card, "k‖text" (the
+   Worker caps a line at 200 characters, which is why one line per card):
+   1‖what was divided, 2‖the other party, 3‖d-or-i-or-n‖the move (d a
+   move they'd make whatever the other side did, i one they'd never make,
+   n no such move), 4‖the percentage to them (0–100). The deck groups the
+   room's lines by phone; the latest line per card wins, so a re-send
+   corrects rather than duplicates. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+/* the engine: a head-on fan, the pie between you (teal) and them (terracotta) */
+.fanwrap{display:flex;align-items:center;gap:16px;background:var(--paper-soft);border:2.5px solid var(--ink);border-radius:12px;padding:12px 14px}
+.fanwrap svg{width:132px;height:132px;flex:none;display:block}
+.fanwrap .rot{transform-box:fill-box;transform-origin:center;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.fanwrap .shares{flex:1;display:flex;flex-direction:column;gap:6px}
+.fanwrap .sh{display:flex;justify-content:space-between;align-items:baseline}
+.fanwrap .sh .w{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:11px}
+.fanwrap .sh .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1}
+.fanwrap .sh.you{color:var(--teal)} .fanwrap .sh.them{color:var(--terracotta)}
+.fanwrap .word{font-weight:700;letter-spacing:.12em;font-size:10.5px;color:var(--muted);text-transform:uppercase;margin-top:4px}
+/* the cards */
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.pie{--side:var(--red)} .card.them{--side:var(--terracotta)} .card.strat{--side:var(--maroon)} .card.out{--side:var(--ink)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+.card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input[type=text]:focus{border-bottom-color:var(--side)}
+.card input:disabled{opacity:.45}
+.card ::placeholder{color:var(--muted);font-weight:500}
+.chips{display:flex;flex-direction:column;gap:8px}
+button.opt{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:15px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:11px 14px;cursor:pointer}
+button.opt.mine{background:var(--side,var(--red));border-color:var(--side,var(--red));color:var(--paper)}
+button.opt:disabled{opacity:.45;cursor:default}
+.slider{display:flex;flex-direction:column;gap:8px}
+.slider input[type=range]{width:100%;accent-color:var(--red)}
+.slider .ends{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--muted)}
+.slider .ends .you{color:var(--teal)} .slider .ends .them{color:var(--terracotta)}
+.slider input:disabled{opacity:.45}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center}
+.bigcard .head{font-weight:700;font-size:22px;color:var(--red)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.4}
+.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+#app{display:flex;flex-direction:column;gap:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 3</div>
+  <h1 id="q">A zero-sum game from your world</h1>
+  <div class="hint" id="hint">In groups of three, one phone. A situation where you and another party had to divide something and could not collaborate.</div>
+  <div class="fanwrap" id="fanwrap"></div>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m3-engines', LOCKKEY='gt-engine-locked';
+const PIEMAX=90, PARTYMAX=60, MOVEMAX=90;
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), st=document.getElementById('status'), fanwrap=document.getElementById('fanwrap');
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+let sayN=0;
+function say(line){
+  sayN++;
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+/* ---- the fan ---- */
+const CX=230,CY=230,RR=196;
+function sector(a0,a1){
+  const big=(a1-a0)%360>180?1:0;
+  const x0=CX+RR*Math.sin(a0*Math.PI/180), y0=CY-RR*Math.cos(a0*Math.PI/180);
+  const x1=CX+RR*Math.sin(a1*Math.PI/180), y1=CY-RR*Math.cos(a1*Math.PI/180);
+  return 'M'+CX+' '+CY+' L'+x0+' '+y0+' A'+RR+' '+RR+' 0 '+big+' 1 '+x1+' '+y1+' Z';
+}
+let blades='';for(let i=0;i<18;i++)blades+='<path d="M230 82 q26 60 8 138" transform="rotate('+(i*20)+' 230 230)"/>';
+function fanSVG(pct){
+  const a=Math.max(0,Math.min(100,pct))*3.6;
+  const secA=a>=360?'<circle cx="230" cy="230" r="196" fill="var(--teal)"/>':a<=0?'':'<path d="'+sector(0,a)+'" fill="var(--teal)"/>';
+  const secB=a<=0?'<circle cx="230" cy="230" r="196" fill="var(--terracotta)"/>':a>=360?'':'<path d="'+sector(a,360)+'" fill="var(--terracotta)"/>';
+  return '<svg viewBox="0 0 460 460" aria-hidden="true"><circle cx="230" cy="230" r="222" fill="var(--ink)"/><circle cx="230" cy="230" r="204" fill="var(--tan-light)"/><circle cx="230" cy="230" r="196" fill="var(--ink)"/>'+
+    '<g class="rot" id="rot">'+secA+secB+'<g stroke="var(--paper)" stroke-width="3" opacity=".55" fill="none">'+blades+'</g><circle cx="230" cy="230" r="46" fill="var(--ink)"/><path d="M230 196 q30 14 12 46 q-14 24 -42 12" stroke="var(--paper)" stroke-width="9" fill="none" stroke-linecap="round"/></g></svg>';
+}
+let turns=0;
+function drawFan(pct,word){
+  fanwrap.innerHTML=fanSVG(pct)+'<div class="shares"><div class="sh you"><span class="w">You</span><span class="n">'+pct+'</span></div><div class="sh them"><span class="w">The other party</span><span class="n">'+(100-pct)+'</span></div><div class="word">'+esc(word||'')+'</div></div>';
+}
+function spinFan(){const r=document.getElementById('rot');if(!r)return;turns+=1;r.style.transform='rotate('+(turns*360)+'deg)';}
+const wordFor=p=>p>=100?'A total win':p<=0?'A total loss':p===50?'An even split':p>50?'Most of it to you':'Most of it to them';
+
+/* ---- the form ---- */
+let locked=null;
+try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
+function render(){
+  st.textContent='';app.innerHTML='';
+  if(locked){renderLocked();return;}
+  drawFan(50,wordFor(50));
+  const c1=card('pie','THE PIE','What was being divided?','One contract, one budget, one slot, one engine: something fixed, that both of you wanted');
+  const pie=input(PIEMAX,'the overhaul contract at renewal…');c1.appendChild(pie);
+  const c2=card('them','THE OTHER PARTY','Who was on the other side?','');
+  const party=input(PARTYMAX,'the incumbent shop…');c2.appendChild(party);
+  const c3=card('strat','YOUR STRATEGY','Was there a move you would have made whatever they did, or one you would never have made, whatever they did?','Tap one, then say what the move was');
+  const chips=document.createElement('div');chips.className='chips';
+  let k=null;const cb=[];
+  [['d','I would have done it whatever they did'],['i','I would never have done it, whatever they did'],['n','No such move']].forEach(([kk,label])=>{
+    const b=document.createElement('button');b.className='opt';b.type='button';b.textContent=label;b.dataset.k=kk;
+    b.addEventListener('click',()=>{k=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));move.disabled=(k==='n');if(k==='n')move.value='';sync();});
+    chips.appendChild(b);cb.push(b);});
+  c3.appendChild(chips);
+  const move=input(MOVEMAX,'The move…');c3.appendChild(move);
+  const c4=card('out','THE OUTCOME','How was it divided in the end?','Set the split as a percentage between you and them: 100–0 is a total win, 0–100 a total loss, 50/50 an even split');
+  const sl=document.createElement('div');sl.className='slider';
+  sl.innerHTML='<input type="range" min="0" max="100" step="5" value="50" aria-label="Percentage to you"><div class="ends"><span class="them">0 · A total loss</span><span>50 · 50</span><span class="you">100 · A total win</span></div>';
+  const range=sl.querySelector('input');
+  range.addEventListener('input',()=>{drawFan(+range.value,wordFor(+range.value));});
+  c4.appendChild(sl);
+  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  function sync(){lk.disabled=!(clean(pie.value)&&clean(party.value)&&k&&(k==='n'||clean(move.value)));}
+  [pie,party,move].forEach(i=>i.addEventListener('input',sync));
+  lk.addEventListener('click',()=>{
+    const P=clean(pie.value),T=clean(party.value),M=k==='n'?'':clean(move.value),pct=+range.value;
+    if(!P||!T||!k||(k!=='n'&&!M))return;
+    lk.disabled=true;[pie,party,move,range].forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
+    say('1‖'+P).then(()=>say('2‖'+T)).then(()=>say('3‖'+k+'‖'+M)).then(()=>say('4‖'+pct))
+      .then(()=>{locked={pie:P,party:T,k,move:M,pct};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();spinFan();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;[pie,party,range].forEach(i=>i.disabled=false);move.disabled=(k==='n');cb.forEach(b=>b.disabled=false);});
+  });
+  [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
+  pie.focus();
+}
+function renderLocked(){
+  drawFan(locked.pct,wordFor(locked.pct));
+  const big=document.createElement('div');big.className='bigcard';
+  const kw={d:'A move you would have made whatever they did',i:'A move you would never have made, whatever they did',n:'No such move'}[locked.k];
+  big.innerHTML='<div class="head">Your engine is on the screen</div><div class="sub"></div>';
+  big.querySelector('.sub').textContent=locked.pie+' · against '+locked.party+' · '+kw+(locked.move?': '+locked.move:'')+' · '+locked.pct+' to you, '+(100-locked.pct)+' to them. Look up at the screen.';
+  app.appendChild(big);
+  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your engine)';
+  again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
+  app.appendChild(again);
+}
+function card(side,suit,question,sub){const c=document.createElement('div');c.className='card '+side;c.innerHTML='<div class="suit"></div><div class="pq"></div>';c.querySelector('.suit').textContent=suit;
+  c.querySelector('.pq').textContent=question;if(sub){const s=document.createElement('small');s.textContent=sub;c.querySelector('.pq').appendChild(s);}return c;}
+function input(max,ph){const i=document.createElement('input');i.type='text';i.maxLength=max;i.placeholder=ph;i.autocomplete='off';return i;}
+function btn(label,cls){const b=document.createElement('button');b.className=cls;b.type='button';b.textContent=label;return b;}
+render();
+</script>
+</body></html>
