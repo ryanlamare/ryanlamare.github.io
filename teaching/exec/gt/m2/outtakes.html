@@ -1,0 +1,790 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 2 — Outtakes</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/gt/deck.css">
+<style>
+/* Module-2 widgets (shared components live in deck.css; figure treatments
+   lifted from the LER 565 week 2 decks) */
+/* interactive game trees + the Frost tree: word states are class toggles over
+   static SVG text — no runtime text injection (Safari-safe) */
+.tree .rev{opacity:0;transition:opacity .35s}
+.tree .rev.on{opacity:1}
+.tree .dim{opacity:.25;transition:opacity .35s}
+.tree .hit{stroke:transparent;stroke-width:36;cursor:pointer}
+.tree .pay{fill:var(--teal)}
+.tree .pay.best{fill:var(--red)}
+.tree .paynote{font-weight:600;font-size:15px;fill:var(--muted)}
+.tree .owner{font-weight:700;font-size:16px;letter-spacing:.06em}
+.tree .st1, .frosttree .st1{opacity:0;transition:opacity .4s}
+.tree.two .st1, .frosttree.terms .st1{opacity:1}
+.tree.two .st0, .frosttree.terms .st0{opacity:0}
+.tree .st0, .frosttree .st0{transition:opacity .4s}
+@keyframes tshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.tree.shake{animation:tshake .3s}
+.frosttree{cursor:pointer}
+.frosttree .fword{font-weight:600;font-size:17px;fill:var(--ink);font-style:italic}
+.frosttree .fterm{font-weight:700;font-size:17px;fill:var(--red);text-transform:uppercase;letter-spacing:.04em}
+/* game-tree anatomy row */
+.anatrow{position:absolute;left:96px;right:96px;top:200px;bottom:96px;display:flex;gap:48px;align-items:center}
+.anatrow .ptiles{display:flex;flex-direction:column;gap:20px;flex:1}
+.anatrow .ptile .pt{font-size:17px;white-space:nowrap}
+/* ultimatum split slider — drag the divider from 99/1 to 1/99, starts 50/50 */
+.deal2{width:740px}
+.deal2 .dtrack{height:78px;border:3px solid var(--ink);position:relative;touch-action:none;cursor:ew-resize;background:var(--paper)}
+.deal2 .dA{position:absolute;left:0;top:0;bottom:0;background:var(--teal)}
+.deal2 .dB{position:absolute;right:0;top:0;bottom:0;background:var(--terracotta)}
+.deal2 .dhandle{position:absolute;top:-10px;bottom:-10px;width:14px;margin-left:-7px;background:var(--ink);cursor:grab}
+.deal2 .dvals{display:flex;justify-content:space-between;margin-top:14px;font-family:var(--display);font-weight:900;font-size:40px}
+.deal2 .dvA{color:var(--teal)}
+.deal2 .dvB{color:var(--terracotta)}
+/* three-games tiles (565 live) */
+.gtiles{position:absolute;left:96px;right:96px;top:250px;bottom:120px;display:flex;justify-content:center;gap:44px;align-items:flex-start}
+.gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px}
+.gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.gtile .pg{height:92px;width:auto}
+.gtile .gl{font-weight:700;font-size:22px;color:var(--ink);line-height:1.18}
+.gtile .gs{font-weight:500;font-size:17px;color:var(--muted);line-height:1.32;max-width:24ch}
+/* plain card pile + beat-me widget */
+.resgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:9px;width:100%;max-width:620px;margin:8px auto 0}
+.res{aspect-ratio:3/4;background:var(--card);border:2px solid var(--ink)}
+.res.goneA{opacity:.5;background:
+  linear-gradient(45deg,transparent 44%,var(--ink) 44% 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--ink) 44% 56%,transparent 56%),var(--card)}
+.res.goneB{opacity:.5;background:
+  linear-gradient(45deg,transparent 44%,var(--red) 44% 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--red) 44% 56%,transparent 56%),var(--card)}
+.res.last{outline:3px solid var(--red);outline-offset:2px}
+/* solving numline (565 live) */
+.numstack{display:flex;flex-direction:column;align-items:center;gap:30px;width:100%}
+.numline{width:100%;max-width:1000px;height:210px;overflow:visible}
+.numline .axis{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.numline .tick{stroke:var(--ink);stroke-width:3}
+.numline .endlbl{font-weight:700;font-size:22px;fill:var(--muted)}
+.numline .band{fill:var(--red);opacity:.16}
+/* first-mover example cards (565 lecture) */
+.exgrid{display:flex;justify-content:center;gap:36px;margin-top:110px}
+.excard{width:320px;background:var(--card);border:2px solid var(--ink);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.exhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.expolicy{font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:14px;color:var(--ink)}
+.extag{font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:11px;padding:3px 8px;flex:none}
+.extag.first{background:var(--red);color:var(--paper)}
+.extag.second{background:var(--paper);border:2px solid var(--ink);color:var(--ink)}
+.exbody{font-weight:500;font-size:17px;color:var(--ink);line-height:1.4}
+/* ultimatum split bar (565 live) */
+.splitwrap{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
+.splitbar{display:flex;width:740px;height:78px;border:3px solid var(--ink)}
+.splitbar .seg{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:var(--paper)}
+.splitbar .segA{background:var(--teal);flex:0 0 58%;border-right:3px solid var(--paper)}
+.splitbar .segB{background:var(--terracotta);flex:0 0 42%}
+.splitlbl{display:flex;justify-content:space-between;width:740px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--muted)}
+/* centipede strip (565 live, simple form) */
+.centi{width:100%;max-width:940px;height:210px;overflow:visible}
+.centi .nA{fill:var(--teal);stroke:var(--ink);stroke-width:3}
+.centi .nB{fill:var(--terracotta);stroke:var(--ink);stroke-width:3}
+.centi .pass{stroke:var(--ink);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.centi .take{stroke:var(--red);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.centi .pa{fill:var(--teal);font-weight:700;font-size:18px;text-anchor:middle}
+.centi .pb{fill:var(--terracotta);font-weight:700;font-size:18px;text-anchor:middle}
+.centi .lbl{fill:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13px;text-anchor:middle}
+/* theory-vs-results compare (565 live) */
+.compare{display:flex;flex-direction:column;align-items:center;gap:36px}
+.cols2{display:flex;align-items:flex-start;justify-content:center;gap:96px}
+.col2{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;width:330px}
+.col2 .pg{height:96px;width:auto}
+.col2 .ct{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:19px;color:var(--ink)}
+.col2.theory{opacity:.55}
+.col2.real .ct{color:var(--red)}
+.col2 .cs{font-weight:500;font-size:18px;color:var(--muted);max-width:26ch;line-height:1.34}
+.lesson{font-weight:500;font-size:22px;color:var(--ink);text-align:center;max-width:56ch;line-height:1.35}
+.lesson b{color:var(--red);font-weight:700}
+/* poll results as classic Isotype rows — one row per option, one figure per
+   answer, in the option colour. The row anatomy (labelled gutter, big number,
+   fixed-width glyph slots on a shared baseline) is the 565 week 6 unit-row
+   treatment; lanes wrap if a room outgrows one line. */
+.units{flex:1;display:flex;flex-direction:column;justify-content:center;gap:30px;position:relative}
+.urow{display:flex;align-items:flex-end;gap:18px}
+.urow .uhead{width:200px;flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:1px;padding-bottom:2px}
+.urow .ulbl{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:15px;color:var(--ink);line-height:1.25}
+.urow .uval{font-family:var(--display);font-weight:900;font-size:56px;line-height:.82;opacity:0;transition:opacity .5s .2s}
+.urow.revealed .uval{opacity:1}
+.urow .ulane{flex:1;display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 4px;min-height:58px;border-left:2px solid var(--rule);padding-left:12px}
+.urow .u{width:30px;display:flex;align-items:flex-end;justify-content:center}
+.urow .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.urow.revealed .u svg{opacity:1;transform:scale(1)}
+.uunit{font-weight:500;font-size:14px;color:var(--muted);margin-left:230px}
+/* first movers who lost: phones write in, the wall fills when time is called */
+.faded{opacity:.06 !important;pointer-events:none}
+#fmLead,#fmGrid,.flopbar{transition:opacity .5s}
+.flopbar{position:absolute;left:0;right:0;bottom:56px;display:flex;align-items:center;justify-content:center;gap:26px}
+.flopbar .qrs{width:150px;height:150px;border:2.5px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;padding:6px}
+.flopbar .qrs img{width:100%;height:100%;display:block}
+.flopbar .fq{font-weight:700;font-size:22px;color:var(--red);max-width:24ch;line-height:1.3}
+.flopbar .fu{font-weight:600;font-size:14px;color:var(--muted);margin-top:6px}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:12px 14px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+/* charting complete courses: by hand, by computer, beyond computers */
+.ccwrap{position:absolute;left:64px;right:64px;top:288px;bottom:56px;display:flex;gap:44px;align-items:center}
+.cclist{flex:1;display:flex;flex-direction:column;gap:22px}
+.ccrow{display:flex;align-items:center;gap:24px;border:2px solid var(--ink);background:var(--card);padding:14px 24px}
+.ccrow .pg{height:60px;width:66px;flex:none}
+.ccrow .ccid{width:210px;flex:none}
+.ccrow .ccname{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--muted)}
+.ccrow .ccnum{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red);line-height:1.1;white-space:nowrap}
+.ccrow .ccnum sup{font-size:.55em}
+.ccrow .ccunit{font-weight:600;font-size:14px;color:var(--ink)}
+.ccrow .ccs{font-weight:500;font-size:16.5px;color:var(--ink);line-height:1.38;flex:1}
+.ccclip{flex:0 0 330px;display:flex;flex-direction:column;gap:14px}
+.ccclip .medialink{flex-direction:column;text-align:center;gap:12px;padding:22px 20px;margin:0}
+.ccclip .mlt{text-align:center}
+/* live results: each pair's recorded game stacks as dots on an axis */
+.dstrip{display:block;width:100%;height:auto}
+.dstrip .axis{stroke:var(--ink);stroke-width:3}
+.dstrip .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
+.dstrip .dot{fill:var(--teal);opacity:.9}
+.dstrip .dot.bad{fill:var(--red)}
+.dstrip .meanline{stroke:var(--red);stroke-width:4;stroke-dasharray:8 6}
+.dstrip .meanlab{font-family:var(--display);font-weight:900;font-size:22px;fill:var(--red)}
+.resnotes{position:absolute;left:96px;right:96px;bottom:44px;display:flex;flex-direction:column;gap:7px;text-align:center}
+.resnotes div{font-weight:500;font-size:19.5px;line-height:1.3;color:var(--ink)}
+.resnotes b{color:var(--red);font-weight:700}
+.dkey{display:flex;gap:26px;justify-content:center}
+.dkey .k{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px;color:var(--muted)}
+.dkey .sw{width:16px;height:16px;border-radius:50%;flex:none}
+.ordstat{font-weight:500;font-size:21.5px;color:var(--ink);text-align:center;min-height:1.35em;line-height:1.35}
+.ordstat b{color:var(--red)}
+/* the long-term Tapas deal: one move per slide, a strike meter on each;
+   struck branches stay dead all session */
+.dkqr{position:absolute;left:96px;top:166px;display:flex;gap:14px;align-items:center}
+.dkqr .qrb{width:96px;height:96px;border:2.5px solid var(--ink);background:#fff;padding:5px;flex:none}
+.dkqr .qrb img{width:100%;height:100%;display:block}
+.meter{position:absolute;right:96px;top:176px;display:flex;gap:8px;align-items:center}
+.meter .mlbl{font-weight:700;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-right:5px}
+.meter .mc{width:30px;height:30px;border:2.5px solid var(--ink);background:var(--card);display:block}
+.meter .mc.on{border-color:var(--red);background:
+  linear-gradient(45deg,transparent 42%,var(--paper) 42% 58%,transparent 58%),
+  linear-gradient(-45deg,transparent 42%,var(--paper) 42% 58%,transparent 58%),var(--red)}
+.nwrap{position:absolute;left:96px;right:96px;top:280px;bottom:150px;display:flex;flex-direction:column;gap:0}
+.nopts{display:flex;gap:60px;justify-content:center}
+.nopt{position:relative;width:470px;border:2.5px solid var(--ink);background:var(--card);padding:22px 52px 20px 22px;text-align:left}
+.nopt .tagl{position:absolute;top:-13px;left:12px;background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;padding:2px 10px;letter-spacing:.06em}
+.nopt .ol{font-weight:700;font-size:20px;line-height:1.35;color:var(--ink)}
+.nopt .vn{position:absolute;top:10px;right:12px;font-family:var(--display);font-weight:900;font-size:34px;color:var(--ink);opacity:0;transition:opacity .3s}
+.nopt.counted .vn{opacity:1}
+.nopt.take{border-color:var(--teal);box-shadow:inset 0 0 0 2.5px var(--teal)}
+.nopt.dead{border-color:var(--red)}
+.nopt.dead .tagl{background:var(--red)}
+.nopt.dead::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top right,transparent 47.5%,var(--red) 47.5% 52.5%,transparent 52.5%)}
+.nopt.pick{cursor:pointer;outline:3px dashed var(--red);outline-offset:3px}
+.nbr{width:100%;height:58px;flex:none}
+.nbr path{fill:none;stroke:var(--ink);stroke-width:3.5;stroke-dasharray:420;stroke-dashoffset:420;transition:stroke-dashoffset .7s ease}
+.nbr path.on{stroke-dashoffset:0}
+.nbr path.bad{stroke:var(--red)}
+.resp{border:2.5px solid var(--ink);background:var(--card);max-width:780px;margin:0 auto;padding:15px 24px;
+  opacity:0;transform:translateY(10px);transition:opacity .5s .45s,transform .5s .45s}
+.resp.on{opacity:1;transform:none}
+.resp .rl{font-weight:700;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-bottom:5px}
+.resp .rt{font-weight:500;font-size:19px;line-height:1.4;color:var(--ink)}
+.resp.crack{border-color:var(--red)}
+.resp.crack .rl{color:var(--red)}
+/* the finale: the game in reduced form */
+.ftrail{position:absolute;left:80px;right:80px;top:270px;bottom:170px;display:flex;gap:14px;align-items:center;justify-content:center}
+.fcol{flex:1;max-width:230px;display:flex;flex-direction:column;gap:12px}
+.fcol .fq{font-weight:700;letter-spacing:.1em;font-size:12px;color:var(--muted);text-align:center;min-height:1em}
+.fchip{position:relative;border:2.5px solid var(--ink);background:var(--card);padding:11px 13px;font-weight:700;font-size:14.5px;line-height:1.3;color:var(--ink);opacity:.4}
+.fchip.take{opacity:1;border-color:var(--teal);box-shadow:inset 0 0 0 2px var(--teal)}
+.fchip.dead{opacity:1;border-color:var(--red)}
+.fchip.dead::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top right,transparent 46%,var(--red) 46% 54%,transparent 54%)}
+.ftrail .farr{flex:none;font-weight:900;font-size:22px;color:var(--muted)}
+.fend{flex:0 0 190px;border:3px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center;
+  font-weight:700;font-size:16px;line-height:1.35;color:var(--ink)}
+.fend.won{border-color:var(--teal)}
+.fend.lost{border-color:var(--red);color:var(--red)}
+.dkctl{position:absolute;left:96px;bottom:42px;display:flex;gap:10px}
+.dkctl button,.dkend button{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.08em;padding:10px 16px;cursor:pointer;
+  border:2.5px solid var(--ink);background:var(--card);color:var(--ink)}
+.dkctl button.primary,.dkend button{background:var(--red);border-color:var(--red);color:var(--paper)}
+.dkctl button:disabled{opacity:.35;cursor:default}
+.dkreset{position:absolute;right:96px;bottom:46px;background:none;border:none;color:var(--muted);
+  font-family:var(--sans);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:underline}
+.dkend{position:absolute;left:230px;right:230px;top:250px;bottom:200px;background:var(--paper);border:3px solid var(--ink);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:28px;z-index:6}
+.dkend.on{display:flex}
+.dkend .et{font-weight:700;font-size:24px;line-height:1.4;color:var(--ink);max-width:42ch}
+.dkend .et b{color:var(--red)}
+.dkend .es{font-weight:500;font-size:15.5px;color:var(--muted)}
+/* bullets-left figure-right row + the Tapas plane (the m1 treatment) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.sidefig{flex:none;height:420px;width:auto;overflow:visible}
+.sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
+/* the break scoreboard (m1 pattern, one column per Module 2 game) */
+.scb{width:100%;max-width:1080px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 160px 160px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+/* ---- the room's tree (the closing exercise): one limb per group, the
+   model limb from Ryan's own world in teal, drawn from the phones' lines ---- */
+.room{position:absolute;left:0;top:0;width:1280px;height:720px;display:block}
+.room .limb{transition:opacity .45s}
+.room.dim .limb{opacity:.14}
+.room.dim .limb.hot{opacity:1}
+.room .seg{stroke:var(--ink);fill:none;stroke-linecap:round}
+.room .limb.mine .seg{stroke:var(--teal)}
+.room .limb.hot .seg{stroke:var(--red)}
+.room .toleaf{fill:none;stroke-linecap:round;stroke:var(--rule);stroke-width:2.5;stroke-dasharray:4 5}
+.room .toleaf.got{stroke:var(--ink);stroke-dasharray:none}
+.room .limb.mine .toleaf.got{stroke:var(--teal)}
+.room .limb.hot .toleaf.got{stroke:var(--red)}
+.room .toleaf.lost{stroke:var(--muted);stroke-dasharray:none;stroke-width:2}
+.room .stub{stroke:var(--ink);fill:none;stroke-linecap:round;stroke-width:2.2;opacity:.32}
+.room .nd{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+.room .nd.you{stroke:var(--teal)} .room .nd.them{stroke:var(--terracotta)}
+.room .leaf{fill:none;stroke:var(--rule);stroke-width:2.5;stroke-dasharray:4 4}
+.room .leaf.got{fill:var(--red);stroke:var(--red);stroke-dasharray:none}
+.room .leaf.lost{stroke:var(--muted);stroke-dasharray:none}
+.room .trunk{fill:var(--ink)}
+.room .ground{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.room .tip{font-family:var(--display);font-weight:900;font-size:15px;fill:var(--red);opacity:0;transition:opacity .5s}
+.room.all .tip{opacity:1}
+.room .grow{stroke-dasharray:70;stroke-dashoffset:70;animation:rgrow .55s ease-out forwards}
+@keyframes rgrow{to{stroke-dashoffset:0}}
+.room .pop{transform-box:fill-box;transform-origin:center;animation:rpop .5s ease-out forwards}
+@keyframes rpop{from{transform:scale(0)}to{transform:scale(1)}}
+.rtitle{position:absolute;left:60px;top:62px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--muted)}
+.rcount{position:absolute;right:60px;bottom:38px;display:flex;align-items:baseline;gap:10px}
+.rcount .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
+.rcount .l{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted)}
+.rlegend{position:absolute;top:96px;width:340px;display:flex;flex-direction:column;gap:7px;opacity:0;transition:opacity .5s}
+.rlegend.on{opacity:1}
+.rlegend.left{left:60px}
+.rlegend.right{right:60px;text-align:right}
+.rlegend div{font-weight:600;font-size:13.5px;line-height:1.3;color:var(--ink)}
+.rlegend b{font-family:var(--display);font-weight:900;color:var(--red);margin-right:6px}
+.rlegend.right b{margin:0 0 0 6px}
+.rlegend .mine b{color:var(--teal)}
+.rreplay{position:absolute;left:60px;bottom:38px;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.12em;color:var(--muted);background:transparent;border:2px solid var(--rule);padding:8px 14px;cursor:pointer}
+.rreplay:hover{border-color:var(--ink);color:var(--ink)}
+/* one branch, legible: a vertical stem, your leaves to the left, theirs to
+   the right, the pruned options under the taken one; the outcome leaf on top */
+.bfront{position:absolute;left:110px;right:110px;top:56px;bottom:78px;background:var(--paper-soft);border:3px solid var(--ink);border-radius:14px;padding:22px 40px 18px;display:flex;flex-direction:column;opacity:0;transform:scale(.965);transition:opacity .4s,transform .4s;pointer-events:none}
+.bfront.on{opacity:1;transform:none}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;gap:30px;margin-bottom:6px}
+.bhead .bk{font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--muted)}
+.bview{flex:1;display:flex;flex-direction:column-reverse;justify-content:center;min-height:0}
+.brow{display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;min-height:50px;transition:opacity .35s}
+.brow.off{display:none}
+.brow .bl{text-align:right;padding-right:6px}
+.brow .br{text-align:left;padding-left:6px}
+.brow .bs{position:relative;height:100%;min-height:50px}
+.brow .bs::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--ink)}
+.brow.goal .bs::before{top:50%}
+.brow.root .bs::before{bottom:50%}
+.brow.goal.open .bs::before{background:repeating-linear-gradient(to bottom,var(--rule) 0 4px,transparent 4px 9px)}
+.brow.goal.lost .bs::before{background:var(--muted)}
+.brow .dot{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--paper);border:3px solid var(--ink)}
+.brow.you .dot{border-color:var(--teal)} .brow.them .dot{border-color:var(--terracotta)}
+.brow.you .bs::after,.brow.them .bs::after{content:"";position:absolute;top:50%;height:3px;width:24px;margin-top:-1px}
+.brow.you .bs::after{right:50%;margin-right:7px;background:var(--teal)}
+.brow.them .bs::after{left:50%;margin-left:7px;background:var(--terracotta)}
+.brow .bopt{font-weight:700;font-size:18px;line-height:1.25;color:var(--ink);transition:opacity .4s,font-size .3s}
+.brow .bopt+.bopt{margin-top:3px}
+.brow .bopt.pruned{font-weight:500;font-size:14.5px;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--red);opacity:.75}
+.brow.open .bopt{font-weight:600;font-size:16px;text-decoration:none;color:var(--ink);opacity:1}
+.brow .bopt .bk{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--terracotta);margin-right:8px}
+.brow .bopt small{font-weight:500;font-size:13px}
+.brow .bwho{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;margin-bottom:2px}
+.brow.you .bwho{color:var(--teal)} .brow.them .bwho{color:var(--terracotta)}
+.brow.goal .bwho{color:var(--red)} .brow.root .bwho{color:var(--muted)}
+.brow.goal .bopt{font-size:19px;line-height:1.3}
+.brow .bleaf{position:absolute;left:50%;top:50%;width:30px;height:38px;margin:-24px 0 0 -15px}
+.brow .bleaf path{fill:none;stroke:var(--rule);stroke-width:2.5;stroke-dasharray:4 4;transition:fill .4s,stroke .4s}
+.brow.got .bleaf path{fill:var(--red);stroke:var(--red);stroke-dasharray:none}
+.brow.lost .bleaf path{stroke:var(--muted);stroke-dasharray:none}
+.brow .bstate{font-weight:700;letter-spacing:.14em;font-size:11.5px;color:var(--muted);margin-top:4px}
+.brow.got .bstate{color:var(--red)}
+.bview.model{justify-content:flex-start}
+.bview.model .brow{min-height:58px}
+.bview.model .brow .bs{min-height:58px}
+.bsetup{position:absolute;left:96px;top:274px;width:700px;display:flex;flex-direction:column;gap:18px}
+.bq{display:flex;gap:16px;align-items:flex-start;border-left:4px solid var(--side);padding-left:16px}
+.bq.you{--side:var(--teal)} .bq.them{--side:var(--terracotta)} .bq.goal{--side:var(--red)}
+.bq .bqk{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--side);white-space:nowrap;padding-top:4px;width:150px;flex:none}
+.bq .bqt{font-weight:600;font-size:19px;line-height:1.35;color:var(--ink)}
+.bq .bqt small{display:block;font-weight:500;font-size:16px;color:var(--muted);margin-top:2px}
+.outnote{position:absolute;left:96px;right:96px;top:150px;display:flex;gap:14px;align-items:baseline;font-weight:600;font-size:15px;color:var(--muted);letter-spacing:.02em;z-index:3}
+.outnote b{color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;flex:none}
+.outtakes-index .bullets li.sub{color:var(--muted);font-size:17px}
+</style>
+</head><body>
+
+<!--
+  OUTTAKES for module 2. Every slide or line cut from index.html during the
+  revision pass, kept verbatim (markup, reveals, figures, and the script a
+  slide needs to draw itself) so it can go straight back. To restore a
+  slide: copy its <section> into index.html at the position noted on the
+  slide, renumber data-i in document order, add one <span class="tick"></span>,
+  put its transcript entry back in the sr-only block, and copy its script
+  block back if it had one. The deck as it stood before the cuts is whole at
+  the git tag m2-before-cuts. Nothing here is linked from the hub.
+-->
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>Applied Game Theory, Module 2 — Outtakes</h1>
+<p>Accessible text version. Each heading below is one slide, in order.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 8: Title slide</h2><p>Module 2 outtakes. Every slide or line cut from the module 2 deck, kept whole so it can go straight back.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 8: What was cut, and when</h2><p>The list of cuts, in order, with the date, where each slide stood and why it went.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 8: Back to Tapas Airways</h2><p>The cut slide, verbatim; it stood as slide 24 of 31. The running deal returns. The drawn Tapas Airways jet and its spare engine from Module 1 sit beside bullets revealed one at a time: Tapas Airways still needs its spare engine, and a rival bidder wants the deal as much as you do. Beyond this engine sits the real prize: a long-term deal with Tapas. You play as one room: debate each choice, then vote on your phones, and the majority decides. Three strikes and you lose your shot at the long-term deal; you cannot take a move back. A QR code at the bottom joins the anonymous vote page, which stays open on each phone for the whole game — this is the only slide carrying the QR code.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 8: Opening play</h2><p>The cut slide, verbatim; it stood as slide 25 of 31. Move one of the long-term Tapas deal game. The situation: Tapas has invited first offers for the engine deal, a rival bidder is preparing theirs, and nobody has made an offer yet. Two options, voted anonymously on phones with only a rising votes-in counter showing: A, make the first offer; B, make the second offer. The reveal shows the counts, commits the majority, and animates a branch from the chosen option to Tapas's narrated response. Making the first offer is safe: Tapas appreciates the assertiveness, and your offer now frames the conversation. Making the second offer is a strike: the rival sets the price, and the terms of the contest. A strike meter labelled the long-term deal, with three slots, repeats on every game slide; each wrong choice fills one red.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 8: What does your offer focus on?</h2><p>The cut slide, verbatim; it stood as slide 26 of 31. Move two. Your offer is on the table, and Tapas wants to know what you plan to center the offer on. A, low cost: undercut every rival on price, whatever it takes — a strike: you present a highly cost-competitive price, but you have just indicated to all players that you see this as more of a price war than a long-term collaboration with Tapas. B, high value: address their underlying interests at a higher price — safe: the price raises eyebrows, but the meeting runs long, because you are the one bidder talking about what actually worries them.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 8: Can you do better?</h2><p>The cut slide, verbatim; it stood as slide 27 of 31. Move three. The situation reads differently depending on the room's earlier path: after a high-value offer, the rival undercuts your higher price; after a low-cost offer, the rival goes even lower than you. Either way, Tapas shows you their number and asks if you can do better. A, meet Tapas's price demands and match your rival on costs — a strike: you stay in the contest, on the one dimension where the rival can always go again; whoever wins a price race, the winner is the price. B, hold your price and restate how you answer their concerns — safe: after a high-value offer, Tapas pushes back but keeps talking, because a number can be copied in a minute and what you offered cannot; after a low-cost offer the narration instead notes that with nothing behind your number but the number, Tapas hears stubbornness — but at least the race stops here.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 8: A final concession</h2><p>The cut slide, verbatim; it stood as slide 28 of 31. Move four. The final meeting: Tapas wants to go with your offer, but the board asks for one last concession before they sign — a cap on what surprise repairs can cost them. A, reject making the concession — safe: the board grumbles, and signs, and you have just shown them what dealing with you will be like: straight, and worth trusting with more than one engine. B, agree to making the concession — a strike: they sign, and they also remember how easily you moved; every deal with you from now on will start with a squeeze. Endings appear as an overlay. No strikes: Tapas and your company become long-term partners, and you work together for the next decade. One or two strikes: Tapas signs a long-term deal, but with hesitation — the contract carries break clauses that let them walk away early, and a try-a-cleaner-path option is offered. Three strikes: Tapas remains interested in your business, but sees you as a short-term provider, not a long-term partner. Strikes persist across retries and reloads.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 8: The whole game, drawn as a tree</h2><p>The cut slide, verbatim; it stood as slide 29 of 31. The finale: the game in reduced form. Four columns, one per move, each holding both options as chips — the walked path highlighted, struck branches in red, untaken branches faded — ending in a chip naming the outcome the room reached: long-term partners; signed, with break clauses; or a short-term provider. The strike meter shows the final count. A reset control wipes the game between groups.</p></section>
+</section>
+
+<svg style="display:none" aria-hidden="true">
+<symbol id="im-screen" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="20" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="32" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="44" cy="10" r="3.2"></circle><path fill="var(--ink,#1B1C19)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="59" r="4.2"></circle></symbol>
+<symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"></circle><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"></circle><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">£</text></symbol>
+<symbol id="im-non-zero-sum" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="30" cy="34" r="15"></circle><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" d="M30 13 A21 21 0 0 1 51 34"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M30 13 l8 1.5 m-8 -1.5 l1.5 8"></path></symbol>
+<symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"></rect><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"></rect><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"></path><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,41 22,29 Z"></path><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,41 59,29 Z"></path></symbol>
+<symbol id="im-no-play" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><line x1="17" y1="17" x2="47" y2="47" stroke="var(--red,#CE1E32)" stroke-width="4" stroke-linecap="round"></line></symbol>
+<symbol id="im-repeat" viewBox="0 0 64 64"><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" stroke-linecap="round" d="M32 12 A20 20 0 0 1 52 32"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M52 32 l-9 -1 m9 1 l-2 9"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="6" stroke-linecap="round" d="M32 52 A20 20 0 0 1 12 32"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M12 32 l9 1 m-9 -1 l2 -9"></path></symbol>
+</svg>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">2</div>
+  <div class="tag"><i></i>MODULE 2 · APPLIED GAME THEORY · OUTTAKES</div>
+  <h1>MODULE 2<br><span class="r">OUTTAKES</span></h1>
+  <div class="sub">Every slide or line cut from the module 2 deck, kept whole so it can go straight back</div>
+  <div class="byline">J. RYAN LAMARE</div>
+</section>
+
+<section class="slide content outtakes-index" data-i="1">
+  <div class="kicker"><i></i>MODULE 2 · OUTTAKES</div>
+  <h2>What was cut, and when</h2>
+  <ul class="bullets" style="max-width:1010px;font-size:19px">
+    <li><b>14 Sep 2026 &middot; The long-term Tapas deal, six slides</b> &ndash; stood as slide 24 of 31, slide 25 of 31, slide 26 of 31, slide 27 of 31, slide 28 of 31, slide 29 of 31. Back to Tapas Airways, the four moves and the whole game drawn as a tree, after The limits of sequential reasoning. Ryan’s call (14 Sep): the case is a courtesy, not a storyline, and the vote game narrated the other side’s replies for the room. Replaced by the room’s tree, sequential reasoning in the room’s own world. The ballot page came off the phone game page’s menu; its room m2-decade stays in the Poll Desk.</li>
+    <li class="sub">The deck as it stood before the cuts is whole at the git tag <b>m2-before-cuts</b>. To restore a slide, copy its section back into index.html at the position noted, renumber, add a tick, its transcript entry, and its script block if it had one.</li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 24 of 31. The long-term Tapas deal, six slides; the reason is on the index slide.</span></div>
+  <div class="kicker"><i></i>MODULE 2 · GAME THEORY IN YOUR WORLD</div>
+  <h2>Back to Tapas Airways</h2>
+  <div class="rowfig" style="top:196px;align-items:center">
+    <ul class="bullets" style="max-width:560px;margin-top:0">
+      <li>Tapas Airways still needs its <b>spare engine</b>, and a rival bidder wants the deal as much as you do</li>
+      <li data-step="1">Beyond this engine sits the real prize: a <b>long-term deal</b> with Tapas</li>
+      <li data-step="2">You play as one room: <b>debate each choice</b>, then vote on your phones, and the majority decides</li>
+      <li data-step="3"><b>Three strikes and you lose your shot at the long-term deal.</b> You cannot take a move back</li>
+    </ul>
+    <svg class="sidefig" style="height:264px" viewBox="50 14 505 328" role="img" aria-label="A drawn top view of a Tapas Airways twin-engine jet, one engine under each wing, beside a spare engine on a stand">
+      <!-- the two engines, noses forward, one under each wing -->
+      <rect x="235" y="48" width="54" height="24" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="240" cy="60" rx="6" ry="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="3"/>
+      <rect x="235" y="148" width="54" height="24" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="240" cy="160" rx="6" ry="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="3"/>
+      <!-- both wings, swept back over the engines' tails -->
+      <polygon points="210,95 322,22 344,30 268,95" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="210,125 322,198 344,190 268,125" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- tailplanes -->
+      <polygon points="432,95 474,62 488,68 456,95" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="432,125 474,158 488,152 456,125" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- fuselage, nose to the left -->
+      <path d="M96 93 L440 93 C462 96 476 103 482 110 C476 117 462 124 440 127 L96 127 C74 124 60 117 60 110 C60 103 74 96 96 93 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- cockpit windshield band -->
+      <rect x="74" y="97" width="12" height="26" rx="5" fill="var(--ink)"/>
+      <text x="162" y="116" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.06em;fill:var(--terracotta)">TAPAS AIRWAYS</text>
+      <!-- tail fin with the slanted TA monogram -->
+      <polygon points="436,93 462,40 482,40 462,93" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <g fill="none" stroke="var(--paper)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M455 57 L464 55.5"/>
+        <path d="M459.5 56 L456.5 67"/>
+        <path d="M461 67 L467 55.5 L471.5 67"/>
+        <path d="M463.5 63 L470 63"/>
+      </g>
+      <!-- the spare engine, on its stand -->
+      <line x1="330" y1="310" x2="545" y2="310" stroke="var(--ink)" stroke-width="3.5"/>
+      <rect x="372" y="234" width="128" height="60" rx="26" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="380" cy="264" rx="10" ry="29" fill="var(--teal)" stroke="var(--ink)" stroke-width="3.5"/>
+      <path d="M500 248 L522 258 L522 270 L500 280 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5" stroke-linejoin="round"/>
+      <g stroke="var(--ink)" stroke-width="4" fill="none">
+        <path d="M398 294 L388 310 M398 294 L410 310"/>
+        <path d="M474 294 L464 310 M474 294 L486 310"/>
+      </g>
+      <text class="cardlab" x="446" y="332" text-anchor="middle">THE SPARE ENGINE</text>
+    </svg>
+  </div>
+  <div class="flopbar" data-step="2">
+    <div class="qrs"><img src="qr-decade.svg" alt="QR code for the vote page"></div>
+    <div><div class="fq">Scan once &ndash; every vote happens here</div><div class="fu">keep the page open on your phone</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 25 of 31. The long-term Tapas deal, six slides; the reason is on the index slide.</span></div>
+  <div class="kicker"><i></i>MODULE 2 · THE LONG-TERM TAPAS DEAL · MOVE 1</div>
+  <h2>Opening play</h2>
+  <div class="leadline" id="n0sit" style="max-width:680px;margin-left:auto;margin-right:auto"></div>
+  <div class="dkqr"><div class="livecount"><span class="n" id="n0v">0</span><span class="l">RESPONSES</span></div></div>
+  <div class="meter" style="top:auto;bottom:46px"><span class="mlbl">THE LONG-TERM DEAL</span><i class="mc"></i><i class="mc"></i><i class="mc"></i></div>
+  <div class="nwrap">
+    <div class="nopts">
+      <div class="nopt" id="n0a"><span class="tagl">A</span><div class="ol"></div><span class="vn"></span></div>
+      <div class="nopt" id="n0b"><span class="tagl">B</span><div class="ol"></div><span class="vn"></span></div>
+    </div>
+    <svg class="nbr" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
+      <path id="n0pa" d="M255 2 C255 40 500 26 500 58"/>
+      <path id="n0pb" d="M745 2 C745 40 500 26 500 58"/>
+    </svg>
+    <div class="resp" id="n0r"><div class="rl"></div><div class="rt"></div></div>
+  </div>
+  <div class="dkctl">
+    <button class="primary" data-go="0">OPEN THE VOTE</button>
+    <button data-rev="0" disabled>REVEAL THE ROOM&rsquo;S CALL</button>
+  </div>
+  <div class="dkend" id="n0end"><div class="et"></div><div class="es"></div>
+    <button data-retry style="display:none">TRY A CLEANER PATH</button></div>
+  <div class="demotag dkdemo" style="position:absolute;top:168px;right:320px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 26 of 31. The long-term Tapas deal, six slides; the reason is on the index slide.</span></div>
+  <div class="kicker"><i></i>MODULE 2 · THE LONG-TERM TAPAS DEAL · MOVE 2</div>
+  <h2>What does your offer focus on?</h2>
+  <div class="leadline" id="n1sit" style="max-width:680px;margin-left:auto;margin-right:auto"></div>
+  <div class="dkqr"><div class="livecount"><span class="n" id="n1v">0</span><span class="l">RESPONSES</span></div></div>
+  <div class="meter" style="top:auto;bottom:46px"><span class="mlbl">THE LONG-TERM DEAL</span><i class="mc"></i><i class="mc"></i><i class="mc"></i></div>
+  <div class="nwrap">
+    <div class="nopts">
+      <div class="nopt" id="n1a"><span class="tagl">A</span><div class="ol"></div><span class="vn"></span></div>
+      <div class="nopt" id="n1b"><span class="tagl">B</span><div class="ol"></div><span class="vn"></span></div>
+    </div>
+    <svg class="nbr" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
+      <path id="n1pa" d="M255 2 C255 40 500 26 500 58"/>
+      <path id="n1pb" d="M745 2 C745 40 500 26 500 58"/>
+    </svg>
+    <div class="resp" id="n1r"><div class="rl"></div><div class="rt"></div></div>
+  </div>
+  <div class="dkctl">
+    <button class="primary" data-go="1">OPEN THE VOTE</button>
+    <button data-rev="1" disabled>REVEAL THE ROOM&rsquo;S CALL</button>
+  </div>
+  <div class="dkend" id="n1end"><div class="et"></div><div class="es"></div>
+    <button data-retry style="display:none">TRY A CLEANER PATH</button></div>
+  <div class="demotag dkdemo" style="position:absolute;top:168px;right:320px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 27 of 31. The long-term Tapas deal, six slides; the reason is on the index slide.</span></div>
+  <div class="kicker"><i></i>MODULE 2 · THE LONG-TERM TAPAS DEAL · MOVE 3</div>
+  <h2>Can you do better?</h2>
+  <div class="leadline" id="n2sit" style="max-width:680px;margin-left:auto;margin-right:auto"></div>
+  <div class="dkqr"><div class="livecount"><span class="n" id="n2v">0</span><span class="l">RESPONSES</span></div></div>
+  <div class="meter" style="top:auto;bottom:46px"><span class="mlbl">THE LONG-TERM DEAL</span><i class="mc"></i><i class="mc"></i><i class="mc"></i></div>
+  <div class="nwrap">
+    <div class="nopts">
+      <div class="nopt" id="n2a"><span class="tagl">A</span><div class="ol"></div><span class="vn"></span></div>
+      <div class="nopt" id="n2b"><span class="tagl">B</span><div class="ol"></div><span class="vn"></span></div>
+    </div>
+    <svg class="nbr" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
+      <path id="n2pa" d="M255 2 C255 40 500 26 500 58"/>
+      <path id="n2pb" d="M745 2 C745 40 500 26 500 58"/>
+    </svg>
+    <div class="resp" id="n2r"><div class="rl"></div><div class="rt"></div></div>
+  </div>
+  <div class="dkctl">
+    <button class="primary" data-go="2">OPEN THE VOTE</button>
+    <button data-rev="2" disabled>REVEAL THE ROOM&rsquo;S CALL</button>
+  </div>
+  <div class="dkend" id="n2end"><div class="et"></div><div class="es"></div>
+    <button data-retry style="display:none">TRY A CLEANER PATH</button></div>
+  <div class="demotag dkdemo" style="position:absolute;top:168px;right:320px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 28 of 31. The long-term Tapas deal, six slides; the reason is on the index slide.</span></div>
+  <div class="kicker"><i></i>MODULE 2 · THE LONG-TERM TAPAS DEAL · MOVE 4</div>
+  <h2>A final concession</h2>
+  <div class="leadline" id="n3sit" style="max-width:680px;margin-left:auto;margin-right:auto"></div>
+  <div class="dkqr"><div class="livecount"><span class="n" id="n3v">0</span><span class="l">RESPONSES</span></div></div>
+  <div class="meter" style="top:auto;bottom:46px"><span class="mlbl">THE LONG-TERM DEAL</span><i class="mc"></i><i class="mc"></i><i class="mc"></i></div>
+  <div class="nwrap">
+    <div class="nopts">
+      <div class="nopt" id="n3a"><span class="tagl">A</span><div class="ol"></div><span class="vn"></span></div>
+      <div class="nopt" id="n3b"><span class="tagl">B</span><div class="ol"></div><span class="vn"></span></div>
+    </div>
+    <svg class="nbr" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true">
+      <path id="n3pa" d="M255 2 C255 40 500 26 500 58"/>
+      <path id="n3pb" d="M745 2 C745 40 500 26 500 58"/>
+    </svg>
+    <div class="resp" id="n3r"><div class="rl"></div><div class="rt"></div></div>
+  </div>
+  <div class="dkctl">
+    <button class="primary" data-go="3">OPEN THE VOTE</button>
+    <button data-rev="3" disabled>REVEAL THE ROOM&rsquo;S CALL</button>
+  </div>
+  <div class="dkend" id="n3end"><div class="et"></div><div class="es"></div>
+    <button data-retry style="display:none">TRY A CLEANER PATH</button></div>
+  <div class="demotag dkdemo" style="position:absolute;top:168px;right:320px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 29 of 31. The long-term Tapas deal, six slides; the reason is on the index slide.</span></div>
+  <div class="kicker"><i></i>MODULE 2 · THE LONG-TERM TAPAS DEAL</div>
+  <h2>The whole game, drawn as a tree</h2>
+  <div class="meter"><span class="mlbl">THE LONG-TERM DEAL</span><i class="mc"></i><i class="mc"></i><i class="mc"></i></div>
+  <div class="ftrail" id="ftrail"></div>
+  <button class="dkreset" id="dkReset">RESET GAME</button>
+</section>
+
+</div></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<script src="/go/scores.js"></script>
+<script>
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+/* names typed by participants are untrusted text */
+function escName(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+/* ---- THE LONG-TERM TAPAS DEAL — the whole-room pathfinding game, one
+   move per slide. ALL GAME TEXT lives in DK below; edit freely, the
+   mechanics never depend on the wording. Votes arrive in room m2-decade
+   as "name|a" lines; the deck posts a "::open|token" marker when a vote
+   opens and counts only later lines, latest per name, so retries never
+   double-count. The run, strikes and dead branches persist in
+   localStorage across slides and reloads. ---- */
+(function(){
+  const DK={
+    nodes:[
+      {sit:'Tapas has invited first offers for the engine deal. A rival bidder is preparing theirs. Nobody has made an offer yet.',
+       sh:'OPENING PLAY',
+       a:{t:'Make the first offer',sh:'First offer'},
+       b:{t:'Make the second offer',sh:'Second offer'},
+       crack:'b',
+       out:{a:'Tapas appreciates the assertiveness. Your offer now frames the conversation, and the rival has to respond to you.',
+            b:'The rival sets the price \u2013 and the terms of the contest. From here, every conversation starts from their number.'}},
+      {sit:'Your offer is on the table. Tapas wants to know what you plan to center the offer on.',
+       sitAlt:{at:0,choice:'b',text:'The rival\u2019s number came out first, and your offer follows it. Tapas wants to know what you plan to center the offer on.'},
+       sh:'THE OFFER',
+       a:{t:'Low cost: undercut every rival on price, whatever it takes',sh:'Low cost'},
+       b:{t:'High value: address their underlying interests at a higher price',sh:'High value'},
+       crack:'a',
+       out:{a:'You present a highly cost-competitive price, but you have just indicated to all players that you see this as more of a price war than a long-term collaboration with Tapas.',
+            b:'The price raises eyebrows. But the meeting runs long, because you are the one bidder talking about what actually worries them.'}},
+      {sit:'The rival undercuts your higher price. Tapas shows you their number and asks if you can do better.',
+       sitAlt:{at:1,choice:'a',text:'The rival goes even lower than you. Tapas shows you their number and asks if you can do better.'},
+       sh:'THE UNDERCUT',
+       a:{t:'Meet Tapas\u2019s price demands and match your rival on costs',sh:'Match on price'},
+       b:{t:'Hold your price, and restate how you answer their concerns',sh:'Hold firm'},
+       crack:'a',
+       out:{a:'You stay in the contest \u2013 on the one dimension where the rival can always go again. Whoever wins a price race, the winner is the price.',
+            b:'Tapas pushes back, and keeps talking. A number can be copied in a minute; what you offered cannot.'},
+       outAlt:{at:1,choice:'a',opt:'b',text:'You hold. With nothing behind your number but the number, Tapas hears stubbornness \u2013 but at least the race stops here.'}},
+      {sit:'The final meeting. Tapas wants to go with your offer, but the board asks for one last concession before they sign: a cap on what surprise repairs can cost them.',
+       sh:'THE CONCESSION',
+       a:{t:'Reject making the concession',sh:'Reject'},
+       b:{t:'Agree to making the concession',sh:'Agree'},
+       crack:'b',
+       out:{a:'The board grumbles, and signs. You just showed them what dealing with you will be like: straight, and worth trusting with more than one engine.',
+            b:'They sign. They also remember how easily you moved \u2013 and every deal with you from now on will start with a squeeze.'}},
+    ],
+    endings:{
+      e0:'Tapas and your company become <b>long-term partners</b>, and you work together for the next decade.',
+      e12:'Tapas signs a long-term deal, but with hesitation: the contract carries <b>break clauses</b> that let them walk away early.',
+      e3:'Tapas remains interested in your business, but sees you as a <b>short-term provider</b>, not a long-term partner.'},
+    fends:{e0:'LONG-TERM PARTNERS',e12:'SIGNED, WITH BREAK CLAUSES',e3:'A SHORT-TERM PROVIDER',open:'?'}
+  };
+  /* persistent state */
+  let st={};try{st=JSON.parse(localStorage.getItem('m2decade3'))||{};}catch(_){}
+  let cracks=st.cracks||0, dead=new Set(st.dead||[]), visit=st.visit||0;
+  let node=st.node||0, path=st.path||[], over=st.over||null;
+  let phase='idle', live=false, marker=null, counts={a:0,b:0}, votesN=0;
+  const STRIKE=['STRIKE ONE','STRIKE TWO','STRIKE THREE'];
+  const SFX=Math.random().toString(36).slice(2,6);
+  const save=()=>{try{localStorage.setItem('m2decade3',JSON.stringify({cracks,dead:[...dead],visit,node,path,over}));}catch(_){}};
+  const E=id=>document.getElementById(id);
+  const opt=(i,x)=>E('n'+i+x);
+  const isCrackChoice=(i,x)=>x===DK.nodes[i].crack;
+  /* the story is path-aware: a node's situation (and one response) can
+     read differently depending on what the room did earlier */
+  const sitFor=i=>{const n=DK.nodes[i];
+    return (n.sitAlt&&path[n.sitAlt.at]===n.sitAlt.choice)?n.sitAlt.text:n.sit;};
+  const outFor=(i,x)=>{const n=DK.nodes[i];
+    return (n.outAlt&&n.outAlt.opt===x&&path[n.outAlt.at]===n.outAlt.choice)?n.outAlt.text:n.out[x];};
+  DK.nodes.forEach((n,i)=>{
+    E('n'+i+'sit').textContent=n.sit;
+    opt(i,'a').querySelector('.ol').textContent=n.a.t;
+    opt(i,'b').querySelector('.ol').textContent=n.b.t;
+  });
+  function meters(){document.querySelectorAll('.meter').forEach(m=>{
+    [...m.querySelectorAll('.mc')].forEach((c,i)=>c.classList.toggle('on',i<cracks));});}
+  function showResp(i,x,crack){
+    const r=E('n'+i+'r');
+    const kth=path.slice(0,i+1).filter((x2,j)=>isCrackChoice(j,x2)).length;
+    r.querySelector('.rl').textContent=crack?(STRIKE[kth-1]||'STRIKE THREE'):'TAPAS RESPONDS';
+    r.querySelector('.rt').textContent=outFor(i,x);
+    r.classList.toggle('crack',crack);
+    r.classList.add('on');
+    const pth=E('n'+i+'p'+x);
+    pth.classList.toggle('bad',crack);
+    pth.classList.add('on');
+  }
+  function paintState(){
+    meters();
+    DK.nodes.forEach((n,i)=>{
+      ['a','b'].forEach(x=>{
+        const d=opt(i,x);
+        d.classList.remove('take','dead','pick','counted');d.onclick=null;
+        d.querySelector('.vn').textContent='';
+        if(dead.has(i+'-'+x))d.classList.add('dead');
+      });
+      const r=E('n'+i+'r');r.classList.remove('on','crack');
+      E('n'+i+'pa').classList.remove('on','bad');E('n'+i+'pb').classList.remove('on','bad');
+      E('n'+i+'sit').textContent=i<=path.length?sitFor(i):n.sit;
+      if(i<path.length){
+        const x=path[i], crack=isCrackChoice(i,x);
+        opt(i,x).classList.add(crack?'dead':'take');
+        showResp(i,x,crack);
+      }
+      E('n'+i+'end').classList.remove('on');
+    });
+    document.querySelectorAll('[data-go]').forEach(bn=>{bn.disabled=over!==null||+bn.dataset.go!==node;});
+    document.querySelectorAll('[data-rev]').forEach(bn=>{bn.disabled=true;});
+    fTrail();
+  }
+  function fTrail(){
+    const ft=E('ftrail');
+    let h='';
+    DK.nodes.forEach((n,i)=>{
+      h+='<div class="fcol"><div class="fq">'+n.sh+'</div>';
+      ['a','b'].forEach(x=>{
+        let cls='fchip';
+        if(i<path.length&&path[i]===x)cls+=isCrackChoice(i,x)?' dead':' take';
+        else if(dead.has(i+'-'+x))cls+=' dead';
+        h+='<div class="'+cls+'">'+n[x].sh+'</div>';
+      });
+      h+='</div><div class="farr">&rarr;</div>';
+    });
+    const k=over||'open';
+    h+='<div class="fend '+(k==='e3'?'lost':k==='open'?'':'won')+'">'+DK.fends[k]+'</div>';
+    ft.innerHTML=h;
+  }
+  paintState();
+  /* the vote wire */
+  const sayN=(()=>{let n=0;return line=>{n++;
+    return fetch(POLL_API+'/p/m2-decade/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:line,v:'deck-'+SFX+'-'+(n%9)})});};})();
+  function fetchVotes(){
+    fetch(POLL_API+'/p/m2-decade/answers').then(r=>r.json()).then(d=>{
+      live=true;document.querySelectorAll('.dkdemo').forEach(t=>t.style.display='none');
+      if(phase!=='open'||!marker)return;
+      const lines=(d.answers||[]).map(String);
+      const at=lines.lastIndexOf(marker);
+      const byName=new Map();
+      lines.slice(at+1).forEach(t=>{
+        const m=t.match(/^(.{1,30}?)\s*\|\s*([ab])$/i);
+        if(m)byName.set(m[1].trim().toLowerCase(),m[2].toLowerCase());
+      });
+      counts={a:0,b:0};byName.forEach(v=>counts[v]++);
+      votesN=byName.size;
+      const c=E('n'+node+'v');if(c)c.textContent=votesN;
+    }).catch(()=>{});
+  }
+  setInterval(fetchVotes,2000);fetchVotes();
+  /* demo fallback: the room walks into each trap first, and routes
+     around dead branches after */
+  setInterval(()=>{
+    if(live||phase!=='open')return;
+    votesN=Math.min(21,votesN+2);
+    const trap=DK.nodes[node].crack;
+    const maj=dead.has(node+'-'+trap)?(trap==='a'?'b':'a'):trap;
+    counts[maj]=Math.round(votesN*0.62);counts[maj==='a'?'b':'a']=votesN-counts[maj];
+    const c=E('n'+node+'v');if(c)c.textContent=votesN;
+  },700);
+  function openVote(i){
+    if(over!==null||i!==node||phase!=='idle')return;
+    visit++;save();
+    marker='::open|'+visit+'-'+SFX;
+    sayN(marker).catch(()=>{});
+    counts={a:0,b:0};votesN=0;E('n'+i+'v').textContent=0;
+    E('n'+i+'sit').textContent=sitFor(i);
+    phase='open';
+    document.querySelector('[data-go="'+i+'"]').disabled=true;
+    document.querySelector('[data-rev="'+i+'"]').disabled=false;
+  }
+  function reveal(i){
+    if(phase!=='open'||i!==node)return;
+    ['a','b'].forEach(x=>{const d=opt(i,x);d.classList.add('counted');d.querySelector('.vn').textContent=counts[x];});
+    document.querySelector('[data-rev="'+i+'"]').disabled=true;
+    if(counts.a===counts.b){
+      phase='tie';
+      ['a','b'].forEach(x=>{
+        const d=opt(i,x);d.classList.add('pick');
+        d.onclick=()=>{if(phase!=='tie')return;
+          ['a','b'].forEach(y=>{opt(i,y).classList.remove('pick');opt(i,y).onclick=null;});
+          commit(i,x);};
+      });
+      return;
+    }
+    commit(i,counts.a>counts.b?'a':'b');
+  }
+  function commit(i,x){
+    phase='committed';
+    const crack=isCrackChoice(i,x);
+    path.push(x);
+    opt(i,x).classList.add(crack?'dead':'take');
+    if(crack){dead.add(i+'-'+x);cracks++;meters();}
+    showResp(i,x,crack);
+    node++;
+    if(node<DK.nodes.length)E('n'+node+'sit').textContent=sitFor(node);
+    if(cracks>=3)over='e3';
+    else if(node>=DK.nodes.length)over=cracks===0?'e0':'e12';
+    save();fTrail();
+    if(over){setTimeout(()=>ending(i),1400);return;}
+    phase='idle';
+    const nx=document.querySelector('[data-go="'+node+'"]');if(nx)nx.disabled=false;
+  }
+  function ending(i){
+    const e=E('n'+i+'end');
+    e.querySelector('.et').innerHTML=DK.endings[over];
+    e.querySelector('.es').textContent='';
+    e.querySelector('[data-retry]').style.display=over==='e12'?'':'none';
+    e.classList.add('on');
+  }
+  function resetRun(){
+    node=0;path=[];over=null;phase='idle';save();
+    paintState();
+    location.hash='#21';
+  }
+  document.querySelectorAll('[data-go]').forEach(bn=>bn.addEventListener('click',()=>openVote(+bn.dataset.go)));
+  document.querySelectorAll('[data-rev]').forEach(bn=>bn.addEventListener('click',()=>reveal(+bn.dataset.rev)));
+  document.querySelectorAll('[data-retry]').forEach(bn=>bn.addEventListener('click',resetRun));
+  E('dkReset').addEventListener('click',()=>{
+    if(!confirm('Wipe the whole game \u2013 strikes, dead branches, everything?'))return;
+    cracks=0;dead.clear();resetRun();
+  });
+})();
+</script>
+<script src="/teaching/exec/gt/deck.js"></script>
+</body></html>
