@@ -117,7 +117,7 @@ button.lock.quiet{background:var(--card);border-color:var(--ink);color:var(--ink
 <script>
 const API='https://gt-poll.rlamare.workers.dev', ROOM='m2-branch', GKEY='gt-branch-game';
 const ROUNDS=2, MAXROUNDS=3, OPTMAX=40, SAYMAX=60, NEEDMAX=70, ROLEMAX=40;
-const KINDS={a:'Accept',r:'Reject',c:'Counter'};
+const KINDS={a:'Yes',r:'No',c:'Counter'};
 let voter=null;
 try{
   voter=localStorage.getItem('gt-voter');
@@ -182,7 +182,7 @@ function nodesOf(G){
   const nodes=[];
   G.rounds.forEach((r,i)=>{
     if(r.y)nodes.push({side:'you',opts:r.y.opts,pick:r.y.pick,n:i+1});
-    if(r.t)nodes.push({side:'them',opts:['Accept','Reject','Counter'],pick:'arc'.indexOf(r.t.k),text:r.t.text,n:i+1,first:i===0});
+    if(r.t)nodes.push({side:'them',opts:['Yes','No','Counter'],pick:'arc'.indexOf(r.t.k),text:r.t.text,n:i+1,first:i===0});
   });
   return nodes;
 }
@@ -218,7 +218,7 @@ function drawSap(G,cand,xcand){
       const chosen=nd.pick===j,dy=(j-(nd.opts.length-1)/2)*15;
       const cls='twig '+nd.side+(isCand?' cand':chosen?'':' pruned');
       s+='<path class="'+cls+'" d="M'+X+' '+y+' Q'+(X+dir*14)+' '+(y+dy)+' '+(X+dir*26)+' '+(y+dy)+'"/>';
-      let label=o;if(nd.side==='them'){label=chosen?(KINDS['arc'[j]]+(nd.text?': '+nd.text:'')):(j===0&&nd.first?'Accept (not on the first ask)':o);}
+      let label=o;if(nd.side==='them'){label=chosen?(KINDS['arc'[j]]+(nd.text?': '+nd.text:'')):(j===0&&nd.first?'Yes (not on the first ask)':o);}
       s+='<text class="'+(isCand?'cand':chosen?nd.side:'pruned')+'" x="'+tx+'" y="'+(y+dy+4)+'" text-anchor="'+anchor+'" style="font-size:'+(chosen&&!isCand?'11':'9.5')+'px">'+esc(cut(label,chosen&&!isCand?24:20))+'</text>';
     });
     s+='<circle class="node '+nd.side+'" cx="'+X+'" cy="'+y+'" r="5.5"/>';
@@ -333,7 +333,7 @@ function screen(G){
   }else if(key==='t'){
     const n=r;
     q.textContent='Round '+n+': you are '+role;
-    hint.textContent=(n===1?G.A+' opens. Reply as '+role+' would, honestly. Nobody gets a yes on the first ask, and a reject ends the branch.':G.A+'’s next move. Reply as '+role+' would; you can say yes now.');
+    hint.textContent=(n===1?G.A+' opens. Reply as '+role+' would, honestly. Nobody gets a yes on the first ask, and a no ends the branch.':G.A+'’s next move. Reply as '+role+' would; you can say yes now.');
     app.appendChild(saidCard({k:null,text:last.y.opts[last.y.pick]},G.A,null,true));
     replyCard(n,G,(k,text)=>line('t'+n,k+'‖'+text).then(()=>k==='a'?line('e','1'):k==='r'?line('e','0'):null).then(()=>{shown='';play();}));
   }else if(key==='more'){
@@ -419,17 +419,17 @@ function optionsCard(n,G,onLock){
 function replyCard(n,G,onLock){
   const c=card('them','YOUR REPLY, AS '+cut(G.p||'THE OTHER SIDE',26).toUpperCase(),null);
   const picks=document.createElement('div');picks.className='picks';picks.innerHTML='<div class="plab">Tap your reply</div>';
-  const defs=[['a','Accept',n===1?'Not on the first ask':'You say yes: the branch is reached'],['r','Reject','A flat no: the branch ends here'],['c','Counter','A no, but here is what would work: the game goes on']];
+  const defs=[['a','Yes',n===1?'Not on the first ask':'The branch is reached'],['c','Counter','Not this, but here is what would work: the game goes on'],['r','No','A flat no: the branch ends here']];
   const pb=[];let k=null;
   defs.forEach(([kk,label,note])=>{const b=document.createElement('button');b.className='opt';b.innerHTML='<span class="k"></span><span class="note"></span>';b.querySelector('.k').textContent=label;b.querySelector('.note').textContent=note;
-    if(kk==='a'&&n===1)b.disabled=true;b.addEventListener('click',()=>{k=kk;pb.forEach(x=>x.classList.toggle('mine',x===b));sync();});picks.appendChild(b);pb.push(b);});
+    if(kk==='a'&&n===1)b.disabled=true;b.dataset.k=kk;b.addEventListener('click',()=>{k=kk;pb.forEach(x=>x.classList.toggle('mine',x===b));sync();});picks.appendChild(b);pb.push(b);});
   const sl=document.createElement('div');sl.className='pq';sl.textContent='What does it sound like?';
   const inp=document.createElement('input');inp.maxLength=SAYMAX;inp.placeholder='A few words, in their voice…';inp.autocomplete='off';
   const lk=btn('LOCK IT IN','lock');lk.disabled=true;
-  function sync(){const t=clean(inp.value);lk.disabled=!(k&&(t||k==='a'));drawSap(G,k?{side:'them',opts:['Accept','Reject','Counter'],pick:'arc'.indexOf(k),text:t,n,first:n===1}:null);}
+  function sync(){const t=clean(inp.value);lk.disabled=!(k&&(t||k==='a'));drawSap(G,k?{side:'them',opts:['Yes','No','Counter'],pick:'arc'.indexOf(k),text:t,n,first:n===1}:null);}
   inp.addEventListener('input',sync);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!lk.disabled)lk.click();}});
   lk.addEventListener('click',()=>{const t=clean(inp.value);if(!k)return;lk.disabled=inp.disabled=true;pb.forEach(b=>b.disabled=true);st.textContent='Sending…';
-    onLock(k,t).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=inp.disabled=false;pb.forEach((b,i)=>b.disabled=(i===0&&n===1));});});
+    onLock(k,t).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=inp.disabled=false;pb.forEach(b=>b.disabled=(b.dataset.k==='a'&&n===1));});});
   c.appendChild(picks);c.appendChild(sl);c.appendChild(inp);app.appendChild(c);app.appendChild(lk);app.appendChild(backBtn('← leave this game'));
 }
 </script>
