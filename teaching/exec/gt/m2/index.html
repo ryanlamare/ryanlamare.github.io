@@ -1357,8 +1357,8 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
    r reject, c counter; accept is locked on the first ask), e (1 reached,
    0 stopped), x (the road not taken: j‖k‖text, the partner's real reply
    to one of the asker's pruned openings). Only a yes ends a branch
-   reached. The deck groups the lines by pair (the latest game per pair
-   counts) and draws each pair as one limb of a tree: a bark-brown branch
+   reached. The deck groups the lines by asker and partner (the latest game per
+   asker counts, so a swap grows a second limb) and draws each pair as one limb of a tree: a bark-brown branch
    with a segment per node, leaves at every node, a short twig for every
    option not taken, and from each twig a faint ghost thicket of the paths
    not walked, to the depth the pair went, so only the walked path carries
@@ -1437,10 +1437,11 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
     const tn=s=>{if(!s)return null;const m=/^([arc])‖([\s\S]*)$/.exec(s);if(!m)return null;return {k:m[1],text:m[2].trim()};};
     const byPair=new Map();
     games.forEach(gm=>{const L=gm.L;if(!L.o)return;
-      const limb={v:gm.pk,A:gm.A,B:gm.B,g:gm.g,first:gm.first,o:L.o,p:L.p||'',rounds:[],end:L.e==='0'?0:null,x:null,mine:norm(gm.A)==='ryan'};
+      const limb={v:norm(gm.A)+'>'+norm(gm.B),A:gm.A,B:gm.B,g:gm.g,first:gm.first,o:L.o,p:L.p||'',rounds:[],end:L.e==='0'?0:null,x:null,mine:norm(gm.A)==='ryan'};
       for(let i=1;i<=3;i++){const y=yn(L['y'+i]),t=tn(L['t'+i]);if(!y)break;const r={y};if(t)r.t=t;limb.rounds.push(r);if(!t||t.k==='a')break;}
       if(L.x){const m=/^(\d)‖([arc])‖([\s\S]*)$/.exec(L.x);if(m)limb.x={j:+m[1],k:m[2],text:m[3].trim()};}
-      const have=byPair.get(gm.pk);if(!have||gm.g>have.g)byPair.set(gm.pk,limb);});
+      /* one limb per asker: a pair that swaps roles grows a second branch rather than replacing its first */
+      const key=norm(gm.A)+'>'+norm(gm.B);const have=byPair.get(key);if(!have||gm.g>have.g)byPair.set(key,limb);});
     return [...byPair.values()].sort((a,b)=>a.first-b.first);
   }
   /* ---- geometry: a fan of limbs off the trunk. Slot 0 straight up, then
@@ -1467,8 +1468,9 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
   function fruitAt(x,y,s){return '<g transform="translate('+f1(x)+' '+f1(y)+') scale('+s+')"><path d="M0 -6 C-1 -10 2 -13 4 -14" stroke="#5A3A1E" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="0" cy="2" r="9" fill="var(--red)"/><path d="M-4 -3 C-2 -6 1 -7 3 -6" stroke="#fff" stroke-opacity=".55" stroke-width="2" fill="none" stroke-linecap="round"/></g>';}
   function curve(p,q,bow){const mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2,dx=q[0]-p[0],dy=q[1]-p[1],L=Math.hypot(dx,dy)||1;
     return 'M'+f1(p[0])+' '+f1(p[1])+' Q'+f1(mx-dy/L*bow)+' '+f1(my+dx/L*bow)+' '+f1(q[0])+' '+f1(q[1]);}
+  let ghostMax=3; /* one level less in a full room, so the thickets do not crowd the trunk */
   function ghosts(x,y,ang,depth,seed,level){
-    if(depth<=0||level>3)return '';
+    if(depth<=0||level>ghostMax)return '';
     const len=SEG*(0.72-level*0.1);let s='';
     for(let b=0;b<2;b++){
       const a2=ang+(b?1:-1)*(16+hash(seed,level*7+b)*16)*RAD;
@@ -1480,7 +1482,7 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
   }
   const known=new Map();
   function roomSVG(limbs,animate){
-    const G=geom(limbs);
+    const G=geom(limbs);ghostMax=limbs.length>10?2:3;
     let s='<ellipse class="mound" cx="640" cy="672" rx="300" ry="16"/>';
     s+='<path class="root" d="M620 662 C612 668 596 672 566 674"/><path class="root" d="M660 662 C670 668 686 672 716 674"/>';
     s+='<path class="trunk" d="M606 664 C610 610 618 540 622 440 L658 440 C662 540 670 610 674 664 Z"/>';
@@ -1563,7 +1565,7 @@ function escName(s){const d=document.createElement('div');d.textContent=s;return
     let lastSig='';
     function showSample(limbs,live){
       let limb=null;
-      if(want)limb=limbs.find(l=>l.v===want.toLowerCase())||null;
+      if(want)limb=limbs.find(l=>l.v===want.toLowerCase()||l.v.split('>').sort().join('~')===want.toLowerCase())||null;
       else if(limbs.length){const mine=limbs.filter(l=>l.mine);limb=(mine.length?mine:limbs).reduce((a,b)=>b.first>a.first?b:a);}
       const sig=JSON.stringify(limb);
       if(sig===lastSig)return;lastSig=sig;
