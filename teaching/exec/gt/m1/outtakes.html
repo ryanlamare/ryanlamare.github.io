@@ -1,0 +1,303 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 1 — Outtakes</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/gt/deck.css">
+<style>
+/* Module-1-specific widgets (shared components live in deck.css) */
+/* clip beside bullets, click-to-load (keeps YouTube's title off screen) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+.clipframe.sm iframe,.clipframe.sm .clipcover{width:560px;height:315px}
+/* side figures (the number line, the cards) */
+.sidefig{flex:none;height:420px;width:auto;overflow:visible}
+.sidefig .qmark{font-family:var(--display);font-weight:900;font-size:150px;fill:var(--red)}
+.sidefig .biglab{font-family:var(--sans);font-weight:600;font-size:17px;fill:var(--muted)}
+.sidefig .card{stroke:var(--ink);stroke-width:3.5;rx:10}
+.sidefig .card.white{fill:#fff}
+.sidefig .card.yellow{fill:var(--ochre)}
+.sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
+.sidefig .money{font-family:var(--display);font-weight:900;font-size:60px;fill:var(--red)}
+.sidefig .cross{stroke:var(--red);stroke-width:7;stroke-linecap:round}
+/* matrix marking, the m4 scheme: dominant-strategy payoffs circled in the
+   player's colour, red box on the equilibrium */
+.mx .cell .pa,.mx .cell .pb{position:relative;display:inline-block}
+.mx .cell .circ::after{content:"";position:absolute;inset:-5px -10px;border:3.5px solid currentColor;border-radius:50%;pointer-events:none}
+.mkey{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.mkey .k{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--muted)}
+.mkey .sw{width:22px;height:22px;background:var(--card);flex:none}
+.mkey .sw.circA{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--teal)}
+.mkey .sw.circB{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--terracotta)}
+.mkey .sw.eq{box-shadow:inset 0 0 0 4px var(--red)}
+.mkey .k b{color:var(--ink);font-weight:700}
+/* number-line (divide and conquer) */
+.nlwidget{margin:26px auto 0;max-width:1080px}
+.nline{touch-action:none;cursor:crosshair;display:block;width:100%;height:auto}
+.nline .axis{stroke:var(--ink);stroke-width:3}
+.nline .dead{fill:var(--maroon);opacity:.22}
+.nline .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
+.nline .gdot{fill:var(--red)}
+.nline .gnum{font-family:var(--display);font-weight:900;font-size:20px;fill:var(--ink)}
+.nlog{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;min-height:38px}
+.nlog .g{border:2px solid var(--ink);background:var(--card);font-weight:700;font-size:15px;padding:6px 12px}
+.nlog .g b{color:var(--red)}
+.nlog .g.win{background:var(--red);border-color:var(--red);color:var(--paper)}
+.nlog .g.win b{color:var(--paper)}
+/* live dot plots (first-guess and deals): answers stack as dots on an axis */
+.dstrip{display:block;width:100%;height:auto}
+.dstrip .axis{stroke:var(--ink);stroke-width:3}
+.dstrip .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
+.dstrip .dot{fill:var(--ink);opacity:.85}
+.dstrip .dot.hot{fill:var(--red)}
+.dstrip .meanline{stroke:var(--teal);stroke-width:4;stroke-dasharray:8 6}
+.dstrip .meanlab{font-family:var(--display);font-weight:900;font-size:22px;fill:var(--teal)}
+.dplotlbl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)}
+/* the number game, round by round: one strip per round, revealed as each
+   round is closed from the front */
+.rounds{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
+.rrow{display:flex;align-items:center;gap:14px}
+.rrow .rlab{width:98px;flex:none;text-align:right;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:14px;color:var(--ink)}
+.rrow.open .rlab{color:var(--red)}
+.rrow.future{opacity:.35}
+.rrow svg{flex:1;min-width:0;height:auto;display:block}
+.ngbar{position:absolute;left:96px;right:96px;bottom:52px;width:auto;max-width:none;display:flex;align-items:center;gap:12px;padding:12px 18px}
+.ngbar input{width:90px;font-family:var(--sans);font-weight:700;font-size:16px;background:var(--paper);border:2px solid var(--ink);padding:8px 10px}
+.ngbar .ngverdict{flex:1;text-align:right;font-weight:600;font-size:19px;color:var(--ink)}
+.ngbar .ngverdict b{color:var(--red)}
+.dkey{display:flex;gap:26px;justify-content:center;padding-top:2px}
+.dkey .k{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px;color:var(--muted)}
+.dkey .k i{width:16px;height:16px;border-radius:50%;flex:none}
+.pollnote{position:absolute;left:96px;right:96px;bottom:58px;text-align:center;
+  font-weight:600;font-size:21px;line-height:1.35;color:var(--ink)}
+.pollnote b{color:var(--red)}
+/* the knowledge tower (lessons slide): his ladder of knowing, stacked */
+.ktower{position:absolute;right:96px;top:250px;width:400px;display:flex;flex-direction:column;gap:10px}
+.ktower .kt{border:2.5px solid var(--ink);background:var(--card);font-weight:600;font-size:16.5px;
+  line-height:1.3;padding:11px 16px;opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s ease}
+.ktower.shown .kt{opacity:1;transform:none}
+.ktower.shown .kt:nth-child(2){transition-delay:.5s}
+.ktower.shown .kt:nth-child(3){transition-delay:1s}
+.ktower.shown .kt:nth-child(4){transition-delay:1.5s}
+.ktower .kt:nth-child(2){margin-left:24px}
+.ktower .kt:nth-child(3){margin-left:48px}
+.ktower .kt:nth-child(4){margin-left:72px;border-color:var(--red);color:var(--red);font-weight:700}
+/* live poll join chrome */
+.qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px}
+/* the kennel: a little dog sanctuary, and the ONLY thing on its slide —
+   every submitted dog at true relative size, sorted small to big, each
+   drawing housed in its own cartoon doghouse (overhanging gable roof
+   with a bone on the front, picket fence). A full room of 21 lands as
+   three rows of seven at the biggest house size the canvas allows. The
+   podium: gold, silver and bronze medals pin onto the three dogs
+   nearest the median (ties share a medal), and the gold house turns
+   red — that IS the announcement. */
+.kennel{display:flex;flex-wrap:wrap;gap:12px 26px;align-content:center;justify-content:center;
+  max-width:990px;opacity:0;visibility:hidden;transition:opacity .5s;width:100%}
+.kennel.on{opacity:1;visibility:visible}
+.dogrun{position:relative;display:flex;flex-direction:column;align-items:center;width:118px;
+  opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .45s ease}
+.kennel.on .dogrun{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){.dogrun{transition:none}}
+/* an overfull room (22+, shouldn't happen with a 21-seat cohort):
+   smaller houses so a fourth row still fits */
+.kennel.dense .dogrun{width:96px}
+.kennel.dense .dn{font-size:11px}
+.dogrun .roof{width:128%;height:auto;display:block;margin-bottom:-3px}
+.dogrun .roof .rf{fill:var(--maroon);stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.dogrun.median .roof .rf{fill:var(--red)}
+.dogrun .roof .bone{fill:var(--paper)}
+.dogrun .pen{width:100%;height:auto;background:#fff;border:2.5px solid var(--ink);display:block}
+.dogrun .pen path{stroke:var(--ink);stroke-width:7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dogrun.median .pen{border-color:var(--red);border-width:3.5px}
+.dogrun.median .pen path{stroke:var(--red)}
+.dogrun .fence{width:118%;height:auto;display:block;margin-top:-2px}
+.dogrun .fence polygon{fill:var(--tan);stroke:var(--ink);stroke-width:1.5}
+.dogrun .dn{font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118%;margin-top:2px}
+.dogrun.median .dn{color:var(--red);font-weight:700}
+/* podium medals, pinned to the drawing's top-right corner */
+.medal{position:absolute;width:36px;height:auto;top:36px;right:-9px;z-index:2}
+.medal .rib{fill:var(--red);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.medal .disc{stroke:var(--ink);stroke-width:3}
+.medal.m1 .disc{fill:var(--ochre)}
+.medal.m2 .disc{fill:color-mix(in srgb, var(--ink) 22%, var(--paper))}
+.medal.m3 .disc{fill:var(--sienna)}
+.medal .mnum{font-family:var(--display);font-weight:900;font-size:19px;fill:var(--ink)}
+.medal.m3 .mnum{fill:var(--paper)}
+/* the offers board: pending offers queue up as cards, the instructor taps
+   accept or reject, deals land on the game strips. One board slide per
+   game version; the active slide decides which strip new decisions hit. */
+.gamechip{width:100%;background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;
+  letter-spacing:.08em;text-align:center;padding:10px 0}
+.offq{display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;min-height:76px}
+.offcard{display:flex;align-items:center;gap:10px;border:2.5px solid var(--ink);background:var(--card);padding:8px 8px 8px 14px}
+.offcard .on2{font-weight:700;font-size:16px;max-width:12ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.offcard .oa{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink)}
+.offcard button{font-family:var(--sans);font-weight:900;font-size:16px;width:38px;height:38px;border:2.5px solid var(--ink);
+  background:var(--paper);cursor:pointer}
+.offcard button.acc{color:var(--teal)}
+.offcard button.rej{color:var(--red)}
+.offcard button:hover{background:var(--ink);color:var(--paper)}
+.dstrip .dot2{fill:var(--teal);opacity:.9}
+
+/* the familiarity poll: isotype crowd rows, the m2 pattern with sentence labels */
+.pollrows{display:flex;flex-direction:column;gap:22px;margin-top:26px}
+.urow{display:flex;align-items:flex-end;gap:18px}
+.urow .uhead{width:330px;flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:1px;padding-bottom:2px}
+.urow .ulbl{font-weight:600;font-size:16px;color:var(--ink);line-height:1.3}
+.urow .uval{font-family:var(--display);font-weight:900;font-size:44px;line-height:.82;opacity:0;transition:opacity .5s .2s}
+.urow.revealed .uval{opacity:1}
+.urow .ulane{flex:1;display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 4px;min-height:50px;border-left:2px solid var(--rule);padding-left:12px}
+.urow .u{width:26px;display:flex;align-items:flex-end;justify-content:center}
+.urow .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.urow.revealed .u svg{opacity:1;transform:scale(1)}
+
+/* top of the class: the break scoreboard, m5's board with two event columns */
+.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 160px 160px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+
+/* the Tapas questions wall: phones write in, the screen fills when time is called */
+.faded{opacity:.06 !important;pointer-events:none}
+#twbul,#twqr{transition:opacity .5s}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:10px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .6s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+.outnote{position:absolute;left:96px;right:96px;top:150px;display:flex;gap:14px;align-items:baseline;font-weight:600;font-size:15px;color:var(--muted);letter-spacing:.02em}
+.outnote b{color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;flex:none}
+.outtakes-index ul.bullets li{font-size:20px}
+</style>
+</head><body>
+
+<!--
+  OUTTAKES for module 1. Every slide or line cut from index.html during the
+  revision pass, kept verbatim (markup, reveals, figures) so it can go
+  straight back. To restore a slide: copy its <section> into index.html at
+  the position noted on the slide, renumber data-i in document order, add one
+  <span class="tick"></span>, and put its transcript entry back in the
+  sr-only block. The pre-revision deck is also whole at the git tag
+  gt-before-revision. Nothing here is linked from the hub.
+-->
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>Applied Game Theory, Module 1 — Outtakes</h1>
+<p>Accessible text version. Each heading below is one slide, in order.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 4: Title slide</h2><p>Module 1 outtakes. Every slide or line cut from the module 1 deck, kept whole so it can go straight back.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 4: What was cut, and when</h2><p>Two entries so far, both from 14 September 2026. One: the Granito Air slide, which stood as slide 27 of 30 straight after Tapas Airways; it duplicated that slide bullet for bullet, and Granito returns in module 8's own setup. Two: one bullet from the lessons slide, the four-line "I know that you know" tower, which the slide before had already built card by card. The pre-revision deck is whole at the git tag gt-before-revision.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 4: Granito Air</h2><p>The cut slide, verbatim. A drawn top view of a Granito Air twin-engine jet with a GA monogram on a blue tail fin, above a row of five small spare engines on stands, labeled five engines in storage. Bullets revealed one at a time: Granito Air flies seven A330ceos out of Parma, and they are retiring them; five Trent 700 engines are sitting in storage. Those engines are worth millions, whole or in parts, and the airline wants the best deal possible. Several traders are competing for them, and you are one of them. The airline knows things about its own engines that you don't. Get this deal, and there are more engines behind it, and maybe the whole fleet. A closing red chip asks: how can common knowledge help us in this game?</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 4: One bullet from the lessons slide</h2><p>The cut line, verbatim, from the slide Lessons from the "I'm thinking of a number" game, where it was the third bullet: And crucially, you might know something, but I know that you know it! And you should know that I know that you know it! And I should know that you know that I know that you kn…!</p></section>
+</section>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">1</div>
+  <div class="tag"><i></i>MODULE 1 · APPLIED GAME THEORY · OUTTAKES</div>
+  <h1>MODULE 1<br><span class="r">OUTTAKES</span></h1>
+  <div class="sub">Every slide or line cut from the module 1 deck, kept whole so it can go straight back</div>
+  <div class="byline">J. RYAN LAMARE</div>
+</section>
+
+<section class="slide content outtakes-index" data-i="1">
+  <div class="kicker"><i></i>MODULE 1 · OUTTAKES</div>
+  <h2>What was cut, and when</h2>
+  <ul class="bullets" style="max-width:1010px">
+    <li><b>14 Sep 2026 &middot; Granito Air</b> &ndash; stood as slide 27 of 30, straight after Tapas Airways. Duplicates that slide bullet for bullet; Granito returns in module 8&rsquo;s own setup. The whole slide is next.</li>
+    <li><b>14 Sep 2026 &middot; one bullet from Lessons from the game</b> &ndash; the four-line &ldquo;I know that you know&rdquo; tower, which the slide before had already built card by card. The line is on the last slide here.</li>
+    <li class="sub">The pre-revision deck is whole at the git tag <b>gt-before-revision</b>. To restore a slide, copy its section back into index.html at the position noted, renumber, add a tick and its transcript entry.</li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="outnote"><b>Cut 14 Sep 2026</b><span>Stood as slide 27 of 30, straight after Tapas Airways. Duplicates that slide bullet for bullet; Granito returns in module 8&rsquo;s own setup.</span></div>
+  <div class="kicker"><i></i>MODULE 1 · GAME THEORY IN YOUR WORLD</div>
+  <h2>Granito Air</h2>
+  <div class="rowfig" style="top:225px;bottom:150px;align-items:center">
+    <ul class="bullets" style="max-width:560px;margin-top:0">
+      <li>Granito Air flies seven A330ceos out of Parma, and they are retiring them. <b>Five Trent 700 engines</b> are sitting in storage</li>
+      <li data-step="1">Those engines are worth millions, whole or in parts, and the airline wants the <b>best deal possible</b></li>
+      <li data-step="2">Several traders are competing for them, and <b>you are one of them</b></li>
+      <li data-step="3">The airline knows things about its own engines that <b>you don&rsquo;t</b></li>
+      <li data-step="4">Get this deal, and there are <b>more engines behind it</b> &ndash; and maybe the whole fleet</li>
+    </ul>
+    <svg class="sidefig" style="height:300px" viewBox="50 14 505 328" role="img" aria-label="A drawn top view of a Granito Air twin-engine jet, one engine under each wing, above a row of five spare engines on stands">
+      <!-- the two engines, noses forward, one under each wing -->
+      <rect x="235" y="48" width="54" height="24" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="240" cy="60" rx="6" ry="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="3"/>
+      <rect x="235" y="148" width="54" height="24" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="240" cy="160" rx="6" ry="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="3"/>
+      <!-- both wings, swept back over the engines' tails -->
+      <polygon points="210,95 322,22 344,30 268,95" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="210,125 322,198 344,190 268,125" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- tailplanes -->
+      <polygon points="432,95 474,62 488,68 456,95" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="432,125 474,158 488,152 456,125" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- fuselage, nose to the left -->
+      <path d="M96 93 L440 93 C462 96 476 103 482 110 C476 117 462 124 440 127 L96 127 C74 124 60 117 60 110 C60 103 74 96 96 93 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- cockpit windshield band -->
+      <rect x="74" y="97" width="12" height="26" rx="5" fill="var(--ink)"/>
+      <text x="162" y="116" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.06em;fill:var(--blue)">GRANITO AIR</text>
+      <!-- tail fin with the GA monogram -->
+      <polygon points="436,93 462,40 482,40 462,93" fill="var(--blue)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <text x="458" y="73" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:13px;fill:var(--paper)">GA</text>
+      <!-- five engines in storage, on their stands -->
+      <line x1="68" y1="310" x2="515" y2="310" stroke="var(--ink)" stroke-width="3.5"/>
+      <defs><g id="ga-eng">
+        <rect x="0" y="0" width="128" height="60" rx="26" fill="var(--paper)" stroke="var(--ink)" stroke-width="7"/>
+        <ellipse cx="8" cy="30" rx="10" ry="29" fill="var(--teal)" stroke="var(--ink)" stroke-width="6"/>
+        <path d="M128 14 L150 24 L150 36 L128 46 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M26 60 L16 76 M26 60 L38 76 M102 60 L92 76 M102 60 L114 76" stroke="var(--ink)" stroke-width="7" fill="none"/>
+      </g></defs>
+      <use href="#ga-eng" transform="translate(75 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(162 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(249 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(336 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(423 272) scale(.5)"/>
+      <text class="cardlab" x="292" y="332" text-anchor="middle">FIVE ENGINES IN STORAGE</text>
+    </svg>
+  </div>
+  <div class="chiprow" style="bottom:64px">
+    <div class="chips" data-step="5">
+      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>How can common knowledge help us in this game?</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>MODULE 1 · I&rsquo;M THINKING OF A NUMBER</div>
+  <h2 style="max-width:36ch">Lessons from the &ldquo;I&rsquo;m thinking of a number&rdquo; game</h2>
+  <div class="outnote" style="top:212px"><b>Cut 14 Sep 2026</b><span>One bullet, the third of four on this slide. The tower on the slide before already builds it card by card.</span></div>
+  <ul class="bullets" style="margin-top:150px;max-width:900px">
+      <li>And crucially, you might know something, but I know that you know it! And you should know that I know that you know it! And I should know that you know that I know that you kn&hellip;.!</li>
+  </ul>
+</section>
+
+</div></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<script src="/teaching/exec/gt/deck.js"></script>
+</body></html>
