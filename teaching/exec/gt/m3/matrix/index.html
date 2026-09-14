@@ -1,0 +1,384 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Build your matrix</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 3's closing exercise, played live between two phones like the
+   engine game. One person (the asker) brings a zero-sum contest from
+   their world, "you and ___ are both after ___", one prize only one side
+   can have, and tells their partner who they are playing; the partner
+   plays that rival, in role. Both write the two or three moves their side
+   could make, without seeing the other's list. Both lists in, each picks
+   the move they would actually make, blind, and locks it in; the cell
+   where the two picks meet lights up on both phones. Last, having seen
+   the rival's list, each crosses out any move of theirs they would never
+   make whatever the other side did (or keeps them all); if one cell is
+   left standing, the pair found the equilibrium by elimination alone.
+
+   Wire: every line goes into room m3-matrix as "A|B|g|key|payload",
+   A the asker, B the partner, g the pair's game number (one more than
+   the highest g the pair has used), key one of s (the stake:
+   prize‖rival), ma / mb (the moves: m1‖m2‖m3, asker / rival), pa / pb
+   (the pick, an index into that side's moves), xa / xb (the crossed-out
+   moves: comma-separated indexes, or - for none). The latest line per
+   key wins. Both phones read the same lines back, so every screen is
+   derived from the room and a reload lands where you were. The deck
+   draws the same lines as one matrix per pair. Voter ids rotate a suffix
+   so the Worker's per-phone cap never bites a second game. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button,.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.choices{display:flex;flex-direction:column;gap:11px}
+button.opt,button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;cursor:pointer}
+button.opt.mine{background:var(--side,var(--red));border-color:var(--side,var(--red));color:var(--paper)}
+button.opt.crossed{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px;color:var(--muted);border-color:var(--muted)}
+button.opt:disabled{opacity:.35;cursor:default}
+button.opt .k{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px}
+button.opt .note{display:block;font-weight:500;font-size:12.5px;color:var(--muted);letter-spacing:0;margin-top:2px}
+button.opt.mine .note{color:var(--paper)}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.waitcard{border:2.5px dashed var(--muted);padding:16px;font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
+/* the matrix on the phone: your moves down the side in your colour,
+   theirs along the top; the met cell boxed in red, crossed-out lines
+   faded the way the deck fades a dominated strategy */
+.pm{width:100%;background:var(--paper-soft);border:2.5px solid var(--ink);border-radius:12px;padding:12px 10px 10px;overflow:hidden}
+.pm .pmhead{font-weight:700;letter-spacing:.12em;font-size:10.5px;color:var(--muted);text-transform:uppercase;text-align:center;margin-bottom:8px;line-height:1.35}
+.pm .pmhead .ga{color:var(--you)} .pm .pmhead .gb{color:var(--them)}
+.pm .grid{display:grid;gap:0;grid-template-columns:minmax(78px,1.1fr) repeat(var(--c),1fr);grid-template-rows:max-content repeat(var(--r),minmax(44px,auto))}
+.pm .gcl{display:flex;align-items:flex-end;justify-content:center;text-align:center;padding:0 3px 5px;font-weight:600;font-size:10.5px;line-height:1.2;color:var(--them);transition:opacity .5s;word-break:break-word}
+.pm .grl{display:flex;align-items:center;justify-content:flex-end;text-align:right;padding:2px 7px 2px 0;font-weight:600;font-size:10.5px;line-height:1.2;color:var(--you);transition:opacity .5s;word-break:break-word}
+.pm .gcell{background:var(--card);border:1.5px solid var(--ink);position:relative;display:flex;align-items:center;justify-content:center;transition:opacity .5s;min-height:44px}
+.pm .gcell::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--rule)}
+.pm .gcell.met::before{display:none}
+.pm .gcell.met{background:color-mix(in srgb, var(--red) 10%, var(--card))}
+.pm .gcell.met::after{content:"";position:absolute;inset:3px;border:3px solid var(--red);pointer-events:none}
+.pm .gcell.eq::after{content:"";position:absolute;inset:2px;border:4px solid var(--red);pointer-events:none}
+.pm .gcell .dots{display:flex;gap:4px}
+.pm .gcell .dots i{width:10px;height:10px;border-radius:50%;display:block}
+.pm .gcell .dots .da{background:var(--you)} .pm .gcell .dots .db{background:var(--them)}
+.pm .gone{opacity:.09}
+.pm .todo{color:var(--muted);font-style:italic;font-weight:500}
+.pm .pmstate{font-weight:700;letter-spacing:.12em;font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px;text-transform:uppercase}
+.pm .pmstate.eq{color:var(--red)}
+/* the cards */
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.you{--side:var(--teal)} .card.them{--side:var(--terracotta)} .card.goal{--side:var(--red)} .card.cross{--side:var(--maroon)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+.card input{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input:focus{border-bottom-color:var(--side)}
+.card ::placeholder{color:var(--muted);font-weight:500}
+.optrow{display:flex;align-items:center;gap:10px}
+.optrow .on{flex:none;font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--muted);width:44px}
+.optrow input{flex:1}
+.picks{display:flex;flex-direction:column;gap:8px}
+.picks .plab{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--side)}
+.said{border-left:4px solid var(--terracotta);padding:6px 0 6px 14px;font-weight:600;font-size:16px;line-height:1.35}
+.said .k{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:11.5px;color:var(--terracotta);margin-bottom:2px}
+.said.you{border-color:var(--teal)} .said.you .k{color:var(--teal)}
+.said.goal{border-color:var(--red)} .said.goal .k{color:var(--red)}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+button.lock.quiet{background:var(--card);border-color:var(--ink);color:var(--ink)}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center}
+.bigcard .head{font-weight:700;font-size:22px}
+.bigcard .head.good{color:var(--red)} .bigcard .head.calm{color:var(--ink)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.4}
+#app{display:flex;flex-direction:column;gap:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 3</div>
+  <h1 id="q">Build your matrix</h1>
+  <div class="hint" id="hint"></div>
+  <div class="pm" id="pm" hidden></div>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/go/names.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m3-matrix', GKEY='gt-matrix-game';
+const MOVEMAX=34, PRIZEMAX=60, ROLEMAX=36;
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), hint=document.getElementById('hint'), st=document.getElementById('status'), pm=document.getElementById('pm');
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const cleanName=n=>clean(n).slice(0,30);
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const cut=(t,n)=>t.length>n?t.slice(0,n-1).trim()+'…':t;
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+let sayN=0;
+function say(line){
+  sayN++;
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=()=>fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+/* ---- the game, derived from the room's lines ---- */
+/* "A|B|g|key|payload" -> {A,B,g,key,payload} */
+function parseLines(lines){
+  return lines.map(t=>{const p=String(t).split('|');if(p.length<5)return null;
+    const [A,B,g,key]=p;const payload=p.slice(4).join('|');
+    if(!A||!B||!/^\d{1,3}$/.test(g)||!/^(s|ma|mb|pa|pb|xa|xb)$/.test(key))return null;
+    return {A:A.trim(),B:B.trim(),g:+g,key,payload};}).filter(Boolean);
+}
+const list=s=>s?s.split('‖').map(x=>x.trim()).filter(Boolean):[];
+const idx=(s,n)=>{if(s===undefined||s==='')return null;const i=+s;return (Number.isInteger(i)&&i>=0&&i<n)?i:null;};
+const crossed=(s,n)=>{if(s===undefined)return null;if(s==='-')return [];return s.split(',').map(x=>+x).filter(i=>Number.isInteger(i)&&i>=0&&i<n);};
+/* the state of one game: latest line per key */
+function gameOf(parsed,A,B,g){
+  const L={};
+  parsed.forEach(l=>{if(pairKey(l.A,l.B)===pairKey(A,B)&&l.g===g)L[l.key]=l.payload;});
+  const G={A,B,g,prize:'',rival:'',ma:list(L.ma),mb:list(L.mb),pa:null,pb:null,xa:null,xb:null};
+  if(L.s){const p=L.s.split('‖');G.prize=(p[0]||'').trim();G.rival=(p[1]||'').trim();}
+  G.pa=idx(L.pa,G.ma.length);G.pb=idx(L.pb,G.mb.length);
+  G.xa=crossed(L.xa,G.ma.length);G.xb=crossed(L.xb,G.mb.length);
+  G.met=G.pa!==null&&G.pb!==null;
+  G.over=G.met&&G.xa!==null&&G.xb!==null;
+  return G;
+}
+/* the highest game number a pair has used */
+const maxG=(parsed,A,B)=>parsed.filter(l=>pairKey(l.A,l.B)===pairKey(A,B)).reduce((m,l)=>Math.max(m,l.g),0);
+/* the cells still standing once both sides have crossed out */
+function standing(G){
+  const out=[];
+  const xa=G.xa||[], xb=G.xb||[];
+  G.ma.forEach((_,i)=>{if(xa.includes(i))return;G.mb.forEach((_,j)=>{if(xb.includes(j))return;out.push([i,j]);});});
+  return out;
+}
+
+/* ---- the matrix on the phone: rows are this phone's moves ---- */
+function drawPM(G,meA,cand){
+  pm.hidden=false;
+  const my=meA?G.ma:G.mb, their=meA?G.mb:G.ma;
+  const myPick=meA?G.pa:G.pb, theirPick=meA?G.pb:G.pa;
+  const myX=cand&&cand.x?cand.x:(meA?G.xa:G.xb)||[], theirX=(meA?G.xb:G.xa)||[];
+  const rows=my.length?my:['…','…'], cols=their.length?their:['…','…'];
+  const showTheir=G.ma.length&&G.mb.length; /* neither list shows until both are in */
+  const colsShown=showTheir?cols:['…','…'];
+  const rowsShown=my.length?rows:['…','…'];
+  pm.style.setProperty('--you',meA?'var(--teal)':'var(--terracotta)');
+  pm.style.setProperty('--them',meA?'var(--terracotta)':'var(--teal)');
+  const me=meA?G.A:(G.rival||G.B), them=meA?(G.rival||G.B):G.A;
+  let h='<div class="pmhead"><span class="ga">'+esc(cut(me,18))+'</span> v <span class="gb">'+esc(cut(them,18))+'</span>'+(G.prize?' · for '+esc(cut(G.prize,40)):'')+'</div>';
+  h+='<div class="grid" style="--c:'+colsShown.length+';--r:'+rowsShown.length+'"><div></div>';
+  colsShown.forEach((c,j)=>{h+='<div class="gcl'+(showTheir?'':' todo')+(theirX.includes(j)?' gone':'')+'">'+esc(cut(c,MOVEMAX))+'</div>';});
+  const stand=G.over?standing(G):null;
+  rowsShown.forEach((r,i)=>{
+    h+='<div class="grl'+(my.length?'':' todo')+(myX.includes(i)?' gone':'')+'">'+esc(cut(r,MOVEMAX))+'</div>';
+    colsShown.forEach((c,j)=>{
+      const met=G.met&&myPick===i&&theirPick===j;
+      const gone=myX.includes(i)||theirX.includes(j);
+      const eq=stand&&stand.length===1&&stand[0][0]===(meA?i:j)&&stand[0][1]===(meA?j:i);
+      h+='<div class="gcell'+(met?' met':'')+(gone?' gone':'')+(eq?' eq':'')+'">'+(met?'<span class="dots"><i class="da"></i><i class="db"></i></span>':'')+'</div>';
+    });
+  });
+  h+='</div>';
+  let state='';
+  if(G.over){const n=stand.length;state=n===1?'One cell left standing: the equilibrium':n+' cells still in play';}
+  else if(G.met)state='You met in the boxed cell';
+  else if(myPick!==null)state='Your move is locked';
+  pm.innerHTML=h+(state?'<div class="pmstate'+(G.over&&stand.length===1?' eq':'')+'">'+state+'</div>':'');
+}
+
+/* ---- screens ---- */
+let cur=null; /* {role:'a'|'b',A,B,g} the game this phone is in */
+try{cur=JSON.parse(localStorage.getItem(GKEY));}catch(_){}
+const saveCur=()=>{try{if(cur)localStorage.setItem(GKEY,JSON.stringify(cur));else localStorage.removeItem(GKEY);}catch(_){}};
+function render(){
+  stopPolling();st.textContent='';pm.hidden=true;hint.textContent='';shown='';
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  if(cur&&(norm(cur.A)===norm(name)||norm(cur.B)===norm(name))){return play();}
+  q.textContent='Build your matrix';
+  hint.textContent='In pairs. One of you brings a contest from your world, one prize only one side can win; the other plays the rival.';
+  app.innerHTML='';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='10px';
+  const opts=[['I bring the contest',()=>renderName('Who are you playing with?',partner=>{
+      if(norm(partner)===norm(name)){st.textContent='That’s you — pick the person you’re playing with.';return;}
+      st.textContent='Setting up…';
+      answers().catch(()=>[]).then(lines=>{const g=maxG(parseLines(lines),name,partner)+1;cur={role:'a',A:name,B:partner,g};saveCur();st.textContent='';play();});
+    })],
+   ['I play the rival',renderWaitStart]];
+  opts.forEach(([label,go])=>{const b=document.createElement('button');b.className='opt';b.textContent=label;b.addEventListener('click',go);ch.appendChild(b);});
+  app.appendChild(ch);
+}
+function renderName(title,done){
+  q.textContent=title;app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=cleanName(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);app.appendChild(row);
+  if(name)app.appendChild(backBtn());
+}
+function backBtn(label){const b=document.createElement('button');b.className='back';b.type='button';b.textContent=label||'← start over';b.addEventListener('click',()=>{cur=null;saveCur();render();});return b;}
+/* the partner waits for an asker to name them */
+function renderWaitStart(){
+  stopPolling();q.textContent='Waiting for your partner';app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>Keep this page open. Your partner picks you, writes what you are both after, and tells you who you are playing.';
+  app.appendChild(w);
+  const h=document.createElement('div');h.className='lbl';h.style.marginTop='12px';h.textContent='They need to pick exactly “'+name+'”';app.appendChild(h);
+  app.appendChild(backBtn());
+  const check=()=>answers().then(lines=>{const P=parseLines(lines);
+    const mine=P.filter(l=>l.key==='s'&&norm(l.B)===norm(name));
+    let found=null;mine.forEach(l=>{if(l.g===maxG(P,l.A,l.B)&&(!found||l.g>found.g))found=l;});
+    if(found){cur={role:'b',A:found.A,B:found.B,g:found.g};saveCur();play();}
+  }).catch(()=>{});
+  poller=setInterval(check,2000);check();
+}
+/* every screen of a game comes from the room's lines */
+function play(){
+  stopPolling();
+  const tick=()=>answers().then(lines=>{const G=gameOf(parseLines(lines),cur.A,cur.B,cur.g);screen(G);}).catch(()=>{});
+  poller=setInterval(tick,2200);tick();
+}
+let shown=''; /* which screen is up, so polling does not rebuild it under a typing thumb */
+function screen(G){
+  const meA=cur.role==='a';
+  const myMoves=meA?G.ma:G.mb, theirMoves=meA?G.mb:G.ma;
+  const myPick=meA?G.pa:G.pb, theirPick=meA?G.pb:G.pa;
+  const myX=meA?G.xa:G.xb, theirX=meA?G.xb:G.xa;
+  let key;
+  if(!G.prize)key=meA?'stake':'wait-stake';
+  else if(!myMoves.length)key='moves';
+  else if(!theirMoves.length)key='wait-moves';
+  else if(myPick===null)key='pick';
+  else if(theirPick===null)key='wait-pick';
+  else if(myX===null)key='cross';
+  else if(theirX===null)key='wait-cross';
+  else key='over';
+  if(key===shown){if(G.prize)drawPM(G,meA);return;}
+  shown=key;st.textContent='';app.innerHTML='';
+  if(G.prize)drawPM(G,meA);else pm.hidden=true;
+  const other=meA?G.B:G.A, rival=G.rival||'the rival';
+  if(key==='stake'){
+    q.textContent='What are you both after?';hint.textContent='Then tell '+G.B+' who they are playing, in thirty seconds.';
+    const c=card('goal','THE PRIZE','You and your rival are both after…','One contract, one customer, one slot, one budget line: real, and something only one of you can win');
+    const what=document.createElement('input');what.maxLength=PRIZEMAX;what.placeholder='the engine lease at a regional airline…';what.autocomplete='off';
+    const fl=document.createElement('div');fl.className='pq';fl.textContent='…and the rival is…';
+    const who=document.createElement('input');who.maxLength=ROLEMAX;who.placeholder='the other lessor (that’s '+G.B+')';who.autocomplete='off';
+    const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+    const sync=()=>{lk.disabled=!(clean(what.value)&&clean(who.value));};
+    [what,who].forEach(i=>i.addEventListener('input',sync));
+    lk.addEventListener('click',()=>{const p=clean(what.value),r=clean(who.value);if(!p||!r)return;lk.disabled=what.disabled=who.disabled=true;st.textContent='Sending…';
+      line('s',p+'‖'+r).then(()=>{shown='';play();}).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=what.disabled=who.disabled=false;});});
+    c.appendChild(what);c.appendChild(fl);c.appendChild(who);app.appendChild(c);app.appendChild(lk);app.appendChild(backBtn());what.focus();
+  }else if(key==='moves'){
+    q.textContent=meA?'Your moves':'You are '+rival;
+    hint.textContent=meA?'Two or three things your side could do to win '+G.prize+'. '+G.B+' is writing '+rival+'’s moves at the same time; neither of you sees the other’s list until both are in.'
+      :G.A+' and '+rival+' are both after '+G.prize+'. Two or three things '+rival+' could do to win it. '+G.A+' is writing theirs at the same time.';
+    movesCard(meA,G,list=>line(meA?'ma':'mb',list.join('‖')).then(()=>{shown='';play();}));
+  }else if(key==='pick'){
+    q.textContent='Pick your move, blind';
+    hint.textContent='Now you can see '+(meA?rival:G.A)+'’s moves. Pick the one you would actually make. '+other+' can’t see it until you both lock.';
+    pickCard(meA,G,myMoves,i=>line(meA?'pa':'pb',String(i)).then(()=>{shown='';play();}));
+  }else if(key==='cross'){
+    q.textContent='You met here';
+    hint.textContent='You chose “'+myMoves[myPick]+'”; '+(meA?rival:G.A)+' chose “'+theirMoves[theirPick]+'”.';
+    crossCard(meA,G,myMoves,xs=>line(meA?'xa':'xb',xs.length?xs.join(','):'-').then(()=>{shown='';play();}));
+  }else if(key==='over'){
+    const stand=standing(G), n=stand.length;
+    q.textContent=n===1?'One cell left standing':'Your matrix is on the screen';
+    hint.textContent=n===1?'By crossing out moves alone, you found the equilibrium. Look up at the screen.':'Look up at the screen.';
+    const big=document.createElement('div');big.className='bigcard';
+    big.innerHTML='<div class="head '+(n===1?'good':'calm')+'">'+(n===1?'Equilibrium':n+' cells still in play')+'</div><div class="sub">'+esc(G.A)+' v '+esc(rival)+' (played by '+esc(G.B)+'), for '+esc(G.prize)+'.</div>';
+    app.appendChild(big);
+    const again=btn('PLAY AGAIN, SWAP ROLES','lock');again.addEventListener('click',()=>{cur=null;saveCur();shown='';render();});app.appendChild(again);
+  }else{ /* the waits */
+    const msg={'wait-stake':G.A+' is writing what you are both after, and who you are playing. Keep this page open.',
+      'wait-moves':other+' is still writing. You’ll see their moves when both lists are in.',
+      'wait-pick':'Locked. '+other+' is choosing. The cell lights up when both moves are in.',
+      'wait-cross':other+' is deciding what to cross out.'}[key]||'Waiting…';
+    q.textContent=key==='wait-pick'?'Your move is locked':'Your partner’s turn';hint.textContent='';
+    const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>'+esc(msg);app.appendChild(w);
+    app.appendChild(backBtn('← leave this game'));
+  }
+}
+const line=(key,payload)=>say(cur.A+'|'+cur.B+'|'+cur.g+'|'+key+'|'+payload);
+function btn(label,cls,fn){const b=document.createElement('button');b.className=cls;b.textContent=label;if(fn)b.addEventListener('click',fn);return b;}
+function card(side,suit,question,sub){const c=document.createElement('div');c.className='card '+side;c.innerHTML='<div class="suit"></div>'+(question?'<div class="pq"></div>':'');c.querySelector('.suit').textContent=suit;
+  if(question){c.querySelector('.pq').textContent=question;if(sub){const s=document.createElement('small');s.textContent=sub;c.querySelector('.pq').appendChild(s);}}return c;}
+function movesCard(meA,G,onLock){
+  const c=card(meA?'you':'them',meA?'YOUR MOVES':(cut(G.rival||'THE RIVAL',26).toUpperCase()+'’S MOVES'),null);
+  const inputs=[];
+  for(let j=0;j<3;j++){const row=document.createElement('div');row.className='optrow';row.innerHTML='<span class="on">'+(j<2?'MOVE '+(j+1):'OR')+'</span>';
+    const inp=document.createElement('input');inp.maxLength=MOVEMAX;inp.placeholder=j<2?'One thing you could do…':'A third, if you have one…';inp.autocomplete='off';row.appendChild(inp);c.appendChild(row);inputs.push(inp);}
+  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  const list=()=>inputs.map(i=>clean(i.value)).filter(Boolean);
+  function sync(){lk.disabled=list().length<2;}
+  inputs.forEach(i=>i.addEventListener('input',sync));
+  lk.addEventListener('click',()=>{const L=list();if(L.length<2)return;lk.disabled=true;inputs.forEach(i=>i.disabled=true);st.textContent='Sending…';
+    onLock(L).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;inputs.forEach(i=>i.disabled=false);});});
+  app.appendChild(c);app.appendChild(lk);app.appendChild(backBtn('← leave this game'));inputs[0].focus();
+}
+function pickCard(meA,G,moves,onLock){
+  const c=card(meA?'you':'them','TAP THE MOVE YOU WOULD MAKE',null);
+  const picks=document.createElement('div');picks.className='picks';
+  let pick=-1;const pb=[];
+  moves.forEach((m,i)=>{const b=document.createElement('button');b.className='opt';b.style.setProperty('--side',meA?'var(--teal)':'var(--terracotta)');b.textContent=m;b.addEventListener('click',()=>{pick=i;pb.forEach(x=>x.classList.toggle('mine',x===b));lk.disabled=false;});picks.appendChild(b);pb.push(b);});
+  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  lk.addEventListener('click',()=>{if(pick<0)return;lk.disabled=true;pb.forEach(b=>b.disabled=true);st.textContent='Sending…';
+    onLock(pick).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;pb.forEach(b=>b.disabled=false);});});
+  c.appendChild(picks);app.appendChild(c);app.appendChild(lk);app.appendChild(backBtn('← leave this game'));
+}
+function crossCard(meA,G,moves,onLock){
+  const c=card('cross','CROSS OUT','Now you have seen their moves: is there a move on your list you would never make, whatever they did?','Tap it to cross it out, or keep them all. A move that is worse whatever the other side does is the one the matrix says never to play');
+  const picks=document.createElement('div');picks.className='picks';
+  const xs=new Set();const pb=[];
+  moves.forEach((m,i)=>{const b=document.createElement('button');b.className='opt';b.textContent=m;b.addEventListener('click',()=>{if(xs.has(i))xs.delete(i);else xs.add(i);
+    if(xs.size>=moves.length){xs.delete(i);st.textContent='Keep at least one move.';return;}
+    b.classList.toggle('crossed',xs.has(i));lk.textContent=xs.size?'LOCK IT IN':'KEEP THEM ALL';drawPM(G,meA,{x:[...xs]});});picks.appendChild(b);pb.push(b);});
+  const lk=btn('KEEP THEM ALL','lock');
+  lk.addEventListener('click',()=>{lk.disabled=true;pb.forEach(b=>b.disabled=true);st.textContent='Sending…';
+    onLock([...xs].sort()).catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;pb.forEach(b=>b.disabled=false);});});
+  c.appendChild(picks);app.appendChild(c);app.appendChild(lk);app.appendChild(backBtn('← leave this game'));
+}
+</script>
+</body></html>
