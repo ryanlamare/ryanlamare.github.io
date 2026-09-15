@@ -1,0 +1,179 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Where else do we see Hotelling’s game?</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 3's Hotelling beat, played from the phones: in pairs, name two
+   rivals from your world, pick a colour for each, and drag two hot-dog
+   carts along a beach to where those rivals actually sit. Customers walk
+   to the nearest cart, so the shares update as you drag. LOCK IT IN puts
+   the pair on the room's beach on the deck; a pair can add a second or
+   third example after the first.
+
+   Wire: two lines per example into room m3-beach, "a1‖name‖hex‖pos" and
+   "b1‖name‖hex‖pos" (the digit is the example number, 1 to 3; hex is the
+   cart's colour without the hash; pos is 0–100 along the beach). The deck
+   groups the room's lines by phone and example; the latest line per key
+   wins, so a re-send corrects rather than duplicates. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+/* the beach */
+.beach{position:relative;width:100%;height:150px;background:linear-gradient(180deg,var(--tan-light) 0 64%,var(--blue) 64% 100%);border:2.5px solid var(--ink);border-radius:10px;user-select:none;touch-action:none;overflow:hidden}
+.beach .shade{position:absolute;top:0;bottom:36%;opacity:.28}
+.cart{position:absolute;top:10px;width:84px;margin-left:-42px;text-align:center;cursor:grab;touch-action:none}
+.cart svg{width:66px;height:auto;display:block;margin:0 auto}
+.cart .cwheel{fill:var(--ink)}
+.cart .cletter{font-family:var(--display);font-weight:900;font-size:26px}
+.cart .pct{font-family:var(--display);font-weight:900;font-size:17px;color:var(--paper);margin-top:4px;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.bnote{font-weight:600;font-size:13px;color:var(--muted);text-align:center;min-height:18px}
+.bnote b{color:var(--red)}
+/* the cards */
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.a{--side:var(--teal)} .card.b{--side:var(--terracotta)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+.card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input[type=text]:focus{border-bottom-color:var(--side)}
+.card input:disabled{opacity:.45}
+.card ::placeholder{color:var(--muted);font-weight:500}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0;position:relative}
+.sw.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--paper) inset}
+.sw.on::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--on-mark)}
+.sw:disabled{opacity:.4;cursor:default}
+.swlbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted)}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+button.lock.quiet{background:var(--card);border-color:var(--ink);color:var(--ink)}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center}
+.bigcard .head{font-weight:700;font-size:22px;color:var(--red)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.4}
+.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+#app{display:flex;flex-direction:column;gap:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 3</div>
+  <h1 id="q">Where else do we see Hotelling’s game?</h1>
+  <div class="hint" id="hint">In pairs. Two rivals from your world. Name them, pick a colour for each, and put them on the beach where they actually sit.</div>
+  <div class="beach" id="beach"></div>
+  <div class="bnote" id="bnote"></div>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m3-beach', KEY='gt-beach';
+const NAMEMAX=24, MAXN=3;
+const PALETTE=[['CE1E32','Red'],['C4673D','Terracotta'],['D09868','Tan'],['C9A227','Ochre'],['26713D','Green'],['59949C','Teal'],['37658A','Blue'],['5B3C8A','Purple'],['6B3F47','Maroon'],['8E3E28','Brick'],['9A958A','Grey'],['1B1C19','Black']];
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), st=document.getElementById('status'), beach=document.getElementById('beach'), bnote=document.getElementById('bnote');
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* light letters on a dark cart, dark letters on a light one */
+const light=hex=>{const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);return (0.299*r+0.587*g+0.114*b)<150;};
+function say(line){
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+/* ---- the beach: two draggable carts, customers walk to the nearest ---- */
+const S={a:{name:'',hex:'59949C',pos:30},b:{name:'',hex:'C4673D',pos:70}};
+function cartSVG(side){
+  const c=S[side], fg=light(c.hex)?'#F0EAD9':'#1B1C19';
+  const letter=(c.name||side).trim().charAt(0).toUpperCase();
+  return '<svg viewBox="0 0 90 96"><path fill="#'+c.hex+'" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect fill="#'+c.hex+'" x="18" y="50" width="54" height="28"/><text class="cletter" fill="'+fg+'" x="45" y="72" text-anchor="middle">'+esc(letter)+'</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>';
+}
+function drawBeach(lockedView){
+  const A=S.a.pos,B=S.b.pos, mid=(Math.min(A,B)+Math.max(A,B))/2, leftIsA=A<=B;
+  const sA=leftIsA?mid:100-mid, sB=100-sA;
+  beach.innerHTML='<div class="shade" style="left:0;width:'+(leftIsA?mid:100-mid)+'%;background:#'+(leftIsA?S.a.hex:S.b.hex)+'"></div>'+
+    '<div class="shade" style="right:0;width:'+(leftIsA?100-mid:mid)+'%;background:#'+(leftIsA?S.b.hex:S.a.hex)+'"></div>'+
+    '<div class="cart" id="cartA" style="left:'+A+'%">'+cartSVG('a')+'<div class="pct">'+Math.round(sA)+'%</div></div>'+
+    '<div class="cart" id="cartB" style="left:'+B+'%">'+cartSVG('b')+'<div class="pct">'+Math.round(sB)+'%</div></div>';
+  if(!lockedView){drag(document.getElementById('cartA'),'a');drag(document.getElementById('cartB'),'b');}
+  const gap=Math.abs(A-B);
+  bnote.innerHTML=lockedView?'':(gap<=10?'<b>Side by side.</b> Neither can gain by moving.':gap<=30?'Close. Can either one do better by moving?':'Far apart. Who gets the customers in the middle?');
+}
+function drag(el,side){
+  el.addEventListener('pointerdown',e=>{
+    e.preventDefault();el.setPointerCapture(e.pointerId);
+    const move=ev=>{const r=beach.getBoundingClientRect();S[side].pos=Math.round(Math.max(2,Math.min(98,(ev.clientX-r.left)/r.width*100)));
+      el.style.left=S[side].pos+'%';layoutOnly();};
+    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);drawBeach(false);};
+    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+  });
+}
+function layoutOnly(){
+  const A=S.a.pos,B=S.b.pos, mid=(Math.min(A,B)+Math.max(A,B))/2, leftIsA=A<=B;
+  const sA=leftIsA?mid:100-mid, sB=100-sA;
+  const sh=beach.querySelectorAll('.shade');
+  sh[0].style.width=(leftIsA?mid:100-mid)+'%';sh[0].style.background='#'+(leftIsA?S.a.hex:S.b.hex);
+  sh[1].style.width=(leftIsA?100-mid:mid)+'%';sh[1].style.background='#'+(leftIsA?S.b.hex:S.a.hex);
+  document.querySelector('#cartA .pct').textContent=Math.round(sA)+'%';
+  document.querySelector('#cartB .pct').textContent=Math.round(sB)+'%';
+}
+
+/* ---- the form ---- */
+let saved={n:0,done:[]};
+try{saved=JSON.parse(localStorage.getItem(KEY))||saved;}catch(_){}
+function render(){
+  st.textContent='';app.innerHTML='';
+  if(saved.n>0&&saved.justLocked){renderLocked();return;}
+  S.a={name:'',hex:'59949C',pos:30};S.b={name:'',hex:'C4673D',pos:70};
+  drawBeach(false);
+  const cards={};
+  ['a','b'].forEach(side=>{
+    const c=document.createElement('div');c.className='card '+side;
+    c.innerHTML='<div class="suit">'+(side==='a'?'RIVAL ONE':'RIVAL TWO')+'</div><div class="pq">'+(side==='a'?'Who is the first rival?':'And who is the other?')+'</div>';
+    const inp=document.createElement('input');inp.type='text';inp.maxLength=NAMEMAX;inp.placeholder=side==='a'?'Carle…':'Christie…';inp.autocomplete='off';
+    inp.addEventListener('input',()=>{S[side].name=clean(inp.value);drawBeach(false);sync();});
+    c.appendChild(inp);
+    const lbl=document.createElement('div');lbl.className='swlbl';lbl.textContent='Their colour';c.appendChild(lbl);
+    const sw=document.createElement('div');sw.className='swatches';
+    PALETTE.forEach(([hex,name])=>{const b=document.createElement('button');b.type='button';b.className='sw'+(S[side].hex===hex?' on':'');b.style.background='#'+hex;b.style.setProperty('--on-mark',light(hex)?'#F0EAD9':'#1B1C19');b.title=name;b.setAttribute('aria-label',name);
+      b.addEventListener('click',()=>{S[side].hex=hex;sw.querySelectorAll('.sw').forEach(x=>x.classList.toggle('on',x===b));drawBeach(false);});sw.appendChild(b);});
+    c.appendChild(sw);cards[side]=c;app.appendChild(c);
+  });
+  const lk=document.createElement('button');lk.className='lock';lk.type='button';lk.textContent='LOCK IT IN';lk.disabled=true;
+  function sync(){lk.disabled=!(S.a.name&&S.b.name);}
+  lk.addEventListener('click',()=>{
+    if(!S.a.name||!S.b.name)return;
+    const n=saved.n+1;
+    lk.disabled=true;app.querySelectorAll('input,button').forEach(b=>b.disabled=true);st.textContent='Sending…';
+    say('a'+n+'‖'+S.a.name+'‖'+S.a.hex+'‖'+S.a.pos).then(()=>say('b'+n+'‖'+S.b.name+'‖'+S.b.hex+'‖'+S.b.pos))
+      .then(()=>{saved={n,done:[...(saved.done||[]),{a:{...S.a},b:{...S.b}}],justLocked:true};try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);app.querySelectorAll('input,button').forEach(b=>b.disabled=false);lk.disabled=false;});
+  });
+  app.appendChild(lk);
+  const back=document.createElement('button');back.className='back';back.type='button';back.textContent=saved.n?'← your '+saved.n+' pair'+(saved.n>1?'s are':' is')+' on the beach':'';
+  if(saved.n)app.appendChild(back);
+}
+function renderLocked(){
+  const last=saved.done[saved.done.length-1];
+  S.a={...last.a};S.b={...last.b};drawBeach(true);
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div class="head">They’re on the beach</div><div class="sub"></div>';
+  big.querySelector('.sub').textContent=last.a.name+' and '+last.b.name+', '+Math.abs(last.a.pos-last.b.pos)+' apart out of 100. Look up at the screen.';
+  app.appendChild(big);
+  if(saved.n<MAXN){const more=document.createElement('button');more.className='lock quiet';more.type='button';more.textContent='ANOTHER PAIR OF RIVALS';more.addEventListener('click',()=>{saved.justLocked=false;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(_){}render();});app.appendChild(more);}
+  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your pairs)';
+  again.addEventListener('click',()=>{saved={n:0,done:[]};try{localStorage.removeItem(KEY);}catch(_){}render();});
+  app.appendChild(again);
+}
+render();
+</script>
+</body></html>
