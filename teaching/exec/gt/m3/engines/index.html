@@ -7,16 +7,15 @@
 /* Module 3's closing exercise: one phone per group of three, one real
    zero-sum situation from their world, drawn on the deck as one engine
    whose fan is the pie. The group writes what was being divided, who was
-   on the other side, one move they would have made whatever the other
-   side did (or would never have made, whatever they did), and sets how it
+   on the other side, whether either side had a dominant or inferior
+   strategy (and what it was), and sets how it
    was divided in the end as a percentage between them and the other
    party; the fan on this page follows the slider. One LOCK IT IN.
 
    Wire: four lines into room m3-engines, one per card, "k‖text" (the
    Worker caps a line at 200 characters, which is why one line per card):
-   1‖what was divided, 2‖the other party, 3‖d-or-i-or-n‖the move (d a
-   move they'd make whatever the other side did, i one they'd never make,
-   n no such move), 4‖the percentage to them (0–100). The deck groups the
+   1‖what was divided, 2‖the other party, 3‖d-or-i-or-n‖the strategy (d
+   dominant, i inferior, n neither), 4‖the percentage to them (0–100). The deck groups the
    room's lines by phone; the latest line per card wins, so a re-send
    corrects rather than duplicates. */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -30,7 +29,9 @@ h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
 /* the engine: a head-on fan, the pie between you (teal) and them (terracotta) */
 .fanwrap{display:flex;align-items:center;gap:16px;background:var(--paper-soft);border:2.5px solid var(--ink);border-radius:12px;padding:12px 14px}
 .fanwrap svg{width:132px;height:132px;flex:none;display:block}
-.fanwrap .rot{transform-box:fill-box;transform-origin:center;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.fanwrap .rot{transform-box:fill-box;transform-origin:center}
+.fanwrap.running .rot{animation:erun 7s linear infinite}
+@keyframes erun{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .fanwrap .shares{flex:1;display:flex;flex-direction:column;gap:6px}
 .fanwrap .sh{display:flex;justify-content:space-between;align-items:baseline}
 .fanwrap .sh .w{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:11px}
@@ -113,32 +114,32 @@ let turns=0;
 function drawFan(pct,word){
   fanwrap.innerHTML=fanSVG(pct)+'<div class="shares"><div class="sh you"><span class="w">You</span><span class="n">'+pct+'</span></div><div class="sh them"><span class="w">The other party</span><span class="n">'+(100-pct)+'</span></div><div class="word">'+esc(word||'')+'</div></div>';
 }
-function spinFan(){const r=document.getElementById('rot');if(!r)return;turns+=1;r.style.transform='rotate('+(turns*360)+'deg)';}
-const wordFor=p=>p>=100?'A total win':p<=0?'A total loss':p===50?'An even split':p>50?'Most of it to you':'Most of it to them';
+function spinFan(){fanwrap.classList.add('running');}
+const wordFor=p=>p>=100?'You won everything':p<=0?'You lost everything':p===50?'An even split':p>50?'Most of it to you':'Most of it to them';
 
 /* ---- the form ---- */
 let locked=null;
 try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
 function render(){
-  st.textContent='';app.innerHTML='';
+  st.textContent='';app.innerHTML='';fanwrap.classList.remove('running');
   if(locked){renderLocked();return;}
   drawFan(50,wordFor(50));
   const c1=card('pie','THE PIE','What was being divided?','One contract, one budget, one slot, one engine: something fixed, that both of you wanted');
   const pie=input(PIEMAX,'the overhaul contract at renewal…');c1.appendChild(pie);
   const c2=card('them','THE OTHER PARTY','Who was on the other side?','');
   const party=input(PARTYMAX,'the incumbent shop…');c2.appendChild(party);
-  const c3=card('strat','YOUR STRATEGY','Was there a move you would have made whatever they did, or one you would never have made, whatever they did?','Tap one, then say what the move was');
+  const c3=card('strat','YOUR STRATEGY','Did either side have a dominant or inferior strategy?','Tap one, then say what it was');
   const chips=document.createElement('div');chips.className='chips';
   let k=null;const cb=[];
-  [['d','I would have done it whatever they did'],['i','I would never have done it, whatever they did'],['n','No such move']].forEach(([kk,label])=>{
+  [['d','Dominant strategy'],['i','Inferior strategy'],['n','Neither']].forEach(([kk,label])=>{
     const b=document.createElement('button');b.className='opt';b.type='button';b.textContent=label;b.dataset.k=kk;
     b.addEventListener('click',()=>{k=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));move.disabled=(k==='n');if(k==='n')move.value='';sync();});
     chips.appendChild(b);cb.push(b);});
   c3.appendChild(chips);
-  const move=input(MOVEMAX,'The move…');c3.appendChild(move);
-  const c4=card('out','THE OUTCOME','How was it divided in the end?','Set the split as a percentage between you and them: 100–0 is a total win, 0–100 a total loss, 50/50 an even split');
+  const move=input(MOVEMAX,'What was it, and whose?');c3.appendChild(move);
+  const c4=card('out','THE OUTCOME','How was the pie divided in the end?','Set it as a percentage split between you and the other side (100% = you won everything; 0% = you lost everything)');
   const sl=document.createElement('div');sl.className='slider';
-  sl.innerHTML='<input type="range" min="0" max="100" step="5" value="50" aria-label="Percentage to you"><div class="ends"><span class="them">0 · A total loss</span><span>50 · 50</span><span class="you">100 · A total win</span></div>';
+  sl.innerHTML='<input type="range" min="0" max="100" step="5" value="50" aria-label="Percentage to you"><div class="ends"><span class="them">0% · You lost everything</span><span>50 · 50</span><span class="you">100% · You won everything</span></div>';
   const range=sl.querySelector('input');
   range.addEventListener('input',()=>{drawFan(+range.value,wordFor(+range.value));});
   c4.appendChild(sl);
@@ -157,9 +158,9 @@ function render(){
   pie.focus();
 }
 function renderLocked(){
-  drawFan(locked.pct,wordFor(locked.pct));
+  drawFan(locked.pct,wordFor(locked.pct));fanwrap.classList.add('running');
   const big=document.createElement('div');big.className='bigcard';
-  const kw={d:'A move you would have made whatever they did',i:'A move you would never have made, whatever they did',n:'No such move'}[locked.k];
+  const kw={d:'A dominant strategy',i:'An inferior strategy',n:'No dominant or inferior strategy'}[locked.k];
   big.innerHTML='<div class="head">Your engine is on the screen</div><div class="sub"></div>';
   big.querySelector('.sub').textContent=locked.pie+' · against '+locked.party+' · '+kw+(locked.move?': '+locked.move:'')+' · '+locked.pct+' to you, '+(100-locked.pct)+' to them. Look up at the screen.';
   app.appendChild(big);
