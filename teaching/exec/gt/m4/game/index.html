@@ -1,506 +1,701 @@
-<!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8">
+<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Price Wars — game brief</title>
+<title>Module 4 · Price Wars</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
+/* Participant page for the Module 4 price war (the capstone of day one).
+   Teams of three run one petrol station each, Aura Fuels or Buco's
+   Service Station, and post a price every week without seeing the other
+   station's sign. Nobody knows which station they are playing against:
+   the deck pairs the teams at random when the game starts and the only
+   people who ever learn are the reps who meet. The whole brief lives on
+   this page, there is no separate rules sheet, and no payoff matrix is
+   shown during play (the deck puts the matrix up after the game).
+
+   Wire (four gt-poll rooms; ?room=<x> suffixes all of them for a
+   rehearsal, ?demo=1 runs the whole thing locally with no network):
+     m4-teams   "a1|Name"                     one line per phone, who is on which station
+     m4-prices  "a1|w|1.40"                   the team's lock for week w, latest wins until the reveal
+                "::pair|a1=b3,a2=b5"          the deck's random pairing (the game has started)
+                "::open|w"  "::reveal|w"      the deck opens a week, then puts the signs up
+                "::meet|w"  "::reps|w"        the deck offers a meeting before week w, then closes the asking
+                "::shock|on"                  the Gazette rules for weeks 5 and 6 (read by the points system too)
+     m4-huddle  "a1|w|1.40|Name|reason"       a teammate's leaning, seen only by that team; "a1|w|lock|Name"
+     m4-meet    "a1|w|ask|y"                  the team asked (or not) for the meeting before week w
+                "a1|w|agreed|Name|text"       the rep's private note of what was agreed, for the debrief
+   A week is revealed on this phone only once the deck says so, never
+   from the other station's lock arriving. */
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--paper-soft);color:var(--ink);font-family:var(--sans);line-height:1.5;
-  padding:40px 16px 80px;-webkit-font-smoothing:antialiased}
-.sheet{max-width:880px;margin:0 auto;background:var(--paper);padding:64px 72px 72px;
-  box-shadow:0 2px 30px rgba(27,28,25,.10);border:1px solid var(--rule)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tag>span{white-space:nowrap}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-family:var(--display);font-weight:900;font-size:40px;line-height:.95;color:var(--red);letter-spacing:.01em}
+h2{font-weight:700;font-size:21px;line-height:1.25}
+h2 .st{color:var(--red)}
+p{font-size:16px;line-height:1.5}
+p b{font-weight:700}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.tbtn{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:none;border:1.5px solid var(--muted);color:var(--muted);padding:5px 9px;cursor:pointer}
+.tbtn.playing{border-color:var(--red);color:var(--red)}
+.card{border:2.5px solid var(--ink);background:var(--card);padding:16px 18px}
+.card.soft{border-style:dashed;border-color:var(--muted);background:none}
+.card h3{font-weight:700;font-size:16px;margin-bottom:6px}
+.card p{font-size:15px}
+.card p+p{margin-top:8px}
+.stack{display:flex;flex-direction:column;gap:11px}
+button.big{display:block;width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:16px 18px;cursor:pointer}
+button.big:disabled{opacity:.4;cursor:default}
+button.big.quiet{background:var(--card);color:var(--ink);border-color:var(--ink)}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
 
-/* ---- header ---- */
-.hhead{text-align:center}
-.hkick{font-weight:700;text-transform:uppercase;letter-spacing:.26em;font-size:12.5px;color:var(--muted)}
-.hword{font-family:var(--display);font-weight:900;font-size:86px;line-height:.9;color:var(--red);
-  letter-spacing:.005em;margin-top:20px}
-.hsub{font-weight:700;font-size:21px;color:var(--ink);margin-top:10px}
-.hrule{border:0;border-top:2px solid var(--ink);margin:26px 0 24px}
-.lead-p{font-size:17px;line-height:1.6;margin-bottom:16px}
-.lead-p:last-child{margin-bottom:0}
-.tagline{text-align:center;font-weight:700;font-size:18px;color:var(--ink);margin:24px 0 6px}
+/* the station picker */
+.stgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stgrid .col{display:flex;flex-direction:column;gap:8px}
+.stgrid .colh{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;padding-bottom:2px;min-height:38px;display:flex;align-items:flex-end}
+.stgrid .col.a .colh{color:var(--teal)} .stgrid .col.b .colh{color:var(--terracotta)}
+.stgrid button{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);background:var(--card);
+  border:2.5px solid var(--ink);padding:13px 10px;cursor:pointer}
+.stgrid .col.a button.on{background:var(--teal);border-color:var(--teal);color:var(--paper)}
+.stgrid .col.b button.on{background:var(--terracotta);border-color:var(--terracotta);color:var(--paper)}
 
-/* ---- section heads ---- */
-.shead{display:flex;align-items:center;gap:13px;margin:42px 0 0}
-.shead .sq{width:17px;height:17px;background:var(--red);flex:none}
-.shead svg{width:30px;height:30px;flex:none}
-.shead h2{font-family:var(--display);font-weight:900;font-size:29px;color:var(--red);letter-spacing:.005em}
-.srule{border:0;border-top:1.5px solid var(--ink);margin:10px 0 20px}
+/* the brief */
+.brief{display:flex;flex-direction:column;gap:14px}
+.brief .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.brief .who{border:2.5px solid var(--ink);padding:12px 13px;background:var(--card)}
+.brief .who.mine{border-width:3.5px}
+.brief .who .nm{font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+.brief .who.a .nm{color:var(--teal)} .brief .who.b .nm{color:var(--terracotta)}
+.brief .who .yours{font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px}
+.brief .who p{font-size:13.5px;line-height:1.4;margin-top:5px}
+.brief ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.brief li{position:relative;padding-left:22px;font-size:15px;line-height:1.45}
+.brief li::before{content:"";position:absolute;left:0;top:8px;width:9px;height:9px;background:var(--red)}
+.brief .pay{display:flex;flex-direction:column;gap:8px}
+.brief .pay .row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;border-top:1.5px solid var(--rule);padding-top:8px}
+.brief .pay .row:first-child{border-top:none;padding-top:0}
+.brief .pay .n{font-family:var(--display);font-weight:900;font-size:26px;line-height:1;color:var(--ink);min-width:78px}
+.brief .pay .n.good{color:var(--green)} .brief .pay .n.bad{color:var(--red)}
+.brief .pay .t{font-size:14px;line-height:1.4}
+.brief .goal{background:var(--ink);color:var(--paper);padding:14px 16px;text-align:center;font-weight:700;font-size:16px}
 
-/* ---- cards ---- */
-.cards2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:6px 0 2px}
-.hcard{background:var(--card);border:1px solid var(--rule);padding:22px 24px}
-.hcard .ck{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--terracotta);margin-bottom:9px}
-.hcard h3{font-weight:700;font-size:20px;color:var(--ink);margin-bottom:8px}
-.hcard p{font-size:15.5px;line-height:1.5;color:var(--ink)}
-.hcard.teal .ck{color:var(--teal)}
+/* the junction */
+.junction{border:2.5px solid var(--ink);background:var(--tan-light);overflow:hidden}
+.junction svg{display:block;width:100%;height:auto}
+.wkhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.wkhead .wk{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
+.wkhead .dbl{font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ochre);border:2px solid var(--ochre);padding:4px 8px}
+.wkhead .shk{color:var(--red);border-color:var(--red)}
+.wkhead .mine{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.wkhead .mine.a{color:var(--teal)} .wkhead .mine.b{color:var(--terracotta)}
 
-/* ---- bullets ---- */
-ul.hbul{list-style:none;margin:4px 0}
-ul.hbul li{position:relative;padding-left:26px;margin-bottom:15px;font-size:16.5px;line-height:1.55}
-ul.hbul li:last-child{margin-bottom:0}
-ul.hbul li::before{content:"";position:absolute;left:0;top:8px;width:10px;height:10px;background:var(--red)}
-.gain{color:var(--green);font-weight:700}.loss{color:var(--red);font-weight:700}.flat{color:var(--ink);font-weight:700}
-.pa{color:var(--teal);font-weight:700}.pb{color:var(--terracotta);font-weight:700}
+/* the two signs you can post */
+.signs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.signbtn{font-family:var(--sans);text-align:left;background:var(--card);border:2.5px solid var(--ink);padding:0;cursor:pointer;color:var(--ink);overflow:hidden}
+.signbtn .top{background:var(--ink);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:6px 10px}
+.signbtn .pr{font-family:var(--display);font-weight:900;font-size:46px;line-height:1;padding:12px 10px 4px}
+.signbtn .pr small{font-size:22px;vertical-align:top;margin-right:1px}
+.signbtn .why{font-size:12.5px;line-height:1.35;color:var(--muted);padding:0 10px 10px;font-weight:500}
+.signbtn.lean{border-color:var(--red);border-width:3.5px}
+.signbtn.lean .top{background:var(--red)}
+.signbtn.locked{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.signbtn.locked .why{color:color-mix(in srgb,var(--paper) 75%,transparent)}
+.signbtn:disabled{cursor:default}
+.huddle{display:flex;flex-direction:column;gap:8px}
+.huddle .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.huddle .chips{display:flex;flex-direction:column;gap:5px;min-height:10px}
+.chip{font-size:13px;line-height:1.3;background:var(--card);border-left:4px solid var(--ink);padding:5px 8px}
+.chip b{font-weight:700}
+.chip.me{border-left-color:var(--red)}
+.chip .r{display:block;color:var(--muted);font-weight:500}
+.reason{width:100%;font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:12px 14px}
+.reason::placeholder{color:var(--muted);font-weight:500}
+.lockline{font-weight:600;font-size:14px;color:var(--muted)}
+.lockline b{color:var(--ink)}
 
-/* ---- objective box ---- */
-.obox{background:var(--ink);color:var(--paper);text-align:center;padding:28px 24px;margin:32px 0 6px}
-.obox .ok{font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:12.5px;color:var(--tan-light);margin-bottom:10px}
-.obox .ot{font-weight:700;font-size:22px;line-height:1.3}
+/* the result card and the ledger */
+.result{border:2.5px solid var(--ink);background:var(--card);padding:16px;text-align:center}
+.result .amt{font-family:var(--display);font-weight:900;font-size:54px;line-height:1;color:var(--ink)}
+.result .amt.good{color:var(--green)} .result .amt.bad{color:var(--red)}
+.result .amt small{font-size:26px;vertical-align:top}
+.result .verdict{font-weight:700;font-size:16px;margin-top:8px}
+.result .run{font-weight:600;font-size:13.5px;color:var(--muted);margin-top:6px;letter-spacing:.04em;text-transform:uppercase}
+.result .run b{color:var(--ink);font-size:15px}
+table.ledger{width:100%;border-collapse:collapse;font-size:14px}
+table.ledger th{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--ink)}
+table.ledger td{padding:7px 6px;border-bottom:1.5px solid var(--rule);font-weight:600}
+table.ledger td.w{font-weight:700}
+table.ledger td.w em{font-style:normal;font-size:10px;color:var(--ochre);margin-left:4px;letter-spacing:.1em}
+table.ledger td.w em.s{color:var(--red)}
+table.ledger td.you{color:var(--ink)} table.ledger td.them{color:var(--muted)}
+table.ledger td.p150{color:var(--green)} table.ledger td.p140{color:var(--red)}
+table.ledger tr.cur td{background:color-mix(in srgb,var(--card) 70%,transparent)}
+table.ledger tr.tot td{border-top:2.5px solid var(--ink);border-bottom:none;font-weight:700;font-size:15px}
+table.ledger td.blank{color:var(--rule)}
 
-/* ---- payoff matrix (house component) ---- */
-.matwrap{display:flex;justify-content:center;margin:6px 0 14px}
-.pd{display:grid;grid-template-columns:54px 132px 200px 200px;grid-template-rows:34px 40px 112px 112px}
-.pd .ch{grid-column:3/5;grid-row:1;display:flex;align-items:center;justify-content:center;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:15px;color:var(--terracotta)}
-.pd .cl{display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--ink)}
-.pd .cl1{grid-column:3;grid-row:2}.pd .cl2{grid-column:4;grid-row:2}
-.pd .rh{grid-column:1;grid-row:3/5;display:flex;align-items:center;justify-content:center;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:15px;color:var(--teal);writing-mode:vertical-rl;transform:rotate(180deg)}
-.pd .rl{display:flex;align-items:center;justify-content:flex-end;text-align:right;padding-right:14px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--ink)}
-.pd .rl1{grid-column:2;grid-row:3}.pd .rl2{grid-column:2;grid-row:4}
-.pd .pdgrid{grid-column:3/5;grid-row:3/5;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;background:var(--ink);border:3px solid var(--ink)}
-.pd .pcell{background:var(--card);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;position:relative}
-.pd .pcomma{color:var(--muted);font-weight:500;margin:0 .14em}
-.cap{text-align:center;font-size:14.5px;color:var(--muted);margin-top:4px}
+/* the meeting */
+.meet .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.spot{background:var(--ink);color:var(--paper);padding:16px;text-align:center}
+.spot .where{font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:var(--paper);margin:4px 0}
+.spot .sub{font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:color-mix(in srgb,var(--paper) 70%,transparent)}
+.bulletin{border:3px double var(--ink);background:var(--paper-soft);padding:14px 16px}
+.bulletin .mast{font-family:var(--display);font-weight:900;font-size:22px;line-height:1;text-align:center;letter-spacing:.02em}
+.bulletin .mast small{display:block;font-family:var(--sans);font-weight:600;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.bulletin h3{font-weight:700;font-size:17px;line-height:1.2;margin:10px 0 6px;color:var(--red)}
+.bulletin p{font-size:14px;line-height:1.45}
+.bulletin a{color:var(--ink);font-weight:700}
+.foot{font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.04em;text-align:center;margin-top:10px}
 
-/* ---- ledger ---- */
-table.ledger{width:100%;border-collapse:collapse;margin-top:6px}
-table.ledger th{text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px;
-  color:var(--muted);padding:10px 12px;border-bottom:2px solid var(--ink)}
-table.ledger td{padding:0 12px;border-bottom:1px solid var(--rule);font-size:15px;height:46px}
-table.ledger tr.x2 td{background:color-mix(in srgb, var(--blue) 14%, transparent)}
-table.ledger tr.fin td{background:color-mix(in srgb, var(--ochre) 20%, transparent)}
-table.ledger .rnum{font-weight:700}
-table.ledger .tag{font-weight:700;font-size:11px;letter-spacing:.04em;margin-left:7px}
-.tag.blue{color:var(--blue)}.tag.amber{color:var(--ochre)}
-.legend{font-size:13px;color:var(--muted);margin-top:12px}
-.legend b.blue{color:var(--blue)}.legend b.amber{color:var(--ochre)}
-.exnote{font-size:14.5px;line-height:1.55;color:var(--muted);margin-top:20px;border-left:3px solid var(--rule);padding-left:16px}
-.exnote b{color:var(--ink)}
-
-/* ---- scene illustration ---- */
-.scene{margin:28px 0 6px;border:1px solid var(--rule);background:var(--paper)}
-.scene svg{width:100%;height:auto;display:block}
-.scene figcaption{font-size:14.5px;line-height:1.5;color:var(--muted);padding:11px 14px 12px;
-  border-top:1px solid var(--rule);background:var(--paper-soft);display:flex;align-items:center;gap:14px}
-.scene figcaption>span{flex:1}
-.theme{flex:none;display:inline-flex;align-items:center;gap:8px;background:var(--card);
-  border:1.5px solid var(--rule);color:var(--ink);font-family:var(--sans);font-weight:700;
-  text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;padding:7px 12px;cursor:pointer;
-  transition:border-color .2s,background .2s}
-.theme:hover{border-color:var(--red)}
-.theme:focus-visible{outline:2px solid var(--red);outline-offset:2px}
-.theme .tri{width:0;height:0;border-left:9px solid var(--red);border-top:6px solid transparent;
-  border-bottom:6px solid transparent;transition:none}
-.theme.playing{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-.theme.playing .tri{width:9px;height:12px;border:0;background:var(--tan-light);
-  clip-path:polygon(0 0,35% 0,35% 100%,0 100%,0 0,65% 0,100% 0,100% 100%,65% 100%,65% 0)}
-
-
-
-/* ---- price lock-in (inline; posts to the gt-poll room m4-prices) ---- */
-.lk-name{display:flex;gap:10px;margin-top:8px}
-.lk-name input{flex:1;min-width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:12px 14px}
-.lk-name button{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:12px 18px;cursor:pointer}
-.lockwrap{margin-top:6px}
-.lk-h{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--muted);margin:18px 0 8px}
-.lk-stations{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.lk-stations button{font-family:var(--sans);font-weight:700;font-size:15px;padding:12px 0;background:var(--card);
-  border:2px solid var(--rule);cursor:pointer}
-.lk-stations button.a{color:var(--teal)}
-.lk-stations button.b{color:var(--terracotta)}
-.lk-stations button.on{border-color:var(--ink);background:var(--paper-soft);box-shadow:inset 0 0 0 1.5px var(--ink)}
-.lk-weeks{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.lk-weeks button{font-family:var(--sans);font-weight:700;font-size:15px;padding:12px 0;background:var(--card);
-  border:2px solid var(--rule);cursor:pointer;color:var(--ink)}
-.lk-weeks button.on{border-color:var(--ink);background:var(--paper-soft);box-shadow:inset 0 0 0 1.5px var(--ink)}
-.lk-prices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.lk-prices button{font-family:var(--display);font-weight:900;font-size:38px;padding:20px 0;cursor:pointer;
-  background:var(--ink);color:var(--paper);border:3px solid var(--ink)}
-.lk-prices button.on{background:var(--red);border-color:var(--red)}
-.lk-go{width:100%;margin-top:20px;font-family:var(--sans);font-weight:700;text-transform:uppercase;
-  letter-spacing:.14em;font-size:15px;padding:16px 0;background:var(--red);color:var(--paper);border:0;cursor:pointer}
-.lk-go:disabled{background:var(--rule);cursor:default}
-.lk-status{margin-top:12px;text-align:center;font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
-.lk-status.ok{color:var(--green)}
-.lk-status.bad{color:var(--red)}
-@media (max-width:640px){.lk-prices button{font-size:30px}}
-
-/* ---- footer ---- */
-.hfoot{display:flex;justify-content:space-between;margin-top:54px;padding-top:16px;border-top:1.5px solid var(--ink);
-  font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;color:var(--muted)}
-
-@media print{
-  body{background:#fff;padding:0}
-  .sheet{box-shadow:none;border:0;max-width:none;padding:32px 36px}
-  .shead{break-after:avoid}.hcard,.obox,tr{break-inside:avoid}
-  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-}
-@media (max-width:640px){
-  .sheet{padding:40px 22px}
-  .hword{font-size:54px}
-  .cards2{grid-template-columns:1fr}
-  .pd{grid-template-columns:26px 76px 116px 116px;grid-template-rows:24px 30px 78px 78px}
-  .pd .pcell{font-size:17px}
-  .pd .pcell{font-size:20px}
-  .pd .ch,.pd .rh{font-size:12px}
-  .pd .cl,.pd .rl{font-size:11px}
-  .pd .rl{padding-right:10px}
-  table.ledger th{font-size:11px;padding:8px 7px}
-  table.ledger td{padding:0 7px;font-size:14px}
-}
+/* demo driver */
+.demo{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);display:flex;gap:10px;align-items:center;padding:10px 14px;font-size:13px;font-weight:600;z-index:9}
+.demo button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);border:none;color:var(--paper);padding:9px 12px;cursor:pointer;margin-left:auto;white-space:nowrap}
+.demo .dl{color:color-mix(in srgb,var(--paper) 70%,transparent)}
+body.demo-on{padding-bottom:90px}
 </style>
-</head>
-<body class="">
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
-  <symbol id="im-factory" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="6" y="32" width="46" height="26"></rect><rect fill="var(--ink,#1B1C19)" x="13" y="20" width="4" height="12"></rect><rect fill="var(--ink,#1B1C19)" x="22" y="14" width="4" height="18"></rect><rect fill="var(--ink,#1B1C19)" x="31" y="22" width="4" height="10"></rect><rect fill="var(--paper,#E9E2D2)" x="12" y="40" width="7" height="9"></rect><rect fill="var(--red,#CE1E32)" x="24" y="40" width="7" height="9"></rect><rect fill="var(--paper,#E9E2D2)" x="36" y="40" width="7" height="9"></rect></symbol>
-  <symbol id="im-payoff-matrix" viewBox="0 0 100 100"><rect fill="var(--ink,#1B1C19)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink,#1B1C19)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink,#1B1C19)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink,#1B1C19)" x="54" y="54" width="40" height="40"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.8"></rect></symbol>
-  <symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"></circle><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"></circle><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">$</text></symbol>
-  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink,#1B1C19)"><circle cx="40" cy="20" r="14"></circle><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"></path><rect x="26" y="92" width="12" height="36"></rect><rect x="42" y="92" width="12" height="36"></rect></g><g fill="var(--red,#CE1E32)"><circle cx="130" cy="20" r="14"></circle><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"></path><rect x="116" y="92" width="12" height="36"></rect><rect x="132" y="92" width="12" height="36"></rect></g></symbol>
-  <symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"></rect><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"></rect><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"></path><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,42 22,29 Z"></path><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,42 59,29 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="18.2" r="4.2"></circle></symbol>
-</svg>
-
-<main class="sheet">
-
-  <header class="hhead">
-    <div class="hkick">Applied Game Theory &nbsp;·&nbsp; Module 4</div>
-    <div class="hword" data-edit="">PRICE WARS</div>
-    <div class="hsub" data-edit="">Aura Fuels vs Buco’s Service Station</div>
-  </header>
-
-  <hr class="hrule">
-
-  <p class="lead-p">You run one of two petrol stations on opposite corners of the same junction, on a busy
-  A road with nothing else for four miles in either direction. About four thousand cars pass every day and
-  every one of them can read both of your signs before deciding which side to pull into.</p>
-
-  <p class="lead-p">One of you is <b>Aura Fuels</b>, thirty years on this corner, lower overheads and an older set of
-  regulars, but with family pressure building to hang up the spurs. The other is <b>Buco’s Service
-  Station</b>, the newest upstart, six pumps to Aura’s four and a car wash that brings people in, but
-  with investors who want returns. I will tell you which one you are.</p>
-
-  <p class="lead-p">Beyond that you sell identical fuel. Same supplier, same specification, same card
-  readers, same overpriced sandwiches. The number on the sign is the only real difference between you.</p>
-
-  <p class="lead-p">Every Monday morning you post your price for the week. You post it without seeing
-  theirs. Once both signs are up, they stay up until the following Monday, and everybody can see everything.
-  You will be doing this for six weeks, and neither of you is going anywhere.</p>
-
-  <figure class="scene"><svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two petrol stations facing each other across a desert crossroads">
-      <rect x="0" y="0" width="1000" height="252" fill="var(--tan-light)"></rect>
-      <circle cx="500" cy="208" r="70" fill="var(--red)"></circle>
-      <path d="M0 252 L0 196 L70 196 L96 168 L186 168 L214 252 Z" fill="var(--maroon)"></path>
-      <path d="M786 252 L812 158 L906 158 L930 190 L1000 190 L1000 252 Z" fill="var(--sienna)"></path>
-      <path d="M236 252 L262 214 L352 214 L372 252 Z" fill="var(--grey)"></path>
-      <path d="M628 252 L648 222 L742 222 L762 252 Z" fill="var(--grey)"></path>
-      <rect x="0" y="252" width="1000" height="148" fill="var(--tan)"></rect>
-      <rect x="0" y="252" width="1000" height="5" fill="var(--rule)"></rect>
-      <rect x="0" y="306" width="1000" height="58" fill="var(--grey)"></rect>
-      <rect x="452" y="252" width="96" height="148" fill="var(--grey)"></rect>
-      <g fill="var(--paper)"><rect x="30" y="333" width="46" height="6"></rect><rect x="112" y="333" width="46" height="6"></rect><rect x="194" y="333" width="46" height="6"></rect><rect x="276" y="333" width="46" height="6"></rect><rect x="358" y="333" width="46" height="6"></rect><rect x="596" y="333" width="46" height="6"></rect><rect x="678" y="333" width="46" height="6"></rect><rect x="760" y="333" width="46" height="6"></rect><rect x="842" y="333" width="46" height="6"></rect><rect x="924" y="333" width="46" height="6"></rect></g>
-      <rect x="0" y="364" width="1000" height="4" fill="var(--rule)"></rect>
-      <g><rect x="96" y="212" width="196" height="20" fill="var(--teal)"></rect><rect x="104" y="232" width="11" height="58" fill="var(--teal)"></rect><rect x="273" y="232" width="11" height="58" fill="var(--teal)"></rect><rect x="150" y="238" width="86" height="52" fill="var(--ink)"></rect><rect x="161" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="197" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="124" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="248" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="127" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="251" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="52" y="196" width="11" height="98" fill="var(--ink)"></rect><rect x="20" y="150" width="76" height="52" fill="var(--ink)"></rect><rect x="20" y="150" width="76" height="13" fill="var(--teal)"></rect><text x="58" y="192" text-anchor="middle" font-family="League Spartan, sans-serif" font-weight="900" font-size="26" fill="var(--paper)">1.50</text></g>
-      <g><rect x="708" y="212" width="196" height="20" fill="var(--terracotta)"></rect><rect x="716" y="232" width="11" height="58" fill="var(--terracotta)"></rect><rect x="885" y="232" width="11" height="58" fill="var(--terracotta)"></rect><rect x="762" y="238" width="86" height="52" fill="var(--ink)"></rect><rect x="773" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="809" y="248" width="28" height="22" fill="var(--paper)"></rect><rect x="736" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="860" y="258" width="16" height="32" fill="var(--ink)"></rect><rect x="739" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="863" y="264" width="10" height="8" fill="var(--red)"></rect><rect x="937" y="196" width="11" height="98" fill="var(--ink)"></rect><rect x="904" y="150" width="76" height="52" fill="var(--ink)"></rect><rect x="904" y="150" width="76" height="13" fill="var(--terracotta)"></rect><text x="942" y="192" text-anchor="middle" font-family="League Spartan, sans-serif" font-weight="900" font-size="26" fill="var(--paper)">1.50</text></g>
-      <g fill="var(--green)"><rect x="396" y="258" width="13" height="44"></rect><rect x="384" y="272" width="13" height="8"></rect><rect x="384" y="272" width="8" height="22"></rect><rect x="409" y="266" width="13" height="8"></rect><rect x="414" y="266" width="8" height="26"></rect><rect x="592" y="270" width="11" height="32"></rect><rect x="603" y="280" width="10" height="7"></rect><rect x="605" y="280" width="8" height="20"></rect></g>
-      
-    </svg>
-    <figcaption>
-      <span data-edit="">Aura on the left, Buco’s on the right, and every car on that road reads both
-      signs before it chooses a side.</span>
-      <button type="button" class="theme" onclick="toggleTheme(this)" aria-label="Play the theme">
-        <span class="tri" aria-hidden="true"></span><span class="tl">Theme</span>
-      </button>
-      <audio id="themeAudio" preload="none" src="showdown.mp3"></audio>
-    </figcaption>
-  </figure>
-
-  <div class="shead"><span class="sq"></span><h2>Your two choices</h2></div>
-  <hr class="srule">
-
-  <div class="cards2">
-    <div class="hcard teal">
-      <div class="ck" data-edit="">Option one</div>
-      <h3>Post £1.50</h3>
-      <p>Your standard price. You earn 30p a litre. If they post the same, the traffic splits between you
-      roughly as it always does and you both have a good week.</p>
-    </div>
-    <div class="hcard">
-      <div class="ck" data-edit="">Option two</div>
-      <h3>Post £1.40</h3>
-      <p>You earn 20p a litre instead of 30p, but if their sign still says £1.50 then almost every car
-      on that road turns into your forecourt instead of theirs.</p>
-    </div>
-  </div>
-
-  <div class="shead"><span class="sq"></span><h2>The payoffs</h2></div>
-  <hr class="srule">
-
-  <div class="matwrap">
-    <div class="pd">
-      <div class="ch">Buco’s · column</div>
-      <div class="cl cl1">£1.50</div><div class="cl cl2">£1.40</div>
-      <div class="rh" data-edit="">Aura · row</div>
-      <div class="rl rl1">£1.50</div><div class="rl rl2">£1.40</div>
-      <div class="pdgrid">
-        <div class="pcell"><span class="pa">12</span><span class="pcomma">,</span><span class="pb">12</span></div>
-        <div class="pcell"><span class="pa">2</span><span class="pcomma">,</span><span class="pb">18</span></div>
-        <div class="pcell"><span class="pa">18</span><span class="pcomma">,</span><span class="pb">2</span></div>
-        <div class="pcell"><span class="pa">9</span><span class="pcomma">,</span><span class="pb">9</span></div>
-      </div>
-    </div>
-  </div>
-  <div class="cap">Each cell reads (<b class="pa">Aura</b>, <b class="pb">Buco’s</b>), in <b>£000s of margin</b> for that week.</div>
-
-  <div class="shead"><span class="sq"></span><h2>Reading the payoffs</h2></div>
-  <hr class="srule">
-
-  <ul class="hbul">
-    <li><b>Both post £1.50</b> <span class="pa">(12</span>, <span class="pb">12)</span>. Around 40,000
-    litres each at 30p, so <b>£12,000</b> apiece. Nobody wins a driver and nobody loses one.</li>
-    <li><b>You post £1.40 and they hold.</b> Your margin drops to 20p, but volume more than doubles to
-    about 90,000 litres, so you take <span class="gain">£18,000</span>. They keep the handful of
-    regulars who never look at the sign: <span class="loss">£2,000</span>.</li>
-    <li><b>Both post £1.40</b> <span class="flat">(9, 9)</span>. Cheap fuel does pull a few extra cars
-    onto the road, so about 45,000 litres each, but only at 20p. <b>£9,000</b> each. You have handed
-    £3,000 to the motorists of the district and gained nothing from each other.</li>
-  </ul>
-
-  <div class="shead"><span class="sq"></span><h2>Weeks 3 and 6: double, and a chance to talk</h2></div>
-  <hr class="srule">
-
-  <p class="lead-p">Two of your weeks are worth twice as much. In <b>week three</b> and <b>week six</b>, every
-  figure in the table above doubles. A quiet week at £1.50 pays £24,000 instead of £12,000,
-  and being the only one holding costs you £4,000 instead of £2,000.</p>
-
-  <p class="lead-p">Before each of those two weeks, and only then, you may send one person to meet one person
-  from the other station for two minutes. The meeting happens only if both stations ask for it. If either
-  declines, there is no meeting.</p>
-
-  <p class="lead-p">Nothing agreed in that meeting is written down, and nothing said in it binds you when you
-  set your price.</p>
-
-  <div class="shead"><span class="sq"></span><h2>Rules</h2></div>
-  <hr class="srule">
-
-  <ul class="hbul">
-    <li><b>Six weeks</b>, and one price decision each week: £1.50 or £1.40.</li>
-    <li><b>Weeks 3 and 6 pay double.</b> Everything else about them is the same.</li>
-    <li><b>Three minutes</b> with your own team before each week. Decide one week at a time rather than
-    planning all six now.</li>
-    <li><b>Lock your price in on this page.</b> It stays hidden until both signs go up together, and the scores
-    go on the board at the front.</li>
-    <li><b>No contact with the other station</b> at any point, except the two-minute meetings before weeks
-    three and six, and only if both stations have asked for one.</li>
-    <li><b>Your goal is to make as much money as you can across the six weeks.</b> Not to beat the other
-    station, and not to be liked by them.</li>
-  </ul>
-
-  <div class="obox">
-    <div class="ok">Your objective</div>
-    <div class="ot">Make as much money as you can across the six weeks.</div>
-  </div>
-
-  <div class="shead"><span class="sq"></span><h2>Locking in your price</h2></div>
-  <hr class="srule">
-
-  <p class="lead-p" data-edit>When your team has decided, one of you locks the week&rsquo;s price in right here.
-  It stays hidden until both signs go up on the board at the front, and locking in again before the
-  reveal replaces your earlier choice.</p>
-
-  <div class="lockwrap">
-    <div class="lk-h" data-edit>Your station</div>
-    <div class="lk-stations" id="lkStations"></div>
-    <div class="lk-h" data-edit>Week</div>
-    <div class="lk-weeks" id="lkWeeks"></div>
-    <div class="lk-h" data-edit>Your price</div>
-    <div class="lk-prices">
-      <button type="button" id="lk150">&pound;1.50</button>
-      <button type="button" id="lk140">&pound;1.40</button>
-    </div>
-    <button class="lk-go" id="lkGo" disabled>LOCK IT IN</button>
-    <div class="lk-status" id="lkStatus">Pick your station, the week, and a price.</div>
-    <div class="lk-h" data-edit style="margin-top:18px">Who&rsquo;s on this phone</div>
-    <div class="lk-name" id="lkName">
-      <input type="text" id="lkNameIn" maxlength="30" placeholder="Your first name" autocomplete="off">
-      <button type="button" id="lkNameGo">THAT&rsquo;S ME</button>
-    </div>
-    <div class="lk-status" id="lkNameStatus">Everyone on the team taps their own name in, once, on their own phone.</div>
-  </div>
-
-  <div class="shead"><span class="sq"></span><h2>Your team ledger</h2></div>
-  <hr class="srule">
-
-  <table class="ledger">
-    <thead>
-      <tr><th style="width:78px">Week</th><th>Your choice</th><th>Their choice</th><th style="width:110px">This week</th><th style="width:110px">Running total</th></tr>
-    </thead>
-    <tbody>
-      <tr><td class="rnum">1</td><td></td><td></td><td></td><td></td></tr>
-      <tr><td class="rnum">2</td><td></td><td></td><td></td><td></td></tr>
-      <tr class="x2"><td class="rnum">3<span class="tag blue">×2</span></td><td></td><td></td><td></td><td></td></tr>
-      <tr><td class="rnum">4</td><td></td><td></td><td></td><td></td></tr>
-      <tr><td class="rnum">5</td><td></td><td></td><td></td><td></td></tr>
-      <tr class="x2"><td class="rnum">6<span class="tag blue">×2</span></td><td></td><td></td><td></td><td></td></tr>
-      <tr class="fin"><td class="rnum">Final<span class="tag amber">total</span></td><td></td><td></td><td></td><td></td></tr>
-    </tbody>
-  </table>
-
-  <div class="legend" data-edit=""><b class="blue">Blue weeks</b> pay double. <b class="amber">Amber</b> is your final figure, which is what goes on the board at the front.</div>
-
-  <div class="exnote" data-edit="">Keep the ledger honestly, including the weeks you would rather forget. The debrief works from what actually happened rather than from what anyone intended, and the most useful part of the session is comparing the four ledgers in the room.</div>
-
-  <div class="hfoot">
-    <span data-edit="">Price Wars &nbsp;·&nbsp; Module 4</span>
-    <span data-edit="">Ryan Lamare</span>
-  </div>
-
-</main>
+</head><body>
+<div class="wrap">
+  <div class="tag"><span><i></i>APPLIED GAME THEORY · MODULE 4</span><button class="tbtn" id="theme" type="button" aria-label="Play the theme">Theme</button></div>
+  <h1 id="q">PRICE WARS</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<audio id="themeAudio" src="showdown.mp3" preload="none"></audio>
+<script src="/go/names.js"></script>
 <script>
-/* Team claim: each phone posts one "station|name" line into the room
-   m4-teams so the class points system can credit the station's result to
-   everyone on it. The lock-in below is unchanged. */
+const API='https://gt-poll.rlamare.workers.dev';
+const qs=new URLSearchParams(location.search);
+const DEMO=qs.get('demo')==='1';
+const SUF=qs.get('room')?('-'+qs.get('room').replace(/[^a-z0-9-]/g,'')):'';
+const ROOM={teams:'m4-teams'+SUF,prices:'m4-prices'+SUF,huddle:'m4-huddle'+SUF,meet:'m4-meet'+SUF};
+const WEEKS=6, N=5;
+const LBL={a:'Aura',b:'Buco’s'};
+const FULL={a:'Aura Fuels',b:'Buco’s Service Station'};
+const SPOTS=['the door','the window','the back of the room','the front of the room','the corridor'];
+const SK='pw'+SUF+'-';   /* localStorage keys, per room */
+
+/* ---------- identity ---------- */
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+let name=null, station='';
+try{name=localStorage.getItem('gt-name');station=localStorage.getItem(SK+'station')||'';}catch(_){}
+if(DEMO&&!name)name='You';
+const app=document.getElementById('app'), st=document.getElementById('status');
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function claimOnce(){
+  if(DEMO)return;
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+if(name)claimOnce();
+
+/* ---------- the wire ---------- */
+const sayN={};
+function say(room,line,tag){
+  /* fifteen lines per voter per room is the Worker's cap; a tag (the week)
+     gives each week its own allowance, so a team that changes its mind is
+     never locked out */
+  if(DEMO){demoSay(room,line);return Promise.resolve();}
+  const k=room+(tag||'');sayN[k]=(sayN[k]||0)+1;
+  const v=voter+(tag?'-'+tag:'')+'-'+(sayN[k]%9);
+  return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=room=>DEMO?Promise.resolve(demoAnswers(room)):fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone. Flag the instructor.':'That didn’t send. Try again.';
+
+/* the game as the wire describes it */
+const G={pair:{},opened:0,revealed:0,shock:false,meetOpen:0,repsSent:0,lock:{},lean:{},locker:{},ask:{},agreed:{}};
+function parse(prices,huddle,meet){
+  G.pair={};G.opened=0;G.revealed=0;G.shock=false;G.meetOpen=0;G.repsSent=0;G.lock={};G.lean={};G.locker={};G.ask={};G.agreed={};
+  prices.forEach(t=>{
+    const p=String(t).trim().toLowerCase().split('|').map(s=>s.trim());
+    if(p[0]==='::pair'&&p[1]){p[1].split(',').forEach(x=>{const m=x.match(/^(a[1-5])=(b[1-5])$/);if(m){G.pair[m[1]]=m[2];G.pair[m[2]]=m[1];}});}
+    else if(p[0]==='::open'&&/^[1-6]$/.test(p[1]))G.opened=Math.max(G.opened,+p[1]);
+    else if(p[0]==='::reveal'&&/^[1-6]$/.test(p[1]))G.revealed=Math.max(G.revealed,+p[1]);
+    else if(p[0]==='::shock')G.shock=p[1]==='on';
+    else if(p[0]==='::meet'&&/^[1-6]$/.test(p[1]))G.meetOpen=Math.max(G.meetOpen,+p[1]);
+    else if(p[0]==='::reps'&&/^[1-6]$/.test(p[1]))G.repsSent=Math.max(G.repsSent,+p[1]);
+    else if(/^[ab][1-5]$/.test(p[0])&&/^[1-6]$/.test(p[1])&&/^1\.[45]0$/.test(p[2]))G.lock[p[0]+'|'+p[1]]=p[2];
+  });
+  huddle.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());
+    const s=p[0].toLowerCase();
+    if(!/^[ab][1-5]$/.test(s)||!/^[1-6]$/.test(p[1]))return;
+    if(p[2]==='lock'&&p[3])G.locker[s+'|'+p[1]]=p[3];
+    else if(/^1\.[45]0$/.test(p[2])&&p[3]){
+      const k=s+'|'+p[1];G.lean[k]=G.lean[k]||{};G.lean[k][norm(p[3])]={name:p[3],price:p[2],why:p[4]||''};
+    }
+  });
+  meet.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());
+    const s=p[0].toLowerCase();
+    if(!/^[ab][1-5]$/.test(s)||!/^[1-6]$/.test(p[1]))return;
+    if(p[2]==='ask')G.ask[s+'|'+p[1]]=p[3]==='y';
+    else if(p[2]==='agreed'&&p[3]){G.agreed[s+'|'+p[1]]={name:p[3],text:p.slice(4).join(' | ')};}
+  });
+}
+function profit(mine,theirs,week){
+  if(G.shock&&week>=5){
+    if(mine==='1.40'&&theirs==='1.50')return 72;
+    if(mine==='1.50'&&theirs==='1.40')return 2;
+    return mine==='1.50'?12:9;
+  }
+  const dbl=(week===3||week===6)?2:1;
+  if(mine==='1.50')return (theirs==='1.50'?12:2)*dbl;
+  return (theirs==='1.50'?18:9)*dbl;
+}
+const rival=()=>G.pair[station]||'';
+const isDouble=w=>!G.shock||w<5?(w===3||w===6):false;
+const meetWeeks=()=>G.shock?[3,5]:[3,6];
+function ledger(){
+  const r=rival();let run=0;const rows=[];
+  for(let w=1;w<=WEEKS;w++){
+    const mine=G.lock[station+'|'+w], theirs=r?G.lock[r+'|'+w]:'';
+    const shown=w<=G.revealed&&mine&&theirs;
+    const p=shown?profit(mine,theirs,w):null;
+    if(p!==null)run+=p;
+    rows.push({w,mine:shown?mine:'',theirs:shown?theirs:'',p,run:shown?run:null});
+  }
+  return {rows,total:run};
+}
+
+/* ---------- phases ---------- */
+function phase(){
+  if(!name)return 'name';
+  if(!station)return 'station';
+  if(!G.pair[station])return 'brief';
+  const next=G.revealed+1;                                   /* the week that comes next */
+  if(G.revealed>=WEEKS)return 'over';
+  if(G.opened<next){                                          /* between weeks */
+    if(G.meetOpen===next)return G.repsSent===next?'meeting':'asking';
+    return G.revealed===0?'brief':'between';
+  }
+  return G.revealed<G.opened?'week':'between';
+}
+let lastKey='';
+function render(force){
+  const ph=phase();
+  const key=ph+'|'+G.opened+'|'+G.revealed+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+station;
+  const same=key===lastKey&&!force;
+  lastKey=key;
+  if(!same){app.replaceChildren();stopCars();}
+  ({name:renderName,station:renderStation,brief:renderBrief,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
+}
+
+/* who are you */
+function renderName(same){
+  if(same)return;
+  app.innerHTML='<h2>Who are you?</h2><p>Your name, so your station’s result counts for you in the points.</p>'+
+    '<div class="namerow"><input id="nm" maxlength="30" autocomplete="off" placeholder="First name and initial"><button id="nmgo" type="button">GO</button></div>';
+  const inp=document.getElementById('nm');
+  const go=()=>{const n=clean(inp.value);if(!n)return;
+    GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render(true);},app,{clean});};
+  document.getElementById('nmgo').addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  inp.focus();
+}
+
+/* which station */
+function renderStation(same){
+  if(same)return;
+  let h='<div class="me"><span class="who">You are <b>'+esc(name)+'</b></span><button type="button" id="notme">Not me</button></div>'+
+    '<h2>Which station are you?</h2><p>Ryan will tell your team which one you are. Everyone on the team picks the same one.</p><div class="stgrid">';
+  ['a','b'].forEach(s=>{h+='<div class="col '+s+'"><div class="colh">'+FULL[s]+'</div>';
+    for(let i=1;i<=N;i++)h+='<button type="button" data-st="'+s+i+'">'+LBL[s]+' '+i+'</button>';h+='</div>';});
+  h+='</div>';
+  app.innerHTML=h;
+  document.getElementById('notme').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}render(true);});
+  app.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>{
+    station=b.dataset.st;try{localStorage.setItem(SK+'station',station);}catch(_){}
+    say(ROOM.teams,station+'|'+name).catch(c=>{st.textContent=failMsg(c);});
+    render(true);
+  }));
+}
+
+/* the brief, and the wait for the start */
+function briefHTML(){
+  const me=station[0], them=me==='a'?'b':'a';
+  const who=s=>'<div class="who '+s+(s===me?' mine':'')+'">'+(s===me?'<div class="yours">This is you</div>':'')+'<div class="nm">'+FULL[s]+'</div><p>'+
+    (s==='a'?'Thirty years on this corner, lower overheads and an older set of regulars, but family pressure is building to hang up the spurs.'
+            :'The newest upstart, six pumps to Aura’s four and a car wash that brings people in, but with investors who want returns.')+'</p></div>';
+  return '<div class="brief">'+
+    '<p>You run one of two petrol stations on opposite corners of the same junction, on a busy A road with nothing else for four miles in either direction. About four thousand cars pass every day and every one of them can read both of your signs before deciding which side to pull into.</p>'+
+    '<div class="two">'+who('a')+who('b')+'</div>'+
+    '<p>Beyond that you sell identical fuel. Same supplier, same specification, same card readers, same overpriced sandwiches. <b>The number on the sign is the only real difference between you.</b></p>'+
+    '<div class="card"><h3>How a week works</h3><p>Every Monday morning you post your price for the week, and you post it without seeing theirs. Once both signs are up they stay up until the following Monday, and everybody can see everything. Six weeks, and neither of you is going anywhere.</p>'+
+    '<p>You will not know which '+LBL[them]+' you are playing. There are several across the road, one of them is yours, and the only person who will ever find out is whoever you send to a meeting.</p></div>'+
+    '<div class="card"><h3>Your two prices</h3><div class="pay">'+
+    '<div class="row"><div class="n">£12k</div><div class="t"><b>Both post £1.50.</b> Around 40,000 litres each at 30p a litre. Nobody wins a driver and nobody loses one.</div></div>'+
+    '<div class="row"><div class="n good">£18k</div><div class="t"><b>You post £1.40 and they hold at £1.50.</b> Your margin drops to 20p, but almost every car on the road turns into your forecourt. They keep the handful of regulars who never look at the sign: <b>£2k</b>.</div></div>'+
+    '<div class="row"><div class="n bad">£9k</div><div class="t"><b>Both post £1.40.</b> Cheap fuel pulls a few extra cars onto the road, but only at 20p. You have handed £3,000 each to the motorists of the district and gained nothing from each other.</div></div>'+
+    '</div></div>'+
+    '<div class="card"><h3>Weeks 3 and 6 pay double, and you may talk</h3><p>Two of your weeks are worth twice as much. Before each of those two weeks, and only then, you may send one person to meet one person from the other station for two minutes. The meeting happens only if both stations ask for it. Nothing said in it is written down, and nothing said in it binds you when you set your price.</p></div>'+
+    '<ul><li>One price decision each week: <b>£1.50</b> or <b>£1.40</b>.</li>'+
+    '<li>Decide one week at a time rather than planning all six now.</li>'+
+    '<li>Talk it over on this page. Everyone on the team can say which sign they lean towards, and one of you locks the price in. The other station sees none of it.</li>'+
+    '<li>No contact with the other station at any point, except the two-minute meetings.</li></ul>'+
+    '<div class="goal">Make as much money as you can across the six weeks. Not to beat the other station, and not to be liked by them.</div>'+
+    '</div>';
+}
+function renderBrief(same){
+  if(same)return;
+  app.innerHTML='<div class="me"><span class="who">You are <b>'+esc(name)+'</b> on <b>'+LBL[station[0]]+' '+station[1]+'</b></span><button type="button" id="chst">Change</button></div>'+
+    '<div class="waitcard"><span class="pulse"></span>Waiting for the game to start. Read your brief.</div>'+briefHTML();
+  document.getElementById('chst').addEventListener('click',()=>{station='';try{localStorage.removeItem(SK+'station');}catch(_){}render(true);});
+}
+
+/* ---------- the junction ---------- */
+let carsRAF=null, cars=[], carsMode='none', carsMine='', carsTheirs='';
+function junctionSVG(me){
+  /* Aura's forecourt on the left of the road, Buco's on the right, cars
+     come down the road and turn into whichever forecourt the prices send
+     them to; the sign boards carry the week's prices */
+  const A=me==='a', side=s=>s===me?'mine':'';
+  return '<div class="junction"><svg viewBox="0 0 360 230" role="img" aria-label="The junction, with Aura Fuels on the left of the road and Buco’s on the right">'+
+    '<rect x="0" y="0" width="360" height="230" fill="var(--tan-light)"/>'+
+    '<rect x="150" y="0" width="60" height="230" fill="var(--grey)"/>'+
+    '<g fill="var(--paper)"><rect x="178" y="8" width="4" height="18"/><rect x="178" y="42" width="4" height="18"/><rect x="178" y="76" width="4" height="18"/><rect x="178" y="110" width="4" height="18"/><rect x="178" y="144" width="4" height="18"/><rect x="178" y="178" width="4" height="18"/><rect x="178" y="212" width="4" height="18"/></g>'+
+    '<rect x="118" y="90" width="32" height="70" fill="var(--grey)"/><rect x="210" y="90" width="32" height="70" fill="var(--grey)"/>'+
+    '<g class="fc a '+side('a')+'"><rect x="18" y="86" width="104" height="78" fill="var(--paper)" stroke="var(--teal)" stroke-width="3"/>'+
+    '<rect x="34" y="104" width="12" height="30" fill="var(--teal)"/><rect x="58" y="104" width="12" height="30" fill="var(--teal)"/><rect x="82" y="104" width="12" height="30" fill="var(--teal)"/>'+
+    '<rect x="18" y="86" width="104" height="10" fill="var(--teal)"/></g>'+
+    '<g class="fc b '+side('b')+'"><rect x="238" y="86" width="104" height="78" fill="var(--paper)" stroke="var(--terracotta)" stroke-width="3"/>'+
+    '<rect x="254" y="104" width="12" height="30" fill="var(--terracotta)"/><rect x="278" y="104" width="12" height="30" fill="var(--terracotta)"/><rect x="302" y="104" width="12" height="30" fill="var(--terracotta)"/>'+
+    '<rect x="238" y="86" width="104" height="10" fill="var(--terracotta)"/></g>'+
+    '<g id="cars"></g>'+
+    /* the signs, drawn last so cars pass behind them */
+    '<g><rect x="18" y="14" width="104" height="58" fill="var(--ink)"/><rect x="66" y="72" width="8" height="14" fill="var(--ink)"/>'+
+    '<text x="70" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--teal)">AURA FUELS'+(A?' · YOU':'')+'</text>'+
+    '<text id="signA" x="70" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>'+
+    '<g><rect x="238" y="14" width="104" height="58" fill="var(--ink)"/><rect x="286" y="72" width="8" height="14" fill="var(--ink)"/>'+
+    '<text x="290" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--terracotta)">BUCO’S'+(!A?' · YOU':'')+'</text>'+
+    '<text id="signB" x="290" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>'+
+    '</svg></div>';
+}
+function setSigns(a,b){
+  const sa=document.getElementById('signA'), sb=document.getElementById('signB');
+  if(sa)sa.textContent=a?'£'+a:'?';
+  if(sb)sb.textContent=b?'£'+b:'?';
+}
+function startCars(mode,pa,pb){
+  /* mode: 'flow' before the reveal (everyone drives past), 'split' after
+     it (the prices decide who turns in) */
+  stopCars();carsMode=mode;carsMine=pa;carsTheirs=pb;cars=[];
+  const g=document.getElementById('cars');if(!g)return;
+  let last=performance.now(), spawn=0;
+  const pick=()=>{
+    if(carsMode!=='split')return 's';
+    const r=Math.random();
+    if(pa===pb)return r<.38?'a':(r<.76?'b':'s');
+    const cheap=pa==='1.40'?'a':'b';
+    return r<.78?cheap:(r<.88?(cheap==='a'?'b':'a'):'s');
+  };
+  const tick=now=>{
+    const dt=Math.min(50,now-last);last=now;spawn-=dt;
+    if(spawn<=0){cars.push({t:-0.05,dest:pick(),lane:Math.random()<.5?168:192});spawn=carsMode==='split'?260:420;}
+    cars.forEach(c=>{c.t+=dt/2600;});
+    cars=cars.filter(c=>c.t<1.05);
+    let h='';
+    cars.forEach(c=>{
+      let x,y,rot=0,op=1;
+      if(c.dest==='s'){x=c.lane;y=-30+c.t*290;}
+      else{
+        /* down to the junction, then a curve into the forecourt */
+        const k=c.t/0.42;
+        if(k<1){x=c.lane;y=-30+k*130;}
+        else{const u=Math.min(1,(c.t-0.42)/0.5);const tx=c.dest==='a'?70:290;
+          x=c.lane+(tx-c.lane)*(1-Math.pow(1-u,2));y=100+u*40;rot=(c.dest==='a'?-1:1)*Math.sin(u*Math.PI)*70;op=u>0.8?1-(u-0.8)/0.2:1;}
+      }
+      h+='<rect x="-7" y="-12" width="14" height="24" rx="3" fill="var(--ink)" opacity="'+op.toFixed(2)+'" transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+') rotate('+rot.toFixed(1)+')"/>';
+    });
+    g.innerHTML=h;
+    carsRAF=requestAnimationFrame(tick);
+  };
+  carsRAF=requestAnimationFrame(tick);
+}
+function stopCars(){if(carsRAF){cancelAnimationFrame(carsRAF);carsRAF=null;}}
+
+/* ---------- a week in play ---------- */
+function weekHead(w){
+  const s=G.shock&&w>=5;
+  return '<div class="wkhead"><span class="wk">WEEK '+w+'</span>'+
+    (s?'<span class="dbl shk">Gazette rules</span>':(isDouble(w)?'<span class="dbl">Pays double</span>':''))+
+    '<span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>';
+}
+function bulletinHTML(){
+  return '<div class="bulletin"><div class="mast">The Junction Gazette<small>Stop the presses · special edition</small></div>'+
+    '<h3>Price wars at the junction go digital</h3>'+
+    '<p>FuelWatch, the price app sweeping the region, has just added the junction to its map. From this Monday every driver within twenty miles sees both signs, live, before choosing where to fill up.</p>'+
+    '<p><b>Undercut alone and the app sends every car on every road to your forecourt: £72k for the week.</b> The undercut station keeps its £2k of regulars. Match each other and the app has nothing to show: £12k each at £1.50, £9k each at £1.40. The week 6 doubling is off. <a href="../extra/" target="_blank" rel="noopener">Read the paper</a></p></div>';
+}
+let leanPrice='', leanWhy='';
+function renderWeek(same){
+  const w=G.opened, r=rival();
+  const mine=G.lock[station+'|'+w];
+  const leans=G.lean[station+'|'+w]||{};
+  const myLean=leans[norm(name)];
+  if(!same){
+    leanPrice=myLean?myLean.price:'';leanWhy=myLean?myLean.why:'';
+    app.innerHTML=weekHead(w)+junctionSVG(station[0])+
+      (G.shock&&w>=5?bulletinHTML():'')+
+      '<div class="lbl">Post your sign</div>'+
+      '<input class="reason" id="why" maxlength="60" autocomplete="off" placeholder="A few words for your team (optional)" value="'+esc(leanWhy)+'">'+
+      '<div class="huddle"><div class="row">'+
+      '<button type="button" class="signbtn" data-p="1.50"><div class="top">Hold</div><div class="pr"><small>£</small>1.50</div><div class="why">Your standard price. A good week if they hold too.</div></button>'+
+      '<button type="button" class="signbtn" data-p="1.40"><div class="top">Cut</div><div class="pr"><small>£</small>1.40</div><div class="why">Take the road if they hold. Cheap fuel for everyone if they cut too.</div></button>'+
+      '</div><div class="row"><div class="chips" id="chipsA"></div><div class="chips" id="chipsB"></div></div></div>'+
+      '<button type="button" class="big" id="lockgo" disabled>Lock it in for the team</button>'+
+      '<div class="lockline" id="lockline"></div>'+
+      '<div class="lbl">Your ledger</div>'+ledgerHTML(w);
+    startCars('flow');
+    const why=document.getElementById('why');
+    why.addEventListener('input',()=>{leanWhy=why.value;});
+    why.addEventListener('change',()=>{if(leanPrice)postLean();});
+    app.querySelectorAll('.signbtn').forEach(b=>b.addEventListener('click',()=>{
+      leanPrice=b.dataset.p;postLean();paintWeek();
+    }));
+    document.getElementById('lockgo').addEventListener('click',()=>{
+      const p=leanPrice;if(!p)return;
+      const go=document.getElementById('lockgo');go.disabled=true;
+      say(ROOM.prices,station+'|'+w+'|'+p,'w'+w).then(()=>say(ROOM.huddle,station+'|'+w+'|lock|'+name,'l'+w)).then(()=>{
+        G.lock[station+'|'+w]=p;G.locker[station+'|'+w]=name;st.textContent='';paintWeek();
+      }).catch(c=>{go.disabled=false;st.textContent=failMsg(c);});
+    });
+  }
+  paintWeek();
+  function postLean(){
+    const line=station+'|'+w+'|'+leanPrice+'|'+name+'|'+clean(leanWhy||'').slice(0,60);
+    const k=station+'|'+w;G.lean[k]=G.lean[k]||{};G.lean[k][norm(name)]={name,price:leanPrice,why:clean(leanWhy||'').slice(0,60)};
+    say(ROOM.huddle,line,'h'+w).catch(c=>{st.textContent=failMsg(c);});
+  }
+}
+function paintWeek(){
+  const w=G.opened, mine=G.lock[station+'|'+w], leans=G.lean[station+'|'+w]||{};
+  app.querySelectorAll('.signbtn').forEach(b=>{
+    b.classList.toggle('lean',!mine&&b.dataset.p===leanPrice);
+    b.classList.toggle('locked',!!mine&&b.dataset.p===mine);
+  });
+  const chips=p=>Object.values(leans).filter(l=>l.price===p).map(l=>'<div class="chip'+(norm(l.name)===norm(name)?' me':'')+'"><b>'+esc(l.name)+'</b>'+(l.why?'<span class="r">'+esc(l.why)+'</span>':'')+'</div>').join('');
+  const ca=document.getElementById('chipsA'), cb=document.getElementById('chipsB');
+  if(ca)ca.innerHTML=chips('1.50');if(cb)cb.innerHTML=chips('1.40');
+  const go=document.getElementById('lockgo'), ll=document.getElementById('lockline');
+  if(go){
+    if(mine){go.textContent='Change it to £'+(mine==='1.50'?'1.40':'1.50');go.classList.add('quiet');go.disabled=false;
+      go.onclick=()=>{leanPrice=mine==='1.50'?'1.40':'1.50';go.disabled=true;
+        say(ROOM.prices,station+'|'+w+'|'+leanPrice,'w'+w).then(()=>say(ROOM.huddle,station+'|'+w+'|lock|'+name,'l'+w)).then(()=>{G.lock[station+'|'+w]=leanPrice;G.locker[station+'|'+w]=name;paintWeek();}).catch(c=>{go.disabled=false;st.textContent=failMsg(c);});};
+    }
+    else{go.textContent=leanPrice?'Lock £'+leanPrice+' in for the team':'Lock it in for the team';go.classList.remove('quiet');go.disabled=!leanPrice;go.onclick=null;}
+  }
+  if(ll){
+    ll.innerHTML=mine?('<span class="pulse"></span>Your sign says <b>£'+mine+'</b>'+(G.locker[station+'|'+w]?', locked by <b>'+esc(G.locker[station+'|'+w])+'</b>':'')+'. Waiting for Monday morning. You can still change it until the signs go up.')
+      :'Nobody on '+LBL[station[0]]+' '+station[1]+' has locked a price yet.';
+  }
+  setSigns(station[0]==='a'?(mine||leanPrice):'',station[0]==='b'?(mine||leanPrice):'');
+  const lg=document.getElementById('ledger');if(lg)lg.outerHTML=ledgerHTML(w);
+}
+function ledgerHTML(cur){
+  const L=ledger();
+  let h='<table class="ledger" id="ledger"><thead><tr><th>Week</th><th>You</th><th>Them</th><th>This week</th><th>Running</th></tr></thead><tbody>';
+  L.rows.forEach(x=>{
+    const s=G.shock&&x.w>=5;
+    h+='<tr'+(x.w===cur?' class="cur"':'')+'><td class="w">'+x.w+(s?'<em class="s">!</em>':(isDouble(x.w)?'<em>×2</em>':''))+'</td>'+
+      '<td class="you '+(x.mine?'p'+x.mine.replace('.',''):'blank')+'">'+(x.mine?'£'+x.mine:'–')+'</td>'+
+      '<td class="them '+(x.theirs?'p'+x.theirs.replace('.',''):'blank')+'">'+(x.theirs?'£'+x.theirs:'–')+'</td>'+
+      '<td class="'+(x.p===null?'blank':'')+'">'+(x.p===null?'–':'£'+x.p+'k')+'</td>'+
+      '<td class="'+(x.run===null?'blank':'')+'">'+(x.run===null?'–':'£'+x.run+'k')+'</td></tr>';
+  });
+  h+='<tr class="tot"><td colspan="4">Total so far</td><td>£'+L.total+'k</td></tr></tbody></table>';
+  return h;
+}
+
+/* ---------- the reveal, and the wait between weeks ---------- */
+function verdict(mine,theirs,w){
+  const s=G.shock&&w>=5;
+  if(mine==='1.50'&&theirs==='1.50')return 'You both held. A good week.';
+  if(mine==='1.40'&&theirs==='1.40')return 'You both cut. Cheap fuel for the district, and nothing gained from each other.';
+  if(mine==='1.40')return s?'They held and the app sent every car to you.':'They held. You took the road.';
+  return s?'They cut and the app sent every car to them.':'They cut and you held. Only the regulars came in.';
+}
+function renderBetween(same){
+  const w=G.revealed, r=rival();
+  const mine=G.lock[station+'|'+w], theirs=r?G.lock[r+'|'+w]:'';
+  if(same)return;
+  const p=(mine&&theirs)?profit(mine,theirs,w):null;
+  const L=ledger();
+  app.innerHTML=weekHead(w)+junctionSVG(station[0])+
+    (p===null?'<div class="card soft"><p>No sign went up for one of the two stations this week, so nothing was earned. The board at the front has the detail.</p></div>':
+    '<div class="result"><div class="amt '+(p>=12?(p>12?'good':''):'bad')+'"><small>£</small><span id="amt">0</span><small>k</small></div><div class="verdict">'+verdict(mine,theirs,w)+'</div>'+
+    '<div class="run">Six-week total so far <b>£'+L.total+'k</b></div></div>')+
+    '<div class="waitcard"><span class="pulse"></span>'+(w<WEEKS?'Waiting for week '+(w+1)+' to open.':'That was the last week.')+'</div>'+
+    '<div class="lbl">Your ledger</div>'+ledgerHTML(0);
+  setSigns(station[0]==='a'?mine:theirs,station[0]==='b'?mine:theirs);
+  if(p!==null){
+    startCars('split',station[0]==='a'?mine:theirs,station[0]==='b'?mine:theirs);
+    const el=document.getElementById('amt');const t0=performance.now();
+    const step=now=>{const u=Math.min(1,(now-t0)/900);el.textContent=Math.round(p*(1-Math.pow(1-u,3)));if(u<1)requestAnimationFrame(step);};
+    requestAnimationFrame(step);
+  }else startCars('flow');
+}
+
+/* ---------- the meetings ---------- */
+function renderAsking(same){
+  const w=G.meetOpen, mine=G.ask[station+'|'+w];
+  if(!same){
+    app.innerHTML='<div class="wkhead"><span class="wk">BEFORE WEEK '+w+'</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
+      (G.shock&&w>=5?bulletinHTML():'')+
+      '<div class="card meet"><h3>A meeting with the other station?</h3><p>Two minutes, one person from each side, and only if both stations ask. Nothing said in it binds anyone. Whoever you send is the only one who will ever know which station is yours.</p></div>'+
+      '<div class="meet"><div class="two"><button type="button" class="big" id="askY">Ask to meet</button><button type="button" class="big quiet" id="askN">No meeting</button></div></div>'+
+      '<div class="lockline" id="askline"></div>';
+    const send=y=>{const b=document.getElementById(y?'askY':'askN');b.disabled=true;
+      say(ROOM.meet,station+'|'+w+'|ask|'+(y?'y':'n'),'m'+w).then(()=>{G.ask[station+'|'+w]=y;paintAsk();}).catch(c=>{b.disabled=false;st.textContent=failMsg(c);});};
+    document.getElementById('askY').addEventListener('click',()=>send(true));
+    document.getElementById('askN').addEventListener('click',()=>send(false));
+  }
+  paintAsk();
+  function paintAsk(){
+    const m=G.ask[station+'|'+w];
+    const y=document.getElementById('askY'), n=document.getElementById('askN'), l=document.getElementById('askline');
+    if(y){y.classList.toggle('quiet',m===false);y.disabled=false;}
+    if(n){n.classList.toggle('quiet',m!==false);n.disabled=false;}
+    if(l)l.innerHTML=m===undefined?'Your station hasn’t answered yet. Any of you can.':(m?'<b>You asked to meet.</b> If they asked too, you will be told where.':'<b>No meeting from your side.</b> You can change your mind until the reps are sent.');
+  }
+}
+function renderMeeting(same){
+  const w=G.meetOpen, r=rival();
+  const on=!!(G.ask[station+'|'+w]&&r&&G.ask[r+'|'+w]);
+  const idx=Object.keys(G.pair).filter(k=>k[0]==='a').sort().indexOf(station[0]==='a'?station:r);
+  const spot=SPOTS[Math.max(0,idx)%SPOTS.length];
+  const agreed=G.agreed[station+'|'+w];
+  if(!same){
+    app.innerHTML='<div class="wkhead"><span class="wk">BEFORE WEEK '+w+'</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
+      (on?'<div class="spot"><div class="sub">Meeting on. Send one person to</div><div class="where">'+esc(spot)+'</div><div class="sub">Two minutes</div></div>'+
+          '<div class="card soft"><h3>Back from the meeting?</h3><p>What did the two of you agree? Only you and the debrief will see this. The other station writes its own version.</p></div>'+
+          '<input class="reason" id="agreed" maxlength="120" autocomplete="off" placeholder="What was agreed, in a few words" value="'+esc(agreed?agreed.text:'')+'">'+
+          '<button type="button" class="big" id="agreedgo">Send</button><div class="lockline" id="agreedline"></div>'
+        :'<div class="card"><h3>No meeting this time.</h3><p>Week '+w+' opens when Ryan says so.</p></div>')+
+      '<div class="waitcard"><span class="pulse"></span>Waiting for week '+w+' to open.</div>';
+    const go=document.getElementById('agreedgo');
+    if(go)go.addEventListener('click',()=>{
+      const t=clean(document.getElementById('agreed').value).slice(0,120);if(!t)return;go.disabled=true;
+      say(ROOM.meet,station+'|'+w+'|agreed|'+name+'|'+t,'g'+w).then(()=>{G.agreed[station+'|'+w]={name,text:t};go.disabled=false;paintAgreed();}).catch(c=>{go.disabled=false;st.textContent=failMsg(c);});
+    });
+  }
+  paintAgreed();
+  function paintAgreed(){const l=document.getElementById('agreedline');const a=G.agreed[station+'|'+w];
+    if(l)l.innerHTML=a?'Noted from <b>'+esc(a.name)+'</b>: “'+esc(a.text)+'”. Send again to replace it.':'';}
+}
+
+/* ---------- game over ---------- */
+function renderOver(same){
+  if(same)return;
+  const L=ledger();
+  app.innerHTML='<div class="wkhead"><span class="wk">SIX WEEKS</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
+    '<div class="result"><div class="run">Your six weeks</div><div class="amt"><small>£</small>'+L.total+'<small>k</small></div><div class="verdict">The board at the front takes it from here.</div></div>'+
+    '<div class="lbl">Your ledger</div>'+ledgerHTML(0)+
+    '<div class="foot">Price Wars · Module 4</div>';
+}
+
+/* ---------- polling ---------- */
+function tick(){
+  if(!station){render();return;}
+  Promise.all([answers(ROOM.prices),answers(ROOM.huddle),answers(ROOM.meet)]).then(([p,h,m])=>{
+    parse(p,h,m);render();
+  }).catch(()=>{});
+}
+setInterval(tick,2500);
+render();tick();
+
+/* ---------- the theme ---------- */
 (function(){
-const API='https://gt-poll.rlamare.workers.dev/p/m4-teams/say';
-const inp=document.getElementById('lkNameIn'), go=document.getElementById('lkNameGo'), st=document.getElementById('lkNameStatus');
-let voter=localStorage.getItem('pw-voter');
-if(!voter){voter=(crypto.randomUUID?crypto.randomUUID():('v'+Date.now()+'-'+Math.random().toString(36).slice(2,10)));localStorage.setItem('pw-voter',voter);}
-const LBL={a:'Aura',b:"Buco's"};
-try{const n=localStorage.getItem('pw-name');if(n)inp.value=n;}catch(_){}
-go.addEventListener('click',()=>{
-  const station=localStorage.getItem('pw-station')||'';
-  const name=inp.value.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
-  if(!station){st.className='lk-status bad';st.textContent='Pick your station first, just above.';return;}
-  if(!name){st.className='lk-status bad';st.textContent='Type your name first.';return;}
-  go.disabled=true;
-  fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:station+'|'+name,v:voter+'-n'})})
-  .then(r=>r.json()).then(d=>{
-    go.disabled=false;
-    if(d.ok){try{localStorage.setItem('pw-name',name);}catch(_){}st.className='lk-status ok';st.textContent='Counted: '+name+' on '+LBL[station[0]]+' '+station[1]+'.';}
-    else{st.className='lk-status bad';st.textContent='That didn\u2019t go through. Try again.';}
-  }).catch(()=>{go.disabled=false;st.className='lk-status bad';st.textContent='No connection. Try again in a moment.';});
-});
+  const btn=document.getElementById('theme'), a=document.getElementById('themeAudio');
+  btn.addEventListener('click',()=>{
+    if(!a.paused){a.pause();a.currentTime=0;btn.classList.remove('playing');btn.textContent='Theme';return;}
+    a.volume=0.55;a.onended=()=>{btn.classList.remove('playing');btn.textContent='Theme';};
+    const p=a.play();if(p&&p.then)p.then(()=>{btn.classList.add('playing');btn.textContent='Stop';}).catch(()=>{});
+  });
 })();
 
-/* Price lock-in: posts one "station|week|price" line per lock into the
-   gt-poll /say lane, room m4-prices. The deck's board and the
-   facilitator's desk page read the same room; the latest line per
-   station and week wins. Station choice sticks in localStorage. */
-(function(){
-const API='https://gt-poll.rlamare.workers.dev/p/m4-prices/say';
-const TEAMS=['a1','a2','a3','a4','b1','b2','b3','b4'];
-const LBL={a:'Aura',b:"Buco's"};
-let station=localStorage.getItem('pw-station')||'', week='', price='';
-let voter=localStorage.getItem('pw-voter');
-if(!voter){voter=(crypto.randomUUID?crypto.randomUUID():('v'+Date.now()+'-'+Math.random().toString(36).slice(2,10)));localStorage.setItem('pw-voter',voter);}
-const stEl=document.getElementById('lkStations');
-TEAMS.forEach(t=>{
-  const b=document.createElement('button');b.type='button';
-  b.className=t[0];b.textContent=LBL[t[0]]+' '+t[1];b.dataset.t=t;
-  b.addEventListener('click',()=>{station=t;localStorage.setItem('pw-station',t);paint();});
-  stEl.appendChild(b);
-});
-const wkEl=document.getElementById('lkWeeks');
-for(let w=1;w<=6;w++){
-  const b=document.createElement('button');b.type='button';b.dataset.w=w;b.textContent='W'+w;
-  b.addEventListener('click',()=>{week=String(w);paint();});
-  wkEl.appendChild(b);
-}
-const b150=document.getElementById('lk150'), b140=document.getElementById('lk140');
-b150.addEventListener('click',()=>{price='1.50';paint();});
-b140.addEventListener('click',()=>{price='1.40';paint();});
-const go=document.getElementById('lkGo'), status=document.getElementById('lkStatus');
-function paint(){
-  [...stEl.children].forEach(b=>b.classList.toggle('on',b.dataset.t===station));
-  [...wkEl.children].forEach(b=>b.classList.toggle('on',b.dataset.w===week));
-  b150.classList.toggle('on',price==='1.50');
-  b140.classList.toggle('on',price==='1.40');
-  go.disabled=!(station&&week&&price);
-}
-go.addEventListener('click',()=>{
-  go.disabled=true;
-  status.className='lk-status';status.textContent='Locking in\u2026';
-  fetch(API,{method:'POST',headers:{'content-type':'application/json'},
-    body:JSON.stringify({t:station+'|'+week+'|'+price,v:voter})})
-  .then(r=>r.json()).then(d=>{
-    if(d.ok){status.className='lk-status ok';
-      status.textContent='Locked: \u00a3'+price+' for Week '+week+' ('+LBL[station[0]]+' '+station[1]+')';}
-    else{status.className='lk-status bad';
-      status.textContent=d.error==='enough'?'This phone has locked in too many times \u2013 use a teammate\u2019s phone.':'That didn\u2019t go through. Try again.';}
-    paint();
-  }).catch(()=>{status.className='lk-status bad';status.textContent='No connection. Try again, or tell the facilitator your price.';paint();});
-});
-paint();
-})();
-</script>
-<script defer="" src="/edit.js"></script>
-<script>
-/* The Theme button plays showdown.mp3 if it is sitting next to this file.
-   Browsers block sound until the user acts, which is why this is a button rather
-   than page load. If the file is missing or the format is unsupported, a short
-   synthesised motif plays instead, so the button is never dead. */
-function toggleTheme(btn){
-  var a = document.getElementById('themeAudio');
-  if(!a){ playSynth(btn); return; }
-  if(!a.paused){ a.pause(); a.currentTime = 0; setBtn(btn,false); return; }
-  a.volume = 0.55;
-  a.onended = function(){ setBtn(btn,false); };
-  a.onerror = function(){ setBtn(btn,false); playSynth(btn); };
-  var p = a.play();
-  if(p && p.catch){ p.then(function(){ setBtn(btn,true); })
-                     .catch(function(){ setBtn(btn,false); playSynth(btn); }); }
-  else { setBtn(btn,true); }
-}
-function setBtn(btn,on){
-  if(!btn) return;
-  btn.classList.toggle('playing', !!on);
-  btn.setAttribute('aria-label', on ? 'Stop the theme' : 'Play the theme');
-  var l = btn.querySelector('.tl'); if(l) l.textContent = on ? 'Stop' : 'Theme';
-}
-
-/* fallback: a short western motif synthesised with the Web Audio API */
-var __ac;
-function playSynth(btn){
-  try{
-    var AC = window.AudioContext || window.webkitAudioContext;
-    if(!AC) return;
-    __ac = __ac || new AC();
-    if(__ac.state === 'suspended') __ac.resume();
-    var t0 = __ac.currentTime + 0.06;
-    var master = __ac.createGain(); master.gain.value = 0.20;
-    master.connect(__ac.destination);
-    var line = [[440,0,0.30],[523.25,0.30,0.26],[587.33,0.56,0.62],
-                [587.33,1.34,0.24],[523.25,1.58,0.24],[440,1.82,1.00]];
-    line.forEach(function(n){
-      var f=n[0], at=n[1], dur=n[2];
-      var o=__ac.createOscillator(); o.type='sine'; o.frequency.value=f;
-      var lfo=__ac.createOscillator(); lfo.type='sine'; lfo.frequency.value=5.4;
-      var lg=__ac.createGain(); lg.gain.value=f*0.009;
-      lfo.connect(lg); lg.connect(o.frequency);
-      var g=__ac.createGain();
-      g.gain.setValueAtTime(0, t0+at);
-      g.gain.linearRampToValueAtTime(0.85, t0+at+0.05);
-      g.gain.setValueAtTime(0.85, t0+at+dur*0.68);
-      g.gain.linearRampToValueAtTime(0, t0+at+dur);
-      o.connect(g); g.connect(master);
-      o.start(t0+at); lfo.start(t0+at);
-      o.stop(t0+at+dur+0.03); lfo.stop(t0+at+dur+0.03);
-    });
-    [0,0.56,1.34,1.82].forEach(function(at){
-      var o=__ac.createOscillator(); o.type='triangle'; o.frequency.value=110;
-      var g=__ac.createGain();
-      g.gain.setValueAtTime(0.0001, t0+at);
-      g.gain.exponentialRampToValueAtTime(0.45, t0+at+0.012);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0+at+0.52);
-      o.connect(g); g.connect(master);
-      o.start(t0+at); o.stop(t0+at+0.56);
-    });
-    if(btn){ setBtn(btn,true); setTimeout(function(){ setBtn(btn,false); }, 3000); }
-  }catch(e){ /* audio unavailable; the page is unaffected */ }
+/* ---------- demo: the deck's moves, driven from a bar at the foot ----------
+   ?demo=1 keeps everything on this phone. The rival team is Buco's 3 (or
+   Aura 3), two invented teammates lean and sometimes lock before you do,
+   the rival holds early and cuts late, and every press of the bar is one
+   move the deck would make. */
+const demoRoom={};
+function demoAnswers(room){return (demoRoom[room]||[]).slice();}
+function demoSay(room,line){(demoRoom[room]=demoRoom[room]||[]).push(line);}
+if(DEMO){
+  document.body.classList.add('demo-on');
+  const bar=document.createElement('div');bar.className='demo';
+  bar.innerHTML='<span><b>DEMO</b> <span class="dl" id="dl">no network, the deck’s next move is on the right</span></span><button type="button" id="dnext">Start the game</button>';
+  document.body.appendChild(bar);
+  const mates=['Priya K','Tom W'];
+  let step=0;
+  const rv=()=>G.pair[station]||(station[0]==='a'?'b3':'a3');
+  const plan=()=>{
+    const s=[];
+    s.push({l:'Start the game',f:()=>{const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
+      demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');demoSay(ROOM.prices,'::open|1');}});
+    for(let w=1;w<=6;w++){
+      const mw=G.shock?[3,5]:[3,6];
+      if(mw.includes(w)&&w>1){
+        s.push({l:'Offer a meeting before week '+w,f:()=>{demoSay(ROOM.prices,'::meet|'+w);setTimeout(()=>{demoSay(ROOM.meet,rv()+'|'+w+'|ask|'+(Math.random()<.8?'y':'n'));},1500);}});
+        s.push({l:'Send the reps',f:()=>{demoSay(ROOM.prices,'::reps|'+w);}});
+        s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
+      }
+      else if(w>1)s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
+      s.push({l:'Signs up, week '+w,f:()=>{
+        const r=rv();const rp=w>=5?'1.40':(w===3?(Math.random()<.5?'1.40':'1.50'):'1.50');
+        demoSay(ROOM.prices,r+'|'+w+'|'+rp);
+        if(!G.lock[station+'|'+w]){demoSay(ROOM.prices,station+'|'+w+'|1.50');demoSay(ROOM.huddle,station+'|'+w+'|lock|'+mates[0]);}
+        demoSay(ROOM.prices,'::reveal|'+w);}});
+      if(w===4)s.push({l:'Stop the presses (Gazette)',f:()=>{demoSay(ROOM.prices,'::shock|on');}});
+    }
+    return s;
+  };
+  const btn=document.getElementById('dnext'), dl=document.getElementById('dl');
+  btn.addEventListener('click',()=>{
+    const s=plan();if(step>=s.length){btn.disabled=true;return;}
+    s[step].f();step++;
+    tick();
+    const n=plan()[step];btn.textContent=n?n.l:'Done';dl.textContent=s[step-1].l;
+  });
+  /* teammates lean a moment after a week opens */
+  setInterval(()=>{
+    const w=G.opened;if(!station||!w||G.revealed>=w)return;
+    const k=station+'|'+w;const have=G.lean[k]||{};
+    mates.forEach((m,i)=>{if(!have[norm(m)]&&Math.random()<.35){
+      const p=w>=5?'1.40':(Math.random()<.7?'1.50':'1.40');
+      const why=p==='1.50'?['keep it civil','they held last week','double week, don’t rock it'][i%3]:['they’ll cut anyway','last chance to take the road','app week, go'][i%3];
+      demoSay(ROOM.huddle,k+'|'+p+'|'+m+'|'+why);}});
+  },2200);
 }
 </script>
-
-
 </body></html>
