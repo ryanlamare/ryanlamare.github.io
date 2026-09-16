@@ -149,7 +149,7 @@ cmd.week = async (...spec) => {
     if (G.sign[t + '|' + w] || !plan[t]) continue;
     await say(ROOM.prices, t + '|' + w + '|' + plan[t], seatVoter(t, 1)); await sleep(GAP);
   }
-  console.log('Signs posted for week ' + w + (opt.skip ? ' (except ' + opt.skip + ')' : '') + '. Press Signs up on the deck when every sign is up.');
+  console.log('Signs posted for week ' + w + (opt.skip ? ' (except ' + opt.skip + ')' : '') + '. Press Prices set on the deck when every sign is up.');
 };
 cmd.split = async () => { console.error('No team agreement on the stripped phone; nothing to split.'); process.exit(1); };
 cmd.ask = async (team, yn) => {

@@ -9,8 +9,8 @@
    colour and dots. Each week the phone carries three things: this week's
    choice (two prices, hold one to commit, three dots under it that go
    green when the team agrees and red when it is split; three greens and the
-   sign goes up), the record of both sides' behaviour so far as coloured
-   squares, and the team's money so far. Nothing is revealed on the phone;
+   sign goes up), the record of both sides' behaviour as coloured
+   squares, and the team's revenue. Nothing is revealed on the phone;
    the board is the reveal, and the phone waits behind a station-coloured
    PRICE LOCKED IN until the board has shown its junction. Meetings are one
    question (meet? yes/no, and who goes) and one tap afterwards (what did
@@ -234,9 +234,8 @@ function parse(teams,prices,huddle,meet){
     if(p[2]==='ask'){G.ask[s+'|'+p[1]]=p[3]==='y';if(p[4])G.rep[s+'|'+p[1]]=p[4];}
     else if(p[2]==='agreed'&&p[3])G.agreed[s+'|'+p[1]]={name:p[3],text:p.slice(4).join(' | ')};
   });
-  const mine=station?(station[0]==='a'?station:G.pair[station]):'';
+  /* the phone moves on only when the deck closes the week (Ryan, 16 Sep: the board is the reveal; a junction going up early spoiled it) */
   G.myRev=G.revealed;
-  for(let w=G.revealed+1;w<=WEEKS;w++){if(mine&&G.shown[w+'|'+mine])G.myRev=w;else break;}
 }
 function profit(mine,theirs,week){
   if(G.shock&&week>=5){if(mine==='1.40'&&theirs==='1.50')return 72;if(mine==='1.50'&&theirs==='1.40')return 2;return mine==='1.50'?12:9;}
@@ -268,7 +267,7 @@ function record(){
 
 /* ---------- pieces ---------- */
 function topHTML(wkText,total,hot){
-  return '<div class="top'+(hot?' hot':'')+'"><span class="wk">'+wkText+'</span><span class="tot"><small>SO FAR</small>£'+total+'k</span></div>';
+  return '<div class="top'+(hot?' hot':'')+'"><span class="wk">'+wkText+'</span><span class="tot"><small>REVENUE</small>£'+total+'k</span></div>';
 }
 const stTag=()=>'<b class="'+station[0]+'">'+LBL[station[0]].toUpperCase()+' '+station[1]+'</b>';
 const jxTag=()=>junction()?' · <span class="jx">JUNCTION '+junction()+'</span>':'';
@@ -386,7 +385,7 @@ function renderLobby(same){
 }
 function renderJunction(same){
   if(same)return;
-  app.innerHTML='<div class="bigj"><small>This is your junction</small><b>JUNCTION '+junction()+'</b><span class="st '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
+  app.innerHTML='<div class="bigj"><b>JUNCTION '+junction()+'</b><span class="st '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
     '<div class="wait"><span class="pulse"></span>Waiting for week 1</div>';
 }
 
@@ -456,7 +455,7 @@ function renderMeeting(same){
   const rep=G.rep[station+'|'+w]||'';
   if(!same){
     app.innerHTML=topHTML('WEEK '+w+' AHEAD · '+stTag()+jxTag(),record().total)+
-      (on?'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION '+junction()+'</b><span class="st" style="color:var(--ink)">'+(rep?(norm(rep)===norm(name)?'You go':esc(rep)+' goes'):'One of you goes')+'</span></div>'+
+      (on?'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION '+junction()+'</b><span class="st" style="color:var(--ink)">'+(rep?(norm(rep)===norm(name)?'You meet ':esc(rep)+' meets '):'One of you meets ')+esc(G.rep[r+'|'+w]||(LBL[r[0]]+' '+r[1]))+'</span></div>'+
           '<div class="line">What did you agree?</div><div class="three"><button type="button" class="big quiet" data-ag="1.50">£1.50</button><button type="button" class="big quiet" data-ag="1.40">£1.40</button><button type="button" class="big quiet" data-ag="none">Nothing</button></div>'
         :'<div class="bigj" style="padding-top:10px"><small>Before week '+w+'</small><b style="font-size:40px;color:var(--ink)">NO MEETING</b></div>')+
       '<div class="wait"><span class="pulse"></span>Waiting for week '+w+'</div>';
