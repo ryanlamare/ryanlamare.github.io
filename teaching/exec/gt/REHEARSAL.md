@@ -26,6 +26,10 @@ Poll Desk resets them, and the last step here is that reset.
 - **After the Top of the table slide** of each module open **ryanlamare.com/go/points** in Student 1's window and check the number matches the board.
 - Once per module, tap **change** on a student's name and pick it again, to see the name-guard panel and the "that's me, on another phone" path.
 
+## A whole room for Price Wars: the tester (16 Sep 2026)
+
+You cannot fill six teams with phones, so a script plays the phones. Open the deck as **localhost:8000/teaching/exec/gt/m4/?room=trial** (or the live site with the same `?room=trial`) and the desk as **m4/game/desk/?room=trial**, and have whoever is at the terminal run `node teaching/exec/gt/trial/m4.js --room trial …` between your presses: `teams 3 3` fills three Aura and three Buco's teams of invented people; you press Start; `week all 1.50` (or `week a1=1.40 b2=1.40`, or `random`) commits every team one dot at a time, `split a2` makes a team disagree and then come round, `undo a2 --who 2` takes one commit back; you press Signs up; `ask a1 y` and `note a1 "…"` play the meetings; `pds 6` and `routes` play the closing exercise; `vote 8 3 4 5 3 2` fills the Axelrod poll (that one is the real poll, reset it after). `state` prints the rooms as the deck reads them, and `shot a1 2` screenshots the real phone page as seat 2 of Aura 1 sees it right now (`shot deck 5`, `shot desk`, `shot pds` likewise), into `trial/shots/`. Your own phone on `?room=trial` joins as one more seat. Nothing in the script can reach a real room; the `-trial` rooms are reset from Poll Desk afterwards. The script header lists every command.
+
 ## Hidden Agenda, the drills, and the run with your wife
 
 - **Hidden Agenda needs five seats.** The m8 phone page takes rehearsal overrides, so use five *tabs* in your normal profile rather than the five profiles:
