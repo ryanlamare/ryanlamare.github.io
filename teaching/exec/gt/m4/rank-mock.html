@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Rank the rules (sample)</title>
+<title>Rank the strategies (sample)</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
 /* SAMPLE, not wired: the ranking screen for the Axelrod vote, for Ryan to
@@ -16,9 +16,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
 .hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
 .order{display:flex;flex-direction:column;gap:8px}
-.slot{display:flex;align-items:center;gap:14px;min-height:58px;border:2.5px dashed var(--rule);padding:0 14px 0 0}
-.slot .n{flex:none;width:44px;height:54px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:24px;color:var(--muted)}
-.slot .body{flex:1;min-width:0;padding:8px 0}
+.slot{display:flex;align-items:center;gap:14px;min-height:40px;border:2.5px dashed var(--rule);padding:0 14px 0 0}
+.slot.filled,.slot.anchor{min-height:58px}
+.slot .n{flex:none;width:44px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:24px;color:var(--muted)}
+.slot .body{flex:1;min-width:0;padding:8px 0;display:flex;flex-direction:column;justify-content:center}
 .slot.filled{border:2.5px solid var(--ink);background:var(--card);cursor:pointer}
 .slot.filled .n{background:var(--ink);color:var(--paper)}
 .slot.anchor{border:2.5px solid var(--rule);background:var(--paper-soft);cursor:default}
@@ -37,8 +38,7 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 .locked .slot.filled{cursor:default}
 </style></head><body><div class="wrap">
 <div class="tag"><i></i>Applied Game Theory · Module 4</div>
-<h1>Axelrod’s tournament: rank the rules</h1>
-<div class="hint">Tap the rule you think finishes first, then the next. Tester finishes fourth; that one is done for you. Tap a rule you have placed to take it back.</div>
+<h1>Rank the strategies</h1>
 <div class="order" id="order"></div>
 <div class="pool" id="pool"></div>
 <button class="lock" id="lock" disabled>LOCK IT IN</button>
@@ -46,13 +46,13 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 </div>
 <script>
 const RULES=[
- ['Tit for Tat','Start by cooperating, then copy whatever they did last move'],
- ['Tit for Two Tats','Cooperate, and defect only after they defect twice in a row'],
- ['Always Cooperate','Cooperate on every move, whatever they do to you'],
- ['Always Defect','Defect on every move, whatever they do to you'],
- ['Grudger','Cooperate until they defect once, then defect for ever after'],
- ['Random','Cooperate or defect on a coin toss, every single move'],
- ['Tester','Defect first. If they hit back, apologise and copy them from then on. If they don’t, keep taking every other move']
+ ['Always Cooperate','Cooperates every move, whatever they do'],
+ ['Always Defect','Defects every move, whatever they do'],
+ ['Grudger','Cooperates until they defect once, then defects for ever'],
+ ['Random','Cooperates or defects on a coin toss, every move'],
+ ['Tit for Tat','Cooperates first, then copies their last move'],
+ ['Tit for Two Tats','Cooperates, and defects only after they defect twice running'],
+ ['Tester','Defects first. If you hit back it copies you from then on; if you don’t, it keeps cheating']
 ];
 const ANCHOR=6, ANCHOR_AT=4;           /* Tester sits at fourth */
 const SLOTS=[1,2,3,5,6,7];             /* the six the room fills, in order */
@@ -71,7 +71,6 @@ function render(){
   pool.innerHTML='';
   const left=RULES.map((_,i)=>i).filter(i=>i!==ANCHOR&&!placed.includes(i));
   if(left.length&&!locked){
-    const h=document.createElement('div');h.className='ph';h.textContent=placed.length?'Next: who finishes '+['','first','second','third','','fifth','sixth','seventh'][SLOTS[placed.length]]+'?':'Who finishes first?';pool.appendChild(h);
     left.forEach(i=>{const b=document.createElement('button');b.className='opt';b.type='button';b.innerHTML='<span class="rn">'+RULES[i][0]+'</span><span class="rd">'+RULES[i][1]+'</span>';b.addEventListener('click',()=>{placed.push(i);render();});pool.appendChild(b);});
   }
   lock.disabled=locked||placed.length<6;
