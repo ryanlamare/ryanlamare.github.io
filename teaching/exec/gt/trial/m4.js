@@ -19,7 +19,7 @@
      node trial/m4.js --room trial agree a1 1.50                the rep's one tap: 1.50, 1.40 or none (--who 2 names another seat)
      node trial/m4.js --room trial pds 6               six groups' dilemmas into m4-pds-trial
      node trial/m4.js --room trial routes              every group answers the way out (once the deck has opened it)
-     node trial/m4.js --room trial vote 8 3 4 5 3 2    Axelrod votes; NOTE this poll has no room suffix, so it is the REAL m4-axelrod (reset it from Poll Desk after)
+     node trial/m4.js --room trial rank 5                    Axelrod votes; NOTE this poll has no room suffix, so it is the REAL m4-axelrod (reset it from Poll Desk after)
      node trial/m4.js --room trial shot a1             screenshot the real phone page as seat 1 of a1 sees it (needs Chrome, writes trial/shots/)
      node trial/m4.js --room trial shot deck 5         screenshot the deck's slide 5 on this room
      node trial/m4.js --room trial deck open 1         post a deck marker yourself (for a solo test without the deck: pair, paper w, meet w, reps w, open w, reveal w, shock)
@@ -191,15 +191,17 @@ cmd.routes = async () => {
   const R = ['r', 'e', 'p', 'r', 'n', 'e', 'p', 'r', 'e', 'r'];
   for (let i = 0; i < groups.length; i++) { await say(ROOM.pds, '5‖' + R[i % R.length], groups[i]); await sleep(GAP); }
 };
-cmd.vote = async (...counts) => {
-  console.log('NOTE: m4-axelrod has no room suffix; these votes go into the real poll. Reset it from Poll Desk afterwards.');
-  let k = 0;
-  for (let o = 0; o < 6; o++) for (let i = 0; i < (+counts[o] || 0); i++) {
-    const v = 'trial-vote-' + (++k) + '-' + SUF.replace(/[^a-z0-9]/g, '') + '00';
-    const r = await fetch(API + '/p/m4-axelrod/vote', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ o, v }) });
-    if (!r.ok) throw new Error('vote ' + r.status); await sleep(GAP / 4);
+cmd.rank = async (n) => {
+  console.log('NOTE: m4-axelrod has no room suffix; these rankings go into the real poll. Reset it from Poll Desk afterwards.');
+  /* option indexes: Always Cooperate 0, Always Defect 1, Grudger 2, Random 3, Tit for Tat 4, Tit for Two Tats 5; Tester is given */
+  const R = [[4, 2, 5, 3, 0, 1], [4, 1, 2, 5, 0, 3], [1, 4, 2, 5, 0, 3], [2, 4, 5, 0, 3, 1], [4, 5, 2, 0, 3, 1], [3, 4, 2, 5, 0, 1], [4, 2, 1, 5, 3, 0], [0, 4, 5, 2, 3, 1]];
+  n = Math.min(+n || 5, R.length);
+  for (let i = 0; i < n; i++) {
+    const v = 'trial-rank-' + (i + 1) + '-' + SUF.replace(/[^a-z0-9]/g, '') + '00';
+    const r = await fetch(API + '/p/m4-axelrod/say', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ t: 'rank|' + R[i].join(','), v }) });
+    if (!r.ok) throw new Error('rank ' + r.status); await sleep(GAP / 4);
   }
-  console.log(k + ' votes in.');
+  console.log(n + ' rankings in.');
 };
 cmd.deck = async (what, w, extra) => {
   const v = 'trial-deck-' + SUF.replace(/[^a-z0-9]/g, '') + '0000';

@@ -78,6 +78,26 @@ button.pick.nextq .pm::after{content:" →"}
 .games{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .games .gh{font-weight:700;font-size:16px;color:var(--red);margin-bottom:2px}
 a.pick{text-decoration:none}
+/* the ranking poll (m4 Axelrod): tap the strategy you think finishes first,
+   then the next; the anchor sits in its given place; tap a placed one to
+   take it back; LOCK IT IN when the list is full */
+.rank{display:flex;flex-direction:column;gap:14px}
+.rank .order{display:flex;flex-direction:column;gap:8px}
+.rank .slot{display:flex;align-items:center;gap:14px;min-height:40px;border:2.5px dashed var(--rule);padding:0 14px 0 0}
+.rank .slot.filled,.rank .slot.anchor{min-height:58px}
+.rank .slot .n{flex:none;width:44px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:24px;color:var(--muted)}
+.rank .slot .body{flex:1;min-width:0;padding:8px 0;display:flex;flex-direction:column;justify-content:center}
+.rank .slot.filled{border:2.5px solid var(--ink);background:var(--card);cursor:pointer}
+.rank .slot.filled .n{background:var(--ink);color:var(--paper)}
+.rank .slot.anchor{border:2.5px solid var(--rule);background:var(--paper-soft)}
+.rank .slot.anchor .n{background:var(--rule);color:var(--paper)}
+.rank .slot.anchor .body{opacity:.75}
+.rank .rn{font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
+.rank .rd{font-weight:500;font-size:13.5px;line-height:1.3;color:var(--muted);margin-top:2px}
+.rank .pool{display:flex;flex-direction:column;gap:8px}
+.rank button.opt{display:block;padding:12px 14px}
+.rank button.opt .rn,.rank button.opt .rd{display:block}
+.rank.locked .slot.filled{cursor:default}
 </style>
 </head><body>
 <svg style="display:none" aria-hidden="true">
@@ -231,6 +251,7 @@ function renderPoll(poll,id){
   opts.innerHTML='';
   if(poll.type==='text'&&poll.pair&&CFG&&CFG.polls[poll.pair]){setupPair(opts,poll,CFG.polls[poll.pair],poll.pair);return;}
   if(poll.type==='form'){setupForm(opts,poll);return;}
+  if(poll.type==='rank'){setupRank(opts,poll);return;}
   if(poll.type==='text'){setupText(opts,poll);return;}
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
   let picked=null;
@@ -273,6 +294,66 @@ function lockDone(poll){
   showNext(poll);
 }
 const RECORDED='<b>Response recorded.</b> Results on the screen soon.';
+/* the ranking poll: one line "rank|i,i,i,i,i,i" (option indexes, best first,
+   the anchor left out) sent once through /say; the order is kept on the
+   phone, and a room reset (no line from this phone any more) unlocks it */
+function setupRank(opts,poll){
+  const id=pollId, st=document.getElementById('status');
+  const anchor=poll.anchor||null, at=anchor?anchor.at:0, n=poll.options.length+(anchor?1:0);
+  const slots=[];for(let k=1;k<=n;k++)if(k!==at)slots.push(k);
+  let placed=[], locked=null;
+  try{const m=localStorage.getItem('gt-rank-'+id);if(m)locked=m.split(',').map(Number);}catch(_){}
+  opts.style.display='block';opts.innerHTML='';
+  const box=document.createElement('div');box.className='rank';opts.appendChild(box);
+  const order=document.createElement('div');order.className='order';
+  const pool=document.createElement('div');pool.className='pool';
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
+  box.append(order,pool,lock);
+  function render(){
+    const list=locked||placed, at_={};list.forEach((o,i)=>at_[slots[i]]=o);
+    order.innerHTML='';
+    for(let k=1;k<=n;k++){
+      const d=document.createElement('div');const o=at_[k];
+      const isA=anchor&&k===at;
+      d.className='slot'+(isA?' anchor':(o===undefined?'':' filled'));
+      const nn=document.createElement('div');nn.className='n';nn.textContent=k;d.appendChild(nn);
+      const body=document.createElement('div');body.className='body';
+      const item=isA?anchor:(o===undefined?null:poll.options[o]);
+      if(item){const a=document.createElement('div');a.className='rn';a.textContent=item.t;const b=document.createElement('div');b.className='rd';b.textContent=item.d||'';body.append(a,b);}
+      d.appendChild(body);
+      if(!isA&&o!==undefined&&!locked)d.addEventListener('click',()=>{placed=placed.filter(x=>x!==o);render();});
+      order.appendChild(d);
+    }
+    pool.innerHTML='';
+    if(!locked){
+      poll.options.forEach((op,i)=>{if(placed.includes(i))return;
+        const b=document.createElement('button');b.className='opt';b.type='button';
+        const a=document.createElement('span');a.className='rn';a.textContent=op.t;const g=document.createElement('span');g.className='rd';g.textContent=op.d||'';b.append(a,g);
+        b.addEventListener('click',()=>{placed.push(i);render();});pool.appendChild(b);});
+    }
+    lock.disabled=!!locked||placed.length<slots.length;
+    box.classList.toggle('locked',!!locked);
+    if(locked){lock.remove();}
+  }
+  lock.addEventListener('click',()=>{
+    if(placed.length<slots.length)return;
+    lock.disabled=true;st.textContent='Sending…';
+    const line='rank|'+placed.join(',');
+    fetch(API+'/p/'+id+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:voter})})
+    .then(r=>{if(!r.ok)throw r.status;locked=placed.slice();try{localStorage.setItem('gt-rank-'+id,locked.join(','));}catch(_){}
+      st.innerHTML=LOCKED;render();showNext(poll);})
+    .catch(()=>{lock.disabled=false;st.textContent='That didn’t send — try again.';});
+  });
+  render();
+  if(locked){
+    st.innerHTML=LOCKED;showNext(poll);
+    fetch(API+'/p/'+id+'/entries').then(r=>r.json()).then(d=>{
+      if(pollId!==id||(d.entries||[]).some(e=>e.v===voter))return;
+      try{localStorage.removeItem('gt-rank-'+id);}catch(_){}
+      st.textContent='';renderPoll(poll,id);
+    }).catch(()=>{});
+  }
+}
 function setupText(opts,poll){
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
   const st=document.getElementById('status');

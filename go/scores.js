@@ -37,6 +37,7 @@
                   winner earns 5 points.
      enginegame — the m3 pitch lines; the side ahead over the pair's
                   rounds earns winPoints, a dead heat pays nobody.
+     ranking    — m4 Axelrod: exact placings against the seeded tournament's order
      pricewars  — m4 team signs + the deck's ::pair, ::reveal and ::shock
                   markers; each match scored on the LOWER of its two totals against bands
                   (130→10, 80→3, 50→1), paid to every name that claimed
@@ -84,6 +85,15 @@ const GT_SCORES = (() => {
            ten. Team membership comes from the m4-teams room. */
         { key: 'pricewars', label: 'Price Wars', kind: 'pricewars', room: 'm4-prices', teams: 'm4-teams',
           bands: [[130, 10], [80, 3], [50, 1]] },
+        /* the Axelrod ranking (16 Sep): each phone ranks six strategies
+           (Tester is given as fourth) and the deck runs a FIXED, seeded
+           tournament, so the true order is a constant here: option
+           indexes in polls.json order (Always Cooperate 0, Always Defect 1,
+           Grudger 2, Random 3, Tit for Tat 4, Tit for Two Tats 5), best
+           first. Points for exact placings: all six 5, four or five 3,
+           two or three 1. Tiers are Claude's, for Ryan's veto. */
+        { key: 'axelrod', label: 'Axelrod', kind: 'ranking', room: 'm4-axelrod', truth: [4, 2, 5, 3, 0, 1],
+          tiers: [[6, 5], [4, 3], [2, 1]] },
       ],
     },
     {
@@ -304,6 +314,24 @@ const GT_SCORES = (() => {
       if (Math.abs(x.n - target) !== best) return;
       const name = claims.get(x.v);
       if (name && !winners.has(norm(name))) { winners.add(norm(name)); addPoints(tally, name, ev.key, ev.winPoints); }
+    });
+  }
+
+  /* the ranking game: latest "rank|i,i,i,i,i,i" line per voter, scored on how
+     many of the six sit in their true place; a name scores once */
+  async function scoreRanking(ev, claims, tally) {
+    const d = await j('/p/' + ev.room + '/entries');
+    const seen = new Set();
+    latestPerVoter(d.entries).forEach((t, v) => {
+      const m = /^rank\|(\d(?:,\d){5})$/.exec(String(t || ''));
+      if (!m) return;
+      const a = m[1].split(',').map(Number);
+      if (new Set(a).size !== 6) return;
+      const exact = a.filter((o, i) => o === ev.truth[i]).length;
+      const tier = ev.tiers.find(([n]) => exact >= n);
+      if (!tier) return;
+      const name = claims.get(v);
+      if (name && !seen.has(norm(name))) { seen.add(norm(name)); addPoints(tally, name, ev.key, tier[1]); }
     });
   }
 
@@ -772,6 +800,7 @@ const GT_SCORES = (() => {
         else if (ev.kind === 'mediandog') await scoreDog(ev, claims, tally);
         else if (ev.kind === 'enginegame') await scoreEngine(ev, claims, tally);
         else if (ev.kind === 'pricewars') await scorePricewars(ev, claims, tally);
+        else if (ev.kind === 'ranking') await scoreRanking(ev, claims, tally);
         else if (ev.kind === 'shootout') await scoreShootout(ev, claims, tally);
         else if (ev.kind === 'bossbattle') await scoreBossBattle(ev, claims, tally);
         else if (ev.kind === 'inspection') await scoreInspection(ev, claims, tally);
