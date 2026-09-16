@@ -17,6 +17,21 @@ const GAZETTE = (() => {
     { name: 'Granito Air', line: 'Old engines, honest miles.' },
     { name: 'Castellane Capital', line: 'Returns, eventually.' },
   ];
+  /* two small stories a week with nothing to do with the stations, so it reads like a paper (Claude's, for veto) */
+  const FILLERS = [
+    ['Roundabout to be repainted for the third time this year', 'The council says the last coat was the wrong white.'],
+    ['Lost tortoise found asleep in the car wash', 'Owner says he has done it before.'],
+    ['Parish council debates the height of the new hedge', 'A decision is expected by spring, or the one after.'],
+    ['Local choir seeks tenors, will settle for anyone', 'Rehearsals Tuesdays. Biscuits provided.'],
+    ['Bus timetable changes, nobody sure how', 'The 41 now leaves either earlier or later.'],
+    ['Bridge club welcomes its first member under sixty', 'She has already won twice.'],
+    ['Reader’s letter: the potholes have names now', 'The one by the church is called Gerald.'],
+    ['Chip shop extends opening hours by ten minutes', 'Queues reported.'],
+    ['Weather vane restored, points the wrong way', 'The blacksmith says it is the wind that is wrong.'],
+    ['Allotment marrow breaks the village record, again', 'Same grower, same marrow, some say.'],
+    ['Library fines waived for the month', 'Return the atlas, whoever you are.'],
+    ['Cricket club’s roller stolen, then returned', 'It had been rolled somewhere.'],
+  ];
   const WEATHER = [null, { icon: 'sun', word: 'Dry all week' }, { icon: 'cloud', word: 'Overcast' }, { icon: 'sun', word: 'Bank holiday sunshine' }, { icon: 'rain', word: 'Showers' }, { icon: 'wind', word: 'Blustery' }, { icon: 'sun', word: 'Fair' }];
   function theme(last) {
     if (!last || !last.n) return 'first';
@@ -42,7 +57,7 @@ const GAZETTE = (() => {
   function edition(w, ctx) {
     ctx = ctx || {};
     const shock = !!ctx.shock, last = ctx.last, t = theme(last);
-    const E = { mast: 'The Junction Gazette', kicker: 'Monday morning · Week ' + w, headline: '', paras: [], notice: null, roundup: null, weather: WEATHER[w] || WEATHER[1], ad: ADS[(w - 1) % ADS.length] };
+    const E = { mast: 'The Junction Gazette', kicker: 'Monday morning · Week ' + w, headline: '', paras: [], notice: null, roundup: null, weather: WEATHER[w] || WEATHER[1], ad: ADS[(w - 1) % ADS.length], fillers: [FILLERS[(w - 1) * 2 % FILLERS.length], FILLERS[((w - 1) * 2 + 1) % FILLERS.length]] };
     const head = { peace: 'Peace at the pumps', war: 'Price wars erupt', mixed: 'Mixed fortunes at the pumps' }[t];
     if (last && last.n) E.roundup = last.n + ' signs went up last Monday, ' + last.held + ' at £1.50 and ' + last.cut + ' at £1.40. The junctions took ' + k(last.earned) + ' of the ' + k(last.possible) + ' there was to take.';
     if (w === 1) {

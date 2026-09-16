@@ -20,10 +20,10 @@
    rest drive past. Those are the real numbers behind the payoffs, so the
    cars the room watches pull in are the money.
 
-   Locking (Ryan's rule, 16 Sep): everyone on the team proposes a price by
-   pressing and holding, and the sign goes up only when all of them have
-   proposed the same one. There is no clock and no default price (Ryan,
-   16 Sep: a "£1.50 unless you agree" rule would anchor the whole game at
+   Committing (Ryan, 17 Sep, simplified from lean/hold): tap a price, then
+   Commit; Undo takes it back. The sign goes up only when everyone on the
+   team has committed the same price. There is no clock and no default
+   price (a "£1.50 unless you agree" rule would anchor the game at
    holding). The deck waits for every sign; a dead phone is dropped from
    its team by the facilitator, and the deck keeps a hidden override.
 
@@ -35,8 +35,8 @@
                 "::open|w"  "::reveal|w"         the deck opens a week, then puts the signs up
                 "::meet|w"  "::reps|w"           the deck offers a meeting before week w, then closes the asking
                 "::shock|on"                     the Gazette rules for weeks 5 and 6 (read by the points system too)
-     m4-huddle  "a1|w|lean|Name|price|why"       a teammate's leaning, seen only by that team
-                "a1|w|lock|Name|price"           a teammate's lock (latest per name wins until the sign is up)
+     m4-huddle  "a1|w|lock|Name|price"           a teammate's commit (latest per name wins until the sign is up)
+                "a1|w|undo|Name"                 the same person taking it back
                 "a1|0|drop|Name"                 the facilitator drops a name from a team (a dead phone)
      m4-meet    "a1|w|ask|y"                     the team asked (or not) for the meeting before week w
                 "a1|w|agreed|Name|text"          the rep's private note of what was agreed, for the debrief
@@ -124,19 +124,16 @@ button.big.quiet{background:var(--card);color:var(--ink);border-color:var(--ink)
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:opacity .35s}
 .signbtn .pr{position:relative;z-index:1;font-family:var(--display);font-weight:900;font-size:46px;line-height:1;padding:18px 10px 16px;text-align:center}
 .signbtn .pr small{font-size:22px;vertical-align:top;margin-right:1px}
-.signbtn .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--ink);transition:height .25s ease-out}
-.signbtn.a .fill{background:var(--teal)} .signbtn.b .fill{background:var(--terracotta)}
-.signbtn.holding .fill{height:100%;transition:height 1s linear}
+.cu{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}
 .signbtn.lean{border-color:var(--red);border-width:3.5px}
 .signbtn.locked{color:var(--paper)}
 .signbtn.locked.a{background:var(--teal);border-color:var(--teal)} .signbtn.locked.b{background:var(--terracotta);border-color:var(--terracotta)}
-.signbtn.locked .fill{display:none}
 .signbtn.mute{opacity:.3}
 .signbtn:disabled{cursor:default}
 .hint{font-weight:600;font-size:13px;color:var(--muted);text-align:center;letter-spacing:.02em}
 .tlines{display:flex;flex-direction:column;gap:5px}
 .tl{font-size:15px;line-height:1.35;padding:6px 10px;background:var(--card);border-left:4px solid var(--rule)}
-.tl.lean{border-left-color:var(--ochre)} .tl.prop{border-left-color:var(--green)} .tl.none{color:var(--muted)}
+.tl.prop{border-left-color:var(--green)} .tl.none{color:var(--muted)}
 .committed{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);animation:cin .35s ease-out;cursor:pointer}
 .committed.a{background:var(--teal)} .committed.b{background:var(--terracotta)}
 .committed.off{opacity:0;transition:opacity .4s}
@@ -298,6 +295,7 @@ function parse(teams,prices,huddle,meet){
     if(p[2]==='drop'&&p[3])drop[s+'|'+norm(p[3])]=true;
     else if(p[2]==='lean'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lean[k]=G.lean[k]||{};G.lean[k][norm(p[3])]={name:p[3],price:p[4],why:p[5]||''};}
     else if(p[2]==='lock'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lock[k]=G.lock[k]||{};G.lock[k][norm(p[3])]={name:p[3],price:p[4]};}
+    else if(p[2]==='undo'&&p[3]&&G.lock[k])delete G.lock[k][norm(p[3])];
   });
   G.claim={};Object.entries(claim).forEach(([n,c])=>{G.claim[n]=c.st;if(drop[c.st+'|'+n])return;(G.members[c.st]=G.members[c.st]||[]).push(c.name);});
   meet.forEach(t=>{
@@ -425,42 +423,38 @@ function renderStation(same){
   }));
 }
 
-/* ---------- press and hold ----------
-   A short tap fires onTap (a leaning), a press held for a second fires
-   onHold (a lock). The red bar along the foot of the button fills while
-   it is held, so the gesture explains itself. */
-function holdable(btn,onTap,onHold){
-  let t=null, t0=0, fired=false;
-  const cancel=()=>{if(t){clearTimeout(t);t=null;}btn.classList.remove('holding');};
-  btn.addEventListener('pointerdown',e=>{
-    if(btn.disabled)return;
-    e.preventDefault();try{btn.setPointerCapture(e.pointerId);}catch(_){}
-    fired=false;t0=performance.now();btn.classList.add('holding');
-    t=setTimeout(()=>{fired=true;cancel();onHold&&onHold();},HOLD_MS);
-  });
-  const up=()=>{if(!t&&!btn.classList.contains('holding'))return;const short=performance.now()-t0<350;cancel();if(!fired&&short&&onTap)onTap();};
-  btn.addEventListener('pointerup',up);
-  btn.addEventListener('pointercancel',cancel);
-  btn.addEventListener('pointerleave',cancel);
-  btn.addEventListener('contextmenu',e=>e.preventDefault());
-}
+/* ---------- the two prices, and commit / undo ---------- */
 function signButtons(me,opts){
-  /* opts: {hint, only} */
+  /* opts: {only} */
   const b=p=>'<button type="button" class="signbtn '+me+'" data-p="'+p+'"'+(opts.only&&opts.only!==p?' disabled':'')+'>'+
-    '<div class="fill"></div><div class="pr"><small>£</small>'+p+'</div></button>';
-  return '<div class="signs">'+b('1.50')+b('1.40')+'</div>'+(opts.hint?'<div class="hint">'+opts.hint+'</div>':'');
+    '<div class="pr"><small>\u00a3</small>'+p+'</div></button>';
+  return '<div class="signs">'+b('1.50')+b('1.40')+'</div>'+
+    '<div class="cu"><button type="button" class="big" id="commit" disabled>Commit</button><button type="button" class="big quiet" id="undo" disabled>Undo</button></div>';
+}
+/* paint the two squares and the two buttons from a picked price, my commit, and the team's locked sign */
+function paintSigns(root,me,picked,mine,up){
+  root.querySelectorAll('.signbtn').forEach(x=>{
+    const p=x.dataset.p;
+    x.classList.toggle('locked',up?p===up:(!!mine&&mine===p));
+    x.classList.toggle('mute',up?p!==up:(mine?mine!==p:(!!picked&&picked!==p)));
+    x.classList.toggle('lean',!up&&!mine&&picked===p);
+    x.disabled=!!up||!!mine||x.hasAttribute('data-only-off');
+  });
+  const c=root.querySelector('#commit'),u=root.querySelector('#undo');
+  if(c){c.disabled=!!up||!!mine||!picked;c.textContent=picked&&!mine?'Commit \u00a3'+picked:'Commit';}
+  if(u)u.disabled=!!up||!mine;
 }
 
 /* ---------- how it's played: a guided practice week ----------
    Four trials, one per cell of the game, with two invented teammates so
-   the team mechanic is learned too: tap to lean, hold to propose, the
-   sign goes up only when all three propose the same price (PRICE
-   COMMITTED fills the screen), and in the second trial a teammate
-   proposes the other price first so a disagreement is felt. */
-const tut={step:0,first:'',timers:[],lean:{},prop:{},committed:''};
+   the team mechanic is learned too: tap a price, Commit, the sign goes
+   up only when all three commit the same price (PRICE LOCKED IN fills
+   the screen), and in the second trial a teammate commits the other
+   price first so a disagreement is felt. */
+const tut={step:0,first:'',timers:[],prop:{},picked:'',committed:''};
 const MATES=['Priya K','Tom W'];
 function tutDone(){try{return localStorage.getItem(SK+'tut')==='1';}catch(_){return false;}}
-function tutReset(){tut.timers.forEach(clearTimeout);tut.timers=[];tut.lean={};tut.prop={};tut.committed='';}
+function tutReset(){tut.timers.forEach(clearTimeout);tut.timers=[];tut.prop={};tut.picked='';tut.committed='';}
 function later(ms,f){tut.timers.push(setTimeout(f,ms));}
 function renderBrief(same){
   if(same)return;
@@ -479,18 +473,17 @@ function goalHTML(){
   return '<div class="goal">Your goal is to make as much money as you can over the next six weeks!</div>';
 }
 /* one line per person on the team */
-function teamLines(members,leans,props,me){
+function teamLines(members,props,me){
   return '<div class="tlines">'+members.map(n=>{
     const who=norm(n)===norm(me)?'You':esc(n), isMe=norm(n)===norm(me);
-    const pr=props[norm(n)], ln=leans[norm(n)];
-    if(pr)return '<div class="tl prop"><b>'+who+'</b> '+(isMe?'proposed':'proposed')+' <b>\u00a3'+pr+'</b></div>';
-    if(ln)return '<div class="tl lean"><b>'+who+'</b> '+(isMe?'are':'is')+' leaning \u00a3'+ln+'</div>';
-    return '<div class="tl none"><b>'+who+'</b> '+(isMe?'haven\u2019t':'hasn\u2019t')+' said yet</div>';
+    const pr=props[norm(n)];
+    if(pr)return '<div class="tl prop"><b>'+who+'</b> committed <b>\u00a3'+pr+'</b></div>';
+    return '<div class="tl none"><b>'+who+'</b> '+(isMe?'haven\u2019t':'hasn\u2019t')+' committed yet</div>';
   }).join('')+'</div>';
 }
 function committedOverlay(me,price,label){
   const o=document.createElement('div');o.className='committed '+me;
-  o.innerHTML='<div class="cl">'+(label?esc(label):teamLabel())+'</div><div class="ck">Price committed</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
+  o.innerHTML='<div class="cl">'+(label?esc(label):teamLabel())+'</div><div class="ck">Price locked in</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
   document.body.appendChild(o);
   const off=()=>{o.classList.add('off');setTimeout(()=>o.remove(),450);};
   o.addEventListener('click',off);setTimeout(off,2600);
@@ -507,30 +500,25 @@ function tutCard(){
   const dim=on=>{const f=app.querySelector('.fc.'+them);if(f)f.classList.toggle('dim',on);};
   const other=p=>p==='1.50'?'1.40':'1.50';
   const members=[name].concat(MATES);
-  /* one trial: the player leans and proposes (only `only` if set), the mates follow
+  /* one trial: the player picks and commits (only `only` if set), the mates follow
      by the script, the other station posts `theirs` */
   const trial=(title,text,only,theirs,nextLabel,nextStep,script)=>{
     dim(false);setBoth('','');startCars('flow');
-    body.innerHTML=card(title,text)+signButtons(me,{hint:'Tap to lean. Press and hold to propose.',only})+
+    body.innerHTML=card(title,text)+signButtons(me,{only})+'<div class="hint">Tap a price, then commit it.</div>'+
       '<div id="tlines"></div><div class="lockline" id="tstat"></div><div id="tres"></div>';
+    if(only)body.querySelectorAll('.signbtn').forEach(x=>{if(x.dataset.p!==only)x.setAttribute('data-only-off','1');});
     const paint=()=>{
       const mine=tut.prop[norm(name)];
-      body.querySelectorAll('.signbtn').forEach(x=>{
-        const p=x.dataset.p;
-        x.classList.toggle('locked',tut.committed?p===tut.committed:(!!mine&&mine===p));
-        x.classList.toggle('mute',tut.committed?p!==tut.committed:(!!mine&&mine!==p));
-        x.classList.toggle('lean',!mine&&!tut.committed&&tut.lean[norm(name)]===p);
-        if(tut.committed)x.disabled=true;
-      });
-      document.getElementById('tlines').innerHTML=teamLines(members,tut.lean,tut.prop,name);
+      paintSigns(body,me,tut.picked,mine,tut.committed);
+      document.getElementById('tlines').innerHTML=teamLines(members,tut.prop,name);
       const st=document.getElementById('tstat');
       const props=members.filter(n=>tut.prop[norm(n)]);
       const prices=new Set(props.map(n=>tut.prop[norm(n)]));
-      if(tut.committed)st.innerHTML='<b>Your sign is up: \u00a3'+tut.committed+'.</b>';
-      else if(prices.size>1)st.innerHTML='<b>Your proposals don\u2019t agree.</b> Nothing goes on the sign until all three of you propose the same price. In the game you could switch by holding the other price; here, wait for him.';
-      else if(props.length)st.innerHTML='<b>'+props.length+' of 3 proposed \u00a3'+[...prices][0]+'.</b> Waiting for '+members.filter(n=>!tut.prop[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
+      if(tut.committed)st.innerHTML='<b>Your price is locked in: \u00a3'+tut.committed+'.</b>';
+      else if(prices.size>1)st.innerHTML='<b>Your prices don\u2019t agree.</b> Nothing goes on the sign until all three of you commit the same price. In the game you could undo and change yours; here, wait for him.';
+      else if(props.length)st.innerHTML='<b>'+props.length+' of 3 committed \u00a3'+[...prices][0]+'.</b> Waiting for '+members.filter(n=>!tut.prop[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
       else st.innerHTML='';
-      setBoth(tut.committed||mine||tut.lean[norm(name)]||'','');
+      setBoth(tut.committed||mine||tut.picked||'','');
       if(!tut.committed&&props.length===3&&prices.size===1)commit([...prices][0]);
     };
     const commit=p=>{
@@ -545,31 +533,27 @@ function tutCard(){
         document.getElementById('tnext').addEventListener('click',()=>{tut.step=nextStep;tutCard();});
       });
     };
-    body.querySelectorAll('.signbtn').forEach(b=>holdable(b,
-      ()=>{if(tut.committed)return;const p=b.dataset.p;tut.lean[norm(name)]=p;paint();script.onLean&&script.onLean(p,paint);},
-      ()=>{if(tut.committed)return;const p=b.dataset.p;if(!tut.first)tut.first=p;delete tut.lean[norm(name)];tut.prop[norm(name)]=p;paint();script.onPropose&&script.onPropose(p,paint);}));
+    body.querySelectorAll('.signbtn').forEach(b=>b.addEventListener('click',()=>{if(tut.committed||tut.prop[norm(name)])return;tut.picked=b.dataset.p;paint();script.onPick&&script.onPick(tut.picked,paint);}));
+    body.querySelector('#commit').addEventListener('click',()=>{if(!tut.picked||tut.committed)return;const p=tut.picked;if(!tut.first)tut.first=p;tut.prop[norm(name)]=p;paint();script.onCommit&&script.onCommit(p,paint);});
+    body.querySelector('#undo').addEventListener('click',()=>{if(tut.committed)return;delete tut.prop[norm(name)];paint();});
     paint();
   };
-  const mateLean=(i,p,paint,ms)=>later(ms,()=>{if(!tut.prop[norm(MATES[i])]){tut.lean[norm(MATES[i])]=p;paint();}});
-  const matePropose=(i,p,paint,ms)=>later(ms,()=>{delete tut.lean[norm(MATES[i])];tut.prop[norm(MATES[i])]=p;paint();});
+  const mateCommit=(i,p,paint,ms)=>later(ms,()=>{tut.prop[norm(MATES[i])]=p;paint();});
   if(tut.step===0){
     dim(true);setBoth('','');startCars('flow');
     body.innerHTML=card('This is your station','You sell the same fuel as '+LBL[them]+' across the road. About a hundred cars a week come down this road and read both signs before they choose. The price on your sign is the only difference between you.')+
       '<button type="button" class="big" id="tnext">Next</button>';
     document.getElementById('tnext').addEventListener('click',()=>{tut.step=1;tutCard();});
   }
-  else if(tut.step===1)trial('Post a price','Every Monday you post a price without seeing theirs. Tap a price and your team sees you lean. Press and hold to propose it. When all three of you have proposed the same price, it goes on your sign.','','1.50','Now try the other price',2,
-    {onLean:(p,paint)=>{mateLean(0,p,paint,900);mateLean(1,p,paint,1700);},
-     onPropose:(p,paint)=>{matePropose(0,p,paint,1100);matePropose(1,p,paint,2100);}});
-  else if(tut.step===2)trial('Now propose the other price','Same week, same hundred cars, and the other station holds at \u00a31.50 again. This time your team doesn\u2019t all agree straight away.',other(tut.first),'1.50','What if they cut?',3,
-    {onLean:(p,paint)=>{mateLean(0,p,paint,800);mateLean(1,tut.first,paint,1400);},
-     onPropose:(p,paint)=>{matePropose(0,p,paint,900);matePropose(1,tut.first,paint,1500);matePropose(1,p,paint,6500);}});
+  else if(tut.step===1)trial('Post a price','Every Monday you post a price without seeing theirs. Tap a price and commit it. When all three of you have committed the same price, it goes on your sign.','','1.50','Now try the other price',2,
+    {onCommit:(p,paint)=>{mateCommit(0,p,paint,1100);mateCommit(1,p,paint,2100);}});
+  else if(tut.step===2)trial('Now post the other price','Same week, same hundred cars, and the other station holds at \u00a31.50 again. This time your team doesn\u2019t all agree straight away.',other(tut.first),'1.50','What if they cut?',3,
+    {onPick:(p,paint)=>{mateCommit(1,tut.first,paint,900);},
+     onCommit:(p,paint)=>{mateCommit(0,p,paint,900);mateCommit(1,p,paint,6500);}});
   else if(tut.step===3)trial('This time they cut','The other station is going to post \u00a31.40. Hold at \u00a31.50 and see what it costs you.','1.50','1.40','And if you both cut?',4,
-    {onLean:(p,paint)=>{mateLean(0,p,paint,700);mateLean(1,p,paint,1200);},
-     onPropose:(p,paint)=>{matePropose(0,p,paint,800);matePropose(1,p,paint,1500);}});
-  else if(tut.step===4)trial('Both of you cut','Propose \u00a31.40 while they post \u00a31.40.','1.40','1.40','One more thing',5,
-    {onLean:(p,paint)=>{mateLean(0,p,paint,700);mateLean(1,p,paint,1200);},
-     onPropose:(p,paint)=>{matePropose(0,p,paint,800);matePropose(1,p,paint,1500);}});
+    {onCommit:(p,paint)=>{mateCommit(0,p,paint,800);mateCommit(1,p,paint,1500);}});
+  else if(tut.step===4)trial('Both of you cut','Commit \u00a31.40 while they post \u00a31.40.','1.40','1.40','One more thing',5,
+    {onCommit:(p,paint)=>{mateCommit(0,p,paint,800);mateCommit(1,p,paint,1500);}});
   else{
     dim(false);setBoth('','');startCars('flow');
     body.innerHTML=goalHTML()+'<button type="button" class="big" id="tnext">I\u2019m ready</button>';
@@ -685,33 +669,33 @@ function weekHead(w){
     (s?'<span class="dbl shk">Gazette rules</span>':(isDouble(w)?'<span class="dbl">Pays double</span>':''))+
     '<span class="mine '+station[0]+'">'+teamLabel()+'</span></div>';
 }
-let postedSign={}, seenCommit={};
+let postedSign={}, seenCommit={}, picked='';
 function renderWeek(same){
   const w=G.opened;
   if(!same){
+    picked='';
     app.innerHTML=weekHead(w)+junctionSVG(station[0])+
       '<div class="lbl">Post your price</div>'+
-      signButtons(station[0],{hint:'Tap to lean. Press and hold to propose.'})+
+      signButtons(station[0],{})+'<div class="hint">Tap a price, then commit it. Undo takes it back.</div>'+
       '<div id="wlines"></div>'+
       '<div class="lockline" id="lockline"></div>'+
       '<div class="lbl">Your ledger</div>'+ledgerHTML(w);
     startCars('flow');
-    app.querySelectorAll('.signbtn').forEach(b=>holdable(b,
-      ()=>{postLean(b.dataset.p);},
-      ()=>{postLock(b.dataset.p);}));
+    app.querySelectorAll('.signbtn').forEach(b=>b.addEventListener('click',()=>{picked=b.dataset.p;paintWeek();}));
+    document.getElementById('commit').addEventListener('click',()=>{
+      const p=picked;if(!p||G.sign[station+'|'+w])return;
+      const k=station+'|'+w;G.lock[k]=G.lock[k]||{};G.lock[k][norm(name)]={name,price:p};
+      say(ROOM.huddle,station+'|'+w+'|lock|'+name+'|'+p,'k'+w).catch(c=>{st.textContent=failMsg(c);});
+      paintWeek();
+    });
+    document.getElementById('undo').addEventListener('click',()=>{
+      const k=station+'|'+w;if(G.sign[k]||!G.lock[k]||!G.lock[k][norm(name)])return;
+      delete G.lock[k][norm(name)];
+      say(ROOM.huddle,station+'|'+w+'|undo|'+name,'k'+w).catch(c=>{st.textContent=failMsg(c);});
+      paintWeek();
+    });
   }
   paintWeek();
-  function postLean(p){
-    const k=station+'|'+w;G.lean[k]=G.lean[k]||{};G.lean[k][norm(name)]={name,price:p,why:''};
-    say(ROOM.huddle,station+'|'+w+'|lean|'+name+'|'+p+'|','h'+w).catch(c=>{st.textContent=failMsg(c);});
-    paintWeek();
-  }
-  function postLock(p){
-    if(G.sign[station+'|'+w])return;
-    const k=station+'|'+w;G.lock[k]=G.lock[k]||{};G.lock[k][norm(name)]={name,price:p};
-    say(ROOM.huddle,station+'|'+w+'|lock|'+name+'|'+p,'k'+w).catch(c=>{st.textContent=failMsg(c);});
-    paintWeek();
-  }
 }
 function paintWeek(){
   const w=G.opened, k=station+'|'+w;
@@ -719,30 +703,23 @@ function paintWeek(){
   /* the team has agreed and no sign is up yet: this phone posts it (any of them may; the same line twice is harmless) */
   if(ag&&!up&&!postedSign[k+ag]){postedSign[k+ag]=true;say(ROOM.prices,station+'|'+w+'|'+ag,'w'+w).then(()=>{G.sign[k]=ag;paintWeek();}).catch(()=>{postedSign[k+ag]=false;});}
   if(up&&!seenCommit[k]){seenCommit[k]=true;committedOverlay(station[0],up);}
-  const locks=G.lock[k]||{}, leans=G.lean[k]||{};
-  const myLock=locks[norm(name)], myLean=leans[norm(name)];
-  app.querySelectorAll('.signbtn').forEach(b=>{
-    const p=b.dataset.p;
-    b.classList.toggle('locked',up?p===up:(!!myLock&&myLock.price===p));
-    b.classList.toggle('mute',up?p!==up:(!!myLock&&myLock.price!==p));
-    b.classList.toggle('lean',!up&&!myLock&&!!myLean&&myLean.price===p);
-    b.disabled=!!up;
-  });
+  const locks=G.lock[k]||{};
+  const myLock=locks[norm(name)];
+  paintSigns(app,station[0],picked,myLock?myLock.price:'',up);
   const mem=myMembers();
-  const L={},P={};
-  mem.forEach(n=>{const l=locks[norm(n)],e=leans[norm(n)];if(l)P[norm(n)]=l.price;else if(e)L[norm(n)]=e.price;});
-  const wl=document.getElementById('wlines');if(wl)wl.innerHTML=teamLines(mem,L,P,name);
+  const P={};mem.forEach(n=>{const l=locks[norm(n)];if(l)P[norm(n)]=l.price;});
+  const wl=document.getElementById('wlines');if(wl)wl.innerHTML=teamLines(mem,P,name);
   const ll=document.getElementById('lockline');
   if(ll){
     const nLock=mem.filter(n=>locks[norm(n)]).length;
     const prices=new Set(mem.filter(n=>locks[norm(n)]).map(n=>locks[norm(n)].price));
     ll.classList.toggle('up',!!up);
-    if(up)ll.innerHTML='<b>Your sign is up: \u00a3'+up+'.</b> Waiting for Monday morning.';
-    else if(prices.size>1)ll.innerHTML='<b>Your proposals don\u2019t agree.</b> The sign goes up when everyone has proposed the same price. Hold the other price to switch.';
-    else if(nLock===0)ll.innerHTML='Nobody on '+LBL[station[0]]+' '+station[1]+' has proposed yet.';
-    else ll.innerHTML='<b>'+nLock+' of '+mem.length+' proposed'+(prices.size?' \u00a3'+[...prices][0]:'')+'.</b> Waiting for '+mem.filter(n=>!locks[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
+    if(up)ll.innerHTML='<b>Your price is locked in: \u00a3'+up+'.</b> Waiting for Monday morning.';
+    else if(prices.size>1)ll.innerHTML='<b>Your prices don\u2019t agree.</b> The sign goes up when everyone has committed the same price. Undo to change yours.';
+    else if(nLock===0)ll.innerHTML='Nobody on '+LBL[station[0]]+' '+station[1]+' has committed yet.';
+    else ll.innerHTML='<b>'+nLock+' of '+mem.length+' committed'+(prices.size?' \u00a3'+[...prices][0]:'')+'.</b> Waiting for '+mem.filter(n=>!locks[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
   }
-  const shown=up||(myLock?myLock.price:(myLean?myLean.price:''));
+  const shown=up||(myLock?myLock.price:(picked||''));
   setSigns(station[0]==='a'?shown:'',station[0]==='b'?shown:'');
   const lg=document.getElementById('ledger');if(lg)lg.outerHTML=ledgerHTML(w);
 }
@@ -904,14 +881,13 @@ if(DEMO){
     tick();
     const n=plan()[step];btn.textContent=n?n.l:'Done';dl.textContent=s[step-1].l;
   });
-  /* teammates lean a moment after a week opens, and propose behind you (Tom holds out in week 2) */
+  /* teammates commit behind you (Tom holds out in week 2) */
   setInterval(()=>{
     const w=G.opened;if(!station||!w||G.myRev>=w)return;
-    const k=station+'|'+w;const leans=G.lean[k]||{}, locks=G.lock[k]||{};
-    const my=locks[norm(name)], myLean=leans[norm(name)];
+    const k=station+'|'+w;const locks=G.lock[k]||{};
+    const my=locks[norm(name)];
     mates.forEach((m,i)=>{
-      if(!leans[norm(m)]&&!locks[norm(m)]&&(my||myLean)&&Math.random()<.5)demoSay(ROOM.huddle,k+'|lean|'+m+'|'+(my?my.price:myLean.price)+'|');
-      else if(my&&!locks[norm(m)]&&Math.random()<(w===2&&i===1?.08:.45))demoSay(ROOM.huddle,k+'|lock|'+m+'|'+my.price);
+      if(my&&!locks[norm(m)]&&Math.random()<(w===2&&i===1?.08:.45))demoSay(ROOM.huddle,k+'|lock|'+m+'|'+my.price);
     });
   },2200);
 }

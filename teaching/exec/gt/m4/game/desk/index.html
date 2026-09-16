@@ -62,7 +62,8 @@ function parse(teams,prices,huddle,meet){
   huddle.forEach(t=>{const p=String(t).split('|').map(s=>s.trim());const s=p[0].toLowerCase();
     if(!/^[ab][1-5]$/.test(s))return;
     if(p[2]==='drop'&&p[3])drop[s+'|'+norm(p[3])]=true;
-    else if(p[2]==='lock'&&p[3]&&/^1\.[45]0$/.test(p[4])){const k=s+'|'+p[1];G.lock[k]=G.lock[k]||{};G.lock[k][norm(p[3])]=p[4];}});
+    else if(p[2]==='lock'&&p[3]&&/^1\.[45]0$/.test(p[4])){const k=s+'|'+p[1];G.lock[k]=G.lock[k]||{};G.lock[k][norm(p[3])]=p[4];}
+    else if(p[2]==='undo'&&p[3]){const k=s+'|'+p[1];if(G.lock[k])delete G.lock[k][norm(p[3])];}});
   Object.entries(claim).forEach(([n,c])=>{if(drop[c.st+'|'+n])return;(G.members[c.st]=G.members[c.st]||[]).push(c.name);});
   meet.forEach(t=>{const p=String(t).split('|').map(s=>s.trim());if(p[2]==='ask')G.ask[p[0].toLowerCase()+'|'+p[1]]=p[3]==='y';});
 }
