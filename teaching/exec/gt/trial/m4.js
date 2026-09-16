@@ -12,11 +12,9 @@
 
      node trial/m4.js --room trial teams 3 3            three Aura and three Buco's teams of three, invented names
      node trial/m4.js --room trial state               everything the rooms hold, as the deck reads it
-     node trial/m4.js --room trial week all 1.50       every team commits £1.50 for the open week, one dot at a time
-     node trial/m4.js --room trial week a1=1.40 a2=1.50 b3=1.40 …   per team (unnamed teams hold)
-     node trial/m4.js --room trial commit a2 1.40 --who 1,2   some of a team commit
-     node trial/m4.js --room trial undo a2 --who 2
-     node trial/m4.js --room trial split a2            two commit £1.50, one £1.40, and eight seconds later the odd one comes round
+     node trial/m4.js --room trial week all 1.50       every team's sign goes up at £1.50 for the open week
+     node trial/m4.js --room trial week a1=1.40 a2=1.50 b3=1.40 …   per team (unnamed teams hold); --skip a1 leaves a team for a real phone
+     node trial/m4.js --room trial commit a2 1.40      one team's sign
      node trial/m4.js --room trial ask a1 y            the team asks (or n: does not ask) for the meeting the deck has offered
      node trial/m4.js --room trial agree a1 1.50                the rep's one tap: 1.50, 1.40 or none (--who 2 names another seat)
      node trial/m4.js --room trial pds 6               six groups' dilemmas into m4-pds-trial
@@ -131,26 +129,14 @@ cmd.state = async () => {
   const groups = new Set(pdsE.filter(e => /^[1-5]‖/.test(e.t)).map(e => e.v));
   console.log('  dilemmas: ' + groups.size + ' groups in' + (pdsE.some(e => e.t === '::routes') ? ' · way-out question OPEN · ' + pdsE.filter(e => /^5‖/.test(e.t)).length + ' answered' : ''));
 };
-async function commitSeats(G, team, price, who, w) {
-  for (const s of who) {
-    const seat = seats(G, team).find(x => x.n === s); if (!seat) { console.log('  (' + team + ' has no seat ' + s + ')'); continue; }
-    await say(ROOM.huddle, team + '|' + w + '|lock|' + seat.name + '|' + price, seatVoter(team, s)); await sleep(GAP);
-  }
-  const G2 = await read(); const ag = agreedPrice(G2, team, w);
-  if (ag && !G2.sign[team + '|' + w]) { await say(ROOM.prices, team + '|' + w + '|' + ag, seatVoter(team, 1)); console.log('  ' + team + ': all agree, sign up at £' + ag); }
-  else if (!ag) console.log('  ' + team + ': no sign yet');
-}
+/* one hold posts the team's sign (the stripped phone); the fuller page's lock lines are no longer sent */
 cmd.commit = async (team, price) => {
   const G = await read(); const w = needOpen(G);
   if (!/^1\.[45]0$/.test(price)) throw new Error('price is 1.50 or 1.40');
-  const who = opt.who ? opt.who.split(',').map(Number) : [1, 2, 3];
-  await commitSeats(G, team, price, who, w);
+  if (G.sign[team + '|' + w]) { console.log('  ' + team + ': sign already up'); return; }
+  await say(ROOM.prices, team + '|' + w + '|' + price, seatVoter(team, +(opt.who || 1)));
 };
-cmd.undo = async (team) => {
-  const G = await read(); const w = needOpen(G);
-  const who = opt.who ? opt.who.split(',').map(Number) : [1];
-  for (const s of who) { const seat = seats(G, team).find(x => x.n === s); if (seat) await say(ROOM.huddle, team + '|' + w + '|undo|' + seat.name, seatVoter(team, s)); }
-};
+cmd.undo = async () => { console.error('There is no undo on the stripped phone: a hold is the sign.'); process.exit(1); };
 cmd.week = async (...spec) => {
   const G = await read(); const w = needOpen(G);
   const teams = Object.keys(G.members).sort();
@@ -158,25 +144,14 @@ cmd.week = async (...spec) => {
   if (spec[0] === 'all') teams.forEach(t => plan[t] = spec[1] || '1.50');
   else if (spec[0] === 'random') teams.forEach(t => plan[t] = Math.random() < .5 ? '1.50' : '1.40');
   else { teams.forEach(t => plan[t] = '1.50'); spec.forEach(x => { const m = x.match(/^([ab][1-5])=(1\.[45]0)$/); if (m) plan[m[1]] = m[2]; }); }
-  /* seats take turns across teams, so the deck's dots fill everywhere at once */
-  for (let s = 1; s <= 3; s++) for (const t of teams) {
-    if (G.sign[t + '|' + w]) continue;
-    const seat = seats(G, t).find(x => x.n === s); if (!seat) continue;
-    await say(ROOM.huddle, t + '|' + w + '|lock|' + seat.name + '|' + plan[t], seatVoter(t, s)); await sleep(GAP / 2);
+  if (opt.skip) opt.skip.split(',').forEach(t => delete plan[t]);   /* --skip a1 leaves a team for a real phone */
+  for (const t of teams) {
+    if (G.sign[t + '|' + w] || !plan[t]) continue;
+    await say(ROOM.prices, t + '|' + w + '|' + plan[t], seatVoter(t, 1)); await sleep(GAP);
   }
-  const G2 = await read();
-  for (const t of teams) { const ag = agreedPrice(G2, t, w); if (ag && !G2.sign[t + '|' + w]) await say(ROOM.prices, t + '|' + w + '|' + ag, seatVoter(t, 1)); }
-  console.log('Every team\'s sign is up for week ' + w + '. Press Signs up on the deck.');
+  console.log('Signs posted for week ' + w + (opt.skip ? ' (except ' + opt.skip + ')' : '') + '. Press Signs up on the deck when every sign is up.');
 };
-cmd.split = async (team) => {
-  const G = await read(); const w = needOpen(G);
-  await commitSeats(G, team, '1.50', [1, 2], w);
-  await commitSeats(G, team, '1.40', [3], w);
-  console.log('  ' + team + ' disagrees, 2 to 1. Eight seconds…'); await sleep(+(opt.after || 8000));
-  const seat = seats(G, team)[2];
-  await say(ROOM.huddle, team + '|' + w + '|undo|' + seat.name, seatVoter(team, 3)); await sleep(GAP);
-  await commitSeats(G, team, '1.50', [3], w);
-};
+cmd.split = async () => { console.error('No team agreement on the stripped phone; nothing to split.'); process.exit(1); };
 cmd.ask = async (team, yn) => {
   const G = await read(); if (!G.meetOpen) { console.error('The deck has not offered a meeting (::meet). Press Offer meetings first.'); process.exit(1); }
   /* yes carries the rep's name (seat 1 unless --who n) */

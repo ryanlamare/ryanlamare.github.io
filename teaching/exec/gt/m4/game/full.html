@@ -4,7 +4,12 @@
 <title>Module 4 · Price Wars</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Participant page for the Module 4 price war, rebuilt 16 Sep 2026 to
+/* KEPT, NOT LIVE (16 Sep 2026): the fuller phone with the three-week tutorial
+   and the three-dot team agreement, superseded the same evening by the
+   stripped page at index.html (one hold per team posts the sign). It still
+   runs on the same rooms if ever wanted again.
+
+   Participant page for the Module 4 price war, rebuilt 16 Sep 2026 to
    Ryan's rule for the phones: minimal, no explaining, the state shown with
    colour and dots. Each week the phone carries three things: this week's
    choice (two prices, hold one to commit, three dots under it that go
@@ -18,22 +23,16 @@
    carry one red band. A three-week TUTORIAL runs once, before the game.
    All wording is Claude's, for veto.
 
-   STRIPPED (Ryan, 16 Sep evening): the phone is a hand, not a place. No
-   tutorial, no dots, no team agreement: everyone on a team sees the same
-   two prices, whoever holds one posts the team's sign, and the other
-   phones show it locked. The thinking happens out loud at the table; the
-   meaning happens on the board and in the debrief. The fuller page with
-   the tutorial and the dots is kept at full.html.
-
-   Wire (gt-poll rooms; ?room=<x> suffixes all of them for a rehearsal,
-   ?demo=1 runs the whole thing locally with no network):
+   Wire (four gt-poll rooms; ?room=<x> suffixes all of them for a
+   rehearsal, ?demo=1 runs the whole thing locally with no network):
      m4-teams   "a1|Name"                        one line per phone, who is on which station
-     m4-prices  "a1|w|1.40"                      the TEAM's sign for week w (posted by whichever phone held first)
+     m4-prices  "a1|w|1.40"                      the TEAM's sign for week w (posted by a phone once all agree)
                 "::pair|a1=b3,a2=b5"             the deck's random pairing (the game has started)
                 "::open|w"  "::shown|w|aX"  "::reveal|w"   the deck opens a week, shows a junction, closes the week
                 "::meet|w"  "::reps|w"           the deck offers a meeting before week w, then closes the asking
                 "::shock|on"                     the Gazette rules for weeks 5 and 6
-     m4-huddle  "a1|0|drop|Name"                 the facilitator drops a name from a team (a dead phone); the lock lines of the fuller page are ignored
+     m4-huddle  "a1|w|lock|Name|price"           a teammate's commit (latest per name wins until the sign is up)
+                "a1|0|drop|Name"                 the facilitator drops a name from a team (a dead phone)
      m4-meet    "a1|w|ask|y|Rep"  "a1|w|ask|n"   the team asked (or not) for the meeting, and who goes
                 "a1|w|agreed|Name|1.50"          what the rep says was agreed: 1.50, 1.40 or none
    A week is revealed on this phone only once the deck says so. */
@@ -292,7 +291,7 @@ function flipSign(side,price){const g=document.getElementById('sign'+side.toUppe
 function setCounts(a,b){const ca=document.getElementById('cntA'),cb=document.getElementById('cntB');if(ca)ca.textContent=a===null?'':a+' CARS';if(cb)cb.textContent=b===null?'':b+' CARS';}
 function tilesHTML(me){
   const t=p=>'<button type="button" class="tile '+me+'" data-p="'+p+'"><div class="fill"></div><div class="pr"><small>£</small>'+p+'</div></button>';
-  return '<div class="lbl">Select your weekly price</div><div class="tiles">'+t('1.50')+t('1.40')+'</div>';
+  return '<div class="lbl">Select your weekly price</div><div class="tiles">'+t('1.50')+t('1.40')+'<div class="dots" data-p="1.50"></div><div class="dots" data-p="1.40"></div></div>';
 }
 /* dots: one per member, mine ringed; green when everyone placed agrees, all red when the team is split */
 function paintTiles(root,members,locks,me,up){
@@ -332,9 +331,11 @@ function splash(me,price,label,both){
 function unsplash(){if(splashEl){const e=splashEl;splashEl=null;e.classList.add('off');setTimeout(()=>e.remove(),450);}}
 
 /* ---------- phases ---------- */
+function tutDone(){try{return localStorage.getItem(SK+'tut')==='1';}catch(_){return false;}}
 function phase(){
   if(!name)return 'name';
   if(!station)return 'station';
+  if(!tutDone())return 'tut';
   if(!G.pair[station])return 'lobby';
   if(G.myRev>=WEEKS)return 'over';
   const next=G.myRev+1;
@@ -351,7 +352,7 @@ function render(force){
   const same=key===lastKey&&!force;
   lastKey=key;
   if(!same){app.replaceChildren();if(ph!=='week')unsplash();}
-  ({name:renderName,station:renderStation,lobby:renderLobby,junction:renderJunction,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
+  ({name:renderName,station:renderStation,tut:renderTut,lobby:renderLobby,junction:renderJunction,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
 }
 
 function renderName(same){
@@ -381,8 +382,9 @@ function renderLobby(same){
   if(same)return;
   app.innerHTML='<div class="bigj"><small>You are on</small><b class="st '+station[0]+'" style="color:var(--'+(station[0]==='a'?'teal':'terracotta')+');font-size:48px">'+LBL[station[0]]+' '+station[1]+'</b></div>'+
     '<div class="wait"><span class="pulse"></span>Waiting for the game to start</div>'+
-    '<button type="button" class="small" id="chst">Change station</button>';
+    '<div style="display:flex;gap:22px"><button type="button" class="small" id="chst">Change station</button><button type="button" class="small" id="again">Run the tutorial again</button></div>';
   document.getElementById('chst').addEventListener('click',()=>{station='';try{localStorage.removeItem(SK+'station');}catch(_){}render(true);});
+  document.getElementById('again').addEventListener('click',()=>{try{localStorage.removeItem(SK+'tut');}catch(_){}render(true);});
 }
 function renderJunction(same){
   if(same)return;
@@ -395,20 +397,22 @@ let postedSign={};
 function renderWeek(same){
   const w=G.opened;
   if(!same){
-    app.innerHTML=topHTML(weekTag(w),record().total,G.shock&&w>=5)+junctionSVG(station[0])+twistHTML(w)+
-      (w===1?'<div class="line"><b>Hold a price</b> to commit. One hold is your team’s sign.</div>':'')+tilesHTML(station[0])+recordHTML(record().rows,w);
+    app.innerHTML=topHTML(weekTag(w),record().total,G.shock&&w>=5)+junctionSVG(station[0])+twistHTML(w)+tilesHTML(station[0])+recordHTML(record().rows,w);
     wireHold(app,p=>{
       const k=station+'|'+w;if(G.sign[k])return;
-      G.sign[k]=p;paintWeek();
-      say(ROOM.prices,station+'|'+w+'|'+p,'w'+w).catch(c=>{delete G.sign[k];paintWeek();st.textContent=failMsg(c);});
+      G.lock[k]=G.lock[k]||{};G.lock[k][norm(name)]={name,price:p};
+      say(ROOM.huddle,station+'|'+w+'|lock|'+name+'|'+p,'k'+w).catch(c=>{st.textContent=failMsg(c);});
+      paintWeek();
     });
   }
   paintWeek();
 }
 function paintWeek(){
-  const w=G.opened, k=station+'|'+w, up=G.sign[k]||'';
-  paintTiles(app,myMembers(),{},name,up);
-  const mine=up;
+  const w=G.opened, k=station+'|'+w, up=G.sign[k]||'', ag=agreed(station,w);
+  if(ag&&!up&&!postedSign[k+ag]){postedSign[k+ag]=true;say(ROOM.prices,station+'|'+w+'|'+ag,'w'+w).then(()=>{G.sign[k]=ag;paintWeek();}).catch(()=>{postedSign[k+ag]=false;});}
+  const locks={};const L=G.lock[k]||{};Object.keys(L).forEach(n=>locks[n]=L[n].price);
+  paintTiles(app,myMembers(),locks,name,up);
+  const mine=up||locks[norm(name)]||'';
   setSigns(station[0]==='a'?mine:'',station[0]==='b'?mine:'');
   if(up){const r=rival();splash(station[0],up,LBL[station[0]]+' '+station[1]+' · Junction '+junction(),!!(r&&G.sign[r+'|'+w]));}
   else unsplash();
@@ -473,6 +477,91 @@ function renderOver(same){
     '<div class="wait"><span class="pulse"></span>The board takes it from here</div>';
 }
 
+/* ---------- the tutorial: three scripted weeks, run once ----------
+   Week 1: hold a price, the team agrees, the sign goes up, the other
+   station's price, the result. Week 2: the record and money are on the
+   screen, a teammate disagrees, the reds, the switch, the result. Week 3:
+   the meeting question, who goes, what was agreed, then the double week.
+   Results appear here only because there is no board yet. ---- */
+const MATES=['Priya K','Tom W'];
+const T={week:1,mine:'',mates:['',''],locked:'',theirs:'',rows:[],total:0,timers:[],ask:null,rep:'',ag:''};
+const tLater=(ms,f)=>T.timers.push(setTimeout(f,ms));
+function tReset(){T.timers.forEach(clearTimeout);T.timers=[];T.mine='';T.mates=['',''];T.locked='';T.theirs='';}
+function renderTut(same){if(same)return;T.week=1;T.rows=[];T.total=0;T.ask=null;T.rep='';T.ag='';tutWeek();}
+function tutWeek(){
+  tReset();
+  const me=station[0], w=T.week, dbl=w===3;
+  const rows=[1,2,3,4,5,6].map(x=>T.rows[x-1]||{w:x,mine:'',theirs:'',p:null});
+  const top=()=>'<div class="tut">TUTORIAL</div>'+topHTML('WEEK '+w+(dbl?' <em>· PAYS DOUBLE</em>':'')+' · '+stTag(),T.total);
+  const members=[name].concat(MATES);
+  const paint=()=>{
+    const locks={};members.forEach((n,i)=>{const p=i===0?T.mine:T.mates[i-1];if(p)locks[norm(n)]=p;});
+    paintTiles(app,members,locks,name,T.locked);
+    const mine=T.locked||T.mine;setSigns(me==='a'?mine:'',me==='b'?mine:'');
+    const line=document.getElementById('tline');
+    const placed=Object.values(locks), split=new Set(placed).size>1;
+    if(line&&!T.locked){
+      if(split)line.innerHTML='<b>Red:</b> you don’t all agree. Hold the other price, or wait for them.';
+      else if(placed.length===3)line.innerHTML='Three greens. Your sign goes up.';
+    }
+    if(!T.locked&&placed.length===3&&!split){T.locked=placed[0];lock(placed[0]);}
+  };
+  const lock=p=>{
+    paint();
+    tLater(500,()=>splash(me,p,LBL[me]+' '+station[1]+' · Tutorial',false));
+    tLater(2300,()=>splash(me,p,LBL[me]+' '+station[1]+' · Tutorial',true));
+    tLater(3900,()=>{unsplash();result(p);});
+  };
+  const result=p=>{
+    const theirs=T.theirs;
+    flipSign(me==='a'?'b':'a',theirs);
+    const pa=me==='a'?p:theirs,pb=me==='a'?theirs:p;const c=carSplit(pa,pb,w);
+    const money=profit(p,theirs,w);
+    T.rows[w-1]={w,mine:p,theirs,p:money};T.total+=money;
+    tLater(700,()=>{setCounts(c[0],c[1]);
+      const rec=document.getElementById('trec');if(rec)rec.outerHTML='<div id="trec">'+recordHTML([1,2,3,4,5,6].map(x=>T.rows[x-1]||{w:x,mine:'',theirs:'',p:null}),0)+'</div>';
+      document.querySelector('.top .tot').innerHTML='<small>SO FAR</small>£'+T.total+'k';
+      const line=document.getElementById('tline');
+      const said=theirs===p?(p==='1.50'?'They held too. Forty cars each: <b>£'+money+'k</b>.':'They cut too. Forty-five cars each at the lower price: <b>£'+money+'k</b>.')
+        :(p==='1.50'?'They cut. Ninety cars went to them: <b>£'+money+'k</b> for you.':'They held. Ninety cars came to you: <b>£'+money+'k</b>.');
+      line.innerHTML=said+(dbl?' Double week.':'');
+      const next=document.createElement('button');next.type='button';next.className='big';next.textContent=w<3?'Week '+(w+1):'I’m ready';
+      next.addEventListener('click',()=>{if(w<3){T.week=w+1;tutWeek();}else{try{localStorage.setItem(SK+'tut','1');}catch(_){}render(true);}});
+      line.insertAdjacentElement('afterend',next);
+    });
+  };
+  const prices=(first,theirs,script)=>{
+    T.theirs=theirs;
+    app.innerHTML=top()+junctionSVG(me)+'<div class="line" id="tline">'+first+'</div>'+tilesHTML(me)+'<div id="trec">'+recordHTML(rows,w)+'</div>';
+    wireHold(app,p=>{const fresh=!T.mine;T.mine=p;paint();if(fresh)script(p);else paint();});
+    paint();
+  };
+  if(w===1)prices('Week 1. <b>Hold a price</b> to commit to it. Your team will follow.','1.50',p=>{tLater(1100,()=>{T.mates[0]=p;paint();});tLater(2300,()=>{T.mates[1]=p;paint();});});
+  else if(w===2)prices('Week 2. Your record and money are on the screen. Hold a price.','1.40',p=>{
+    const other=p==='1.50'?'1.40':'1.50';
+    tLater(1000,()=>{T.mates[0]=p;paint();});
+    tLater(2200,()=>{T.mates[1]=other;paint();});
+    tLater(6500,()=>{T.mates[1]=T.mine;paint();});
+  });
+  else{
+    /* week 3: the meeting first, then the double week */
+    app.innerHTML=top()+'<div class="line" id="tline">Week 3 pays double. Do you want to meet the other station?</div>'+
+      '<div class="two"><button type="button" class="big" id="tY">Yes</button><button type="button" class="big quiet" id="tN">No</button></div><div id="twho"></div>';
+    const go=()=>prices('Week 3. Hold a price.','1.50',p=>{tLater(1000,()=>{T.mates[0]=p;paint();});tLater(2000,()=>{T.mates[1]=p;paint();});});
+    document.getElementById('tN').addEventListener('click',()=>{go();});
+    document.getElementById('tY').addEventListener('click',()=>{
+      document.getElementById('tY').classList.add('on');
+      const who=document.getElementById('twho');
+      who.innerHTML='<div class="line" style="margin:14px 0 10px">Who goes?</div><div class="names">'+members.map(x=>'<button type="button" class="big quiet" data-n="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>';
+      who.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{
+        app.innerHTML=top()+'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION 3</b><span class="st" style="color:var(--ink)">'+(norm(b.dataset.n)===norm(name)?'You go':esc(b.dataset.n)+' goes')+'</span></div>'+
+          '<div class="line" id="tline">Back from the meeting. What did you agree?</div><div class="three"><button type="button" class="big quiet" data-ag="1.50">£1.50</button><button type="button" class="big quiet" data-ag="1.40">£1.40</button><button type="button" class="big quiet" data-ag="none">Nothing</button></div>';
+        app.querySelectorAll('[data-ag]').forEach(x=>x.addEventListener('click',()=>{x.classList.add('on');tLater(600,go);}));
+      }));
+    });
+  }
+}
+
 /* ---------- polling ---------- */
 let pickedAt=0;
 function tick(){
@@ -497,8 +586,10 @@ render();setTimeout(tick,0);
 })();
 
 /* ---------- demo: the deck's moves, driven from a bar at the foot ----------
-   ?demo=1 keeps everything on this phone: the rival team holds early and
-   cuts late, and every press of the bar is one move the deck would make. */
+   ?demo=1 keeps everything on this phone: two invented teammates commit
+   behind you (one holds out a while in week 2), the rival team holds
+   early and cuts late, and every press of the bar is one move the deck
+   would make. */
 const demoRoom={};
 function demoAnswers(room){return (demoRoom[room]||[]).slice();}
 function demoSay(room,line){(demoRoom[room]=demoRoom[room]||[]).push(line);}
@@ -511,7 +602,7 @@ if(DEMO){
   const rv=()=>G.pair[station]||(station[0]==='a'?'b3':'a3');
   const plan=()=>{
     const s=[];const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
-    s.push({l:'Start the game',f:()=>{['Priya K','Tom W'].forEach(m=>demoSay(ROOM.teams,me+'|'+m));demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');}});
+    s.push({l:'Start the game',f:()=>{MATES.forEach(m=>demoSay(ROOM.teams,me+'|'+m));demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');}});
     for(let w=1;w<=6;w++){
       if(w===5)s.push({l:'The Junction Gazette',f:()=>{demoSay(ROOM.prices,'::shock|on');}});
       if((G.shock?[3,5]:[3,6]).includes(w)){
@@ -532,6 +623,11 @@ if(DEMO){
     s[step].f();step++;tick();
     const n=plan()[step];btn.textContent=n?n.l:'Done';dl.textContent=s[step-1].l;
   });
+  setInterval(()=>{
+    const w=G.opened;if(!station||!w||G.myRev>=w)return;
+    const k=station+'|'+w;const locks=G.lock[k]||{};const my=locks[norm(name)];
+    MATES.forEach((m,i)=>{if(my&&(!locks[norm(m)]||locks[norm(m)].price!==my.price)&&Math.random()<(w===2&&i===1?.12:.5))demoSay(ROOM.huddle,k+'|lock|'+m+'|'+my.price);});
+  },2200);
 }
 </script>
 </body></html>
