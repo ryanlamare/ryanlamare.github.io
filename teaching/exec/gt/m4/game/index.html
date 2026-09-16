@@ -360,7 +360,7 @@ function phase(){
 let lastKey='';
 function render(force){
   const ph=phase();
-  const key=ph+'|'+G.opened+'|'+G.revealed+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+G.paper+'|'+station;
+  const key=ph+'|'+G.opened+'|'+G.revealed+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+G.paper+'|'+(G.pair[station]||'')+'|'+station;
   const same=key===lastKey&&!force;
   lastKey=key;
   if(!same){app.replaceChildren();stopCars();}
@@ -440,7 +440,8 @@ function tutDone(){try{return localStorage.getItem(SK+'tut')==='1';}catch(_){ret
 function renderBrief(same){
   if(same)return;
   if(tutDone()){
-    app.innerHTML=meLine()+'<div class="waitcard"><span class="pulse"></span>Waiting for the game to start.</div>'+goalHTML()+
+    const started=!!G.pair[station];
+    app.innerHTML=meLine()+'<div class="waitcard"><span class="pulse"></span>'+(started?'The game has started. Waiting for week 1 to open.':'Waiting for the game to start.')+'</div>'+(started?paperHTML(1):'')+goalHTML()+
       '<button type="button" class="back" id="again">Show me how it’s played again</button>';
     wireMe();
     document.getElementById('again').addEventListener('click',()=>{try{localStorage.removeItem(SK+'tut');}catch(_){}tut.step=0;tut.first='';render(true);});
