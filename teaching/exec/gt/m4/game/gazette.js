@@ -1,60 +1,71 @@
-/* The Junction Gazette, one front page a week. Shared by the deck (the
-   paper overlay on the board slide, read aloud before a week opens) and
-   the phones (a small card of the same edition). Week 5 is the rule
-   change. The district round-up uses the room's own numbers from the
-   week before, computed by whoever is showing the page.
+/* The Junction Gazette, one front page a week, shown on the deck over the
+   board and read aloud before the week opens (Ryan, 16 Sep: not on the
+   phones). Three headlines from the week before, all holding, all
+   cutting, or a mix, a one-line report in the old arcade style, a small
+   weather icon, and a small advertisement that is a player from Module 8.
+   Week 5 is the rule change. Text is Claude's draft, every line for veto.
 
-   GAZETTE.edition(w, ctx) -> {mast, kicker, headline, paras:[..], notice:[..]|null, roundup:{...}|null}
-   ctx: {shock:bool, last:{n, held, cut, earned, possible}|null, meetings:int|null}
-   Text is Claude's draft (16 Sep 2026), every line for Ryan's veto. */
+   GAZETTE.edition(w, ctx) -> {mast, kicker, headline, paras, notice, roundup, weather:{icon,word}, ad:{name,line}}
+   ctx: {shock:bool, last:{n, held, cut, earned, possible, junctions:[{k, pa, pb, ma, mb}]}|null, meetings:int} */
 const GAZETTE = (() => {
   const k = v => '£' + v + 'k';
-  function roundup(last) {
-    if (!last || !last.n) return null;
-    return {
-      title: 'Around the district',
-      lines: [
-        last.n + ' signs went up on Monday: ' + last.held + ' at £1.50 and ' + last.cut + ' at £1.40.',
-        'Between them the stations took ' + k(last.earned) + ' of the ' + k(last.possible) + ' that was there to be taken.' +
-          (last.possible > last.earned ? ' The rest went to the motorists of the district, who say thank you.' : ' Nobody left a penny on the table.'),
-      ],
-    };
+  const ADS = [
+    { name: 'Tapas Airways', line: 'Wherever you’re going, we’re going too.' },
+    { name: 'Banco Meridiano', line: 'Money, patiently.' },
+    { name: 'Northlake Leasing', line: 'Yours until it isn’t.' },
+    { name: 'Kestrel Aero Finance', line: 'We build them. We’ll finance them.' },
+    { name: 'Granito Air', line: 'Old engines, honest miles.' },
+    { name: 'Castellane Capital', line: 'Returns, eventually.' },
+  ];
+  const WEATHER = [null, { icon: 'sun', word: 'Dry all week' }, { icon: 'cloud', word: 'Overcast' }, { icon: 'sun', word: 'Bank holiday sunshine' }, { icon: 'rain', word: 'Showers' }, { icon: 'wind', word: 'Blustery' }, { icon: 'sun', word: 'Fair' }];
+  function theme(last) {
+    if (!last || !last.n) return 'first';
+    if (last.cut === 0) return 'peace';
+    if (last.held === 0) return 'war';
+    return 'mixed';
+  }
+  /* the one-liner, in the old arcade style */
+  function report(w, last) {
+    const t = theme(last);
+    if (t === 'first') return 'The stations are still feeling each other out.';
+    if (t === 'peace') return 'What a quiet week! Every sign at the junction said £1.50 and the traffic split the way it always has.';
+    if (t === 'war') return 'What a week! Every sign said £1.40, the motorists filled up cheap, and nobody gained a thing on anybody.';
+    const steals = last.junctions.filter(j => j.pa !== j.pb);
+    const s = steals[0];
+    const who = s.pa === '1.40' ? 'Aura' : 'Buco’s', other = s.pa === '1.40' ? 'Buco’s' : 'Aura';
+    let line = who + ' at junction ' + s.k + ' pulled a fast one on ' + other + ' and took £' + (s.pa === '1.40' ? s.ma : s.mb) + 'k!';
+    if (steals.length > 1) line += ' And it wasn’t the only one.';
+    const held = last.junctions.filter(j => j.pa === '1.50' && j.pb === '1.50').length;
+    if (held) line += ' Elsewhere, peace.';
+    return line;
   }
   function edition(w, ctx) {
     ctx = ctx || {};
-    const shock = !!ctx.shock;
-    const ru = w >= 2 ? roundup(ctx.last) : null;
-    const E = { mast: 'The Junction Gazette', kicker: 'Monday morning · Week ' + w, headline: '', paras: [], notice: null, roundup: ru };
+    const shock = !!ctx.shock, last = ctx.last, t = theme(last);
+    const E = { mast: 'The Junction Gazette', kicker: 'Monday morning · Week ' + w, headline: '', paras: [], notice: null, roundup: null, weather: WEATHER[w] || WEATHER[1], ad: ADS[(w - 1) % ADS.length] };
+    const head = { peace: 'Peace at the pumps', war: 'Price wars erupt', mixed: 'Mixed fortunes at the pumps' }[t];
+    if (last && last.n) E.roundup = last.n + ' signs went up last Monday, ' + last.held + ' at £1.50 and ' + last.cut + ' at £1.40. The junctions took ' + k(last.earned) + ' of the ' + k(last.possible) + ' there was to take.';
     if (w === 1) {
       E.kicker = 'Monday morning · Week 1 · New season';
       E.headline = 'New season opens at the junction';
       E.paras = [
-        'Two stations, one crossroads, and a hundred cars a week that can read both signs before they choose a side. Aura Fuels and Buco’s Service Station open the season this morning selling the same fuel at whatever price is on their boards.',
-        'Our reporter asked both managers what Monday’s sign would say. Neither would comment.',
-        'Weather: dry all week. Good driving.',
+        'Two stations, one crossroads, and a hundred cars a week that can read both signs before they choose a side. Aura and Buco’s open the season this morning selling the same fuel at whatever price is on their boards.',
+        report(w, null),
       ];
     } else if (w === 2) {
-      const cut = ctx.last ? ctx.last.cut : 0;
-      E.headline = cut ? 'Price cuts at the junction' : 'Peace at the pumps';
-      E.paras = [
-        cut ? 'Drivers coming through the junction this week found signs at £1.40 for the first time this season. Regulars at the stations that held say they are staying loyal. Everyone else is following the cheaper sign.'
-            : 'Every sign at the junction said £1.50 this week, and the traffic split the way it always has. Not a single driver had a reason to change sides.',
-        'Both managers were asked whether next week’s price would change. Both said they would see.',
-      ];
+      E.headline = head;
+      E.paras = [report(w, last), 'Both managers were asked whether next week’s price would change. Both said they would see.'];
     } else if (w === 3) {
       E.kicker = 'Monday morning · Week 3 · Bank holiday';
-      E.headline = 'Bank holiday weekend brings twice the traffic';
+      E.headline = head + ' as the bank holiday arrives';
       E.paras = [
-        'Every car that fills up at the junction this week counts for double. The stations know it, the drivers know it, and this paper suspects the signs know it too.',
-        (ctx.meetings ? 'Our reporter saw managers from rival stations talking in a car park on Sunday evening, and could not hear a word of it.'
-                      : 'Our reporter watched the car park on Sunday evening and saw nobody from either station. Whatever goes on the signs on Monday was decided alone.'),
+        report(w, last),
+        'Every car that fills up this week counts for double. ' + (ctx.meetings ? 'Our reporter saw managers from rival stations talking in a car park on Sunday evening, and could not hear a word of it.'
+          : 'Our reporter watched the car park on Sunday evening and saw nobody from either station.'),
       ];
     } else if (w === 4) {
-      E.headline = 'After the bank holiday, the pumps settle';
-      E.paras = [
-        'The double week is over and the road is back to its usual hundred cars. Two ordinary weeks remain before the end of the season, and one of them pays double.',
-        'A reader writes to ask why two stations selling the same fuel ever post different prices. The editor has passed the question to both managers.',
-      ];
+      E.headline = head + ' after the bank holiday';
+      E.paras = [report(w, last), 'The road is back to its usual hundred cars. Two weeks remain, and the last one pays double.'];
     } else if (w === 5) {
       if (shock) {
         E.kicker = 'Stop the presses · Special edition · Week 5';
@@ -70,30 +81,21 @@ const GAZETTE = (() => {
           'No doubling in week 6. One last meeting before week 5, two minutes, only if both stations ask. Then silence.',
         ];
       } else {
-        E.headline = 'A quiet week before the last one';
-        E.paras = [
-          'An ordinary week at the junction, and the last one before the season’s closing double. Both managers were seen studying the other side’s sign for longer than usual.',
-        ];
+        E.headline = head;
+        E.paras = [report(w, last), 'An ordinary week, and the last one before the season’s closing double.'];
       }
     } else {
+      E.kicker = 'Monday morning · Week 6 · Final week';
       if (shock) {
-        E.kicker = 'Monday morning · Week 6 · Final week';
-        E.headline = 'Last week of the season, and the app is watching';
-        E.paras = [
-          'FuelWatch now shows the junction to every driver in the district, and whatever goes on the signs this morning is the last word of the season. There are no more meetings.',
-          'Undercut alone and the app sends the district to your forecourt: £72k. Match, and it is £12k each at £1.50 or £9k each at £1.40.',
-        ];
+        E.headline = head + ', and the app is watching';
+        E.paras = [report(w, last), 'Whatever goes on the signs this morning is the last word of the season. There are no more meetings. Undercut alone and the app sends the district to your forecourt: £72k. Match, and it is £12k each at £1.50 or £9k each at £1.40.'];
       } else {
-        E.kicker = 'Monday morning · Week 6 · Final week';
-        E.headline = 'Last week of the season, and it pays double';
-        E.paras = [
-          'The season closes this week with the second double: every car that fills up counts twice. Before the signs go up the stations may meet one last time, one person each, if both ask.',
-          'After Sunday there is no next week. The paper will be watching the signs on Monday morning like everyone else.',
-        ];
+        E.headline = head + ' before the final double';
+        E.paras = [report(w, last), 'The season closes this week with the second double: every car that fills up counts twice. Before the signs go up the stations may meet one last time, if both ask. After Sunday there is no next week.'];
       }
     }
     return E;
   }
-  return { edition, roundup };
+  return { edition, theme, report };
 })();
 if (typeof module !== 'undefined') module.exports = GAZETTE;
