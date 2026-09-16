@@ -1,0 +1,207 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Your own prisoner's dilemma</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 4's closing exercise, in two touches: one phone per group of
+   three (the Price Wars team), one real situation from their world filled
+   into the template from Strip out the story, drawn on the deck as a
+   small payoff matrix in their own words. The matrix on this page follows
+   the inputs as they type. One LOCK IT IN. Then, once the deck has opened
+   the second question (after Axelrod), the same phone answers how they
+   would get out of it, and locks that in too.
+
+   Wire: lines into room m4-pds, one per card, "k‖text" (the Worker caps a
+   line at 200 characters): 1‖your side‖the other side, 2‖the collective
+   action, 3‖the individual action, 4‖o|k|u (one-off; recurs with a known
+   end; recurs with no known end), and later 5‖r|e|p|n (the way out). The
+   deck posts "::routes" into the room when it opens the second question;
+   this page polls for that marker once the dilemma is locked. The deck
+   groups the room's lines by phone; the latest line per card wins, so a
+   re-send corrects rather than duplicates. ?room=<x> suffixes the room
+   for a rehearsal, as on the Price Wars deck. All wording is Claude's, for veto. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+/* the matrix: their two sides, their two actions, the letters from the deck */
+.pdm{background:var(--paper-soft);border:2.5px solid var(--ink);border-radius:12px;padding:12px 14px 14px;display:grid;grid-template-columns:22px 92px 1fr 1fr;grid-template-rows:20px auto 54px 54px;gap:4px;align-items:stretch}
+.pdm .ch{grid-row:1;grid-column:3 / span 2;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--terracotta);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdm .rh{grid-column:1;grid-row:3 / span 2;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--teal);writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdm .cl{grid-row:2;font-weight:600;font-size:11.5px;line-height:1.2;text-align:center;padding:0 2px 4px;display:flex;align-items:flex-end;justify-content:center;min-height:30px;color:var(--ink);overflow:hidden}
+.pdm .rl{grid-column:2;font-weight:600;font-size:11.5px;line-height:1.2;text-align:right;padding-right:6px;display:flex;align-items:center;justify-content:flex-end;color:var(--ink);overflow:hidden}
+.pdm .cl.ph,.pdm .rl.ph,.pdm .ch.ph,.pdm .rh.ph{color:var(--muted);font-weight:500;font-style:italic}
+.pdm .c{background:var(--card);border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:22px;position:relative}
+.pdm .c .a{color:var(--teal)} .pdm .c .b{color:var(--terracotta)} .pdm .c .p{color:var(--muted);font-family:var(--sans);font-weight:500;font-size:16px;margin:0 3px}
+.pdm .c.eq::after{content:"";position:absolute;inset:2px;border:3.5px solid var(--red);pointer-events:none}
+.pdm .c.par::after{content:"";position:absolute;inset:2px;border:3.5px solid var(--green);pointer-events:none}
+.pdm .c.par .a,.pdm .c.par .b{color:var(--green)}
+/* the cards */
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.sides{--side:var(--red)} .card.hold{--side:var(--teal)} .card.defect{--side:var(--terracotta)} .card.horizon{--side:var(--maroon)} .card.route{--side:var(--ink)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
+.card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input[type=text]:focus{border-bottom-color:var(--side)}
+.card input:disabled{opacity:.45}
+.card ::placeholder{color:var(--muted);font-weight:500}
+.card .two{display:flex;flex-direction:column;gap:2px}
+.card .two label{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;margin-top:6px}
+.card .two label.a{color:var(--teal)} .card .two label.b{color:var(--terracotta)}
+.chips{display:flex;flex-direction:column;gap:8px}
+button.opt{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:15px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:11px 14px;cursor:pointer}
+button.opt small{display:block;font-weight:500;font-size:13px;color:var(--muted);margin-top:2px}
+button.opt.mine{background:var(--side,var(--red));border-color:var(--side,var(--red));color:var(--paper)}
+button.opt.mine small{color:var(--paper);opacity:.85}
+button.opt:disabled{opacity:.45;cursor:default}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center}
+.bigcard .head{font-weight:700;font-size:22px;color:var(--red)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.4}
+.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+#app{display:flex;flex-direction:column;gap:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 4</div>
+  <h1 id="q">Your own prisoner’s dilemma</h1>
+  <div class="hint" id="hint">In your Price Wars team, one phone. A situation from your own world where each side is tempted to do the thing that leaves you both worse off.</div>
+  <div class="pdm" id="pdm"></div>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const QS=new URLSearchParams(location.search);
+const SUF=QS.get('room')?('-'+QS.get('room').replace(/[^a-z0-9-]/g,'')):'';
+const API=QS.get('api')||'https://gt-poll.rlamare.workers.dev', ROOM='m4-pds'+SUF, LOCKKEY='gt-pd-locked'+SUF, ROUTEKEY='gt-pd-route'+SUF;
+const SIDEMAX=50, MOVEMAX=90;
+const HORIZONS=[['o','A one-off','You decide once, and that is that'],['k','It recurs, and everyone knows when it ends','A contract with an end date, a project with a last milestone'],['u','It recurs, and nobody knows when it ends','A relationship that could go on for years, or stop next month']];
+const ROUTES=[['r','Make it repeat','Turn a one-off into a relationship with no known end'],['e','Bring in an enforcer','A contract, a regulator, a boss: someone who makes defecting cost'],['p','Change the payoffs','Make the collective action pay more, or defecting pay less'],['n','There is no way out','It stays a dilemma, and the best you can do is not defect first']];
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), st=document.getElementById('status'), pdm=document.getElementById('pdm');
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function say(line){
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+/* ---- the matrix: the template from the deck, in their words ---- */
+function drawMatrix(a,b,hold,defect){
+  const ph=(t,alt)=>t?esc(t):'<span>'+alt+'</span>';
+  pdm.innerHTML='<div class="ch'+(b?'':' ph')+'">'+(b?esc(b):'The other side')+'</div><div class="rh'+(a?'':' ph')+'">'+(a?esc(a):'Your side')+'</div>'+
+    '<div class="cl'+(hold?'':' ph')+'" style="grid-column:3">'+(hold?esc(hold):'Collective')+'</div><div class="cl'+(defect?'':' ph')+'" style="grid-column:4">'+(defect?esc(defect):'Individual')+'</div>'+
+    '<div class="rl'+(hold?'':' ph')+'" style="grid-row:3">'+(hold?esc(hold):'Collective')+'</div><div class="rl'+(defect?'':' ph')+'" style="grid-row:4">'+(defect?esc(defect):'Individual')+'</div>'+
+    '<div class="c par" style="grid-row:3;grid-column:3"><span class="a">A</span><span class="p">,</span><span class="b">A</span></div>'+
+    '<div class="c" style="grid-row:3;grid-column:4"><span class="a">C</span><span class="p">,</span><span class="b">B</span></div>'+
+    '<div class="c" style="grid-row:4;grid-column:3"><span class="a">B</span><span class="p">,</span><span class="b">C</span></div>'+
+    '<div class="c eq" style="grid-row:4;grid-column:4"><span class="a">D</span><span class="p">,</span><span class="b">D</span></div>';
+}
+
+/* ---- the form ---- */
+let locked=null, route=null;
+try{locked=JSON.parse(localStorage.getItem(LOCKKEY));route=localStorage.getItem(ROUTEKEY);}catch(_){}
+function render(){
+  st.textContent='';app.innerHTML='';
+  if(locked){renderLocked();return;}
+  drawMatrix('','','','');
+  const c1=card('sides','THE TWO SIDES','Who are the two sides?','You, and the one other party whose choice decides what you get');
+  const two=document.createElement('div');two.className='two';
+  const la=document.createElement('label');la.className='a';la.textContent='Your side';const sa=input(SIDEMAX,'us, the sales team…');
+  const lb=document.createElement('label');lb.className='b';lb.textContent='The other side';const sb=input(SIDEMAX,'their buying team…');
+  two.append(la,sa,lb,sb);c1.appendChild(two);
+  const c2=card('hold','THE COLLECTIVE ACTION','What does holding back look like?','The move that pays you both, if you both make it');
+  const hold=input(MOVEMAX,'hold the price…');c2.appendChild(hold);
+  const c3=card('defect','THE INDIVIDUAL ACTION','What does defecting look like?','The move each of you is tempted to make, whatever the other does');
+  const defect=input(MOVEMAX,'undercut…');c3.appendChild(defect);
+  const c4=card('horizon','THE HORIZON','Is it a one-off, or does it recur?','And if it recurs, does everyone know when it ends?');
+  const chips=document.createElement('div');chips.className='chips';
+  let hz=null;const cb=[];
+  HORIZONS.forEach(([kk,label,sub])=>{
+    const b=document.createElement('button');b.className='opt';b.type='button';b.innerHTML=esc(label)+'<small>'+esc(sub)+'</small>';b.dataset.k=kk;
+    b.addEventListener('click',()=>{hz=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));sync();});
+    chips.appendChild(b);cb.push(b);});
+  c4.appendChild(chips);
+  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  function sync(){drawMatrix(clean(sa.value),clean(sb.value),clean(hold.value),clean(defect.value));
+    lk.disabled=!(clean(sa.value)&&clean(sb.value)&&clean(hold.value)&&clean(defect.value)&&hz);}
+  [sa,sb,hold,defect].forEach(i=>i.addEventListener('input',sync));
+  lk.addEventListener('click',()=>{
+    const A=clean(sa.value),B=clean(sb.value),H=clean(hold.value),D=clean(defect.value);
+    if(!A||!B||!H||!D||!hz)return;
+    lk.disabled=true;[sa,sb,hold,defect].forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
+    say('1‖'+A+'‖'+B).then(()=>say('2‖'+H)).then(()=>say('3‖'+D)).then(()=>say('4‖'+hz))
+      .then(()=>{locked={a:A,b:B,hold:H,defect:D,hz};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;[sa,sb,hold,defect].forEach(i=>i.disabled=false);cb.forEach(b=>b.disabled=false);});
+  });
+  [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
+  sa.focus();
+}
+/* locked: the dilemma is on the screen; the second question arrives when the deck opens it */
+let routesOpen=false, poller=null;
+function renderLocked(){
+  drawMatrix(locked.a,locked.b,locked.hold,locked.defect);
+  const hzw=(HORIZONS.find(h=>h[0]===locked.hz)||HORIZONS[0])[1];
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div class="head">Your dilemma is on the screen</div><div class="sub"></div>';
+  big.querySelector('.sub').textContent=locked.a+' against '+locked.b+' · '+hzw+'. Look up at the screen.';
+  app.appendChild(big);
+  if(route){
+    const r=ROUTES.find(x=>x[0]===route)||ROUTES[0];
+    const done=document.createElement('div');done.className='bigcard';
+    done.innerHTML='<div class="head">Your way out is on the screen</div><div class="sub"></div>';
+    done.querySelector('.sub').textContent=r[1]+'. '+r[2]+'.';
+    app.appendChild(done);
+    return;
+  }
+  if(routesOpen){renderRoute();return;}
+  const wait=document.createElement('div');wait.className='hint';wait.textContent='Keep this page open. There is one more question later in the session.';
+  app.appendChild(wait);
+  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your dilemma)';
+  again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
+  app.appendChild(again);
+  if(!poller)poller=setInterval(checkOpen,3000);checkOpen();
+}
+function checkOpen(){
+  if(routesOpen||route||!locked)return;
+  fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
+    if((d.entries||[]).some(e=>e.t==='::routes')){routesOpen=true;clearInterval(poller);poller=null;render();}
+  }).catch(()=>{});
+}
+function renderRoute(){
+  const c=card('route','THE WAY OUT','How would you get out of it?','Tap the one you would try first');
+  const chips=document.createElement('div');chips.className='chips';
+  let pick=null;const cb=[];
+  ROUTES.forEach(([kk,label,sub])=>{
+    const b=document.createElement('button');b.className='opt';b.type='button';b.innerHTML=esc(label)+'<small>'+esc(sub)+'</small>';b.dataset.k=kk;
+    b.addEventListener('click',()=>{pick=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));lk.disabled=false;});
+    chips.appendChild(b);cb.push(b);});
+  c.appendChild(chips);
+  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  lk.addEventListener('click',()=>{
+    if(!pick)return;lk.disabled=true;cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
+    say('5‖'+pick).then(()=>{route=pick;try{localStorage.setItem(ROUTEKEY,route);}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;cb.forEach(b=>b.disabled=false);});
+  });
+  app.appendChild(c);app.appendChild(lk);
+}
+function card(side,suit,question,sub){const c=document.createElement('div');c.className='card '+side;c.innerHTML='<div class="suit"></div><div class="pq"></div>';c.querySelector('.suit').textContent=suit;
+  c.querySelector('.pq').textContent=question;if(sub){const s=document.createElement('small');s.textContent=sub;c.querySelector('.pq').appendChild(s);}return c;}
+function input(max,ph){const i=document.createElement('input');i.type='text';i.maxLength=max;i.placeholder=ph;i.autocomplete='off';return i;}
+function btn(label,cls){const b=document.createElement('button');b.className=cls;b.type='button';b.textContent=label;return b;}
+render();
+</script>
+</body></html>
