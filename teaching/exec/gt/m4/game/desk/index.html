@@ -26,6 +26,8 @@ td.def{color:var(--muted);font-style:italic}
 tr.match td{background:var(--card)}
 .err{color:var(--red)}
 .w{display:inline-block;min-width:44px}
+button.nm{font-family:var(--sans);font-weight:600;font-size:13.5px;color:var(--ink);background:var(--card);border:1.5px solid var(--rule);padding:3px 8px;cursor:pointer;margin:1px 0}
+button.nm:hover{border-color:var(--ink)}
 </style></head><body>
 <div class="wrap">
   <div class="tag"><i></i>MODULE 4 · FACILITATOR ONLY</div>
@@ -80,7 +82,7 @@ function tick(){
     const w=G.opened>G.revealed?G.opened:0;
     const row=(t,mi,mate)=>{
       const mem=G.members[t]||[],locks=w?(G.lock[t+'|'+w]||{}):{};
-      let h='<tr class="'+(mi?'match':'')+'"><td>'+(mi||'—')+'</td><td class="'+t[0]+'">'+LBL[t[0]]+' '+t[1]+'</td><td class="m">'+esc(mem.join(', '))+'</td>';
+      let h='<tr class="'+(mi?'match':'')+'"><td>'+(mi||'—')+'</td><td class="'+t[0]+'">'+LBL[t[0]]+' '+t[1]+'</td><td class="m">'+mem.map(n=>'<button type="button" class="nm" data-n="'+esc(n)+'">'+esc(n)+'</button>').join(' ')+'</td>';
       h+='<td>'+(w?(G.sign[t+'|'+w]?'sign up £'+G.sign[t+'|'+w]:mem.map(n=>locks[norm(n)]?'£'+locks[norm(n)]:'·').join(' ')):'')+'</td>';
       let tot=0;
       for(let k=1;k<=6;k++){const s=sign(t,k),o=mate?sign(mate,k):'';const p=(s&&o&&k<=G.revealed)?profit(s,o,k):null;if(p!==null)tot+=p;
@@ -90,11 +92,18 @@ function tick(){
     paired.forEach(([a,b],i)=>{rows.push(row(a,i+1,b));rows.push(row(b,i+1,a));});
     teams.filter(t=>!listed.has(t)).forEach(t=>rows.push(row(t,'',null)));
     document.getElementById('rows').innerHTML=rows.join('')||'<tr><td colspan="11" class="m">Nobody has joined yet.</td></tr>';
+    document.querySelectorAll('button.nm').forEach(b=>b.addEventListener('click',()=>moveName(b.dataset.n)));
     document.getElementById('status').innerHTML='<b>'+A.length+'</b> Aura and <b>'+B.length+'</b> Buco’s teams · '+(paired.length?'paired, <b>'+paired.length+'</b> matches':'not started')+
       ' · week <b>'+(G.opened||'—')+'</b>'+(G.opened>G.revealed?' open':' (week '+G.revealed+' revealed)')+(G.shock?' · <b class="err">Gazette rules on</b>':'')+
       (G.meetOpen>G.revealed?' · meetings before week '+G.meetOpen+(G.repsSent>=G.meetOpen?' (reps sent)':' (asking)'):'');
-    document.getElementById('foot').textContent='Italic prices are the £1.50 default for a team that had not agreed when the signs went up. Drop a dead phone from a team by posting "a1|0|drop|Name" into the huddle room from the Poll Desk.';
+    document.getElementById('foot').innerHTML='Tap a name to move that person to another team; their phone follows within a few seconds. To put someone on a team who hasn\u2019t picked one, type their name exactly as on their phone: <button type="button" id="addn" class="nm">add a name</button>. Drop a dead phone from a team by posting "a1|0|drop|Name" into the huddle room from the Poll Desk.';
+    document.getElementById('addn').addEventListener('click',()=>{const n=prompt('Their name, exactly as on their phone');if(n)moveName(n.trim());});
   }).catch(()=>{document.getElementById('status').innerHTML='<span class="err">No connection to the poll server.</span>';});
+}
+function moveName(n){
+  const t=prompt('Put '+n+' on which team? (a1–a5 for Aura, b1–b5 for Buco’s)');
+  if(!t||!/^[ab][1-5]$/i.test(t.trim()))return;
+  fetch(API+'/p/'+ROOM.teams+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:t.trim().toLowerCase()+'|'+n,v:'desk-'+Math.random().toString(36).slice(2,12)})}).then(tick);
 }
 setInterval(tick,2000);tick();
 </script>

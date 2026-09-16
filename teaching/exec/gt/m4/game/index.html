@@ -138,6 +138,7 @@ button.big.quiet{background:var(--card);color:var(--ink);border-color:var(--ink)
 .committed{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);animation:cin .35s ease-out;cursor:pointer}
 .committed.a{background:var(--teal)} .committed.b{background:var(--terracotta)}
 .committed.off{opacity:0;transition:opacity .4s}
+.committed .cl{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.02em;text-transform:uppercase;margin-bottom:6px}
 .committed .ck{font-weight:700;font-size:16px;letter-spacing:.3em;text-transform:uppercase}
 .committed .cp{font-family:var(--display);font-weight:900;font-size:96px;line-height:1}
 .committed .cp small{font-size:44px;vertical-align:top}
@@ -267,7 +268,7 @@ const answers=room=>DEMO?Promise.resolve(demoAnswers(room)):fetch(API+'/p/'+room
 const failMsg=code=>code===429?'That’s plenty from one phone. Flag the instructor.':'That didn’t send. Try again.';
 
 /* the game as the wire describes it */
-const G={pair:{},opened:0,revealed:0,myRev:0,shown:{},shock:false,meetOpen:0,repsSent:0,paper:0,sign:{},lean:{},lock:{},members:{},ask:{},agreed:{}};
+const G={pair:{},opened:0,revealed:0,myRev:0,shown:{},shock:false,meetOpen:0,repsSent:0,paper:0,sign:{},lean:{},lock:{},members:{},claim:{},ask:{},agreed:{}};
 function parse(teams,prices,huddle,meet){
   G.pair={};G.opened=0;G.revealed=0;G.shown={};G.shock=false;G.meetOpen=0;G.repsSent=0;G.paper=0;G.sign={};G.lean={};G.lock={};G.members={};G.ask={};G.agreed={};
   const claim={}, drop={};
@@ -296,7 +297,7 @@ function parse(teams,prices,huddle,meet){
     else if(p[2]==='lean'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lean[k]=G.lean[k]||{};G.lean[k][norm(p[3])]={name:p[3],price:p[4],why:p[5]||''};}
     else if(p[2]==='lock'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lock[k]=G.lock[k]||{};G.lock[k][norm(p[3])]={name:p[3],price:p[4]};}
   });
-  Object.entries(claim).forEach(([n,c])=>{if(drop[c.st+'|'+n])return;(G.members[c.st]=G.members[c.st]||[]).push(c.name);});
+  G.claim={};Object.entries(claim).forEach(([n,c])=>{G.claim[n]=c.st;if(drop[c.st+'|'+n])return;(G.members[c.st]=G.members[c.st]||[]).push(c.name);});
   meet.forEach(t=>{
     const p=String(t).split('|').map(s=>s.trim());
     const s=p[0].toLowerCase();
@@ -327,6 +328,8 @@ function carSplit(pa,pb,week){
   return pa==='1.40'?[cut,7]:[7,cut];
 }
 const rival=()=>G.pair[station]||'';
+const junction=()=>{const a=station[0]==='a'?station:G.pair[station];const P=Object.keys(G.pair).filter(k=>k[0]==='a').sort();const i=P.indexOf(a);return i<0?0:i+1;};
+const teamLabel=()=>LBL[station[0]]+' '+station[1]+(junction()?' \u00b7 Junction '+junction():'');
 const isDouble=w=>!G.shock||w<5?(w===3||w===6):false;
 function myMembers(){
   const m=(G.members[station]||[]).slice();
@@ -383,7 +386,7 @@ function render(force){
   ({name:renderName,station:renderStation,brief:renderBrief,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
 }
 function meLine(){
-  return '<div class="me"><span class="who">You are <b>'+esc(name)+'</b> on <b class="'+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</b></span><button type="button" id="chst">Change</button></div>';
+  return '<div class="me"><span class="who">You are <b>'+esc(name)+'</b> on <b class="'+station[0]+'">'+teamLabel()+'</b></span><button type="button" id="chst">Change</button></div>';
 }
 function wireMe(){
   const b=document.getElementById('chst');
@@ -407,14 +410,14 @@ function renderName(same){
 function renderStation(same){
   if(same)return;
   let h='<div class="me"><span class="who">You are <b>'+esc(name)+'</b></span><button type="button" id="notme">Not me</button></div>'+
-    '<h2>Which station are you?</h2><p>Ryan will tell your team which one you are. Everyone on the team picks the same one.</p><div class="stgrid">';
+    '<h2>Which station are you?</h2><p>Ryan will tell your team which one you are, or put you on one from his desk. Everyone on the team picks the same one.</p><div class="stgrid">';
   ['a','b'].forEach(s=>{h+='<div class="col '+s+'"><div class="colh">'+FULL[s]+'</div>';
     for(let i=1;i<=N;i++)h+='<button type="button" data-st="'+s+i+'">'+LBL[s]+' '+i+'</button>';h+='</div>';});
   h+='</div>';
   app.innerHTML=h;
   document.getElementById('notme').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}render(true);});
   app.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>{
-    station=b.dataset.st;try{localStorage.setItem(SK+'station',station);}catch(_){}
+    station=b.dataset.st;pickedAt=Date.now();try{localStorage.setItem(SK+'station',station);}catch(_){}
     say(ROOM.teams,station+'|'+name).catch(c=>{st.textContent=failMsg(c);});
     render(true);
   }));
@@ -461,7 +464,7 @@ function renderBrief(same){
   if(same)return;
   if(tutDone()){
     const started=!!G.pair[station];
-    app.innerHTML=meLine()+'<div class="waitcard"><span class="pulse"></span>'+(started?'The game has started. Waiting for week 1 to open.':'Waiting for the game to start.')+'</div>'+goalHTML()+
+    app.innerHTML=meLine()+'<div class="waitcard"><span class="pulse"></span>'+(started?'The game has started. You are <b>'+teamLabel()+'</b>. Waiting for week 1 to open.':'Waiting for the game to start.')+'</div>'+goalHTML()+
       '<button type="button" class="back" id="again">Show me how it\u2019s played again</button>';
     wireMe();
     document.getElementById('again').addEventListener('click',()=>{try{localStorage.removeItem(SK+'tut');}catch(_){}tut.step=0;tut.first='';render(true);});
@@ -483,9 +486,9 @@ function teamLines(members,leans,props,me){
     return '<div class="tl none"><b>'+who+'</b> '+(isMe?'haven\u2019t':'hasn\u2019t')+' said yet</div>';
   }).join('')+'</div>';
 }
-function committedOverlay(me,price){
+function committedOverlay(me,price,label){
   const o=document.createElement('div');o.className='committed '+me;
-  o.innerHTML='<div class="ck">Price committed</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
+  o.innerHTML='<div class="cl">'+esc(label||teamLabel())+'</div><div class="ck">Price committed</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
   document.body.appendChild(o);
   const off=()=>{o.classList.add('off');setTimeout(()=>o.remove(),450);};
   o.addEventListener('click',off);setTimeout(off,2600);
@@ -529,7 +532,7 @@ function tutCard(){
       if(!tut.committed&&props.length===3&&prices.size===1)commit([...prices][0]);
     };
     const commit=p=>{
-      tut.committed=p;paint();committedOverlay(me,p);
+      tut.committed=p;paint();committedOverlay(me,p,LBL[me]+' '+station[1]+' \u00b7 practice');
       later(2900,()=>{flipSign(them,theirs);});
       later(3700,()=>{
         startCars('split',me==='a'?p:theirs,me==='a'?theirs:p,1);
@@ -678,7 +681,7 @@ function weekHead(w){
   const s=G.shock&&w>=5;
   return '<div class="wkhead"><span class="wk">WEEK '+w+'</span>'+
     (s?'<span class="dbl shk">Gazette rules</span>':(isDouble(w)?'<span class="dbl">Pays double</span>':''))+
-    '<span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>';
+    '<span class="mine '+station[0]+'">'+teamLabel()+'</span></div>';
 }
 let postedSign={}, seenCommit={};
 function renderWeek(same){
@@ -834,14 +837,18 @@ function renderOver(same){
 }
 
 /* ---------- polling ---------- */
+let pickedAt=0;
 function tick(){
-  if(!station){render();return;}
   Promise.all([answers(ROOM.teams),answers(ROOM.prices),answers(ROOM.huddle),answers(ROOM.meet)]).then(([t,p,h,m])=>{
-    parse(t,p,h,m);render();
+    parse(t,p,h,m);
+    /* the facilitator can put a name on a team, or move it, from the desk; the phone follows */
+    const c=name?G.claim[norm(name)]:'';
+    if(c&&c!==station&&Date.now()-pickedAt>12000){station=c;try{localStorage.setItem(SK+'station',station);}catch(_){}parse(t,p,h,m);render(true);return;}
+    render();
   }).catch(()=>{});
 }
 setInterval(tick,2500);
-render();tick();
+render();setTimeout(tick,0);   /* after the demo block below has been declared */
 
 /* ---------- the theme ---------- */
 (function(){
