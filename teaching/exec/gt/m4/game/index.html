@@ -179,7 +179,12 @@ table.ledger td.blank{color:var(--rule)}
 .bulletin .mast small{display:block;font-family:var(--sans);font-weight:600;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .bulletin h3{font-weight:700;font-size:17px;line-height:1.2;margin:10px 0 6px;color:var(--red)}
 .bulletin p{font-size:14px;line-height:1.45}
-.bulletin a{color:var(--ink);font-weight:700}
+.bulletin p+p{margin-top:6px}
+.bulletin .notice{background:var(--ink);color:var(--paper);padding:10px 12px;margin-top:8px}
+.bulletin .notice p{font-size:13.5px;font-weight:600;margin-bottom:5px}
+.bulletin .notice p:last-child{margin-bottom:0}
+.bulletin .ru{margin-top:10px;font-size:13.5px;color:var(--muted)}
+.bulletin .ru b{color:var(--red)}
 .foot{font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.04em;text-align:center;margin-top:10px}
 
 /* demo driver */
@@ -197,9 +202,10 @@ body.demo-on{padding-bottom:90px}
 </div>
 <audio id="themeAudio" src="showdown.mp3" preload="none"></audio>
 <script src="/go/names.js"></script>
+<script src="gazette.js"></script>
 <script>
-const API='https://gt-poll.rlamare.workers.dev';
 const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
 const DEMO=qs.get('demo')==='1';
 const SUF=qs.get('room')?('-'+qs.get('room').replace(/[^a-z0-9-]/g,'')):'';
 const ROOM={teams:'m4-teams'+SUF,prices:'m4-prices'+SUF,huddle:'m4-huddle'+SUF,meet:'m4-meet'+SUF};
@@ -250,9 +256,9 @@ const answers=room=>DEMO?Promise.resolve(demoAnswers(room)):fetch(API+'/p/'+room
 const failMsg=code=>code===429?'That’s plenty from one phone. Flag the instructor.':'That didn’t send. Try again.';
 
 /* the game as the wire describes it */
-const G={pair:{},opened:0,revealed:0,shock:false,meetOpen:0,repsSent:0,sign:{},lean:{},lock:{},members:{},ask:{},agreed:{}};
+const G={pair:{},opened:0,revealed:0,shock:false,meetOpen:0,repsSent:0,paper:0,sign:{},lean:{},lock:{},members:{},ask:{},agreed:{}};
 function parse(teams,prices,huddle,meet){
-  G.pair={};G.opened=0;G.revealed=0;G.shock=false;G.meetOpen=0;G.repsSent=0;G.sign={};G.lean={};G.lock={};G.members={};G.ask={};G.agreed={};
+  G.pair={};G.opened=0;G.revealed=0;G.shock=false;G.meetOpen=0;G.repsSent=0;G.paper=0;G.sign={};G.lean={};G.lock={};G.members={};G.ask={};G.agreed={};
   const claim={}, drop={};
   teams.forEach(t=>{
     const m=String(t).match(/^([ab][1-5])\s*\|\s*(.{1,40}?)$/i);
@@ -266,6 +272,7 @@ function parse(teams,prices,huddle,meet){
     else if(p[0]==='::shock')G.shock=p[1]==='on';
     else if(p[0]==='::meet'&&/^[1-6]$/.test(p[1]))G.meetOpen=Math.max(G.meetOpen,+p[1]);
     else if(p[0]==='::reps'&&/^[1-6]$/.test(p[1]))G.repsSent=Math.max(G.repsSent,+p[1]);
+    else if(p[0]==='::paper'&&/^[1-6]$/.test(p[1]))G.paper=Math.max(G.paper,+p[1]);
     else if(/^[ab][1-5]$/.test(p[0])&&/^[1-6]$/.test(p[1])&&/^1\.[45]0$/.test(p[2]))G.sign[p[0]+'|'+p[1]]=p[2];
   });
   huddle.forEach(t=>{
@@ -353,7 +360,7 @@ function phase(){
 let lastKey='';
 function render(force){
   const ph=phase();
-  const key=ph+'|'+G.opened+'|'+G.revealed+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+station;
+  const key=ph+'|'+G.opened+'|'+G.revealed+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+G.paper+'|'+station;
   const same=key===lastKey&&!force;
   lastKey=key;
   if(!same){app.replaceChildren();stopCars();}
@@ -603,11 +610,22 @@ function weekHead(w){
     (s?'<span class="dbl shk">Gazette rules</span>':(isDouble(w)?'<span class="dbl">Pays double</span>':''))+
     '<span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>';
 }
-function bulletinHTML(){
-  return '<div class="bulletin"><div class="mast">The Junction Gazette<small>Stop the presses · special edition</small></div>'+
-    '<h3>Price wars at the junction go digital</h3>'+
-    '<p>FuelWatch, the price app sweeping the region, has just added the junction to its map. From this Monday every driver within twenty miles sees both signs, live, before choosing where to fill up.</p>'+
-    '<p><b>Undercut alone and the app sends every car on every road to your forecourt: £72k for the week.</b> The undercut station keeps its £2k of regulars. Match each other and the app has nothing to show: £12k each at £1.50, £9k each at £1.40. The week 6 doubling is off. <a href="../extra/" target="_blank" rel="noopener">Read the paper</a></p></div>';
+/* the week's paper, the same edition the deck shows, once the deck has read it out */
+function weekStats(w){
+  const P=Object.keys(G.pair).filter(k=>k[0]==='a').sort().map(a=>[a,G.pair[a]]);
+  if(!P.length||w<1||w>G.revealed)return null;
+  let held=0,cut=0,earned=0;
+  P.forEach(([a,b])=>{const sa=signUp(a,w),sb=signUp(b,w);[sa,sb].forEach(x=>{if(x.price==='1.50')held++;else cut++;});earned+=profit(sa.price,sb.price,w)+profit(sb.price,sa.price,w);});
+  return {n:P.length*2,held,cut,earned,possible:P.length*((G.shock&&w>=5)?74:24*(isDouble(w)?2:1))};
+}
+function paperHTML(w){
+  if(!w||G.paper<w)return '';
+  const P=Object.keys(G.pair).filter(k=>k[0]==='a');
+  const E=GAZETTE.edition(w,{shock:G.shock,last:weekStats(w-1),meetings:P.filter(a=>G.ask[a+'|3']&&G.ask[G.pair[a]+'|3']).length});
+  return '<div class="bulletin"><div class="mast">'+esc(E.mast)+'<small>'+esc(E.kicker)+'</small></div><h3>'+esc(E.headline)+'</h3>'+
+    E.paras.map(t=>'<p>'+esc(t)+'</p>').join('')+
+    (E.notice?'<div class="notice">'+E.notice.map(t=>'<p>'+esc(t)+'</p>').join('')+'</div>':'')+
+    (E.roundup?'<p class="ru"><b>'+esc(E.roundup.title)+'.</b> '+E.roundup.lines.map(esc).join(' ')+'</p>':'')+'</div>';
 }
 let leanWhy='', postedSign={};
 function renderWeek(same){
@@ -616,7 +634,7 @@ function renderWeek(same){
     const myLean=(G.lean[station+'|'+w]||{})[norm(name)];
     leanWhy=myLean?myLean.why:'';
     app.innerHTML=weekHead(w)+junctionSVG(station[0])+
-      (G.shock&&w>=5?bulletinHTML():'')+
+      paperHTML(w)+
       '<div class="lbl">Post your price</div>'+
       '<input class="reason" id="why" maxlength="60" autocomplete="off" placeholder="A few words for your team (optional)" value="'+esc(leanWhy)+'">'+
       signButtons(station[0],{hint:'Tap to lean. Press and hold to lock.'})+
@@ -706,6 +724,7 @@ function renderBetween(same){
     (mine.def?'<div class="note">Your team hadn’t all locked, so your sign stayed at £1.50.</div>':'')+
     '<div class="run">Six-week total so far <b>£'+L.total+'k</b></div></div>')+
     '<div class="waitcard"><span class="pulse"></span>'+(w<WEEKS?'Waiting for week '+(w+1)+' to open.':'That was the last week.')+'</div>'+
+    (w<WEEKS?paperHTML(w+1):'')+
     '<div class="lbl">Your ledger</div>'+ledgerHTML(0);
   if(p!==null){
     const pa=station[0]==='a'?mine.price:theirs.price, pb=station[0]==='a'?theirs.price:mine.price;
@@ -718,7 +737,7 @@ function renderAsking(same){
   const w=G.meetOpen;
   if(!same){
     app.innerHTML='<div class="wkhead"><span class="wk">BEFORE WEEK '+w+'</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
-      (G.shock&&w>=5?bulletinHTML():'')+
+      paperHTML(w)+
       '<div class="card meet"><h3>Do you want to meet the other station?</h3><p>Two minutes, one person from each side. It happens only if both stations ask. Nothing said in it counts for anything when the signs go up.</p></div>'+
       '<div class="meet"><div class="two"><button type="button" class="big" id="askY">Ask to meet</button><button type="button" class="big quiet" id="askN">No meeting</button></div></div>'+
       '<div class="lockline" id="askline"></div>';
@@ -748,7 +767,7 @@ function renderMeeting(same){
           '<div class="card soft"><h3>Back from the meeting?</h3><p>What did the two of you agree? Only you and the debrief will see this. The other station writes its own version.</p></div>'+
           '<input class="reason" id="agreed" maxlength="120" autocomplete="off" placeholder="What was agreed, in a few words" value="'+esc(a?a.text:'')+'">'+
           '<button type="button" class="big" id="agreedgo">Send</button><div class="lockline" id="agreedline"></div>'
-        :'<div class="card"><h3>No meeting this time.</h3><p>Week '+w+' opens when Ryan says so.</p></div>')+
+        :'<div class="card"><h3>No meeting this time.</h3><p>Week '+w+' opens when Ryan says so.</p></div>')+paperHTML(w)+
       '<div class="waitcard"><span class="pulse"></span>Waiting for week '+w+' to open.</div>';
     const go=document.getElementById('agreedgo');
     if(go)go.addEventListener('click',()=>{
@@ -810,22 +829,19 @@ if(DEMO){
   const rv=()=>G.pair[station]||(station[0]==='a'?'b3':'a3');
   const plan=()=>{
     const s=[];
-    s.push({l:'Start the game',f:()=>{const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
-      mates.forEach(m=>demoSay(ROOM.teams,me+'|'+m));
-      demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');demoSay(ROOM.prices,'::open|1');}});
+    const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
+    s.push({l:'Start the game',f:()=>{mates.forEach(m=>demoSay(ROOM.teams,me+'|'+m));demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');}});
     for(let w=1;w<=6;w++){
-      const mw=G.shock?[3,5]:[3,6];
-      if(mw.includes(w)&&w>1){
+      s.push({l:'Read the week\u2019s paper, week '+w,f:()=>{if(w===5)demoSay(ROOM.prices,'::shock|on');demoSay(ROOM.prices,'::paper|'+w);}});
+      if((G.shock?[3,5]:[3,6]).includes(w)){
         s.push({l:'Offer a meeting before week '+w,f:()=>{demoSay(ROOM.prices,'::meet|'+w);setTimeout(()=>{demoSay(ROOM.meet,rv()+'|'+w+'|ask|'+(Math.random()<.8?'y':'n'));},1500);}});
         s.push({l:'Send the reps',f:()=>{demoSay(ROOM.prices,'::reps|'+w);}});
-        s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
       }
-      else if(w>1)s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
+      s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
       s.push({l:'Signs up, week '+w,f:()=>{
-        const r=rv();const rp=w>=5?'1.40':(w===3?(Math.random()<.5?'1.40':'1.50'):'1.50');
-        demoSay(ROOM.prices,r+'|'+w+'|'+rp);
+        const rp=w>=5?'1.40':(w===3?(Math.random()<.5?'1.40':'1.50'):'1.50');
+        demoSay(ROOM.prices,rv()+'|'+w+'|'+rp);
         demoSay(ROOM.prices,'::reveal|'+w);}});
-      if(w===4)s.push({l:'Stop the presses (Gazette)',f:()=>{demoSay(ROOM.prices,'::shock|on');}});
     }
     return s;
   };

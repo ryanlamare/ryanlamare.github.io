@@ -37,8 +37,8 @@
                   winner earns 5 points.
      enginegame — the m3 pitch lines; the side ahead over the pair's
                   rounds earns winPoints, a dead heat pays nobody.
-     pricewars  — m4 lock-ins + the deck's "::shock|on" marker; each match
-                  scored on the LOWER of its two totals against bands
+     pricewars  — m4 team signs + the deck's ::pair, ::reveal and ::shock
+                  markers; each match scored on the LOWER of its two totals against bands
                   (130→10, 80→3, 50→1), paid to every name that claimed
                   the station in the teams room. Bands are revealed only
                   after the game — the brief says "win as much as you can". */
@@ -655,35 +655,46 @@ const GT_SCORES = (() => {
     return (theirs === '1.50' ? 18 : 9) * dbl;
   }
   async function scorePricewars(ev, claims, tally) {
+    /* since 16 Sep 2026: five stations a side, the deck's "::pair|a1=b3,..."
+       marker says who played whom, "::reveal|w" says which weeks were
+       played, and a paired team with no sign for a revealed week stood at
+       1.50 (the lock rule's default) */
     const d = await j('/p/' + ev.room + '/answers');
-    const price = {}; let shock = false;
+    const price = {}; let shock = false, revealed = 0; const pair = {};
     (d.answers || []).forEach(t => {
       const s = String(t).trim().toLowerCase();
       const sm = s.match(/^::shock\|(on|off)$/);
       if (sm) { shock = sm[1] === 'on'; return; }
-      const m = s.match(/^([ab][1-4])\s*\|\s*([1-6])\s*\|\s*(1\.[45]0)$/);
+      const rv = s.match(/^::reveal\|([1-6])$/);
+      if (rv) { revealed = Math.max(revealed, +rv[1]); return; }
+      const pm = s.match(/^::pair\|(.+)$/);
+      if (pm) { pm[1].split(',').forEach(x => { const q = x.trim().match(/^(a[1-5])=(b[1-5])$/); if (q) { pair[q[1]] = q[2]; pair[q[2]] = q[1]; } }); return; }
+      const m = s.match(/^([ab][1-5])\s*\|\s*([1-6])\s*\|\s*(1\.[45]0)$/);
       if (m) price[m[1] + '|' + m[2]] = m[3];
     });
-    const total = st => { let sum = 0, weeks = 0; const mate = (st[0] === 'a' ? 'b' : 'a') + st[1];
-      for (let w = 1; w <= 6; w++) { const mine = price[st + '|' + w], theirs = price[mate + '|' + w];
+    const sign = (st, w) => price[st + '|' + w] || (w <= revealed ? '1.50' : null);
+    const total = st => { let sum = 0, weeks = 0; const mate = pair[st] || ((st[0] === 'a' ? 'b' : 'a') + st[1]);
+      for (let w = 1; w <= 6; w++) { const mine = sign(st, w), theirs = sign(mate, w);
         if (mine && theirs) { sum += pwProfit(mine, theirs, w, shock); weeks++; } }
       return weeks ? sum : null; };
     const pts = {};
-    for (let i = 1; i <= 4; i++) {
-      const a = total('a' + i), b = total('b' + i);
-      if (a === null || b === null) continue;
-      const floor = Math.min(a, b);
+    const matches = Object.keys(pair).length ? Object.keys(pair).filter(k => k[0] === 'a').map(a => [a, pair[a]]) : [1, 2, 3, 4, 5].map(i => ['a' + i, 'b' + i]);
+    for (const [a, b] of matches) {
+      const ta = total(a), tb = total(b);
+      if (ta === null || tb === null) continue;
+      const floor = Math.min(ta, tb);
       let p = 0; for (const [at, v] of ev.bands) { if (floor >= at) { p = v; break; } }
-      pts['a' + i] = p; pts['b' + i] = p;
+      pts[a] = p; pts[b] = p;
     }
     const td = await j('/p/' + ev.teams + '/answers');
     const member = new Map(); /* name -> station, latest wins */
     (td.answers || []).forEach(t => {
-      const m = String(t).match(/^([ab][1-4])\s*\|\s*(.{1,40}?)$/i);
+      const m = String(t).match(/^([ab][1-5])\s*\|\s*(.{1,40}?)$/i);
       if (m) member.set(norm(m[2]), { name: m[2].trim(), st: m[1].toLowerCase() });
     });
     member.forEach(({ name, st }) => { if (pts[st]) addPoints(tally, name, ev.key, pts[st]); });
   }
+
 
   /* Hidden Agenda: once a table is over, its board carries every seat's
      role and the winner; the winning side's names each take winPoints */
