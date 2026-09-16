@@ -35,9 +35,21 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 .tile.mute{opacity:.3}
 .dots{display:flex;justify-content:center;gap:12px;min-height:26px}
 .dot{width:20px;height:20px;border-radius:50%;border:2.5px solid var(--ink);background:transparent;transition:transform .3s,background .3s,border-color .3s;transform:scale(.001)}
-.dot.on{transform:scale(1);background:var(--ink)}
-.dot.me.on{background:transparent;border-width:3.5px;border-color:var(--red)}
-.dot.me.on::after{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--red);margin:3px auto}
+.dot.on{transform:scale(1);background:var(--green);border-color:var(--green)}
+.dots.split .dot.on{background:var(--red);border-color:var(--red)}
+.dot.me.on{background:transparent;border-width:3.5px}
+.dot.me.on::after{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--green);margin:3px auto}
+.dots.split .dot.me.on::after{background:var(--red)}
+.splash{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);background:var(--teal);animation:cin .35s ease-out;cursor:pointer}
+.splash.off{opacity:0;transition:opacity .4s;pointer-events:none}
+.splash .cl{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.02em;text-transform:uppercase}
+.splash .ck{font-weight:700;font-size:16px;letter-spacing:.3em;text-transform:uppercase}
+.splash .cp{font-family:var(--display);font-weight:900;font-size:96px;line-height:1}
+.splash .cp small{font-size:44px;vertical-align:top}
+@keyframes cin{from{transform:scale(1.12);opacity:0}to{transform:scale(1);opacity:1}}
+.twist{display:none;background:var(--red);color:var(--paper);padding:12px 14px;font-weight:700;font-size:17px;line-height:1.3;text-align:center}
+.twist.on{display:block}
+.top.hot .wk,.top.hot .wk b{color:var(--red)}
 /* the reveal */
 .take{font-family:var(--display);font-weight:900;font-size:64px;line-height:1;text-align:center;color:var(--ink);opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s}
 .take.on{opacity:1;transform:none}
@@ -68,53 +80,64 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
     <g id="sgA" class="signg"><rect x="18" y="14" width="104" height="58" fill="var(--teal)"/><rect x="66" y="72" width="8" height="14" fill="var(--teal)"/><text x="70" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--paper)">AURA · YOU</text><text id="signA" x="70" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>
     <g id="sgB" class="signg"><rect x="238" y="14" width="104" height="58" fill="var(--terracotta)"/><rect x="286" y="72" width="8" height="14" fill="var(--terracotta)"/><text x="290" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--paper)">BUCO’S</text><text id="signB" x="290" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>
   </svg></div>
+  <div class="twist" id="twist">FuelWatch is watching. Undercut alone and the app sends the whole district to you: <b>&pound;72k</b>. Match, and nothing changes. No double in week 6.</div>
   <div class="signs">
     <button type="button" class="tile" data-p="1.50"><div class="fill"></div><div class="pr"><small>&pound;</small>1.50</div></button>
     <button type="button" class="tile" data-p="1.40"><div class="fill"></div><div class="pr"><small>&pound;</small>1.40</div></button>
     <div class="dots" data-p="1.50"><span class="dot me"></span><span class="dot"></span><span class="dot"></span></div>
     <div class="dots" data-p="1.40"><span class="dot me"></span><span class="dot"></span><span class="dot"></span></div>
   </div>
-  <div class="take" id="take"><small>+&pound;</small><span id="amt">0</span><small>k</small></div>
   <span class="pulse" id="pulse"></span>
 </div>
 <div class="bar"><b>MOCK</b><span id="hint">Tap a price. Your ring lands under it; your teammates follow.</span>
   <button type="button" class="q" id="theyHold">They hold</button><button type="button" class="q" id="theyCut">They cut</button>
-  <button type="button" id="signsUp" disabled>Signs up (the deck)</button><button type="button" class="q" id="again">Again</button></div>
+  <button type="button" id="signsUp" disabled>Signs up (the deck)</button><button type="button" class="q" id="twistBtn">Week 5 twist</button><button type="button" class="q" id="again">Again</button></div>
 <script>
-const S={mine:'',mates:['',''],locked:'',theirs:'1.50',timers:[]};
+const S={week:1,total:0,mine:'',mates:['',''],locked:'',theirs:'1.50',twist:false,timers:[]};
 const later=(ms,f)=>S.timers.push(setTimeout(f,ms));
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function head(){
+  const dbl=(S.week===3||S.week===6)&&!S.twist;
+  $('.top').classList.toggle('hot',S.twist);
+  $('.wk').innerHTML='WEEK '+S.week+(dbl?' &middot; PAYS DOUBLE':'')+' &middot; <b>AURA 1</b> &middot; JUNCTION 1';
+  $('.tot').innerHTML='<small>SO FAR</small>£'+S.total+'k';
+  $('#twist').classList.toggle('on',S.twist);
+}
 function paint(){
-  $$('.dots').forEach(d=>{const p=d.dataset.p;const dots=d.querySelectorAll('.dot');
+  const placed=[S.mine,S.mates[0],S.mates[1]].filter(Boolean), split=new Set(placed).size>1;
+  $$('.dots').forEach(d=>{const p=d.dataset.p;const dots=d.querySelectorAll('.dot');d.classList.toggle('split',split);
     dots[0].classList.toggle('on',S.mine===p);dots[1].classList.toggle('on',S.mates[0]===p);dots[2].classList.toggle('on',S.mates[1]===p);});
   $$('.tile').forEach(t=>{const p=t.dataset.p;t.classList.toggle('locking',S.locked===p);t.classList.toggle('mute',!!S.locked&&S.locked!==p);t.disabled=!!S.locked;});
   $('#signA').textContent=S.locked?'£'+S.locked:'?';
-  $('#signsUp').disabled=!S.locked;
-  if(!S.locked&&S.mine&&S.mates[0]===S.mine&&S.mates[1]===S.mine){S.locked=S.mine;later(0,paint);$('#hint').textContent='Three under one price: the sign goes up. That fill is the whole confirmation.';}
+  $('#signsUp').disabled=!S.locked;$('#pulse').classList.toggle('on',!!S.locked);
+  if(!S.locked&&S.mine&&S.mates[0]===S.mine&&S.mates[1]===S.mine){S.locked=S.mine;later(0,paint);later(900,splash);$('#hint').textContent='Three greens: the sign goes up, the splash says so, and the phone waits. The reveal is on the board.';}
+}
+function splash(){
+  const o=document.createElement('div');o.className='splash';
+  o.innerHTML='<div class="cl">Aura 1 · Junction 1</div><div class="ck">Price locked in</div><div class="cp"><small>£</small>'+S.locked+'</div>';
+  document.body.appendChild(o);const off=()=>{o.classList.add('off');setTimeout(()=>o.remove(),450);};o.addEventListener('click',off);setTimeout(off,2600);
 }
 $$('.tile').forEach(t=>t.addEventListener('click',()=>{
   if(S.locked)return;S.mine=t.dataset.p;paint();
   S.timers.forEach(clearTimeout);S.timers=[];
+  /* one teammate agrees; the other tries the other price first, then comes round, so the reds are seen once */
+  const other=S.mine==='1.50'?'1.40':'1.50';
   later(1100,()=>{S.mates[0]=S.mine;paint();});
-  later(2300,()=>{S.mates[1]=S.mine;paint();});
+  later(2300,()=>{S.mates[1]=other;paint();$('#hint').textContent='Split: every dot is red until you agree. Anyone can move their own dot.';});
+  later(5200,()=>{S.mates[1]=S.mine;paint();});
 }));
-$('#theyHold').addEventListener('click',()=>{S.theirs='1.50';$('#hint').textContent='The other station will post £1.50.';});
-$('#theyCut').addEventListener('click',()=>{S.theirs='1.40';$('#hint').textContent='The other station will post £1.40.';});
+$('#theyHold').addEventListener('click',()=>{S.theirs='1.50';$('#hint').textContent='The other station will post £1.50 (you only find out on the board).';});
+$('#theyCut').addEventListener('click',()=>{S.theirs='1.40';$('#hint').textContent='The other station will post £1.40 (you only find out on the board).';});
 $('#signsUp').addEventListener('click',()=>{
-  if(!S.locked)return;$('#signsUp').disabled=true;
-  const g=$('#sgB');g.classList.remove('flip');void g.getBBox();g.classList.add('flip');
-  later(250,()=>{$('#signB').textContent='£'+S.theirs;});
+  if(!S.locked)return;
   const mine=S.locked,theirs=S.theirs;
-  const cars=mine===theirs?(mine==='1.50'?[40,40]:[45,45]):(mine==='1.40'?[90,7]:[7,90]);
-  const pay=mine==='1.50'?(theirs==='1.50'?12:2):(theirs==='1.50'?18:9);
-  later(1100,()=>{$('#cntA').textContent=cars[0]+' CARS';$('#cntB').textContent=cars[1]+' CARS';});
-  later(1600,()=>{const t=$('#take');t.classList.add('on',pay>12?'good':(pay<12?'bad':'x'));const t0=performance.now();
-    const step=now=>{const u=Math.min(1,(now-t0)/700);$('#amt').textContent=Math.round(pay*u);if(u<1)requestAnimationFrame(step);};requestAnimationFrame(step);});
-  later(2600,()=>{$('.tot').innerHTML='<small>SO FAR</small>£'+pay+'k';$('#pulse').classList.add('on');$('#hint').textContent='That is the whole reveal on the phone: their sign, the cars, your number. The big screen has the rest.';});
+  let pay=mine==='1.50'?(theirs==='1.50'?12:2):(theirs==='1.50'?18:9);
+  if(S.twist)pay=mine===theirs?pay:(mine==='1.40'?72:2);else if(S.week===3||S.week===6)pay*=2;
+  S.total+=pay;S.week=Math.min(6,S.week+1);S.mine='';S.mates=['',''];S.locked='';
+  head();paint();$('#hint').textContent='Week '+S.week+': same two prices, and the team\'s total so far at the top.';
 });
-$('#again').addEventListener('click',()=>{S.timers.forEach(clearTimeout);S.timers=[];S.mine='';S.mates=['',''];S.locked='';
-  $('#signB').textContent='?';$('#cntA').textContent='';$('#cntB').textContent='';$('#take').className='take';$('#amt').textContent='0';$('.tot').innerHTML='<small>SO FAR</small>£0k';$('#pulse').classList.remove('on');
-  $('#hint').textContent='Tap a price. Your ring lands under it; your teammates follow.';paint();});
-paint();
+$('#twistBtn').addEventListener('click',()=>{S.twist=!S.twist;if(S.twist)S.week=Math.max(S.week,5);head();paint();$('#hint').textContent=S.twist?'Week 5 after the Gazette: the header goes red and one band carries the new rule. The paper itself is on the board.':'Twist off.';});
+$('#again').addEventListener('click',()=>{S.timers.forEach(clearTimeout);S.timers=[];Object.assign(S,{week:1,total:0,mine:'',mates:['',''],locked:'',twist:false});head();paint();$('#hint').textContent='Tap a price. Your ring lands under it; your teammates follow.';});
+head();paint();
 </script>
 </body></html>
