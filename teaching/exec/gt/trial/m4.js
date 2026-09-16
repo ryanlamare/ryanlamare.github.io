@@ -180,7 +180,7 @@ cmd.pds = async (n) => {
   n = Math.min(+n || 6, DILEMMAS.length);
   for (let i = 0; i < n; i++) {
     const [a, b, h, d, hz] = DILEMMAS[i], v = 'trial-pds-' + (i + 1) + '-' + SUF.replace(/[^a-z0-9]/g, '') + '00';
-    await say(ROOM.pds, '1‖' + a + '‖' + b, v); await say(ROOM.pds, '2‖' + h, v); await say(ROOM.pds, '3‖' + d, v); await say(ROOM.pds, '4‖' + hz, v);
+    await say(ROOM.pds, '1‖' + a + '‖' + b, v); await say(ROOM.pds, '2‖' + h, v); await say(ROOM.pds, '3‖' + d, v); /* the horizon (4‖) was cut on 16 Sep */
     await sleep(GAP);
   }
 };

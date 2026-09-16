@@ -14,8 +14,8 @@
 
    Wire: lines into room m4-pds, one per card, "k‖text" (the Worker caps a
    line at 200 characters): 1‖your side‖the other side, 2‖the collective
-   action, 3‖the individual action, 4‖o|k|u (one-off; recurs with a known
-   end; recurs with no known end), and later 5‖r|e|p|n (the way out). The
+   action, 3‖the individual action, and later 5‖r|e|p|n (the way out). Line
+   4 was the horizon (o|k|u), cut by Ryan on 16 Sep; the deck ignores it. The
    deck posts "::routes" into the room when it opens the second question;
    this page polls for that marker once the dilemma is locked. The deck
    groups the room's lines by phone; the latest line per card wins, so a
@@ -43,7 +43,7 @@ h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
 .pdm .c.par .a,.pdm .c.par .b{color:var(--green)}
 /* the cards */
 .card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
-.card.sides{--side:var(--red)} .card.hold{--side:var(--teal)} .card.defect{--side:var(--terracotta)} .card.horizon{--side:var(--maroon)} .card.route{--side:var(--ink)}
+.card.sides{--side:var(--red)} .card.hold{--side:var(--teal)} .card.defect{--side:var(--terracotta)} .card.route{--side:var(--ink)}
 .card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
 .card .pq{font-weight:600;font-size:16px;line-height:1.35}
 .card .pq small{display:block;font-weight:500;font-size:13.5px;color:var(--muted);margin-top:3px}
@@ -82,7 +82,6 @@ const QS=new URLSearchParams(location.search);
 const SUF=QS.get('room')?('-'+QS.get('room').replace(/[^a-z0-9-]/g,'')):'';
 const API=QS.get('api')||'https://gt-poll.rlamare.workers.dev', ROOM='m4-pds'+SUF, LOCKKEY='gt-pd-locked'+SUF, ROUTEKEY='gt-pd-route'+SUF;
 const SIDEMAX=50, MOVEMAX=90;
-const HORIZONS=[['o','A one-off','You decide once, and that is that'],['k','It recurs, and everyone knows when it ends','A contract with an end date, a project with a last milestone'],['u','It recurs, and nobody knows when it ends','A relationship that could go on for years, or stop next month']];
 const ROUTES=[['r','Make it repeat','Turn a one-off into a relationship with no known end'],['e','Bring in an enforcer','A contract, a regulator, a boss: someone who makes defecting cost'],['p','Change the payoffs','Make the collective action pay more, or defecting pay less'],['n','There is no way out','It stays a dilemma, and the best you can do is not defect first']];
 let voter=null;
 try{
@@ -127,37 +126,28 @@ function render(){
   const hold=input(MOVEMAX,'hold the price…');c2.appendChild(hold);
   const c3=card('defect','THE INDIVIDUAL ACTION','What does defecting look like?','The move each of you is tempted to make, whatever the other does');
   const defect=input(MOVEMAX,'undercut…');c3.appendChild(defect);
-  const c4=card('horizon','THE HORIZON','Is it a one-off, or does it recur?','And if it recurs, does everyone know when it ends?');
-  const chips=document.createElement('div');chips.className='chips';
-  let hz=null;const cb=[];
-  HORIZONS.forEach(([kk,label,sub])=>{
-    const b=document.createElement('button');b.className='opt';b.type='button';b.innerHTML=esc(label)+'<small>'+esc(sub)+'</small>';b.dataset.k=kk;
-    b.addEventListener('click',()=>{hz=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));sync();});
-    chips.appendChild(b);cb.push(b);});
-  c4.appendChild(chips);
   const lk=btn('LOCK IT IN','lock');lk.disabled=true;
   function sync(){drawMatrix(clean(sa.value),clean(sb.value),clean(hold.value),clean(defect.value));
-    lk.disabled=!(clean(sa.value)&&clean(sb.value)&&clean(hold.value)&&clean(defect.value)&&hz);}
+    lk.disabled=!(clean(sa.value)&&clean(sb.value)&&clean(hold.value)&&clean(defect.value));}
   [sa,sb,hold,defect].forEach(i=>i.addEventListener('input',sync));
   lk.addEventListener('click',()=>{
     const A=clean(sa.value),B=clean(sb.value),H=clean(hold.value),D=clean(defect.value);
-    if(!A||!B||!H||!D||!hz)return;
-    lk.disabled=true;[sa,sb,hold,defect].forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
-    say('1‖'+A+'‖'+B).then(()=>say('2‖'+H)).then(()=>say('3‖'+D)).then(()=>say('4‖'+hz))
-      .then(()=>{locked={a:A,b:B,hold:H,defect:D,hz};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
-      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;[sa,sb,hold,defect].forEach(i=>i.disabled=false);cb.forEach(b=>b.disabled=false);});
+    if(!A||!B||!H||!D)return;
+    lk.disabled=true;[sa,sb,hold,defect].forEach(i=>i.disabled=true);st.textContent='Sending…';
+    say('1‖'+A+'‖'+B).then(()=>say('2‖'+H)).then(()=>say('3‖'+D))
+      .then(()=>{locked={a:A,b:B,hold:H,defect:D};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;[sa,sb,hold,defect].forEach(i=>i.disabled=false);});
   });
-  [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
+  [c1,c2,c3].forEach(c=>app.appendChild(c));app.appendChild(lk);
   sa.focus();
 }
 /* locked: the dilemma is on the screen; the second question arrives when the deck opens it */
 let routesOpen=false, poller=null;
 function renderLocked(){
   drawMatrix(locked.a,locked.b,locked.hold,locked.defect);
-  const hzw=(HORIZONS.find(h=>h[0]===locked.hz)||HORIZONS[0])[1];
   const big=document.createElement('div');big.className='bigcard';
   big.innerHTML='<div class="head">Your dilemma is on the screen</div><div class="sub"></div>';
-  big.querySelector('.sub').textContent=locked.a+' against '+locked.b+' · '+hzw+'. Look up at the screen.';
+  big.querySelector('.sub').textContent=locked.a+' & '+locked.b+'. Look up at the screen.';
   app.appendChild(big);
   if(route){
     const r=ROUTES.find(x=>x[0]===route)||ROUTES[0];
