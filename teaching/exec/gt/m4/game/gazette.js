@@ -84,7 +84,7 @@ const GAZETTE = (() => {
     } else if (w === 5) {
       if (shock) {
         E.kicker = 'Stop the presses · Special edition · Week 5';
-        E.headline = 'Price wars at the junction go digital';
+        E.headline = 'Breaking news: FuelWatch app disrupts pricing at the junction';
         E.paras = [
           'FuelWatch, the price app sweeping the region, has just added the junction to its map. From this Monday every driver within twenty miles sees both signs, live, before choosing where to fill up.',
           'What it means is simple, and it is dynamite for the two stations. Undercut your rival on price and the app sends every car on every road to your forecourt: the week’s margin is quadrupled, seventy-two thousand pounds. The undercut station keeps only its two thousand of regulars, the handful who never look at a sign or use an app. Match each other and the app has nothing interesting to show: two signs at £1.50 still pay £12,000 each, two at £1.40 still pay £9,000 each.',
