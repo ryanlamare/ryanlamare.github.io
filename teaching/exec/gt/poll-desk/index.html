@@ -36,6 +36,10 @@ h1 .r{color:var(--red)}
   padding:9px 14px;cursor:pointer}
 .room button:hover{background:var(--red);border-color:var(--red)}
 .room button:disabled{opacity:.35;cursor:default}
+.bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
+.bulk .or{font-weight:600;font-size:13px;color:var(--muted)}
+.bulk input{font-family:var(--sans);font-weight:600;font-size:14px;padding:9px 12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);min-width:220px}
+.bulk button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:var(--paper);border:none;padding:11px 14px;cursor:pointer}
 .msg{font-size:13px;min-height:1.4em;margin-top:12px;opacity:.8}
 .msg.bad{color:var(--red);opacity:1}
 .sctag{font-weight:700;font-size:9.5px;letter-spacing:.12em;color:var(--red);
@@ -50,6 +54,10 @@ h1 .r{color:var(--red)}
   <div class="secretrow">
     <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
     <button id="saveSecret" type="button">SAVE</button>
+  </div>
+  <div class="bulk" id="bulk">
+    <button id="resetAll" type="button">RESET EVERY ROOM</button>
+    <span class="or">or a rehearsal:</span><input type="text" id="suffix" placeholder="room suffix, e.g. trial11" autocomplete="off"><button id="resetTrial" type="button">RESET THAT REHEARSAL</button>
   </div>
   <div id="rooms"></div>
   <div class="msg" id="msg"></div>
@@ -110,8 +118,29 @@ document.getElementById('saveSecret').addEventListener('click',()=>{
 });
 function say(t,bad){msg.textContent=t;msg.className='msg'+(bad?' bad':'');}
 const roomsEl=document.getElementById('rooms');
+/* bulk resets: every listed room (the scoring rooms included: between cohorts only), or one rehearsal's rooms by suffix */
+let ALL_IDS=[];
+async function resetIds(ids,label){
+  const s=secretEl.value.trim();
+  if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
+  if(prompt('Type RESET to clear '+label+' ('+ids.length+' rooms). This cannot be undone.')!=='RESET'){say('Nothing reset.');return;}
+  let ok=0,bad=0;
+  for(const id of ids){
+    try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});const d=await r.json();if(d.ok)ok++;else bad++;}catch(_){bad++;}
+    say('Resetting '+label+': '+ok+' done'+(bad?', '+bad+' refused':'')+'…');
+  }
+  say(label+': '+ok+' rooms cleared'+(bad?', '+bad+' refused (is the secret right?)':'.'));
+  document.querySelectorAll('#rooms .ct').forEach(c=>{c.textContent='–';c.className='ct';});
+}
+document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room, scoring rooms included'));
+document.getElementById('resetTrial').addEventListener('click',()=>{
+  const suf=document.getElementById('suffix').value.trim().replace(/[^a-z0-9-]/g,'');
+  if(!suf){say('Type the rehearsal room suffix first (the part after ?room=).',true);return;}
+  resetIds(['m4-teams','m4-prices','m4-huddle','m4-meet','m4-pds'].map(r=>r+'-'+suf),'rehearsal '+suf);
+});
 fetch('/go/polls.json').then(r=>r.json()).then(cfg=>{
   const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:p.type==='text'||p.type==='form'})).concat(EXTRA);
+  ALL_IDS=rooms.map(r=>r.id);
   rooms.forEach(room=>{
     const div=document.createElement('div');div.className='room';
     div.innerHTML='<div class="rn"><div class="rid"></div><div class="rq"></div></div>'+
