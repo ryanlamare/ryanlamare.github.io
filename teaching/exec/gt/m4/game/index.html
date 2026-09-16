@@ -4,211 +4,145 @@
 <title>Module 4 · Price Wars</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Participant page for the Module 4 price war (the capstone of day one).
-   Teams of three run one petrol station each, Aura or Buco's, and post a
-   price every week without seeing the other station's sign. Nobody knows
-   which station they are playing against: the deck pairs the teams at
-   random when the game starts and the only people who ever learn are the
-   reps who meet. The phone teaches HOW to play (a guided practice week,
-   four trials, one per cell of the game) and the rules of the six weeks
-   are told to the room from the deck. No payoff matrix is shown during
-   play; the deck puts it up afterwards.
-
-   A hundred cars pass the junction each week and each one is worth £300
-   at £1.50 or £200 at £1.40: forty each when both hold, ninety to the
-   cutter and seven to the holder, forty-five each when both cut, and the
-   rest drive past. Those are the real numbers behind the payoffs, so the
-   cars the room watches pull in are the money.
-
-   Committing (Ryan, 17 Sep, simplified from lean/hold): tap a price, then
-   Commit; Undo takes it back. The sign goes up only when everyone on the
-   team has committed the same price. There is no clock and no default
-   price (a "£1.50 unless you agree" rule would anchor the game at
-   holding). The deck waits for every sign; a dead phone is dropped from
-   its team by the facilitator, and the deck keeps a hidden override.
+/* Participant page for the Module 4 price war, rebuilt 16 Sep 2026 to
+   Ryan's rule for the phones: minimal, no explaining, the state shown with
+   colour and dots. Each week the phone carries three things: this week's
+   choice (two prices, hold one to commit, three dots under it that go
+   green when the team agrees and red when it is split; three greens and the
+   sign goes up), the record of both sides' behaviour so far as coloured
+   squares, and the team's money so far. Nothing is revealed on the phone;
+   the board is the reveal, and the phone waits behind a station-coloured
+   PRICE LOCKED IN until the board has shown its junction. Meetings are one
+   question (meet? yes/no, and who goes) and one tap afterwards (what did
+   you agree: £1.50, £1.40, nothing). Weeks 5 and 6 under the Gazette rules
+   carry one red band. A three-week TUTORIAL runs once, before the game.
+   All wording is Claude's, for veto.
 
    Wire (four gt-poll rooms; ?room=<x> suffixes all of them for a
    rehearsal, ?demo=1 runs the whole thing locally with no network):
      m4-teams   "a1|Name"                        one line per phone, who is on which station
-     m4-prices  "a1|w|1.40"                      the TEAM's sign for week w (posted by a phone once all locked)
+     m4-prices  "a1|w|1.40"                      the TEAM's sign for week w (posted by a phone once all agree)
                 "::pair|a1=b3,a2=b5"             the deck's random pairing (the game has started)
-                "::open|w"  "::reveal|w"         the deck opens a week, then puts the signs up
+                "::open|w"  "::shown|w|aX"  "::reveal|w"   the deck opens a week, shows a junction, closes the week
                 "::meet|w"  "::reps|w"           the deck offers a meeting before week w, then closes the asking
-                "::shock|on"                     the Gazette rules for weeks 5 and 6 (read by the points system too)
+                "::shock|on"                     the Gazette rules for weeks 5 and 6
      m4-huddle  "a1|w|lock|Name|price"           a teammate's commit (latest per name wins until the sign is up)
-                "a1|w|undo|Name"                 the same person taking it back
                 "a1|0|drop|Name"                 the facilitator drops a name from a team (a dead phone)
-     m4-meet    "a1|w|ask|y"                     the team asked (or not) for the meeting before week w
-                "a1|w|agreed|Name|text"          the rep's private note of what was agreed, for the debrief
-   A week is revealed on this phone only once the deck says so, never
-   from the other station's sign arriving. */
+     m4-meet    "a1|w|ask|y|Rep"  "a1|w|ask|n"   the team asked (or not) for the meeting, and who goes
+                "a1|w|agreed|Name|1.50"          what the rep says was agreed: 1.50, 1.40 or none
+   A week is revealed on this phone only once the deck says so. */
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:18px 18px 40px}
 .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 .tag{font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tag>span{white-space:nowrap}
 .tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
-h1{font-family:var(--display);font-weight:900;font-size:40px;line-height:.95;color:var(--red);letter-spacing:.01em}
-h2{font-weight:700;font-size:21px;line-height:1.25}
+h2{font-weight:700;font-size:22px;line-height:1.25}
 p{font-size:16px;line-height:1.5}
-p b{font-weight:700}
-.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
 .status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
-.status b{color:var(--red)}
 .tbtn{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:none;border:1.5px solid var(--muted);color:var(--muted);padding:5px 9px;cursor:pointer}
 .tbtn.playing{border-color:var(--red);color:var(--red)}
-.card{border:2.5px solid var(--ink);background:var(--card);padding:16px 18px}
-.card.soft{border-style:dashed;border-color:var(--muted);background:none}
-.card h3{font-weight:700;font-size:16px;margin-bottom:6px}
-.card p{font-size:15px}
-.card p+p{margin-top:8px}
-button.big{display:block;width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:16px 18px;cursor:pointer}
+button.big{display:block;width:100%;font-family:var(--sans);font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:16px 18px;cursor:pointer}
 button.big:disabled{opacity:.4;cursor:default}
 button.big.quiet{background:var(--card);color:var(--ink);border-color:var(--ink)}
+button.big.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.three button.big{padding:16px 6px;font-size:16px}
 .namerow{display:flex;gap:10px}
-.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
-  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
-.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
-  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
-.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.me .who{font-weight:700;font-size:15px}
-.me .who b{color:var(--red)}
-.me .who b.a{color:var(--teal)} .me .who b.b{color:var(--terracotta)}
-.jx{color:var(--maroon)}
-.committed .cl .jx{color:var(--paper);background:var(--maroon);padding:2px 10px;margin-left:4px}
-.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
-  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
-.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
-.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
-  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:0 20px;cursor:pointer}
+.small{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start;font-family:var(--sans)}
+/* the top line: week, station, junction on the left; the team's money on the right */
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.top .wk{font-weight:700;letter-spacing:.1em;font-size:11.5px;color:var(--muted);line-height:1.5}
+.top .wk b.a{color:var(--teal)} .top .wk b.b{color:var(--terracotta)} .top .wk .jx{color:var(--maroon)}
+.top .wk em{font-style:normal;color:var(--ochre)}
+.top.hot .wk,.top.hot .wk em{color:var(--red)}
+.top .tot{font-family:var(--display);font-weight:900;font-size:21px;line-height:1;white-space:nowrap;flex:none}
+.top .tot small{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.14em;color:var(--muted);margin-right:6px;vertical-align:middle}
+.tut{background:var(--maroon);color:var(--paper);font-family:var(--display);font-weight:900;font-size:24px;letter-spacing:.08em;text-align:center;padding:10px}
+.line{font-weight:600;font-size:18px;line-height:1.35}
+.line b{color:var(--red)}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--muted)}
+/* the junction */
+.junction{border:2.5px solid var(--ink);background:var(--tan-light);overflow:hidden}
+.junction svg{display:block;width:100%;height:auto}
+.signg{transform-box:fill-box;transform-origin:center}
+.signg.flip{animation:flip .5s ease-in-out}
+@keyframes flip{0%{transform:scaleY(1)}50%{transform:scaleY(.04)}100%{transform:scaleY(1)}}
+/* the two prices: hold one to commit, the dots under it */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{position:relative;background:var(--paper-soft);border:2.5px solid var(--ink);padding:0;cursor:pointer;overflow:hidden;font-family:var(--sans);color:var(--ink);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tile .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--teal);transition:height .25s ease-out}
+.tile.b .fill{background:var(--terracotta)}
+.tile.holding .fill{height:100%;transition:height var(--hold,650ms) linear}
+.tile.mine .fill{height:100%;transition:height .2s}
+.tile .pr{position:relative;z-index:1;font-family:var(--display);font-weight:900;font-size:52px;line-height:1;padding:22px 10px 18px;text-align:center;transition:color .3s}
+.tile .pr small{font-size:24px;vertical-align:top;margin-right:1px}
+.tile.mine .pr{color:var(--paper)}
+.tile:disabled{cursor:default}
+.dots{display:flex;justify-content:center;gap:12px;min-height:26px}
+.dot{width:20px;height:20px;border-radius:50%;border:2.5px solid var(--ink);transform:scale(.001);transition:transform .3s,background .3s,border-color .3s}
+.dot.on{transform:scale(1);background:var(--green);border-color:var(--green)}
+.dots.split .dot.on{background:var(--red);border-color:var(--red)}
+.dot.me.on{background:transparent;border-width:3.5px}
+.dot.me.on::after{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--green);margin:3px auto}
+.dots.split .dot.me.on::after{background:var(--red)}
+/* the record: your sign over theirs, one column a week */
+.rec{display:grid;grid-template-columns:44px repeat(6,1fr);gap:6px 7px;align-items:end}
+.rec .rk{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+.rec .rk .a{color:var(--teal);height:16px;line-height:16px} .rec .rk .b{color:var(--terracotta);height:16px;line-height:16px}
+.rec .wkc{display:flex;flex-direction:column;gap:4px;align-items:center}
+.rec .wl{font-weight:700;font-size:10.5px;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
+.rec .wl em{font-style:normal;color:var(--ochre)} .rec .wl em.s{color:var(--red)}
+.rec .sq{width:100%;height:16px;border:1.5px solid var(--rule);background:transparent;transition:background .4s,border-color .4s}
+.rec .sq.p150{background:var(--green);border-color:var(--green)} .rec .sq.p140{background:var(--red);border-color:var(--red)}
+.rec .wkc.cur .sq{border-color:var(--ink);border-style:dashed}
+.twist{background:var(--red);color:var(--paper);padding:12px 14px;font-weight:700;font-size:16.5px;line-height:1.3;text-align:center}
+/* the splash: the sign is up; the phone waits behind it until the board has shown this junction */
+.splash{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);animation:cin .35s ease-out;padding:24px;text-align:center}
+.splash.a{background:var(--teal)} .splash.b{background:var(--terracotta)}
+.splash.off{opacity:0;transition:opacity .4s;pointer-events:none}
+.splash .cl{font-family:var(--display);font-weight:900;font-size:28px;letter-spacing:.02em;text-transform:uppercase}
+.splash .ck{font-weight:700;font-size:16px;letter-spacing:.3em;text-transform:uppercase}
+.splash .cp{font-family:var(--display);font-weight:900;font-size:96px;line-height:1}
+.splash .cp small{font-size:44px;vertical-align:top}
+.splash .cs{font-weight:600;font-size:17px;line-height:1.4;max-width:26ch;color:color-mix(in srgb,var(--paper) 82%,transparent);margin-top:8px;transition:color .4s}
+.splash .cs.both{color:var(--paper);font-weight:700}
+@keyframes cin{from{transform:scale(1.12);opacity:0}to{transform:scale(1);opacity:1}}
+.wait{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;animation:pu 1.2s ease-in-out infinite;flex:none}
 @keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
-.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start;font-family:var(--sans)}
-
+.bigj{text-align:center;padding:26px 0 10px}
+.bigj small{display:block;font-weight:700;font-size:13px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.bigj b{font-family:var(--display);font-weight:900;font-size:62px;line-height:1;color:var(--maroon)}
+.bigj .st{display:block;font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;margin-top:12px}
+.bigj .st.a{color:var(--teal)} .bigj .st.b{color:var(--terracotta)}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.names button.big{font-size:15px;padding:14px 8px;text-transform:none;letter-spacing:.02em}
+/* the tutorial's result, the only place a result appears on the phone */
+.take{font-family:var(--display);font-weight:900;font-size:56px;line-height:1;text-align:center;color:var(--ink)}
+.take small{font-size:26px;vertical-align:top}
+.take.good{color:var(--green)} .take.bad{color:var(--red)}
 /* the station picker */
 .stgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stgrid .col{display:flex;flex-direction:column;gap:8px}
 .stgrid .colh{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;padding-bottom:2px;min-height:38px;display:flex;align-items:flex-end}
 .stgrid .col.a .colh{color:var(--teal)} .stgrid .col.b .colh{color:var(--terracotta)}
-.stgrid button{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);background:var(--card);
-  border:2.5px solid var(--ink);padding:13px 10px;cursor:pointer}
+.stgrid button{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:13px 10px;cursor:pointer}
 .stgrid .col.a button{border-color:var(--teal)} .stgrid .col.b button{border-color:var(--terracotta)}
-
-/* how it's played */
-.tdots{display:flex;gap:6px}
-.tdots i{width:22px;height:6px;background:var(--rule)}
-.tdots i.on{background:var(--red)}
-.tcard h3{font-weight:700;font-size:20px;line-height:1.2;color:var(--red)}
-.tcard p{font-size:15.5px;line-height:1.45;margin-top:5px}
-.goal{background:var(--blue);color:var(--paper);padding:18px;text-align:center;font-weight:700;font-size:19px;line-height:1.3}
-.goal small{display:block;font-weight:500;font-size:13.5px;line-height:1.4;margin-top:10px;color:color-mix(in srgb,var(--paper) 80%,transparent)}
-
-/* the junction */
-.junction{border:2.5px solid var(--ink);background:var(--tan-light);overflow:hidden}
-.junction svg{display:block;width:100%;height:auto}
-.signg{transform-box:fill-box;transform-origin:center}
-.signg.flip{animation:flip .52s ease-in-out}
-@keyframes flip{0%{transform:scaleY(1)}50%{transform:scaleY(.04)}100%{transform:scaleY(1)}}
-.fc.dim{opacity:.32}
-.wkhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.wkhead .wk{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
-.wkhead .dbl{font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ochre);border:2px solid var(--ochre);padding:4px 8px}
-.wkhead .shk{color:var(--red);border-color:var(--red)}
-.wkhead .mine{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
-.wkhead .mine.a{color:var(--teal)} .wkhead .mine.b{color:var(--terracotta)}
-
-/* the two prices: tap to lean, press and hold to lock */
-.signs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.signbtn{position:relative;font-family:var(--sans);text-align:left;background:var(--paper-soft);border:2.5px solid var(--ink);padding:0;cursor:pointer;color:var(--ink);overflow:hidden;
-  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:opacity .35s}
-.signbtn .pr{position:relative;z-index:1;font-family:var(--display);font-weight:900;font-size:46px;line-height:1;padding:18px 10px 16px;text-align:center}
-.signbtn .pr small{font-size:22px;vertical-align:top;margin-right:1px}
-.cu{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}
-.signbtn.lean{border-color:var(--red);border-width:3.5px}
-.signbtn.locked{color:var(--paper)}
-.signbtn.locked.a{background:var(--teal);border-color:var(--teal)} .signbtn.locked.b{background:var(--terracotta);border-color:var(--terracotta)}
-.signbtn.mute{opacity:.3}
-.signbtn:disabled{cursor:default}
-.hint{font-weight:600;font-size:13px;color:var(--muted);text-align:center;letter-spacing:.02em}
-.tlines{display:flex;flex-direction:column;gap:5px}
-.tl{font-size:15px;line-height:1.35;padding:6px 10px;background:var(--card);border-left:4px solid var(--rule)}
-.tl.prop{border-left-color:var(--green)} .tl.none{color:var(--muted)}
-.committed{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);animation:cin .35s ease-out;cursor:pointer}
-.committed.a{background:var(--teal)} .committed.b{background:var(--terracotta)}
-.committed.off{opacity:0;transition:opacity .4s}
-.committed .cl{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.02em;text-transform:uppercase;margin-bottom:6px}
-.committed .ck{font-weight:700;font-size:16px;letter-spacing:.3em;text-transform:uppercase}
-.committed .cp{font-family:var(--display);font-weight:900;font-size:96px;line-height:1}
-.committed .cp small{font-size:44px;vertical-align:top}
-.committed .cs{font-weight:600;font-size:15px;color:color-mix(in srgb,var(--paper) 80%,transparent)}
-@keyframes cin{from{transform:scale(1.15);opacity:0}to{transform:scale(1);opacity:1}}
-.chips2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chips{display:flex;flex-direction:column;gap:5px;min-height:6px}
-.chip{font-size:13px;line-height:1.3;background:var(--card);border-left:4px solid var(--rule);padding:5px 8px}
-.chip b{font-weight:700}
-.chip.lock{border-left-color:var(--green)}
-.chip.lean{border-left-color:var(--ochre)}
-.chip .r{display:block;color:var(--muted);font-weight:500}
-.chip .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-left:5px}
-.reason{width:100%;font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:12px 14px}
-.reason::placeholder{color:var(--muted);font-weight:500}
-.lockline{font-weight:600;font-size:14px;color:var(--muted)}
-.lockline b{color:var(--ink)}
-.lockline.up{color:var(--green)} .lockline.up b{color:var(--green)}
-
-/* the result card and the ledger */
-.result{border:2.5px solid var(--ink);background:var(--card);padding:16px;text-align:center}
-.result .amt{font-family:var(--display);font-weight:900;font-size:54px;line-height:1;color:var(--blue)}
-.result .amt.good{color:var(--green)} .result .amt.bad{color:var(--red)}
-.result .amt small{font-size:26px;vertical-align:top}
-.result .verdict{font-weight:700;font-size:16px;margin-top:8px}
-.result .run{font-weight:600;font-size:13.5px;color:var(--muted);margin-top:6px;letter-spacing:.04em;text-transform:uppercase}
-.result .run b{color:var(--ink);font-size:15px}
-.result .note{font-weight:600;font-size:14px;color:var(--muted);margin-top:8px}
-.result.small{padding:12px}
-.result.small .amt{font-size:44px}
-.result.small .verdict{font-size:15px}
-table.ledger{width:100%;border-collapse:collapse;font-size:14px}
-table.ledger th{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:2px solid var(--ink)}
-table.ledger td{padding:7px 6px;border-bottom:1.5px solid var(--rule);font-weight:600}
-table.ledger td.w{font-weight:700}
-table.ledger td.w em{font-style:normal;font-size:10px;color:var(--ochre);margin-left:4px;letter-spacing:.1em}
-table.ledger td.w em.s{color:var(--red)}
-table.ledger td.p150{color:var(--green)} table.ledger td.p140{color:var(--red)}
-table.ledger td.def{color:var(--muted);font-style:italic}
-table.ledger tr.cur td{background:color-mix(in srgb,var(--card) 70%,transparent)}
-table.ledger tr.tot td{border-top:2.5px solid var(--ink);border-bottom:none;font-weight:700;font-size:15px}
-table.ledger td.blank{color:var(--rule)}
-
-/* the meeting */
-.meet .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.spot{background:var(--ink);color:var(--paper);padding:16px;text-align:center}
-.spot .where{font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:var(--ochre);margin:4px 0}
-.spot .sub{font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:color-mix(in srgb,var(--paper) 70%,transparent)}
-.bulletin{border:3px double var(--ink);background:var(--paper-soft);padding:14px 16px}
-.bulletin .mast{font-family:var(--display);font-weight:900;font-size:22px;line-height:1;text-align:center;letter-spacing:.02em}
-.bulletin .mast small{display:block;font-family:var(--sans);font-weight:600;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:4px}
-.bulletin h3{font-weight:700;font-size:17px;line-height:1.2;margin:10px 0 6px;color:var(--red)}
-.bulletin p{font-size:14px;line-height:1.45}
-.bulletin p+p{margin-top:6px}
-.bulletin .notice{background:var(--ink);color:var(--paper);padding:10px 12px;margin-top:8px}
-.bulletin .notice p{font-size:13.5px;font-weight:600;margin-bottom:5px}
-.bulletin .notice p:last-child{margin-bottom:0}
-.bulletin .ru{margin-top:10px;font-size:13.5px;color:var(--muted)}
-.bulletin .ru b{color:var(--red)}
-.foot{font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.04em;text-align:center;margin-top:10px}
-
 /* demo driver */
-.demo{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);display:flex;gap:10px;align-items:center;padding:10px 14px;font-size:13px;font-weight:600;z-index:9}
-.demo button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);border:none;color:var(--paper);padding:9px 12px;cursor:pointer;margin-left:auto;white-space:nowrap}
+.demo{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);display:flex;gap:10px;align-items:center;padding:12px 16px;font-size:12px;z-index:30}
+.demo button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);border:none;color:var(--paper);padding:10px 12px;cursor:pointer;margin-left:auto}
 .demo .dl{color:color-mix(in srgb,var(--paper) 70%,transparent)}
 body.demo-on{padding-bottom:90px}
 </style>
 </head><body>
 <div class="wrap">
-  <div class="tag"><span><i></i>APPLIED GAME THEORY · MODULE 4</span><button class="tbtn" id="theme" type="button" aria-label="Play the theme">Theme</button></div>
-  <h1 id="q">PRICE WARS</h1>
+  <div class="tag"><span><i></i>PRICE WARS · MODULE 4</span><button class="tbtn" id="theme" type="button" aria-label="Play the theme">Theme</button></div>
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
@@ -219,12 +153,12 @@ const qs=new URLSearchParams(location.search);
 const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
 const DEMO=qs.get('demo')==='1';
 const SUF=qs.get('room')?('-'+qs.get('room').replace(/[^a-z0-9-]/g,'')):'';
+if(SUF){const tg=document.querySelector('.tag>span');const b=document.createElement('b');b.style.cssText='margin-left:10px;color:var(--paper);background:var(--maroon);padding:2px 8px;letter-spacing:.12em';b.textContent='ROOM '+SUF.slice(1).toUpperCase();tg.appendChild(b);}
 const ROOM={teams:'m4-teams'+SUF,prices:'m4-prices'+SUF,huddle:'m4-huddle'+SUF,meet:'m4-meet'+SUF};
-const WEEKS=6, N=5, HOLD_MS=1000;
+const WEEKS=6, N=5, HOLD_MS=650;
 const LBL={a:'Aura',b:'Buco’s'};
 const FULL={a:'Aura Fuels',b:'Buco’s Service Station'};
-const SPOTS=['the door','the window','the back of the room','the front of the room','the corridor'];
-const SK='pw'+SUF+'-';   /* localStorage keys, per room */
+const SK='pw'+SUF+'-';
 const CARCOL=['var(--maroon)','var(--blue)','var(--green)','var(--ochre)','var(--sienna)','var(--grey)','var(--ink)','var(--red)'];
 
 /* ---------- identity ---------- */
@@ -254,9 +188,6 @@ if(name)claimOnce();
 /* ---------- the wire ---------- */
 const sayN={};
 function say(room,line,tag){
-  /* fifteen lines per voter per room is the Worker's cap; a tag (the week)
-     gives each week its own allowance, so a team that changes its mind is
-     never locked out */
   if(DEMO){demoSay(room,line);return Promise.resolve();}
   const k=room+(tag||'');sayN[k]=(sayN[k]||0)+1;
   const v=voter+(tag?'-'+tag:'')+'-'+(sayN[k]%9);
@@ -267,14 +198,11 @@ const answers=room=>DEMO?Promise.resolve(demoAnswers(room)):fetch(API+'/p/'+room
 const failMsg=code=>code===429?'That’s plenty from one phone. Flag the instructor.':'That didn’t send. Try again.';
 
 /* the game as the wire describes it */
-const G={pair:{},opened:0,revealed:0,myRev:0,shown:{},shock:false,meetOpen:0,repsSent:0,paper:0,sign:{},lean:{},lock:{},members:{},claim:{},ask:{},agreed:{}};
+const G={pair:{},opened:0,revealed:0,myRev:0,shown:{},shock:false,meetOpen:0,repsSent:0,sign:{},lock:{},members:{},claim:{},ask:{},rep:{},agreed:{}};
 function parse(teams,prices,huddle,meet){
-  G.pair={};G.opened=0;G.revealed=0;G.shown={};G.shock=false;G.meetOpen=0;G.repsSent=0;G.paper=0;G.sign={};G.lean={};G.lock={};G.members={};G.ask={};G.agreed={};
+  G.pair={};G.opened=0;G.revealed=0;G.shown={};G.shock=false;G.meetOpen=0;G.repsSent=0;G.sign={};G.lock={};G.members={};G.ask={};G.rep={};G.agreed={};
   const claim={}, drop={};
-  teams.forEach(t=>{
-    const m=String(t).match(/^([ab][1-5])\s*\|\s*(.{1,40}?)$/i);
-    if(m)claim[norm(m[2])]={name:m[2].trim(),st:m[1].toLowerCase()};
-  });
+  teams.forEach(t=>{const m=String(t).match(/^([ab][1-5])\s*\|\s*(.{1,40}?)$/i);if(m)claim[norm(m[2])]={name:m[2].trim(),st:m[1].toLowerCase()};});
   prices.forEach(t=>{
     const p=String(t).trim().toLowerCase().split('|').map(s=>s.trim());
     if(p[0]==='::pair'&&p[1]){p[1].split(',').forEach(x=>{const m=x.match(/^(a[1-5])=(b[1-5])$/);if(m){G.pair[m[1]]=m[2];G.pair[m[2]]=m[1];}});}
@@ -283,96 +211,132 @@ function parse(teams,prices,huddle,meet){
     else if(p[0]==='::shock')G.shock=p[1]==='on';
     else if(p[0]==='::meet'&&/^[1-6]$/.test(p[1]))G.meetOpen=Math.max(G.meetOpen,+p[1]);
     else if(p[0]==='::reps'&&/^[1-6]$/.test(p[1]))G.repsSent=Math.max(G.repsSent,+p[1]);
-    else if(p[0]==='::paper'&&/^[1-6]$/.test(p[1]))G.paper=Math.max(G.paper,+p[1]);
     else if(p[0]==='::shown'&&/^[1-6]$/.test(p[1])&&/^a[1-5]$/.test(p[2]))G.shown[p[1]+'|'+p[2]]=true;
     else if(/^[ab][1-5]$/.test(p[0])&&/^[1-6]$/.test(p[1])&&/^1\.[45]0$/.test(p[2]))G.sign[p[0]+'|'+p[1]]=p[2];
   });
   huddle.forEach(t=>{
-    const p=String(t).split('|').map(s=>s.trim());
-    const s=p[0].toLowerCase();
-    if(!/^[ab][1-5]$/.test(s)||!/^[0-6]$/.test(p[1]))return;
-    const k=s+'|'+p[1];
+    const p=String(t).split('|').map(s=>s.trim());const s=p[0].toLowerCase();
+    if(!/^[ab][1-5]$/.test(s)||!/^[0-6]$/.test(p[1]))return;const k=s+'|'+p[1];
     if(p[2]==='drop'&&p[3])drop[s+'|'+norm(p[3])]=true;
-    else if(p[2]==='lean'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lean[k]=G.lean[k]||{};G.lean[k][norm(p[3])]={name:p[3],price:p[4],why:p[5]||''};}
     else if(p[2]==='lock'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lock[k]=G.lock[k]||{};G.lock[k][norm(p[3])]={name:p[3],price:p[4]};}
     else if(p[2]==='undo'&&p[3]&&G.lock[k])delete G.lock[k][norm(p[3])];
   });
   G.claim={};Object.entries(claim).forEach(([n,c])=>{G.claim[n]=c.st;if(drop[c.st+'|'+n])return;(G.members[c.st]=G.members[c.st]||[]).push(c.name);});
   meet.forEach(t=>{
-    const p=String(t).split('|').map(s=>s.trim());
-    const s=p[0].toLowerCase();
+    const p=String(t).split('|').map(s=>s.trim());const s=p[0].toLowerCase();
     if(!/^[ab][1-5]$/.test(s)||!/^[1-6]$/.test(p[1]))return;
-    if(p[2]==='ask')G.ask[s+'|'+p[1]]=p[3]==='y';
-    else if(p[2]==='agreed'&&p[3]){G.agreed[s+'|'+p[1]]={name:p[3],text:p.slice(4).join(' | ')};}
+    if(p[2]==='ask'){G.ask[s+'|'+p[1]]=p[3]==='y';if(p[4])G.rep[s+'|'+p[1]]=p[4];}
+    else if(p[2]==='agreed'&&p[3])G.agreed[s+'|'+p[1]]={name:p[3],text:p.slice(4).join(' | ')};
   });
-  /* my junction is revealed when the deck has shown it, or closed the week */
   const mine=station?(station[0]==='a'?station:G.pair[station]):'';
   G.myRev=G.revealed;
   for(let w=G.revealed+1;w<=WEEKS;w++){if(mine&&G.shown[w+'|'+mine])G.myRev=w;else break;}
 }
 function profit(mine,theirs,week){
-  if(G.shock&&week>=5){
-    if(mine==='1.40'&&theirs==='1.50')return 72;
-    if(mine==='1.50'&&theirs==='1.40')return 2;
-    return mine==='1.50'?12:9;
-  }
+  if(G.shock&&week>=5){if(mine==='1.40'&&theirs==='1.50')return 72;if(mine==='1.50'&&theirs==='1.40')return 2;return mine==='1.50'?12:9;}
   const dbl=(week===3||week===6)?2:1;
   if(mine==='1.50')return (theirs==='1.50'?12:2)*dbl;
   return (theirs==='1.50'?18:9)*dbl;
 }
-/* how the hundred cars split between the two forecourts */
-function carSplit(pa,pb,week){
-  const shock=G.shock&&week>=5;
-  if(pa===pb)return pa==='1.50'?[40,40]:[45,45];
-  const cut=shock?93:90;
-  return pa==='1.40'?[cut,7]:[7,cut];
-}
+function carSplit(pa,pb,week){const shock=G.shock&&week>=5;if(pa===pb)return pa==='1.50'?[40,40]:[45,45];const cut=shock?93:90;return pa==='1.40'?[cut,7]:[7,cut];}
 const rival=()=>G.pair[station]||'';
 const junction=()=>{const a=station[0]==='a'?station:G.pair[station];const P=Object.keys(G.pair).filter(k=>k[0]==='a').sort();const i=P.indexOf(a);return i<0?0:i+1;};
-const teamLabel=()=>LBL[station[0]]+' '+station[1]+(junction()?' \u00b7 <span class="jx">Junction '+junction()+'</span>':'');
 const isDouble=w=>!G.shock||w<5?(w===3||w===6):false;
-function myMembers(){
-  const m=(G.members[station]||[]).slice();
-  if(name&&!m.some(x=>norm(x)===norm(name)))m.push(name);
-  return m;
-}
-/* the team's agreed price for week w: every member's latest lock, all the same */
+function myMembers(){const m=(G.members[station]||[]).slice();if(name&&!m.some(x=>norm(x)===norm(name)))m.push(name);return m;}
 function agreed(stn,w){
-  const locks=G.lock[stn+'|'+w]||{};
-  const mem=stn===station?myMembers():(G.members[stn]||[]);
-  if(!mem.length)return '';
-  let p='';
+  const locks=G.lock[stn+'|'+w]||{};const mem=stn===station?myMembers():(G.members[stn]||[]);
+  if(!mem.length)return '';let p='';
   for(const n of mem){const l=locks[norm(n)];if(!l)return '';if(p&&l.price!==p)return '';p=l.price;}
   return p;
 }
-/* the sign that went up: the team's posted sign, or £1.50 by default once the week is revealed */
-function signUp(stn,w){
-  const s=G.sign[stn+'|'+w];
-  if(s)return {price:s,def:false};
-  if(w<=G.myRev)return {price:'1.50',def:true};
-  return null;
-}
-function ledger(){
-  const r=rival();let run=0;const rows=[];
+function signUp(stn,w){const s=G.sign[stn+'|'+w];if(s)return s;if(w<=G.myRev)return '1.50';return '';}
+function record(){
+  const r=rival();let total=0;const rows=[];
   for(let w=1;w<=WEEKS;w++){
-    const mine=w<=G.myRev?signUp(station,w):null, theirs=(w<=G.myRev&&r)?signUp(r,w):null;
-    const p=(mine&&theirs)?profit(mine.price,theirs.price,w):null;
-    if(p!==null)run+=p;
-    rows.push({w,mine,theirs,p,run:p===null?null:run});
+    const mine=w<=G.myRev?signUp(station,w):'', theirs=(w<=G.myRev&&r)?signUp(r,w):'';
+    const p=(mine&&theirs)?profit(mine,theirs,w):null;if(p!==null)total+=p;
+    rows.push({w,mine,theirs,p});
   }
-  return {rows,total:run};
+  return {rows,total};
 }
 
+/* ---------- pieces ---------- */
+function topHTML(wkText,total,hot){
+  return '<div class="top'+(hot?' hot':'')+'"><span class="wk">'+wkText+'</span><span class="tot"><small>SO FAR</small>£'+total+'k</span></div>';
+}
+const stTag=()=>'<b class="'+station[0]+'">'+LBL[station[0]].toUpperCase()+' '+station[1]+'</b>';
+const jxTag=()=>junction()?' · <span class="jx">JUNCTION '+junction()+'</span>':'';
+function weekTag(w){return 'WEEK '+w+(isDouble(w)?' <em>· PAYS DOUBLE</em>':'')+' · '+stTag()+jxTag();}
+function junctionSVG(me){
+  const sign=(s,x,col)=>'<g id="sign'+s.toUpperCase()+'g" class="signg"><rect x="'+x+'" y="14" width="104" height="58" fill="'+col+'"/><rect x="'+(x+48)+'" y="72" width="8" height="14" fill="'+col+'"/>'+
+    '<text x="'+(x+52)+'" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--paper)">'+(s==='a'?'AURA':'BUCO’S')+(s===me?' · YOU':'')+'</text>'+
+    '<text id="sign'+s.toUpperCase()+'" x="'+(x+52)+'" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>';
+  const fc=(s,x,col)=>'<g class="fc '+s+'"><rect x="'+x+'" y="86" width="104" height="78" fill="var(--paper)" stroke="'+col+'" stroke-width="3"/>'+
+    '<rect x="'+(x+16)+'" y="104" width="12" height="30" fill="'+col+'"/><rect x="'+(x+40)+'" y="104" width="12" height="30" fill="'+col+'"/><rect x="'+(x+64)+'" y="104" width="12" height="30" fill="'+col+'"/>'+
+    '<rect x="'+x+'" y="86" width="104" height="10" fill="'+col+'"/>'+
+    '<text id="cnt'+s.toUpperCase()+'" x="'+(x+52)+'" y="154" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="19" fill="'+col+'"></text></g>';
+  return '<div class="junction"><svg viewBox="0 0 360 172" role="img" aria-label="The junction, with Aura on the left of the road and Buco’s on the right">'+
+    '<rect x="0" y="0" width="360" height="172" fill="var(--tan-light)"/><rect x="150" y="0" width="60" height="172" fill="var(--grey)"/>'+
+    '<g fill="var(--paper)"><rect x="178" y="8" width="4" height="18"/><rect x="178" y="42" width="4" height="18"/><rect x="178" y="76" width="4" height="18"/><rect x="178" y="110" width="4" height="18"/><rect x="178" y="144" width="4" height="18"/></g>'+
+    '<rect x="118" y="90" width="32" height="70" fill="var(--grey)"/><rect x="210" y="90" width="32" height="70" fill="var(--grey)"/>'+
+    fc('a',18,'var(--teal)')+fc('b',238,'var(--terracotta)')+sign('a',18,'var(--teal)')+sign('b',238,'var(--terracotta)')+'</svg></div>';
+}
+function setSigns(a,b){const sa=document.getElementById('signA'),sb=document.getElementById('signB');if(sa)sa.textContent=a?'£'+a:'?';if(sb)sb.textContent=b?'£'+b:'?';}
+function flipSign(side,price){const g=document.getElementById('sign'+side.toUpperCase()+'g');if(!g)return;g.classList.remove('flip');void g.getBBox();g.classList.add('flip');setTimeout(()=>{const t=document.getElementById('sign'+side.toUpperCase());if(t)t.textContent='£'+price;},250);}
+function setCounts(a,b){const ca=document.getElementById('cntA'),cb=document.getElementById('cntB');if(ca)ca.textContent=a===null?'':a+' CARS';if(cb)cb.textContent=b===null?'':b+' CARS';}
+function tilesHTML(me){
+  const t=p=>'<button type="button" class="tile '+me+'" data-p="'+p+'"><div class="fill"></div><div class="pr"><small>£</small>'+p+'</div></button>';
+  return '<div class="lbl">Select your weekly price</div><div class="tiles">'+t('1.50')+t('1.40')+'<div class="dots" data-p="1.50"></div><div class="dots" data-p="1.40"></div></div>';
+}
+/* dots: one per member, mine ringed; green when everyone placed agrees, all red when the team is split */
+function paintTiles(root,members,locks,me,up){
+  const placed=members.map(n=>locks[norm(n)]).filter(Boolean), split=new Set(placed).size>1;
+  const mine=locks[norm(me)]||'';
+  root.querySelectorAll('.dots').forEach(d=>{const p=d.dataset.p;d.classList.toggle('split',split);
+    if(d.children.length!==members.length)d.innerHTML=members.map(n=>'<span class="dot'+(norm(n)===norm(me)?' me':'')+'"></span>').join('');
+    [...d.children].forEach((el,i)=>el.classList.toggle('on',locks[norm(members[i])]===p));});
+  root.querySelectorAll('.tile').forEach(t=>{const p=t.dataset.p;t.classList.toggle('mine',(up||mine)===p);t.disabled=!!up;if(up)t.classList.remove('holding');});
+}
+/* press and hold a tile to commit; holding the other one moves the commit */
+function wireHold(root,onCommit){
+  root.querySelectorAll('.tile').forEach(t=>{
+    let timer=null;
+    const start=e=>{if(t.disabled||t.classList.contains('mine'))return;e.preventDefault();t.classList.add('holding');
+      timer=setTimeout(()=>{timer=null;t.classList.remove('holding');onCommit(t.dataset.p);},HOLD_MS);};
+    const stop=()=>{if(timer){clearTimeout(timer);timer=null;}t.classList.remove('holding');};
+    t.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(ev=>t.addEventListener(ev,stop));
+    t.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+}
+function recordHTML(rows,cur){
+  let h='<div class="rec"><div class="rk"><span></span><span class="a">You</span><span class="b">Them</span></div>';
+  rows.forEach(r=>{h+='<div class="wkc'+(r.w===cur?' cur':'')+'"><div class="wl">W'+r.w+(G.shock&&r.w>=5?'<em class="s">!</em>':(isDouble(r.w)?'<em>×2</em>':''))+'</div>'+
+    '<div class="sq'+(r.mine?' p'+r.mine.replace('.',''):'')+'"></div><div class="sq'+(r.theirs?' p'+r.theirs.replace('.',''):'')+'"></div></div>';});
+  return h+'</div>';
+}
+const twistHTML=w=>(G.shock&&w>=5)?'<div class="twist">FuelWatch is watching. Undercut alone and the app sends the whole district to you: £72k. Match, and nothing changes. No double in week 6.</div>':'';
+let splashEl=null;
+function splash(me,price,label,both){
+  if(!splashEl){splashEl=document.createElement('div');splashEl.className='splash '+me;
+    splashEl.innerHTML='<div class="cl"></div><div class="ck">Price locked in</div><div class="cp"><small>£</small><span></span></div><div class="cs"></div>';
+    document.body.appendChild(splashEl);}
+  splashEl.querySelector('.cl').innerHTML=label;splashEl.querySelector('.cp span').textContent=price;
+  const cs=splashEl.querySelector('.cs');cs.textContent=both?'Both signs are up. Look at the board.':'Waiting for the other station.';cs.classList.toggle('both',!!both);
+}
+function unsplash(){if(splashEl){const e=splashEl;splashEl=null;e.classList.add('off');setTimeout(()=>e.remove(),450);}}
+
 /* ---------- phases ---------- */
+function tutDone(){try{return localStorage.getItem(SK+'tut')==='1';}catch(_){return false;}}
 function phase(){
   if(!name)return 'name';
   if(!station)return 'station';
-  if(!G.pair[station])return 'brief';
-  const next=G.myRev+1;
+  if(!tutDone())return 'tut';
+  if(!G.pair[station])return 'lobby';
   if(G.myRev>=WEEKS)return 'over';
+  const next=G.myRev+1;
   if(G.opened<next){
     if(G.meetOpen===next)return G.repsSent===next?'meeting':'asking';
-    return G.myRev===0?'brief':'between';
+    return G.myRev===0?'junction':'between';
   }
   return G.myRev<G.opened?'week':'between';
 }
@@ -382,22 +346,13 @@ function render(force){
   const key=ph+'|'+G.opened+'|'+G.myRev+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+(G.pair[station]||'')+'|'+station;
   const same=key===lastKey&&!force;
   lastKey=key;
-  if(!same){app.replaceChildren();stopCars();}
-  ({name:renderName,station:renderStation,brief:renderBrief,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
-}
-function meLine(){
-  return '<div class="me"><span class="who">You are <b>'+esc(name)+'</b> on <b class="'+station[0]+'">'+teamLabel()+'</b></span><button type="button" id="chst">Change</button></div>';
-}
-function wireMe(){
-  const b=document.getElementById('chst');
-  if(b)b.addEventListener('click',()=>{station='';try{localStorage.removeItem(SK+'station');}catch(_){}render(true);});
+  if(!same){app.replaceChildren();if(ph!=='week')unsplash();}
+  ({name:renderName,station:renderStation,tut:renderTut,lobby:renderLobby,junction:renderJunction,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
 }
 
-/* who are you */
 function renderName(same){
   if(same)return;
-  app.innerHTML='<h2>Who are you?</h2><p>Your name, so your station’s result counts for you in the points.</p>'+
-    '<div class="namerow"><input id="nm" maxlength="30" autocomplete="off" placeholder="First name and initial"><button id="nmgo" type="button">GO</button></div>';
+  app.innerHTML='<h2>Who are you?</h2><div class="namerow"><input id="nm" maxlength="30" autocomplete="off" placeholder="First name and initial"><button id="nmgo" type="button">GO</button></div>';
   const inp=document.getElementById('nm');
   const go=()=>{const n=clean(inp.value);if(!n)return;
     GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render(true);},app,{clean});};
@@ -405,15 +360,11 @@ function renderName(same){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
   inp.focus();
 }
-
-/* which station */
 function renderStation(same){
   if(same)return;
-  let h='<div class="me"><span class="who">You are <b>'+esc(name)+'</b></span><button type="button" id="notme">Not me</button></div>'+
-    '<h2>Which station are you?</h2><p>Ryan will tell your team which one you are, or put you on one from his desk. Everyone on the team picks the same one.</p><div class="stgrid">';
-  ['a','b'].forEach(s=>{h+='<div class="col '+s+'"><div class="colh">'+FULL[s]+'</div>';
-    for(let i=1;i<=N;i++)h+='<button type="button" data-st="'+s+i+'">'+LBL[s]+' '+i+'</button>';h+='</div>';});
-  h+='</div>';
+  let h='<h2>Which station are you?</h2><div class="stgrid">';
+  ['a','b'].forEach(s=>{h+='<div class="col '+s+'"><div class="colh">'+FULL[s]+'</div>';for(let i=1;i<=N;i++)h+='<button type="button" data-st="'+s+i+'">'+LBL[s]+' '+i+'</button>';h+='</div>';});
+  h+='</div><button type="button" class="small" id="notme">Not '+esc(name)+'? Change name</button>';
   app.innerHTML=h;
   document.getElementById('notme').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}render(true);});
   app.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>{
@@ -422,397 +373,188 @@ function renderStation(same){
     render(true);
   }));
 }
-
-/* ---------- the two prices, and commit / undo ---------- */
-function signButtons(me,opts){
-  /* opts: {only} */
-  const b=p=>'<button type="button" class="signbtn '+me+'" data-p="'+p+'"'+(opts.only&&opts.only!==p?' disabled':'')+'>'+
-    '<div class="pr"><small>\u00a3</small>'+p+'</div></button>';
-  return '<div class="signs">'+b('1.50')+b('1.40')+'</div>'+
-    '<div class="cu"><button type="button" class="big" id="commit" disabled>Commit</button><button type="button" class="big quiet" id="undo" disabled>Undo</button></div>';
-}
-/* paint the two squares and the two buttons from a picked price, my commit, and the team's locked sign */
-function paintSigns(root,me,picked,mine,up){
-  root.querySelectorAll('.signbtn').forEach(x=>{
-    const p=x.dataset.p;
-    x.classList.toggle('locked',up?p===up:(!!mine&&mine===p));
-    x.classList.toggle('mute',up?p!==up:(mine?mine!==p:(!!picked&&picked!==p)));
-    x.classList.toggle('lean',!up&&!mine&&picked===p);
-    x.disabled=!!up||!!mine||x.hasAttribute('data-only-off');
-  });
-  const c=root.querySelector('#commit'),u=root.querySelector('#undo');
-  if(c){c.disabled=!!up||!!mine||!picked;c.textContent=picked&&!mine?'Commit \u00a3'+picked:'Commit';}
-  if(u)u.disabled=!!up||!mine;
-}
-
-/* ---------- how it's played: a guided practice week ----------
-   Four trials, one per cell of the game, with two invented teammates so
-   the team mechanic is learned too: tap a price, Commit, the sign goes
-   up only when all three commit the same price (PRICE LOCKED IN fills
-   the screen), and in the second trial a teammate commits the other
-   price first so a disagreement is felt. */
-const tut={step:0,first:'',timers:[],prop:{},picked:'',committed:''};
-const MATES=['Priya K','Tom W'];
-function tutDone(){try{return localStorage.getItem(SK+'tut')==='1';}catch(_){return false;}}
-function tutReset(){tut.timers.forEach(clearTimeout);tut.timers=[];tut.prop={};tut.picked='';tut.committed='';}
-function later(ms,f){tut.timers.push(setTimeout(f,ms));}
-function renderBrief(same){
+function renderLobby(same){
   if(same)return;
-  if(tutDone()){
-    const started=!!G.pair[station];
-    app.innerHTML=meLine()+'<div class="waitcard"><span class="pulse"></span>'+(started?'The game has started. You are <b>'+teamLabel()+'</b>. Waiting for week 1 to open.':'Waiting for the game to start.')+'</div>'+goalHTML()+
-      '<button type="button" class="back" id="again">Show me how it\u2019s played again</button>';
-    wireMe();
-    document.getElementById('again').addEventListener('click',()=>{try{localStorage.removeItem(SK+'tut');}catch(_){}tut.step=0;tut.first='';render(true);});
-    return;
-  }
-  tut.step=0;tut.first='';
-  tutCard();
+  app.innerHTML='<div class="bigj"><small>You are on</small><b class="st '+station[0]+'" style="color:var(--'+(station[0]==='a'?'teal':'terracotta')+');font-size:48px">'+LBL[station[0]]+' '+station[1]+'</b></div>'+
+    '<div class="wait"><span class="pulse"></span>Waiting for the game to start</div>'+
+    '<button type="button" class="small" id="chst">Change station</button><button type="button" class="small" id="again">Run the tutorial again</button>';
+  document.getElementById('chst').addEventListener('click',()=>{station='';try{localStorage.removeItem(SK+'station');}catch(_){}render(true);});
+  document.getElementById('again').addEventListener('click',()=>{try{localStorage.removeItem(SK+'tut');}catch(_){}render(true);});
 }
-function goalHTML(){
-  return '<div class="goal">Your goal is to make as much money as you can over the next six weeks!</div>';
-}
-/* one line per person on the team */
-function teamLines(members,props,me){
-  return '<div class="tlines">'+members.map(n=>{
-    const who=norm(n)===norm(me)?'You':esc(n), isMe=norm(n)===norm(me);
-    const pr=props[norm(n)];
-    if(pr)return '<div class="tl prop"><b>'+who+'</b> committed <b>\u00a3'+pr+'</b></div>';
-    return '<div class="tl none"><b>'+who+'</b> '+(isMe?'haven\u2019t':'hasn\u2019t')+' committed yet</div>';
-  }).join('')+'</div>';
-}
-function committedOverlay(me,price,label){
-  const o=document.createElement('div');o.className='committed '+me;
-  o.innerHTML='<div class="cl">'+(label?esc(label):teamLabel())+'</div><div class="ck">Price locked in</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
-  document.body.appendChild(o);
-  const off=()=>{o.classList.add('off');setTimeout(()=>o.remove(),450);};
-  o.addEventListener('click',off);setTimeout(off,2600);
-}
-function tutCard(){
-  tutReset();
-  const me=station[0], them=me==='a'?'b':'a';
-  const dots='<div class="tdots">'+[0,1,2,3,4].map(i=>'<i class="'+(i<=Math.min(tut.step,4)?'on':'')+'"></i>').join('')+'</div>';
-  const card=(h,p)=>'<div class="tcard"><h3>'+h+'</h3>'+(p?'<p id="tcp">'+p+'</p>':'')+'</div>';
-  const setBoth=(pm,pt)=>setSigns(me==='a'?pm:pt,me==='a'?pt:pm);
-  app.innerHTML=meLine()+'<div class="lbl">How it\u2019s played</div>'+dots+junctionSVG(me)+'<div id="tbody"></div>';
-  wireMe();
-  const body=document.getElementById('tbody');
-  const dim=on=>{const f=app.querySelector('.fc.'+them);if(f)f.classList.toggle('dim',on);};
-  const other=p=>p==='1.50'?'1.40':'1.50';
-  const members=[name].concat(MATES);
-  /* one trial: the player picks and commits (only `only` if set), the mates follow
-     by the script, the other station posts `theirs` */
-  const trial=(title,text,only,theirs,nextLabel,nextStep,script)=>{
-    dim(false);setBoth('','');startCars('flow');
-    body.innerHTML=card(title,text)+signButtons(me,{only})+'<div class="hint">Tap a price, then commit it.</div>'+
-      '<div id="tlines"></div><div class="lockline" id="tstat"></div><div id="tres"></div>';
-    if(only)body.querySelectorAll('.signbtn').forEach(x=>{if(x.dataset.p!==only)x.setAttribute('data-only-off','1');});
-    const paint=()=>{
-      const mine=tut.prop[norm(name)];
-      paintSigns(body,me,tut.picked,mine,tut.committed);
-      document.getElementById('tlines').innerHTML=teamLines(members,tut.prop,name);
-      const st=document.getElementById('tstat');
-      const props=members.filter(n=>tut.prop[norm(n)]);
-      const prices=new Set(props.map(n=>tut.prop[norm(n)]));
-      if(tut.committed)st.innerHTML='<b>Your price is locked in: \u00a3'+tut.committed+'.</b>';
-      else if(prices.size>1)st.innerHTML='<b>Your prices don\u2019t agree.</b> Nothing goes on the sign until all three of you commit the same price. In the game you could undo and change yours; here, wait for him.';
-      else if(props.length)st.innerHTML='<b>'+props.length+' of 3 committed \u00a3'+[...prices][0]+'.</b> Waiting for '+members.filter(n=>!tut.prop[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
-      else st.innerHTML='';
-      setBoth(tut.committed||mine||tut.picked||'','');
-      if(!tut.committed&&props.length===3&&prices.size===1)commit([...prices][0]);
-    };
-    const commit=p=>{
-      tut.committed=p;paint();committedOverlay(me,p,LBL[me]+' '+station[1]+' \u00b7 practice');
-      later(2900,()=>{flipSign(them,theirs);});
-      later(3700,()=>{
-        startCars('split',me==='a'?p:theirs,me==='a'?theirs:p,1);
-        const pr=profit(p,theirs,1);
-        document.getElementById('tres').innerHTML='<div class="result small"><div class="amt '+(pr>12?'good':(pr<12?'bad':''))+'"><small>\u00a3</small><span id="tamt">0</span><small>k</small></div><div class="verdict">'+verdict(p,theirs,1)+'</div></div>'+
-          '<button type="button" class="big" id="tnext">'+nextLabel+'</button>';
-        countUp('tamt',pr,6500);
-        document.getElementById('tnext').addEventListener('click',()=>{tut.step=nextStep;tutCard();});
-      });
-    };
-    body.querySelectorAll('.signbtn').forEach(b=>b.addEventListener('click',()=>{if(tut.committed||tut.prop[norm(name)])return;tut.picked=b.dataset.p;paint();script.onPick&&script.onPick(tut.picked,paint);}));
-    body.querySelector('#commit').addEventListener('click',()=>{if(!tut.picked||tut.committed)return;const p=tut.picked;if(!tut.first)tut.first=p;tut.prop[norm(name)]=p;paint();script.onCommit&&script.onCommit(p,paint);});
-    body.querySelector('#undo').addEventListener('click',()=>{if(tut.committed)return;delete tut.prop[norm(name)];paint();});
-    paint();
-  };
-  const mateCommit=(i,p,paint,ms)=>later(ms,()=>{tut.prop[norm(MATES[i])]=p;paint();});
-  if(tut.step===0){
-    dim(true);setBoth('','');startCars('flow');
-    body.innerHTML=card('This is your station','You sell the same fuel as '+LBL[them]+' across the road. About a hundred cars a week come down this road and read both signs before they choose. The price on your sign is the only difference between you.')+
-      '<button type="button" class="big" id="tnext">Next</button>';
-    document.getElementById('tnext').addEventListener('click',()=>{tut.step=1;tutCard();});
-  }
-  else if(tut.step===1)trial('Post a price','Every Monday you post a price without seeing theirs. Tap a price and commit it. When all three of you have committed the same price, it goes on your sign.','','1.50','Now try the other price',2,
-    {onCommit:(p,paint)=>{mateCommit(0,p,paint,1100);mateCommit(1,p,paint,2100);}});
-  else if(tut.step===2)trial('Now post the other price','Same week, same hundred cars, and the other station holds at \u00a31.50 again. This time your team doesn\u2019t all agree straight away.',other(tut.first),'1.50','What if they cut?',3,
-    {onPick:(p,paint)=>{mateCommit(1,tut.first,paint,900);},
-     onCommit:(p,paint)=>{mateCommit(0,p,paint,900);mateCommit(1,p,paint,6500);}});
-  else if(tut.step===3)trial('This time they cut','The other station is going to post \u00a31.40. Hold at \u00a31.50 and see what it costs you.','1.50','1.40','And if you both cut?',4,
-    {onCommit:(p,paint)=>{mateCommit(0,p,paint,800);mateCommit(1,p,paint,1500);}});
-  else if(tut.step===4)trial('Both of you cut','Commit \u00a31.40 while they post \u00a31.40.','1.40','1.40','One more thing',5,
-    {onCommit:(p,paint)=>{mateCommit(0,p,paint,800);mateCommit(1,p,paint,1500);}});
-  else{
-    dim(false);setBoth('','');startCars('flow');
-    body.innerHTML=goalHTML()+'<button type="button" class="big" id="tnext">I\u2019m ready</button>';
-    document.getElementById('tnext').addEventListener('click',()=>{try{localStorage.setItem(SK+'tut','1');}catch(_){}render(true);});
-  }
-}
-function flipSign(side,price){
-  const g=document.getElementById('sign'+side.toUpperCase()+'g');if(!g)return;
-  g.classList.remove('flip');void g.getBBox();g.classList.add('flip');
-  setTimeout(()=>{const t=document.getElementById('sign'+side.toUpperCase());if(t)t.textContent='\u00a3'+price;},260);
-}
-function countUp(id,to,ms){
-  const el=document.getElementById(id);if(!el)return;const t0=performance.now();
-  const step=now=>{const u=Math.min(1,(now-t0)/(ms||900));el.textContent=Math.round(to*u);if(u<1)requestAnimationFrame(step);};
-  requestAnimationFrame(step);
-}
-
-/* ---------- the junction ---------- */
-let carsRAF=null;
-function junctionSVG(me){
-  /* Aura's forecourt on the left of the road, Buco's on the right. Cars
-     come down the road and turn into whichever forecourt the prices send
-     them to; the sign boards carry the week's prices in each station's
-     colour, and the counters under each forecourt are that week's cars
-     and money. */
-  const side=s=>s===me?'mine':'';
-  const sign=(s,x,col)=>'<g id="sign'+s.toUpperCase()+'g" class="signg"><rect x="'+x+'" y="14" width="104" height="58" fill="'+col+'"/><rect x="'+(x+48)+'" y="72" width="8" height="14" fill="'+col+'"/>'+
-    '<text x="'+(x+52)+'" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--paper)">'+(s==='a'?'AURA':'BUCO’S')+(s===me?' · YOU':'')+'</text>'+
-    '<text id="sign'+s.toUpperCase()+'" x="'+(x+52)+'" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>';
-  const fc=(s,x,col)=>'<g class="fc '+s+' '+side(s)+'"><rect x="'+x+'" y="86" width="104" height="78" fill="var(--paper)" stroke="'+col+'" stroke-width="3"/>'+
-    '<rect x="'+(x+16)+'" y="104" width="12" height="30" fill="'+col+'"/><rect x="'+(x+40)+'" y="104" width="12" height="30" fill="'+col+'"/><rect x="'+(x+64)+'" y="104" width="12" height="30" fill="'+col+'"/>'+
-    '<rect x="'+x+'" y="86" width="104" height="10" fill="'+col+'"/>'+
-    '<text id="cnt'+s.toUpperCase()+'" x="'+(x+52)+'" y="190" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="22" fill="'+col+'"></text>'+
-    '<text id="mon'+s.toUpperCase()+'" x="'+(x+52)+'" y="212" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="var(--ink)"></text></g>';
-  return '<div class="junction"><svg viewBox="0 0 360 230" role="img" aria-label="The junction, with Aura on the left of the road and Buco’s on the right">'+
-    '<rect x="0" y="0" width="360" height="230" fill="var(--tan-light)"/>'+
-    '<rect x="150" y="0" width="60" height="230" fill="var(--grey)"/>'+
-    '<g fill="var(--paper)"><rect x="178" y="8" width="4" height="18"/><rect x="178" y="42" width="4" height="18"/><rect x="178" y="76" width="4" height="18"/><rect x="178" y="110" width="4" height="18"/><rect x="178" y="144" width="4" height="18"/><rect x="178" y="178" width="4" height="18"/><rect x="178" y="212" width="4" height="18"/></g>'+
-    '<rect x="118" y="90" width="32" height="70" fill="var(--grey)"/><rect x="210" y="90" width="32" height="70" fill="var(--grey)"/>'+
-    fc('a',18,'var(--teal)')+fc('b',238,'var(--terracotta)')+
-    '<g id="cars"></g>'+
-    sign('a',18,'var(--teal)')+sign('b',238,'var(--terracotta)')+
-    '</svg></div>';
-}
-function setSigns(a,b){
-  const sa=document.getElementById('signA'), sb=document.getElementById('signB');
-  if(sa)sa.textContent=a?'£'+a:'?';
-  if(sb)sb.textContent=b?'£'+b:'?';
-}
-function setCount(s,n,money){
-  const c=document.getElementById('cnt'+s), m=document.getElementById('mon'+s);
-  if(c)c.textContent=n===null?'':(n+(n===1?' CAR':' CARS'));
-  if(m)m.textContent=money===null?'':('£'+(Math.round(money*10)/10)+'k');
-}
-function startCars(mode,pa,pb,week){
-  /* 'flow': cars drive past while the signs are blank. 'split': the
-     week's hundred cars, each turning into the forecourt the prices send
-     it to, the counters ticking as they arrive; the money under each
-     forecourt climbs to that side's real payoff. */
-  stopCars();
-  const g=document.getElementById('cars');if(!g)return;
-  let cars=[], queue=[], last=performance.now(), spawn=0, arrived=[0,0], total=[0,0], pay=[0,0];
-  if(mode==='split'){
-    const sp=carSplit(pa,pb,week||1);total=sp;pay=[profit(pa,pb,week||1),profit(pb,pa,week||1)];
-    for(let i=0;i<sp[0];i++)queue.push('a');for(let i=0;i<sp[1];i++)queue.push('b');
-    for(let i=queue.length;i<100;i++)queue.push('s');
-    for(let i=queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[queue[i],queue[j]]=[queue[j],queue[i]];}
-    setCount('A',0,0);setCount('B',0,0);
-  }else{setCount('A',null,null);setCount('B',null,null);}
-  const tick=now=>{
-    const dt=Math.min(50,now-last);last=now;spawn-=dt;
-    if(spawn<=0){
-      if(mode==='split'){if(queue.length){cars.push({t:-0.05,dest:queue.shift(),lane:Math.random()<.5?168:192,col:CARCOL[Math.floor(Math.random()*CARCOL.length)]});spawn=60;}}
-      else{cars.push({t:-0.05,dest:'s',lane:Math.random()<.5?168:192,col:CARCOL[Math.floor(Math.random()*CARCOL.length)]});spawn=420;}
-    }
-    cars.forEach(c=>{c.t+=dt/(mode==='split'?1500:2600);});
-    let h='';
-    cars.forEach(c=>{
-      let x,y,rot=0,op=1;
-      if(c.dest==='s'){x=c.lane;y=-30+c.t*290;}
-      else{
-        const k=c.t/0.42;
-        if(k<1){x=c.lane;y=-30+k*130;}
-        else{const u=Math.min(1,(c.t-0.42)/0.5);const tx=c.dest==='a'?70:290;
-          x=c.lane+(tx-c.lane)*(1-Math.pow(1-u,2));y=100+u*40;rot=(c.dest==='a'?-1:1)*Math.sin(u*Math.PI)*70;op=u>0.8?1-(u-0.8)/0.2:1;
-          if(u>=1&&!c.counted){c.counted=true;const i=c.dest==='a'?0:1;arrived[i]++;
-            setCount(c.dest.toUpperCase(),arrived[i],total[i]?pay[i]*arrived[i]/total[i]:0);}}
-      }
-      if(c.t<1.05)h+='<rect x="-7" y="-12" width="14" height="24" rx="3" fill="'+c.col+'" opacity="'+op.toFixed(2)+'" transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+') rotate('+rot.toFixed(1)+')"/>';
-    });
-    cars=cars.filter(c=>c.t<1.05);
-    g.innerHTML=h;
-    if(mode==='split'&&!queue.length&&!cars.length){setCount('A',total[0],pay[0]);setCount('B',total[1],pay[1]);carsRAF=null;return;}
-    carsRAF=requestAnimationFrame(tick);
-  };
-  carsRAF=requestAnimationFrame(tick);
-}
-function stopCars(){if(carsRAF){cancelAnimationFrame(carsRAF);carsRAF=null;}}
-
-/* what happened, in a line */
-function verdict(mine,theirs,w){
-  const shock=G.shock&&w>=5, dbl=isDouble(w)?' This week paid double.':'';
-  if(mine==='1.50'&&theirs==='1.50')return 'They posted £1.50 too. Forty cars pulled in to each of you.'+dbl;
-  if(mine==='1.40'&&theirs==='1.40')return 'They posted £1.40 too. Forty-five cars each, at the lower price.'+dbl;
-  if(mine==='1.40')return shock?'They posted £1.50. The app sent nearly every car in the district to you.':'They posted £1.50. Ninety cars pulled in to you and seven to them.'+dbl;
-  return shock?'They posted £1.40. The app sent nearly every car in the district to them.':'They posted £1.40. Ninety cars pulled in to them and seven to you.'+dbl;
+function renderJunction(same){
+  if(same)return;
+  app.innerHTML='<div class="bigj"><small>This is your junction</small><b>JUNCTION '+junction()+'</b><span class="st '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
+    '<div class="wait"><span class="pulse"></span>Waiting for week 1</div>';
 }
 
 /* ---------- a week in play ---------- */
-function weekHead(w){
-  const s=G.shock&&w>=5;
-  return '<div class="wkhead"><span class="wk">WEEK '+w+'</span>'+
-    (s?'<span class="dbl shk">Gazette rules</span>':(isDouble(w)?'<span class="dbl">Pays double</span>':''))+
-    '<span class="mine '+station[0]+'">'+teamLabel()+'</span></div>';
-}
-let postedSign={}, seenCommit={}, picked='';
+let postedSign={};
 function renderWeek(same){
   const w=G.opened;
   if(!same){
-    picked='';
-    app.innerHTML=weekHead(w)+junctionSVG(station[0])+
-      '<div class="lbl">Post your price</div>'+
-      signButtons(station[0],{})+'<div class="hint">Tap a price, then commit it. Undo takes it back.</div>'+
-      '<div id="wlines"></div>'+
-      '<div class="lockline" id="lockline"></div>'+
-      '<div class="lbl">Your ledger</div>'+ledgerHTML(w);
-    startCars('flow');
-    app.querySelectorAll('.signbtn').forEach(b=>b.addEventListener('click',()=>{picked=b.dataset.p;paintWeek();}));
-    document.getElementById('commit').addEventListener('click',()=>{
-      const p=picked;if(!p||G.sign[station+'|'+w])return;
-      const k=station+'|'+w;G.lock[k]=G.lock[k]||{};G.lock[k][norm(name)]={name,price:p};
+    app.innerHTML=topHTML(weekTag(w),record().total,G.shock&&w>=5)+junctionSVG(station[0])+twistHTML(w)+tilesHTML(station[0])+recordHTML(record().rows,w);
+    wireHold(app,p=>{
+      const k=station+'|'+w;if(G.sign[k])return;
+      G.lock[k]=G.lock[k]||{};G.lock[k][norm(name)]={name,price:p};
       say(ROOM.huddle,station+'|'+w+'|lock|'+name+'|'+p,'k'+w).catch(c=>{st.textContent=failMsg(c);});
-      paintWeek();
-    });
-    document.getElementById('undo').addEventListener('click',()=>{
-      const k=station+'|'+w;if(G.sign[k]||!G.lock[k]||!G.lock[k][norm(name)])return;
-      delete G.lock[k][norm(name)];
-      say(ROOM.huddle,station+'|'+w+'|undo|'+name,'k'+w).catch(c=>{st.textContent=failMsg(c);});
       paintWeek();
     });
   }
   paintWeek();
 }
 function paintWeek(){
-  const w=G.opened, k=station+'|'+w;
-  const up=G.sign[k]||'', ag=agreed(station,w);
-  /* the team has agreed and no sign is up yet: this phone posts it (any of them may; the same line twice is harmless) */
+  const w=G.opened, k=station+'|'+w, up=G.sign[k]||'', ag=agreed(station,w);
   if(ag&&!up&&!postedSign[k+ag]){postedSign[k+ag]=true;say(ROOM.prices,station+'|'+w+'|'+ag,'w'+w).then(()=>{G.sign[k]=ag;paintWeek();}).catch(()=>{postedSign[k+ag]=false;});}
-  if(up&&!seenCommit[k]){seenCommit[k]=true;committedOverlay(station[0],up);}
-  const locks=G.lock[k]||{};
-  const myLock=locks[norm(name)];
-  paintSigns(app,station[0],picked,myLock?myLock.price:'',up);
-  const mem=myMembers();
-  const P={};mem.forEach(n=>{const l=locks[norm(n)];if(l)P[norm(n)]=l.price;});
-  const wl=document.getElementById('wlines');if(wl)wl.innerHTML=teamLines(mem,P,name);
-  const ll=document.getElementById('lockline');
-  if(ll){
-    const nLock=mem.filter(n=>locks[norm(n)]).length;
-    const prices=new Set(mem.filter(n=>locks[norm(n)]).map(n=>locks[norm(n)].price));
-    ll.classList.toggle('up',!!up);
-    if(up)ll.innerHTML='<b>Your price is locked in: \u00a3'+up+'.</b> Waiting for Monday morning.';
-    else if(prices.size>1)ll.innerHTML='<b>Your prices don\u2019t agree.</b> The sign goes up when everyone has committed the same price. Undo to change yours.';
-    else if(nLock===0)ll.innerHTML='Nobody on '+LBL[station[0]]+' '+station[1]+' has committed yet.';
-    else ll.innerHTML='<b>'+nLock+' of '+mem.length+' committed'+(prices.size?' \u00a3'+[...prices][0]:'')+'.</b> Waiting for '+mem.filter(n=>!locks[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
-  }
-  const shown=up||(myLock?myLock.price:(picked||''));
-  setSigns(station[0]==='a'?shown:'',station[0]==='b'?shown:'');
-  const lg=document.getElementById('ledger');if(lg)lg.outerHTML=ledgerHTML(w);
+  const locks={};const L=G.lock[k]||{};Object.keys(L).forEach(n=>locks[n]=L[n].price);
+  paintTiles(app,myMembers(),locks,name,up);
+  const mine=up||locks[norm(name)]||'';
+  setSigns(station[0]==='a'?mine:'',station[0]==='b'?mine:'');
+  if(up){const r=rival();splash(station[0],up,LBL[station[0]]+' '+station[1]+' · Junction '+junction(),!!(r&&G.sign[r+'|'+w]));}
+  else unsplash();
 }
-function ledgerHTML(cur){
-  const L=ledger();
-  const cell=s=>!s?'<td class="blank">\u2013</td>':'<td class="'+(s.def?'def ':'')+'p'+s.price.replace('.','')+'">\u00a3'+s.price+'</td>';
-  let h='<table class="ledger" id="ledger"><thead><tr><th>Week</th><th>You</th><th>Them</th><th>This week</th><th>Running</th></tr></thead><tbody>';
-  L.rows.forEach(x=>{
-    const s=G.shock&&x.w>=5;
-    h+='<tr'+(x.w===cur?' class="cur"':'')+'><td class="w">'+x.w+(s?'<em class="s">!</em>':(isDouble(x.w)?'<em>\u00d72</em>':''))+'</td>'+cell(x.mine)+cell(x.theirs)+
-      '<td class="'+(x.p===null?'blank':'')+'">'+(x.p===null?'\u2013':'\u00a3'+x.p+'k')+'</td>'+
-      '<td class="'+(x.run===null?'blank':'')+'">'+(x.run===null?'\u2013':'\u00a3'+x.run+'k')+'</td></tr>';
-  });
-  h+='<tr class="tot"><td colspan="4">Total so far</td><td>\u00a3'+L.total+'k</td></tr></tbody></table>';
-  return h;
-}
-
-/* ---------- the reveal, and the wait between weeks ---------- */
 function renderBetween(same){
   if(same)return;
-  const w=G.myRev, r=rival();
-  const mine=signUp(station,w), theirs=r?signUp(r,w):null;
-  const p=(mine&&theirs)?profit(mine.price,theirs.price,w):null;
-  const L=ledger();
-  app.innerHTML=weekHead(w)+junctionSVG(station[0])+
-    (p===null?'<div class="card soft"><p>The board at the front has this week.</p></div>':
-    '<div class="result"><div class="amt '+(p>=12?(p>12?'good':''):'bad')+'"><small>\u00a3</small><span id="amt">0</span><small>k</small></div><div class="verdict">'+verdict(mine.price,theirs.price,w)+'</div>'+
-    '<div class="run">Six-week total so far <b>\u00a3'+L.total+'k</b></div></div>')+
-    '<div class="waitcard"><span class="pulse"></span>'+(w<WEEKS?'Waiting for week '+(w+1)+' to open.':'That was the last week.')+'</div>'+
-    '<div class="lbl">Your ledger</div>'+ledgerHTML(0);
-  if(p!==null){
-    const pa=station[0]==='a'?mine.price:theirs.price, pb=station[0]==='a'?theirs.price:mine.price;
-    setSigns(station[0]==='a'?mine.price:'',station[0]==='b'?mine.price:'');
-    setTimeout(()=>{flipSign(station[0]==='a'?'b':'a',theirs.price);},700);
-    setTimeout(()=>{startCars('split',pa,pb,w);countUp('amt',p,6500);},1500);
-  }else startCars('flow');
+  const w=G.myRev, r=rival(), R=record();
+  const mine=signUp(station,w), theirs=r?signUp(r,w):'';
+  app.innerHTML=topHTML(weekTag(w),R.total,G.shock&&w>=5)+junctionSVG(station[0])+recordHTML(R.rows,0)+
+    '<div class="wait"><span class="pulse"></span>'+(w<WEEKS?'Waiting for week '+(w+1):'That was the last week')+'</div>';
+  setSigns(station[0]==='a'?mine:theirs,station[0]==='b'?mine:theirs);
+  if(mine&&theirs){const pa=station[0]==='a'?mine:theirs,pb=station[0]==='a'?theirs:mine;const c=carSplit(pa,pb,w);setCounts(c[0],c[1]);}
 }
 
-/* ---------- the meetings ---------- */
+/* ---------- the meetings: one question, then one tap ---------- */
 function renderAsking(same){
   const w=G.meetOpen;
   if(!same){
-    app.innerHTML='<div class="wkhead"><span class="wk">BEFORE WEEK '+w+'</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
-      '<div class="card meet"><h3>Do you want to meet the other station?</h3><p>Two minutes, one person from each side. It happens only if both stations ask. Nothing said in it counts for anything when the signs go up.</p></div>'+
-      '<div class="meet"><div class="two"><button type="button" class="big" id="askY">Ask to meet</button><button type="button" class="big quiet" id="askN">No meeting</button></div></div>'+
-      '<div class="lockline" id="askline"></div>';
-    const send=y=>{const b=document.getElementById(y?'askY':'askN');b.disabled=true;
-      say(ROOM.meet,station+'|'+w+'|ask|'+(y?'y':'n'),'m'+w).then(()=>{G.ask[station+'|'+w]=y;paintAsk();}).catch(c=>{b.disabled=false;st.textContent=failMsg(c);});};
-    document.getElementById('askY').addEventListener('click',()=>send(true));
-    document.getElementById('askN').addEventListener('click',()=>send(false));
+    app.innerHTML=topHTML('WEEK '+w+' AHEAD · '+stTag()+jxTag(),record().total)+
+      '<div class="line">Do you want to meet the other station?</div>'+
+      '<div class="two"><button type="button" class="big" id="askY">Yes</button><button type="button" class="big quiet" id="askN">No</button></div>'+
+      '<div id="who"></div>';
+    document.getElementById('askY').addEventListener('click',()=>{G.ask[station+'|'+w]=true;paintAsk();
+      say(ROOM.meet,station+'|'+w+'|ask|y','m'+w).catch(c=>{st.textContent=failMsg(c);});});
+    document.getElementById('askN').addEventListener('click',()=>{const b=document.getElementById('askN');b.disabled=true;
+      say(ROOM.meet,station+'|'+w+'|ask|n','m'+w).then(()=>{G.ask[station+'|'+w]=false;delete G.rep[station+'|'+w];paintAsk();}).catch(c=>{b.disabled=false;st.textContent=failMsg(c);});});
   }
   paintAsk();
   function paintAsk(){
-    const m=G.ask[station+'|'+w];
-    const y=document.getElementById('askY'), n=document.getElementById('askN'), l=document.getElementById('askline');
-    if(y){y.classList.toggle('quiet',m===false);y.disabled=false;}
-    if(n){n.classList.toggle('quiet',m!==false);n.disabled=false;}
-    if(l)l.innerHTML=m===undefined?'Your station hasn’t answered yet. Any of you can.':(m?'<b>You asked to meet.</b> If they asked too, you’ll be told where.':'<b>No meeting from your side.</b> You can change your mind until the reps are sent.');
+    const m=G.ask[station+'|'+w], rep=G.rep[station+'|'+w]||'';
+    const y=document.getElementById('askY'),n=document.getElementById('askN'),who=document.getElementById('who');
+    y.classList.toggle('on',m===true);y.classList.toggle('quiet',m===false);n.classList.toggle('on',m===false);n.classList.toggle('quiet',m!==false);n.disabled=false;
+    if(m!==true){who.innerHTML='';return;}
+    if(!who.children.length){
+      who.innerHTML='<div class="line" style="margin-bottom:10px">Who goes?</div><div class="names">'+myMembers().map(x=>'<button type="button" class="big quiet" data-n="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>';
+      who.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{const nm=b.dataset.n;
+        say(ROOM.meet,station+'|'+w+'|ask|y|'+nm,'m'+w).then(()=>{G.rep[station+'|'+w]=nm;paintAsk();}).catch(c=>{st.textContent=failMsg(c);});}));
+    }
+    who.querySelectorAll('[data-n]').forEach(b=>{b.classList.toggle('on',norm(b.dataset.n)===norm(rep));b.classList.toggle('quiet',norm(b.dataset.n)!==norm(rep));});
   }
 }
 function renderMeeting(same){
   const w=G.meetOpen, r=rival();
   const on=!!(G.ask[station+'|'+w]&&r&&G.ask[r+'|'+w]);
-  const idx=Object.keys(G.pair).filter(k=>k[0]==='a').sort().indexOf(station[0]==='a'?station:r);
-  const spot=SPOTS[Math.max(0,idx)%SPOTS.length];
-  const a=G.agreed[station+'|'+w];
+  const rep=G.rep[station+'|'+w]||'';
   if(!same){
-    app.innerHTML='<div class="wkhead"><span class="wk">BEFORE WEEK '+w+'</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
-      (on?'<div class="spot"><div class="sub">Meeting on. Send one person to</div><div class="where">'+esc(spot)+'</div><div class="sub">Two minutes</div></div>'+
-          '<div class="card soft"><h3>Back from the meeting?</h3><p>What did the two of you agree? Only you and the debrief will see this. The other station writes its own version.</p></div>'+
-          '<input class="reason" id="agreed" maxlength="120" autocomplete="off" placeholder="What was agreed, in a few words" value="'+esc(a?a.text:'')+'">'+
-          '<button type="button" class="big" id="agreedgo">Send</button><div class="lockline" id="agreedline"></div>'
-        :'<div class="card"><h3>No meeting this time.</h3><p>Week '+w+' opens when Ryan says so.</p></div>')+
-      '<div class="waitcard"><span class="pulse"></span>Waiting for week '+w+' to open.</div>';
-    const go=document.getElementById('agreedgo');
-    if(go)go.addEventListener('click',()=>{
-      const t=clean(document.getElementById('agreed').value).slice(0,120);if(!t)return;go.disabled=true;
-      say(ROOM.meet,station+'|'+w+'|agreed|'+name+'|'+t,'g'+w).then(()=>{G.agreed[station+'|'+w]={name,text:t};go.disabled=false;paintAgreed();}).catch(c=>{go.disabled=false;st.textContent=failMsg(c);});
-    });
+    app.innerHTML=topHTML('WEEK '+w+' AHEAD · '+stTag()+jxTag(),record().total)+
+      (on?'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION '+junction()+'</b><span class="st" style="color:var(--ink)">'+(rep?(norm(rep)===norm(name)?'You go':esc(rep)+' goes'):'One of you goes')+'</span></div>'+
+          '<div class="line">What did you agree?</div><div class="three"><button type="button" class="big quiet" data-ag="1.50">£1.50</button><button type="button" class="big quiet" data-ag="1.40">£1.40</button><button type="button" class="big quiet" data-ag="none">Nothing</button></div>'
+        :'<div class="bigj" style="padding-top:10px"><small>Before week '+w+'</small><b style="font-size:40px;color:var(--ink)">NO MEETING</b></div>')+
+      '<div class="wait"><span class="pulse"></span>Waiting for week '+w+'</div>';
+    app.querySelectorAll('[data-ag]').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.ag;
+      say(ROOM.meet,station+'|'+w+'|agreed|'+name+'|'+v,'g'+w).then(()=>{G.agreed[station+'|'+w]={name,text:v};paintAg();}).catch(c=>{st.textContent=failMsg(c);});}));
   }
-  paintAgreed();
-  function paintAgreed(){const l=document.getElementById('agreedline');const x=G.agreed[station+'|'+w];
-    if(l)l.innerHTML=x?'Noted from <b>'+esc(x.name)+'</b>: “'+esc(x.text)+'”. Send again to replace it.':'';}
+  paintAg();
+  function paintAg(){const a=G.agreed[station+'|'+w];app.querySelectorAll('[data-ag]').forEach(b=>{const onb=a&&a.text===b.dataset.ag;b.classList.toggle('on',!!onb);b.classList.toggle('quiet',!onb);});}
 }
-
-/* ---------- game over ---------- */
 function renderOver(same){
   if(same)return;
-  const L=ledger();
-  app.innerHTML='<div class="wkhead"><span class="wk">SIX WEEKS</span><span class="mine '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
-    '<div class="result"><div class="run">Your six weeks</div><div class="amt"><small>£</small>'+L.total+'<small>k</small></div><div class="verdict">The board at the front takes it from here.</div></div>'+
-    '<div class="lbl">Your ledger</div>'+ledgerHTML(0)+
-    '<div class="foot">Price Wars · Module 4</div>';
+  const R=record();
+  app.innerHTML=topHTML('SIX WEEKS · '+stTag()+jxTag(),R.total)+'<div class="bigj"><small>Your six weeks</small><b style="color:var(--ink)">£'+R.total+'k</b></div>'+recordHTML(R.rows,0)+
+    '<div class="wait"><span class="pulse"></span>The board takes it from here</div>';
+}
+
+/* ---------- the tutorial: three scripted weeks, run once ----------
+   Week 1: hold a price, the team agrees, the sign goes up, the other
+   station's price, the result. Week 2: the record and money are on the
+   screen, a teammate disagrees, the reds, the switch, the result. Week 3:
+   the meeting question, who goes, what was agreed, then the double week.
+   Results appear here only because there is no board yet. ---- */
+const MATES=['Priya K','Tom W'];
+const T={week:1,mine:'',mates:['',''],locked:'',theirs:'',rows:[],total:0,timers:[],ask:null,rep:'',ag:''};
+const tLater=(ms,f)=>T.timers.push(setTimeout(f,ms));
+function tReset(){T.timers.forEach(clearTimeout);T.timers=[];T.mine='';T.mates=['',''];T.locked='';T.theirs='';}
+function renderTut(same){if(same)return;T.week=1;T.rows=[];T.total=0;T.ask=null;T.rep='';T.ag='';tutWeek();}
+function tutWeek(){
+  tReset();
+  const me=station[0], w=T.week, dbl=w===3;
+  const rows=[1,2,3,4,5,6].map(x=>T.rows[x-1]||{w:x,mine:'',theirs:'',p:null});
+  const top=()=>'<div class="tut">TUTORIAL</div>'+topHTML('WEEK '+w+(dbl?' <em>· PAYS DOUBLE</em>':'')+' · '+stTag(),T.total);
+  const members=[name].concat(MATES);
+  const paint=()=>{
+    const locks={};members.forEach((n,i)=>{const p=i===0?T.mine:T.mates[i-1];if(p)locks[norm(n)]=p;});
+    paintTiles(app,members,locks,name,T.locked);
+    const mine=T.locked||T.mine;setSigns(me==='a'?mine:'',me==='b'?mine:'');
+    const line=document.getElementById('tline');
+    const placed=Object.values(locks), split=new Set(placed).size>1;
+    if(line&&!T.locked){
+      if(split)line.innerHTML='<b>Red:</b> you don’t all agree. Hold the other price, or wait for them.';
+      else if(placed.length===3)line.innerHTML='Three greens. Your sign goes up.';
+    }
+    if(!T.locked&&placed.length===3&&!split){T.locked=placed[0];lock(placed[0]);}
+  };
+  const lock=p=>{
+    paint();
+    tLater(500,()=>splash(me,p,LBL[me]+' '+station[1]+' · Tutorial',false));
+    tLater(2300,()=>splash(me,p,LBL[me]+' '+station[1]+' · Tutorial',true));
+    tLater(3900,()=>{unsplash();result(p);});
+  };
+  const result=p=>{
+    const theirs=T.theirs;
+    flipSign(me==='a'?'b':'a',theirs);
+    const pa=me==='a'?p:theirs,pb=me==='a'?theirs:p;const c=carSplit(pa,pb,w);
+    const money=profit(p,theirs,w);
+    T.rows[w-1]={w,mine:p,theirs,p:money};T.total+=money;
+    tLater(700,()=>{setCounts(c[0],c[1]);
+      const rec=document.getElementById('trec');if(rec)rec.outerHTML='<div id="trec">'+recordHTML([1,2,3,4,5,6].map(x=>T.rows[x-1]||{w:x,mine:'',theirs:'',p:null}),0)+'</div>';
+      document.querySelector('.top .tot').innerHTML='<small>SO FAR</small>£'+T.total+'k';
+      const line=document.getElementById('tline');
+      const said=theirs===p?(p==='1.50'?'They held too. Forty cars each: <b>£'+money+'k</b>.':'They cut too. Forty-five cars each at the lower price: <b>£'+money+'k</b>.')
+        :(p==='1.50'?'They cut. Ninety cars went to them: <b>£'+money+'k</b> for you.':'They held. Ninety cars came to you: <b>£'+money+'k</b>.');
+      line.innerHTML=said+(dbl?' Double week.':'');
+      const next=document.createElement('button');next.type='button';next.className='big';next.textContent=w<3?'Week '+(w+1):'I’m ready';
+      next.addEventListener('click',()=>{if(w<3){T.week=w+1;tutWeek();}else{try{localStorage.setItem(SK+'tut','1');}catch(_){}render(true);}});
+      line.insertAdjacentElement('afterend',next);
+    });
+  };
+  const prices=(first,theirs,script)=>{
+    T.theirs=theirs;
+    app.innerHTML=top()+junctionSVG(me)+'<div class="line" id="tline">'+first+'</div>'+tilesHTML(me)+'<div id="trec">'+recordHTML(rows,w)+'</div>';
+    wireHold(app,p=>{const fresh=!T.mine;T.mine=p;paint();if(fresh)script(p);else paint();});
+    paint();
+  };
+  if(w===1)prices('Week 1. <b>Hold a price</b> to commit to it. Your team will follow.','1.50',p=>{tLater(1100,()=>{T.mates[0]=p;paint();});tLater(2300,()=>{T.mates[1]=p;paint();});});
+  else if(w===2)prices('Week 2. Your record and money are on the screen. Hold a price.','1.40',p=>{
+    const other=p==='1.50'?'1.40':'1.50';
+    tLater(1000,()=>{T.mates[0]=p;paint();});
+    tLater(2200,()=>{T.mates[1]=other;paint();});
+    tLater(6500,()=>{T.mates[1]=T.mine;paint();});
+  });
+  else{
+    /* week 3: the meeting first, then the double week */
+    app.innerHTML=top()+'<div class="line" id="tline">Week 3 pays double. Do you want to meet the other station?</div>'+
+      '<div class="two"><button type="button" class="big" id="tY">Yes</button><button type="button" class="big quiet" id="tN">No</button></div><div id="twho"></div>';
+    const go=()=>prices('Week 3. Hold a price.','1.50',p=>{tLater(1000,()=>{T.mates[0]=p;paint();});tLater(2000,()=>{T.mates[1]=p;paint();});});
+    document.getElementById('tN').addEventListener('click',()=>{go();});
+    document.getElementById('tY').addEventListener('click',()=>{
+      document.getElementById('tY').classList.add('on');
+      const who=document.getElementById('twho');
+      who.innerHTML='<div class="line" style="margin:14px 0 10px">Who goes?</div><div class="names">'+members.map(x=>'<button type="button" class="big quiet" data-n="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>';
+      who.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{
+        app.innerHTML=top()+'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION 3</b><span class="st" style="color:var(--ink)">'+(norm(b.dataset.n)===norm(name)?'You go':esc(b.dataset.n)+' goes')+'</span></div>'+
+          '<div class="line" id="tline">Back from the meeting. What did you agree?</div><div class="three"><button type="button" class="big quiet" data-ag="1.50">£1.50</button><button type="button" class="big quiet" data-ag="1.40">£1.40</button><button type="button" class="big quiet" data-ag="none">Nothing</button></div>';
+        app.querySelectorAll('[data-ag]').forEach(x=>x.addEventListener('click',()=>{x.classList.add('on');tLater(600,go);}));
+      }));
+    });
+  }
 }
 
 /* ---------- polling ---------- */
@@ -820,14 +562,13 @@ let pickedAt=0;
 function tick(){
   Promise.all([answers(ROOM.teams),answers(ROOM.prices),answers(ROOM.huddle),answers(ROOM.meet)]).then(([t,p,h,m])=>{
     parse(t,p,h,m);
-    /* the facilitator can put a name on a team, or move it, from the desk; the phone follows */
     const c=name?G.claim[norm(name)]:'';
     if(c&&c!==station&&Date.now()-pickedAt>12000){station=c;try{localStorage.setItem(SK+'station',station);}catch(_){}parse(t,p,h,m);render(true);return;}
     render();
   }).catch(()=>{});
 }
 setInterval(tick,2500);
-render();setTimeout(tick,0);   /* after the demo block below has been declared */
+render();setTimeout(tick,0);
 
 /* ---------- the theme ---------- */
 (function(){
@@ -840,34 +581,31 @@ render();setTimeout(tick,0);   /* after the demo block below has been declared *
 })();
 
 /* ---------- demo: the deck's moves, driven from a bar at the foot ----------
-   ?demo=1 keeps everything on this phone. The rival team is Buco's 3 (or
-   Aura 3), two invented teammates lean and then lock (Tom holds out for a
-   while in week 2, so the lock rule can be felt), the rival holds early
-   and cuts late, and every press of the bar is one move the deck would
-   make. */
+   ?demo=1 keeps everything on this phone: two invented teammates commit
+   behind you (one holds out a while in week 2), the rival team holds
+   early and cuts late, and every press of the bar is one move the deck
+   would make. */
 const demoRoom={};
 function demoAnswers(room){return (demoRoom[room]||[]).slice();}
 function demoSay(room,line){(demoRoom[room]=demoRoom[room]||[]).push(line);}
 if(DEMO){
   document.body.classList.add('demo-on');
   const bar=document.createElement('div');bar.className='demo';
-  bar.innerHTML='<span><b>DEMO</b> <span class="dl" id="dl">no network, the deck’s next move is on the right</span></span><button type="button" id="dnext">Start the game</button>';
+  bar.innerHTML='<span><b>DEMO</b> <span class="dl" id="dl">no network; the deck’s next move is on the right</span></span><button type="button" id="dnext">Start the game</button>';
   document.body.appendChild(bar);
-  const mates=['Priya K','Tom W'];
   let step=0;
   const rv=()=>G.pair[station]||(station[0]==='a'?'b3':'a3');
   const plan=()=>{
-    const s=[];
-    const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
-    s.push({l:'Start the game',f:()=>{mates.forEach(m=>demoSay(ROOM.teams,me+'|'+m));demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');}});
+    const s=[];const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
+    s.push({l:'Start the game',f:()=>{MATES.forEach(m=>demoSay(ROOM.teams,me+'|'+m));demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');}});
     for(let w=1;w<=6;w++){
-      s.push({l:'Read the week\u2019s paper, week '+w,f:()=>{if(w===5)demoSay(ROOM.prices,'::shock|on');demoSay(ROOM.prices,'::paper|'+w);}});
+      if(w===5)s.push({l:'The Junction Gazette',f:()=>{demoSay(ROOM.prices,'::shock|on');}});
       if((G.shock?[3,5]:[3,6]).includes(w)){
-        s.push({l:'Offer a meeting before week '+w,f:()=>{demoSay(ROOM.prices,'::meet|'+w);setTimeout(()=>{demoSay(ROOM.meet,rv()+'|'+w+'|ask|'+(Math.random()<.8?'y':'n'));},1500);}});
+        s.push({l:'Offer a meeting before week '+w,f:()=>{demoSay(ROOM.prices,'::meet|'+w);setTimeout(()=>{demoSay(ROOM.meet,rv()+'|'+w+'|ask|'+(Math.random()<.8?'y|Sam O':'n'));},1500);}});
         s.push({l:'Send the reps',f:()=>{demoSay(ROOM.prices,'::reps|'+w);}});
       }
       s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
-      s.push({l:'Signs up, week '+w,f:()=>{
+      s.push({l:'Reveal junction, week '+w,f:()=>{
         const rp=w>=5?'1.40':(w===3?(Math.random()<.5?'1.40':'1.50'):'1.50');
         demoSay(ROOM.prices,rv()+'|'+w+'|'+rp);
         demoSay(ROOM.prices,'::shown|'+w+'|'+(station[0]==='a'?station:rv()));demoSay(ROOM.prices,'::reveal|'+w);}});
@@ -877,18 +615,13 @@ if(DEMO){
   const btn=document.getElementById('dnext'), dl=document.getElementById('dl');
   btn.addEventListener('click',()=>{
     const s=plan();if(step>=s.length){btn.disabled=true;return;}
-    s[step].f();step++;
-    tick();
+    s[step].f();step++;tick();
     const n=plan()[step];btn.textContent=n?n.l:'Done';dl.textContent=s[step-1].l;
   });
-  /* teammates commit behind you (Tom holds out in week 2) */
   setInterval(()=>{
     const w=G.opened;if(!station||!w||G.myRev>=w)return;
-    const k=station+'|'+w;const locks=G.lock[k]||{};
-    const my=locks[norm(name)];
-    mates.forEach((m,i)=>{
-      if(my&&!locks[norm(m)]&&Math.random()<(w===2&&i===1?.08:.45))demoSay(ROOM.huddle,k+'|lock|'+m+'|'+my.price);
-    });
+    const k=station+'|'+w;const locks=G.lock[k]||{};const my=locks[norm(name)];
+    MATES.forEach((m,i)=>{if(my&&(!locks[norm(m)]||locks[norm(m)].price!==my.price)&&Math.random()<(w===2&&i===1?.12:.5))demoSay(ROOM.huddle,k+'|lock|'+m+'|'+my.price);});
   },2200);
 }
 </script>

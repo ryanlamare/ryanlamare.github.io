@@ -18,7 +18,7 @@
      node trial/m4.js --room trial undo a2 --who 2
      node trial/m4.js --room trial split a2            two commit £1.50, one £1.40, and eight seconds later the odd one comes round
      node trial/m4.js --room trial ask a1 y            the team asks (or n: does not ask) for the meeting the deck has offered
-     node trial/m4.js --room trial note a1 "Hold at 1.50, both weeks"   the rep's private note
+     node trial/m4.js --room trial agree a1 1.50                the rep's one tap: 1.50, 1.40 or none (--who 2 names another seat)
      node trial/m4.js --room trial pds 6               six groups' dilemmas into m4-pds-trial
      node trial/m4.js --room trial routes              every group answers the way out (once the deck has opened it)
      node trial/m4.js --room trial vote 8 3 4 5 3 2    Axelrod votes; NOTE this poll has no room suffix, so it is the REAL m4-axelrod (reset it from Poll Desk after)
@@ -179,12 +179,16 @@ cmd.split = async (team) => {
 };
 cmd.ask = async (team, yn) => {
   const G = await read(); if (!G.meetOpen) { console.error('The deck has not offered a meeting (::meet). Press Offer meetings first.'); process.exit(1); }
-  await say(ROOM.meet, team + '|' + G.meetOpen + '|ask|' + (yn === 'n' ? 'n' : 'y'), seatVoter(team, 1));
+  /* yes carries the rep's name (seat 1 unless --who n) */
+  const who = +(opt.who || 1);
+  await say(ROOM.meet, team + '|' + G.meetOpen + '|ask|' + (yn === 'n' ? 'n' : 'y|' + seatName(team, who)), seatVoter(team, 1));
 };
-cmd.note = async (team, ...text) => {
+cmd.agree = async (team, what) => {
   const G = await read(); const w = G.meetOpen || 3;
-  await say(ROOM.meet, team + '|' + w + '|agreed|' + seatName(team, 1) + '|' + text.join(' ').replace(/[|‖]/g, '/'), seatVoter(team, 1));
+  const v = /^1\.[45]0$/.test(what) ? what : 'none';
+  await say(ROOM.meet, team + '|' + w + '|agreed|' + seatName(team, +(opt.who || 1)) + '|' + v, seatVoter(team, 1));
 };
+cmd.note = cmd.agree;
 const DILEMMAS = [
   ['Our sales team', 'The rival bidder', 'Quote a sensible margin', 'Undercut to win the tender at any price', 'u'],
   ['Our department', 'The other department', 'Share the engineers as the plan says', 'Book them for our project first', 'k'],
