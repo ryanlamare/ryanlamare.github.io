@@ -20,11 +20,12 @@
    rest drive past. Those are the real numbers behind the payoffs, so the
    cars the room watches pull in are the money.
 
-   Locking (Ryan's rule, 16 Sep): everyone on the team locks a price by
+   Locking (Ryan's rule, 16 Sep): everyone on the team proposes a price by
    pressing and holding, and the sign goes up only when all of them have
-   locked the same one. A team that has not agreed when the signs go up
-   stays at £1.50, the standard price, so a holdout has real weight and a
-   dead phone can never stall the room.
+   proposed the same one. There is no clock and no default price (Ryan,
+   16 Sep: a "£1.50 unless you agree" rule would anchor the whole game at
+   holding). The deck waits for every sign; a dead phone is dropped from
+   its team by the facilitator, and the deck keeps a hidden override.
 
    Wire (four gt-poll rooms; ?room=<x> suffixes all of them for a
    rehearsal, ?demo=1 runs the whole thing locally with no network):
@@ -733,7 +734,7 @@ function paintWeek(){
     ll.classList.toggle('up',!!up);
     if(up)ll.innerHTML='<b>Your sign is up: \u00a3'+up+'.</b> Waiting for Monday morning.';
     else if(prices.size>1)ll.innerHTML='<b>Your proposals don\u2019t agree.</b> The sign goes up when everyone has proposed the same price. Hold the other price to switch.';
-    else if(nLock===0)ll.innerHTML='Nobody on '+LBL[station[0]]+' '+station[1]+' has proposed yet. If you haven\u2019t all agreed by Monday morning, the sign stays at \u00a31.50.';
+    else if(nLock===0)ll.innerHTML='Nobody on '+LBL[station[0]]+' '+station[1]+' has proposed yet.';
     else ll.innerHTML='<b>'+nLock+' of '+mem.length+' proposed'+(prices.size?' \u00a3'+[...prices][0]:'')+'.</b> Waiting for '+mem.filter(n=>!locks[norm(n)]).map(n=>norm(n)===norm(name)?'you':esc(n)).join(' and ')+'.';
   }
   const shown=up||(myLock?myLock.price:(myLean?myLean.price:''));
@@ -764,7 +765,6 @@ function renderBetween(same){
   app.innerHTML=weekHead(w)+junctionSVG(station[0])+
     (p===null?'<div class="card soft"><p>The board at the front has this week.</p></div>':
     '<div class="result"><div class="amt '+(p>=12?(p>12?'good':''):'bad')+'"><small>\u00a3</small><span id="amt">0</span><small>k</small></div><div class="verdict">'+verdict(mine.price,theirs.price,w)+'</div>'+
-    (mine.def?'<div class="note">Your team hadn\u2019t all agreed, so your sign stayed at \u00a31.50.</div>':'')+
     '<div class="run">Six-week total so far <b>\u00a3'+L.total+'k</b></div></div>')+
     '<div class="waitcard"><span class="pulse"></span>'+(w<WEEKS?'Waiting for week '+(w+1)+' to open.':'That was the last week.')+'</div>'+
     '<div class="lbl">Your ledger</div>'+ledgerHTML(0);
