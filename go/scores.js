@@ -680,11 +680,11 @@ const GT_SCORES = (() => {
     const pts = {};
     const matches = Object.keys(pair).length ? Object.keys(pair).filter(k => k[0] === 'a').map(a => [a, pair[a]]) : [1, 2, 3, 4, 5].map(i => ['a' + i, 'b' + i]);
     for (const [a, b] of matches) {
+      /* each team scores on its OWN six-week revenue (Ryan, 16 Sep 2026: the temptation has to be real; pair scoring softened it) */
       const ta = total(a), tb = total(b);
       if (ta === null || tb === null) continue;
-      const floor = Math.min(ta, tb);
-      let p = 0; for (const [at, v] of ev.bands) { if (floor >= at) { p = v; break; } }
-      pts[a] = p; pts[b] = p;
+      const band = x => { let p = 0; for (const [at, v] of ev.bands) { if (x >= at) { p = v; break; } } return p; };
+      pts[a] = band(ta); pts[b] = band(tb);
     }
     const td = await j('/p/' + ev.teams + '/answers');
     const member = new Map(); /* name -> station, latest wins */
