@@ -1529,7 +1529,7 @@ function milestones(a,b){
   meetWeeks().forEach(w=>{
     if(w>W)return;
     const met=!!(G.ask[a+'|'+w]&&G.ask[b+'|'+w]);
-    const said=t=>{const n=G.agreed[t+'|'+w];return !n?'said nothing':(/^1\.[45]0$/.test(n.text)?'said £'+n.text:(n.text==='none'?'said nothing was agreed':'said “'+esc(n.text)+'”'));};
+    const said=t=>{const n=G.agreed[t+'|'+w];return !n?'gave no answer':(/^1\.[45]0$/.test(n.text)?'said £'+n.text:(n.text==='none'?'said nothing was agreed':'said “'+esc(n.text)+'”'));};
     const did=t=>(t===a?sa(w):sb(w))==='1.50'?'held':'cut';
     if(!met){const asked=[G.ask[a+'|'+w]?A:'',G.ask[b+'|'+w]?B:''].filter(Boolean);
       out.push('No meeting before week '+w+(asked.length===1?': only '+asked[0]+' asked.':'.'));}
@@ -1563,9 +1563,9 @@ function paintReplay(){
     let head='<div class="rl"></div>',rowA='<div class="rl a">'+LBL.a+' '+a[1]+'</div>',rowB='<div class="rl b">'+LBL.b+' '+b[1]+'</div>';
     cols.forEach(c=>{
       if(c.m){const w=c.m,met=!!(G.ask[a+'|'+w]&&G.ask[b+'|'+w]);
-        const said=t=>{const n=G.agreed[t+'|'+w];return !n?'':(/^1\.[45]0$/.test(n.text)?'£'+n.text:(n.text==='none'?'nothing':'…'));};
+        const said=t=>{const n=G.agreed[t+'|'+w];return !n?'no answer':(/^1\.[45]0$/.test(n.text)?'said £'+n.text:(n.text==='none'?'said nothing agreed':'said …'));};
         head+='<div class="mh">'+(w<=W||G.meetOpen>=w?(met?'MET':'NO MEETING'):'')+'</div>';
-        rowA+='<div class="mc'+(met?' on':'')+'">'+(met?'said '+said(a):'')+'</div>';rowB+='<div class="mc'+(met?' on':'')+'">'+(met?'said '+said(b):'')+'</div>';return;}
+        rowA+='<div class="mc'+(met?' on':'')+'">'+(met?said(a):'')+'</div>';rowB+='<div class="mc'+(met?' on':'')+'">'+(met?said(b):'')+'</div>';return;}
       const w=c.w, seen=w<=W;
       head+='<div class="wh">Week '+w+(G.shock&&w>=5?'<em class="s">!</em>':(isDouble(w)?'<em>×2</em>':''))+'</div>';
       const sa=seen?signUp(a,w).price:'',sb=seen?signUp(b,w).price:'';
