@@ -76,6 +76,8 @@ button.big.quiet{background:var(--card);color:var(--ink);border-color:var(--ink)
 .me .who{font-weight:700;font-size:15px}
 .me .who b{color:var(--red)}
 .me .who b.a{color:var(--teal)} .me .who b.b{color:var(--terracotta)}
+.jx{color:var(--maroon)}
+.committed .cl .jx{color:var(--paper);background:var(--maroon);padding:2px 10px;margin-left:4px}
 .me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
   background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
 .waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
@@ -329,7 +331,7 @@ function carSplit(pa,pb,week){
 }
 const rival=()=>G.pair[station]||'';
 const junction=()=>{const a=station[0]==='a'?station:G.pair[station];const P=Object.keys(G.pair).filter(k=>k[0]==='a').sort();const i=P.indexOf(a);return i<0?0:i+1;};
-const teamLabel=()=>LBL[station[0]]+' '+station[1]+(junction()?' \u00b7 Junction '+junction():'');
+const teamLabel=()=>LBL[station[0]]+' '+station[1]+(junction()?' \u00b7 <span class="jx">Junction '+junction()+'</span>':'');
 const isDouble=w=>!G.shock||w<5?(w===3||w===6):false;
 function myMembers(){
   const m=(G.members[station]||[]).slice();
@@ -488,7 +490,7 @@ function teamLines(members,leans,props,me){
 }
 function committedOverlay(me,price,label){
   const o=document.createElement('div');o.className='committed '+me;
-  o.innerHTML='<div class="cl">'+esc(label||teamLabel())+'</div><div class="ck">Price committed</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
+  o.innerHTML='<div class="cl">'+(label?esc(label):teamLabel())+'</div><div class="ck">Price committed</div><div class="cp"><small>\u00a3</small>'+price+'</div><div class="cs">Your sign is up. Waiting for Monday morning.</div>';
   document.body.appendChild(o);
   const off=()=>{o.classList.add('off');setTimeout(()=>o.remove(),450);};
   o.addEventListener('click',off);setTimeout(off,2600);

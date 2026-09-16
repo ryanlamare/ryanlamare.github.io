@@ -73,7 +73,7 @@
 /* the reveal stage */
 .stagewrap{display:flex;gap:24px;flex:1;min-height:0;align-items:stretch}
 .rstage{position:relative;flex:none;width:640px;display:flex;flex-direction:column;gap:8px}
-.stagehead{font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.stagehead{font-weight:900;font-family:var(--display);font-size:26px;letter-spacing:.02em;text-transform:uppercase;color:var(--paper);background:var(--maroon);display:inline-block;padding:6px 16px 4px;align-self:flex-start}
 .stagesvg{display:block;width:640px;height:auto;border:2.5px solid var(--ink)}
 .stamps{position:absolute;left:0;right:0;top:266px;display:flex;justify-content:space-between;padding:0 36px;pointer-events:none}
 .stamp{font-family:var(--display);font-weight:900;font-size:64px;line-height:1;color:var(--ink);opacity:0;transform:scale(1.8) rotate(-6deg)}
@@ -82,7 +82,7 @@
 .jlist{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:flex-start;padding-top:24px}
 .jrow{display:grid;grid-template-columns:110px 1fr 1fr;align-items:center;gap:10px;opacity:.35}
 .jrow.on{opacity:1}
-.jrow .jn{font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.jrow .jn{font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--maroon)}
 .jrow .js{background:var(--card);color:var(--ink);text-align:center;font-family:var(--display);font-weight:900;font-size:22px;line-height:1;padding:9px 6px 7px}
 .jrow .js small{display:block;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.06em;margin-top:3px;color:var(--muted)}
 .jrow .js.a.p150,.jrow .js.b.p150{background:var(--green);color:var(--paper)} .jrow .js.a.p140,.jrow .js.b.p140{background:var(--red);color:var(--paper)}
@@ -91,6 +91,9 @@
 .paper .box.wx{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
 .paper .box.wx .bt{align-self:flex-start}
 .paper .box .wxi{width:56px;height:56px;display:block}
+.paper .adstrip{margin-top:14px;border:2px dashed var(--muted);padding:10px 14px;font-weight:500;font-size:15px;color:var(--muted);display:flex;gap:12px;align-items:baseline}
+.paper .adstrip .bt{font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.paper .adstrip b{font-family:var(--display);font-weight:900;font-size:18px;color:var(--ink)}
 .paper .box.ad{border-style:dashed;border-color:var(--muted);color:var(--muted)}
 .paper .box.ad .bt{color:var(--muted)}
 .paper .box.ad .adn{font-family:var(--display);font-weight:900;font-size:19px;color:var(--ink);margin-bottom:2px}
@@ -1217,8 +1220,8 @@ function showPaper(w,on){
   let side='';
   if(E.notice)side+='<div class="box notice"><div class="bt">Notice to both stations</div>'+E.notice.map(n=>'<p>'+esc(n)+'</p>').join('')+'</div>';
   side+='<div class="box wx"><div class="bt">Weather</div>'+weatherIcon(E.weather.icon)+'<p>'+esc(E.weather.word)+'</p></div>';
-  side+='<div class="box ad"><div class="bt">Advertisement</div><p class="adn">'+esc(E.ad.name)+'</p><p>'+esc(E.ad.line)+'</p></div>';
   document.getElementById('pside').innerHTML=side;
+  document.getElementById('pbody').innerHTML+='<div class="adstrip"><span class="bt">Advertisement</span><b>'+esc(E.ad.name)+'</b> '+esc(E.ad.line)+'</div>';
   const ctl=document.getElementById('pctl');
   ctl.innerHTML=(w===5?'<button type="button" id="pnoshock">'+(G.shock?'Call the app off (no rule change)':'Rule change is off · put it back')+'</button> ':'')+'<button type="button" id="pclose">Close</button>';
   document.getElementById('pclose').addEventListener('click',()=>showPaper(w,false));
@@ -1386,7 +1389,7 @@ function paintReplay(){
       const na=G.agreed[a+'|'+w],nb=G.agreed[b+'|'+w];
       return '<div class="note a"><div class="nw">'+LBL.a+' '+a[1]+' · before week '+w+'</div><div class="nt'+(na?'':' none')+'">'+(na?'“'+esc(na.text)+'”':'nothing written down')+'</div></div>'+
              '<div class="note b"><div class="nw">'+LBL.b+' '+b[1]+' · before week '+w+'</div><div class="nt'+(nb?'':' none')+'">'+(nb?'“'+esc(nb.text)+'”':'nothing written down')+'</div></div>';}).join('');
-    h+='<div class="rp" data-step="'+(i+1)+'" data-stepcall="pwPanel"><div class="rhead"><div class="mn">Match '+(i+1)+' of '+P.length+'</div><div class="mt"><b class="a">'+LBL.a+' '+a[1]+'</b> and <b class="b">'+LBL.b+' '+b[1]+'</b></div></div>'+
+    h+='<div class="rp" data-step="'+(i+1)+'" data-stepcall="pwPanel"><div class="rhead"><div class="mn" style="color:var(--maroon)">Junction '+(i+1)+' of '+P.length+'</div><div class="mt"><b class="a">'+LBL.a+' '+a[1]+'</b> and <b class="b">'+LBL.b+' '+b[1]+'</b></div></div>'+
       '<div class="strip">'+strip+'</div>'+(notes?'<div class="notes">'+notes+'</div>':'')+
       '<div class="tots"><div class="tot a"><div class="tv">£'+ta+'k</div><div class="tl">'+LBL.a+' '+a[1]+'</div></div><div class="tot b"><div class="tv">£'+tb+'k</div><div class="tl">'+LBL.b+' '+b[1]+'</div></div></div></div>';
   });
