@@ -93,6 +93,9 @@
     [-12,-4,4,12].forEach(x=>mk('line',{x1:x,y1:0,x2:x,y2:-22,stroke:INK,'stroke-width':2.5},t));
     /* an olive tree */
     mk('line',{x1:1200,y1:132,x2:1200,y2:116,stroke:INK,'stroke-width':2.5},g);mk('circle',{cx:1200,cy:108,r:10,fill:GREEN,stroke:INK,'stroke-width':1.5},g);
+    /* jetties out to the near berths */
+    [[1076,58,1052,60],[1084,102,1062,104],[1082,142,1066,146],[1100,170,1092,184],[1138,176,1136,202],[1182,184,1184,208],[1222,172,1228,192]].forEach(j=>{
+      mk('line',{x1:j[0],y1:j[1],x2:j[2],y2:j[3],stroke:INK,'stroke-width':5,'stroke-linecap':'round'},g);mk('line',{x1:j[0],y1:j[1],x2:j[2],y2:j[3],stroke:SIENNA,'stroke-width':2.4,'stroke-linecap':'round'},g);});
     const tx=mk('text',{x:1160,y:156,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':13,'letter-spacing':'.3em',fill:INK},g);tx.textContent='ITHACA';
   })();
 
@@ -232,7 +235,10 @@
   function saveHome(){try{sessionStorage.setItem(HOMEKEY,JSON.stringify(home));}catch(_){}}
   function ringOf(){const n=[0,0,0];ships.forEach(b=>{if(b.state==='enter'||b.state==='ring')n[b.ring]++;});
     let best=0,bv=1e9;for(let i=0;i<3;i++){const v=n[i]/CAP[i];if(v<bv-1e-9){bv=v;best=i;}}return best;}
-  function anchorSpot(i){const row=Math.floor(i/7)%2, col=i%7;return {x:1028-col*64-row*30,y:row?98:152};}
+  /* home: ships dock round Ithaca's shore, the nearer berths first, then a second row farther out */
+  const BERTHS=[[1026,70],[1036,112],[1040,154],[1074,194],[1124,216],[1178,224],[1228,208],
+                [974,62],[982,106],[986,152],[1008,198],[1050,238],[1102,260],[1156,268],[1210,260]];
+  function anchorSpot(i){const b=BERTHS[i%BERTHS.length], lap=Math.floor(i/BERTHS.length);return {x:b[0]-lap*46,y:b[1]+lap*34};}
   function place(b){b.x=CX+Math.cos(b.th)*RX*b.rho;b.y=CY+Math.sin(b.th)*RY*b.rho;
     b.s=.74+.30*(b.y-(CY-RY))/(2*RY);
     const sn=-Math.sin(b.th);if(!b.dir)b.dir=sn<0?-1:1;if(sn>.10)b.dir=1;else if(sn<-.10)b.dir=-1;}
@@ -247,7 +253,7 @@
   function dock(b,now,instant){
     const at=anchorSpot(home.indexOf(b.v));
     if(!b.g)b.g=shipNode(b,harbourG);else harbourG.appendChild(b.g);
-    if(instant){b.x=at.x;b.y=at.y;b.s=.56;b.face=1;b.state='anchored';b.ph=(b.look.seed%628)/100;put(b,now);ships.set(b.v,b);return;}
+    if(instant){b.x=at.x;b.y=at.y;b.s=.5;b.face=1;b.state='anchored';b.ph=(b.look.seed%628)/100;put(b,now);ships.set(b.v,b);return;}
     b.state='home';b.t0=now;b.from={x:b.x,y:b.y,s:b.s};b.to=at;
   }
   function counts(){let sea=0,hm=0;ships.forEach(b=>{b.state==='home'||b.state==='anchored'?hm++:sea++;});sea+=pending.length;
@@ -264,7 +270,7 @@
       if(b.state==='enter'){const k=Math.min(1,(now-b.t0)/7000), e=1-Math.pow(1-k,3);b.rho=2.1+(b.rt-2.1)*e;if(k>=1)b.state='ring';}
       if(b.state==='enter'||b.state==='ring'){b.th+=dt*0.06*(b.state==='enter'?1.5:1);sailing.push(b);}
       if(b.state==='home'){const k=Math.min(1,(now-b.t0)/6500), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
-        b.x=b.from.x+(b.to.x-b.from.x)*e;b.y=b.from.y+(b.to.y-b.from.y)*e-Math.sin(e*Math.PI)*30;b.s=b.from.s+(.56-b.from.s)*e;
+        b.x=b.from.x+(b.to.x-b.from.x)*e;b.y=b.from.y+(b.to.y-b.from.y)*e-Math.sin(e*Math.PI)*30;b.s=b.from.s+(.5-b.from.s)*e;
         b.face=b.to.x>=b.from.x?1:-1;if(k>=1){b.state='anchored';b.face=1;}}
     });
     /* ships keep their distance: a full berth on their own ring, half of one from the rings either side */
