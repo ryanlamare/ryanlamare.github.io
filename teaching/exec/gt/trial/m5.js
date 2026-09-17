@@ -16,7 +16,7 @@
      node trial/m5.js --room trial invest 20 --rate 0.95 …with 95% investing (default 0.8 in round 1, 0.95 in round 2); --round 2 forces the round
      node trial/m5.js --room trial votes bos 20          twenty votes on Whose system? for the open round, sides alternating; by default each side backs its own system in round 1 and most land on the first side's in round 2
      node trial/m5.js --room trial votes chicken 20 --a 0.3    …30% of each side on the first option (give ground); --ra / --ta set one side; by default most hold firm in round 1 and the second side gives in round 2
-     node trial/m5.js --room trial games 22              twenty-two windows onto the aircraft (invented situations)
+     node trial/m5.js --room trial games 22              twenty-two windows onto the aircraft (invented situations; --from 1 skips the first, the hiring case)
      node trial/m5.js --room trial state                 what each room holds, as the deck reads it
      node trial/m5.js --room trial deck open             post the round-two marker yourself (solo test without the deck); --game bos|chicken for the vote rooms
      node trial/m5.js --room trial deck reveal 1         post the investment reveal marker, so phones play the outcome
@@ -96,7 +96,7 @@ const SITS = [
 ];
 async function games(n) {
   for (let i = 0; i < n; i++) {
-    const e = SITS[i % SITS.length], v = voterOf('gam', i);
+    const e = SITS[(i + (+opt.from || 0)) % SITS.length], v = voterOf('gam', i); /* --from 1 skips the hiring case, which is Ryan's own example */
     await say(ROOM.games, 'a‖' + NAMES[i] + '‖' + e[0] + '‖' + e[1], v);
     await say(ROOM.games, 'b‖' + e[2] + '‖' + e[3] + '‖' + e[4], v);
     await sleep(GAP);
