@@ -108,10 +108,11 @@ const GT_SCORES = (() => {
             { id: 'm5-k10', type: 'c' }, { id: 'm5-k11', type: 't' }, { id: 'm5-k12', type: 'c' },
             { id: 'm5-k13', type: 'c' }, { id: 'm5-k14', type: 'c' }, { id: 'm5-k15', type: 'c' }, { id: 'm5-k16', type: 'c' },
           ] },
-        { key: 'twothirds', label: 'Two-thirds', kind: 'twothirds', room: 'm5-twothirds', winPoints: 5 },
-        /* the investment game (m5-invest) is deliberately unscored: it is a
-           whole-room trust game, and the module's ten points are already
-           spoken for by its two skill games */
+        /* guess two-thirds (m5-twothirds, 5 points to the winner) was cut on
+           17 Sep 2026 with its slides (m5/outtakes.html); the quiz alone
+           scores module 5. The investment game (m5-invest), the vote games
+           and the closing exercise (m5-games) are unscored: played for their
+           lessons, not for points */
       ],
     },
     {

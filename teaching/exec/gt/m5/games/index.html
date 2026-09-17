@@ -1,0 +1,168 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>A coordination game from your world</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 5's closing exercise: one phone each, one real coordination
+   problem from their world. Five answers: the players, the situation, the
+   options, which game (stag hunt, battle of the sexes, or chicken), and
+   the focal point. One LOCK IT IN. The deck lights one aircraft window
+   per phone, tinted by the game, and shows the five answers under the
+   aircraft when Ryan walks to that window.
+
+   Wire: two lines into room m5-games, "k‖…" (the Worker caps a line at
+   200 characters and a phone at 15 lines a room, so two lines a send
+   leaves room for a start-over):
+     a‖name‖players‖situation
+     b‖options‖s-or-b-or-c‖focal point
+   The deck groups the room's lines by phone; the latest a and b per
+   phone win, so a re-send corrects rather than duplicates. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button,.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0}
+.choices{display:flex;flex-direction:column;gap:11px}
+button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;cursor:pointer}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1 1 0;width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);padding:12px 14px;outline:none;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:0 18px;cursor:pointer}
+/* the cards */
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.ply{--side:var(--terracotta)} .card.sit{--side:var(--red)} .card.opt{--side:var(--teal)} .card.game{--side:var(--maroon)} .card.fp{--side:var(--ink)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input[type=text]:focus{border-bottom-color:var(--side)}
+.card input:disabled{opacity:.45}
+.card ::placeholder{color:var(--muted);font-weight:500}
+.chips{display:flex;flex-direction:column;gap:8px}
+button.opt{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:15px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:11px 14px;cursor:pointer}
+button.opt.mine{background:var(--side,var(--red));border-color:var(--side,var(--red));color:var(--paper)}
+button.opt[data-k=s].mine{background:var(--teal);border-color:var(--teal)}
+button.opt[data-k=b].mine{background:var(--terracotta);border-color:var(--terracotta)}
+button.opt[data-k=c].mine{background:var(--red);border-color:var(--red)}
+button.opt:disabled{opacity:.45;cursor:default}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+/* locked: the window, lit in the game's colour */
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.bigcard .win{width:44px;height:58px;border-radius:12px;border:3px solid var(--ink)}
+.bigcard .win.s{background:var(--teal)} .bigcard .win.b{background:var(--terracotta)} .bigcard .win.c{background:var(--red)}
+.bigcard .head{font-weight:700;font-size:22px}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>MODULE 5 · YOUR GAME</div>
+  <h1 id="q">A coordination game from your world</h1>
+  <div class="hint" id="hint"></div>
+  <div id="app"></div>
+  <div class="status" id="status" aria-live="polite"></div>
+</div>
+<script src="/go/names.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m5-games', LOCKKEY='gt-cgame-locked';
+const PLYMAX=60, SITMAX=70, OPTMAX=80, FPMAX=60;
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), hint=document.getElementById('hint'), st=document.getElementById('status');
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const cleanName=n=>clean(n).slice(0,30);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const GAME={s:'Stag hunt',b:'Battle of the sexes',c:'Chicken'};
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+function say(line){
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+let locked=null;
+try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
+function render(){
+  st.textContent='';app.innerHTML='';hint.textContent='';
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  q.textContent='A coordination game from your world';
+  if(locked){renderLocked();return;}
+  hint.textContent='A situation from your world where two sides had to land on the same thing.';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const c1=card('ply','THE PLAYERS','Who were the players?');const ply=input(PLYMAX,'me and the hiring committee…');c1.appendChild(ply);
+  const c2=card('sit','THE SITUATION','What was the situation?');const sit=input(SITMAX,'recruiting a candidate…');c2.appendChild(sit);
+  const c3=card('opt','THE OPTIONS','What were the options?');const opt=input(OPTMAX,'the strongest record, or the best cultural fit…');c3.appendChild(opt);
+  const c4=card('game','THE GAME','Stag hunt, battle of the sexes, or chicken?');
+  const chips=document.createElement('div');chips.className='chips';let k=null;const cb=[];
+  [['s','Stag hunt'],['b','Battle of the sexes'],['c','Chicken']].forEach(([kk,label])=>{
+    const b=document.createElement('button');b.className='opt';b.type='button';b.textContent=label;b.dataset.k=kk;
+    b.addEventListener('click',()=>{k=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));sync();});
+    chips.appendChild(b);cb.push(b);});
+  c4.appendChild(chips);
+  const c5=card('fp','THE FOCAL POINT','What was the focal point?');const fp=input(FPMAX,'where the candidate did their PhD…');c5.appendChild(fp);
+  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  const all=[ply,sit,opt,fp];
+  function sync(){lk.disabled=!(all.every(i=>clean(i.value))&&k);}
+  all.forEach(i=>i.addEventListener('input',sync));
+  lk.addEventListener('click',()=>{
+    const P=clean(ply.value),S=clean(sit.value),O=clean(opt.value),F=clean(fp.value);
+    if(!P||!S||!O||!F||!k)return;
+    lk.disabled=true;all.forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
+    say('a‖'+name+'‖'+P+'‖'+S).then(()=>say('b‖'+O+'‖'+k+'‖'+F))
+      .then(()=>{locked={name,ply:P,sit:S,opt:O,k,fp:F};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;all.forEach(i=>i.disabled=false);cb.forEach(b=>b.disabled=false);});
+  });
+  [c1,c2,c3,c4,c5].forEach(c=>app.appendChild(c));app.appendChild(lk);
+  ply.focus();
+}
+function renderLocked(){
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div class="win '+locked.k+'"></div><div class="head">Your window is on the screen</div><div class="sub"></div>';
+  big.querySelector('.sub').textContent=locked.sit+' · '+locked.ply+' · '+locked.opt+' · '+GAME[locked.k]+' · focal point: '+locked.fp+'. Look up at the screen.';
+  app.appendChild(big);
+  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your window)';
+  again.style.marginTop='14px';
+  again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
+  app.appendChild(again);
+}
+function renderName(title,done){
+  q.textContent=title;app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';inp.autocomplete='off';
+  const b=document.createElement('button');b.type='button';b.textContent='OK';
+  const go=()=>{const v=cleanName(inp.value);if(v)done(v);};
+  b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+}
+function card(side,suit,question){const c=document.createElement('div');c.className='card '+side;c.innerHTML='<div class="suit"></div><div class="pq"></div>';c.querySelector('.suit').textContent=suit;c.querySelector('.pq').textContent=question;return c;}
+function input(max,ph){const i=document.createElement('input');i.type='text';i.maxLength=max;i.placeholder=ph;i.autocomplete='off';return i;}
+function btn(label,cls){const b=document.createElement('button');b.className=cls;b.type='button';b.textContent=label;return b;}
+</script>
+</body></html>

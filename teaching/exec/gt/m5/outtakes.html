@@ -1,0 +1,486 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 5 — Outtakes</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/gt/deck.css">
+<style>
+/* Module-5 rules, copied whole from index.html so every cut slide draws itself.
+   Module-5 widgets (shared components live in deck.css). The live spine runs
+   through gt-poll: guess-two-thirds is played on slide 3 and solved from the
+   same answers at the end; the common knowledge quiz runs self-paced on
+   phones (sixteen chained polls, m5-k1..k16) against a ten-minute timer,
+   with two board slides walking the scores; the investment game is a
+   three-round repeated stag hunt (one volunteer after round one) played from game/ under each player's name;
+   the two vote games (whose system, the hub lease) run from
+   tapas/ in two rounds with one volunteer's pitch in between. Scoring (in
+   /go/scores.js) is the quiz at up to 5 points and the two-thirds game at 5
+   to the winner; the investment game and the vote games are played for
+   their lessons, not for points. Every live slide falls back to marked
+   DEMO DATA when the Worker is unreachable. */
+
+/* clip beside text, click-to-load (keeps YouTube's title off screen) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipframe.sm iframe{width:560px;height:315px}
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipframe.sm .clipcover{width:560px;height:315px}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+
+/* best-response marking, the Module-4 scheme: payoffs circled in each
+   player's colour, red box on the equilibrium cell */
+.mx .cell .pa,.mx .cell .pb{position:relative;display:inline-block}
+.mx .cell .circ::after{content:"";position:absolute;inset:-5px -10px;border:3.5px solid currentColor;border-radius:50%;pointer-events:none}
+.mkey{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
+.mkey .k{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--muted)}
+.mkey .sw{width:22px;height:22px;background:var(--card);flex:none}
+.mkey .sw.circA{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--teal)}
+.mkey .sw.circB{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--terracotta)}
+.mkey .sw.eq{box-shadow:inset 0 0 0 4px var(--red)}
+.mkey .k b{color:var(--ink);font-weight:700}
+
+/* verdict line under a poll's bars, filled in by its reveal step */
+.pollnote{position:absolute;left:96px;right:96px;bottom:58px;text-align:center;
+  font-weight:600;font-size:21px;line-height:1.35;color:var(--ink)}
+.pollnote b{color:var(--red)}
+
+/* the investment board: rows appear as names lock choices in; a round's
+   column reveals when its header is tapped, and totals count only the
+   revealed rounds */
+.board{border-collapse:collapse}
+.board th,.board td{border:2px solid var(--ink)}
+.board thead th{background:var(--ink);color:var(--paper);font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;font-size:13px;height:36px;padding:0 12px;cursor:pointer;user-select:none}
+.board thead th.name,.board thead th.tot{cursor:default}
+.board thead th.open{color:var(--red)}
+.board tbody th{background:var(--card);font-weight:700;font-size:15px;text-align:left;padding:0 14px;height:34px;white-space:nowrap}
+.board tbody td{background:var(--paper);width:96px;height:34px;text-align:center;font-weight:700;font-size:15px}
+.board tbody td.in{color:var(--teal)}
+.board tbody td.out{color:var(--muted);font-weight:500}
+.board tbody td.lose{color:var(--red)}
+.board tbody td.tot{background:var(--card);color:var(--red);font-size:16px;width:96px}
+.board.compact tbody th{height:26px;font-size:13px}
+.board.compact tbody td{height:26px;font-size:13px}
+.boards{display:flex;gap:18px;align-items:flex-start;justify-content:center}
+.boardhint{font-weight:500;font-size:15px;color:var(--muted);text-align:center;margin-top:10px}
+.boardhint b{color:var(--red)}
+
+/* quiz progress: phones that have answered the first question, and the last */
+.quizprog{display:flex;gap:26px;justify-content:center;margin-top:14px;font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.quizprog b{font-family:var(--display);font-weight:900;font-size:28px;line-height:1;color:var(--red);margin-right:8px;vertical-align:-2px}
+/* quiz countdown: sits under the QR code in the right column */
+.timerbox{position:static;right:auto;top:auto;width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  border:2.5px solid var(--ink);background:var(--paper-soft);padding:16px 20px 18px}
+.timerbox .t{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--ink)}
+.timerbox .t.low{color:var(--red)}
+.timerbox button{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.08em;background:var(--red);color:var(--paper);border:none;padding:10px 18px;cursor:pointer}
+.timerbox button:hover{background:var(--ink)}
+
+/* quiz score board: one row per question, revealed one keypress at a time */
+.krows{width:100%;max-width:1060px;display:flex;flex-direction:column;gap:11px}
+.krow{display:grid;grid-template-columns:220px 1fr 260px 74px 44px;align-items:center;gap:16px;
+  border:2px solid var(--ink);background:var(--card);padding:8px 16px;position:relative}
+.krow .ql{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--ink)}
+.krow .qa{font-weight:600;font-size:17px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.krow .qbar{height:20px;background:var(--paper);position:relative}
+.krow .qbar i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);transition:width .8s ease}
+.krow.pt .qbar i{background:var(--red)}
+.krow .qp{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);text-align:right}
+.krow .qm{font-weight:900;font-size:20px;text-align:center;color:var(--muted)}
+.krow.pt .qm{color:var(--red)}
+
+/* live poll join chrome + the write-in wall (Module-4 idioms) */
+.qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .5s}
+.faded{opacity:.06 !important;pointer-events:none}
+#ycbul,#ycqr{transition:opacity .5s}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:12px 14px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+
+/* two-thirds reveal: three big figures, then the winning number */
+.tour{display:flex;justify-content:center;gap:52px;width:100%}
+.tcell2{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;width:250px}
+.tcell2 .tv{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--ink)}
+.tcell2 .tv.red{color:var(--red)}
+.tcell2 .tl{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+
+/* focal-point convergence figure + closing staircase (both lifted from the
+   LER 565 week-4 lecture; geometry unchanged, type set in the suite's sizes) */
+.conv{display:flex;flex-direction:column;align-items:center;gap:26px}
+.stairs{display:flex;align-items:flex-end;justify-content:center;gap:40px}
+.stairs .step{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;width:220px}
+.stairs .step .pg{width:auto}
+.stairs .step .sname{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:19px;color:var(--ink)}
+.stairs .step .ssub{font-weight:500;font-size:16px;color:var(--muted);line-height:1.3;max-width:22ch}
+.stairs .step.s3 .sname{color:var(--red)}
+.stopnote{font-weight:500;font-size:22px;color:var(--muted);display:flex;align-items:center;gap:14px}
+.stopnote i{width:13px;height:13px;background:var(--red);display:inline-block;flex:none}
+.stopnote b{color:var(--red);font-weight:700}
+
+/* the module scoreboard: five rows, revealed fifth place first */
+.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 150px 150px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+
+/* pictogram tiles (the m3 idiom) and the five example tiles */
+.gtiles{position:absolute;left:96px;right:96px;top:250px;display:flex;justify-content:center;gap:52px;align-items:flex-start}
+.gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+.gtile .gl{font-weight:700;font-size:21px;color:var(--ink);line-height:1.22}
+.gtile .pg{height:110px;width:auto}
+.extiles{position:absolute;left:72px;right:72px;top:262px;display:flex;justify-content:center;gap:16px;align-items:flex-start}
+.extile{width:212px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.extile .ic{height:104px;display:flex;align-items:flex-end;justify-content:center}
+.extile .ic .pg{height:100px;width:auto}
+.extile .xl{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:17px;color:var(--ink);line-height:1.2}
+.extile .xs{font-weight:500;font-size:15.5px;color:var(--muted);line-height:1.35;max-width:24ch}
+
+/* before/after stations (the LER 565 week-4 "this week" figure) */
+.ba{display:flex;align-items:center;justify-content:center;gap:30px;flex:none;align-self:center}
+.ba .station{display:flex;flex-direction:column;align-items:center;gap:18px;width:190px;text-align:center}
+.ba .station .pg{height:130px;width:auto}
+.ba .station.then{opacity:.45}
+.ba .station .slbl{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:18px;color:var(--ink);line-height:1.2}
+.ba .station.now .slbl{color:var(--red)}
+.ba .arrow{font-size:72px;color:var(--red);line-height:1}
+
+/* story props beside the bullets: the animals, the café signs, the posters */
+.props{flex:none;width:400px;align-self:center;display:flex;flex-direction:column;gap:18px;align-items:center}
+.prop{display:flex;align-items:center;gap:22px;width:100%;border:2.5px solid var(--ink);background:var(--card);padding:12px 22px}
+.prop .pg{height:82px;width:auto;flex:none}
+.prop .pn{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:18px;color:var(--ink);line-height:1.2}
+.prop.sign{position:relative;margin-top:14px;padding:18px 22px}
+.prop.sign::before{content:"";position:absolute;left:50%;top:-16px;width:3px;height:16px;background:var(--ink);transform:translateX(-50%)}
+.posters{flex:none;width:440px;align-self:center;display:flex;justify-content:center;gap:30px}
+.prop.poster{flex-direction:column;justify-content:center;gap:16px;width:200px;height:260px;border-width:3px;text-align:center}
+.prop.poster .pg{height:74px}
+.prop.poster .pn{font-size:21px}
+
+/* number-line figures: the worked two-thirds example and the elimination ladder */
+.numline{width:100%;max-width:640px;height:auto;display:block;overflow:visible}
+.numline text{font-family:var(--sans);font-weight:700;font-size:16px;fill:var(--ink)}
+.numline text.red{fill:var(--red)}
+.numline text.sm{font-weight:600;font-size:14px;fill:var(--muted)}
+.numline .axis{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.numline .tk line{stroke:var(--ink);stroke-width:2}
+.numline .band{fill:var(--muted);opacity:.3;stroke:var(--paper);stroke-width:2}
+/* the long two-thirds solution slide runs a size down */
+ul.bullets.tight li{font-size:21px;margin-top:12px}
+ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
+.numline .drop{stroke:var(--ink);stroke-width:2;stroke-dasharray:4 5}
+.numline.ladder text{font-size:17px}
+
+/* the vote games: rules slide (bullets left, QR + matrix right) and
+   the two-round board (a crowd per side per option, round 1 beside round 2) */
+.tpside{flex:none;display:flex;flex-direction:column;align-items:center;gap:20px;align-self:center}
+.tpqr{width:110px;height:110px;flex:none;border:2.5px solid var(--ink);background:#fff;padding:5px}
+.tpqr img{width:100%;height:100%;display:block}
+.tboard{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:16px}
+.tbar{display:flex;align-items:center;gap:26px;justify-content:center}
+.tpbtn{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);color:var(--paper);border:2.5px solid var(--red);padding:9px 18px;cursor:pointer}
+.tpbtn:disabled{background:var(--card);border-color:var(--rule);color:var(--muted);cursor:default}
+.tstate{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--muted)}
+.tpanels{flex:1;display:flex;gap:28px;align-items:stretch}
+.tpanel{flex:1;border:2.5px solid var(--ink);background:var(--paper-soft);padding:14px 18px 12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tpanel .tph{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red);text-align:center}
+.tgrid{display:grid;grid-template-columns:104px 1fr 1fr;grid-template-rows:auto 1fr 1fr;gap:8px;flex:1}
+.tgrid.one{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+.tgrid .tcol{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:12.5px;color:var(--ink);text-align:center;line-height:1.2;align-self:end;padding-bottom:2px}
+.tgrid .trow{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:13px;line-height:1.15;color:var(--ink);align-self:center;text-align:right;padding-right:6px;overflow-wrap:anywhere}
+.tgrid .trow:nth-of-type(1){color:var(--teal)}
+.tcell{position:relative;background:var(--card);border:1.5px solid var(--ink);min-height:104px;padding:8px 10px 6px;display:flex;flex-direction:column;gap:4px}
+.tcell .tcount{font-family:var(--display);font-weight:900;font-size:30px;line-height:.9;color:var(--ink);opacity:0;transition:opacity .5s .2s}
+.tpanel.revealed .tcell .tcount{opacity:1}
+.tcell .tlane{display:flex;flex-wrap:wrap;gap:3px 2px;align-content:flex-start;flex:1}
+.tcell .u{width:18px;display:block}
+.tcell .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.tpanel.revealed .u svg{opacity:1;transform:scale(1)}
+.tcell.opt-a .u{color:var(--teal)} .tcell.opt-b .u{color:var(--terracotta)}
+.tpanel .tverdict{font-weight:600;font-size:17px;line-height:1.3;color:var(--ink);text-align:center;min-height:2.6em;opacity:0;transition:opacity .5s .4s}
+.tpanel.revealed .tverdict{opacity:1}
+.tpanel .tverdict b{color:var(--red)}
+.tpanel.waiting{opacity:.45}
+/* Moneyball: two small matrices stacked beside the clip */
+.mbclips{position:relative;width:560px;height:315px;flex:none}
+.mbclip{position:absolute;inset:0;transition:opacity .7s}
+.mbclip#mb2wrap{opacity:0;pointer-events:none}
+.mbclip#mb2wrap.shown2{opacity:1;pointer-events:auto}
+.mbclip#mb1wrap.gone{opacity:0;pointer-events:none}
+.mbstack{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+.clipcover .todo{font-weight:600;font-size:13px;letter-spacing:.08em;color:var(--paper);opacity:.75}
+.outnote{position:absolute;left:96px;right:96px;bottom:44px;font-size:13px;display:flex;gap:14px;align-items:baseline;font-weight:600;font-size:15px;color:var(--muted);letter-spacing:.02em;z-index:3}
+.outnote b{color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;flex:none}
+.outtakes-index .bullets li.sub{color:var(--muted);font-size:17px}
+</style>
+</head><body>
+
+<!--
+  OUTTAKES for module 5. Every slide or line cut from index.html during the
+  revision pass, kept verbatim (markup, reveals, figures) so it can go
+  straight back. To restore a slide: copy its <section> into index.html at
+  the position noted on the slide, renumber data-i in document order, add
+  one tick, and put its transcript entry back in the sr-only block. The
+  deck as it stood before the cuts is whole at the git tag m5-before-cuts.
+  Nothing here is linked from the hub.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="im-tree" viewBox="0 0 132 100"><g fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"><line x1="16" y1="50" x2="68" y2="22"/><line x1="16" y1="50" x2="68" y2="78"/><line x1="68" y1="22" x2="118" y2="8"/><line x1="68" y1="22" x2="118" y2="36"/><line x1="68" y1="78" x2="118" y2="64"/><line x1="68" y1="78" x2="118" y2="92"/></g><circle cx="16" cy="50" r="10" fill="var(--ink)"/><circle cx="68" cy="22" r="8" fill="var(--ink)"/><circle cx="68" cy="78" r="8" fill="var(--ink)"/><rect x="112" y="2" width="12" height="12" fill="var(--red)"/><rect x="112" y="30" width="12" height="12" fill="var(--ink)"/><rect x="112" y="58" width="12" height="12" fill="var(--ink)"/><rect x="112" y="86" width="12" height="12" fill="var(--ink)"/></symbol><symbol id="im-pie" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="var(--ink)"/><path d="M50 50 L50 8 A42 42 0 0 1 92 50 Z" fill="var(--red)"/><path d="M50 50 L50 8 A42 42 0 0 1 92 50 Z" fill="none" stroke="var(--paper)" stroke-width="3"/></symbol><symbol id="im-mx1" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/></symbol>
+</svg>
+
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>Applied Game Theory, Module 5 — Outtakes</h1>
+<p>Accessible text version. Each heading below is one slide, in order.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 8: Title slide</h2><p>Module 5 outtakes. Every slide or line cut from the module 5 deck, kept whole so it can go straight back.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 8: What was cut, and when</h2><p>A list of the cuts, each with the date, where the slide stood, and why.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 8: Introduction</h2><p>The cut slide, verbatim; it stood as slide 3 of 32, after Learning objectives. So far, we've covered sequential choices, simultaneous zero-sum choices, and the prisoner's dilemma — shown as three pictogram tiles: a game tree, a pie split in two, and a payoff matrix with one cell boxed in red. Then one line: although the prisoner's dilemma gets a lot of attention, other theories are equally important in explaining strategic thinking.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 8: Guess two-thirds of the average</h2><p>The cut slide, verbatim; it stood as slide 5 of 32, before the pop quiz. A live game answered by phone — a QR code links to ryanlamare.com/go and a counter shows how many numbers are in. The rules: pick any whole number between 0 and 100. The individual whose number is closest to two-thirds of the room's average wins. The worked example is drawn as a number line from 0 to 100: dots at 5, 25 and 60; a marker at their average, 30; a red marker at two-thirds of that, 20; and the dot at 25 turns red, labelled "25 wins". Numbers lock in now; the game is solved at the end of the session.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 8: Tapas: the bigger prize?</h2><p>The cut slide, verbatim; it stood as slide 18 of 32, after Stag hunt. The Tapas stag hunt, for discussion. Both sides can see something bigger than one spare engine behind this deal. Going big pays off only if the other side goes big too; going big alone is wasted effort. Just doing the one engine is safe — and small. What would it take for both sides to go big? The matrix, RRPF rows against Tapas columns, choices "build the bigger partnership" or "just do the one engine": both build 3, 3; RRPF builds alone 0, 1; Tapas builds alone 1, 0; both small 1, 1. Both diagonal cells are boxed in red.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 8: Finding the Nash equilibrium in the two-thirds game</h2><p>The cut slide, verbatim; it stood as slide 29 of 32, after Who gave ground. How do we solve this game? Remember common knowledge and successive elimination of inferior strategies. If everyone guessed 100, you should guess two-thirds of that: 67 — so eliminate 68 and above. But if nobody plays above 67, your winning strategy is two-thirds of that: 45 — eliminate 46 and above. And so on, ruling out 30, 20, 13, 9 — all the way down to 0, which is the Nash equilibrium. So, all of those who answered 0 got it right — or did they?? Beside the bullets, a number line from 0 to 100 that shades out the eliminated numbers step by step until only 0 is left, marked with a red dot labelled "0 is the Nash equilibrium".</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 8: The two-thirds game, resolved live</h2><p>The cut slide, verbatim; it stood as slide 30 of 32. Three large figures from the numbers locked in at the start of the session: how many answers came in; the room's average, revealed on a keypress; and two-thirds of that average, revealed on the next. A final reveal names the winning number — the guess closest to the target — and gives a shout out to anyone who said 0, the equilibrium answer. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 8: Where we land</h2><p>The cut slide, verbatim; it stood as slide 31 of 32, the module’s close before Top of the table. A rising staircase of the three games, revealed step by step. Stag hunt, a small matrix with both diagonal cells ringed: aligned — trust unlocks the best one. Battle of the sexes, taller, both cells ringed: different preferences over which one. Chicken, tallest, its bottom-right cell solid red: opposed — miscoordination is disaster. A closing note: where you land turns on focal points. Next session: mixed strategies — when the right move is to be unpredictable.</p></section>
+</section>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">5</div>
+  <div class="tag"><i></i>MODULE 5 · APPLIED GAME THEORY · OUTTAKES</div>
+  <h1>MODULE 5<br><span class="r">OUTTAKES</span></h1>
+  <div class="sub">Every slide or line cut from the module, kept whole</div>
+  <div class="byline">J. RYAN LAMARE</div>
+</section>
+
+<section class="slide content outtakes-index" data-i="1">
+  <div class="kicker"><i></i>MODULE 5 · OUTTAKES</div>
+  <h2>What was cut, and when</h2>
+  <ul class="bullets" style="max-width:1060px;font-size:16px;line-height:1.35">
+    <li><b>17 Sep 2026 &middot; Introduction</b> &ndash; stood as slide 3 of 32. The day-one recap tiles; replaced by The plan for the day, the day-two opener that runs both days as one running order with the module in front lit.</li>
+    <li><b>17 Sep 2026 &middot; Guess two-thirds of the average, three slides</b> &ndash; stood as slides 5, 29 and 30 of 32: the rules with the phone lock-in at the start, the elimination ladder and the live resolve at the end. Ryan: its lesson is the number game&rsquo;s from module 1, and it is not about coordination. The objective and its five points went with it; the quiz alone now scores module 5.</li>
+    <li><b>17 Sep 2026 &middot; Tapas: the bigger prize?</b> &ndash; stood as slide 18 of 32, after Stag hunt. The client case adding its own content, and the fourth stag hunt matrix in a row.</li>
+    <li><b>17 Sep 2026 &middot; Where we land</b> &ndash; stood as slide 31 of 32, the staircase of the three games and the next-session line. Replaced by the closing exercise: a coordination game from each person&rsquo;s world, one window each on the aircraft.</li>
+    <li class="sub">The deck as it stood before the cuts is whole at the git tag <b>m5-before-cuts</b>. To restore a slide, copy its section back into index.html at the position noted, renumber, add a tick and its transcript entry.</li>
+  </ul>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 5</div>
+  <h2>Introduction</h2>
+<div class="outnote"><b>Cut 17 Sep 2026</b><span>stood as slide 3 of 32, after Learning objectives. Replaced by the day-two opener, The plan for the day, which does the same recap as the running order of both days (Ryan, 16 Sep: start the day where we left off).</span></div>
+  <div class="leadline" style="margin-top:24px">So far, we&rsquo;ve covered sequential choices, simultaneous zero-sum choices, and the prisoner&rsquo;s dilemma</div>
+  <div class="gtiles" style="top:262px">
+    <div class="gtile"><svg class="pg" viewBox="0 0 132 100"><use href="#im-tree"/></svg><div class="gl">Sequential choices</div></div>
+    <div class="gtile"><svg class="pg" viewBox="0 0 100 100"><use href="#im-pie"/></svg><div class="gl">Simultaneous zero-sum choices</div></div>
+    <div class="gtile"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx1"/></svg><div class="gl">The prisoner&rsquo;s dilemma</div></div>
+  </div>
+  <div class="chiprow" style="bottom:70px;gap:12px">
+    <div class="chead2" data-step="1" style="max-width:60ch;text-align:center">Although the prisoner&rsquo;s dilemma gets a lot of attention, <b style="color:var(--red)">other theories are equally important</b> in explaining strategic thinking!</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>MODULE 5 · GUESS TWO-THIRDS</div>
+  <h2>Guess two-thirds of the average</h2>
+<div class="outnote"><b>Cut 17 Sep 2026</b><span>stood as slide 5 of 32, before the pop quiz. Ryan, 16 Sep: its lesson (level-k reasoning, and the equilibrium is not where the room lands) is the number game&rsquo;s lesson from module 1, and the iterated elimination is carried by the worked best response. Its five points go with it; the quiz alone scores module 5.</span></div>
+  <div class="rowfig" style="top:196px">
+    <div style="flex:1;min-width:0;max-width:680px;display:flex;flex-direction:column;gap:18px">
+      <ul class="bullets" style="margin-top:0;max-width:none">
+        <li>Pick any whole number between 0 and 100</li>
+        <li data-step="1">The individual whose number is closest to <b>two-thirds of the room&rsquo;s average</b> wins!</li>
+        <li data-step="2">So, if the guesses were 5, 25, and 60, the winner would be&hellip;</li>
+      </ul>
+      <!-- the worked example as a number line: the three guesses, their average, two-thirds of it, and the winner -->
+      <svg class="numline" data-step="3" viewBox="0 0 640 150" aria-hidden="true">
+        <line class="axis" x1="30" y1="84" x2="610" y2="84"/>
+        <g class="tk"><line x1="30" y1="76" x2="30" y2="92"/><line x1="175" y1="76" x2="175" y2="92"/><line x1="320" y1="76" x2="320" y2="92"/><line x1="465" y1="76" x2="465" y2="92"/><line x1="610" y1="76" x2="610" y2="92"/></g>
+        <text class="sm" x="30" y="112" text-anchor="middle">0</text><text class="sm" x="175" y="112" text-anchor="middle">25</text><text class="sm" x="320" y="112" text-anchor="middle">50</text><text class="sm" x="465" y="112" text-anchor="middle">75</text><text class="sm" x="610" y="112" text-anchor="middle">100</text>
+        <line class="drop" x1="204" y1="34" x2="204" y2="84"/>
+        <text x="204" y="24" text-anchor="middle">Average: (5 + 25 + 60) &divide; 3 = 30</text>
+        <line class="drop" x1="146" y1="66" x2="146" y2="84" style="stroke:var(--red)"/>
+        <text class="red" x="196" y="58" text-anchor="end">30 &times; 2/3 = 20</text>
+        <circle cx="59" cy="84" r="9" fill="var(--ink)"/><circle cx="378" cy="84" r="9" fill="var(--ink)"/>
+        <circle cx="175" cy="84" r="11" fill="var(--red)"/>
+        <text class="red" x="175" y="142" text-anchor="middle">25 wins</text>
+      </svg>
+      <ul class="bullets" style="margin-top:0;max-width:none">
+        <li data-step="4">Lock your number in now &ndash; we&rsquo;ll come back to this at the end of the session</li>
+      </ul>
+    </div>
+  </div>
+  <div class="qrpanel" style="top:220px;width:360px;right:96px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-twothirds.svg" alt="QR code for the two-thirds poll at ryanlamare.com/go"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+    <div class="livecount"><span class="n" id="ttN">0</span><span class="l">RESPONSES</span></div>
+  </div>
+  <div class="demotag" id="ttD" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>MODULE 5 · GAME THEORY IN YOUR WORLD</div>
+  <h2>Tapas: the bigger prize?</h2>
+<div class="outnote"><b>Cut 17 Sep 2026</b><span>stood as slide 18 of 32, after Stag hunt. The client case adding its own content, and the fourth look at the stag hunt matrix in a row (the 14 Sep line: the case is a courtesy, not a source of examples inside the lessons).</span></div>
+  <div class="rowfig" style="align-items:flex-start;gap:44px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>Both sides can see something bigger than one spare engine behind this deal</li>
+      <li data-step="1">Going big pays off only if the other side goes big too. Going big alone is wasted effort</li>
+      <li data-step="2">Just doing the one engine is safe &ndash; and small</li>
+      <li data-step="3"><b>What would it take for both sides to go big?</b></li>
+    </ul>
+    <div style="flex:none;align-self:center">
+      <div class="mx" style="--cols:2;--rows:2;--cw:190px;--rh:80px">
+        <div class="chead">TAPAS</div>
+        <div class="rhead">RRPF</div>
+        <div class="cl" style="grid-column:3">Build the bigger partnership</div>
+        <div class="cl" style="grid-column:4">Just do the one engine</div>
+        <div class="rl" style="grid-row:3">Build the bigger partnership</div>
+        <div class="rl" style="grid-row:4">Just do the one engine</div>
+        <div class="cell eq" style="grid-row:3;grid-column:3"><span class="pa">3</span><span class="pc">,</span><span class="pb">3</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">1</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">1</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell eq" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">1</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 5 · GUESS TWO-THIRDS</div>
+  <h2>Finding the Nash equilibrium in the two-thirds game</h2>
+<div class="outnote"><b>Cut 17 Sep 2026</b><span>stood as slide 29 of 32, after Who gave ground. Cut with the two-thirds game.</span></div>
+  <div class="rowfig" style="align-items:flex-start;gap:40px;top:206px">
+    <ul class="bullets tight" style="margin-top:0;flex:1;min-width:0">
+      <li>How do we solve this game? Remember <b>common knowledge</b> and <b>successive elimination of inferior strategies</b></li>
+      <li data-step="1">Let&rsquo;s say everyone in the room guessed 100&hellip;what should you guess?</li>
+      <li class="sub" data-step="1">100 &times; (2/3) = 67, so we can eliminate numbers 68 or above</li>
+      <li data-step="2">But if nobody will play above 67, your winning strategy should be 2/3 of those choices</li>
+      <li class="sub" data-step="2">67 &times; (2/3) = 45, so we can now eliminate numbers 46 or above</li>
+      <li data-step="3">And so on (30, 20, 13, 9&hellip;)&hellip;all the way down to <b>0, which is the Nash equilibrium</b></li>
+      <li data-step="4"><b>So, all of those who answered 0 got it right&hellip;or did they??</b></li>
+    </ul>
+    <!-- the elimination ladder: each step shades out the numbers nobody should play any more -->
+    <svg class="numline ladder" viewBox="0 0 440 200" aria-hidden="true" style="flex:none;width:440px;align-self:center">
+      <line class="axis" x1="30" y1="120" x2="410" y2="120"/>
+      <g class="tk"><line x1="30" y1="112" x2="30" y2="128"/><line x1="125" y1="112" x2="125" y2="128"/><line x1="220" y1="112" x2="220" y2="128"/><line x1="315" y1="112" x2="315" y2="128"/><line x1="410" y1="112" x2="410" y2="128"/></g>
+      <text class="sm" x="30" y="150" text-anchor="middle">0</text><text class="sm" x="125" y="150" text-anchor="middle">25</text><text class="sm" x="220" y="150" text-anchor="middle">50</text><text class="sm" x="315" y="150" text-anchor="middle">75</text><text class="sm" x="410" y="150" text-anchor="middle">100</text>
+      <g data-step="1"><rect class="band" x="288.4" y="98" width="121.6" height="44"/><text x="349" y="86" text-anchor="middle">68 and above</text></g>
+      <g data-step="2"><rect class="band" x="204.8" y="98" width="83.6" height="44"/><text x="246" y="60" text-anchor="middle">46 and above</text><line class="drop" x1="246" y1="66" x2="246" y2="98"/></g>
+      <g data-step="3">
+        <rect class="band" x="147.8" y="98" width="57" height="44"/><rect class="band" x="109.8" y="98" width="38" height="44"/><rect class="band" x="83.2" y="98" width="26.6" height="44"/><rect class="band" x="68" y="98" width="15.2" height="44"/><rect class="band" x="56.6" y="98" width="11.4" height="44"/><rect class="band" x="33.8" y="98" width="22.8" height="44"/>
+        <text x="110" y="86" text-anchor="middle">31, 21, 14, 10&hellip;</text>
+        <circle cx="30" cy="120" r="11" fill="var(--red)"/>
+        <text class="red" x="30" y="184" text-anchor="start">0 is the Nash equilibrium</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 5 · GUESS TWO-THIRDS</div>
+  <h2>Finding the Nash equilibrium in the two-thirds game</h2>
+<div class="outnote"><b>Cut 17 Sep 2026</b><span>stood as slide 30 of 32. Cut with the two-thirds game; the script that resolves it live is kept below so this deck still runs against the m5-twothirds room.</span></div>
+  <div class="fig" style="top:230px;gap:44px">
+    <div class="tour">
+      <div class="tcell2"><span class="tv" id="ttcN2">0</span><span class="tl">Numbers in</span></div>
+      <div class="tcell2" data-step="1" data-stepcall="ttAvgFill"><span class="tv" id="ttAvg">&ndash;</span><span class="tl">The room&rsquo;s average</span></div>
+      <div class="tcell2" data-step="2" data-stepcall="ttTargetFill"><span class="tv red" id="ttTarget">&ndash;</span><span class="tl">Two-thirds of that</span></div>
+    </div>
+    <div class="cap" data-step="3" data-stepcall="ttWinner" id="ttWin" style="font-size:23px;color:var(--ink)"></div>
+  </div>
+  <div class="demotag" id="ttD2" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 5 · WHERE NEXT</div>
+  <h2>Where we land</h2>
+<div class="outnote"><b>Cut 17 Sep 2026</b><span>stood as slide 31 of 32, the module&rsquo;s close before Top of the table. Replaced by the closing exercise, A coordination game from your world, and the aircraft (Ryan, 17 Sep).</span></div>
+  <div class="fig" style="top:210px;gap:44px">
+    <div class="stairs">
+      <div class="step s1" data-step="1"><svg class="pg" viewBox="0 0 100 100" style="height:84px"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"></rect></svg><div class="sname">Stag Hunt</div><div class="ssub">Aligned &ndash; trust unlocks the best one</div></div>
+      <div class="step s2" data-step="2"><svg class="pg" viewBox="0 0 100 100" style="height:128px"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"></rect></svg><div class="sname">Battle of the Sexes</div><div class="ssub">Different preferences over which one</div></div>
+      <div class="step s3" data-step="3"><svg class="pg" viewBox="0 0 100 100" style="height:176px"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--red)" x="54" y="54" width="40" height="40"></rect></svg><div class="sname">Chicken</div><div class="ssub">Opposed &ndash; miscoordination is disaster</div></div>
+    </div>
+    <div class="stopnote" data-step="4"><i></i><span>Where you land turns on <b>focal points</b>. Next session: mixed strategies &ndash; when the right move is to be unpredictable.</span></div>
+  </div>
+</section>
+
+</div></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+
+<script>
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+function refreshShownCalls(){
+  document.querySelectorAll('[data-stepcall]').forEach(el=>{
+    const n=el.dataset.stepcall;
+    if(el.dataset.stepon==='1'&&(n==='ttAvgFill'||n==='ttTargetFill'||n==='ttWinner')){try{window[n](el,true);}catch(_){}}
+  });
+}
+/* ---- guess two-thirds: numbers arrive on slide 3 via /go?p=m5-twothirds,
+   the same answers resolve the game at the end ---- */
+(function(){
+  const DEMO=[33,20,25,17,50,0,22,14,29,41,12,8,7,66,23,18,31,2,44,27,15];
+  const st={live:false,nums:[],shown:0};
+  const n1=document.getElementById('ttN'), n2=document.getElementById('ttcN2');
+  function nums(){return st.live?st.nums:DEMO;}
+  function renderCount(){
+    n1.textContent=st.live?st.nums.length:st.shown;
+    n2.textContent=st.live?st.nums.length:DEMO.length;
+    const off=st.live?'none':'';
+    document.getElementById('ttD').style.display=off;
+    document.getElementById('ttD2').style.display=off;
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m5-twothirds/answers').then(r=>r.json()).then(d=>{
+      st.live=true;
+      st.nums=(d.answers||[]).map(t=>parseInt(String(t).replace(/[^0-9-]/g,''),10))
+        .filter(v=>Number.isInteger(v)&&v>=0&&v<=100);
+      renderCount();
+      refreshShownCalls();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{if(!st.live&&st.shown<DEMO.length){st.shown++;renderCount();}},420);
+  renderCount();
+  function avg(){const v=nums();return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
+  window.ttAvgFill=function(el,on){
+    document.getElementById('ttAvg').textContent=on?(Math.round(avg()*10)/10).toString():'–';
+  };
+  window.ttTargetFill=function(el,on){
+    document.getElementById('ttTarget').textContent=on?Math.round(avg()*2/3).toString():'–';
+  };
+  window.ttWinner=function(el,on){
+    if(!on){el.innerHTML='';return;}
+    const v=nums(), a=avg(), target=a*2/3;
+    if(!v.length){el.innerHTML='';return;}
+    let best=v[0];v.forEach(x=>{if(Math.abs(x-target)<Math.abs(best-target))best=x;});
+    el.innerHTML='The winning guess is <b>'+best+'</b> &ndash; who had it? But also, a shout out to anyone who said <b>0</b> (the equilibrium answer)!';
+  };
+})();
+
+</script>
+<script src="/teaching/exec/gt/deck.js"></script>
+</body></html>
