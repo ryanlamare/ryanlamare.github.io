@@ -73,12 +73,12 @@
 
   /* rhumb lines from two roses, as on a portolan */
   (function(){const g=mk('g',{stroke:INK,'stroke-width':.8,opacity:.13},chart);
-    [[1150,592],[150,150]].forEach(c=>{for(let i=0;i<32;i++){const a=i*Math.PI/16;mk('line',{x1:c[0],y1:c[1],x2:c[0]+Math.cos(a)*1600,y2:c[1]+Math.sin(a)*1600},g);}});})();
+    [[1150,592],[330,330]].forEach(c=>{for(let i=0;i<32;i++){const a=i*Math.PI/16;mk('line',{x1:c[0],y1:c[1],x2:c[0]+Math.cos(a)*1600,y2:c[1]+Math.sin(a)*1600},g);}});})();
 
   /* wavelets, scattered, drifting a little */
   const waves=mk('g',{fill:'none',stroke:TEAL,'stroke-width':1.6,'stroke-linecap':'round',opacity:.55},chart);
   (function(){const r=rng(7);for(let i=0;i<120;i++){const x=F+20+r()*(1280-2*F-60), y=F+20+r()*(720-2*F-40), w=7+r()*6;
-    if((x>1020&&y<200)||(x<330&&y>540)||(Math.abs(x-CX)<150&&Math.abs(y-CY)<66))continue;
+    if((x>960&&y<280)||(x<340&&y>520)||(x<260&&y>110&&y<250)||(x>690&&x<1000&&y<170)||(Math.abs(x-CX)<150&&Math.abs(y-CY)<66))continue;
     mk('path',{d:'M'+x.toFixed(0)+' '+y.toFixed(0)+' q'+(w/2).toFixed(1)+' -5 '+w.toFixed(1)+' 0 q'+(w/2).toFixed(1)+' 5 '+w.toFixed(1)+' 0'},waves);}})();
 
   /* Ithaca, top right: home */
@@ -99,24 +99,75 @@
     const tx=mk('text',{x:1160,y:156,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':13,'letter-spacing':'.3em',fill:INK},g);tx.textContent='ITHACA';
   })();
 
-  /* here be dragons, bottom left */
-  const monster=mk('g',{},chart);
-  (function(){const g=monster;
-    const hump=(x,y,w,h)=>{mk('path',{d:'M'+x+' '+y+' C'+x+' '+(y-h)+' '+(x+w)+' '+(y-h)+' '+(x+w)+' '+y,fill:GREEN,stroke:INK,'stroke-width':2.5},g);
-      for(let i=1;i<4;i++){const px=x+w*i/4;mk('path',{d:'M'+(px-5)+' '+(y-h*0.62)+' q5 -6 10 0',fill:'none',stroke:PAPER,'stroke-width':1.5,opacity:.8},g);}
-      mk('path',{d:'M'+(x-8)+' '+y+' q6 -5 12 0 q6 5 12 0 M'+(x+w-16)+' '+y+' q6 -5 12 0 q6 5 12 0',fill:'none',stroke:PAPER,'stroke-width':2.5},g);};
-    hump(196,640,46,40);hump(136,646,44,30);
-    /* neck and head */
-    mk('path',{d:'M82 650 C70 600 84 566 112 562 C134 558 150 570 148 586 L124 590 C112 590 106 604 112 650 Z',fill:GREEN,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
-    mk('path',{d:'M148 586 l20 -2 l-8 6 l10 4 l-22 0',fill:RED,stroke:INK,'stroke-width':1.5,'stroke-linejoin':'round'},g);
-    mk('circle',{cx:122,cy:574,r:4,fill:PAPER,stroke:INK,'stroke-width':1.5},g);mk('circle',{cx:123,cy:574,r:1.6,fill:INK},g);
-    mk('path',{d:'M96 566 l-6 -12 l10 6 l2 -12 l8 12',fill:OCHRE,stroke:INK,'stroke-width':1.5,'stroke-linejoin':'round'},g);
-    mk('path',{d:'M70 650 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0',fill:'none',stroke:PAPER,'stroke-width':2.5},g);
-    /* the tail */
-    mk('path',{d:'M262 644 C270 616 286 612 292 596 l8 12 l-10 2 C288 626 278 632 276 644 Z',fill:GREEN,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
-    mk('path',{id:'seaDragonArc',d:'M64 548 C120 500 230 500 318 560',fill:'none'},defs);
-    const t=mk('text',{'font-family':'Jost, sans-serif','font-weight':700,'font-size':12.5,'letter-spacing':'.34em',fill:INK,opacity:.85},chart);
-    const tp=mk('textPath',{href:'#seaDragonArc',startOffset:'4%'},t);tp.textContent='HERE BE DRAGONS';
+  /* the Odyssey's trials, dotted round the chart (Ryan, 18 Sep, in place of
+     here be dragons): Troy where the voyage starts, the Cyclops, Scylla and
+     Charybdis, and Ithaca where it ends. Nothing on the chart harms a ship. */
+  const trials=mk('g',{},chart);
+  /* Troy, top left, under the cartouche: walls, and the horse outside them */
+  (function(){const g=mk('g',{},trials);
+    mk('path',{d:'M36 128 C90 126 116 150 124 182 C132 212 114 238 36 240 Z',fill:LAND,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
+    mk('path',{d:'M48 168 H108 V206 H48 Z',fill:'#C4673D',stroke:INK,'stroke-width':2},g);
+    [48,60,72,84,96].forEach(x=>mk('rect',{x,y:162,width:7,height:8,fill:'#C4673D',stroke:INK,'stroke-width':1.5},g));
+    mk('rect',{x:94,y:146,width:16,height:24,fill:'#C4673D',stroke:INK,'stroke-width':2},g);
+    mk('path',{d:'M72 206 V190 a6 6 0 0 1 12 0 V206 Z',fill:INK},g);
+    /* the horse, on wheels */
+    const h=mk('g',{transform:'translate(150 214)'},g);
+    mk('path',{d:'M-22 -4 H16 V-22 H-22 Z M12 -22 L18 -40 H30 L32 -32 L24 -30 L22 -22 Z',fill:SIENNA,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},h);
+    mk('path',{d:'M-18 -4 V10 M-8 -4 V10 M4 -4 V10 M12 -4 V10',stroke:SIENNA,'stroke-width':4,'stroke-linecap':'round'},h);
+    mk('path',{d:'M-18 -4 V10 M-8 -4 V10 M4 -4 V10 M12 -4 V10',stroke:INK,'stroke-width':1.2,'stroke-linecap':'round',opacity:.5},h);
+    mk('path',{d:'M-26 12 H20',stroke:INK,'stroke-width':2.5},h);
+    [-20,-2,14].forEach(x=>{mk('circle',{cx:x,cy:14,r:5,fill:OCHRE,stroke:INK,'stroke-width':1.8},h);});
+    mk('circle',{cx:27,cy:-36,r:1.4,fill:INK},h);
+    mk('path',{d:'M16 -22 H-22 M-4 -22 V-4',stroke:INK,'stroke-width':1,opacity:.5},h);
+    const t=mk('text',{x:78,y:226,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':11.5,'letter-spacing':'.3em',fill:INK},g);t.textContent='TROY';
+  })();
+  /* the Cyclops, bottom left: a rocky shore, his cave, his sheep, and the giant himself */
+  const cyclops=mk('g',{},trials);
+  (function(){const g=cyclops;
+    /* the giant stands behind the shore */
+    mk('path',{d:'M104 668 L112 560 C112 538 188 538 188 560 L196 668 Z',fill:SIENNA,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
+    mk('path',{d:'M186 556 C204 540 216 520 226 500',stroke:'#D9A878','stroke-width':16,'stroke-linecap':'round'},g);
+    mk('path',{d:'M186 556 C204 540 216 520 226 500',stroke:INK,'stroke-width':2.5,fill:'none',opacity:0},g);
+    mk('path',{d:'M112 560 C100 580 96 604 98 626',stroke:'#D9A878','stroke-width':14,'stroke-linecap':'round'},g);
+    /* the boulder */
+    mk('path',{d:'M208 478 L232 466 L256 476 L262 500 L246 514 L218 510 L204 496 Z',fill:'#8A8174',stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
+    mk('path',{d:'M232 466 L238 490 L262 500 M238 490 L218 510',stroke:INK,'stroke-width':1.2,fill:'none',opacity:.5},g);
+    /* the head, one eye */
+    mk('circle',{cx:150,cy:506,r:32,fill:'#D9A878',stroke:INK,'stroke-width':2.5},g);
+    mk('path',{d:'M124 486 C130 468 170 468 176 486 L170 480 L160 486 L150 478 L140 486 L130 480 Z',fill:INK},g);
+    mk('circle',{cx:150,cy:504,r:12,fill:PAPER,stroke:INK,'stroke-width':2.5},g);mk('circle',{cx:151,cy:505,r:6,fill:INK},g);
+    mk('path',{d:'M134 490 L166 488',stroke:INK,'stroke-width':4,'stroke-linecap':'round'},g);
+    mk('path',{d:'M138 526 Q150 520 162 526',stroke:INK,'stroke-width':2.5,fill:'none','stroke-linecap':'round'},g);
+    /* the shore in front of him */
+    mk('path',{d:'M36 560 C120 566 200 590 262 620 C300 638 330 656 330 668 L36 668 Z',fill:LAND,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
+    mk('path',{d:'M60 668 C60 626 130 626 130 668 Z',fill:INK},g);
+    [[190,624],[224,640],[258,656]].forEach(p=>{mk('ellipse',{cx:p[0],cy:p[1],rx:11,ry:7,fill:PAPER,stroke:INK,'stroke-width':1.8},g);mk('circle',{cx:p[0]+11,cy:p[1]-3,r:4,fill:INK},g);
+      mk('path',{d:'M'+(p[0]-6)+' '+(p[1]+6)+' v5 M'+(p[0]+4)+' '+(p[1]+6)+' v5',stroke:INK,'stroke-width':2},g);});
+    const t=mk('text',{x:200,y:596,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':11.5,'letter-spacing':'.3em',fill:INK},g);t.textContent='THE CYCLOPS';
+  })();
+  /* Scylla and Charybdis, the strait along the top */
+  let whirl=null;
+  (function(){const g=mk('g',{},trials);
+    mk('path',{d:'M700 36 L702 66 C716 100 738 112 770 114 C802 116 822 92 832 36 Z',fill:'#8A8174',stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
+    mk('path',{d:'M740 36 L748 100 M790 36 L784 104',stroke:INK,'stroke-width':1.2,opacity:.5},g);
+    const neck=(d,hx,hy,flip)=>{mk('path',{d,fill:'none',stroke:INK,'stroke-width':10,'stroke-linecap':'round'},g);mk('path',{d,fill:'none',stroke:GREEN,'stroke-width':6.5,'stroke-linecap':'round'},g);
+      const h=mk('g',{transform:'translate('+hx+' '+hy+') scale('+(flip?-1:1)+' 1)'},g);
+      mk('path',{d:'M-8 -6 C-2 -12 10 -10 12 -2 L6 2 L-4 4 Z',fill:GREEN,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},h);
+      mk('path',{d:'M12 -2 l9 -3 l-4 4 l5 3 l-10 0',fill:RED,stroke:INK,'stroke-width':1.2,'stroke-linejoin':'round'},h);
+      mk('circle',{cx:0,cy:-5,r:2.2,fill:PAPER,stroke:INK,'stroke-width':1},h);mk('circle',{cx:.6,cy:-5,r:1,fill:INK},h);};
+    neck('M770 100 C800 96 830 70 852 54',852,54,false);
+    neck('M776 104 C812 108 840 96 866 92',866,92,false);
+    neck('M772 108 C790 130 818 138 846 134',846,134,false);
+    neck('M760 106 C740 128 728 136 706 140',706,140,true);
+    const t=mk('text',{x:766,y:158,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':11.5,'letter-spacing':'.3em',fill:INK},g);t.textContent='SCYLLA';
+    /* the whirlpool turns */
+    whirl=mk('g',{},g);
+    let d='M930 104';for(let i=0;i<=170;i++){const a=i*0.22, r=2+i*0.26;d+=' L'+(930+Math.cos(a)*r*1.35).toFixed(1)+' '+(104+Math.sin(a)*r*0.7).toFixed(1);}
+    mk('ellipse',{cx:930,cy:104,rx:64,ry:34,fill:BLUE,opacity:.25},whirl);
+    mk('path',{d,fill:'none',stroke:BLUE,'stroke-width':2.6,'stroke-linecap':'round'},whirl);
+    mk('path',{d,fill:'none',stroke:PAPER,'stroke-width':1,'stroke-linecap':'round',opacity:.7,transform:'rotate(180 930 104)'},whirl);
+    mk('circle',{cx:930,cy:104,r:5,fill:INK},whirl);
+    const t2=mk('text',{x:930,y:158,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':11.5,'letter-spacing':'.3em',fill:INK},g);t2.textContent='CHARYBDIS';
   })();
 
   /* the compass rose, bottom right */
@@ -284,7 +335,7 @@
       L.forEach(b=>{(b.y<CY+6?backG:frontG).appendChild(b.g);});}
     song(now);
     waves.setAttribute('transform','translate('+(Math.sin(now/2600)*5).toFixed(1)+' 0)');
-    monster.setAttribute('transform','translate(0 '+(Math.sin(now/1700)*2.5).toFixed(1)+')');
+    cyclops.setAttribute('transform','translate(0 '+(Math.sin(now/1700)*2.5).toFixed(1)+')');if(whirl)whirl.setAttribute('transform','rotate('+((now/40)%360).toFixed(1)+' 930 104)');
     wake();
   }
 
