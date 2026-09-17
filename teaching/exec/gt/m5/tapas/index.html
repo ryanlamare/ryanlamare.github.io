@@ -30,6 +30,10 @@ button.opt{display:block;text-align:left;width:100%;font-family:var(--sans);font
   font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
   padding:15px 18px;cursor:pointer}
 button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.choices.locked button.opt{pointer-events:none}
+.choices.locked button.opt:not(.mine){opacity:.4}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer;margin-top:4px}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
 .status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
 .status b{color:var(--red)}
 .waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
@@ -86,6 +90,7 @@ if(!g){
   app.appendChild(sd);
   const stage=document.createElement('div');app.appendChild(stage);
   let round=1, mine={1:null,2:null}, shown='';
+  const sentAt={};
   try{mine=JSON.parse(localStorage.getItem('m5tapas-'+g.room)||'{"1":null,"2":null}');}catch(_){}
   function save(){try{localStorage.setItem('m5tapas-'+g.room,JSON.stringify(mine));}catch(_){}}
   function ui(){
@@ -95,20 +100,28 @@ if(!g){
     const lead=document.createElement('div');lead.className='lbl';lead.style.margin='6px 0 8px';
     lead.textContent=round===1?'Round 1 — what do you push for?':'Round 2 — what do you push for now?';
     stage.appendChild(lead);
-    const ch=document.createElement('div');ch.className='choices';
+    /* pick, then LOCK IT IN: sent once, no changes (Ryan's rule of 13 Sep, brought
+       to the two vote games on 17 Sep; they had sent on a single tap and
+       allowed changes until the reveal) */
+    const ch=document.createElement('div');ch.className='choices'+(mine[round]?' locked':'');
+    let picked=null;
+    const lock=document.createElement('button');lock.className='lock';lock.type='button';lock.textContent='LOCK IT IN';lock.disabled=true;
     g.opts.forEach(o=>{
-      const b=document.createElement('button');b.className='opt'+(mine[round]===o.k?' mine':'');b.textContent=o.n;
-      b.addEventListener('click',()=>{
-        say(g.room,'v|'+voter+'|'+side+'|'+round+'|'+o.k).then(()=>{
-          mine[round]=o.k;sentAt[round]=Date.now();save();shown='';ui();
-          st.innerHTML='<b>Sent.</b> '+(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.');
-        }).catch(code=>{st.textContent=failMsg(code);});
-      });
+      const b=document.createElement('button');b.className='opt'+(mine[round]===o.k?' mine':'');b.type='button';b.textContent=o.n;
+      b.addEventListener('click',()=>{if(mine[round])return;picked=o.k;ch.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));b.classList.add('mine');lock.disabled=false;});
       ch.appendChild(b);
     });
+    lock.addEventListener('click',()=>{
+      if(!picked||mine[round])return;
+      const r=round,k=picked;lock.disabled=true;st.textContent='Sending…';
+      say(g.room,'v|'+voter+'|'+side+'|'+r+'|'+k).then(()=>{
+        mine[r]=k;sentAt[r]=Date.now();save();shown='';ui();
+      }).catch(code=>{lock.disabled=false;st.textContent=failMsg(code);});
+    });
+    if(!mine[round])ch.appendChild(lock);
     stage.appendChild(ch);
+    if(mine[round])st.innerHTML='<b>Response locked in.</b> Results on the screen soon.'+(round===1?' Round 2 opens from the big screen.':'');
   }
-  const sentAt={};
   function tick(){
     const t0=Date.now();
     fetch(API+'/p/'+g.room+'/answers').then(r=>r.json()).then(d=>{
