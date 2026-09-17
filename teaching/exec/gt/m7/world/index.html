@@ -143,7 +143,7 @@ function render(){
   renderForm();
 }
 function renderPick(){
-  hint.textContent='Pick one of the games you have already brought to these sessions.';
+  hint.textContent='Think about a strategic game you’ve already identified from your own world. Pick one.';
   const list=document.createElement('div');list.className='choices';
   games.forEach(g=>{const b=document.createElement('button');b.type='button';b.className='pick game';b.style.setProperty('--sail',M7_SHIPS.SAIL[g.module]);
     const s=document.createElement('small');s.textContent='Module '+g.module;b.appendChild(s);b.appendChild(document.createTextNode(g.text));
@@ -152,19 +152,19 @@ function renderPick(){
 }
 function renderForm(){
   const fresh=!games.length;
-  const c1=card('game','THE GAME',fresh?'Think about a prisoner’s dilemma, a coordination game or a sequential game in your own world. Who are the players, and what is the situation?':'');
+  const c1=card('game','THE GAME',fresh?'Think about a strategic game from your own world – a sequential game, a prisoner’s dilemma, or a coordination game. Who are the players, and what is the situation?':'');
   let game=null;
   if(fresh){game=input(GAMEMAX,'we and the other lessor keep undercutting each other…');c1.appendChild(game);}
   else{c1.querySelector('.pq').remove();const m=document.createElement('div');m.className='mine';m.textContent=chosen.text;c1.appendChild(m);c1.style.setProperty('--side',M7_SHIPS.SAIL[chosen.module]);
     c1.querySelector('.suit').textContent='THE GAME, FROM MODULE '+chosen.module;
     if(games.length>1){const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← a different game';b.addEventListener('click',()=>{chosen=null;render();});c1.appendChild(b);}}
-  const c2=card('move','THE STRATEGIC MOVE','Make a strategic move to change the game in your favor');
+  const c2=card('move','THE STRATEGIC MOVE','Change that game in your favor by making a strategic move');
   const kinds=document.createElement('div');kinds.className='kinds';let kind=null;
   [['c','Commitment'],['t','Threat'],['p','Promise']].forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=k[1];b.style.setProperty('--k',M7_SHIPS.PENNANT[k[0]]);
     b.addEventListener('click',()=>{kind=k[0];[...kinds.children].forEach(x=>x.classList.toggle('on',x===b));sync();});kinds.appendChild(b);});
   c2.appendChild(kinds);const move=input(MOVEMAX,'unless the price comes down, we move the contract…');c2.appendChild(move);
-  const c3=card('cred','CREDIBILITY','What would make it credible?');const cred=input(CREDMAX,'we have already qualified the rival’s parts, and they know it…');c3.appendChild(cred);
-  const c4=card('down','THE DOWNSIDE','Are there any potential downsides to the strategic move you made?');const down=input(DOWNMAX,'the rival learns we need them…');c4.appendChild(down);
+  const c3=card('cred','CREDIBILITY','What would give the move credibility?');const cred=input(CREDMAX,'we have already qualified the rival’s parts, and they know it…');c3.appendChild(cred);
+  const c4=card('down','THE DOWNSIDE','Are there potential downsides to making the move?');const down=input(DOWNMAX,'the rival learns we need them…');c4.appendChild(down);
   const hold=document.createElement('button');hold.type='button';hold.className='hold';hold.disabled=true;hold.innerHTML='<i></i><span>HOLD TO BIND YOURSELF TO THE MAST</span>';
   const all=[move,cred,down].concat(game?[game]:[]);
   function ready(){return !!kind&&all.every(i=>clean(i.value));}
