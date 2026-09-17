@@ -8,9 +8,11 @@
    their world. Ryan's four questions (17 Sep): where can it strategically
    benefit you to be inconsistent; who is the other player in this game;
    what happens if they can always predict your moves; is there any way
-   mixing might backfire here. One LOCK IT IN. The deck puts one ball in
-   the goal per phone and shows the answers under the goal when Ryan
-   clicks a ball.
+   mixing might backfire here. One send, ADD YOUR RESPONSE TO THE MIX (his
+   words). The deck drops one ball per phone into a bingo cage and draws
+   them at random; the ball's call and colour come from calls.js, which the
+   deck runs too, so this page can show its owner which ball is theirs. The
+   room is never told: the deck opens a drawn ball's answers without a name.
 
    Wire: two lines into room m6-world, "k‖…" (the Worker caps a line at
    200 characters and a phone at 15 lines a room, so two lines a send
@@ -49,7 +51,7 @@ button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;le
 button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
 /* locked: the ball */
 .bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
-.bigcard svg{width:64px;height:64px;display:block}
+.bigcard svg{width:120px;height:120px;display:block}
 .bigcard .head{font-weight:700;font-size:22px}
 .bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
 </style>
@@ -62,6 +64,7 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
   <div class="status" id="status" aria-live="polite"></div>
 </div>
 <script src="/go/names.js"></script>
+<script src="/teaching/exec/gt/m6/world/calls.js"></script>
 <script>
 /* ?room=<x> plays into a rehearsal room (m6-world-<x>) */
 const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
@@ -109,7 +112,7 @@ function render(){
   const c2=card('who','THE OTHER PLAYER','Who is the other player in this game?');const who=input(WHOMAX,'the shops…');c2.appendChild(who);
   const c3=card('then','IF THEY PREDICT YOU','What happens if they can always predict your moves?');const then=input(THENMAX,'the paperwork is perfect the week we arrive…');c3.appendChild(then);
   const c4=card('risk','THE BACKFIRE','Is there any way mixing might backfire here?');const back=input(BACKMAX,'we skip a shop two years running and miss a real problem…');c4.appendChild(back);
-  const lk=btn('LOCK IT IN','lock');lk.disabled=true;
+  const lk=btn('ADD YOUR RESPONSE TO THE MIX','lock');lk.disabled=true;
   const all=[where,who,then,back];
   function sync(){lk.disabled=!all.every(i=>clean(i.value));}
   all.forEach(i=>i.addEventListener('input',sync));
@@ -126,14 +129,24 @@ function render(){
 }
 function renderLocked(){
   const big=document.createElement('div');big.className='bigcard';
-  const col='var(--ink)';
-  big.innerHTML='<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="var(--paper)" stroke="'+col+'" stroke-width="4"/><polygon points="20,11 28,17 25,26 15,26 12,17" fill="'+col+'"/></svg><div class="head">Your ball is in the goal</div><div class="sub"></div>';
+  big.innerHTML='<div id="myball"></div><div class="head">Your ball is in the mix</div><div class="sub"></div>';
   big.querySelector('.sub').textContent=[locked.where,locked.who,locked.then,locked.back].filter(Boolean).join(' · ')+'. Look up at the screen.';
   app.appendChild(big);
-  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your ball)';
+  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your answers)';
   again.style.marginTop='14px';
   again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
   app.appendChild(again);
+  myBall();
+}
+/* which ball is mine: the same sum the deck does, over the same lines */
+function myBall(){
+  const slot=document.getElementById('myball');if(!slot||!locked)return;
+  fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
+    const c=M6_CALLS(d.entries||[]).get(voter);
+    if(!c){setTimeout(myBall,2500);return;}
+    const col=M6_CALL_COLOUR[c.l];
+    slot.innerHTML='<svg viewBox="-24 -24 48 48" aria-label="Your ball, '+c.l+' '+c.n+'"><circle r="20" fill="'+col+'" stroke="var(--ink)" stroke-width="2.6"/><circle r="12.5" fill="var(--paper)"/><text y="-3.2" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="7.5" fill="var(--ink)">'+c.l+'</text><text y="8" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="12" fill="var(--ink)">'+c.n+'</text><ellipse cx="-9" cy="-11" rx="4.5" ry="2.6" transform="rotate(-40 -9 -11)" fill="#fff" opacity=".55"/></svg>';
+  }).catch(()=>{setTimeout(myBall,2500);});
 }
 function renderName(title,done){
   q.textContent=title;app.innerHTML='';

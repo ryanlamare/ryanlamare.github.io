@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* The Module 6 tester: the phones' side of m6's closing exercise, driven
-   from a terminal, so one person at the deck can watch the goal fill.
+   from a terminal, so one person at the deck can watch the bingo cage fill.
 
    Ryan opens the deck with ?room=trial; whoever runs this script plays the
    phones into the same room (m6-world-trial). A real phone joins as one
@@ -12,7 +12,7 @@
    --room live plays into the REAL room (so a phone that scanned the QR sits
    among the bots). Reset it in the Poll Desk afterwards.
 
-     node trial/m6.js --room trial world 18      eighteen balls into the goal (invented situations)
+     node trial/m6.js --room trial world 18      eighteen balls into the cage (invented situations)
      node trial/m6.js --room trial world 6 --from 12   …starting from the thirteenth bot, to add late arrivals
      node trial/m6.js --room trial state         what the room holds, as the deck reads it
 
