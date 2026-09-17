@@ -1,0 +1,218 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Strategic moves in your world</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 7's closing exercise: one phone each. Ryan's shape (18 Sep 2026):
+   bring back a game you already brought to these sessions, make a strategic
+   move to change it in your favor (commitment, threat or promise), say what
+   would make it credible, and name the downsides. The phone finds its
+   owner's earlier games (Module 2's tree by the asker's name, Modules 3, 4
+   and 5 by this phone) and offers only those; the blank "your game" box
+   appears only when it finds none. The send is a HOLD, the gesture from the
+   chicken wheel: a strategic move is made where everyone can see it and
+   cannot be taken back. The deck (world/sea.js) sails one ship per phone
+   round the Sirens' rock; ships.js gives this phone the same ship, so its
+   owner knows which one is theirs. The room is never told.
+
+   Wire: four lines into room m7-world, one per answer (the Worker caps a
+   line at 200 characters): g‖name‖module‖the game, m‖kind‖the move,
+   c‖what makes it credible, d‖the downside. See ships.js. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button,.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0;align-self:flex-start}
+.choices{display:flex;flex-direction:column;gap:11px}
+button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;cursor:pointer}
+button.pick.game{border-left:12px solid var(--sail);padding-left:14px}
+button.pick.game small{display:block;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1 1 0;width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);padding:12px 14px;outline:none;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:0 18px;cursor:pointer}
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.game{--side:var(--blue)} .card.move{--side:var(--red)} .card.cred{--side:#8a6d10} .card.down{--side:var(--ink)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card .mine{font-weight:600;font-size:16px;line-height:1.35;color:var(--ink)}
+.card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input[type=text]:focus{border-bottom-color:var(--side)}
+.card input:disabled{opacity:.45}
+.card ::placeholder{color:var(--muted);font-weight:500}
+.kinds{display:flex;gap:8px}
+.kinds button{flex:1;font-family:var(--sans);font-weight:700;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:2.5px solid var(--ink);padding:11px 4px;cursor:pointer}
+.kinds button.on{color:var(--paper);background:var(--k);border-color:var(--k)}
+/* the hold */
+button.hold{position:relative;overflow:hidden;width:100%;font-family:var(--sans);font-weight:700;font-size:13.5px;letter-spacing:.07em;background:var(--paper-soft);border:2.5px solid var(--red);color:var(--red);padding:17px 18px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+button.hold i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--red);opacity:.22}
+button.hold span{position:relative;mix-blend-mode:normal}
+button.hold.going i{transition:width 1.3s linear;width:100%}
+button.hold:disabled{border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+.bigcard{border:2.5px solid var(--ink);background:#CFDDD6;padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bigcard #myship svg{width:190px;height:auto;display:block}
+.bigcard .head{font-weight:700;font-size:22px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>MODULE 7 · YOUR WORLD</div>
+  <h1 id="q">Strategic moves in your world</h1>
+  <div class="hint" id="hint"></div>
+  <div id="app"></div>
+  <div class="status" id="status" aria-live="polite"></div>
+</div>
+<script src="/go/names.js"></script>
+<script src="/teaching/exec/gt/m7/world/ships.js"></script>
+<script>
+/* ?room=<x> plays into a rehearsal room (m7-world-<x>) and looks for earlier games in the same rehearsal rooms */
+const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m7-world'+SUF, LOCKKEY='gt-m7world-locked'+SUF;
+const GAMEMAX=150, MOVEMAX=150, CREDMAX=120, DOWNMAX=120;
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), hint=document.getElementById('hint'), st=document.getElementById('status');
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const cleanName=n=>clean(n).slice(0,30);
+const norm=n=>String(n||'').trim().toLowerCase();
+const clip=(s,n)=>s.length<=n?s:s.slice(0,n-1).replace(/\s+\S*$/,'')+'…';
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+function say(line){
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+/* ---- the games this person has already brought: each earlier closing
+   exercise read back in its own words. Module 2 lines carry the asker's
+   name; Modules 3, 4 and 5 are found by this phone's id (and Module 5 by
+   name too, so a different phone on day two still finds it). ---- */
+const entries=room=>fetch(API+'/p/'+room+SUF+'/entries').then(r=>r.json()).then(d=>d.entries||[]).catch(()=>[]);
+function latest(ents,mine){const o={};ents.filter(mine).forEach(e=>{const p=String(e.t||'').split('‖');o[p[0]]=p;});return o;}
+async function myGames(){
+  const [e2,e3,e4,e5]=await Promise.all([entries('m2-branch'),entries('m3-engines'),entries('m4-pds'),entries('m5-games')]);
+  const out=[];
+  /* Module 2: A|B|g|key|payload; the game is the asker's */
+  const g2=new Map();
+  e2.forEach(e=>{const p=String(e.t||'').split('|');if(p.length<5||norm(p[0])!==norm(name))return;const k=p[1]+'|'+p[2];if(!g2.has(k))g2.set(k,{});g2.get(k)[p[3]]=p.slice(4).join('|');});
+  g2.forEach(G=>{if(G.o)out.push({module:2,text:'I need '+G.o+(G.p?' from '+G.p:'')});});
+  const v3=latest(e3,e=>e.v===voter);
+  if(v3['1'])out.push({module:3,text:'Dividing '+v3['1'][1]+(v3['2']?' with '+v3['2'][1]:'')});
+  const v4=latest(e4,e=>e.v===voter);
+  if(v4['1'])out.push({module:4,text:v4['1'][1]+' and '+(v4['1'][2]||'the other side')+(v4['2']&&v4['3']?': '+v4['2'][1]+', or '+v4['3'][1]:'')});
+  const a5=e5.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='a'&&norm(p[1])===norm(name));});
+  const owners=new Set(a5.map(e=>e.v)), v5=latest(e5,e=>owners.has(e.v));
+  if(v5.a)out.push({module:5,text:v5.a[2]+': '+v5.a[3]});
+  return out.map(g=>({module:g.module,text:clip(clean(g.text),GAMEMAX)}));
+}
+
+let locked=null, games=null, chosen=null;
+try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
+function render(){
+  st.textContent='';app.innerHTML='';hint.textContent='';
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;games=null;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  q.textContent='Strategic moves in your world';
+  if(locked){renderLocked();return;}
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;games=null;chosen=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  if(!games){st.textContent='Finding your games…';myGames().then(g=>{games=g;if(g.length===1)chosen=g[0];render();});return;}
+  if(games.length>1&&!chosen){renderPick();return;}
+  renderForm();
+}
+function renderPick(){
+  hint.textContent='Pick one of the games you have already brought to these sessions.';
+  const list=document.createElement('div');list.className='choices';
+  games.forEach(g=>{const b=document.createElement('button');b.type='button';b.className='pick game';b.style.setProperty('--sail',M7_SHIPS.SAIL[g.module]);
+    const s=document.createElement('small');s.textContent='Module '+g.module;b.appendChild(s);b.appendChild(document.createTextNode(g.text));
+    b.addEventListener('click',()=>{chosen=g;render();});list.appendChild(b);});
+  app.appendChild(list);
+}
+function renderForm(){
+  const fresh=!games.length;
+  const c1=card('game','THE GAME',fresh?'Think about a prisoner’s dilemma, a coordination game or a sequential game in your own world. Who are the players, and what is the situation?':'');
+  let game=null;
+  if(fresh){game=input(GAMEMAX,'we and the other lessor keep undercutting each other…');c1.appendChild(game);}
+  else{c1.querySelector('.pq').remove();const m=document.createElement('div');m.className='mine';m.textContent=chosen.text;c1.appendChild(m);c1.style.setProperty('--side',M7_SHIPS.SAIL[chosen.module]);
+    c1.querySelector('.suit').textContent='THE GAME, FROM MODULE '+chosen.module;
+    if(games.length>1){const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← a different game';b.addEventListener('click',()=>{chosen=null;render();});c1.appendChild(b);}}
+  const c2=card('move','THE STRATEGIC MOVE','Make a strategic move to change the game in your favor');
+  const kinds=document.createElement('div');kinds.className='kinds';let kind=null;
+  [['c','Commitment'],['t','Threat'],['p','Promise']].forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=k[1];b.style.setProperty('--k',M7_SHIPS.PENNANT[k[0]]);
+    b.addEventListener('click',()=>{kind=k[0];[...kinds.children].forEach(x=>x.classList.toggle('on',x===b));sync();});kinds.appendChild(b);});
+  c2.appendChild(kinds);const move=input(MOVEMAX,'unless the price comes down, we move the contract…');c2.appendChild(move);
+  const c3=card('cred','CREDIBILITY','What would make it credible?');const cred=input(CREDMAX,'we have already qualified the rival’s parts, and they know it…');c3.appendChild(cred);
+  const c4=card('down','THE DOWNSIDE','Are there any potential downsides to the strategic move you made?');const down=input(DOWNMAX,'the rival learns we need them…');c4.appendChild(down);
+  const hold=document.createElement('button');hold.type='button';hold.className='hold';hold.disabled=true;hold.innerHTML='<i></i><span>HOLD TO BIND YOURSELF TO THE MAST</span>';
+  const all=[move,cred,down].concat(game?[game]:[]);
+  function ready(){return !!kind&&all.every(i=>clean(i.value));}
+  function sync(){hold.disabled=!ready();}
+  all.forEach(i=>i.addEventListener('input',sync));
+  /* the hold: 1.3 seconds, let go early and nothing is sent */
+  let timer=0;
+  const stop=()=>{if(!timer)return;clearTimeout(timer);timer=0;hold.classList.remove('going');st.textContent='Keep holding to send. There is no taking it back.';};
+  const start=e=>{if(hold.disabled||timer)return;e.preventDefault();st.textContent='';hold.classList.add('going');timer=setTimeout(()=>{timer=0;send();},1300);};
+  hold.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(t=>hold.addEventListener(t,stop));
+  hold.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat)start(e);});hold.addEventListener('keyup',stop);
+  hold.addEventListener('contextmenu',e=>e.preventDefault());
+  function send(){
+    const G=fresh?clean(game.value):chosen.text, mod=fresh?0:chosen.module, M=clean(move.value), C=clean(cred.value), D=clean(down.value);
+    hold.disabled=true;all.forEach(i=>i.disabled=true);st.textContent='Sending…';
+    say('g‖'+name+'‖'+mod+'‖'+G).then(()=>say('m‖'+kind+'‖'+M)).then(()=>say('c‖'+C)).then(()=>say('d‖'+D))
+      .then(()=>{locked={name,module:mod,kind,at:Date.now()};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);hold.classList.remove('going');hold.disabled=false;all.forEach(i=>i.disabled=false);});
+  }
+  [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(hold);
+}
+/* locked: my ship, the same one the deck sails */
+let shipTimer=0;
+function renderLocked(){
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div id="myship"></div><div class="head">Your ship is at sea</div>';
+  big.querySelector('#myship').innerHTML=M7_SHIPS.svg(M7_SHIPS.look(voter,locked.module,locked.kind),locked.module);
+  app.appendChild(big);
+  clearTimeout(shipTimer);
+  (function watch(){fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
+      const mine=M7_SHIPS.fleet(d.entries||[]).some(s=>s.v===voter);
+      /* a Poll Desk reset emptied the room: forget the lock, so a rehearsal phone is not stuck (a send from the last few seconds is left alone) */
+      if(!mine&&locked&&Date.now()-(locked.at||0)>15000){locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();return;}
+    }).catch(()=>{}).then(()=>{if(locked)shipTimer=setTimeout(watch,4000);});})();
+}
+function renderName(title,done){
+  q.textContent=title;app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';inp.autocomplete='off';
+  const b=document.createElement('button');b.type='button';b.textContent='OK';
+  const go=()=>{const v=cleanName(inp.value);if(v)done(v);};
+  b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+}
+function card(side,suit,question){const c=document.createElement('div');c.className='card '+side;c.innerHTML='<div class="suit"></div><div class="pq"></div>';c.querySelector('.suit').textContent=suit;c.querySelector('.pq').textContent=question;return c;}
+function input(max,ph){const i=document.createElement('input');i.type='text';i.maxLength=max;i.placeholder=ph;i.autocomplete='off';return i;}
+</script>
+</body></html>

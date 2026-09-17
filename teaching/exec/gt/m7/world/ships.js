@@ -43,5 +43,23 @@
       else{r.down=p[1]||'';r.done=true;}});
     return [...by.values()].filter(r=>r.game&&r.move&&r.done);
   }
-  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,look,fleet,hash};
+  /* the ship as an SVG string, for the phone (the deck builds the same drawing node by node in sea.js) */
+  const EMBLEM={2:'M0 9 V-1 M0 -1 L-7 -8 M0 -1 L7 -8 M0 4 L-5 0 M0 4 L5 0',3:'M8 0 A8 8 0 1 1 -8 0 A8 8 0 1 1 8 0 M0 -8 V8 M-7 -4 L7 4 M-7 4 L7 -4',
+    4:'M-9 -6 h9 v12 h-9 Z M1 -3 l8 -2 l3 11 l-8 2 Z',5:'M-10 0 H9 M3 0 L-4 -8 M3 0 L-4 8 M-8 0 L-11 -4 M-8 0 L-11 4',0:'M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z'};
+  function svg(L,module){
+    const ink='#1B1C19', paper='#E9E2D2', solid=module===4||!EMBLEM[module]||module===0;let oars='';
+    for(let i=0;i<L.oars;i++){const x=-18+i*(36/Math.max(L.oars-1,1));oars+='<line x1="'+x+'" y1="-4" x2="'+(x-9)+'" y2="9" stroke="'+ink+'" stroke-width="1.6" stroke-linecap="round"/>';}
+    return '<svg viewBox="-56 -72 112 88" aria-label="Your ship">'+oars+
+      '<line x1="0" y1="-10" x2="0" y2="-64" stroke="'+ink+'" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<path d="M0 -64 L-20 -58.5 L0 -53 Z" fill="'+L.pennant+'" stroke="'+ink+'" stroke-width="1.5" stroke-linejoin="round"/>'+
+      '<path d="M-22 -52 L22 -52 Q31 -35 24 -17 L-24 -17 Q-16 -35 -22 -52 Z" fill="'+L.sail+'" stroke="'+ink+'" stroke-width="2" stroke-linejoin="round"/>'+
+      '<path d="'+(EMBLEM[module]||EMBLEM[0])+'" transform="translate(2 -34.5) scale(.95)" fill="'+(solid?L.sailInk:'none')+'" stroke="'+L.sailInk+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'+
+      '<line x1="-25" y1="-52" x2="25" y2="-52" stroke="'+ink+'" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<circle cx="0" cy="-13.5" r="2.6" fill="'+paper+'" stroke="'+ink+'" stroke-width="1.2"/>'+
+      '<path d="M-44 -30 C-38 -30 -36 -22 -35 -10 L30 -10 L37 -22 L41 -20 L36 -8 L48 0 L34 0 C30 6 24 8 16 8 L-22 8 C-36 8 -42 -4 -44 -30 Z" fill="'+L.hull+'" stroke="'+ink+'" stroke-width="2" stroke-linejoin="round"/>'+
+      '<path d="M-36 -5 L33 -5" stroke="'+L.stripe+'" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<ellipse cx="28" cy="-1.5" rx="3.4" ry="2.4" fill="'+paper+'" stroke="'+ink+'" stroke-width="1"/><circle cx="28.6" cy="-1.5" r="1.1" fill="'+ink+'"/>'+
+      '<path d="M-48 9 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0" fill="none" stroke="#59949C" stroke-width="2.2" stroke-linecap="round"/></svg>';
+  }
+  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,look,fleet,hash,svg};
 })(typeof window!=='undefined'?window:globalThis);
