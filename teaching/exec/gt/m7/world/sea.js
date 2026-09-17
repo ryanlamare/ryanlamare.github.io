@@ -166,19 +166,6 @@
     mk('circle',{cx:WX,cy:WY,r:5,fill:INK},whirl);
   })();
 
-  /* the compass rose, bottom right */
-  (function(){const g=mk('g',{transform:'translate(930 100)'},chart);
-    mk('circle',{r:48,fill:SOFT,stroke:INK,'stroke-width':2},g);mk('circle',{r:41,fill:'none',stroke:INK,'stroke-width':1},g);
-    for(let i=0;i<32;i++){const a=i*Math.PI/16;mk('line',{x1:Math.cos(a)*41,y1:Math.sin(a)*41,x2:Math.cos(a)*(i%2?44:48),y2:Math.sin(a)*(i%2?44:48),stroke:INK,'stroke-width':1},g);}
-    const pt=(a,len,w,c1,c2)=>{const ca=Math.cos(a),sa=Math.sin(a),px=-sa*w,py=ca*w;
-      mk('path',{d:'M0 0 L'+px+' '+py+' L'+ca*len+' '+sa*len+' Z',fill:c1,stroke:INK,'stroke-width':1},g);
-      mk('path',{d:'M0 0 L'+(-px)+' '+(-py)+' L'+ca*len+' '+sa*len+' Z',fill:c2,stroke:INK,'stroke-width':1},g);};
-    for(let i=0;i<4;i++)pt(Math.PI/4+i*Math.PI/2,28,6,OCHRE,SOFT);
-    for(let i=0;i<4;i++)pt(i*Math.PI/2,i===3?41:38,7,i===3?RED:INK,SOFT);
-    mk('circle',{r:4,fill:SOFT,stroke:INK,'stroke-width':1.5},g);
-    const n=mk('text',{x:0,y:-54,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':14,fill:INK},g);n.textContent='N';
-  })();
-
   /* the title cartouche, top left */
   (function(){const g=mk('g',{},chart);
     mk('path',{d:'M66 58 H452 l-12 24 l12 24 H66 l12 -24 Z',fill:SOFT,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);

@@ -187,7 +187,7 @@ function renderForm(){
   c2.appendChild(kinds);const move=input(MOVEMAX,'unless the price comes down, we move the contract…');c2.appendChild(move);
   const c3=card('cred','CREDIBILITY','What would give the move credibility?');const cred=input(CREDMAX,'we have already qualified the rival’s parts, and they know it…');c3.appendChild(cred);
   const c4=card('down','THE DOWNSIDE','Are there potential downsides to making the move?');const down=input(DOWNMAX,'the rival learns we need them…');c4.appendChild(down);
-  const hold=document.createElement('button');hold.type='button';hold.className='hold';hold.disabled=true;hold.innerHTML='<i></i><span>HOLD TO BIND YOURSELF TO THE MAST</span>';
+  const hold=document.createElement('button');hold.type='button';hold.className='hold';hold.disabled=true;hold.innerHTML='<i></i><span>HOLD TO BIND YOURSELF TO THE MOVE</span>';
   const all=[move,cred,down].concat(game?[game]:[]);
   function ready(){return !!kind&&all.every(i=>clean(i.value));}
   function sync(){hold.disabled=!ready();}
@@ -215,6 +215,9 @@ function renderLocked(){
   big.innerHTML='<div id="myship"></div><div class="head">Your ship is at sea</div>';
   big.querySelector('#myship').innerHTML=M7_SHIPS.svg(M7_SHIPS.look(voter,locked.module,locked.kind,locked.h),locked.module,{monster:true});
   app.appendChild(big);
+  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your ship)';
+  again.style.marginTop='14px';again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
+  app.appendChild(again);
   clearTimeout(shipTimer);
   (function watch(){fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
       const mine=M7_SHIPS.fleet(d.entries||[]).some(s=>s.v===voter);
