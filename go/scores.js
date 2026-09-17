@@ -18,7 +18,8 @@
                   reach the threshold share; everyone in that group scores.
                   With maxPoints set, a name's matched questions scale to
                   that ceiling (15 matches = 5 points, rounded); with
-                  points set, each match pays that flat amount.
+                  points set, each match pays that flat amount, up to
+                  cap when one is given (the m5 quiz: 1 a match, cap 10).
      twothirds  — closest guess(es) to 2/3 of the average win.
      invest     — "name|round|i-or-d" lines; +$5 a round when the round's
                   investment rate clears 90%, −$10 when it doesn't, $0 out.
@@ -100,7 +101,10 @@ const GT_SCORES = (() => {
       id: 'm5',
       title: 'Coordination Games',
       events: [
-        { key: 'quiz', label: 'Quiz', kind: 'consensus', threshold: 0.8, maxPoints: 5,
+        /* one point for every question where you answered with the room and the
+           room cleared 80%, to a ceiling of ten (Ryan, 17 Sep 2026: what the rules
+           slide says; it had been matches scaled out of sixteen to five) */
+        { key: 'quiz', label: 'Quiz', kind: 'consensus', threshold: 0.8, points: 1, cap: 10,
           rooms: [
             { id: 'm5-k1', type: 'c' }, { id: 'm5-k2', type: 't' }, { id: 'm5-k3', type: 'c' },
             { id: 'm5-k4', type: 'c' }, { id: 'm5-k5', type: 't' }, { id: 'm5-k6', type: 't' },
@@ -295,7 +299,8 @@ const GT_SCORES = (() => {
       });
     }
     matches.forEach(m => {
-      const pts = ev.maxPoints ? Math.round(m.n / ev.rooms.length * ev.maxPoints) : m.n * ev.points;
+      let pts = ev.maxPoints ? Math.round(m.n / ev.rooms.length * ev.maxPoints) : m.n * ev.points;
+      if (ev.cap) pts = Math.min(pts, ev.cap);
       if (pts > 0) addPoints(tally, m.name, ev.key, pts);
     });
   }
