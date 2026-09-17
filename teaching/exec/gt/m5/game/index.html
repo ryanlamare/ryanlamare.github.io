@@ -80,13 +80,15 @@ try{
     localStorage.setItem('gt-voter',voter);}
 }catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
 const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+/* ?room=<x> plays into a rehearsal room (m5-invest-<x>) and keeps its picks apart from the real game's */
+const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
 let name=null, round=1, mine={}, seen={}, outcomes={};
-try{name=localStorage.getItem('gt-name');mine=JSON.parse(localStorage.getItem('gt-invest')||'{}');seen=JSON.parse(localStorage.getItem('gt-invest-seen')||'{}');}catch(_){}
-function saveSeen(){try{localStorage.setItem('gt-invest-seen',JSON.stringify(seen));}catch(_){}}
+try{name=localStorage.getItem('gt-name');mine=JSON.parse(localStorage.getItem('gt-invest'+SUF)||'{}');seen=JSON.parse(localStorage.getItem('gt-invest-seen'+SUF)||'{}');}catch(_){}
+function saveSeen(){try{localStorage.setItem('gt-invest-seen'+SUF,JSON.stringify(seen));}catch(_){}}
 if(name)claimOnce();
 let roster=[];
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
-function saveMine(){try{localStorage.setItem('gt-invest',JSON.stringify(mine));}catch(_){}}
+function saveMine(){try{localStorage.setItem('gt-invest'+SUF,JSON.stringify(mine));}catch(_){}}
 const cleanName=n=>n.trim().replace(/\s+/g,' ').slice(0,40);
 function setName(n){
   const v=cleanName(n);
@@ -173,7 +175,7 @@ function renderOutcome(r){
 const sentAt={};
 function tick(){
   const t0=Date.now();
-  fetch(API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
+  fetch(API+'/p/m5-invest'+SUF+'/answers').then(r=>r.json()).then(d=>{
     const lines=(d.answers||[]).map(t=>String(t).trim());
     const open2=lines.some(t=>t==='::open|2');
     let changed=false;
@@ -226,7 +228,7 @@ function renderName(){
 function send(code,lock){
   lock.disabled=true;
   st.textContent='Sending…';
-  fetch(API+'/p/m5-invest/say',{method:'POST',headers:{'content-type':'application/json'},
+  fetch(API+'/p/m5-invest'+SUF+'/say',{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({t:name+'|'+round+'|'+code,v:voter})})
   .then(r=>{if(!r.ok)throw r.status;
     mine[round]=code;sentAt[round]=Date.now();saveMine();

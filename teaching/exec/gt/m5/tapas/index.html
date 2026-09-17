@@ -71,6 +71,9 @@ try{
 const side=(voter.split('').reduce((a,c)=>a+c.charCodeAt(0),0)%2)?'t':'r';
 const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
 const g=GAMES[new URLSearchParams(location.search).get('g')];
+/* ?room=<x> plays into a rehearsal room (m5-bos-<x>, m5-chicken-<x>) */
+const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
+if(g)g.room+=SUF;
 let sayN=0;
 function say(room,line){
   sayN++;
@@ -80,7 +83,7 @@ function say(room,line){
 const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
 if(!g){
   q.textContent='Which vote is on the screen?';
-  app.innerHTML='<div class="choices"><a class="pick" href="?g=bos">Whose system?</a><a class="pick" href="?g=chicken">The hub lease</a></div>';
+  app.innerHTML='<div class="choices"><a class="pick" href="?g=bos'+(SUF?'&room='+SUF.slice(1):'')+'">Whose system?</a><a class="pick" href="?g=chicken'+(SUF?'&room='+SUF.slice(1):'')+'">The hub lease</a></div>';
 }else{
   q.textContent=g.title;
   const sd=document.createElement('div');sd.className='side';
