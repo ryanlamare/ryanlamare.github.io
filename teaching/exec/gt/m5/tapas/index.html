@@ -51,14 +51,8 @@ const API='https://gt-poll.rlamare.workers.dev';
 /* every word below is Ryan's to redline */
 const GAMES={
   bos:{room:'m5-bos',title:'Whose system?',side:{r:'Northeast Airlines',t:'Balta Air Lines'},
-    brief:{r:'Northeast and Balta have merged and must run one booking system. Yours is Northeast’s, the one everyone on your side is used to.',
-           t:'Northeast and Balta have merged and must run one booking system. Yours is Balta’s, the one everyone on your side is used to.'},
-    rule:'If both sides back the same system, you switch to it. If not, the merger is delayed.',
     opts:[{k:'a',n:'Northeast’s system'},{k:'b',n:'Balta’s system'}]},
   chicken:{room:'m5-chicken',title:'The hub lease',side:{r:'USA Air',t:'Plattsburgh Airport'},
-    brief:{r:'You run your hub out of Plattsburgh and the lease is up. Your board has said it will not renew without a big cut in gate and landing fees.',
-           t:'You run Plattsburgh Airport and USA Air’s hub lease is up. Your board has said it cannot afford the cut the airline is demanding.'},
-    rule:'If one side gives ground, the other gets its way. If both give, you split the difference. If both hold firm, the hub is moved elsewhere.',
     opts:[{k:'a',n:'Give ground'},{k:'b',n:'Hold firm'}]}
 };
 let voter=null;
@@ -87,11 +81,9 @@ if(!g){
 }else{
   q.textContent=g.title;
   const sd=document.createElement('div');sd.className='side';
-  sd.innerHTML='<div class="sk">Your side</div><div class="sn '+side+'">'+g.side[side]+'</div><div class="sb"></div>';
-  sd.querySelector('.sb').textContent=g.brief[side];
+  /* only what the phone alone knows: your side. The scenario and the rule are on the slide (Ryan, 17 Sep) */
+  sd.innerHTML='<div class="sk">Your side</div><div class="sn '+side+'">'+g.side[side]+'</div>';
   app.appendChild(sd);
-  const rule=document.createElement('div');rule.className='status';rule.style.color='var(--ink)';rule.textContent=g.rule;
-  app.appendChild(rule);
   const stage=document.createElement('div');app.appendChild(stage);
   let round=1, mine={1:null,2:null}, shown='';
   try{mine=JSON.parse(localStorage.getItem('m5tapas-'+g.room)||'{"1":null,"2":null}');}catch(_){}
