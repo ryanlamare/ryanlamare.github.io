@@ -127,7 +127,7 @@ function render(){
     if(!W||!P||!T||!B)return;
     lk.disabled=true;all.forEach(i=>i.disabled=true);st.textContent='Sending…';
     say('a‖'+name+'‖'+W+'‖'+P).then(()=>say('b‖'+T+'‖'+B))
-      .then(()=>{locked={name,where:W,who:P,then:T,back:B};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .then(()=>{locked={name,where:W,who:P,then:T,back:B,at:Date.now()};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
       .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;all.forEach(i=>i.disabled=false);});
   });
   [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
@@ -156,6 +156,8 @@ function myBall(){
   const slot=document.getElementById('myball');if(!slot||!locked)return;
   fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
     const R=M6_ROOM(d.entries||[]), c=R.calls.get(voter);
+    /* a Poll Desk reset emptied the room: forget the lock, so a rehearsal phone is not stuck (a send from the last few seconds is left alone) */
+    if(!c&&Date.now()-(locked.at||0)>15000){locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();return;}
     if(c)slot.innerHTML=ballSvg(c.l+c.n,{});
     const cardEl=document.getElementById('mycard'), head=document.getElementById('myhead');
     if(c&&R.isDealt){
