@@ -31,32 +31,26 @@ if (LIVE) console.log('  !! playing into the REAL room. Reset it in the Poll Des
 
 /* one invented person per seat, the same every run */
 const NAMES = ['Priya K', 'Tom W', 'Elena R', 'Marcus B', 'Sam O', 'Aisha N', 'Ben T', 'Cara L', 'Dev P', 'Hana S', 'Ivan M', 'Jo F', 'Kemi A', 'Luis G', 'Mei C', 'Noor H', 'Owen D', 'Rosa V', 'Theo J', 'Uma R', 'Vik S', 'Wen L', 'Yara M', 'Zoe P'];
-/* who is trying to predict you, what, what happens if they can, pays (p) or costs (c) */
+/* where it benefits to be inconsistent, the other player, what happens if they can always predict you, how mixing might backfire */
 const WORLD = [
-  ['The maintenance shops we audit', 'Which sites we visit this quarter', 'The paperwork is perfect the week we arrive', 'p'],
-  ['The airline across the table', 'How far we will move on price', 'They wait for our quarter end and get the discount', 'p'],
-  ['My team', 'What I will approve', 'They get on with the work without asking me first', 'c'],
-  ['A rival lessor', 'Which tenders we bid for', 'They only sharpen their price when we are in', 'p'],
-  ['Our suppliers', 'When we re-tender the contract', 'Prices creep up until the month before', 'p'],
-  ['Our customers', 'Whether we deliver on the date', 'They build their schedule around us, and they come back', 'c'],
-  ['Our own sales team', 'Which expense claims get checked', 'The kind we never check keeps growing', 'p'],
-  ['Customers', 'When the promotion starts', 'They hold their orders until it does', 'p'],
-  ['The other side’s lawyers', 'Which clauses we will fight for', 'They trade away the ones we always give up', 'p'],
-  ['Investors', 'What we will pay out', 'A steady share price', 'c'],
-  ['Lessees', 'Which returned engines we inspect closely', 'The records are tidy only for the engines we always check', 'p'],
-  ['Competitors', 'When we release the next version', 'They launch the week before', 'p'],
-  ['A joint-venture partner', 'How we will vote on the board', 'They back us before the meeting', 'c'],
-  ['Fraudsters', 'Which transactions we review', 'They stay just under the threshold', 'p'],
-  ['A counterparty', 'When we walk away from a deal', 'They push until just before that point', 'p'],
-  ['The regulator', 'How we report a finding', 'They trust our reports and visit less', 'c'],
-  ['Bidders', 'How low we will go', 'Every offer lands just above it', 'p'],
-  ['Our lenders', 'Whether we pay on time', 'Cheaper money', 'c'],
-  ['The union', 'When we will settle', 'They hold out until the week we always fold', 'p'],
-  ['A key account', 'Who we send to the renewal', 'They prepare for that person, not for us', 'p'],
-  ['New hires', 'What the probation review checks', 'They do those things well and nothing else', 'p'],
-  ['Our partner airline', 'When our engines come off wing', 'They plan their own shop visits around ours', 'c'],
-  ['The press', 'When we announce results', 'Nothing, they just turn up', 'c'],
-  ['The other bidder', 'Our opening offer', 'They open a fraction better every time', 'p'],
+  ['Which maintenance shops we audit each quarter','The shops','The paperwork is perfect the week we arrive','We skip a shop two years running and miss a real problem'],
+  ['How far we move on price at the end of a quarter','The airline across the table','They wait for our quarter end and get the discount','We hold firm at the wrong moment and lose the deal'],
+  ['Which tenders we bid for','A rival lessor','They only sharpen their price when we are in','We sit out one we should have won'],
+  ['When we re-tender a supply contract','Our suppliers','Prices creep up until the month before','A good supplier stops investing in us'],
+  ['Which expense claims get checked','Our own sales team','The kind we never check keeps growing','An honest person feels accused'],
+  ['When the promotion starts','Our customers','They hold their orders until it does','Loyal customers pay full price the week before and find out'],
+  ['Which clauses we fight for','The other side’s lawyers','They trade away the ones we always give up','We look erratic and the talks slow down'],
+  ['Which returned engines we inspect closely','Lessees','The records are tidy only for the engines we always check','The one we wave through is the bad one'],
+  ['When we release the next version','Competitors','They launch the week before','Our own sales team cannot plan either'],
+  ['Which transactions we review','Fraudsters','They stay just under the threshold','We miss an obvious one and it looks like negligence'],
+  ['When we walk away from a deal','A counterparty','They push until just before that point','We walk from one we needed'],
+  ['Who we send to the renewal','A key account','They prepare for that person, not for us','The customer wanted the person they know'],
+  ['Our opening offer','The other bidder','They open a fraction better every time','We open too high and drop out of the running'],
+  ['When we will settle','The union','They hold out until the week we always fold','A strike we could have avoided'],
+  ['What the probation review checks','New hires','They do those things well and nothing else','People feel the goalposts move'],
+  ['Which sites get a safety walk-round','Site managers','Everything is tidy on the first Monday of the month','A manager takes it as distrust'],
+  ['How we respond to a late payment','Customers who pay late','They pay us last, because we always wait','We chase a good customer hard in a bad month'],
+  ['Which supplier invoices we query','Suppliers','Small overcharges on the lines we never read','Time spent on invoices that were fine'],
 ];
 const voterOf = i => 'trial-m6-world-' + String(i).padStart(3, '0');
 
@@ -72,17 +66,17 @@ async function world(n, from) {
   for (let i = from; i < from + n; i++) {
     const w = WORLD[i];
     await say('a‖' + NAMES[i] + '‖' + w[0] + '‖' + w[1], voterOf(i));
-    await say('b‖' + w[3] + '‖' + w[2], voterOf(i));
+    await say('b‖' + w[2] + '‖' + w[3], voterOf(i));
     await sleep(GAP);
   }
   console.log(n + ' balls sent to ' + ROOM + '.');
 }
 async function state() {
   const by = new Map();
-  (await entries()).forEach(e => { const p = String(e.t || '').split('‖'); if (p[0] !== 'a' && p[0] !== 'b') return; if (!by.has(e.v)) by.set(e.v, {}); const r = by.get(e.v); if (p[0] === 'a') { r.name = p[1]; r.who = p[2]; r.what = p[3]; } else { r.k = p[1]; r.then = p[2]; } });
-  const L = [...by.values()].filter(r => r.what && r.k);
-  console.log(ROOM + ': ' + L.length + ' balls, ' + L.filter(r => r.k === 'p').length + ' pays, ' + L.filter(r => r.k === 'c').length + ' costs.');
-  L.forEach((r, i) => console.log('  ' + (i + 1) + '. ' + (r.k === 'p' ? 'PAYS ' : 'COSTS') + '  ' + r.name + ': ' + r.who + ' / ' + r.what + ' / ' + r.then));
+  (await entries()).forEach(e => { const p = String(e.t || '').split('‖'); if (p[0] !== 'a' && p[0] !== 'b') return; if (!by.has(e.v)) by.set(e.v, {}); const r = by.get(e.v); if (p[0] === 'a') { r.name = p[1]; r.where = p[2]; r.who = p[3]; } else { r.then = p[1]; r.back = p[2]; } });
+  const L = [...by.values()].filter(r => r.where && r.then !== undefined);
+  console.log(ROOM + ': ' + L.length + ' balls.');
+  L.forEach((r, i) => console.log('  ' + (i + 1) + '. ' + r.name + ': ' + r.where + ' / ' + r.who + ' / ' + r.then + ' / ' + r.back));
 }
 
 (async () => {

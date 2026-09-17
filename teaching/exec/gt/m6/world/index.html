@@ -5,18 +5,18 @@
 <link rel="stylesheet" href="/brand.css">
 <style>
 /* Module 6's closing exercise: one phone each, one real situation from
-   their world where somebody is trying to predict them. Four answers: who
-   is trying to predict you, what they are trying to predict, what happens
-   if they can, and one tap, does it pay to be unpredictable here or does
-   it cost you. One LOCK IT IN. The deck puts one ball in the goal per
-   phone, left of the keeper where it pays and right where it costs, and
-   shows the answers under the goal when Ryan clicks a ball.
+   their world. Ryan's four questions (17 Sep): where can it strategically
+   benefit you to be inconsistent; who is the other player in this game;
+   what happens if they can always predict your moves; is there any way
+   mixing might backfire here. One LOCK IT IN. The deck puts one ball in
+   the goal per phone and shows the answers under the goal when Ryan
+   clicks a ball.
 
    Wire: two lines into room m6-world, "k‖…" (the Worker caps a line at
    200 characters and a phone at 15 lines a room, so two lines a send
    leaves room for a start-over):
-     a‖name‖who‖what
-     b‖p-or-c‖what happens
+     a‖name‖where‖the other player
+     b‖if they predict you‖the backfire
    The deck groups the room's lines by phone; the latest a and b per
    phone win, so a re-send corrects rather than duplicates. */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -38,21 +38,16 @@ button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);fon
 .namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:0 18px;cursor:pointer}
 /* the cards */
 .card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
-.card.who{--side:var(--terracotta)} .card.what{--side:var(--red)} .card.then{--side:var(--maroon)} .card.pc{--side:var(--ink)}
+.card.where{--side:var(--red)} .card.who{--side:var(--terracotta)} .card.then{--side:var(--maroon)} .card.risk{--side:var(--ink)}
 .card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
 .card .pq{font-weight:600;font-size:16px;line-height:1.35}
 .card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
 .card input[type=text]:focus{border-bottom-color:var(--side)}
 .card input:disabled{opacity:.45}
 .card ::placeholder{color:var(--muted);font-weight:500}
-.chips{display:flex;gap:8px}
-button.opt{flex:1;display:block;text-align:center;font-family:var(--sans);font-weight:700;font-size:16px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:13px 10px;cursor:pointer}
-button.opt[data-k=p].mine{background:var(--teal);border-color:var(--teal);color:var(--paper)}
-button.opt[data-k=c].mine{background:var(--terracotta);border-color:var(--terracotta);color:var(--paper)}
-button.opt:disabled{opacity:.45;cursor:default}
 button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
 button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
-/* locked: the ball, ringed in the side's colour */
+/* locked: the ball */
 .bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
 .bigcard svg{width:64px;height:64px;display:block}
 .bigcard .head{font-weight:700;font-size:22px}
@@ -71,7 +66,7 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 /* ?room=<x> plays into a rehearsal room (m6-world-<x>) */
 const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
 const API='https://gt-poll.rlamare.workers.dev', ROOM='m6-world'+SUF, LOCKKEY='gt-m6world-locked'+SUF;
-const WHOMAX=60, WHATMAX=80, THENMAX=110;
+const WHEREMAX=80, WHOMAX=50, THENMAX=90, BACKMAX=90;
 let voter=null;
 try{
   voter=localStorage.getItem('gt-voter');
@@ -81,7 +76,6 @@ try{
 const app=document.getElementById('app'), q=document.getElementById('q'), hint=document.getElementById('hint'), st=document.getElementById('status');
 const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
 const cleanName=n=>clean(n).slice(0,30);
-const SIDE={p:'It pays to be unpredictable',c:'It costs me to be unpredictable'};
 let name=null, roster=[];
 try{name=localStorage.getItem('gt-name');}catch(_){}
 if(name)claimOnce();
@@ -106,42 +100,35 @@ function render(){
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
   q.textContent='Unpredictability in your world';
   if(locked){renderLocked();return;}
-  hint.textContent='A situation from your world where somebody is trying to predict you.';
   const me=document.createElement('div');me.className='me';
   me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
   me.querySelector('b').textContent=name;
   me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
   app.appendChild(me);
-  const c1=card('who','THE OTHER SIDE','Who is trying to predict you?');const who=input(WHOMAX,'the maintenance shops we audit…');c1.appendChild(who);
-  const c2=card('what','THE DECISION','What are they trying to predict?');const what=input(WHATMAX,'which sites we visit this quarter…');c2.appendChild(what);
-  const c3=card('then','IF THEY CAN','What happens if they can predict you?');const then=input(THENMAX,'the paperwork is perfect the week we arrive…');c3.appendChild(then);
-  const c4=card('pc','PAYS OR COSTS','Does it pay to be unpredictable here, or does it cost you?');
-  const chips=document.createElement('div');chips.className='chips';let k=null;const cb=[];
-  [['p','It pays'],['c','It costs me']].forEach(([kk,label])=>{
-    const b=document.createElement('button');b.className='opt';b.type='button';b.textContent=label;b.dataset.k=kk;
-    b.addEventListener('click',()=>{k=kk;cb.forEach(x=>x.classList.toggle('mine',x===b));sync();});
-    chips.appendChild(b);cb.push(b);});
-  c4.appendChild(chips);
+  const c1=card('where','THE SITUATION','Where can it strategically benefit you to be inconsistent?');const where=input(WHEREMAX,'which maintenance shops we audit each quarter…');c1.appendChild(where);
+  const c2=card('who','THE OTHER PLAYER','Who is the other player in this game?');const who=input(WHOMAX,'the shops…');c2.appendChild(who);
+  const c3=card('then','IF THEY PREDICT YOU','What happens if they can always predict your moves?');const then=input(THENMAX,'the paperwork is perfect the week we arrive…');c3.appendChild(then);
+  const c4=card('risk','THE BACKFIRE','Is there any way mixing might backfire here?');const back=input(BACKMAX,'we skip a shop two years running and miss a real problem…');c4.appendChild(back);
   const lk=btn('LOCK IT IN','lock');lk.disabled=true;
-  const all=[who,what,then];
-  function sync(){lk.disabled=!(all.every(i=>clean(i.value))&&k);}
+  const all=[where,who,then,back];
+  function sync(){lk.disabled=!all.every(i=>clean(i.value));}
   all.forEach(i=>i.addEventListener('input',sync));
   lk.addEventListener('click',()=>{
-    const W=clean(who.value),D=clean(what.value),T=clean(then.value);
-    if(!W||!D||!T||!k)return;
-    lk.disabled=true;all.forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
-    say('a‖'+name+'‖'+W+'‖'+D).then(()=>say('b‖'+k+'‖'+T))
-      .then(()=>{locked={name,who:W,what:D,then:T,k};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
-      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;all.forEach(i=>i.disabled=false);cb.forEach(b=>b.disabled=false);});
+    const W=clean(where.value),P=clean(who.value),T=clean(then.value),B=clean(back.value);
+    if(!W||!P||!T||!B)return;
+    lk.disabled=true;all.forEach(i=>i.disabled=true);st.textContent='Sending…';
+    say('a‖'+name+'‖'+W+'‖'+P).then(()=>say('b‖'+T+'‖'+B))
+      .then(()=>{locked={name,where:W,who:P,then:T,back:B};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;all.forEach(i=>i.disabled=false);});
   });
   [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
-  who.focus();
+  where.focus();
 }
 function renderLocked(){
   const big=document.createElement('div');big.className='bigcard';
-  const col=locked.k==='p'?'var(--teal)':'var(--terracotta)';
+  const col='var(--ink)';
   big.innerHTML='<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="var(--paper)" stroke="'+col+'" stroke-width="4"/><polygon points="20,11 28,17 25,26 15,26 12,17" fill="'+col+'"/></svg><div class="head">Your ball is in the goal</div><div class="sub"></div>';
-  big.querySelector('.sub').textContent=locked.who+' · '+locked.what+' · '+locked.then+' · '+SIDE[locked.k]+'. Look up at the screen.';
+  big.querySelector('.sub').textContent=[locked.where,locked.who,locked.then,locked.back].filter(Boolean).join(' · ')+'. Look up at the screen.';
   app.appendChild(big);
   const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your ball)';
   again.style.marginTop='14px';
