@@ -76,6 +76,8 @@ async function state() {
   (await entries()).forEach(e => { const p = String(e.t || '').split('‖'); if (p[0] !== 'a' && p[0] !== 'b') return; if (!by.has(e.v)) by.set(e.v, {}); const r = by.get(e.v); if (p[0] === 'a') { r.name = p[1]; r.where = p[2]; r.who = p[3]; } else { r.then = p[1]; r.back = p[2]; } });
   const L = [...by.values()].filter(r => r.where && r.then !== undefined);
   console.log(ROOM + ': ' + L.length + ' balls.');
+  const all = await entries(), marks = all.map(e => String(e.t)).filter(x => x.startsWith('::'));
+  console.log('  markers: ' + (marks.join('  ') || 'none (no draw yet, so no cards dealt)'));
   L.forEach((r, i) => console.log('  ' + (i + 1) + '. ' + r.name + ': ' + r.where + ' / ' + r.who + ' / ' + r.then + ' / ' + r.back));
 }
 

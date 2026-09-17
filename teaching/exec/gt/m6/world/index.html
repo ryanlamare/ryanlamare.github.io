@@ -13,6 +13,8 @@
    them at random; the ball's call and colour come from calls.js, which the
    deck runs too, so this page can show its owner which ball is theirs. The
    room is never told: the deck opens a drawn ball's answers without a name.
+   Once the deck's first draw has dealt, the locked screen also holds this
+   phone's bingo card, stamped as balls are drawn (unscored, for fun).
 
    Wire: two lines into room m6-world, "k‖…" (the Worker caps a line at
    200 characters and a phone at 15 lines a room, so two lines a send
@@ -51,9 +53,13 @@ button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;le
 button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
 /* locked: the ball */
 .bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
-.bigcard svg{width:120px;height:120px;display:block}
+.bigcard #myball svg{width:104px;height:104px;display:block}
 .bigcard .head{font-weight:700;font-size:22px}
-.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
+.bigcard .head.won{font-family:var(--display);font-weight:900;font-size:44px;color:var(--red);line-height:1}
+.bcard{display:grid;gap:8px;width:100%;max-width:300px}
+.bcard:empty{display:none}
+.bcard .cell{background:var(--paper-soft);border:2px solid var(--ink);padding:6px}
+.bcard .cell svg{width:100%;height:auto}
 </style>
 </head><body>
 <div class="wrap">
@@ -127,26 +133,39 @@ function render(){
   [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
   where.focus();
 }
+/* locked: my ball, and once the deck has dealt, my bingo card. The card is
+   state only: coloured balls, a red stamp on each one drawn, BINGO! on a
+   line. Nothing to tap. Deck and phone read the same lines (calls.js). */
+function ballSvg(call,opts){
+  const l=call[0], n=call.slice(1), col=M6_CALL_COLOUR[l]||'var(--ink)', o=opts||{};
+  return '<svg viewBox="-24 -24 48 48" aria-label="'+l+' '+n+(o.hit?', drawn':'')+'"><circle r="20" fill="'+col+'" stroke="var(--ink)" stroke-width="'+(o.own?4:2.6)+'"/><circle r="12.5" fill="var(--paper)"/><text y="-3.2" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="7.5" fill="var(--ink)">'+l+'</text><text y="8" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="12" fill="var(--ink)">'+n+'</text><ellipse cx="-9" cy="-11" rx="4.5" ry="2.6" transform="rotate(-40 -9 -11)" fill="#fff" opacity=".55"/>'+(o.hit?'<circle r="21" fill="var(--red)" opacity=".82"/><path d="M-9 1 L-3 8 L10 -8" fill="none" stroke="var(--paper)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>':'')+'</svg>';
+}
 function renderLocked(){
   const big=document.createElement('div');big.className='bigcard';
-  big.innerHTML='<div id="myball"></div><div class="head">Your ball is in the mix</div><div class="sub"></div>';
-  big.querySelector('.sub').textContent=[locked.where,locked.who,locked.then,locked.back].filter(Boolean).join(' · ')+'. Look up at the screen.';
+  big.innerHTML='<div id="myball"></div><div class="head" id="myhead">Your ball is in the mix</div><div class="bcard" id="mycard"></div>';
   app.appendChild(big);
-  const again=document.createElement('button');again.className='back';again.type='button';again.textContent='← start over (this replaces your answers)';
+  const again=document.createElement('button');again.className='back';again.type='button';again.id='again';again.textContent='← start over (this replaces your answers)';
   again.style.marginTop='14px';
   again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
   app.appendChild(again);
   myBall();
 }
-/* which ball is mine: the same sum the deck does, over the same lines */
+let ballTimer=0;
 function myBall(){
+  clearTimeout(ballTimer);
   const slot=document.getElementById('myball');if(!slot||!locked)return;
   fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
-    const c=M6_CALLS(d.entries||[]).get(voter);
-    if(!c){setTimeout(myBall,2500);return;}
-    const col=M6_CALL_COLOUR[c.l];
-    slot.innerHTML='<svg viewBox="-24 -24 48 48" aria-label="Your ball, '+c.l+' '+c.n+'"><circle r="20" fill="'+col+'" stroke="var(--ink)" stroke-width="2.6"/><circle r="12.5" fill="var(--paper)"/><text y="-3.2" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="7.5" fill="var(--ink)">'+c.l+'</text><text y="8" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="12" fill="var(--ink)">'+c.n+'</text><ellipse cx="-9" cy="-11" rx="4.5" ry="2.6" transform="rotate(-40 -9 -11)" fill="#fff" opacity=".55"/></svg>';
-  }).catch(()=>{setTimeout(myBall,2500);});
+    const R=M6_ROOM(d.entries||[]), c=R.calls.get(voter);
+    if(c)slot.innerHTML=ballSvg(c.l+c.n,{});
+    const cardEl=document.getElementById('mycard'), head=document.getElementById('myhead');
+    if(c&&R.isDealt){
+      const card=M6_CARD(voter,R.dealt);
+      if(card.size){cardEl.style.gridTemplateColumns='repeat('+card.size+',1fr)';
+        cardEl.innerHTML=card.cells.map(x=>'<div class="cell">'+ballSvg(x,{hit:R.draws.indexOf(x)>=0,own:x===card.own})+'</div>').join('');
+        const won=M6_BINGO(card,R.draws);head.textContent=won?'BINGO!':'Your bingo card';head.classList.toggle('won',won);
+        const again=document.getElementById('again');if(again)again.style.display='none';} /* a start-over after the deal would orphan the card */
+    }else{cardEl.innerHTML='';head.textContent='Your ball is in the mix';head.classList.remove('won');}
+  }).catch(()=>{}).then(()=>{ballTimer=setTimeout(myBall,2500);});
 }
 function renderName(title,done){
   q.textContent=title;app.innerHTML='';
