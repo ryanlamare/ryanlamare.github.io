@@ -8,8 +8,8 @@
 
    A click on a ship opens it from the side, the answers written on the ship
    itself: the game on the hull, the move on the sail, what makes it credible
-   inside the rope at the mast, the downside among the rocks under the
-   waterline. No name is shown until WHOSE SHIP IS THIS? is clicked. Closing
+   inside the rope at the mast, the downside under the
+   waterline where a monster coils. No name is shown until WHOSE SHIP IS THIS? is clicked. Closing
    a ship sends it home to Ithaca, where it anchors and can be opened again.
    Nobody is judged and nothing is scored: every ship that binds itself gets
    past.
@@ -255,11 +255,13 @@
     mk('line',{x1:0,y1:-10,x2:0,y2:-64,stroke:INK,'stroke-width':2.6,'stroke-linecap':'round'},body);
     mk('path',{d:'M0 -64 L-20 -58.5 L0 -53 Z',fill:L.pennant,stroke:INK,'stroke-width':1.5,'stroke-linejoin':'round'},body);
     /* the sail, bellied toward the bow */
-    mk('path',{d:'M-22 -52 L22 -52 Q31 -35 24 -17 L-24 -17 Q-16 -35 -22 -52 Z',fill:L.sail,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},body);
+    mk('path',{d:'M-22 -52 L22 -52 Q31 -37 24 -22 L-24 -22 Q-16 -37 -22 -52 Z',fill:L.sail,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},body);
     mk('path',{d:EMBLEM[b.d.module]||EMBLEM[0],transform:'translate(2 -34.5) scale(.95)',fill:b.d.module===4||b.d.module===0?L.sailInk:'none',stroke:L.sailInk,'stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round',opacity:.92},body);
     mk('line',{x1:-25,y1:-52,x2:25,y2:-52,stroke:INK,'stroke-width':2.6,'stroke-linecap':'round'},body);
     /* bound to the mast */
-    mk('circle',{cx:0,cy:-13.5,r:2.6,fill:PAPER,stroke:INK,'stroke-width':1.2},body);
+    mk('path',{d:'M-3.6 -14 L3.6 -14 L2.6 -9.5 L-2.6 -9.5 Z',fill:RED,stroke:INK,'stroke-width':1},body);
+    mk('circle',{cx:0,cy:-17.2,r:3.3,fill:PAPER,stroke:INK,'stroke-width':1.2},body);
+    mk('path',{d:'M-5 -13.2 H5 M-5 -10.6 H5',stroke:OCHRE,'stroke-width':1.4,'stroke-linecap':'round'},body);
     /* the hull: a galley, stern curling up behind, a ram and an eye at the bow */
     mk('path',{d:'M-44 -30 C-38 -30 -36 -22 -35 -10 L30 -10 L37 -22 L41 -20 L36 -8 L48 0 L34 0 C30 6 24 8 16 8 L-22 8 C-36 8 -42 -4 -44 -30 Z',fill:L.hull,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},body);
     mk('path',{d:'M-36 -5 L33 -5',stroke:L.stripe,'stroke-width':2.6,'stroke-linecap':'round'},body);
@@ -386,9 +388,15 @@
     /* the waterline over the hull, and the deep */
     mk('path',{d:'M0 506 q14 -9 28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 V620 H0 Z',fill:'#1F3B4D',opacity:.93},g);
     mk('path',{d:'M0 506 q14 -9 28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0',fill:'none',stroke:PAPER,'stroke-width':3,opacity:.85},g);
-    /* the rocks */
-    mk('path',{d:'M0 620 V560 L26 528 L52 566 L84 540 L112 584 L150 570 L176 620 Z M1100 620 V548 L1070 512 L1046 560 L1012 536 L986 588 L950 574 L928 620 Z',fill:INK,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},g);
-    mk('path',{d:'M26 528 L40 620 M84 540 L92 620 M1070 512 L1060 620 M1012 536 L1006 620',stroke:PAPER,'stroke-width':1.2,opacity:.35},g);
+    /* the monster under the water: coils to the left, a head rising by the bow */
+    const coil=d=>{mk('path',{d,fill:'none',stroke:INK,'stroke-width':30,'stroke-linecap':'round'},g);mk('path',{d,fill:'none',stroke:GREEN,'stroke-width':22,'stroke-linecap':'round'},g);
+      mk('path',{d,fill:'none',stroke:PAPER,'stroke-width':2,'stroke-dasharray':'3 10',opacity:.5},g);};
+    coil('M30 622 C30 570 96 570 96 622');coil('M126 624 C126 584 176 584 176 624');
+    coil('M980 640 C972 590 990 560 1016 546');
+    mk('path',{d:'M1000 556 C998 530 1024 516 1050 522 C1072 528 1078 548 1064 556 L1044 552 L1030 566 Z',fill:GREEN,stroke:INK,'stroke-width':3,'stroke-linejoin':'round'},g);
+    mk('circle',{cx:1030,cy:534,r:7,fill:PAPER,stroke:INK,'stroke-width':2.5},g);mk('circle',{cx:1032,cy:534,r:3.2,fill:INK},g);
+    mk('path',{d:'M1064 556 l26 -6 l-12 8 l14 8 l-28 -2',fill:RED,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},g);
+    mk('path',{d:'M1016 522 l-4 -16 l10 10 l4 -14 l6 14',fill:OCHRE,stroke:INK,'stroke-width':1.8,'stroke-linejoin':'round'},g);
     return P;
   }
   function fit(el,max,min){const box=el.parentElement;for(let f=max;f>=min;f--){el.style.fontSize=f+'px';if(box.scrollHeight<=box.clientHeight+2)break;}}
@@ -422,7 +430,7 @@
     L.forEach(d=>{seen.add(d.v);
       let b=ships.get(d.v)||pending.find(x=>x.v===d.v);
       if(b){b.d=d;return;}
-      b={v:d.v,d,look:S.look(d.v,d.module,d.kind),x:0,y:0,s:1,face:1,ph:0};
+      b={v:d.v,d,look:S.look(d.v,d.module,d.kind,d.h),x:0,y:0,s:1,face:1,ph:0};
       if(home.includes(d.v))dock(b,now,true);
       else if(first)launch(b,now,true);
       else pending.push(b);});
