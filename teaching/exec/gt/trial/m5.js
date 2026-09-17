@@ -14,8 +14,8 @@
 
      node trial/m5.js --room trial invest 20             twenty bots lock the round that is open (round 2 once the deck has opened it)
      node trial/m5.js --room trial invest 20 --rate 0.95 …with 95% investing (default 0.8 in round 1, 0.95 in round 2); --round 2 forces the round
-     node trial/m5.js --room trial votes bos 20          twenty votes on Whose system? for the open round, sides alternating
-     node trial/m5.js --room trial votes chicken 20 --a 0.3    …30% of each side picking the first option (give ground); default 0.5
+     node trial/m5.js --room trial votes bos 20          twenty votes on Whose system? for the open round, sides alternating; by default each side backs its own system in round 1 and most land on the first side's in round 2
+     node trial/m5.js --room trial votes chicken 20 --a 0.3    …30% of each side on the first option (give ground); --ra / --ta set one side; by default most hold firm in round 1 and the second side gives in round 2
      node trial/m5.js --room trial games 22              twenty-two windows onto the aircraft (invented situations)
      node trial/m5.js --room trial state                 what each room holds, as the deck reads it
      node trial/m5.js --room trial deck open             post the round-two marker yourself (solo test without the deck); --game bos|chicken for the vote rooms
@@ -64,12 +64,17 @@ async function invest(n) {
 async function votes(game, n) {
   if (!ROOM[game] || game === 'invest' || game === 'games') { console.error('Which vote? bos (Whose system?) or chicken (The hub lease).'); process.exit(2); }
   const round = opt.round ? +opt.round : openRound(await answers(ROOM[game]));
-  const a = opt.a !== undefined ? +opt.a : 0.5;
-  console.log((game === 'bos' ? 'Whose system?' : 'The hub lease') + ', round ' + round + ': ' + n + ' bots, ' + Math.round(a * 100) + '% of each side on the first option.');
+  /* the share of each side on the FIRST option. Defaults are what a room does:
+     whose system, round 1, each side backs its own (90%), round 2 most of both
+     land on the first side's; the hub lease, most hold firm in round 1, and in
+     round 2 the second side gives ground. --a sets both sides; --ra / --ta one. */
+  const dflt = game === 'bos' ? (round === 1 ? [0.9, 0.1] : [0.9, 0.8]) : (round === 1 ? [0.2, 0.2] : [0.1, 0.8]);
+  const share = [opt.ra !== undefined ? +opt.ra : opt.a !== undefined ? +opt.a : dflt[0], opt.ta !== undefined ? +opt.ta : opt.a !== undefined ? +opt.a : dflt[1]];
+  console.log((game === 'bos' ? 'Whose system?' : 'The hub lease') + ', round ' + round + ': ' + n + ' bots; on the first option, ' + Math.round(share[0] * 100) + '% of the first side and ' + Math.round(share[1] * 100) + '% of the second.');
   const half = [0, 0];
   for (let i = 0; i < n; i++) {
     const s = i % 2; const side = s ? 't' : 'r'; const k = half[s]++;
-    const o = pick(k, Math.ceil(n / 2), a) ? 'a' : 'b';
+    const o = pick(k, Math.ceil(n / 2), share[s]) ? 'a' : 'b';
     const v = voterOf(game === 'bos' ? 'bos' : 'chk', i);
     await say(ROOM[game], 'v|' + v + '|' + side + '|' + round + '|' + o, v); await sleep(GAP);
   }
