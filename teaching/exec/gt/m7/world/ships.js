@@ -56,7 +56,7 @@
     let oars='';for(let i=0;i<L.oars;i++){const x=-18+i*(36/Math.max(L.oars-1,1));oars+='<line x1="'+x+'" y1="-4" x2="'+(x-9)+'" y2="9" stroke="'+ink+'" stroke-width="1.6" stroke-linecap="round"/>';}
     const mast=P.sail||P.pennant||P.bound;
     return '<svg viewBox="-60 -74 120 116" aria-label="Your ship">'+
-      part('monster',P.monster,'<path d="M-46 30 C-46 16 -30 16 -30 30 M-16 34 C-16 22 -4 22 -4 34" fill="none" stroke="#26713D" stroke-width="7" stroke-linecap="round"/><path d="M-46 30 C-46 16 -30 16 -30 30 M-16 34 C-16 22 -4 22 -4 34" fill="none" stroke="'+ink+'" stroke-width="2" stroke-linecap="round" opacity=".35"/>'+
+      part('monster',P.monster,'<path d="M-52 30 a14 6 0 1 1 28 0 a10 4 0 1 1 -20 0 a6 2.5 0 1 1 12 0" fill="none" stroke="'+paper+'" stroke-width="1.6" stroke-linecap="round" opacity=".9"/><circle cx="-38" cy="30" r="1.8" fill="'+ink+'"/>'+
         '<path d="M40 40 C36 30 42 20 48 16 C54 12 60 16 58 22 L52 24 L48 30 L50 40 Z" fill="#26713D" stroke="'+ink+'" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="19" r="2.2" fill="'+paper+'" stroke="'+ink+'" stroke-width="1"/><circle cx="50.6" cy="19" r="1" fill="'+ink+'"/><path d="M58 22 l8 -2 l-4 3 l4 3 l-8 -1" fill="#CE1E32" stroke="'+ink+'" stroke-width="1" stroke-linejoin="round"/>')+
       part('hull',P.hull,oars)+
       part('mast',mast,'<line x1="0" y1="-10" x2="0" y2="-64" stroke="'+ink+'" stroke-width="2.6" stroke-linecap="round"/>')+
