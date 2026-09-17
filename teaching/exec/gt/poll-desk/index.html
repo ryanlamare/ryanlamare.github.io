@@ -126,12 +126,21 @@ async function resetIds(ids,label){
   const s=secretEl.value.trim();
   if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
   if(prompt('Type RESET to clear '+label+' ('+ids.length+' rooms). This cannot be undone.')!=='RESET'){say('Nothing reset.');return;}
-  let ok=0,bad=0;
+  /* one try, and one retry a moment later: a dropped request or a throttled
+     one used to read as "refused (is the secret right?)" with no room named
+     (Ryan's rehearsal, 17 Sep). A wrong secret is a 403 on every room. */
+  const once=async id=>{try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});
+    if(r.status===403)return 'secret';const d=await r.json();return d.ok?'ok':'failed';}catch(_){return 'failed';}};
+  let ok=0;const failed=[];let wrong=0;
   for(const id of ids){
-    try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});const d=await r.json();if(d.ok)ok++;else bad++;}catch(_){bad++;}
-    say('Resetting '+label+': '+ok+' done'+(bad?', '+bad+' refused':'')+'…');
+    let res=await once(id);
+    if(res==='failed'){await new Promise(z=>setTimeout(z,900));res=await once(id);}
+    if(res==='ok')ok++;else if(res==='secret')wrong++;else failed.push(id);
+    say('Resetting '+label+': '+ok+' done'+(failed.length+wrong?', '+(failed.length+wrong)+' not yet':'')+'…');
   }
-  say(label+': '+ok+' rooms cleared'+(bad?', '+bad+' refused (is the secret right?)':'.'));
+  if(wrong)say(label+': '+ok+' rooms cleared, '+wrong+' refused: the secret is wrong.',true);
+  else if(failed.length)say(label+': '+ok+' rooms cleared. Did not clear after a retry: '+failed.join(', ')+'. Press reset on '+(failed.length>1?'those rooms':'that room')+' below.',true);
+  else say(label+': '+ok+' rooms cleared.');
   document.querySelectorAll('#rooms .ct').forEach(c=>{c.textContent='–';c.className='ct';});
 }
 document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room, scoring rooms included'));

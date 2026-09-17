@@ -1095,7 +1095,7 @@ function refreshShownCalls(){
     else st.frozen[r-1]=null;
     render();
   };
-  window.invOpenRound=function(on){st.opened=on;if(on&&st.live&&!st.open2)post('::open|2').then(()=>fetchIt()).catch(()=>{});render();};
+  window.invOpenRound=function(on,genuine){st.opened=on;if(on&&genuine&&st.live&&!st.open2)post('::open|2').then(()=>fetchIt()).catch(()=>{});render();};
   function fetchIt(){
     return fetch(POLL_API+'/p/m5-invest/answers').then(r=>r.json()).then(d=>{
       st.live=true; st.players=new Map(); st.open2=false;
@@ -1354,9 +1354,9 @@ function makeTapasBoard(cfg){
   }
   window[cfg.gid+'Reveal']=function(r,on){st.revealed[r]=on;render();};
   /* step 2 on the board slide: round 2 opens on every phone (the marker is posted once) */
-  window[cfg.gid+'OpenRound']=function(on){
+  window[cfg.gid+'OpenRound']=function(on,genuine){
     st.opened=on;
-    if(on&&st.live&&!st.open2)post('::open|2').then(()=>fetchIt()).catch(()=>{});
+    if(on&&genuine&&st.live&&!st.open2)post('::open|2').then(()=>fetchIt()).catch(()=>{});
     render();
   };
   function fetchIt(){
@@ -1369,7 +1369,20 @@ function makeTapasBoard(cfg){
   TB[cfg.gid]=st;
 }
 window.tbReveal=function(el,on){const f=window[el.dataset.g+'Reveal'];if(f)f(+el.dataset.r,on);};
-window.tbOpen=function(el,on){const f=window[el.dataset.g+'OpenRound'];if(f)f(on);};
+/* The round-two marker goes into the room only on a forward press made ON the
+   board. Arriving on a slide backwards (or by #N.S in the address) turns every
+   step on at once, which used to open round 2 on every phone unasked (Ryan's
+   rehearsal, 17 Sep). These listeners are registered before deck.js's, so the
+   press is noted before the engine advances the step. */
+let fwdPress={t:0,slide:-1};
+function noteFwd(){const a=document.querySelector('.slide.active');fwdPress={t:Date.now(),slide:a?+a.dataset.i:-1};}
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown','ArrowDown',' ','Spacebar'].includes(e.key))noteFwd();},true);
+(function(){let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true,capture:true});
+  addEventListener('touchend',e=>{if(tx!==null&&e.changedTouches[0].clientX-tx<-60)noteFwd();tx=null;},{passive:true,capture:true});})();
+window.tbOpen=function(el,on){const f=window[el.dataset.g+'OpenRound'];if(!f)return;
+  const sl=el.closest('.slide');
+  const genuine=on&&sl&&fwdPress.slide===+sl.dataset.i&&Date.now()-fwdPress.t<800;
+  f(on,genuine);};
 /* whose system: two rounds, no verdict line under the panels (the room can read the crowds) */
 makeTapasBoard({gid:'bos',room:'m5-bos',n:'bosN',n2:'bosN2',
   demo:{1:{r:['a','a','a','a','a','a','a','a','b','a'],t:['b','b','b','b','b','b','b','a','b','b']},

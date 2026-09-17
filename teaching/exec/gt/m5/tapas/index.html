@@ -105,7 +105,7 @@ if(!g){
       const b=document.createElement('button');b.className='opt'+(mine[round]===o.k?' mine':'');b.textContent=o.n;
       b.addEventListener('click',()=>{
         say(g.room,'v|'+voter+'|'+side+'|'+round+'|'+o.k).then(()=>{
-          mine[round]=o.k;save();shown='';ui();
+          mine[round]=o.k;sentAt[round]=Date.now();save();shown='';ui();
           st.innerHTML='<b>Sent.</b> '+(round===1?'You can change it until the big screen reveals round 1. Round 2 opens from the big screen.':'You can change it until the big screen reveals round 2.');
         }).catch(code=>{st.textContent=failMsg(code);});
       });
@@ -113,9 +113,18 @@ if(!g){
     });
     stage.appendChild(ch);
   }
+  const sentAt={};
   function tick(){
+    const t0=Date.now();
     fetch(API+'/p/'+g.room+'/answers').then(r=>r.json()).then(d=>{
       const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
+      /* a Poll Desk reset empties the room: a vote this phone holds that the
+         room no longer has is forgotten, so the phone starts again */
+      [1,2].forEach(r=>{
+        if(!mine[r]||(sentAt[r]&&sentAt[r]>t0-500))return;
+        const held=(d.answers||[]).some(t=>{const p=String(t).trim().split('|');return p[0]==='v'&&p[1]===voter&&+p[3]===r;});
+        if(!held){mine[r]=null;save();shown='';st.textContent='';}
+      });
       const nr=open2?2:1;
       if(nr!==round){round=nr;st.textContent='';}
       ui();
