@@ -58,6 +58,14 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 .inv .cash.grow{transform:scale(1.18);background:var(--teal);color:var(--paper);border-color:var(--teal)}
 .inv .cash.lost{transform:scale(.7) rotate(-8deg);opacity:.25;background:var(--terracotta);color:var(--paper);border-color:var(--terracotta)}
 .inv .cash.kept{background:var(--card);color:var(--muted)}
+.inv.tot .trs{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.inv.tot .tr{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid var(--rule);padding-bottom:6px}
+.inv.tot .trl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.inv.tot .trv{font-family:var(--display);font-weight:900;font-size:24px;line-height:1}
+.inv.tot .up{color:var(--teal)} .inv.tot .down{color:var(--terracotta)} .inv.tot .flat{color:var(--muted)}
+.inv.tot .cash.big{font-size:56px;margin-top:16px}
+.inv.tot .cash.big.up{background:var(--teal);border-color:var(--teal);color:var(--paper)}
+.inv.tot .cash.big.down{background:var(--terracotta);border-color:var(--terracotta);color:var(--paper)}
 .inv .verdict{font-weight:700;font-size:17px;line-height:1.35;color:var(--ink);margin-top:8px;min-height:1.4em;opacity:0;transition:opacity .5s}
 .inv .verdict.on{opacity:1}
 .inv .verdict.good{color:var(--teal)} .inv .verdict.bad{color:var(--terracotta)}
@@ -116,6 +124,8 @@ function render(){
   /* a revealed round you answered and have not yet seen plays its outcome first */
   const due=[1,2].find(r=>outcomes[r]&&mine[r]&&!seen[r]);
   if(due){renderOutcome(due);return;}
+  /* both rounds are revealed and seen: the game is over, and the phone shows the total the button promised */
+  if(outcomes[2]){renderTotal();return;}
   q.textContent='Round '+round+': what do you choose?';
   app.innerHTML='';
   const me=document.createElement('div');me.className='me';
@@ -149,6 +159,24 @@ function render(){
 }
 const received=()=>'<b>Response locked in.</b> Results on the screen soon.'+(round===1?' Round 2 opens from the big screen.':'');
 /* the round's outcome, played back: the rate, then your money grows, goes, or stays */
+/* the end of the game: each round's money as a figure, and the total. No
+   sentences (Ryan, 16 Sep: dots and colour, not text). Invested and it paid
+   is +$50, invested and it failed is -$100, sat out is $0. Built 17 Sep,
+   when Ryan tapped See my total in rehearsal and nothing happened: the
+   button had only ever put the round screen back. */
+function renderTotal(){
+  q.textContent='Your total';
+  app.innerHTML='';
+  const amt=r=>!mine[r]||!outcomes[r]?null:(mine[r]==='i'?(outcomes[r].pays?50:-100):0);
+  const fmt=n=>(n>0?'+':n<0?'\u2212':'')+'$'+Math.abs(n);
+  const cls=n=>n>0?'up':n<0?'down':'flat';
+  const box=document.createElement('div');box.className='inv tot';
+  let sum=0,h='<div class="trs">';
+  [1,2].forEach(r=>{const a=amt(r);if(a!==null)sum+=a;
+    h+='<div class="tr"><span class="trl">Round '+r+'</span><span class="trv '+(a===null?'flat':cls(a))+'">'+(a===null?'\u2013':fmt(a))+'</span></div>';});
+  h+='</div><div class="cash big '+cls(sum)+'">'+fmt(sum)+'</div>';
+  box.innerHTML=h;app.appendChild(box);
+}
 function renderOutcome(r){
   const o=outcomes[r], invested=mine[r]==='i';
   q.textContent='Round '+r+': the reveal';
