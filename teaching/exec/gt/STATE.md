@@ -165,6 +165,18 @@ Ryan's decision: every "in your world" ending in pairs, one phone, except the m6
 
 **Open for him.** Whether the survivor should be named on the banner (built) or only on WHOSE SHIP IS THIS?. The odyssey's timing (about 18 s for three trials and the run home). m1's names: the hand form has no name step, so hands stay anonymous; add one if m7 ever needs them.
 
+## NEXT CHAT: m2's tree and m3's planes as scenes (agreed in prose 18 Sep, late; not built)
+
+Ryan's run-through of the live fills (18 Sep, late) produced the next pass. The endings that work are the ones that are a *place* with things arriving in it and a click that opens one: the prison, the cage, the sea chart. m2 and m3 are to be brought up to that standard, in the style of the sea chart (`m7/world/sea.js`: one full-canvas SVG scene, createElementNS, things sail in as the answers land, mouse only, no walk, no end list).
+
+**m2, the room's tree, becomes a scene.** An autumn English countryside behind it (his words: a nice autumn scene, the tree alive, moving in the breeze, leaves falling). The tree still grows limb by limb as the pairs' lines land. **Cuts:** the DID THEY REPLY THE WAY YOU EXPECTED? header on the opened limb; the last-press list of every yes ("Priya: the pilot…" in black text); the arrow-key walk. **Mouse only:** click a limb to bring it forward legible, click again to put it back. **The opened limb's scaling:** the panel is sized for three rounds, so a short limb (one or two rounds, which he expects most to be) leaves a lot of empty space above; lay it out so a short limb fills its space (build down or across, his words; e.g. the rounds laid along the limb rather than stacked to a fixed height, or the panel sized to the rounds). REPLAY THE GROWTH: not mentioned; ask. The instructor's own pair keeps its yellow leaves unless he says otherwise. The wire and the phone (`m2/tree/`) do not change.
+
+**m3, the room's engines, becomes planes in the sky.** A map or landscape scene with a runway; every finished response is an aircraft that flies into the scene and circles (as the ships circle the rock); a click opens it large with its engines spinning and the pair's answers (the pie, the other party, the strategy, the split) beside; closing it sends the aircraft in to land on the runway, where it parks (as an opened ship used to dock at Ithaca). Mouse only, no arrow walk, no take-off finale (the landing is the ending). **Claude's open question, for him:** one aircraft per pair with both its engines painted in that pair's split (the fleet then reads at a glance, and opening shows the one engine large), or two pairs to an aircraft as now, one engine each. Claude leans to one aircraft per pair. The phone (`m3/engines/`) and the wire do not change.
+
+**m1 and m5:** his question whether they should get the same treatment. Claude's view: m5's jet with the shades already is that kind of scene and needs at most a tweak; m1's card table flies its cards and works, but is the earliest of the endings and could be revisited once m2 and m3 are done. Decide after he has driven m2 and m3.
+
+Order: sample-first, one at a time (m2 first), on a branch, then his read.
+
 ## m8 as it stands
 
 - **Pages.** `m8/game/?g=market` and `?g=cs` (participants; the shortlist opens from a link on the phone), `m8/game/mod.html?t=tapas|granito` (the moderator's phone, admin secret), `m8/game/moderator-script.html?t=` and `m8/game/bidders.html?t=` (printable), `m8/game/cs.js` (both tables' setting and bidders: the one file to edit after the pre-meeting with JN and BJ).
