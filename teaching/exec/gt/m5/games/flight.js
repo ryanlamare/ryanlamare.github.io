@@ -14,19 +14,25 @@
    PLAYERS the pair named, their faces drawing the game the pair tapped:
    stag hunt, both smiling at each other; battle of the sexes, one pleased
    and one glum, turned to each other; chicken, arms folded, chins up,
-   neither looking. The focal point is on the seat-back screen. No name is
-   shown until WHOSE ROW IS THIS? is clicked. Closing pulls the camera back;
-   the shade stays up and two small heads show in the window.
+   neither looking. The focal point is on the seat-back screen, and the
+   pair's own names stand above their answers from the moment the row opens
+   (Ryan, 18 Sep: anonymity is dropped). Closing pulls the camera back; the
+   shade stays up and two small heads show in the window.
 
    When the last shade is up the flight lands: it descends, the land comes
    up, the gear comes down, a runway scrolls in, it touches down and stops.
    Windows stay clickable throughout and a late window simply lights. A
    click on the sun lowers every shade and takes off again (for rehearsal).
 
-   Mouse only. With a row open, Esc, the arrow keys, space or a click close
-   it; with none open the keys move on as usual. ?demo=1 keeps the invented
-   entries (they also show until the room answers). ALL TEXT in DEMO is
-   editable; nothing depends on it. Every node of the scene is made with
+   The E key plays the ending from wherever the flight is: an open row
+   closes, every shade still down goes up in a ripple from the front of the
+   cabin with no zoom, and the flight lands without the wait. Once it is on
+   its way down or on the ground E does nothing; the sun is the way back.
+
+   Mouse only, but for E. With a row open, Esc, the arrow keys, space or a
+   click close it; with none open the keys move on as usual. ?demo=1 keeps
+   the invented entries (they also show until the room answers). ALL TEXT in
+   DEMO is editable; nothing depends on it. Every node of the scene is made with
    createElementNS and moved by its transform attribute (no innerHTML on the
    scene, no CSS transforms on SVG). Expects POLL_API and M5SUF. ---- */
 (function(){
@@ -270,22 +276,39 @@
 
   /* ================= the flight: cruise, and the landing when the last shade is up ================= */
   const VC=26, VTD=215, TDESC=12, TFLARE=2.6, TROLL=8, S1=(720-HY1)/120, GXTD=(JX+PIVX-640)/S1, JY1=HY1+WHEEL_Y*S1-314;   /* on the ground the wheels stand on the runway's line */
-  const fl={ph:'cruise',t:0,h:0,h0:1,v:VC,gear:0,pitch:0,off:0,offTD:0,af:false,hold:0,bump:-9,nosed:false};
+  const fl={ph:'cruise',t:0,h:0,h0:1,v:VC,gear:0,pitch:0,off:0,offTD:0,af:false,fade:0,hold:0,bump:-9,nosed:false};
   const hOf=t=>t<TDESC?.92*ease(t/TDESC):.92+.08*easeOut(Math.min(1,(t-TDESC)/TFLARE)), vOf=h=>VC+(VTD-VC)*h*h;
   function allUp(){const L=current();return L.length>0&&L.every(d=>opened.has(d.v));}
   function afGone(){return !fl.af;}
-  function descend(){let D=0;for(let t=0;t<TDESC+TFLARE;t+=1/120)D+=vOf(hOf(t))/120;
-    fl.ph='descend';fl.t=0;fl.offTD=fl.off+D;fl.af=true;fl.nosed=false;afG.setAttribute('display','');}
+  function descend(){end.on=false;let D=0;for(let t=0;t<TDESC+TFLARE;t+=1/120)D+=vOf(hOf(t))/120;
+    fl.ph='descend';fl.t=0;fl.offTD=fl.off+D;fl.af=true;fl.fade=0;fl.nosed=false;afG.setAttribute('opacity',1);afG.setAttribute('display','');}
   function puff(x,y,n,big){for(let i=0;i<n;i++){const e=mk('circle',{cx:0,cy:0,r:1,opacity:.8},puffG);puffs.push({e,x:x+(Math.random()-.3)*18,y:y-Math.random()*4,vx:50+Math.random()*120,vy:-(8+Math.random()*30),r:(7+Math.random()*10)*big,t:0,life:1+Math.random()*.7});}}
   const puffs=[];
-  function reset(){opened.clear();wins.forEach(w=>{w.tsh=18;});fl.hold=0;
+  function reset(){opened.clear();wins.forEach(w=>{w.tsh=18;});fl.hold=0;end.on=false;
     if(fl.ph==='descend'){fl.ph='climb';fl.t=0;fl.h0=fl.h;}
     else if(fl.ph==='roll'||fl.ph==='landed'){fl.ph='takeoff';fl.t=0;}
     wake();}
   sunG.addEventListener('click',e=>{e.stopPropagation();if(!shown&&cam.k===0)reset();});
+  /* the E key, the suite's skip to the end (Ryan, 18 Sep): an open row closes first; then every shade still down goes
+     up, one after another from the front of the cabin, the whole ripple inside two and a half seconds however full
+     the room, with no zoom; and the flight lands as it does after the last click, without the 2.5 s wait. A window
+     that arrives while the ending is on joins the ripple. Pressed again, or once the flight is on its way down or on
+     the ground, it does nothing. Pressed during a take-off the shades go up at once and it lands when it has levelled */
+  const end={on:false,t:0,gap:.1};
+  function ending(){
+    if(shown)close();
+    const L=current();if(end.on||!L.length||fl.ph==='descend'||fl.ph==='roll'||fl.ph==='landed')return;
+    end.on=true;end.t=0;end.gap=Math.max(.05,Math.min(.16,2.4/Math.max(1,L.filter(d=>!opened.has(d.v)).length)));wake();
+  }
+  function stepEnding(dt){
+    if(!end.on||shown||cam.k>0)return;              /* it waits for the camera to pull back from an open row */
+    const L=current(), down=L.filter(d=>!opened.has(d.v));if(!L.length){end.on=false;return;}
+    end.t-=dt;while(end.t<=0&&down.length){const d=down.shift(), w=wins.get(d.v);opened.add(d.v);if(w)w.tsh=SHADE_UP;end.t+=end.gap;}
+    if(!down.length)end.t=0;
+  }
   function stepFlight(dt,now){
     if(fl.ph==='cruise'){fl.h=0;fl.v=VC;fl.gear=0;fl.pitch+=(0-fl.pitch)*Math.min(1,dt*2);
-      if(allUp()&&!shown&&cam.k===0&&afGone()){fl.hold+=dt;if(fl.hold>2.5)descend();}else fl.hold=0;}
+      if(allUp()&&!shown&&cam.k===0&&afGone()){fl.hold+=dt;if(fl.hold>(end.on?.4:2.5))descend();}else fl.hold=0;}
     else if(fl.ph==='descend'){fl.t+=dt;const t=fl.t;fl.h=hOf(t);fl.v=vOf(fl.h);fl.gear=cl(t,5,7.4);
       fl.pitch=t<TDESC-1.2?-1.4*ease(Math.min(1,t/2.5)):-1.4+4.6*ease(cl(t,TDESC-1.2,TDESC+TFLARE));
       if(t>=TDESC+TFLARE){fl.ph='roll';fl.t=0;fl.h=1;fl.bump=now;fl.off=fl.offTD;puff(JX+PIVX,JY1+314,9,1);}}
@@ -301,7 +324,10 @@
       const want=k<.75?5*Math.sqrt(fl.h0):0;fl.pitch+=(want-fl.pitch)*Math.min(1,dt*1.2);
       if(k>=1){fl.ph='cruise';fl.hold=0;}}
     fl.off+=fl.v*dt;
-    if(fl.af){const thr=GXTD+200+(fl.off-fl.offTD), s=1+(S1-1)*fl.h;if(fl.ph==='cruise'&&thr-AFLEN>700/s){fl.af=false;afG.setAttribute('display','none');}}
+    if(fl.af){const thr=GXTD+200+(fl.off-fl.offTD), s=1+(S1-1)*fl.h;if(fl.ph==='cruise'&&thr-AFLEN>700/s){fl.af=false;afG.setAttribute('display','none');}
+      /* E after a take-off: the field it left is still far below and would take a minute and more to pass, so it fades into the fields and the next landing can begin */
+      else if(fl.ph==='cruise'&&end.on&&allUp()){fl.fade=Math.min(1,fl.fade+dt/1.5);afG.setAttribute('opacity',(1-fl.fade).toFixed(2));if(fl.fade>=1){fl.af=false;afG.setAttribute('display','none');}}
+      else if(fl.fade){fl.fade=0;afG.setAttribute('opacity',1);}}
   }
 
   /* ================= the camera, and one frame ================= */
@@ -319,7 +345,7 @@
     const dt=lastT?Math.min(.05,(now-lastT)/1000):0;lastT=now;
     /* the landing waits while a row is open, so none of it is missed */
     const busy=fl.ph!=='cruise'&&fl.ph!=='landed', wdt=(shown&&busy)?0:dt;
-    stepFlight(wdt,now);
+    stepEnding(dt);stepFlight(wdt,now);
     const h=fl.h, HY=HY0+(HY1-HY0)*h, s=(720-HY)/120, air=fl.ph==='cruise'?1:fl.ph==='landed'?0:Math.min(1,.12+fl.v/VTD)*(h>.98?1:1-.4*h);
 
     if(HY!==lastHY){lastHY=HY;lowSky.setAttribute('transform','translate(0 '+HY.toFixed(1)+')');landG.setAttribute('transform','translate(640 '+HY.toFixed(2)+') scale('+s.toFixed(4)+')');}
@@ -371,7 +397,6 @@
   const ov=$('rowOpen'), rsvg=$('rowSvg');
   const SEAT='#3F5868', SEATL='#587486';
   function mr(tag,attrs,parent){return mk(tag,attrs,parent||rsvg);}
-  const revealed=new Set();
   let row=null;
   /* the fixed part of the cabin: the wall, the bin overhead, the window with the sky going by, two seats, the screen's arm */
   const rowSky=(function(){
@@ -462,7 +487,7 @@
     if(fresh||!row||row.v!==d.v||row.g!==d.g)buildRow(d);
     const g=$('rowG');g.textContent=NAME[d.g];g.className='g '+d.g;
     $('rowSit').textContent=d.sit;$('rowP').textContent=d.p;$('rowOpt').textContent=d.opt;$('rowFp').textContent=d.fp;
-    const w=$('rowWhose'), named=revealed.has(d.v);w.textContent=named?((d.name||'—')+(d.name2?' & '+d.name2:'')):'WHOSE ROW IS THIS?';w.classList.toggle('named',named);
+    $('rowWho').textContent=[d.name,d.name2].filter(Boolean).join(' & ');  /* the pair's names, or the one name, or nothing at all; their two avatars, when the shared kit exists, go in #rowAv beside them */
   }
   function open(v){
     if(shown||cam.k>0||!slide.classList.contains('active'))return;
@@ -474,11 +499,13 @@
     shown=d;fillRow(d,true);cam.dir=1;wake();
   }
   function close(){if(!shown)return;shown=null;ov.classList.remove('on');cam.dir=-1;wake();}
-  $('rowWhose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();if(!shown)return;revealed.has(shown.v)?revealed.delete(shown.v):revealed.add(shown.v);fillRow(shown,false);});
   $('rowClose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();close();});
   ov.addEventListener('click',()=>close());
   addEventListener('keydown',e=>{if(!shown||!slide.classList.contains('active'))return;
     if(['Escape','ArrowRight','ArrowLeft','ArrowDown','ArrowUp','PageDown','PageUp',' ','Spacebar'].includes(e.key)){close();e.preventDefault();e.stopImmediatePropagation();}},true);
+  addEventListener('keydown',e=>{if((e.key!=='e'&&e.key!=='E')||e.ctrlKey||e.metaKey||e.altKey||!slide.classList.contains('active'))return;
+    const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable))return;
+    ending();e.preventDefault();e.stopImmediatePropagation();},true);
 
   /* ================= the room ================= */
   function fetchIt(){
