@@ -97,7 +97,7 @@ const SITS = [
 async function games(n) {
   for (let i = 0; i < n; i++) {
     const e = SITS[(i + (+opt.from || 0)) % SITS.length], v = voterOf('gam', i); /* --from 1 skips the hiring case, which is Ryan's own example */
-    await say(ROOM.games, 'a‖' + NAMES[i] + '‖' + e[0] + '‖' + e[1], v);
+    await say(ROOM.games, 'a‖' + NAMES[i] + '‖' + e[0] + '‖' + e[1] + '‖' + NAMES[(i + 12) % NAMES.length], v);
     await say(ROOM.games, 'b‖' + e[2] + '‖' + e[3] + '‖' + e[4], v);
     await sleep(GAP);
   }

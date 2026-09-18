@@ -149,6 +149,22 @@ m4's closing exercise was the one "in your world" ending without its own picture
 
 Keep it: `git checkout main && git merge --ff-only m4-prison`, then push. Undo it: `git checkout main && git branch -D m4-prison` (tag `m4-before-prison` is the deck as it stood).
 
+## The pairs pass and the odyssey (18 Sep, late; branch `m4-prison`, nothing pushed)
+
+Ryan's decision: every "in your world" ending in pairs, one phone, except the m6 bingo; pairs rotate. Built across the branch, all wording Claude's for veto:
+
+- **The shared step.** `GT_NAMES.partner()` in `go/names.js`: Who's with you? after Who are you? (the roster minus yourself, a typed name, or "I'm on my own this time"), remembered per exercise so pairs can rotate; both names go on each ending's wire and show wherever a name is revealed. m4 has its own copy of the step (built first); m3, m5 and m7 use the shared one.
+- **m1** in pairs: the lead line, the /go form's question and the transcript; a `packed` table (three rows of five) above twelve hands. Not checked at fifteen hands (no bots for m1).
+- **m2** was already in pairs (asker and partner): untouched.
+- **m3** in pairs: `1‖pie‖name‖partner`; two engines to an aircraft is the picture again (fifteen pairs, eight jets); the four-engine mode stays above sixteen.
+- **m4** in pairs: see the m4 note (two tiers of eight big cells).
+- **m5** in pairs: `a‖name‖players‖situation‖partner`; **two panes under one shade per pair** on the jet (the panes narrow below a 40 px pitch, as in the 22-entry demo); the header names both.
+- **m7** in pairs, made vaguer and given its ending: the game is picked by its picture (the tree, the engines, the prison, the plane, or a game of your own), nothing is looked up, `g‖name‖module‖picture‖hull‖partner`; the opened ship reads THE GAME · MODULE 2 · THE TREE over "Sequential moves". Closing a ship no longer docks it. **The odyssey:** SET SAIL FOR ITHACA (button under the counts; Claude's words) sends the fleet to the Cyclops, then Charybdis, then Scylla; at each they gather and hold 1.7 s, the ships fated to be lost there flare with a red starburst, roll over and sink, leaving a wreck (a leaning mast in the ship's sail colour, still clickable), and the rest sail on; one ship reaches Ithaca's harbour under a red **HOME!** banner, "{name} & {partner} made it home safely" (the bingo banner's cut). Fates come from a seed of the room and the fleet's size, so a reload replays to the same end; a Poll Desk reset clears it. Counts read AT SEA · WRECKED · HOME. Luck only, nothing scored (his "no consequences").
+
+**Checked 18 Sep, late, headless:** m7 on demo data through the whole voyage, the wreck open, the reload; the m7 phone through the partner step to the picture tiles and the form; m3 and m5 phones through the partner step; the m5 jet with paired windows; the m3 engines. m4 on the real Worker (fifteen pairs). The live m7 room `m7-world-ctest1` still holds ships from the old wire (they draw; their game text shows as typed).
+
+**Open for him.** Whether the survivor should be named on the banner (built) or only on WHOSE SHIP IS THIS?. Whether the sail button belongs where it is (right, under the counts). The odyssey's timing (about 18 s for three trials and the run home). m1's names: the hand form has no name step, so hands stay anonymous; add one if m7 ever needs them.
+
 ## m8 as it stands
 
 - **Pages.** `m8/game/?g=market` and `?g=cs` (participants; the shortlist opens from a link on the phone), `m8/game/mod.html?t=tapas|granito` (the moderator's phone, admin secret), `m8/game/moderator-script.html?t=` and `m8/game/bidders.html?t=` (printable), `m8/game/cs.js` (both tables' setting and bidders: the one file to edit after the pre-meeting with JN and BJ).

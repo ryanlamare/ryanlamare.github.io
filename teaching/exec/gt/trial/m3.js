@@ -68,7 +68,7 @@ async function engines(n, from) {
   if (!Number.isInteger(n) || n < 1 || from + n > ENGINES.length) { console.error('How many bots? 1 to ' + (ENGINES.length - from) + ' from seat ' + (from + 1) + '.'); process.exit(2); }
   for (let i = from; i < from + n; i++) {
     const e = ENGINES[i], v = voterOf(i);
-    await say('1‖' + e[0] + '‖' + NAMES[i], v);
+    await say('1‖' + e[0] + '‖' + NAMES[i] + '‖' + NAMES[(i + 12) % NAMES.length], v);
     await say('2‖' + e[1], v);
     await say('3‖' + e[2] + '‖' + e[3], v);
     await say('4‖' + e[4], v);

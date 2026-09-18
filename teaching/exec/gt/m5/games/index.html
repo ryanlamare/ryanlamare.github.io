@@ -14,7 +14,7 @@
    Wire: two lines into room m5-games, "k‖…" (the Worker caps a line at
    200 characters and a phone at 15 lines a room, so two lines a send
    leaves room for a start-over):
-     a‖name‖players‖situation
+     a‖name‖players‖situation‖partner   (the partner since 18 Sep: in pairs, one phone)
      b‖options‖s-or-b-or-c‖focal point
    The deck groups the room's lines by phone; the latest a and b per
    phone win, so a re-send corrects rather than duplicates. */
@@ -72,7 +72,7 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 <script>
 /* ?room=<x> plays into a rehearsal room (m5-games-<x>) */
 const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
-const API='https://gt-poll.rlamare.workers.dev', ROOM='m5-games'+SUF, LOCKKEY='gt-cgame-locked'+SUF;
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m5-games'+SUF, LOCKKEY='gt-cgame-locked'+SUF, PARTNERKEY='gt-m5games-partner'+SUF;
 const PLYMAX=60, SITMAX=70, OPTMAX=80, FPMAX=60;
 let voter=null;
 try{
@@ -85,8 +85,9 @@ const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
 const cleanName=n=>clean(n).slice(0,30);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const GAME={s:'Stag hunt',b:'Battle of the sexes',c:'Chicken'};
-let name=null, roster=[];
-try{name=localStorage.getItem('gt-name');}catch(_){}
+let name=null, partner=null, roster=[];
+try{name=localStorage.getItem('gt-name');partner=localStorage.getItem(PARTNERKEY);}catch(_){}
+/* in pairs, one phone (18 Sep): the partner is remembered for this exercise only, so pairs can rotate */
 if(name)claimOnce();
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
 function claimOnce(){
@@ -107,13 +108,14 @@ try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
 function render(){
   st.textContent='';app.innerHTML='';hint.textContent='';
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  if(partner===null){q.textContent='Who’s with you?';GT_NAMES.partner({host:app,roster,not:name,clean:cleanName,hint:'In pairs, one phone. Pick the person you are working with.',done:n=>{partner=n;try{localStorage.setItem(PARTNERKEY,partner);}catch(_){}render();}});return;}
   q.textContent='A coordination game from your world';
   if(locked){renderLocked();return;}
-  hint.textContent='A situation from your world where two sides had to land on the same thing.';
+  hint.textContent='In pairs, one phone. A situation from one of your worlds where two sides had to land on the same thing.';
   const me=document.createElement('div');me.className='me';
   me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
-  me.querySelector('b').textContent=name;
-  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  me.querySelector('b').textContent=name+(partner!=='-'?' & '+partner:'');
+  me.querySelector('button').addEventListener('click',()=>{name=null;partner=null;try{localStorage.removeItem('gt-name');localStorage.removeItem(PARTNERKEY);}catch(_){}render();});
   app.appendChild(me);
   const c1=card('ply','THE PLAYERS','Who were the players?');const ply=input(PLYMAX,'e.g. me and the hiring committee…');c1.appendChild(ply);
   const c2=card('sit','THE SITUATION','What was the situation?');const sit=input(SITMAX,'e.g. recruiting a candidate…');c2.appendChild(sit);
@@ -134,7 +136,7 @@ function render(){
     const P=clean(ply.value),S=clean(sit.value),O=clean(opt.value),F=clean(fp.value);
     if(!P||!S||!O||!F||!k)return;
     lk.disabled=true;all.forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
-    say('a‖'+name+'‖'+P+'‖'+S).then(()=>say('b‖'+O+'‖'+k+'‖'+F))
+    say('a‖'+name+'‖'+P+'‖'+S+'‖'+(partner!=='-'?partner:'')).then(()=>say('b‖'+O+'‖'+k+'‖'+F))
       .then(()=>{locked={name,ply:P,sit:S,opt:O,k,fp:F};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
       .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;all.forEach(i=>i.disabled=false);cb.forEach(b=>b.disabled=false);});
   });
