@@ -57,7 +57,7 @@
     [3,'p','Sharing out the bonus pool between two teams','If they take the smaller share this year, they choose first next year','It is minuted','Next year’s pool might be half the size'],
     [5,'c','Both of us waiting for the other to set the agenda','I circulate mine a week early','Everyone has read it','I have shown my hand'],
   ];
-  const DEMO=E.map((e,i)=>({v:'demo'+i,name:NAMES[i],module:e[0],kind:e[1],game:e[2],move:e[3],cred:i%5===4?e[4]:S.CRED[['ct','rp','ir','pb'][i%5]],down:e[5],done:true}));
+  const DEMO=E.map((e,i)=>({v:'demo'+i,name:NAMES[i],module:e[0],kind:e[1],game:e[2],move:e[3],cred:i%4===3?e[4]:S.CRED[['ct','rp','mo'][i%4]],down:e[5],done:true}));
   const demoOnly=/[?&]demo=1/.test(location.search);
   const ROOM='m7-world'+(window.M7SUF||'');
   const st={live:false,list:[],demoShown:0};
@@ -389,7 +389,7 @@
     P.pennant.setAttribute('fill',L.pennant);P.kind.textContent=(S.KIND[d.kind]||'').toUpperCase();
     P.sail.setAttribute('fill',L.sail);P.hull.setAttribute('fill',L.hull);P.stripe.setAttribute('stroke',L.stripe);
     const sail=$('seaSailBox');sail.style.color=L.sailInk;
-    $('seaGameK').textContent=d.module?'THE GAME, FROM MODULE '+d.module:'THE GAME';
+    $('seaGameK').textContent=d.module?'THE GAME · '+S.GAME[d.module].toUpperCase()+' · MODULE '+d.module:'THE GAME';
     $('seaMove').textContent=d.move;$('seaGame').textContent=d.game;$('seaCred').textContent=d.cred;$('seaDown').textContent=d.down;
     const w=$('seaWhose');w.textContent=revealed.has(b.v)?(d.name||'—'):'WHOSE SHIP IS THIS?';w.classList.toggle('named',revealed.has(b.v));
     ov.classList.add('on');

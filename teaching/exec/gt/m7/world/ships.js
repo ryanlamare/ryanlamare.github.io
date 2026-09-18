@@ -11,7 +11,7 @@
                                    (absent: from the voter id)
      m‖kind‖the move               kind: c commitment, t threat, p promise
      c‖key‖text                    key: ct contract, rp reputation, ir can't be undone,
-                                   pb said in public, oe something else (then the text)
+                                   mo money on the line, oe something else (then the text)
      d‖the downside                the last line; a ship sails in once it lands
 
    The latest line of each letter wins, so a re-send corrects.
@@ -26,7 +26,9 @@
   const PENNANT={c:'#1B1C19',t:'#CE1E32',p:'#59949C'};
   const KIND={c:'Commitment',t:'Threat',p:'Promise'};
   /* what gives the move credibility: a tap on the phone, or something else typed */
-  const CRED={ct:'A contract',rp:'My reputation',ir:'It can’t be undone',pb:'It was said in public',oe:'Something else'};
+  const CRED={ct:'A contract',rp:'Long-term reputation',mo:'Money on the line',oe:'Something else'};
+  /* the earlier closing exercises a game can come back from, by the name the room knew them by */
+  const GAME={2:'Your branch on the tree',3:'Your zero-sum engine',4:'Your prisoner’s dilemma',5:'Your plane window'};
   const HULLS=[['#8E3E28','#C9A227'],['#1B1C19','#CE1E32'],['#6B3F47','#E9E2D2'],['#5B4636','#59949C'],
                ['#8E3E28','#E9E2D2'],['#1B1C19','#C9A227'],['#37658A','#E9E2D2'],['#26713D','#C9A227'],
                ['#5B4636','#CE1E32'],['#6B3F47','#C9A227']];
@@ -74,5 +76,5 @@
         '<ellipse cx="28" cy="-1.5" rx="3.4" ry="2.4" fill="'+paper+'" stroke="'+ink+'" stroke-width="1"/><circle cx="28.6" cy="-1.5" r="1.1" fill="'+ink+'"/>')+
       '<path d="M-56 9 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0" fill="none" stroke="#59949C" stroke-width="2.2" stroke-linecap="round"/></svg>';
   }
-  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,CRED,HULLS,look,fleet,hash,svg};
+  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,CRED,GAME,HULLS,look,fleet,hash,svg};
 })(typeof window!=='undefined'?window:globalThis);
