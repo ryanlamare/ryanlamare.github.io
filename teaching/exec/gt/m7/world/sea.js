@@ -9,7 +9,8 @@
    A click on a ship opens it from the side, the answers written on the ship
    itself: the game on the hull, the move on the sail, what makes it credible
    inside the rope at the mast, the downside under the
-   waterline where a monster coils. No name is shown until WHOSE SHIP IS THIS? is clicked.
+   waterline where a monster coils. The pair's names show straight away (Ryan
+   dropped the anonymity on 18 Sep 2026, and WHOSE SHIP IS THIS? came out).
 
    Then the odyssey (Ryan, 18 Sep, late): a click on Troy sends the whole
    fleet there to gather, as in the book, and then round the trials in turn,
@@ -270,7 +271,6 @@
   /* ================= the fleet ================= */
   const ships=new Map();                       /* v -> ship */
   let pending=[], home=[], shown=null, lastEnter=0;
-  const revealed=new Set();
   /* ---- the odyssey: three trials in turn, then Ithaca for one ship ---- */
   /* the voyage, as in the book: the fleet gathers off Troy first, then the Cyclops, Charybdis, Scylla, and home. Nobody is lost at Troy. */
   const STOPS=[{name:'Troy',x:300,y:214},{name:'the Cyclops',x:340,y:480},{name:'Charybdis',x:1010,y:520},{name:'Scylla',x:842,y:198}];
@@ -494,7 +494,7 @@
     const sail=$('seaSailBox');sail.style.color=L.sailInk;
     $('seaGameK').textContent=d.module?'THE GAME · MODULE '+d.module+' · '+S.GAME[d.module].toUpperCase():'THE GAME';
     $('seaMove').textContent=d.move;$('seaGame').textContent=d.module?(S.PLAY[d.module]||d.game):d.game;$('seaCred').textContent=d.cred;$('seaDown').textContent=d.down;
-    const w=$('seaWhose');w.textContent=revealed.has(b.v)?((d.name||'—')+(d.name2?' & '+d.name2:'')):'WHOSE SHIP IS THIS?';w.classList.toggle('named',revealed.has(b.v));
+    $('seaWhose').textContent=[d.name,d.name2].filter(Boolean).join(' & ');
     ov.classList.add('on');
     fit($('seaMove'),34,15);fit($('seaGame'),22,13);fit($('seaCred'),21,12);fit($('seaDown'),21,13);
   }
@@ -502,7 +502,6 @@
   function close(){
     if(!shown)return;shown=null;fill(null);
   }
-  $('seaWhose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();if(!shown)return;revealed.has(shown.v)?revealed.delete(shown.v):revealed.add(shown.v);fill(shown);});
   $('seaClose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();close();});
   ov.addEventListener('click',e=>{if(e.target===ov)close();});
   addEventListener('keydown',e=>{if(!shown||!slide.classList.contains('active'))return;
