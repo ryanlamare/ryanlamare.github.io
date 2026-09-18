@@ -5,10 +5,13 @@
    The room is m7-world (?room=<x> suffixes it). Each phone sends four lines,
    one per answer, because the Worker keeps 200 characters a line:
 
-     g‖name‖module‖the game‖hull   module: 2, 3, 4 or 5 for a game brought back
-                                   from that module's closing exercise, 0 for a
-                                   new one; hull: the hull colour they picked, 0–9
-                                   (absent: from the voter id)
+     g‖name‖module‖the game‖hull‖partner   module: 2, 3, 4 or 5 for a game brought back
+                                   from that module's closing exercise (the game is
+                                   then its picture: The tree, The engines, The prison,
+                                   The plane; the pair say which of theirs out loud),
+                                   0 for a new one, typed; hull: the colour they picked,
+                                   0–9 (absent: from the voter id); partner: the second
+                                   name, in pairs (18 Sep)
      m‖kind‖the move               kind: c commitment, t threat, p promise
      c‖key‖text                    key: ct contract, rp reputation, ir can't be undone,
                                    mo money on the line, oe something else (then the text)
@@ -28,7 +31,9 @@
   /* what gives the move credibility: a tap on the phone, or something else typed */
   const CRED={ct:'A contract',rp:'Long-term reputation',mo:'Money on the line',oe:'Something else'};
   /* the earlier closing exercises a game can come back from, by the name the room knew them by */
-  const GAME={2:'Your branch on the tree',3:'Your zero-sum engine',4:'Your prisoner’s dilemma',5:'Your plane window'};
+  const GAME={2:'The tree',3:'The engines',4:'The prison',5:'The plane',0:'A game of your own'};
+  /* what each picture stood for, said under it */
+  const PLAY={2:'Sequential moves',3:'Zero-sum',4:'Prisoner’s dilemma',5:'Coordination',0:''};
   const HULLS=[['#8E3E28','#C9A227'],['#1B1C19','#CE1E32'],['#6B3F47','#E9E2D2'],['#5B4636','#59949C'],
                ['#8E3E28','#E9E2D2'],['#1B1C19','#C9A227'],['#37658A','#E9E2D2'],['#26713D','#C9A227'],
                ['#5B4636','#CE1E32'],['#6B3F47','#C9A227']];
@@ -43,7 +48,7 @@
     (entries||[]).forEach(e=>{const p=String(e.t||'').split('‖'), k=p[0];
       if(k!=='g'&&k!=='m'&&k!=='c'&&k!=='d')return;
       if(!by.has(e.v))by.set(e.v,{v:e.v});const r=by.get(e.v);
-      if(k==='g'){r.name=p[1]||'';r.module=[2,3,4,5].includes(+p[2])?+p[2]:0;r.game=p[3]||'';r.h=p[4]===undefined?null:+p[4];}
+      if(k==='g'){r.name=p[1]||'';r.module=[2,3,4,5].includes(+p[2])?+p[2]:0;r.game=p[3]||'';r.h=p[4]===undefined||p[4]===''?null:+p[4];r.name2=p[5]||'';}
       else if(k==='m'){r.kind=PENNANT[p[1]]?p[1]:'c';r.move=p[2]||'';}
       else if(k==='c'){r.credKey=CRED[p[1]]?p[1]:'oe';r.cred=(r.credKey!=='oe'&&CRED[r.credKey])||p[2]||p[1]||'';}
       else{r.down=p[1]||'';r.done=true;}});
@@ -76,5 +81,5 @@
         '<ellipse cx="28" cy="-1.5" rx="3.4" ry="2.4" fill="'+paper+'" stroke="'+ink+'" stroke-width="1"/><circle cx="28.6" cy="-1.5" r="1.1" fill="'+ink+'"/>')+
       '<path d="M-56 9 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0" fill="none" stroke="#59949C" stroke-width="2.2" stroke-linecap="round"/></svg>';
   }
-  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,CRED,GAME,HULLS,look,fleet,hash,svg};
+  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,CRED,GAME,PLAY,HULLS,look,fleet,hash,svg};
 })(typeof window!=='undefined'?window:globalThis);

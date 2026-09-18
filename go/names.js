@@ -89,5 +89,26 @@ const GT_NAMES = (() => {
     try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (_) {}
   }
 
-  return { guard, others, norm };
+  /* partner({host, roster, not, hint, done}): the "Who's with you?" step every
+     in-your-world ending asks after "Who are you?" (in pairs, one phone, from
+     18 Sep 2026). The roster minus yourself, a typed name, or "I'm on my own
+     this time" (done('-')). Pairs rotate module by module, so each page
+     remembers the partner for its own exercise only. */
+  function partner(o) {
+    const host = o.host, clean = o.clean || (s => String(s).trim().replace(/\s+/g, ' ').slice(0, 30));
+    host.innerHTML = '';
+    if (o.hint) { const h = document.createElement('div'); h.className = 'hint'; h.textContent = o.hint; host.appendChild(h); }
+    const list = document.createElement('div'); list.className = 'choices';
+    (o.roster || []).filter(n => norm(n) !== norm(o.not)).forEach(n => { const b = document.createElement('button'); b.className = 'pick'; b.type = 'button'; b.textContent = n; b.addEventListener('click', () => o.done(clean(n))); list.appendChild(b); });
+    host.appendChild(list);
+    const row = document.createElement('div'); row.className = 'namerow'; row.style.marginTop = list.children.length ? '12px' : '0';
+    const inp = document.createElement('input'); inp.maxLength = 30; inp.placeholder = list.children.length ? 'Not on the list? Type the name' : 'Type their first name'; inp.autocomplete = 'off';
+    const ok = document.createElement('button'); ok.type = 'button'; ok.textContent = 'OK';
+    const go = () => { const v = clean(inp.value); if (v) o.done(v); };
+    ok.addEventListener('click', go); inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    row.appendChild(inp); row.appendChild(ok); host.appendChild(row);
+    const a = document.createElement('button'); a.className = 'back'; a.type = 'button'; a.style.marginTop = '14px'; a.textContent = o.alone || 'I’m on my own this time'; a.addEventListener('click', () => o.done('-')); host.appendChild(a);
+  }
+
+  return { guard, others, norm, partner };
 })();

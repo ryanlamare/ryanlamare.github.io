@@ -9,10 +9,16 @@
    A click on a ship opens it from the side, the answers written on the ship
    itself: the game on the hull, the move on the sail, what makes it credible
    inside the rope at the mast, the downside under the
-   waterline where a monster coils. No name is shown until WHOSE SHIP IS THIS? is clicked. Closing
-   a ship sends it home to Ithaca, where it anchors and can be opened again.
-   Nobody is judged and nothing is scored: every ship that binds itself gets
-   past.
+   waterline where a monster coils. No name is shown until WHOSE SHIP IS THIS? is clicked.
+
+   Then the odyssey (Ryan, 18 Sep, late): SET SAIL FOR ITHACA sends the whole
+   fleet round the trials in turn, the Cyclops, Charybdis, Scylla. At each
+   the ships gather and hold a moment, then the ones fated to be wrecked
+   there flare red, roll over and go down, leaving a wreck on the chart (still
+   clickable), and the rest sail on. One ship makes it home to Ithaca and a
+   banner names its pair. The fates are drawn from a seed of the room and the
+   fleet's size, so a reload replays the same voyage to its end state. It is
+   luck and nothing else: nobody is judged and nothing is scored.
 
    With a ship open, Esc, the arrow keys, space or a click outside close it;
    with none open the keys move on as usual. ?demo=1 keeps the invented
@@ -57,7 +63,7 @@
     [3,'p','Sharing out the bonus pool between two teams','If they take the smaller share this year, they choose first next year','It is minuted','Next year’s pool might be half the size'],
     [5,'c','Both of us waiting for the other to set the agenda','I circulate mine a week early','Everyone has read it','I have shown my hand'],
   ];
-  const DEMO=E.map((e,i)=>({v:'demo'+i,name:NAMES[i],module:e[0],kind:e[1],game:e[2],move:e[3],cred:i%4===3?e[4]:S.CRED[['ct','rp','mo'][i%4]],down:e[5],done:true}));
+  const DEMO=E.map((e,i)=>({v:'demo'+i,name:NAMES[i],name2:NAMES[(i+12)%NAMES.length],module:e[0],kind:e[1],game:e[0]?S.GAME[e[0]]:e[2],move:e[3],cred:i%4===3?e[4]:S.CRED[['ct','rp','mo'][i%4]],down:e[5],done:true}));
   const demoOnly=/[?&]demo=1/.test(location.search);
   const ROOM='m7-world'+(window.M7SUF||'');
   const st={live:false,list:[],demoShown:0};
@@ -254,7 +260,8 @@
     return g;
   }
   function put(b,now){
-    const bob=Math.sin(now/620+b.ph)*1.6, roll=Math.sin(now/900+b.ph*1.7)*2.2;
+    const still=b.state==='wreck'||b.state==='sink';
+    const bob=still?0:Math.sin(now/620+b.ph)*1.6, roll=b.state==='wreck'?55:b.state==='sink'?(b.roll||0):Math.sin(now/900+b.ph*1.7)*2.2;
     b.g.setAttribute('transform','translate('+b.x.toFixed(1)+' '+(b.y+bob).toFixed(1)+') scale('+b.s.toFixed(3)+')');
     b.body.setAttribute('transform','scale('+b.face.toFixed(3)+' 1) rotate('+roll.toFixed(2)+')');
   }
@@ -263,9 +270,70 @@
   const ships=new Map();                       /* v -> ship */
   let pending=[], home=[], shown=null, lastEnter=0;
   const revealed=new Set();
-  const HOMEKEY='gt-m7-sea-home-'+ROOM;
-  try{home=JSON.parse(sessionStorage.getItem(HOMEKEY)||'[]');}catch(_){}
-  function saveHome(){try{sessionStorage.setItem(HOMEKEY,JSON.stringify(home));}catch(_){}}
+  /* ---- the odyssey: three trials in turn, then Ithaca for one ship ---- */
+  const STOPS=[{name:'the Cyclops',x:340,y:480},{name:'Charybdis',x:1010,y:520},{name:'Scylla',x:842,y:198}];
+  const VKEY='gt-m7-voyage-'+ROOM, LEG=2600, HOLD=1700, SINK=1400;
+  let voy=null, wrecked=[0,0,0];               /* {plan:{survivor, wreck:{v:stop}}, phase: leg|hold|sink|final|done, stop, t0}; wrecked counts the restored wrecks at each trial */
+  try{const sv=JSON.parse(sessionStorage.getItem(VKEY)||'null');if(sv&&sv.plan)voy={plan:sv.plan,phase:'done',stop:3,t0:0,restored:true};}catch(_){}
+  function saveVoy(){try{if(voy)sessionStorage.setItem(VKEY,JSON.stringify({plan:voy.plan}));else sessionStorage.removeItem(VKEY);}catch(_){}}
+  /* where the i-th ship of the fleet holds at a trial: a loose arc in front of it */
+  function spot(stop,i){const P=STOPS[stop];return {x:P.x+((i%5)-2)*56+(Math.floor(i/5)%2)*22,y:P.y-6+Math.floor(i/5)*30};}
+  /* the fates: one survivor, the rest lost at the three trials, front-loaded so the tension builds */
+  function makePlan(vs){
+    const r=rng(S.hash(ROOM+'|'+vs.length)), order=vs.slice().sort();
+    for(let i=order.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+    const survivor=order[0], doomed=order.slice(1), N=doomed.length, k1=Math.round(N*.42), k2=Math.round((N-k1)*.55), wreck={};
+    doomed.forEach((v,i)=>{wreck[v]=i<k1?0:i<k1+k2?1:2;});
+    return {survivor,wreck};
+  }
+  function setSail(){
+    if(voy||!slide.classList.contains('active'))return;
+    const now=performance.now();
+    while(pending.length)launch(pending.shift(),now,true);
+    const vs=[...ships.values()].filter(b=>b.state==='ring'||b.state==='enter').map(b=>b.v);
+    if(!vs.length)return;
+    if(shown)close();
+    voy={plan:makePlan(vs),phase:'leg',stop:0,t0:now};
+    leg(0);saveVoy();counts();wake();
+  }
+  function leg(stop){
+    let i=0;const now=performance.now();
+    ships.forEach(b=>{if(!['ring','enter','voy'].includes(b.state))return;
+      const to=spot(stop,i++);b.state='voy';b.from={x:b.x,y:b.y,s:b.s};b.to=to;b.t0=now;b.dir=to.x>=b.x?1:-1;frontG.appendChild(b.g);});
+    voy.phase='leg';voy.stop=stop;voy.t0=now;
+  }
+  /* the crash: a red starburst that flares and settles, and the mast left leaning in the water */
+  function wreckNode(b,settled){
+    const g=mk('g',{class:'wreck'},b.g);
+    let d='';for(let i=0;i<20;i++){const a=i*Math.PI/10-Math.PI/2, r=i%2?11:26;d+=(i?' L':'M')+(Math.cos(a)*r).toFixed(1)+' '+(Math.sin(a)*r).toFixed(1);}
+    const star=mk('path',{d:d+' Z',fill:RED,stroke:INK,'stroke-width':2,'stroke-linejoin':'round',transform:'translate(0 -16) scale(0)'},g);
+    const mast=mk('g',{opacity:0},g);
+    mk('path',{d:'M-6 6 L14 -30',stroke:INK,'stroke-width':3,'stroke-linecap':'round'},mast);
+    mk('path',{d:'M14 -30 L0 -22 L12 -18 Z',fill:b.look.sail,stroke:INK,'stroke-width':1.5,'stroke-linejoin':'round'},mast);
+    mk('path',{d:'M-22 8 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0',fill:'none',stroke:PAPER,'stroke-width':2.4,'stroke-linecap':'round'},mast);
+    b.wreck={g,star,mast};
+    if(settled){star.setAttribute('transform','translate(0 -16) scale(.5)');mast.setAttribute('opacity','1');b.body.setAttribute('opacity','0');}
+    return g;
+  }
+  function sinkStep(b,now){
+    const k=Math.min(1,(now-b.t0)/SINK), W=b.wreck;
+    const flare=k<.18?k/.18*1.2:k<.5?1.2:1.2-(k-.5)/.5*.7;
+    W.star.setAttribute('transform','translate(0 -16) scale('+flare.toFixed(3)+')');
+    b.roll=55*Math.min(1,k*1.3);b.body.setAttribute('opacity',(1-k).toFixed(2));W.mast.setAttribute('opacity',(k>.6?(k-.6)/.4:0).toFixed(2));
+    if(k>=1){b.state='wreck';b.body.setAttribute('opacity','0');}
+  }
+  function final(){
+    const b=ships.get(voy.plan.survivor);
+    voy.phase='final';
+    if(!b){voy.phase='done';return;}
+    home=[b.v];b.state='voy';dock(b,performance.now(),false);
+  }
+  const banner=$('seaBanner');
+  function showBanner(b){if(!banner||!b)return;const d=b.d, who=d.name?d.name+(d.name2?' & '+d.name2:''):'One ship';
+    $('seaBannerWho').textContent=who+(d.name?' made it home safely':' made it home safely');banner.classList.add('on');}
+  const sailBtn=$('seaSail');
+  if(sailBtn)sailBtn.addEventListener('click',e=>{e.currentTarget.blur();setSail();});
+  if(banner)banner.addEventListener('click',()=>banner.classList.remove('on'));
   function ringOf(){const n=[0,0,0];ships.forEach(b=>{if(b.state==='enter'||b.state==='ring')n[b.ring]++;});
     let best=0,bv=1e9;for(let i=0;i<3;i++){const v=n[i]/CAP[i];if(v<bv-1e-9){bv=v;best=i;}}return best;}
   /* home: ships dock round Ithaca's shore, the nearer berths first, then a second row farther out */
@@ -289,8 +357,9 @@
     if(instant){b.x=at.x;b.y=at.y;b.s=.5;b.face=1;b.state='anchored';b.ph=(b.look.seed%628)/100;put(b,now);ships.set(b.v,b);return;}
     b.state='home';b.t0=now;b.from={x:b.x,y:b.y,s:b.s};b.to=at;
   }
-  function counts(){let sea=0,hm=0;ships.forEach(b=>{b.state==='home'||b.state==='anchored'?hm++:sea++;});sea+=pending.length;
-    $('seaAt').textContent=sea;$('seaHome').textContent=hm;document.querySelectorAll('[data-m7worldn]').forEach(e=>e.textContent=sea+hm);}
+  function counts(){let sea=0,hm=0,wr=0;ships.forEach(b=>{if(b.state==='home'||b.state==='anchored')hm++;else if(b.state==='wreck'||b.state==='sink')wr++;else sea++;});sea+=pending.length;
+    $('seaAt').textContent=sea;$('seaHome').textContent=hm;const w=$('seaWreck');if(w)w.textContent=wr;document.querySelectorAll('[data-m7worldn]').forEach(e=>e.textContent=sea+hm+wr);
+    if(sailBtn)sailBtn.style.display=(voy||!sea)?'none':'';}
 
   let raf=0,lastSort=0,lastT=0;
   function wake(){if(!raf)raf=requestAnimationFrame(frame);}
@@ -304,8 +373,17 @@
       if(b.state==='enter'||b.state==='ring'){b.th+=dt*0.06*(b.state==='enter'?1.5:1);sailing.push(b);}
       if(b.state==='home'){const k=Math.min(1,(now-b.t0)/6500), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
         b.x=b.from.x+(b.to.x-b.from.x)*e;b.y=b.from.y+(b.to.y-b.from.y)*e-Math.sin(e*Math.PI)*30;b.s=b.from.s+(.5-b.from.s)*e;
-        b.face=b.to.x>=b.from.x?1:-1;if(k>=1){b.state='anchored';b.face=1;}}
+        b.face=b.to.x>=b.from.x?1:-1;if(k>=1){b.state='anchored';b.face=1;if(voy&&voy.phase==='final'){voy.phase='done';showBanner(b);counts();}}}
+      if(b.state==='voy'&&b.to){const k=Math.min(1,(now-b.t0)/LEG), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+        b.x=b.from.x+(b.to.x-b.from.x)*e;b.y=b.from.y+(b.to.y-b.from.y)*e-Math.sin(e*Math.PI)*14;b.s=b.from.s+(.82-b.from.s)*e;turn(b,dt);}
+      if(b.state==='sink')sinkStep(b,now);
     });
+    /* the odyssey's clock: sail, hold, the wrecks, sail on; then home for one */
+    if(voy&&voy.phase==='leg'&&now-voy.t0>LEG+80){voy.phase='hold';voy.t0=now;}
+    else if(voy&&voy.phase==='hold'&&now-voy.t0>HOLD){let any=false;
+      ships.forEach(b=>{if(b.state==='voy'&&voy.plan.wreck[b.v]===voy.stop){b.state='sink';b.t0=now;b.roll=0;wreckNode(b,false);any=true;}});
+      voy.phase='sink';voy.t0=now;if(!any)voy.t0=now-SINK;counts();}
+    else if(voy&&voy.phase==='sink'&&now-voy.t0>SINK+500){if(voy.stop<2)leg(voy.stop+1);else final();counts();}
     /* ships keep their distance: a full berth on their own ring, half of one from the rings either side */
     for(let i=0;i<sailing.length;i++)for(let j=i+1;j<sailing.length;j++){const A=sailing[i],B=sailing[j],dr=Math.abs(A.ring-B.ring);if(dr>1)continue;
       const gap=(dr?0.17:0.40)/Math.min(A.rt,B.rt);let d=(B.th-A.th)%(2*Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;
@@ -389,16 +467,15 @@
     P.pennant.setAttribute('fill',L.pennant);P.kind.textContent=(S.KIND[d.kind]||'').toUpperCase();
     P.sail.setAttribute('fill',L.sail);P.hull.setAttribute('fill',L.hull);P.stripe.setAttribute('stroke',L.stripe);
     const sail=$('seaSailBox');sail.style.color=L.sailInk;
-    $('seaGameK').textContent=d.module?'THE GAME · '+S.GAME[d.module].toUpperCase()+' · MODULE '+d.module:'THE GAME';
-    $('seaMove').textContent=d.move;$('seaGame').textContent=d.game;$('seaCred').textContent=d.cred;$('seaDown').textContent=d.down;
-    const w=$('seaWhose');w.textContent=revealed.has(b.v)?(d.name||'—'):'WHOSE SHIP IS THIS?';w.classList.toggle('named',revealed.has(b.v));
+    $('seaGameK').textContent=d.module?'THE GAME · MODULE '+d.module+' · '+S.GAME[d.module].toUpperCase():'THE GAME';
+    $('seaMove').textContent=d.move;$('seaGame').textContent=d.module?(S.PLAY[d.module]||d.game):d.game;$('seaCred').textContent=d.cred;$('seaDown').textContent=d.down;
+    const w=$('seaWhose');w.textContent=revealed.has(b.v)?((d.name||'—')+(d.name2?' & '+d.name2:'')):'WHOSE SHIP IS THIS?';w.classList.toggle('named',revealed.has(b.v));
     ov.classList.add('on');
     fit($('seaMove'),34,15);fit($('seaGame'),22,13);fit($('seaCred'),21,12);fit($('seaDown'),21,13);
   }
-  function open(b){if(!slide.classList.contains('active'))return;shown=b;fill(b);}
+  function open(b){if(!slide.classList.contains('active'))return;if(voy&&voy.phase!=='done')return;if(b.state==='sink')return;shown=b;fill(b);}
   function close(){
-    if(!shown)return;const b=shown;shown=null;fill(null);
-    if(b.state==='ring'||b.state==='enter'){home.push(b.v);saveHome();dock(b,performance.now(),false);counts();}
+    if(!shown)return;shown=null;fill(null);
   }
   $('seaWhose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();if(!shown)return;revealed.has(shown.v)?revealed.delete(shown.v):revealed.add(shown.v);fill(shown);});
   $('seaClose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();close();});
@@ -413,12 +490,14 @@
       let b=ships.get(d.v)||pending.find(x=>x.v===d.v);
       if(b){b.d=d;return;}
       b={v:d.v,d,look:S.look(d.v,d.module,d.kind,d.h),x:0,y:0,s:1,face:1,ph:0};
-      if(home.includes(d.v))dock(b,now,true);
+      if(voy&&voy.restored&&voy.plan.wreck[d.v]!==undefined){const stop=voy.plan.wreck[d.v], i=wrecked[stop]++, at=spot(stop,i);
+        b.g=shipNode(b,frontG);b.x=at.x;b.y=at.y;b.s=.82;b.face=1;b.state='wreck';wreckNode(b,true);put(b,now);ships.set(b.v,b);}
+      else if(voy&&voy.restored&&voy.plan.survivor===d.v){home=[d.v];dock(b,now,true);showBanner(b);}
       else if(first)launch(b,now,true);
       else pending.push(b);});
     [...ships.keys()].forEach(v=>{if(!seen.has(v)){const b=ships.get(v);if(b.g)b.g.remove();ships.delete(v);if(shown===b){shown=null;fill(null);}}});
     pending=pending.filter(b=>seen.has(b.v));
-    if(st.live&&!L.length&&home.length){home=[];saveHome();}          /* a Poll Desk reset */
+    if(st.live&&!L.length&&(home.length||voy)){home=[];voy=null;wrecked=[0,0,0];saveVoy();if(banner)banner.classList.remove('on');}          /* a Poll Desk reset */
     if(shown)fill(shown);
     $('seaDemo').style.display=st.live?'none':'';
     counts();wake();

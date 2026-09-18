@@ -4,13 +4,13 @@
 <title>Construct your strategic move ship</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Module 7's closing exercise: one phone each. Ryan's shape (18 Sep 2026):
-   bring back a game you already brought to these sessions, make a strategic
-   move to change it in your favor (commitment, threat or promise), say what
-   would make it credible, and name the downsides. The phone finds its
-   owner's earlier games (Module 2's tree by the asker's name, Modules 3 and
-   4 and 5 by name or by this phone) and offers only those; the blank "your game" box
-   appears only when it finds none. The send is a HOLD, the gesture from the
+/* Module 7's closing exercise, in pairs on one phone (18 Sep 2026). Ryan's
+   shape: bring back a game you already brought to these sessions, make a
+   strategic move to change it in your favor (commitment, threat or promise),
+   say what would make it credible, and name the downsides. The game is
+   picked by its picture (the tree, the engines, the prison, the plane) and
+   the pair say which of theirs it was out loud; nothing is looked up, so
+   pairs can rotate. A fifth tile is a game of your own, typed. The send is a HOLD, the gesture from the
    chicken wheel: a strategic move is made where everyone can see it and
    cannot be taken back. The deck (world/sea.js) sails one ship per phone
    round the Sirens' rock; ships.js gives this phone the same ship, so its
@@ -85,7 +85,7 @@ button.hold:disabled{border-color:var(--ink);color:var(--ink);opacity:.45;cursor
 <script>
 /* ?room=<x> plays into a rehearsal room (m7-world-<x>) and looks for earlier games in the same rehearsal rooms */
 const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
-const API='https://gt-poll.rlamare.workers.dev', ROOM='m7-world'+SUF, LOCKKEY='gt-m7world-locked'+SUF;
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m7-world'+SUF, LOCKKEY='gt-m7world-locked'+SUF, PARTNERKEY='gt-m7world-partner'+SUF;
 const GAMEMAX=150, MOVEMAX=150, CREDMAX=120, DOWNMAX=120;
 let voter=null;
 try{
@@ -98,8 +98,8 @@ const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
 const cleanName=n=>clean(n).slice(0,30);
 const norm=n=>String(n||'').trim().toLowerCase();
 const clip=(s,n)=>s.length<=n?s:s.slice(0,n-1).replace(/\s+\S*$/,'')+'…';
-let name=null, roster=[];
-try{name=localStorage.getItem('gt-name');}catch(_){}
+let name=null, partner=null, roster=[];
+try{name=localStorage.getItem('gt-name');partner=localStorage.getItem(PARTNERKEY);}catch(_){}
 if(name)claimOnce();
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
 function claimOnce(){
@@ -115,74 +115,52 @@ function say(line){
 }
 const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
 
-/* ---- the games this person has already brought: each earlier closing
-   exercise read back in its own words. Module 2 lines carry the asker's
-   name; Modules 3, 4 and 5 are found by this phone's id and by name, so a
-   different phone on day two still finds them. ---- */
-const entries=room=>fetch(API+'/p/'+room+SUF+'/entries').then(r=>r.json()).then(d=>d.entries||[]).catch(()=>[]);
-function latest(ents,mine){const o={};ents.filter(mine).forEach(e=>{const p=String(e.t||'').split('‖');o[p[0]]=p;});return o;}
-async function myGames(){
-  const [e2,e3,e4,e5]=await Promise.all([entries('m2-branch'),entries('m3-engines'),entries('m4-pds'),entries('m5-games')]);
-  const out=[];
-  /* Module 2: A|B|g|key|payload; the game is the asker's */
-  const g2=new Map();
-  e2.forEach(e=>{const p=String(e.t||'').split('|');if(p.length<5||norm(p[0])!==norm(name))return;const k=p[1]+'|'+p[2];if(!g2.has(k))g2.set(k,{});g2.get(k)[p[3]]=p.slice(4).join('|');});
-  g2.forEach(G=>{if(G.o)out.push({module:2,text:'I need '+G.o+(G.p?' from '+G.p:'')});});
-  /* Module 3: line 1 carries the name since the exercise went solo (18 Sep); a game from a group phone before that is found by this phone only */
-  const o3=new Set(e3.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='1'&&norm(p[2])===norm(name));}).map(e=>e.v));
-  const v3=latest(e3,e=>o3.has(e.v));
-  if(v3['1'])out.push({module:3,text:'Dividing '+v3['1'][1]+(v3['2']?' with '+v3['2'][1]:'')});
-  /* Module 4: line 1 carries the name since the exercise went solo (18 Sep); a dilemma from a group phone before that is found by this phone only */
-  const o4=new Set(e4.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='1'&&norm(p[3])===norm(name));}).map(e=>e.v));
-  const v4=latest(e4,e=>o4.has(e.v));
-  if(v4['1'])out.push({module:4,text:v4['1'][1]+' and '+(v4['1'][2]||'the other side')+(v4['2']&&v4['3']?': '+v4['2'][1]+', or '+v4['3'][1]:'')});
-  const a5=e5.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='a'&&norm(p[1])===norm(name));});
-  const owners=new Set(a5.map(e=>e.v)), v5=latest(e5,e=>owners.has(e.v));
-  if(v5.a)out.push({module:5,text:v5.a[2]+': '+v5.a[3]});
-  return out.map(g=>({module:g.module,text:clip(clean(g.text),GAMEMAX)}));
-}
+/* ---- the game: one of the four pictures the room already knows, or a game of your own ---- */
+const TILES=[[2,'The tree','Sequential moves'],[3,'The engines','Zero-sum'],[4,'The prison','Prisoner’s dilemma'],[5,'The plane','Coordination'],[0,'A game of your own','Typed in']];
 
-let locked=null, games=null, chosen=null;
+let locked=null, chosen=null;
 try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
 function render(){
   st.textContent='';app.innerHTML='';hint.textContent='';
-  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;games=null;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  /* in pairs, one phone: the partner is named too, so the ship is both of theirs */
+  if(partner===null){q.textContent='Who’s with you?';GT_NAMES.partner({host:app,roster,not:name,clean:cleanName,hint:'In pairs, one phone. Pick the person you are working with.',done:n=>{partner=n;try{localStorage.setItem(PARTNERKEY,partner);}catch(_){}render();}});return;}
   q.textContent='Construct your strategic move ship';
   if(locked){renderLocked();return;}
   const me=document.createElement('div');me.className='me';
   me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
-  me.querySelector('b').textContent=name;
-  me.querySelector('button').addEventListener('click',()=>{name=null;games=null;chosen=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  me.querySelector('b').textContent=name+(partner!=='-'?' & '+partner:'');
+  me.querySelector('button').addEventListener('click',()=>{name=null;partner=null;chosen=null;try{localStorage.removeItem('gt-name');localStorage.removeItem(PARTNERKEY);}catch(_){}render();});
   app.appendChild(me);
-  if(!games){st.textContent='Finding your games…';myGames().then(g=>{games=g;if(g.length===1)chosen=g[0];render();});return;}
-  if(games.length>1&&!chosen){renderPick();return;}
+  if(!chosen){renderPick();return;}
   renderForm();
 }
 function renderPick(){
-  hint.textContent='Think about a strategic game you’ve already identified from your own world. Pick one.';
+  hint.textContent='Think about a strategic game you’ve already identified from your own world. Pick the one you brought to these sessions.';
   const list=document.createElement('div');list.className='choices';
-  games.forEach(g=>{const b=document.createElement('button');b.type='button';b.className='pick game';b.style.setProperty('--sail',M7_SHIPS.SAIL[g.module]);
-    const s=document.createElement('small');s.textContent=M7_SHIPS.GAME[g.module]+' · Module '+g.module;b.appendChild(s);b.appendChild(document.createTextNode(g.text));
-    b.addEventListener('click',()=>{chosen=g;render();});list.appendChild(b);});
+  TILES.forEach(([m,pic,play])=>{const b=document.createElement('button');b.type='button';b.className='pick game';b.style.setProperty('--sail',M7_SHIPS.SAIL[m]);
+    const s=document.createElement('small');s.textContent=(m?'MODULE '+m+' · ':'')+play.toUpperCase();b.appendChild(s);b.appendChild(document.createTextNode(pic));
+    b.addEventListener('click',()=>{chosen={module:m,text:pic};render();});list.appendChild(b);});
   app.appendChild(list);
 }
 function renderForm(){
-  const fresh=!games.length;
+  const fresh=chosen.module===0;
   const build=document.createElement('div');build.className='build';app.appendChild(build);
   let hullIdx=M7_SHIPS.look(voter,0,'c').hullIdx, kind=null, credKey=null, shown=new Set();
   const credOk=()=>!!credKey&&(credKey!=='oe'||!!clean(cred.value));
   const paint=()=>{
-    const mod=fresh?0:chosen.module, gameOn=fresh?!!clean(game.value):true;
+    const mod=chosen.module, gameOn=fresh?!!clean(game.value):true;
     const parts={hull:gameOn,sail:gameOn&&!!clean(move.value),pennant:gameOn&&!!kind,bound:gameOn&&credOk(),monster:gameOn&&!!clean(down.value)};
     build.innerHTML=M7_SHIPS.svg(M7_SHIPS.look(voter,mod,kind||'c',hullIdx),mod,parts);
     const now=new Set();build.querySelectorAll('.part').forEach(g=>{const n=g.classList[1];now.add(n);if(shown.has(n))g.classList.add('old');});shown=now;
   };
-  const c1=card('game','THE GAME',fresh?'Think about a strategic game from your own world – a sequential game, a prisoner’s dilemma, or a coordination game. Who are the players, and what is the situation?':'');
+  const c1=card('game','THE GAME',fresh?'A strategic game from your own world – a sequential game, a prisoner’s dilemma, or a coordination game. Who are the players, and what is the situation?':'');
   let game=null;
+  c1.style.setProperty('--side',M7_SHIPS.SAIL[chosen.module]);
   if(fresh){game=input(GAMEMAX,'e.g. we and the other lessor keep undercutting each other…');c1.appendChild(game);}
-  else{c1.querySelector('.pq').remove();const m=document.createElement('div');m.className='mine';m.textContent=chosen.text;c1.appendChild(m);c1.style.setProperty('--side',M7_SHIPS.SAIL[chosen.module]);
-    c1.querySelector('.suit').textContent='THE GAME · '+M7_SHIPS.GAME[chosen.module].toUpperCase();
-    if(games.length>1){const b=document.createElement('button');b.className='back';b.type='button';b.textContent='←';b.setAttribute('aria-label','A different game');b.style.fontSize='18px';b.style.textDecoration='none';b.addEventListener('click',()=>{chosen=null;render();});c1.appendChild(b);}}
+  else{c1.querySelector('.pq').remove();const m=document.createElement('div');m.className='mine';m.textContent=chosen.text+' · '+M7_SHIPS.PLAY[chosen.module];c1.appendChild(m);
+    c1.querySelector('.suit').textContent='THE GAME · MODULE '+chosen.module;}
+  const back=document.createElement('button');back.className='back';back.type='button';back.textContent='←';back.setAttribute('aria-label','A different game');back.style.fontSize='18px';back.style.textDecoration='none';back.addEventListener('click',()=>{chosen=null;render();});c1.appendChild(back);
   const hulls=document.createElement('div');hulls.className='hulls';
   M7_SHIPS.HULLS.forEach((h,i)=>{const b=document.createElement('button');b.type='button';b.style.setProperty('--h',h[0]);b.style.setProperty('--s',h[1]);b.setAttribute('aria-label','Hull '+(i+1));
     b.classList.toggle('on',i===hullIdx);b.addEventListener('click',()=>{hullIdx=i;[...hulls.children].forEach((x,k)=>x.classList.toggle('on',k===i));paint();});hulls.appendChild(b);});
@@ -212,9 +190,9 @@ function renderForm(){
   hold.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat)start(e);});hold.addEventListener('keyup',stop);
   hold.addEventListener('contextmenu',e=>e.preventDefault());
   function send(){
-    const G=fresh?clean(game.value):chosen.text, mod=fresh?0:chosen.module, M=clean(move.value), C=credKey==='oe'?clean(cred.value):'', D=clean(down.value);
+    const G=fresh?clean(game.value):chosen.text, mod=chosen.module, M=clean(move.value), C=credKey==='oe'?clean(cred.value):'', D=clean(down.value);
     hold.disabled=true;all.concat([cred]).forEach(i=>i.disabled=true);st.textContent='Sending…';
-    say('g‖'+name+'‖'+mod+'‖'+G+'‖'+hullIdx).then(()=>say('m‖'+kind+'‖'+M)).then(()=>say('c‖'+credKey+'‖'+C)).then(()=>say('d‖'+D))
+    say('g‖'+name+'‖'+mod+'‖'+G+'‖'+hullIdx+'‖'+(partner!=='-'?partner:'')).then(()=>say('m‖'+kind+'‖'+M)).then(()=>say('c‖'+credKey+'‖'+C)).then(()=>say('d‖'+D))
       .then(()=>{locked={name,module:mod,kind,h:hullIdx,at:Date.now()};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
       .catch(cd=>{st.textContent=failMsg(cd);hold.classList.remove('going');hold.disabled=false;all.concat([cred]).forEach(i=>i.disabled=false);});
   }

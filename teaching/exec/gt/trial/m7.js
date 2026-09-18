@@ -72,7 +72,7 @@ async function world(n, from) {
   if (!Number.isInteger(n) || n < 1 || from + n > WORLD.length) { console.error('How many bots? 1 to ' + (WORLD.length - from) + ' from seat ' + (from + 1) + '.'); process.exit(2); }
   for (let i = from; i < from + n; i++) {
     const w = WORLD[i];
-    await say('g‖' + NAMES[i] + '‖' + w[0] + '‖' + w[2], voterOf(i));
+    await say('g‖' + NAMES[i] + '‖' + w[0] + '‖' + (w[0] ? S.GAME[w[0]] : w[2]) + '‖' + (i % 10) + '‖' + NAMES[(i + 12) % NAMES.length], voterOf(i));
     await say('m‖' + w[1] + '‖' + w[3], voterOf(i));
     const ck = ['ct', 'rp', 'mo', 'oe'][i % 4];
     await say('c‖' + ck + '‖' + (ck === 'oe' ? w[4] : ''), voterOf(i));
