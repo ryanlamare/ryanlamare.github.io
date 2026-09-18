@@ -10,7 +10,8 @@
                                    new one; hull: the hull colour they picked, 0–9
                                    (absent: from the voter id)
      m‖kind‖the move               kind: c commitment, t threat, p promise
-     c‖what makes it credible
+     c‖key‖text                    key: ct contract, rp reputation, ir can't be undone,
+                                   pb said in public, oe something else (then the text)
      d‖the downside                the last line; a ship sails in once it lands
 
    The latest line of each letter wins, so a re-send corrects.
@@ -24,6 +25,8 @@
   const SAIL_INK={2:'#E9E2D2',3:'#E9E2D2',4:'#E9E2D2',5:'#1B1C19',0:'#E9E2D2'};
   const PENNANT={c:'#1B1C19',t:'#CE1E32',p:'#59949C'};
   const KIND={c:'Commitment',t:'Threat',p:'Promise'};
+  /* what gives the move credibility: a tap on the phone, or something else typed */
+  const CRED={ct:'A contract',rp:'My reputation',ir:'It can’t be undone',pb:'It was said in public',oe:'Something else'};
   const HULLS=[['#8E3E28','#C9A227'],['#1B1C19','#CE1E32'],['#6B3F47','#E9E2D2'],['#5B4636','#59949C'],
                ['#8E3E28','#E9E2D2'],['#1B1C19','#C9A227'],['#37658A','#E9E2D2'],['#26713D','#C9A227'],
                ['#5B4636','#CE1E32'],['#6B3F47','#C9A227']];
@@ -40,7 +43,7 @@
       if(!by.has(e.v))by.set(e.v,{v:e.v});const r=by.get(e.v);
       if(k==='g'){r.name=p[1]||'';r.module=[2,3,4,5].includes(+p[2])?+p[2]:0;r.game=p[3]||'';r.h=p[4]===undefined?null:+p[4];}
       else if(k==='m'){r.kind=PENNANT[p[1]]?p[1]:'c';r.move=p[2]||'';}
-      else if(k==='c'){r.cred=p[1]||'';}
+      else if(k==='c'){r.credKey=CRED[p[1]]?p[1]:'oe';r.cred=(r.credKey!=='oe'&&CRED[r.credKey])||p[2]||p[1]||'';}
       else{r.down=p[1]||'';r.done=true;}});
     return [...by.values()].filter(r=>r.game&&r.move&&r.done);
   }
@@ -71,5 +74,5 @@
         '<ellipse cx="28" cy="-1.5" rx="3.4" ry="2.4" fill="'+paper+'" stroke="'+ink+'" stroke-width="1"/><circle cx="28.6" cy="-1.5" r="1.1" fill="'+ink+'"/>')+
       '<path d="M-56 9 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0 q6 -5 12 0" fill="none" stroke="#59949C" stroke-width="2.2" stroke-linecap="round"/></svg>';
   }
-  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,HULLS,look,fleet,hash,svg};
+  root.M7_SHIPS={SAIL,SAIL_INK,PENNANT,KIND,CRED,HULLS,look,fleet,hash,svg};
 })(typeof window!=='undefined'?window:globalThis);

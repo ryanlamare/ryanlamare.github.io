@@ -74,7 +74,8 @@ async function world(n, from) {
     const w = WORLD[i];
     await say('g‖' + NAMES[i] + '‖' + w[0] + '‖' + w[2], voterOf(i));
     await say('m‖' + w[1] + '‖' + w[3], voterOf(i));
-    await say('c‖' + w[4], voterOf(i));
+    const ck = ['ct', 'rp', 'ir', 'pb', 'oe'][i % 5];
+    await say('c‖' + ck + '‖' + (ck === 'oe' ? w[4] : ''), voterOf(i));
     await say('d‖' + w[5], voterOf(i));
     await sleep(GAP);
   }

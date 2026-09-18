@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Strategic moves in your world</title>
+<title>Construct your strategic move ship</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
 /* Module 7's closing exercise: one phone each. Ryan's shape (18 Sep 2026):
@@ -46,8 +46,10 @@ button.pick.game small{display:block;font-weight:700;font-size:11px;letter-spaci
 .card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
 .card input[type=text]:focus{border-bottom-color:var(--side)}
 .card input:disabled{opacity:.45}
-.card ::placeholder{color:var(--muted);font-weight:500}
+.card ::placeholder{color:var(--muted);font-weight:400;opacity:.8}
 .kinds{display:flex;gap:8px}
+.kinds.creds{flex-wrap:wrap}
+.kinds.creds button{flex:1 1 40%;text-transform:none;letter-spacing:.02em;font-size:14px}
 .kinds button{flex:1;font-family:var(--sans);font-weight:700;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:2.5px solid var(--ink);padding:11px 4px;cursor:pointer}
 .kinds button.on{color:var(--paper);background:var(--k);border-color:var(--k)}
 /* the hold */
@@ -73,7 +75,7 @@ button.hold:disabled{border-color:var(--ink);color:var(--ink);opacity:.45;cursor
 </head><body>
 <div class="wrap">
   <div class="tag"><i></i>MODULE 7 · YOUR WORLD</div>
-  <h1 id="q">Strategic moves in your world</h1>
+  <h1 id="q">Construct your strategic move ship</h1>
   <div class="hint" id="hint"></div>
   <div id="app"></div>
   <div class="status" id="status" aria-live="polite"></div>
@@ -141,7 +143,7 @@ try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
 function render(){
   st.textContent='';app.innerHTML='';hint.textContent='';
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;games=null;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
-  q.textContent='Strategic moves in your world';
+  q.textContent='Construct your strategic move ship';
   if(locked){renderLocked();return;}
   const me=document.createElement('div');me.className='me';
   me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
@@ -163,35 +165,41 @@ function renderPick(){
 function renderForm(){
   const fresh=!games.length;
   const build=document.createElement('div');build.className='build';app.appendChild(build);
-  let hullIdx=M7_SHIPS.look(voter,0,'c').hullIdx, kind=null, shown=new Set();
+  let hullIdx=M7_SHIPS.look(voter,0,'c').hullIdx, kind=null, credKey=null, shown=new Set();
+  const credOk=()=>!!credKey&&(credKey!=='oe'||!!clean(cred.value));
   const paint=()=>{
     const mod=fresh?0:chosen.module, gameOn=fresh?!!clean(game.value):true;
-    const parts={hull:gameOn,sail:gameOn&&!!clean(move.value),pennant:gameOn&&!!kind,bound:gameOn&&!!clean(cred.value),monster:gameOn&&!!clean(down.value)};
+    const parts={hull:gameOn,sail:gameOn&&!!clean(move.value),pennant:gameOn&&!!kind,bound:gameOn&&credOk(),monster:gameOn&&!!clean(down.value)};
     build.innerHTML=M7_SHIPS.svg(M7_SHIPS.look(voter,mod,kind||'c',hullIdx),mod,parts);
     const now=new Set();build.querySelectorAll('.part').forEach(g=>{const n=g.classList[1];now.add(n);if(shown.has(n))g.classList.add('old');});shown=now;
   };
   const c1=card('game','THE GAME',fresh?'Think about a strategic game from your own world – a sequential game, a prisoner’s dilemma, or a coordination game. Who are the players, and what is the situation?':'');
   let game=null;
-  if(fresh){game=input(GAMEMAX,'we and the other lessor keep undercutting each other…');c1.appendChild(game);}
+  if(fresh){game=input(GAMEMAX,'e.g. we and the other lessor keep undercutting each other…');c1.appendChild(game);}
   else{c1.querySelector('.pq').remove();const m=document.createElement('div');m.className='mine';m.textContent=chosen.text;c1.appendChild(m);c1.style.setProperty('--side',M7_SHIPS.SAIL[chosen.module]);
     c1.querySelector('.suit').textContent='THE GAME, FROM MODULE '+chosen.module;
-    if(games.length>1){const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← a different game';b.addEventListener('click',()=>{chosen=null;render();});c1.appendChild(b);}}
+    if(games.length>1){const b=document.createElement('button');b.className='back';b.type='button';b.textContent='←';b.setAttribute('aria-label','A different game');b.style.fontSize='18px';b.style.textDecoration='none';b.addEventListener('click',()=>{chosen=null;render();});c1.appendChild(b);}}
   const hulls=document.createElement('div');hulls.className='hulls';
   M7_SHIPS.HULLS.forEach((h,i)=>{const b=document.createElement('button');b.type='button';b.style.setProperty('--h',h[0]);b.style.setProperty('--s',h[1]);b.setAttribute('aria-label','Hull '+(i+1));
     b.classList.toggle('on',i===hullIdx);b.addEventListener('click',()=>{hullIdx=i;[...hulls.children].forEach((x,k)=>x.classList.toggle('on',k===i));paint();});hulls.appendChild(b);});
-  const hl=document.createElement('div');hl.className='suit';hl.textContent='YOUR HULL';hl.style.borderBottom='0';hl.style.paddingBottom='0';c1.appendChild(hl);c1.appendChild(hulls);
+  const hl=document.createElement('div');hl.className='suit';hl.textContent='YOUR HULL COLOR';hl.style.borderBottom='0';hl.style.paddingBottom='0';c1.appendChild(hl);c1.appendChild(hulls);
   const c2=card('move','THE STRATEGIC MOVE','Change that game in your favor by making a strategic move');
   const kinds=document.createElement('div');kinds.className='kinds';
   [['c','Commitment'],['t','Threat'],['p','Promise']].forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=k[1];b.style.setProperty('--k',M7_SHIPS.PENNANT[k[0]]);
     b.addEventListener('click',()=>{kind=k[0];[...kinds.children].forEach(x=>x.classList.toggle('on',x===b));sync();paint();});kinds.appendChild(b);});
-  c2.appendChild(kinds);const move=input(MOVEMAX,'unless the price comes down, we move the contract…');c2.appendChild(move);
-  const c3=card('cred','CREDIBILITY','What would give the move credibility?');const cred=input(CREDMAX,'we have already qualified the rival’s parts, and they know it…');c3.appendChild(cred);
-  const c4=card('down','THE DOWNSIDE','Are there potential downsides to making the move?');const down=input(DOWNMAX,'the rival learns we need them…');c4.appendChild(down);
+  c2.appendChild(kinds);const move=input(MOVEMAX,'e.g. unless the price comes down, we move the contract…');c2.appendChild(move);
+  const c3=card('cred','CREDIBILITY','What would give the move credibility?');
+  const creds=document.createElement('div');creds.className='kinds creds';
+  const cred=input(CREDMAX,'e.g. we have already qualified the rival’s parts, and they know it…');cred.style.display='none';
+  Object.keys(M7_SHIPS.CRED).forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=M7_SHIPS.CRED[k];b.style.setProperty('--k','#8a6d10');
+    b.addEventListener('click',()=>{credKey=k;[...creds.children].forEach(x=>x.classList.toggle('on',x===b));cred.style.display=k==='oe'?'':'none';if(k==='oe')cred.focus();sync();paint();});creds.appendChild(b);});
+  c3.appendChild(creds);c3.appendChild(cred);
+  const c4=card('down','THE DOWNSIDE','Are there potential downsides to making the move?');const down=input(DOWNMAX,'e.g. the rival learns we need them…');c4.appendChild(down);
   const hold=document.createElement('button');hold.type='button';hold.className='hold';hold.disabled=true;hold.innerHTML='<i></i><span>HOLD TO BIND YOURSELF TO THE MOVE</span>';
-  const all=[move,cred,down].concat(game?[game]:[]);
-  function ready(){return !!kind&&all.every(i=>clean(i.value));}
+  const all=[move,down].concat(game?[game]:[]);
+  function ready(){return !!kind&&credOk()&&all.every(i=>clean(i.value));}
   function sync(){hold.disabled=!ready();}
-  all.forEach(i=>i.addEventListener('input',()=>{sync();paint();}));
+  all.concat([cred]).forEach(i=>i.addEventListener('input',()=>{sync();paint();}));
   /* the hold: 1.3 seconds, let go early and nothing is sent */
   let timer=0;
   const stop=()=>{if(!timer)return;clearTimeout(timer);timer=0;hold.classList.remove('going');st.textContent='Keep holding to send. There is no taking it back.';};
@@ -200,11 +208,11 @@ function renderForm(){
   hold.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat)start(e);});hold.addEventListener('keyup',stop);
   hold.addEventListener('contextmenu',e=>e.preventDefault());
   function send(){
-    const G=fresh?clean(game.value):chosen.text, mod=fresh?0:chosen.module, M=clean(move.value), C=clean(cred.value), D=clean(down.value);
-    hold.disabled=true;all.forEach(i=>i.disabled=true);st.textContent='Sending…';
-    say('g‖'+name+'‖'+mod+'‖'+G+'‖'+hullIdx).then(()=>say('m‖'+kind+'‖'+M)).then(()=>say('c‖'+C)).then(()=>say('d‖'+D))
+    const G=fresh?clean(game.value):chosen.text, mod=fresh?0:chosen.module, M=clean(move.value), C=credKey==='oe'?clean(cred.value):'', D=clean(down.value);
+    hold.disabled=true;all.concat([cred]).forEach(i=>i.disabled=true);st.textContent='Sending…';
+    say('g‖'+name+'‖'+mod+'‖'+G+'‖'+hullIdx).then(()=>say('m‖'+kind+'‖'+M)).then(()=>say('c‖'+credKey+'‖'+C)).then(()=>say('d‖'+D))
       .then(()=>{locked={name,module:mod,kind,h:hullIdx,at:Date.now()};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
-      .catch(cd=>{st.textContent=failMsg(cd);hold.classList.remove('going');hold.disabled=false;all.forEach(i=>i.disabled=false);});
+      .catch(cd=>{st.textContent=failMsg(cd);hold.classList.remove('going');hold.disabled=false;all.concat([cred]).forEach(i=>i.disabled=false);});
   }
   [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(hold);paint();
 }

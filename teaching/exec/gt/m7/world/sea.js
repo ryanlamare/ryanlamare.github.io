@@ -57,7 +57,7 @@
     [3,'p','Sharing out the bonus pool between two teams','If they take the smaller share this year, they choose first next year','It is minuted','Next year’s pool might be half the size'],
     [5,'c','Both of us waiting for the other to set the agenda','I circulate mine a week early','Everyone has read it','I have shown my hand'],
   ];
-  const DEMO=E.map((e,i)=>({v:'demo'+i,name:NAMES[i],module:e[0],kind:e[1],game:e[2],move:e[3],cred:e[4],down:e[5],done:true}));
+  const DEMO=E.map((e,i)=>({v:'demo'+i,name:NAMES[i],module:e[0],kind:e[1],game:e[2],move:e[3],cred:i%5===4?e[4]:S.CRED[['ct','rp','ir','pb'][i%5]],down:e[5],done:true}));
   const demoOnly=/[?&]demo=1/.test(location.search);
   const ROOM='m7-world'+(window.M7SUF||'');
   const st={live:false,list:[],demoShown:0};
@@ -168,10 +168,8 @@
 
   /* the title cartouche, top left */
   (function(){const g=mk('g',{},chart);
-    mk('path',{d:'M66 58 H452 l-12 24 l12 24 H66 l12 -24 Z',fill:SOFT,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
-    mk('path',{d:'M84 64 H434 M84 100 H434',stroke:INK,'stroke-width':1,opacity:.5},g);
-    const a=mk('text',{x:259,y:79,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':10.5,'letter-spacing':'.24em',fill:RED},g);a.textContent='MODULE 7 · GAME THEORY IN YOUR WORLD';
-    const b=mk('text',{x:259,y:96,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':14,'letter-spacing':'.16em',fill:INK},g);b.textContent='STRATEGIC MOVES IN YOUR WORLD';
+    mk('path',{d:'M66 62 H452 l-12 20 l12 20 H66 l12 -20 Z',fill:SOFT,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
+    const b=mk('text',{x:259,y:87,'text-anchor':'middle','font-family':'Jost, sans-serif','font-weight':700,'font-size':14.5,'letter-spacing':'.18em',fill:INK},g);b.textContent='THE ODYSSEY OF STRATEGIC MOVES';
   })();
 
   /* the legend, bottom centre: sails over pennants */
