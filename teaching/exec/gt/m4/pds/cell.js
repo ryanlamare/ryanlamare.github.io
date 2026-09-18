@@ -109,6 +109,11 @@
     '.jc svg.cellsvg{display:block;width:100%;height:100%}',
     '.jc .fig,.jc .bars,.jc .door,.jc .tunnel,.jc .mound,.jc .key,.jc .saw,.jc .cut,.jc .tally{transform-box:fill-box}',
     '.jc .fig{transform-origin:center bottom}',
+    /* the first touch: the door swings shut on the pair and the warden's key turns and is taken away */
+    '.jc.lock .door{animation:jshut .7s .4s cubic-bezier(.6,0,1,1) both}',
+    '@keyframes jshut{from{transform:scaleX(.08)}to{transform:none}}',
+    '.jc.lock .key{animation:jlock 1.6s 1.15s both}',
+    '@keyframes jlock{0%{opacity:1;transform:rotate(0)}45%{opacity:1;transform:rotate(90deg)}70%{opacity:1;transform:rotate(90deg)}100%{opacity:0;transform:rotate(90deg)}}',
     /* r: the tunnel, dug a little at a time */
     '.jc .tunnel,.jc .mound{transform-origin:center bottom;opacity:0}',
     '.jc.esc-r .tunnel,.jc.esc-r .mound{animation:jdig 2.4s steps(4,end) both}',
@@ -147,7 +152,7 @@
     '@keyframes jmkey{0%,72%{opacity:0;transform:rotate(0)}80%{opacity:1;transform:rotate(0)}100%{opacity:1;transform:rotate(90deg)}}'
   ].join('\n');
   /* how long each opened-cell escape runs, so the walk knows when the pair can break out of the block */
-  const ESC_MS={r:3500,e:3400,p:3500,n:1600,m:3500};
+  const ESC_MS={r:3500,e:3400,p:3500,n:1600,m:3500,lock:2800};
 
   root.M4_CELL={ROUTES,ESCAPED,ESCAPED_YOU,MODEL,MODEL_OUT,parse,routesOpen,bigSVG,prisonerSVG,prisonerNodes,CSS,ESC_MS,cut};
 })(typeof window!=='undefined'?window:globalThis);

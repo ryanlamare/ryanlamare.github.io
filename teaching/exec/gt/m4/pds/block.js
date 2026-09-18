@@ -216,7 +216,8 @@
     }
     /* the debrief: the cells that emptied fade, what is still lit is the room's stuck dilemmas */
     function stuck(on){cells.forEach(c=>{const dim=on&&c.state==='out';c.g.setAttribute('opacity',dim?'.3':'1');c.door.setAttribute('opacity',dim?'.3':'1');});}
-    function hot(k){cells.forEach(c=>{const h=k===c.i+1;c.num.setAttribute('fill',h?'#CE1E32':BAR);c.num.setAttribute('font-size',h?'15':'12');});}
+    /* the open cell's number grows; a cell that has been opened keeps its number red, as the jet's shades stay up */
+    function hot(k,seen){cells.forEach(c=>{const h=k===c.i+1, was=seen&&seen.has(c.i+1);c.num.setAttribute('fill',(h||was)?'#CE1E32':BAR);c.num.setAttribute('font-size',h?'15':'12');});}
     const api={setList,breakout,restore,stuck,hot,onClick(fn){onClickFn=fn;},cellCount:()=>cells.length,_debug:()=>({tweens:tweens.length,queue:queue.length,pairs:[...pairs.values()].map(p=>[Math.round(p.x),Math.round(p.y),p.g.parentNode===layers.outside?'out':p.g.parentNode===layers.inside?'in':'gone'])})};
     (window.M4_BLOCKS=window.M4_BLOCKS||[]).push(api);
     return api;
