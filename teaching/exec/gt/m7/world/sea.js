@@ -276,8 +276,14 @@
   const STOPS=[{name:'Troy',x:300,y:214},{name:'the Cyclops',x:340,y:480},{name:'Charybdis',x:1010,y:520},{name:'Scylla',x:842,y:198}];
   const VKEY='gt-m7-voyage-'+ROOM, LEG=2600, HOLD=1700, SINK=1400;
   let voy=null, wrecked=[0,0,0,0];               /* {plan:{survivor, wreck:{v:stop}}, phase: leg|hold|sink|final|done, stop, t0}; wrecked counts the restored wrecks at each trial */
-  try{const sv=JSON.parse(sessionStorage.getItem(VKEY)||'null');if(sv&&sv.plan)voy={plan:sv.plan,phase:'done',stop:3,t0:0,restored:true};}catch(_){}
-  function saveVoy(){try{if(voy)sessionStorage.setItem(VKEY,JSON.stringify({plan:voy.plan}));else sessionStorage.removeItem(VKEY);}catch(_){}}
+  /* a finished voyage is kept for the session so a reload mid-session shows the same end; never on demo data, where a refresh starts clean */
+  try{const sv=JSON.parse(sessionStorage.getItem(VKEY)||'null');if(sv&&sv.plan&&!demoOnly)voy={plan:sv.plan,phase:'done',stop:3,t0:0,restored:true};}catch(_){}
+  function saveVoy(){try{if(voy&&st.live)sessionStorage.setItem(VKEY,JSON.stringify({plan:voy.plan}));else sessionStorage.removeItem(VKEY);}catch(_){}}
+  /* after a voyage, a click on Troy puts the whole fleet back at sea for another run */
+  function resetVoyage(){
+    ships.forEach(b=>{if(b.g)b.g.remove();});ships.clear();pending=[];home=[];voy=null;wrecked=[0,0,0,0];saveVoy();
+    if(banner)banner.classList.remove('on');shown=null;fill(null);sync(true);
+  }
   /* where the i-th ship of the fleet holds at a trial: a loose arc in front of it */
   function spot(stop,i){const P=STOPS[stop];return {x:P.x+((i%5)-2)*56+(Math.floor(i/5)%2)*22,y:P.y-6+Math.floor(i/5)*30};}
   /* the fates: one survivor, the rest lost at the three trials, front-loaded so the tension builds */
@@ -335,7 +341,7 @@
     $('seaBannerWho').textContent=who+(d.name?' made it home safely':' made it home safely');banner.classList.add('on');}
   /* the voyage starts from Troy: a click on the city (Ryan, 18 Sep: no button, he remembers) */
   const troy=$('seaTroy');
-  if(troy)troy.addEventListener('click',e=>{e.stopPropagation();setSail();});
+  if(troy)troy.addEventListener('click',e=>{e.stopPropagation();if(voy&&voy.phase==='done')resetVoyage();else setSail();});
   if(banner)banner.addEventListener('click',()=>banner.classList.remove('on'));
   function ringOf(){const n=[0,0,0];ships.forEach(b=>{if(b.state==='enter'||b.state==='ring')n[b.ring]++;});
     let best=0,bv=1e9;for(let i=0;i<3;i++){const v=n[i]/CAP[i];if(v<bv-1e-9){bv=v;best=i;}}return best;}
@@ -362,7 +368,7 @@
   }
   function counts(){let sea=0,hm=0,wr=0;ships.forEach(b=>{if(b.state==='home'||b.state==='anchored')hm++;else if(b.state==='wreck'||b.state==='sink')wr++;else sea++;});sea+=pending.length;
     $('seaAt').textContent=sea;$('seaHome').textContent=hm;const w=$('seaWreck');if(w)w.textContent=wr;document.querySelectorAll('[data-m7worldn]').forEach(e=>e.textContent=sea+hm+wr);
-    if(troy)troy.style.cursor=(voy||!sea)?'default':'pointer';}
+    if(troy)troy.style.cursor=((voy&&voy.phase!=='done')||(!voy&&!sea))?'default':'pointer';}
 
   let raf=0,lastSort=0,lastT=0;
   function wake(){if(!raf)raf=requestAnimationFrame(frame);}
@@ -493,9 +499,9 @@
       let b=ships.get(d.v)||pending.find(x=>x.v===d.v);
       if(b){b.d=d;return;}
       b={v:d.v,d,look:S.look(d.v,d.module,d.kind,d.h),x:0,y:0,s:1,face:1,ph:0};
-      if(voy&&voy.restored&&voy.plan.wreck[d.v]!==undefined){const stop=voy.plan.wreck[d.v], i=wrecked[stop]++, at=spot(stop,i);
+      if(voy&&voy.restored&&st.live&&voy.plan.wreck[d.v]!==undefined){const stop=voy.plan.wreck[d.v], i=wrecked[stop]++, at=spot(stop,i);
         b.g=shipNode(b,frontG);b.x=at.x;b.y=at.y;b.s=.82;b.face=1;b.state='wreck';wreckNode(b,true);put(b,now);ships.set(b.v,b);}
-      else if(voy&&voy.restored&&voy.plan.survivor===d.v){home=[d.v];dock(b,now,true);showBanner(b);}
+      else if(voy&&voy.restored&&st.live&&voy.plan.survivor===d.v){home=[d.v];dock(b,now,true);showBanner(b);}
       else if(first)launch(b,now,true);
       else pending.push(b);});
     [...ships.keys()].forEach(v=>{if(!seen.has(v)){const b=ships.get(v);if(b.g)b.g.remove();ships.delete(v);if(shown===b){shown=null;fill(null);}}});
