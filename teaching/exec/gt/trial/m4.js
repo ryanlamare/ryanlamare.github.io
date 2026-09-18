@@ -17,8 +17,8 @@
      node trial/m4.js --room trial commit a2 1.40      one team's sign
      node trial/m4.js --room trial ask a1 y            the team asks (or n: does not ask) for the meeting the deck has offered
      node trial/m4.js --room trial agree a1 1.50                the rep's one tap: 1.50, 1.40 or none (--who 2 names another seat)
-     node trial/m4.js --room trial pds 6               six groups' dilemmas into m4-pds-trial
-     node trial/m4.js --room trial routes              every group answers the way out (once the deck has opened it)
+     node trial/m4.js --room trial pds 20              twenty people's dilemmas into m4-pds-trial (solo since 18 Sep; --from 20 adds late ones; 30 invented)
+     node trial/m4.js --room trial routes              every phone answers the way out (once the deck has opened it; --only n makes them all stuck)
      node trial/m4.js --room trial rank 5                    Axelrod votes; NOTE this poll has no room suffix, so it is the REAL m4-axelrod (reset it from Poll Desk after)
      node trial/m4.js --room trial shot a1             screenshot the real phone page as seat 1 of a1 sees it (needs Chrome, writes trial/shots/)
      node trial/m4.js --room trial shot deck 5         screenshot the deck's slide 5 on this room
@@ -164,31 +164,54 @@ cmd.agree = async (team, what) => {
   await say(ROOM.meet, team + '|' + w + '|agreed|' + seatName(team, +(opt.who || 1)) + '|' + v, seatVoter(team, 1));
 };
 cmd.note = cmd.agree;
+/* the room's dilemmas, one a person (solo since 18 Sep): your side, the other side, the collective action, the individual action; the name is NAMES[i] */
 const DILEMMAS = [
-  ['Our sales team', 'The rival bidder', 'Quote a sensible margin', 'Undercut to win the tender at any price', 'u'],
-  ['Our department', 'The other department', 'Share the engineers as the plan says', 'Book them for our project first', 'k'],
-  ['Us', 'Our biggest customer', 'Flag problems early', 'Keep quiet until the invoice is paid', 'u'],
-  ['Our airline', 'The airline across the terminal', 'Hold the fare', 'Cut the fare for the weekend', 'u'],
-  ['Me', 'The colleague I share a bonus pool with', 'Credit the team in the review', 'Take the credit', 'k'],
-  ['Our shop', 'The shop next door', 'Close at six, like always', 'Stay open till nine', 'o'],
-  ['Our lessor', 'The airline', 'Return the engine on time', 'Squeeze one more month out of it', 'k'],
-  ['Our region', 'The other region', 'Stick to the shared price list', 'Discount to hit the quarter', 'u'],
-  ['The two of us', 'Our co-founder', 'Draw the salary we agreed', 'Take the bonus early', 'u'],
-  ['Our maintenance shop', 'The regulator', 'Report every defect', 'Log the easy ones', 'u'],
+  ['Our sales team', 'The rival bidder', 'Quote a sensible margin', 'Undercut to win the tender at any price'],
+  ['Our department', 'The other department', 'Share the engineers as the plan says', 'Book them for our project first'],
+  ['Us', 'Our biggest customer', 'Flag problems early', 'Keep quiet until the invoice is paid'],
+  ['Our airline', 'The airline across the terminal', 'Hold the fare', 'Cut the fare for the weekend'],
+  ['Me', 'The colleague I share a bonus pool with', 'Credit the team in the review', 'Take the credit'],
+  ['Our shop', 'The shop next door', 'Close at six, like always', 'Stay open till nine'],
+  ['Our lessor', 'The airline', 'Return the engine on time', 'Squeeze one more month out of it'],
+  ['Our region', 'The other region', 'Stick to the shared price list', 'Discount to hit the quarter'],
+  ['The two of us', 'Our co-founder', 'Draw the salary we agreed', 'Take the bonus early'],
+  ['Our maintenance shop', 'The regulator', 'Report every defect', 'Log the easy ones'],
+  ['Our plant', 'The sister plant', 'Report the real downtime', 'Massage the numbers before the review'],
+  ['Our union branch', 'The other branch', 'Hold out for the same deal', 'Settle early for a little more'],
+  ['Us', 'The supplier', 'Pay on thirty days', 'Stretch it to ninety'],
+  ['Our team', 'The night shift', 'Leave the bay clean', 'Leave it for the next shift'],
+  ['Our country office', 'The regional office', 'Share the pipeline', 'Keep the best leads back'],
+  ['Me', 'The other candidate', 'Present my own work', 'Take a swipe at theirs'],
+  ['Our fleet', 'The other operator on the route', 'Fly the timetable', 'Add a flight ten minutes before theirs'],
+  ['Our lab', 'The rival lab', 'Publish when the results are ready', 'Announce the result first and check later'],
+  ['Us', 'The lessee', 'Send the records on time', 'Hold the records until the dispute settles'],
+  ['Our office', 'Head office', 'Tell them the real forecast', 'Pad it so the cut lands elsewhere'],
+  ['Our school', 'The school down the road', 'Keep the admissions date', 'Open the offers a week early'],
+  ['Me', 'My manager', 'Say what the project really needs', 'Promise what the board wants to hear'],
+  ['Our clinic', 'The clinic across town', 'Keep to the agreed hours', 'Open on Sundays'],
+  ['Our farm', 'The farm next door', 'Draw the water we agreed', 'Pump a little more in a dry week'],
+  ['The two of us', 'My co-author', 'Do the share we agreed', 'Leave the boring chapter to them'],
+  ['Our club', 'The rival club', 'Stay inside the wage cap', 'Pay the one player over it'],
+  ['Us', 'The other bidder in the auction', 'Bid what it is worth', 'Bid to keep them from having it'],
+  ['Our port', 'The port up the coast', 'Charge the published tariff', 'Cut the fee to take their ships'],
+  ['Our company', 'Our biggest competitor', 'Advertise on product', 'Advertise against them'],
+  ['Me', 'My flatmate', 'Wash up the same night', 'Leave it for the morning'],
 ];
 cmd.pds = async (n) => {
-  n = Math.min(+n || 6, DILEMMAS.length);
-  for (let i = 0; i < n; i++) {
-    const [a, b, h, d, hz] = DILEMMAS[i], v = 'trial-pds-' + (i + 1) + '-' + SUF.replace(/[^a-z0-9]/g, '') + '00';
-    await say(ROOM.pds, '1‖' + a + '‖' + b, v); await say(ROOM.pds, '2‖' + h, v); await say(ROOM.pds, '3‖' + d, v); /* the horizon (4‖) was cut on 16 Sep */
+  const from = +(opt.from || 0); n = Math.min(+n || 6, DILEMMAS.length - from);
+  for (let i = from; i < from + n; i++) {
+    const [a, b, h, d] = DILEMMAS[i], v = 'trial-pds-' + (i + 1) + '-' + SUF.replace(/[^a-z0-9]/g, '') + '00';
+    await say(ROOM.pds, '1‖' + a + '‖' + b + '‖' + NAMES[i], v); await say(ROOM.pds, '2‖' + h, v); await say(ROOM.pds, '3‖' + d, v);
     await sleep(GAP);
   }
+  console.log(n + ' dilemmas in ' + ROOM.pds + '.');
 };
+/* every phone that has a dilemma answers the way out: r repeat, e enforcer, p payoffs, n no way out, round and round; --only r,e,p,n picks one */
 cmd.routes = async () => {
   const E = await entries(ROOM.pds);
   if (!E.some(e => e.t === '::routes')) { console.error('The deck has not opened the way-out question yet (press Open the question on the phones).'); process.exit(1); }
   const groups = [...new Set(E.filter(e => /^1‖/.test(e.t)).map(e => e.v))];
-  const R = ['r', 'e', 'p', 'r', 'n', 'e', 'p', 'r', 'e', 'r'];
+  const R = opt.only ? opt.only.split(',') : ['r', 'e', 'p', 'r', 'n', 'e', 'p', 'r', 'e', 'r', 'n', 'p'];
   for (let i = 0; i < groups.length; i++) { await say(ROOM.pds, '5‖' + R[i % R.length], groups[i]); await sleep(GAP); }
 };
 cmd.rank = async (n) => {
@@ -231,7 +254,9 @@ cmd.shot = async (seat, extra) => {
   let url, name;
   if (seat === 'deck') { await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false }); url = SITE + '/teaching/exec/gt/m4/?room=' + SUF.slice(1) + '#' + (extra || 5); name = 'deck-' + (extra || 5); }
   else if (seat === 'desk') { await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }); url = SITE + '/teaching/exec/gt/m4/game/desk/?room=' + SUF.slice(1); name = 'desk'; }
-  else if (seat === 'pds') { await send('Emulation.setDeviceMetricsOverride', { width: 420, height: 1000, deviceScaleFactor: 1, mobile: true }); url = SITE + '/teaching/exec/gt/m4/pds/?room=' + SUF.slice(1); name = 'pds'; }
+  else if (seat === 'pds') { await send('Emulation.setDeviceMetricsOverride', { width: 420, height: 1000, deviceScaleFactor: 1, mobile: true }); url = SITE + '/teaching/exec/gt/m4/pds/?room=' + SUF.slice(1); name = 'pds';
+    await send('Page.navigate', { url }); await sleep(1200);
+    await send('Runtime.evaluate', { expression: `localStorage.setItem('gt-voter','trial-pds-shot');localStorage.setItem('gt-name','Testy');localStorage.setItem('gt-claimed','Testy')` }); }
   else {
     const n = +(extra || 1);
     await send('Emulation.setDeviceMetricsOverride', { width: 420, height: 1000, deviceScaleFactor: 1, mobile: true });

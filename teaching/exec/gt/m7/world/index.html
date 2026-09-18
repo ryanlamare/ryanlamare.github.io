@@ -9,7 +9,7 @@
    move to change it in your favor (commitment, threat or promise), say what
    would make it credible, and name the downsides. The phone finds its
    owner's earlier games (Module 2's tree by the asker's name, Modules 3 and
-   5 by name or by this phone, Module 4 by this phone) and offers only those; the blank "your game" box
+   4 and 5 by name or by this phone) and offers only those; the blank "your game" box
    appears only when it finds none. The send is a HOLD, the gesture from the
    chicken wheel: a strategic move is made where everyone can see it and
    cannot be taken back. The deck (world/sea.js) sails one ship per phone
@@ -117,8 +117,8 @@ const failMsg=code=>code===429?'That’s plenty from one phone — flag the inst
 
 /* ---- the games this person has already brought: each earlier closing
    exercise read back in its own words. Module 2 lines carry the asker's
-   name; Modules 3, 4 and 5 are found by this phone's id (and Module 5 by
-   name too, so a different phone on day two still finds it). ---- */
+   name; Modules 3, 4 and 5 are found by this phone's id and by name, so a
+   different phone on day two still finds them. ---- */
 const entries=room=>fetch(API+'/p/'+room+SUF+'/entries').then(r=>r.json()).then(d=>d.entries||[]).catch(()=>[]);
 function latest(ents,mine){const o={};ents.filter(mine).forEach(e=>{const p=String(e.t||'').split('‖');o[p[0]]=p;});return o;}
 async function myGames(){
@@ -132,7 +132,9 @@ async function myGames(){
   const o3=new Set(e3.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='1'&&norm(p[2])===norm(name));}).map(e=>e.v));
   const v3=latest(e3,e=>o3.has(e.v));
   if(v3['1'])out.push({module:3,text:'Dividing '+v3['1'][1]+(v3['2']?' with '+v3['2'][1]:'')});
-  const v4=latest(e4,e=>e.v===voter);
+  /* Module 4: line 1 carries the name since the exercise went solo (18 Sep); a dilemma from a group phone before that is found by this phone only */
+  const o4=new Set(e4.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='1'&&norm(p[3])===norm(name));}).map(e=>e.v));
+  const v4=latest(e4,e=>o4.has(e.v));
   if(v4['1'])out.push({module:4,text:v4['1'][1]+' and '+(v4['1'][2]||'the other side')+(v4['2']&&v4['3']?': '+v4['2'][1]+', or '+v4['3'][1]:'')});
   const a5=e5.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='a'&&norm(p[1])===norm(name));});
   const owners=new Set(a5.map(e=>e.v)), v5=latest(e5,e=>owners.has(e.v));
