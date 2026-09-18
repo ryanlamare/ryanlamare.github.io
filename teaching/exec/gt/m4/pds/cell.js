@@ -3,7 +3,7 @@
    page and mirrored by trial/m4.js. Nothing here touches the DOM.
 
    Ryan's picture (18 Sep 2026, second version the same evening): a prison.
-   Every dilemma is a pair of prisoners in stripes who step off the bus, walk
+   In pairs, one phone (18 Sep). Every dilemma is a pair of prisoners in stripes who step off the bus, walk
    up to an empty cell and are locked in; a click opens the cell large with
    the dilemma chalked on the wall. On the second touch, in the walk, each
    cell plays its escape large (a tunnel dug a little at a time, the warden's
@@ -16,9 +16,9 @@
    The room is m4-pds (?room=<x> suffixes it). Each phone sends one line per
    card, because the Worker keeps 200 characters a line:
 
-     1‖your side‖the other side‖name   the name since the exercise went solo
-                                       (18 Sep); a line from a group phone
-                                       before that has no name and still draws
+     1‖your side‖the other side‖name‖partner   the names since the exercise went solo
+                                       and then to pairs (18 Sep); a line from
+                                       a group phone before that has no name and still draws
      2‖the collective action
      3‖the individual action
      5‖r|e|p|n                         the way out, once the deck has posted
@@ -43,9 +43,9 @@
   function parse(entries){
     const by=new Map();
     (entries||[]).forEach(e=>{const m=/^([1-5])‖([\s\S]*)$/.exec(String(e.t||''));if(!m)return;
-      if(!by.has(e.v))by.set(e.v,{v:e.v,name:'',a:'',b:'',hold:'',defect:'',rt:''});
+      if(!by.has(e.v))by.set(e.v,{v:e.v,name:'',name2:'',a:'',b:'',hold:'',defect:'',rt:''});
       const g=by.get(e.v), t=m[2].trim();
-      if(m[1]==='1'){const p=t.split('‖');g.a=(p[0]||'').trim();g.b=(p[1]||'').trim();g.name=(p[2]||'').trim();}
+      if(m[1]==='1'){const p=t.split('‖');g.a=(p[0]||'').trim();g.b=(p[1]||'').trim();g.name=(p[2]||'').trim();g.name2=(p[3]||'').trim();}
       else if(m[1]==='2')g.hold=t;else if(m[1]==='3')g.defect=t;
       else if(m[1]==='5'){if(ROUTES[t])g.rt=t;}});
     return [...by.values()].filter(g=>g.a&&g.b&&g.hold&&g.defect);

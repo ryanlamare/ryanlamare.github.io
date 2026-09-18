@@ -17,7 +17,7 @@
      node trial/m4.js --room trial commit a2 1.40      one team's sign
      node trial/m4.js --room trial ask a1 y            the team asks (or n: does not ask) for the meeting the deck has offered
      node trial/m4.js --room trial agree a1 1.50                the rep's one tap: 1.50, 1.40 or none (--who 2 names another seat)
-     node trial/m4.js --room trial pds 20              twenty people's dilemmas into m4-pds-trial (solo since 18 Sep; --from 20 adds late ones; 30 invented)
+     node trial/m4.js --room trial pds 15              fifteen pairs' dilemmas into m4-pds-trial (in pairs since 18 Sep, two names a line; --from 15 adds late ones; 30 invented)
      node trial/m4.js --room trial routes              every phone answers the way out (once the deck has opened it; --only n makes them all stuck)
      node trial/m4.js --room trial rank 5                    Axelrod votes; NOTE this poll has no room suffix, so it is the REAL m4-axelrod (reset it from Poll Desk after)
      node trial/m4.js --room trial shot a1             screenshot the real phone page as seat 1 of a1 sees it (needs Chrome, writes trial/shots/)
@@ -198,10 +198,10 @@ const DILEMMAS = [
   ['Me', 'My flatmate', 'Wash up the same night', 'Leave it for the morning'],
 ];
 cmd.pds = async (n) => {
-  const from = +(opt.from || 0); n = Math.min(+n || 6, DILEMMAS.length - from);
+  const from = +(opt.from || 0); n = Math.min(+n || 15, DILEMMAS.length - from);
   for (let i = from; i < from + n; i++) {
     const [a, b, h, d] = DILEMMAS[i], v = 'trial-pds-' + (i + 1) + '-' + SUF.replace(/[^a-z0-9]/g, '') + '00';
-    await say(ROOM.pds, '1‖' + a + '‖' + b + '‖' + NAMES[i], v); await say(ROOM.pds, '2‖' + h, v); await say(ROOM.pds, '3‖' + d, v);
+    await say(ROOM.pds, '1‖' + a + '‖' + b + '‖' + NAMES[(2 * i) % NAMES.length] + '‖' + NAMES[(2 * i + 1) % NAMES.length], v); await say(ROOM.pds, '2‖' + h, v); await say(ROOM.pds, '3‖' + d, v);
     await sleep(GAP);
   }
   console.log(n + ' dilemmas in ' + ROOM.pds + '.');

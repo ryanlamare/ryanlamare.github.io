@@ -75,7 +75,7 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 const C=window.M4_CELL;
 const QS=new URLSearchParams(location.search);
 const SUF=QS.get('room')?('-'+QS.get('room').replace(/[^a-z0-9-]/g,'')):'';
-const API=QS.get('api')||'https://gt-poll.rlamare.workers.dev', ROOM='m4-pds'+SUF, LOCKKEY='gt-pd-locked'+SUF, ROUTEKEY='gt-pd-route'+SUF;
+const API=QS.get('api')||'https://gt-poll.rlamare.workers.dev', ROOM='m4-pds'+SUF, LOCKKEY='gt-pd-locked'+SUF, ROUTEKEY='gt-pd-route'+SUF, PARTNERKEY='gt-pd-partner'+SUF;
 const SIDEMAX=50, MOVEMAX=90;
 let voter=null;
 try{
@@ -96,8 +96,9 @@ const failMsg=code=>code===429?'That’s plenty from one phone — flag the inst
 
 /* the name, as on every solo exercise: the join key for the points system, and what
    lets Module 7 hand this dilemma back to its owner on any phone */
-let name=null, roster=[];
-try{name=localStorage.getItem('gt-name');}catch(_){}
+let name=null, partner=null, roster=[];
+try{name=localStorage.getItem('gt-name');partner=localStorage.getItem(PARTNERKEY);}catch(_){}
+/* pairs rotate module by module, so the partner is remembered for this exercise only; '-' means on my own */
 if(name)claimOnce();
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
 function claimOnce(){
@@ -107,10 +108,10 @@ function claimOnce(){
   fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
   .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
 }
-function renderName(title,done){
-  q.textContent=title;app.innerHTML='';
+function renderName(title,done,opts){
+  q.textContent=title;app.innerHTML='';hint.textContent=(opts&&opts.hint)||'';
   const list=document.createElement('div');list.className='choices';
-  roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
+  roster.filter(n=>!(opts&&opts.not&&norm(n)===norm(opts.not))).forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
   app.appendChild(list);
   const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
   const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';inp.autocomplete='off';
@@ -118,8 +119,10 @@ function renderName(title,done){
   const go=()=>{const v=cleanName(inp.value);if(v)done(v);};
   b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
   row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+  if(opts&&opts.alone){const a=document.createElement('button');a.className='back';a.type='button';a.style.marginTop='14px';a.textContent=opts.alone;a.addEventListener('click',()=>done('-'));app.appendChild(a);}
 }
-meEl.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+const norm=n=>String(n||'').trim().toLowerCase().replace(/\s+/g,' ');
+meEl.querySelector('button').addEventListener('click',()=>{name=null;partner=null;try{localStorage.removeItem('gt-name');localStorage.removeItem(PARTNERKEY);}catch(_){}render();});
 
 /* ---- the form ---- */
 let locked=null, route=null;
@@ -127,9 +130,11 @@ try{locked=JSON.parse(localStorage.getItem(LOCKKEY));route=localStorage.getItem(
 function render(){
   st.textContent='';app.innerHTML='';meEl.hidden=true;hint.textContent='';
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
-  q.textContent='Your own prisoner’s dilemma';meEl.hidden=false;meEl.querySelector('b').textContent=name;
+  /* in pairs, one phone: the partner is named too, so the dilemma is both of theirs */
+  if(partner===null){renderName('Who’s with you?',n=>{partner=n;try{localStorage.setItem(PARTNERKEY,partner);}catch(_){}render();},{not:name,hint:'In pairs, one phone. Pick the person you are working with.',alone:'I’m on my own this time'});return;}
+  q.textContent='Your own prisoner’s dilemma';meEl.hidden=false;meEl.querySelector('b').textContent=name+(partner&&partner!=='-'?' & '+partner:'');
   if(locked){renderLocked();return;}
-  hint.textContent='On your own phone. A situation from your own world where each side is tempted to do the thing that leaves you both worse off.';
+  hint.textContent='In pairs, one phone. A situation from one of your worlds where each side is tempted to do the thing that leaves you both worse off.';
   const c1=card('sides','THE TWO SIDES','Who are the two sides?','You, and the one other party whose choice decides what you get');
   const two=document.createElement('div');two.className='two';
   const la=document.createElement('label');la.className='a';la.textContent='Your side';const sa=input(SIDEMAX,'e.g. us, the sales team…');
@@ -146,7 +151,7 @@ function render(){
     const A=clean(sa.value),B=clean(sb.value),H=clean(hold.value),D=clean(defect.value);
     if(!A||!B||!H||!D)return;
     lk.disabled=true;[sa,sb,hold,defect].forEach(i=>i.disabled=true);st.textContent='Sending…';
-    say('1‖'+A+'‖'+B+'‖'+name).then(()=>say('2‖'+H)).then(()=>say('3‖'+D))
+    say('1‖'+A+'‖'+B+'‖'+name+'‖'+(partner&&partner!=='-'?partner:'')).then(()=>say('2‖'+H)).then(()=>say('3‖'+D))
       .then(()=>{locked={a:A,b:B,hold:H,defect:D,at:Date.now()};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
       .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;[sa,sb,hold,defect].forEach(i=>i.disabled=false);});
   });
