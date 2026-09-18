@@ -4,8 +4,9 @@
 
    Ryan's picture (18 Sep 2026, second version the same evening): a prison.
    In pairs, one phone (18 Sep). Every dilemma is a pair of prisoners in stripes who step off the bus, walk
-   up to an empty cell and are locked in; a click opens the cell large with
-   the dilemma chalked on the wall. On the second touch, in the walk, each
+   up to an empty cell and are locked in; a click pushes the camera in to the
+   cell and it opens large with the dilemma chalked on the wall (nothing in
+   the opened cell moves until the camera has arrived: .hold below). On the second touch, in the walk, each
    cell plays its escape large (a tunnel dug a little at a time, the warden's
    key turning and the door swinging, the bars sawn through, or the door
    staying shut) and then the pair breaks out of the block: up through the
@@ -110,6 +111,8 @@
     '.jc svg.cellsvg{display:block;width:100%;height:100%}',
     '.jc .fig,.jc .bars,.jc .door,.jc .tunnel,.jc .mound,.jc .key,.jc .saw,.jc .cut,.jc .tally{transform-box:fill-box}',
     '.jc .fig{transform-origin:center bottom}',
+    /* while the camera is still pushing in, the opened cell waits on its first frame, so the locking and every escape start as the push ends */
+    '.jc.hold *{animation-play-state:paused!important}',
     /* the first touch: the door swings shut on the pair and the warden's key turns and is taken away */
     '.jc.lock .door{animation:jshut .7s .4s cubic-bezier(.6,0,1,1) both}',
     '@keyframes jshut{from{transform:scaleX(.08)}to{transform:none}}',

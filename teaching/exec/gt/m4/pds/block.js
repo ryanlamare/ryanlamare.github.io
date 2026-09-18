@@ -7,9 +7,15 @@
    to the next empty cell and are locked in; pairs queue and set off one after
    another, as the ships did. A fourth tier appears above thirty.
 
-   A click on a cell hands its number to the deck, which opens it large. In
-   the walk on the second slide, once a cell's escape has played large, the
-   deck asks the block to break the pair out: a tunnel comes up through the
+   A click on a cell hands its number to the deck, which opens it large, and
+   the way in is a camera (Ryan, 18 Sep: the way Module 5's jet pushes in to a
+   window, as the suite's idiom for going inside something): the whole block
+   is one group, and push() scales it about the one point of the canvas that
+   carries the clicked cell to where the opened view's big cell sits, in 0.7 s,
+   telling the deck on every frame where the cell has got to so the opened
+   view can ride in on it; pull() runs the same move backwards from wherever
+   the camera is. On the second slide, once a cell's escape has played large
+   and the camera is back out, the deck asks the block to break the pair out: a tunnel comes up through the
    ground outside the wall and they run off; the warden's door opens and they
    walk down the stairs and out through the gate; two bars part and they go
    down a rope from the gallery and run for the gate; or they stay put and
@@ -40,7 +46,8 @@
   window.M4_BLOCK=function(svg,opts){
     opts=opts||{};
     const S=window.M4_CELL;
-    function mk(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+    let world=null, veil=null;                     /* the camera moves this one group; the paper behind it stays put, and a veil of the same paper lies over it */
+    function mk(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||world||svg).appendChild(e);return e;}
     const slide=svg.closest('.slide');
     const isActive=()=>!slide||slide.classList.contains('active');
     let LY=null, layers={}, cells=[], pairs=new Map(), queue=[], lastStart=0, list=[], onClickFn=null, loop=null, tweens=[];
@@ -48,12 +55,14 @@
     /* ================= the scene ================= */
     function buildScene(){
       while(svg.firstChild)svg.removeChild(svg.firstChild);
-      cells=[];
+      cells=[];world=null;veil=null;
       const {T,COLS,CELLH,PITCH,CELLW,S,X0,floorY}=LY;
       const top=floorY(T-1)-CELLH-26;
       mk('rect',{x:0,y:0,width:1280,height:720,fill:SOFT});
-      mk('rect',{x:0,y:G,width:1280,height:32,fill:RULE});
-      mk('path',{d:'M0 '+G+' H1280',stroke:INK,'stroke-width':2});
+      world=mk('g',{});
+      /* the ground runs on past both edges of the canvas, because a push in to an end cell looks past them */
+      mk('rect',{x:-2000,y:G,width:5280,height:32,fill:RULE});
+      mk('path',{d:'M-2000 '+G+' H3280',stroke:INK,'stroke-width':2});
       /* the block */
       mk('rect',{x:136,y:top,width:1048,height:G-top,fill:TAN,stroke:INK,'stroke-width':2.5});
       mk('rect',{x:128,y:top-10,width:1064,height:12,fill:STONE,stroke:INK,'stroke-width':2});
@@ -114,6 +123,10 @@
         mk('circle',{cx:c.x0+CELLW-10,cy:c.ty+CELLH/2,r:4*S,fill:BAR},d);
         c.door=d;setDoor(c,1);
       });
+      /* the veil: once the camera is in, the block close up is only a ghost round the opened cell, so the cell has the screen */
+      veil=mk('rect',{x:0,y:0,width:1280,height:720,fill:SOFT,opacity:0,'pointer-events':'none'},svg);
+      /* a rebuild under an open cell (a tier arriving, a reset): the camera is put straight back on it */
+      if(cam.k>0)shoot();
     }
     svg.addEventListener('click',e=>{const t=e.target.closest('[data-k]');if(t&&onClickFn)onClickFn(+t.getAttribute('data-k'));});
     /* open: the door swung back on its hinge, seen edge-on (0 shut, 1 open) */
@@ -151,6 +164,9 @@
     function tween(ms,fn){return new Promise(res=>{let s=null;tweens.push({step(now){if(s===null)s=now;const f=Math.min(1,(now-s)/ms);fn(ease(f));if(f>=1){res();return true;}return false;}});});}
     const wait=ms=>new Promise(r=>setTimeout(r,ms));
     function tick(now){tweens=tweens.filter(t=>!t.step(now));
+      if(cam.dir){const dt=cam.last?Math.min(50,now-cam.last):0;cam.last=now;
+        cam.k=Math.max(0,Math.min(1,cam.k+cam.dir*dt/PUSH));shoot();
+        if(cam.dir&&cam.k===(cam.dir>0?1:0)){cam.dir=0;settle(true);}}
       /* the queue: one pair sets off every 700 ms, once the slide is showing */
       if(queue.length&&isActive()&&now-lastStart>700){lastStart=now;const q=queue.shift();q.p.g.removeAttribute('visibility');arrive(q.p,q.c);}
       loop=requestAnimationFrame(tick);}
@@ -164,6 +180,29 @@
       await tween(320,f=>setDoor(c,1-f));
     }
     function enter(p,c){layers.inside.appendChild(p.g);p.g.setAttribute('data-k',c.i+1);p.face=1;place(p,c.cx,c.fy-2);c.state='in';}
+
+    /* ================= the camera ================= */
+    /* k runs 0 (the whole block) to 1 (in the cell), eased both ways, no bounce. The zoom is a pure scale about
+       one fixed point of the canvas, so everything runs straight out from it, and it grows by ratio so the push
+       reads as one steady move: the cell ends as tall as R, the opened view's big cell, and centred on it. fn
+       hears, every frame, how far in the camera is (eased), how far up the opened view should have come (it and
+       the veil rise together over the last part of the way in), how big the cell is against its final size, and
+       how far its centre still is from R's; the deck glues the opened view to that. Both promises resolve true when
+       the move ran to its end and false when another move took over. */
+    const cam={k:0,dir:0,i:-1,R:null,fn:null,last:0,done:[]}, PUSH=700, VEIL=.84;
+    function settle(ok){const d=cam.done;cam.done=[];d.forEach(r=>r(ok));}
+    function shoot(){
+      const c=cells[cam.i], R=cam.R;
+      if(!c||!R||cam.k<=0){cam.k=0;if(!c||!R){cam.dir=0;settle(false);}if(world)world.removeAttribute('transform');if(veil)veil.setAttribute('opacity','0');if(cam.fn)cam.fn(0,0,1,0,0);return;}
+      const e=ease(cam.k), z1=R.h/LY.CELLH, z=Math.pow(z1,e), cx=c.x0+LY.CELLW/2, cy=c.ty+LY.CELLH/2, rx=R.x+R.w/2, ry=R.y+R.h/2;
+      const fx=(rx-z1*cx)/(1-z1), fy=(ry-z1*cy)/(1-z1);
+      world.setAttribute('transform','translate('+(fx*(1-z)).toFixed(2)+' '+(fy*(1-z)).toFixed(2)+') scale('+z.toFixed(4)+')');
+      const up=Math.max(0,Math.min(1,(e-.5)/.42));
+      veil.setAttribute('opacity',(VEIL*up).toFixed(3));
+      if(cam.fn)cam.fn(e,up,z/z1,fx+(cx-fx)*z-rx,fy+(cy-fy)*z-ry);
+    }
+    function push(k,R,fn){settle(false);cam.i=k-1;cam.R=R;cam.fn=fn;cam.dir=1;cam.last=0;return new Promise(r=>cam.done.push(r));}
+    function pull(){settle(false);if(cam.k<=0){cam.dir=0;return Promise.resolve(true);}cam.dir=-1;cam.last=0;return new Promise(r=>cam.done.push(r));}
 
     /* ================= what the deck asks ================= */
     function setList(L){
@@ -231,7 +270,7 @@
     function stuck(on){cells.forEach(c=>{const dim=on&&c.state==='out';c.g.setAttribute('opacity',dim?'.3':'1');c.door.setAttribute('opacity',dim?'.3':'1');});}
     /* the open cell's number grows; a cell that has been opened keeps its number red, as the jet's shades stay up */
     function hot(k,seen){cells.forEach(c=>{const h=k===c.i+1, was=seen&&seen.has(c.i+1);c.num.setAttribute('fill',(h||was)?'#CE1E32':BAR);c.num.setAttribute('font-size',String((h?15:12)*LY.S));});}
-    const api={setList,breakout,restore,stuck,hot,onClick(fn){onClickFn=fn;},cellCount:()=>cells.length,_debug:()=>({tweens:tweens.length,queue:queue.length,pairs:[...pairs.values()].map(p=>[Math.round(p.x),Math.round(p.y),p.g.parentNode===layers.outside?'out':p.g.parentNode===layers.inside?'in':'gone'])})};
+    const api={setList,breakout,restore,stuck,hot,push,pull,moving:()=>cam.dir!==0,onClick(fn){onClickFn=fn;},cellCount:()=>cells.length,_debug:()=>({cam:[+cam.k.toFixed(3),cam.dir,cam.i],tweens:tweens.length,queue:queue.length,pairs:[...pairs.values()].map(p=>[Math.round(p.x),Math.round(p.y),p.g.parentNode===layers.outside?'out':p.g.parentNode===layers.inside?'in':'gone'])})};
     (window.M4_BLOCKS=window.M4_BLOCKS||[]).push(api);
     return api;
   };
