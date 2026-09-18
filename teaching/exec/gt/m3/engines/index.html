@@ -4,7 +4,8 @@
 <title>Your own engine</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Module 3's closing exercise: one phone per group of three, one real
+/* Module 3's closing exercise: one phone each (solo since 18 Sep 2026, Ryan's
+   call; it was one phone per group of three), one real
    zero-sum situation from their world, drawn on the deck as one engine
    whose fan is the pie. The group writes what was being divided, who was
    on the other side, whether either side had a dominant or inferior
@@ -14,7 +15,7 @@
 
    Wire: four lines into room m3-engines, one per card, "k‖text" (the
    Worker caps a line at 200 characters, which is why one line per card):
-   1‖what was divided, 2‖the other party, 3‖d-or-i-or-n‖the strategy (d
+   1‖what was divided‖name, 2‖the other party, 3‖d-or-i-or-n‖the strategy (d
    dominant, i inferior, n neither), 4‖the percentage to them (0–100). The deck groups the
    room's lines by phone; the latest line per card wins, so a re-send
    corrects rather than duplicates. */
@@ -64,18 +65,31 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 .bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px;line-height:1.4}
 .back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
 #app{display:flex;flex-direction:column;gap:12px}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0}
+.choices{display:flex;flex-direction:column;gap:11px}
+button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;cursor:pointer}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1 1 0;width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);padding:12px 14px;outline:none;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:0 18px;cursor:pointer}
 </style>
 </head><body>
 <div class="wrap">
   <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 3</div>
   <h1 id="q">A zero-sum game from your world</h1>
-  <div class="hint" id="hint">In groups of three, one phone. A situation where you and another party had to divide something and could not collaborate.</div>
+  <div class="hint" id="hint">On your own phone. A situation where you and another party had to divide something and could not collaborate.</div>
   <div class="fanwrap" id="fanwrap"></div>
+  <div class="me" id="me" hidden><span class="who">Playing as <b></b></span><button type="button">change</button></div>
   <div id="app"></div>
   <div class="status" id="status"></div>
 </div>
+<script src="/go/names.js"></script>
 <script>
-const API='https://gt-poll.rlamare.workers.dev', ROOM='m3-engines', LOCKKEY='gt-engine-locked';
+/* ?room=<x> plays into a rehearsal room (m3-engines-<x>) */
+const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m3-engines'+SUF, LOCKKEY='gt-engine-locked'+SUF;
 const PIEMAX=90, PARTYMAX=60, MOVEMAX=90;
 let voter=null;
 try{
@@ -93,6 +107,34 @@ function say(line){
     body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
 }
 const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+/* the name, as on every solo exercise: the join key for the points system, and what
+   lets Module 7 hand this engine back to its owner on any phone */
+const cleanName=n=>clean(n).slice(0,30);
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+function renderName(title,done){
+  document.getElementById('q').textContent=title;app.innerHTML='';fanwrap.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';inp.autocomplete='off';
+  const b=document.createElement('button');b.type='button';b.textContent='OK';
+  const go=()=>{const v=cleanName(inp.value);if(v)done(v);};
+  b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+}
+const meEl=document.getElementById('me');
+meEl.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
 
 /* ---- the fan ---- */
 const CX=230,CY=230,RR=196;
@@ -121,7 +163,9 @@ const wordFor=p=>p>=100?'You won everything':p<=0?'You lost everything':p===50?'
 let locked=null;
 try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
 function render(){
-  st.textContent='';app.innerHTML='';fanwrap.classList.remove('running');
+  st.textContent='';app.innerHTML='';fanwrap.classList.remove('running');meEl.hidden=true;
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  document.getElementById('q').textContent='A zero-sum game from your world';meEl.hidden=false;meEl.querySelector('b').textContent=name;
   if(locked){renderLocked();return;}
   drawFan(50,wordFor(50));
   const c1=card('pie','THE PIE','What was being divided?','One contract, one budget, one slot, one engine: something fixed, that both of you wanted');
@@ -150,7 +194,7 @@ function render(){
     const P=clean(pie.value),T=clean(party.value),M=k==='n'?'':clean(move.value),pct=+range.value;
     if(!P||!T||!k||(k!=='n'&&!M))return;
     lk.disabled=true;[pie,party,move,range].forEach(i=>i.disabled=true);cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
-    say('1‖'+P).then(()=>say('2‖'+T)).then(()=>say('3‖'+k+'‖'+M)).then(()=>say('4‖'+pct))
+    say('1‖'+P+'‖'+name).then(()=>say('2‖'+T)).then(()=>say('3‖'+k+'‖'+M)).then(()=>say('4‖'+pct))
       .then(()=>{locked={pie:P,party:T,k,move:M,pct};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();spinFan();})
       .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;[pie,party,range].forEach(i=>i.disabled=false);move.disabled=(k==='n');cb.forEach(b=>b.disabled=false);});
   });

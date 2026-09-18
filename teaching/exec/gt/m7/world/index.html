@@ -8,8 +8,8 @@
    bring back a game you already brought to these sessions, make a strategic
    move to change it in your favor (commitment, threat or promise), say what
    would make it credible, and name the downsides. The phone finds its
-   owner's earlier games (Module 2's tree by the asker's name, Modules 3, 4
-   and 5 by this phone) and offers only those; the blank "your game" box
+   owner's earlier games (Module 2's tree by the asker's name, Modules 3 and
+   5 by name or by this phone, Module 4 by this phone) and offers only those; the blank "your game" box
    appears only when it finds none. The send is a HOLD, the gesture from the
    chicken wheel: a strategic move is made where everyone can see it and
    cannot be taken back. The deck (world/sea.js) sails one ship per phone
@@ -128,7 +128,9 @@ async function myGames(){
   const g2=new Map();
   e2.forEach(e=>{const p=String(e.t||'').split('|');if(p.length<5||norm(p[0])!==norm(name))return;const k=p[1]+'|'+p[2];if(!g2.has(k))g2.set(k,{});g2.get(k)[p[3]]=p.slice(4).join('|');});
   g2.forEach(G=>{if(G.o)out.push({module:2,text:'I need '+G.o+(G.p?' from '+G.p:'')});});
-  const v3=latest(e3,e=>e.v===voter);
+  /* Module 3: line 1 carries the name since the exercise went solo (18 Sep); a game from a group phone before that is found by this phone only */
+  const o3=new Set(e3.filter(e=>{const p=String(e.t||'').split('‖');return e.v===voter||(p[0]==='1'&&norm(p[2])===norm(name));}).map(e=>e.v));
+  const v3=latest(e3,e=>o3.has(e.v));
   if(v3['1'])out.push({module:3,text:'Dividing '+v3['1'][1]+(v3['2']?' with '+v3['2'][1]:'')});
   const v4=latest(e4,e=>e.v===voter);
   if(v4['1'])out.push({module:4,text:v4['1'][1]+' and '+(v4['1'][2]||'the other side')+(v4['2']&&v4['3']?': '+v4['2'][1]+', or '+v4['3'][1]:'')});
