@@ -6,8 +6,9 @@
    line beside the runway, engines running.
 
    A click on an aircraft opens it: the fan head on, winding up from a
-   standstill to its split, the two shares, and the pair's three notes. No
-   name is shown until WHOSE AIRCRAFT IS THIS? is clicked. Closing it sends
+   standstill to its split, the two shares, the pair's three notes and the
+   pair's names (shown straight away: Ryan dropped the anonymity on 18 Sep
+   2026, and WHOSE AIRCRAFT IS THIS? came out). Closing it sends
    the aircraft out: it backtracks to the threshold, rolls, lifts off and
    joins the circuit over the field, so by the end the whole room is in the
    air together. An aircraft in the circuit opens again on a click and simply
@@ -17,7 +18,13 @@
    Mouse only. With an aircraft open, Esc, the arrow keys, space or a click
    outside close it; with none open the keys move on as usual. Which
    aircraft have flown is kept in sessionStorage per room, so a reload keeps
-   it; a Poll Desk reset of the room clears it. ?demo=1 keeps the invented
+   it; a Poll Desk reset of the room clears it, and so does a click on the
+   sun (or, after dark, the moon), which puts every aircraft back on the
+   ground and winds the day back to morning (the suite's reset; without it
+   a tab that had flown the whole room showed an empty field running
+   straight to night). The E key plays the ending from wherever the day has
+   got to: whatever is still on the ground leaves in quick succession, into
+   the night. ?demo=1 keeps the invented
    fleet (it also shows if the poll server cannot be reached); ?room=<x>
    reads the rehearsal room m3-engines-<x>. ALL TEXT in DEMO is invented and
    nothing depends on it. Every node of the scene is made with
@@ -76,12 +83,12 @@
   let day=0, night=0;const NIGHT='#1B2745';
   const dawnO=mk('rect',{x:0,y:0,width:1280,height:HORIZON,fill:'#F2C7A0',opacity:0}), goldO=mk('rect',{x:0,y:0,width:1280,height:HORIZON,fill:'#EFA968',opacity:0}), nightO=mk('rect',{x:0,y:0,width:1280,height:HORIZON,fill:NIGHT,opacity:0});
   const starsG=mk('g',{fill:'#FFFFFF',opacity:0});(function(){const r=rng(5);for(let i=0;i<70;i++)mk('circle',{cx:(r()*1280).toFixed(0),cy:(r()*360).toFixed(0),r:(.7+r()*1.1).toFixed(1),opacity:(.5+r()*.5).toFixed(2)},starsG);})();
-  const sun=mk('circle',{cx:0,cy:0,r:44,fill:'#EFDFA8'});
-  const moon=mk('g',{opacity:0});mk('circle',{cx:1010,cy:118,r:30,fill:'#F3EED8'},moon);mk('circle',{cx:1022,cy:110,r:27,fill:NIGHT},moon);
-  const farCloudG=mk('g',{});
-  const trailG=mk('g',{});
+  const sun=mk('circle',{cx:0,cy:0,r:44,fill:'#EFDFA8',style:'cursor:pointer'});
+  const moon=mk('g',{opacity:0,style:'cursor:pointer'});mk('circle',{cx:1010,cy:118,r:30,fill:'#F3EED8'},moon);mk('circle',{cx:1022,cy:110,r:27,fill:NIGHT},moon);
+  const farCloudG=mk('g',{style:'pointer-events:none'});
+  const trailG=mk('g',{style:'pointer-events:none'});
   const backG=mk('g',{});                           /* the far side of the circuit */
-  const midCloudG=mk('g',{});
+  const midCloudG=mk('g',{style:'pointer-events:none'});
   const frontG=mk('g',{});                          /* the near side of the circuit, and anything climbing out */
   /* hills, then the airport's buildings on the horizon */
   const HILL1='M0 '+HORIZON+' L0 420 Q120 384 260 412 Q380 434 520 404 Q640 380 760 414 Q900 446 1010 410 Q1130 376 1280 418 L1280 '+HORIZON+' Z', HILL2='M0 '+HORIZON+' L0 438 Q160 410 330 436 Q520 458 700 430 Q880 408 1040 438 Q1170 456 1280 432 L1280 '+HORIZON+' Z';
@@ -209,7 +216,6 @@
   const FKEY='gt-m3-flown'+(window.M3SUF||'');
   let flown=new Set();try{flown=new Set(JSON.parse(sessionStorage.getItem(FKEY)||'[]'));}catch(_){}
   function saveFlown(){try{if(st.live)sessionStorage.setItem(FKEY,JSON.stringify([...flown]));}catch(_){}}   /* demo data starts clean on a reload */
-  const revealed=new Set();
   const ROUTES=[{x:-160,y:150,s:.5},{x:1440,y:120,s:.55},{x:-140,y:-40,s:.4},{x:1420,y:-60,s:.42},{x:330,y:330,s:.06,far:true},{x:960,y:318,s:.06,far:true},{x:640,y:-90,s:.3},{x:1440,y:300,s:.2,far:true}];
   let routeN=0;
   function leave(b,now){b.state='leave';b.t0=now;const R=ROUTES[(routeN++)%ROUTES.length];b.route=R;
@@ -230,6 +236,19 @@
   /* cleared for take-off: one at a time on the runway */
   function clear(b){if(b.state!=='queue'&&b.state!=='taxi')return;b.state='cleared';waiting.push(b);}
   function depart(b,now){runway=b;b.state='backtrack';b.t0=now;b.from={x:b.x,y:b.y,s:b.s};b.dur=Math.max(900,Math.hypot(b.x-170,RWY-b.y)/.46);b.dir=-1;rollG.appendChild(b.g);}
+  /* the ending (the E key): whatever is still on the ground leaves in quick succession, the nearest to the threshold first.
+     Two are on the move at a time, one on the runway and the next taxiing to hold short of it (HOLD), which steps on as
+     soon as the one ahead is well down its roll; each rolls harder and leaves the circuit after a short turn */
+  const HOLD=600;let ending=false, holder=null;
+  function departShort(b,now){holder=b;b.short=true;b.state='backtrack';b.t0=now;b.from={x:b.x,y:b.y,s:b.s};b.dur=Math.max(600,Math.hypot(b.x-170,HOLD-b.y)/.75);b.dir=-1;rollG.appendChild(b.g);}
+  function playEnding(){if(!slide.classList.contains('active'))return;if(shown)close();ending=true;
+    planes.forEach(b=>{if(b.state==='ring')b.laps=Math.min(b.laps,(b.lap||0)+.6);});wake();}
+  /* the click on the sun, or the moon after dark: every aircraft back on the ground, the day wound back to morning */
+  let rewind=false;
+  function reset(){if(!slide.classList.contains('active'))return;if(shown){shown=null;fill(null);}
+    planes.forEach(b=>{if(b.g)b.g.remove();if(b.trail)b.trail.remove();});planes.clear();pending=[];waiting.length=0;runway=null;holder=null;ending=false;nextI=0;routeN=0;
+    flown=new Set();saveFlown();rewind=true;sync(true);}
+  sun.addEventListener('click',reset);moon.addEventListener('click',reset);
   function listNow(){return st.live?st.list:(demoOnly||st.failed)?DEMOLIST.slice(0,st.demoShown):[];}
   function counts(){const L=listNow(), air=L.filter(d=>flown.has(d.v)).length;
     $('fieldGnd').textContent=L.length-air;$('fieldAir').textContent=air;document.querySelectorAll('[data-engn]').forEach(e=>e.textContent=st.live?st.list.length:0);}
@@ -241,23 +260,30 @@
     raf=0;if(!slide.classList.contains('active')){lastT=0;return;}
     const dt=lastT?Math.min(.05,(now-lastT)/1000):0;lastT=now;
     if(pending.length&&now-lastEnter>620){lastEnter=now;arrive(pending.shift(),now,false);counts();}
-    if(!runway&&waiting.length&&!shown){const b=waiting.shift();if(planes.get(b.v)===b)depart(b,now);}
+    if(ending){let ground=0;planes.forEach(b=>{if(b.state==='queue')clear(b);if(b.state==='taxi'||b.state==='cleared')ground++;});
+      if(!ground&&!pending.length&&!holder)ending=false;}
+    if(waiting.length&&!shown){
+      if(ending){if(!holder){waiting.sort((a,c)=>a.x-c.x);const b=waiting.shift();if(planes.get(b.v)===b)departShort(b,now);}}
+      else if(!runway&&!holder){const b=waiting.shift();if(planes.get(b.v)===b)depart(b,now);}}
     const circling=[];
     planes.forEach(b=>{
       if(b.state==='taxi'||b.state==='queue'||b.state==='cleared'){const dx=b.to.x-b.x, dy=b.to.y-b.y;
         b.x+=Math.sign(dx)*Math.min(Math.abs(dx),dt*(b.state==='taxi'?330:160));b.y+=Math.sign(dy)*Math.min(Math.abs(dy),dt*60);b.s+=(b.to.s-b.s)*Math.min(1,dt*3);
         if(b.state==='taxi'&&Math.abs(dx)<.5)b.state='queue';}
       else if(b.state==='backtrack'){const k=Math.min(1,(now-b.t0)/b.dur), e=ease(k);
-        b.x=b.from.x+(170-b.from.x)*e;b.y=b.from.y+(RWY-b.from.y)*Math.min(1,e*2.2);b.s=b.from.s+(1.05-b.from.s)*e;turn(b,dt);
-        if(k>=1){b.state='lineup';b.t0=now;b.dir=1;}}
-      else if(b.state==='lineup'){turn(b,dt);if(now-b.t0>700&&b.face>.99){b.state='roll';b.t0=now;}}
-      else if(b.state==='roll'){const t=(now-b.t0)/1000;b.x=170+80*t*t;b.pitch=t>1.9?Math.min(11,(t-1.9)*26):0;
-        if(t>2.35){b.state='climb';b.t0=now;b.ring=ringOf();b.th=-.6;const p3=ringPos(b), tx=Math.sin(b.th)*RX, ty=-Math.cos(b.th)*RY, tl=Math.hypot(tx,ty);
-          b.path=[{x:b.x,y:b.y},{x:b.x+640,y:b.y-30},{x:p3.x-tx/tl*340,y:p3.y-ty/tl*340+60},p3];flown.add(b.v);saveFlown();runway=null;counts();}}
+        b.x=b.from.x+(170-b.from.x)*e;b.y=b.from.y+((b.short?HOLD:RWY)-b.from.y)*Math.min(1,e*2.2);b.s=b.from.s+((b.short?1:1.05)-b.from.s)*e;turn(b,dt);
+        if(k>=1){if(b.short)b.state='hold';else{b.state='lineup';b.t0=now;b.dir=1;}}}
+      else if(b.state==='hold'){turn(b,dt);if(!runway){runway=b;if(holder===b)holder=null;b.state='lineup';b.t0=now;b.dir=1;b.from={y:b.y,s:b.s};}}
+      else if(b.state==='lineup'){turn(b,dt);if(b.short){const e=ease(Math.min(1,(now-b.t0)/550));b.y=b.from.y+(RWY-b.from.y)*e;b.s=b.from.s+(1.05-b.from.s)*e;}
+        if(now-b.t0>(b.short?560:700)&&b.face>.99){b.state='roll';b.t0=now;}}
+      else if(b.state==='roll'){const t=(now-b.t0)/1000, a=b.short?135:80, off=Math.sqrt(442/a);b.x=170+a*t*t;b.pitch=t>off*.81?Math.min(11,(t-off*.81)*26):0;
+        if(b.short&&runway===b&&b.x>390)runway=null;                /* in the ending the next one steps on behind it */
+        if(t>off){b.state='climb';b.t0=now;b.ring=ringOf();b.th=-.6;const p3=ringPos(b), tx=Math.sin(b.th)*RX, ty=-Math.cos(b.th)*RY, tl=Math.hypot(tx,ty);
+          b.path=[{x:b.x,y:b.y},{x:b.x+640,y:b.y-30},{x:p3.x-tx/tl*340,y:p3.y-ty/tl*340+60},p3];flown.add(b.v);saveFlown();if(runway===b)runway=null;counts();}}
       else if(b.state==='climb'){const k=Math.min(1,(now-b.t0)/CLIMB), u=1-k, P=b.path;
         const nx=u*u*u*P[0].x+3*u*u*k*P[1].x+3*u*k*k*P[2].x+k*k*k*P[3].x, ny=u*u*u*P[0].y+3*u*u*k*P[1].y+3*u*k*k*P[2].y+k*k*k*P[3].y;
         if(dt){const vx=(nx-b.x)/dt, vy=(ny-b.y)/dt;if(Math.abs(vx)>12)b.dir=vx>0?1:-1;const want=Math.max(-6,Math.min(22,-Math.atan2(vy,Math.abs(vx)+40)*57.3));b.pitch+=(want-b.pitch)*Math.min(1,dt*2.5);}
-        b.x=nx;b.y=ny;b.s=1.05+(P[3].s-1.05)*(k*k*(3-2*k));turn(b,dt);if(k>=1){b.state='ring';b.lap=0;b.laps=(.55+Math.random()*.5)*2*Math.PI;counts();}}
+        b.x=nx;b.y=ny;b.s=1.05+(P[3].s-1.05)*(k*k*(3-2*k));turn(b,dt);if(k>=1){b.state='ring';b.lap=0;b.laps=b.short?.5+Math.random()*.5:(.55+Math.random()*.5)*2*Math.PI;counts();}}
       else if(b.state==='ring'){b.th-=dt*SPIN;b.lap=(b.lap||0)+dt*SPIN;
         if(b.lap>b.laps&&shown!==b&&!shown){leave(b,now);}else circling.push(b);}
       if(b.state==='leave'){const k=Math.min(1,(now-b.t0)/LEAVE), e=k*k*(3-2*k)*.5+k*.5, u=1-e, P=b.path, R=b.route;
@@ -278,7 +304,7 @@
     if(now-lastSort>400){lastSort=now;
       [...planes.values()].filter(b=>b.state==='ring'||b.state==='leave').sort((a,c)=>a.y-c.y).forEach(b=>{(b.state==='leave'?(b.route.far?backG:frontG):Math.sin(b.th)<-.05?backG:frontG).appendChild(b.g);});}
     {const L=listNow(), total=L.length, gone=L.filter(d=>flown.has(d.v)).length, want=total?gone/total:0;
-      day+=Math.sign(want-day)*Math.min(Math.abs(want-day),dt*.12);
+      day+=Math.sign(want-day)*Math.min(Math.abs(want-day),dt*(rewind?1.5:.12));if(rewind&&Math.abs(want-day)<.001)rewind=false;
       const cl=(v,a,c)=>Math.max(0,Math.min(1,(v-a)/(c-a)));night=cl(day,.8,1);
       const sx=150+day*1010, sy=402-Math.sin(Math.min(1,day*1.04)*Math.PI)*300+cl(day,.86,1)*150, low=1-cl(402-sy,0,160);
       sun.setAttribute('cx',sx.toFixed(1));sun.setAttribute('cy',sy.toFixed(1));sun.setAttribute('fill',low>.5?'#F4C27A':'#EFDFA8');sun.setAttribute('r',(44+low*8).toFixed(1));
@@ -322,16 +348,20 @@
     $('fieldA').textContent=d.pct;$('fieldB').textContent=100-d.pct;$('fieldWord').textContent=wordFor(d.pct);
     $('fieldPie').textContent=d.pie;$('fieldParty').textContent=d.party;
     $('fieldKind').textContent=KIND[d.k]||KIND.n;$('fieldMove').textContent=d.k==='n'?'':d.move;$('fieldStrat').classList.toggle('none',d.k==='n');
-    const w=$('fieldWhose'), named=revealed.has(b.v);w.textContent=named?((d.name||'—')+(d.name2?' & '+d.name2:'')):'WHOSE AIRCRAFT IS THIS?';w.classList.toggle('named',named);
+    $('fieldWhose').textContent=[d.name,d.name2].filter(Boolean).join(' & ');
     ov.classList.add('on');
   }
-  function open(b){if(!slide.classList.contains('active'))return;if(['backtrack','lineup','roll','climb','leave'].includes(b.state))return;shown=b;fill(b);}
+  function open(b){if(!slide.classList.contains('active'))return;if(['backtrack','hold','lineup','roll','climb','leave'].includes(b.state))return;shown=b;fill(b);}
   function close(){if(!shown)return;const b=shown;shown=null;fill(null);clear(b);wake();}
-  $('fieldWhose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();if(!shown)return;revealed.has(shown.v)?revealed.delete(shown.v):revealed.add(shown.v);fill(shown);});
   $('fieldClose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();close();});
   ov.addEventListener('click',e=>{if(e.target===ov)close();});
   addEventListener('keydown',e=>{if(!shown||!slide.classList.contains('active'))return;
     if(['Escape','ArrowRight','ArrowLeft','ArrowDown','ArrowUp','PageDown','PageUp',' ','Spacebar'].includes(e.key)){close();e.preventDefault();e.stopImmediatePropagation();}},true);
+
+  /* E plays the ending (the suite's skip to the end); the sun is the way back */
+  addEventListener('keydown',e=>{if((e.key!=='e'&&e.key!=='E')||e.metaKey||e.ctrlKey||e.altKey||!slide.classList.contains('active'))return;
+    const t=document.activeElement;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;
+    playEnding();e.preventDefault();e.stopImmediatePropagation();},true);
 
   /* ================= the room ================= */
   function sync(first){
@@ -342,7 +372,7 @@
       b={v:d.v,d,x:0,y:0,s:1,face:1,dir:1,pitch:0,ph:0};
       if(flown.has(d.v))return;                       /* it has flown and gone on its way */
       if(first)arrive(b,now,true);else pending.push(b);});
-    [...planes.keys()].forEach(v=>{if(!seen.has(v)){const b=planes.get(v);if(b.g)b.g.remove();planes.delete(v);if(runway===b)runway=null;if(shown===b){shown=null;fill(null);}}});
+    [...planes.keys()].forEach(v=>{if(!seen.has(v)){const b=planes.get(v);if(b.g)b.g.remove();planes.delete(v);if(runway===b)runway=null;if(holder===b)holder=null;if(shown===b){shown=null;fill(null);}}});
     pending=pending.filter(b=>seen.has(b.v));
     if(st.live&&!L.length&&flown.size){flown=new Set();saveFlown();nextI=0;}                 /* a Poll Desk reset */
     if(!planes.size&&!pending.length)nextI=0;
@@ -353,7 +383,7 @@
   function fetchIt(){
     fetch(POLL_API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
       const was=st.live, next=group(d.entries||[]), changed=JSON.stringify(next)!==JSON.stringify(st.list);
-      if(!was&&planes.size){planes.forEach(b=>{if(b.g)b.g.remove();});planes.clear();pending=[];waiting.length=0;runway=null;shown=null;fill(null);nextI=0;}   /* the demo fleet goes if the room answers after all */
+      if(!was&&planes.size){planes.forEach(b=>{if(b.g)b.g.remove();});planes.clear();pending=[];waiting.length=0;runway=null;holder=null;ending=false;shown=null;fill(null);nextI=0;}   /* the demo fleet goes if the room answers after all */
       st.live=true;st.failed=false;st.list=next;
       if(changed||!was)sync(false);
     }).catch(()=>{if(!st.live){st.failed=true;sync();}});
