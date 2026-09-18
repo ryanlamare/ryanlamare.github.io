@@ -8,12 +8,11 @@
    18 Sep 2026, Ryan's call; it was one phone per Price Wars team only because
    the team shared a phone). One real situation from their world filled into
    the template from Strip out the story: the two sides, the collective
-   action, the individual action. The cell at the top of this page builds as
-   they type: each side walks in as a prisoner, the actions are chalked on
-   the wall, and LOCK IT IN slams the door. The deck (m4/index.html, the
-   prison wall) shows every cell. Then, once the deck has opened the second
+   action, the individual action. LOCK IT IN puts them on the bus: on the
+   deck (m4/index.html, the cell block) every dilemma is a pair of prisoners
+   walked off the bus into a cell. Then, once the deck has opened the second
    question (after Four lessons), the same phone answers how they would get
-   out of it, and its own cell plays the escape.
+   out of it, and the walk on the deck plays the escape.
 
    Wire and the drawing: cell.js. The name goes on line 1 so Module 7 can
    hand the dilemma back to its owner on any phone. ?room=<x> suffixes the
@@ -35,13 +34,6 @@ button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);fon
 .namerow{display:flex;gap:10px}
 .namerow input{flex:1 1 0;width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);padding:12px 14px;outline:none;min-width:0}
 .namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:0 18px;cursor:pointer}
-/* the cell, built as the answers come in */
-.build{border:2.5px solid var(--ink);background:#2A2825;position:sticky;top:0;z-index:2;box-shadow:0 4px 0 rgba(0,0,0,.07);overflow:hidden}
-.build .jc{width:100%;aspect-ratio:2/1}
-.build .plate{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;background:#D9C5AD;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;min-height:26px}
-.build .plate span{flex:1 1 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.build .plate .a{color:var(--teal)} .build .plate .b{color:var(--terracotta);text-align:right}
-.build .plate .ph{color:var(--muted);font-weight:500;font-style:italic;text-transform:none;letter-spacing:0}
 /* the cards */
 .card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
 .card.sides{--side:var(--red)} .card.hold{--side:var(--teal)} .card.defect{--side:var(--terracotta)} .card.route{--side:var(--ink)}
@@ -73,7 +65,6 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
   <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 4</div>
   <h1 id="q">Your own prisoner’s dilemma</h1>
   <div class="hint" id="hint"></div>
-  <div class="build" id="build" hidden><div class="plate" id="plate"></div><div class="jc" id="cell"></div></div>
   <div class="me" id="me" hidden><span class="who">Playing as <b></b></span><button type="button">change</button></div>
   <div id="app"></div>
   <div class="status" id="status" aria-live="polite"></div>
@@ -82,7 +73,6 @@ button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--
 <script src="/teaching/exec/gt/m4/pds/cell.js"></script>
 <script>
 const C=window.M4_CELL;
-document.head.appendChild(Object.assign(document.createElement('style'),{textContent:C.CSS}));
 const QS=new URLSearchParams(location.search);
 const SUF=QS.get('room')?('-'+QS.get('room').replace(/[^a-z0-9-]/g,'')):'';
 const API=QS.get('api')||'https://gt-poll.rlamare.workers.dev', ROOM='m4-pds'+SUF, LOCKKEY='gt-pd-locked'+SUF, ROUTEKEY='gt-pd-route'+SUF;
@@ -94,7 +84,7 @@ try{
     localStorage.setItem('gt-voter',voter);}
 }catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
 const app=document.getElementById('app'), st=document.getElementById('status'), hint=document.getElementById('hint'), q=document.getElementById('q');
-const build=document.getElementById('build'), cellEl=document.getElementById('cell'), plate=document.getElementById('plate'), meEl=document.getElementById('me');
+const meEl=document.getElementById('me');
 const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
 const cleanName=n=>clean(n).slice(0,30);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -118,7 +108,7 @@ function claimOnce(){
   .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
 }
 function renderName(title,done){
-  q.textContent=title;app.innerHTML='';build.hidden=true;
+  q.textContent=title;app.innerHTML='';
   const list=document.createElement('div');list.className='choices';
   roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
   app.appendChild(list);
@@ -131,18 +121,6 @@ function renderName(title,done){
 }
 meEl.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
 
-/* ---- the cell at the top: the two sides walk in, the actions are chalked, the door slams on LOCK IT IN ---- */
-let shown=new Set();
-function drawCell(a,b,hold,defect,bars,opts){
-  const parts={a:!!a,b:!!b,hold:!!hold,defect:!!defect,bars:!!bars}, inn={};
-  Object.keys(parts).forEach(k=>{if(parts[k]&&!shown.has(k))inn[k]=true;});
-  cellEl.className='jc'+(opts&&opts.esc?' esc-'+opts.esc:'');
-  cellEl.innerHTML=C.svg({parts,in:inn,late:!!(opts&&opts.late)});
-  shown=new Set(Object.keys(parts).filter(k=>parts[k]));
-  plate.innerHTML='<span class="a'+(a?'':' ph')+'">'+(a?esc(a):'Your side')+'</span><span class="b'+(b?'':' ph')+'">'+(b?esc(b):'The other side')+'</span>';
-  build.hidden=false;
-}
-
 /* ---- the form ---- */
 let locked=null, route=null;
 try{locked=JSON.parse(localStorage.getItem(LOCKKEY));route=localStorage.getItem(ROUTEKEY);}catch(_){}
@@ -152,7 +130,6 @@ function render(){
   q.textContent='Your own prisoner’s dilemma';meEl.hidden=false;meEl.querySelector('b').textContent=name;
   if(locked){renderLocked();return;}
   hint.textContent='On your own phone. A situation from your own world where each side is tempted to do the thing that leaves you both worse off.';
-  shown=new Set();drawCell('','','','',false);
   const c1=card('sides','THE TWO SIDES','Who are the two sides?','You, and the one other party whose choice decides what you get');
   const two=document.createElement('div');two.className='two';
   const la=document.createElement('label');la.className='a';la.textContent='Your side';const sa=input(SIDEMAX,'e.g. us, the sales team…');
@@ -163,8 +140,7 @@ function render(){
   const c3=card('defect','THE INDIVIDUAL ACTION','What does defecting look like?','The move each of you is tempted to make, whatever the other does');
   const defect=input(MOVEMAX,'e.g. undercut…');c3.appendChild(defect);
   const lk=btn('LOCK IT IN','lock');lk.disabled=true;
-  function sync(){drawCell(clean(sa.value),clean(sb.value),clean(hold.value),clean(defect.value),false);
-    lk.disabled=!(clean(sa.value)&&clean(sb.value)&&clean(hold.value)&&clean(defect.value));}
+  function sync(){lk.disabled=!(clean(sa.value)&&clean(sb.value)&&clean(hold.value)&&clean(defect.value));}
   [sa,sb,hold,defect].forEach(i=>i.addEventListener('input',sync));
   lk.addEventListener('click',()=>{
     const A=clean(sa.value),B=clean(sb.value),H=clean(hold.value),D=clean(defect.value);
@@ -178,19 +154,8 @@ function render(){
   sa.focus();
 }
 /* locked: the door has shut; the second question arrives when the deck opens it */
-let routesOpen=false, poller=null, routedNow=false;
+let routesOpen=false, poller=null;
 function renderLocked(){
-  if(route){
-    /* the escape: played once, the moment the way out is chosen; a reload shows its end state */
-    shown=new Set(['a','b','hold','defect','bars']);
-    drawCell(locked.a,locked.b,locked.hold,locked.defect,true,{esc:route});
-    if(!routedNow)cellEl.classList.add('done');routedNow=false;
-  }else{
-    /* the door slams once, the first time this screen is seen after the send */
-    const fresh=Date.now()-(locked.at||0)<4000&&!shown.has('bars');
-    if(!fresh)shown=new Set(['a','b','hold','defect','bars']);
-    drawCell(locked.a,locked.b,locked.hold,locked.defect,true);
-  }
   const big=document.createElement('div');big.className='bigcard';
   big.innerHTML='<div class="head"></div><div class="sub"></div>';
   if(route){
@@ -198,17 +163,16 @@ function renderLocked(){
     big.querySelector('.head').textContent=C.ESCAPED_YOU[route];
     big.querySelector('.sub').textContent=r[0]+'. '+r[1]+'.';
     app.appendChild(big);
-    const again=startOver('← start over (this replaces your way out)',()=>{route=null;try{localStorage.removeItem(ROUTEKEY);}catch(_){}render();});
-    app.appendChild(again);
+    app.appendChild(startOver('← start over (this replaces your way out)',()=>{route=null;try{localStorage.removeItem(ROUTEKEY);}catch(_){}render();}));
     return;
   }
-  big.querySelector('.head').textContent='Your cell is on the wall';
+  big.querySelector('.head').textContent='You\u2019re on the bus';
   big.querySelector('.sub').textContent=locked.a+' & '+locked.b+'. Look up at the screen.';
   app.appendChild(big);
   if(routesOpen){renderRoute();return;}
   const wait=document.createElement('div');wait.className='hint';wait.textContent='Keep this page open. There is one more question later in the session.';
   app.appendChild(wait);
-  app.appendChild(startOver('← start over (this replaces your dilemma)',()=>{locked=null;shown=new Set();try{localStorage.removeItem(LOCKKEY);}catch(_){}render();}));
+  app.appendChild(startOver('← start over (this replaces your dilemma)',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();}));
   if(!poller)poller=setInterval(checkOpen,3000);checkOpen();
 }
 function checkOpen(){
@@ -216,7 +180,7 @@ function checkOpen(){
   fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
     const en=d.entries||[];
     /* a Poll Desk reset emptied the room: forget the lock, so a rehearsal phone is not stuck (a send from the last few seconds is left alone) */
-    if(!en.some(e=>e.v===voter)&&Date.now()-(locked.at||0)>15000){locked=null;shown=new Set();try{localStorage.removeItem(LOCKKEY);}catch(_){}clearInterval(poller);poller=null;render();return;}
+    if(!en.some(e=>e.v===voter)&&Date.now()-(locked.at||0)>15000){locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}clearInterval(poller);poller=null;render();return;}
     if(C.routesOpen(en)){routesOpen=true;clearInterval(poller);poller=null;render();}
   }).catch(()=>{});
 }
@@ -232,7 +196,7 @@ function renderRoute(){
   const lk=btn('LOCK IT IN','lock');lk.disabled=true;
   lk.addEventListener('click',()=>{
     if(!pick)return;lk.disabled=true;cb.forEach(b=>b.disabled=true);st.textContent='Sending…';
-    say('5‖'+pick).then(()=>{route=pick;try{localStorage.setItem(ROUTEKEY,route);}catch(_){}routedNow=true;render();window.scrollTo({top:0,behavior:'smooth'});})
+    say('5‖'+pick).then(()=>{route=pick;try{localStorage.setItem(ROUTEKEY,route);}catch(_){}render();window.scrollTo({top:0,behavior:'smooth'});})
       .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;cb.forEach(b=>b.disabled=false);});
   });
   app.appendChild(c);app.appendChild(lk);
