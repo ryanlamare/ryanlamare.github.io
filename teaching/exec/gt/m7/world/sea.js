@@ -11,8 +11,9 @@
    inside the rope at the mast, the downside under the
    waterline where a monster coils. No name is shown until WHOSE SHIP IS THIS? is clicked.
 
-   Then the odyssey (Ryan, 18 Sep, late): SET SAIL FOR ITHACA sends the whole
-   fleet round the trials in turn, the Cyclops, Charybdis, Scylla. At each
+   Then the odyssey (Ryan, 18 Sep, late): a click on Troy sends the whole
+   fleet there to gather, as in the book, and then round the trials in turn,
+   the Cyclops, Charybdis, Scylla. At each
    the ships gather and hold a moment, then the ones fated to be wrecked
    there flare red, roll over and go down, leaving a wreck on the chart (still
    clickable), and the rest sail on. One ship makes it home to Ithaca and a
@@ -110,7 +111,7 @@
      Charybdis, and Ithaca where it ends. Nothing on the chart harms a ship. */
   const trials=mk('g',{},chart);
   /* Troy, top left, under the cartouche: walls, and the horse outside them */
-  (function(){const g=mk('g',{},trials);
+  (function(){const g=mk('g',{id:'seaTroy'},trials);
     mk('path',{d:'M36 128 C90 126 116 150 124 182 C132 212 114 238 36 240 Z',fill:LAND,stroke:INK,'stroke-width':2.5,'stroke-linejoin':'round'},g);
     mk('path',{d:'M48 168 H108 V206 H48 Z',fill:'#C4673D',stroke:INK,'stroke-width':2},g);
     [48,60,72,84,96].forEach(x=>mk('rect',{x,y:162,width:7,height:8,fill:'#C4673D',stroke:INK,'stroke-width':1.5},g));
@@ -271,9 +272,10 @@
   let pending=[], home=[], shown=null, lastEnter=0;
   const revealed=new Set();
   /* ---- the odyssey: three trials in turn, then Ithaca for one ship ---- */
-  const STOPS=[{name:'the Cyclops',x:340,y:480},{name:'Charybdis',x:1010,y:520},{name:'Scylla',x:842,y:198}];
+  /* the voyage, as in the book: the fleet gathers off Troy first, then the Cyclops, Charybdis, Scylla, and home. Nobody is lost at Troy. */
+  const STOPS=[{name:'Troy',x:300,y:214},{name:'the Cyclops',x:340,y:480},{name:'Charybdis',x:1010,y:520},{name:'Scylla',x:842,y:198}];
   const VKEY='gt-m7-voyage-'+ROOM, LEG=2600, HOLD=1700, SINK=1400;
-  let voy=null, wrecked=[0,0,0];               /* {plan:{survivor, wreck:{v:stop}}, phase: leg|hold|sink|final|done, stop, t0}; wrecked counts the restored wrecks at each trial */
+  let voy=null, wrecked=[0,0,0,0];               /* {plan:{survivor, wreck:{v:stop}}, phase: leg|hold|sink|final|done, stop, t0}; wrecked counts the restored wrecks at each trial */
   try{const sv=JSON.parse(sessionStorage.getItem(VKEY)||'null');if(sv&&sv.plan)voy={plan:sv.plan,phase:'done',stop:3,t0:0,restored:true};}catch(_){}
   function saveVoy(){try{if(voy)sessionStorage.setItem(VKEY,JSON.stringify({plan:voy.plan}));else sessionStorage.removeItem(VKEY);}catch(_){}}
   /* where the i-th ship of the fleet holds at a trial: a loose arc in front of it */
@@ -283,7 +285,7 @@
     const r=rng(S.hash(ROOM+'|'+vs.length)), order=vs.slice().sort();
     for(let i=order.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
     const survivor=order[0], doomed=order.slice(1), N=doomed.length, k1=Math.round(N*.42), k2=Math.round((N-k1)*.55), wreck={};
-    doomed.forEach((v,i)=>{wreck[v]=i<k1?0:i<k1+k2?1:2;});
+    doomed.forEach((v,i)=>{wreck[v]=i<k1?1:i<k1+k2?2:3;});
     return {survivor,wreck};
   }
   function setSail(){
@@ -331,8 +333,9 @@
   const banner=$('seaBanner');
   function showBanner(b){if(!banner||!b)return;const d=b.d, who=d.name?d.name+(d.name2?' & '+d.name2:''):'One ship';
     $('seaBannerWho').textContent=who+(d.name?' made it home safely':' made it home safely');banner.classList.add('on');}
-  const sailBtn=$('seaSail');
-  if(sailBtn)sailBtn.addEventListener('click',e=>{e.currentTarget.blur();setSail();});
+  /* the voyage starts from Troy: a click on the city (Ryan, 18 Sep: no button, he remembers) */
+  const troy=$('seaTroy');
+  if(troy)troy.addEventListener('click',e=>{e.stopPropagation();setSail();});
   if(banner)banner.addEventListener('click',()=>banner.classList.remove('on'));
   function ringOf(){const n=[0,0,0];ships.forEach(b=>{if(b.state==='enter'||b.state==='ring')n[b.ring]++;});
     let best=0,bv=1e9;for(let i=0;i<3;i++){const v=n[i]/CAP[i];if(v<bv-1e-9){bv=v;best=i;}}return best;}
@@ -359,7 +362,7 @@
   }
   function counts(){let sea=0,hm=0,wr=0;ships.forEach(b=>{if(b.state==='home'||b.state==='anchored')hm++;else if(b.state==='wreck'||b.state==='sink')wr++;else sea++;});sea+=pending.length;
     $('seaAt').textContent=sea;$('seaHome').textContent=hm;const w=$('seaWreck');if(w)w.textContent=wr;document.querySelectorAll('[data-m7worldn]').forEach(e=>e.textContent=sea+hm+wr);
-    if(sailBtn)sailBtn.style.display=(voy||!sea)?'none':'';}
+    if(troy)troy.style.cursor=(voy||!sea)?'default':'pointer';}
 
   let raf=0,lastSort=0,lastT=0;
   function wake(){if(!raf)raf=requestAnimationFrame(frame);}
@@ -383,7 +386,7 @@
     else if(voy&&voy.phase==='hold'&&now-voy.t0>HOLD){let any=false;
       ships.forEach(b=>{if(b.state==='voy'&&voy.plan.wreck[b.v]===voy.stop){b.state='sink';b.t0=now;b.roll=0;wreckNode(b,false);any=true;}});
       voy.phase='sink';voy.t0=now;if(!any)voy.t0=now-SINK;counts();}
-    else if(voy&&voy.phase==='sink'&&now-voy.t0>SINK+500){if(voy.stop<2)leg(voy.stop+1);else final();counts();}
+    else if(voy&&voy.phase==='sink'&&now-voy.t0>SINK+500){if(voy.stop<3)leg(voy.stop+1);else final();counts();}
     /* ships keep their distance: a full berth on their own ring, half of one from the rings either side */
     for(let i=0;i<sailing.length;i++)for(let j=i+1;j<sailing.length;j++){const A=sailing[i],B=sailing[j],dr=Math.abs(A.ring-B.ring);if(dr>1)continue;
       const gap=(dr?0.17:0.40)/Math.min(A.rt,B.rt);let d=(B.th-A.th)%(2*Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d<-Math.PI)d+=2*Math.PI;
@@ -497,7 +500,7 @@
       else pending.push(b);});
     [...ships.keys()].forEach(v=>{if(!seen.has(v)){const b=ships.get(v);if(b.g)b.g.remove();ships.delete(v);if(shown===b){shown=null;fill(null);}}});
     pending=pending.filter(b=>seen.has(b.v));
-    if(st.live&&!L.length&&(home.length||voy)){home=[];voy=null;wrecked=[0,0,0];saveVoy();if(banner)banner.classList.remove('on');}          /* a Poll Desk reset */
+    if(st.live&&!L.length&&(home.length||voy)){home=[];voy=null;wrecked=[0,0,0,0];saveVoy();if(banner)banner.classList.remove('on');}          /* a Poll Desk reset */
     if(shown)fill(shown);
     $('seaDemo').style.display=st.live?'none':'';
     counts();wake();
