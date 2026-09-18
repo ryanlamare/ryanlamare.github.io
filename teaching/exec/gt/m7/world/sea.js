@@ -262,7 +262,7 @@
   }
   function put(b,now){
     const still=b.state==='wreck'||b.state==='sink';
-    const bob=still?0:Math.sin(now/620+b.ph)*1.6, roll=b.state==='wreck'?55:b.state==='sink'?(b.roll||0):Math.sin(now/900+b.ph*1.7)*2.2;
+    const bob=still?0:Math.sin(now/620+b.ph)*1.6, roll=b.state==='wreck'?0:b.state==='sink'?(b.roll||0):Math.sin(now/900+b.ph*1.7)*2.2;
     b.g.setAttribute('transform','translate('+b.x.toFixed(1)+' '+(b.y+bob).toFixed(1)+') scale('+b.s.toFixed(3)+')');
     b.body.setAttribute('transform','scale('+b.face.toFixed(3)+' 1) rotate('+roll.toFixed(2)+')');
   }
@@ -310,8 +310,12 @@
       const to=spot(stop,i++);b.state='voy';b.from={x:b.x,y:b.y,s:b.s};b.to=to;b.t0=now;b.dir=to.x>=b.x?1:-1;frontG.appendChild(b.g);});
     voy.phase='leg';voy.stop=stop;voy.t0=now;
   }
-  /* the crash: a red starburst that flares and settles, and the mast left leaning in the water */
-  function wreckNode(b,settled){
+  /* how a ship is lost depends on the trial (Ryan, 18 Sep): at the Cyclops a red starburst flares
+     and it rolls over; at Charybdis it spirals down into the whirlpool; at Scylla it is snatched up
+     to the cliff and eaten. In every case the mast is left leaning where the fleet held, so the
+     wreck stays on the chart and can still be opened. */
+  const WX=1150, WY=590, SCX=770, SCY=118;
+  function wreckNode(b,settled,stop){
     const g=mk('g',{class:'wreck'},b.g);
     let d='';for(let i=0;i<20;i++){const a=i*Math.PI/10-Math.PI/2, r=i%2?11:26;d+=(i?' L':'M')+(Math.cos(a)*r).toFixed(1)+' '+(Math.sin(a)*r).toFixed(1);}
     const star=mk('path',{d:d+' Z',fill:RED,stroke:INK,'stroke-width':2,'stroke-linejoin':'round',transform:'translate(0 -16) scale(0)'},g);
@@ -319,16 +323,28 @@
     mk('path',{d:'M-6 6 L14 -30',stroke:INK,'stroke-width':3,'stroke-linecap':'round'},mast);
     mk('path',{d:'M14 -30 L0 -22 L12 -18 Z',fill:b.look.sail,stroke:INK,'stroke-width':1.5,'stroke-linejoin':'round'},mast);
     mk('path',{d:'M-22 8 q6 -5 12 0 q6 5 12 0 q6 -5 12 0 q6 5 12 0',fill:'none',stroke:PAPER,'stroke-width':2.4,'stroke-linecap':'round'},mast);
-    b.wreck={g,star,mast};
-    if(settled){star.setAttribute('transform','translate(0 -16) scale(.5)');mast.setAttribute('opacity','1');b.body.setAttribute('opacity','0');}
+    b.wreck={g,star,mast,stop};b.sx=b.x;b.sy=b.y;b.ss=b.s;
+    if(settled){if(stop===1)star.setAttribute('transform','translate(0 -16) scale(.5)');mast.setAttribute('opacity','1');b.body.setAttribute('opacity','0');}
     return g;
   }
   function sinkStep(b,now){
-    const k=Math.min(1,(now-b.t0)/SINK), W=b.wreck;
-    const flare=k<.18?k/.18*1.2:k<.5?1.2:1.2-(k-.5)/.5*.7;
-    W.star.setAttribute('transform','translate(0 -16) scale('+flare.toFixed(3)+')');
-    b.roll=55*Math.min(1,k*1.3);b.body.setAttribute('opacity',(1-k).toFixed(2));W.mast.setAttribute('opacity',(k>.6?(k-.6)/.4:0).toFixed(2));
-    if(k>=1){b.state='wreck';b.body.setAttribute('opacity','0');}
+    const k=Math.min(1,(now-b.t0)/SINK), W=b.wreck, e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    if(W.stop===1){ /* the Cyclops: the crash */
+      const flare=k<.18?k/.18*1.2:k<.5?1.2:1.2-(k-.5)/.5*.7;
+      W.star.setAttribute('transform','translate(0 -16) scale('+flare.toFixed(3)+')');
+      b.roll=55*Math.min(1,k*1.3);b.body.setAttribute('opacity',(1-k).toFixed(2));
+    }else if(W.stop===2){ /* Charybdis: down the whirlpool */
+      const a=k*k*14, r=(1-e)*46;
+      b.x=b.sx+(WX-b.sx)*e+Math.cos(a)*r*1.3;b.y=b.sy+(WY-b.sy)*e+Math.sin(a)*r*.8;b.s=b.ss*(1-.85*e);b.roll=k*540;
+      b.body.setAttribute('opacity',(k<.6?1:1-(k-.6)/.4).toFixed(2));
+    }else{ /* Scylla: snatched up and eaten */
+      const q=Math.min(1,k/.7), ee=q*q;
+      b.x=b.sx+(SCX-b.sx)*ee;b.y=b.sy+(SCY-b.sy)*ee;b.s=b.ss*(1-.8*ee);b.roll=-25*q;
+      b.body.setAttribute('opacity',(k<.55?1:Math.max(0,1-(k-.55)/.15)).toFixed(2));
+      if(k>.7){const f=(k-.7)/.3, flare=f<.3?f/.3:1-(f-.3)/.7;W.star.setAttribute('transform','translate('+(SCX-b.sx).toFixed(0)+' '+(SCY-b.sy-10).toFixed(0)+') scale('+(flare*.9).toFixed(3)+')');}
+    }
+    W.mast.setAttribute('opacity',(k>.6?(k-.6)/.4:0).toFixed(2));
+    if(k>=1){b.state='wreck';b.body.setAttribute('opacity','0');b.x=b.sx;b.y=b.sy;b.s=b.ss;if(W.stop!==1)W.star.setAttribute('transform','scale(0)');}
   }
   function final(){
     const b=ships.get(voy.plan.survivor);
@@ -390,7 +406,7 @@
     /* the odyssey's clock: sail, hold, the wrecks, sail on; then home for one */
     if(voy&&voy.phase==='leg'&&now-voy.t0>LEG+80){voy.phase='hold';voy.t0=now;}
     else if(voy&&voy.phase==='hold'&&now-voy.t0>HOLD){let any=false;
-      ships.forEach(b=>{if(b.state==='voy'&&voy.plan.wreck[b.v]===voy.stop){b.state='sink';b.t0=now;b.roll=0;wreckNode(b,false);any=true;}});
+      ships.forEach(b=>{if(b.state==='voy'&&voy.plan.wreck[b.v]===voy.stop){b.state='sink';b.t0=now;b.roll=0;wreckNode(b,false,voy.stop);any=true;}});
       voy.phase='sink';voy.t0=now;if(!any)voy.t0=now-SINK;counts();}
     else if(voy&&voy.phase==='sink'&&now-voy.t0>SINK+500){if(voy.stop<3)leg(voy.stop+1);else final();counts();}
     /* ships keep their distance: a full berth on their own ring, half of one from the rings either side */
@@ -500,7 +516,7 @@
       if(b){b.d=d;return;}
       b={v:d.v,d,look:S.look(d.v,d.module,d.kind,d.h),x:0,y:0,s:1,face:1,ph:0};
       if(voy&&voy.restored&&st.live&&voy.plan.wreck[d.v]!==undefined){const stop=voy.plan.wreck[d.v], i=wrecked[stop]++, at=spot(stop,i);
-        b.g=shipNode(b,frontG);b.x=at.x;b.y=at.y;b.s=.82;b.face=1;b.state='wreck';wreckNode(b,true);put(b,now);ships.set(b.v,b);}
+        b.g=shipNode(b,frontG);b.x=at.x;b.y=at.y;b.s=.82;b.face=1;b.state='wreck';wreckNode(b,true,stop);put(b,now);ships.set(b.v,b);}
       else if(voy&&voy.restored&&st.live&&voy.plan.survivor===d.v){home=[d.v];dock(b,now,true);showBanner(b);}
       else if(first)launch(b,now,true);
       else pending.push(b);});
