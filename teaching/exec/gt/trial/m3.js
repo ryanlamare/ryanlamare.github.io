@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* The Module 3 tester: the phones' side of m3's closing exercise (solo since
    18 Sep 2026), driven from a terminal, so one person at the deck can watch
-   the fleet fill. Past sixteen engines the deck flies four-engine jets.
+   the airfield fill: one aircraft per phone, lined up beside the runway.
 
    Ryan opens the deck with ?room=trial; whoever runs this script plays the
    phones into the same room (m3-engines-trial). A real phone joins as one
