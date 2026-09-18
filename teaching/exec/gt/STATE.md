@@ -165,7 +165,7 @@ Ryan's decision: every "in your world" ending in pairs, one phone, except the m6
 
 **Open for him.** Whether the survivor should be named on the banner (built) or only on WHOSE SHIP IS THIS?. The odyssey's timing (about 18 s for three trials and the run home). m1's names: the hand form has no name step, so hands stay anonymous; add one if m7 ever needs them.
 
-## m2's tree and m3's airfield as scenes (agreed in prose 18 Sep late; BUILT 18 Sep night on branch `scenes`, two commits, NOT merged, NOT pushed, nothing approved)
+## m2's tree and m3's airfield as scenes (agreed in prose 18 Sep late; built 18 Sep night on branch `scenes`; MERGED and PUSHED LIVE the same night at Ryan's word)
 
 Ryan's run-through of the live fills (18 Sep, late) produced this pass. The endings that work are a *place* with things arriving in it and a click that opens one: the prison, the cage, the sea chart. m2 and m3 are brought up to that standard in the style of the sea chart (one full-canvas scene, createElementNS, arrivals as the answers land, mouse only, no walk, no end list). His go for the build: "go ahead and start building, I'll be busy for at least an hour". Undo everything: `git checkout main && git branch -D scenes`. Undo one module: `git revert <its commit>` on the branch. Keep it: on main, `git merge --ff-only scenes`, then push. Tags `m2-before-scene` and `m3-before-scene` hold the decks as they stood. The phones and the wire are untouched in both modules.
 
@@ -185,7 +185,7 @@ Ryan's run-through of the live fills (18 Sep, late) produced this pass. The endi
 
 ## NEXT CHAT: m5 and m1 as scenes (ideas from Ryan, 18 Sep, night; talked through in prose, NOTHING BUILT, nothing agreed beyond the direction)
 
-**First, the branch.** `scenes` holds m2 (autumn field, the seasons, the end of the year) and m3 (airfield, routes, liveries, day to night). Ryan's reads: m2 "PERFECT", "loving m3". It is NOT merged or pushed; he has not yet said to. Ask at the start of the next chat; on his word, `git checkout main && git merge --ff-only scenes`, then push. m3's second pass was not re-run on the real Worker.
+**First, the branch.** `scenes` holds m2 (autumn field, the seasons, the end of the year) and m3 (airfield, routes, liveries, day to night). Ryan's reads: m2 "PERFECT", "loving m3". **MERGED to main and PUSHED LIVE at his word, 18 Sep, night ("lets commit and push first").** The branch `scenes` can be deleted. m3's second pass was not re-run on the real Worker, and m2 has never been driven on it (no `?room=`, no bots): both belong in his next run-through.
 
 **m5: the jet in flight, and faces in the window (his idea).** The aircraft is properly flying (clouds streaming past, a bob, land scrolling under it). A shade goes up on two passengers, who are the two PLAYERS the pair named (not the two participants), and their faces show the game the pair tapped: stag hunt, both smiling at each other (same wish, the question is trust); battle of the sexes, one pleased and one glum, turned toward each other (they want to land together, they disagree where); chicken, arms folded, chins up, neither looking (Claude's third face, so all three games read apart; nothing is judged, the faces draw the pair's own tap). Claude's additions, for him: the focal point as the seat-back screen between them; when the last shade is up the flight lands (m3 is a day of departures, m5 one flight arriving). Open: zoom into a cabin row when a window opens, or stay on the small window. Faces plain (dots and a mouth), nobody's likeness.
 
