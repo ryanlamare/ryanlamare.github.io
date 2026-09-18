@@ -36,8 +36,10 @@ const opt = {}; const args = [];
 for (let i = 0; i < argv.length; i++) { if (argv[i].startsWith('--')) { opt[argv[i].slice(2)] = argv[i + 1]; i++; } else args.push(argv[i]); }
 const API = opt.api || 'https://gt-poll.rlamare.workers.dev';
 const SITE = opt.site || 'http://localhost:8000';
-if (!opt.room) { console.error('Say which rehearsal room: --room trial (this script never plays into the real rooms).'); process.exit(2); }
-const SUF = '-' + opt.room.replace(/[^a-z0-9-]/g, '');
+if (!opt.room) { console.error('Say which room: --room trial (a rehearsal room), or --room live for pds/routes only (the REAL dilemma room; reset it in the Poll Desk after).'); process.exit(2); }
+const LIVE = opt.room === 'live';
+const SUF = LIVE ? '' : '-' + opt.room.replace(/[^a-z0-9-]/g, '');
+if (LIVE) console.log('  !! playing into the REAL dilemma room. Reset it in the Poll Desk when you are done.');
 const ROOM = { teams: 'm4-teams' + SUF, prices: 'm4-prices' + SUF, huddle: 'm4-huddle' + SUF, meet: 'm4-meet' + SUF, pds: 'm4-pds' + SUF };
 const GAP = +(opt.gap || 900);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -273,4 +275,5 @@ cmd.shot = async (seat, extra) => {
 
 const [c, ...rest] = args;
 if (!c || !cmd[c]) { console.error('commands: ' + Object.keys(cmd).join(', ')); process.exit(2); }
+if (LIVE && !['pds', 'routes', 'state'].includes(c) && !(c === 'deck' && rest[0] === 'routes')) { console.error('--room live is for pds, routes and deck routes only; Price Wars stays in a rehearsal room.'); process.exit(2); }
 try { await cmd[c](...rest); } catch (e) { console.error(e.message); process.exit(1); }

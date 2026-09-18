@@ -77,8 +77,9 @@
     SPEC.forEach(([tag,at])=>{const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);parent.appendChild(e);});
   }
 
-  /* ---- the opened cell, 520×300: the wall up close, the door on the left, the pair with their sides under them.
-     o.esc r|e|p|n|m plays the escape (CSS below); the chalk is HTML beside it, in the deck. ---- */
+  /* ---- the opened cell, 520×300: the wall up close with the bars right across the front (Ryan, 18 Sep:
+     they have to look locked in), the door a hinged section of those bars with its lock at the right, the pair
+     behind. o.esc r|e|p|n|m plays the escape (CSS below); the chalk is HTML beside it, in the deck. ---- */
   function bigSVG(o){
     o=o||{};
     let h='<svg class="cellsvg" viewBox="0 0 520 300" aria-hidden="true">';
@@ -90,16 +91,16 @@
     h+='<ellipse class="tunnel" cx="230" cy="284" rx="70" ry="13" fill="'+HOLE+'"/><path class="mound" d="M330 284 q34 -34 72 0 z" fill="'+EARTH+'"/>';
     h+='<g class="fig figA"><g transform="translate(130,150) scale(.95)">'+prisonerSVG()+'</g></g>';
     h+='<g class="fig figB"><g transform="translate(300,150) scale(.95)">'+prisonerSVG()+'</g></g>';
-    if(o.names){
-      h+='<text x="168" y="293" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="'+TEAL+'">'+esc(cut(o.names[0],16).toUpperCase())+'</text>';
-      h+='<text x="338" y="293" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="'+TERRA+'">'+esc(cut(o.names[1],16).toUpperCase())+'</text>';
-    }
-    h+='<g class="bars" stroke="'+BAR+'" stroke-width="7" fill="none" stroke-linecap="round">';
-    h+='<g class="door"><path d="M14 -4 V304 M34 -4 V110 M34 190 V304 M54 -4 V110 M54 190 V304 M74 -4 V304 M14 40 H74 M14 236 H74"/><path class="cut" d="M34 110 V190 M54 110 V190"/></g>';
-    h+='<path d="M100 -4 V304" stroke-width="11"/><circle cx="100" cy="150" r="11" fill="'+BAR+'" stroke="none"/><circle cx="100" cy="148" r="3.2" fill="'+WALL+'" stroke="none"/><path d="M100 150 v6" stroke="'+WALL+'" stroke-width="3"/>';
+    /* the bars, right across: fixed to the left of the door, the door from 300 to 460 on a hinge at 292, the lock post at 468 */
+    h+='<g class="bars" stroke="'+BAR+'" stroke-width="6" fill="none" stroke-linecap="round">';
+    h+='<path d="M20 -4 V304 M60 -4 V304 M100 -4 V304 M140 -4 V304 M260 -4 V304 M20 40 H286 M20 236 H286"/>';
+    h+='<path d="M180 -4 V110 M180 190 V304 M220 -4 V110 M220 190 V304"/><path class="cut" d="M180 110 V190 M220 110 V190"/>';
+    h+='<g class="door"><path d="M300 -4 V304 M340 -4 V304 M380 -4 V304 M420 -4 V304 M460 -4 V304 M300 40 H460 M300 236 H460"/></g>';
+    h+='<path d="M292 -4 V304 M500 -4 V304 M500 40 H520 M500 236 H520" stroke-width="7"/><path d="M468 -4 V304" stroke-width="10"/>';
+    h+='<circle cx="468" cy="150" r="11" fill="'+BAR+'" stroke="none"/><circle cx="468" cy="148" r="3.2" fill="'+WALL+'" stroke="none"/><path d="M468 150 v6" stroke="'+WALL+'" stroke-width="3"/>';
     h+='</g>';
-    h+='<g class="saw" fill="none"><path d="M20 150 H70" stroke="'+BAR+'" stroke-width="8"/><path d="M22 155 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6" stroke="'+BAR+'" stroke-width="3"/><path d="M70 150 h12 v-12 h-6" stroke="'+EARTH+'" stroke-width="8" stroke-linecap="round"/></g>';
-    h+='<g class="key" fill="none" stroke="'+BRASS+'" stroke-width="4.5"><circle cx="100" cy="150" r="8"/><path d="M100 158 v20 h9 v-6 h-9"/></g>';
+    h+='<g class="saw" fill="none"><path d="M168 150 H232" stroke="'+BAR+'" stroke-width="8"/><path d="M170 155 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6 l4 6 l4 -6" stroke="'+BAR+'" stroke-width="3"/><path d="M232 150 h12 v-12 h-6" stroke="'+EARTH+'" stroke-width="8" stroke-linecap="round"/></g>';
+    h+='<g class="key" fill="none" stroke="'+BRASS+'" stroke-width="4.5"><circle cx="468" cy="150" r="8"/><path d="M468 158 v20 h9 v-6 h-9"/></g>';
     return h+'</svg>';
   }
 
@@ -127,16 +128,16 @@
     '.jc .door{transform-origin:left center}',
     '.jc.esc-e .door{animation:jopen .9s 1.4s ease-out both}',
     '@keyframes jopen{to{transform:scaleX(.08)}}',
-    '.jc.esc-e .fig{animation:jout 1s 2.3s ease-in both}',
-    '@keyframes jout{to{transform:translateX(-260%);opacity:0}}',
+    '.jc.esc-e .figA{animation:joutA 1.1s 2.3s ease-in both}.jc.esc-e .figB{animation:joutB 1.1s 2.3s ease-in both}',
+    '@keyframes joutA{to{transform:translateX(560%);opacity:0}}@keyframes joutB{to{transform:translateX(200%);opacity:0}}',
     /* p: the bars are sawn through */
     '.jc .saw{opacity:0}',
     '.jc.esc-p .saw{animation:jsaw 2s .2s ease-in-out both}',
     '@keyframes jsaw{0%{opacity:1;transform:translateX(0)}20%{transform:translateX(-16%)}40%{transform:translateX(0)}60%{transform:translateX(-16%)}80%{transform:translateX(0)}95%{opacity:1}100%{opacity:0;transform:translateX(0)}}',
     '.jc.esc-p .cut{animation:jcut .2s 2.2s both}',
     '@keyframes jcut{to{opacity:0}}',
-    '.jc.esc-p .fig{animation:jthrough 1s 2.4s ease-in both}',
-    '@keyframes jthrough{to{transform:translateX(-260%) scale(1.1);opacity:0}}',
+    '.jc.esc-p .figA{animation:jthroughA 1s 2.4s ease-in both}.jc.esc-p .figB{animation:jthroughB 1s 2.4s ease-in both}',
+    '@keyframes jthroughA{40%{transform:translateX(110%) scale(1);opacity:1}to{transform:translateX(110%) scale(1.25);opacity:0}}@keyframes jthroughB{40%{transform:translateX(-175%) scale(1);opacity:1}to{transform:translateX(-175%) scale(1.25);opacity:0}}',
     /* n: no way out, the door stays shut */
     '.jc .tally{opacity:0}',
     '.jc.esc-n .fig{animation:jsit .8s ease-out both}',
@@ -146,8 +147,8 @@
     /* m: the model. They walked out by agreement, and the warden marched them back in */
     '.jc.esc-m .door{animation:jmdoor 3.4s ease-in-out both}',
     '@keyframes jmdoor{0%{transform:none}25%{transform:scaleX(.08)}60%{transform:scaleX(.08)}70%{transform:none}100%{transform:none}}',
-    '.jc.esc-m .fig{animation:jmfig 3.4s ease-in-out both}',
-    '@keyframes jmfig{0%{transform:none}35%{transform:translateX(-120%)}55%{transform:translateX(-120%)}68%{transform:none}100%{transform:none}}',
+    '.jc.esc-m .figA{animation:jmfigA 3.4s ease-in-out both}.jc.esc-m .figB{animation:jmfigB 3.4s ease-in-out both}',
+    '@keyframes jmfigA{0%{transform:none}35%{transform:translateX(300%)}55%{transform:translateX(300%)}68%{transform:none}100%{transform:none}}@keyframes jmfigB{0%{transform:none}35%{transform:translateX(120%)}55%{transform:translateX(120%)}68%{transform:none}100%{transform:none}}',
     '.jc.esc-m .key{animation:jmkey 3.4s both}',
     '@keyframes jmkey{0%,72%{opacity:0;transform:rotate(0)}80%{opacity:1;transform:rotate(0)}100%{opacity:1;transform:rotate(90deg)}}'
   ].join('\n');
