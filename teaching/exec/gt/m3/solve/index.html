@@ -1,0 +1,110 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 3 · The Engine Game</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 3 engine game as it stands after the plain
+   pass (19 Sep 2026): the pair has the deck's payoff matrix in their hands and
+   solves it together. Tap a pitch, down the side or across the top, to cross
+   that line out; tap it again to bring it back. When one row and one column
+   are left, that cell takes the deck's red equilibrium box. The page sends
+   nothing and checks nothing: a pair that crosses out the wrong line lands on
+   the wrong cell, and the debrief slide (Solving the engine game) is the
+   answer. No names, no pairing, no room. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 14px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.3;color:var(--red)}
+.how{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.axis{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--muted)}
+.axis.top{text-align:center;padding-left:64px;margin-bottom:-8px}
+.mx{display:grid;grid-template-columns:64px repeat(4,1fr);grid-auto-rows:54px;gap:0}
+.mx button{font-family:var(--sans);font-weight:700;font-size:14px;color:var(--ink);background:none;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;position:relative}
+.mx button.cl{align-self:stretch}
+.mx button.rl{text-align:right;padding-right:10px}
+.mx button.out{color:var(--muted);text-decoration:line-through;text-decoration-thickness:2px}
+.mx .corner{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--muted);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:10px}
+.cell{background:var(--card);border:1.5px solid var(--ink);margin:-.75px;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:16px;position:relative}
+.cell .pa{color:var(--teal)} .cell .pb{color:var(--terracotta)} .cell .pc{color:var(--muted);font-weight:500;margin:0 .16em}
+.cell.rout>span,.cell.cout>span{opacity:.28}
+.cell.rout::before{content:"";position:absolute;left:-1px;right:-1px;top:50%;height:2.5px;margin-top:-1.25px;background:var(--ink)}
+.cell.cout::after{content:"";position:absolute;top:-1px;bottom:-1px;left:50%;width:2.5px;margin-left:-1.25px;background:var(--ink)}
+.cell.eq{outline:4.5px solid var(--red);outline-offset:-5px}
+.key{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:14px;line-height:1.35;color:var(--muted)}
+.key b{color:var(--ink)}
+.key .you{color:var(--teal);font-weight:700} .key .them{color:var(--terracotta);font-weight:700}
+.again{align-self:flex-start;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:10px 16px;cursor:pointer}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 3</div>
+  <h1>Try to solve this game in pairs: can you find the equilibrium?</h1>
+  <div class="how">Tap a pitch to cross it out. Tap it again to bring it back.</div>
+  <div class="axis top">Your rival&rsquo;s pitch</div>
+  <div class="mx" id="mx"></div>
+  <button class="again" id="again" type="button">Start again</button>
+  <div class="key">
+    <div>Each cell is <span class="you">your share</span> &middot; <span class="them">your rival&rsquo;s share</span></div>
+    <div><b>Price</b> &ndash; cut the price</div>
+    <div><b>Terms</b> &ndash; promise better terms</div>
+    <div><b>Solve</b> &ndash; solve a longstanding concern</div>
+    <div><b>Charm</b> &ndash; charm the board</div>
+  </div>
+</div>
+<script>
+/* the deck's matrix: your share of the slice, your pitch down the side */
+const SHARE=[[50,55,40,70],[45,50,45,65],[60,55,50,60],[30,35,40,50]];
+const NAMES=['Price','Terms','Solve','Charm'];
+const rowOut=[false,false,false,false], colOut=[false,false,false,false];
+const mx=document.getElementById('mx');
+const rowBtn=[], colBtn=[], cells=[[],[],[],[]];
+
+const corner=document.createElement('div');corner.className='corner';corner.textContent='You';
+mx.appendChild(corner);
+NAMES.forEach((n,c)=>{
+  const b=document.createElement('button');b.type='button';b.className='cl';b.textContent=n;
+  b.setAttribute('aria-label','Your rival pitches '+n);
+  b.addEventListener('click',()=>toggle(colOut,c));
+  colBtn.push(b);mx.appendChild(b);
+});
+NAMES.forEach((n,r)=>{
+  const b=document.createElement('button');b.type='button';b.className='rl';b.textContent=n;
+  b.setAttribute('aria-label','You pitch '+n);
+  b.addEventListener('click',()=>toggle(rowOut,r));
+  rowBtn.push(b);mx.appendChild(b);
+  NAMES.forEach((_,c)=>{
+    const d=document.createElement('div');d.className='cell';
+    d.innerHTML='<span class="pa">'+SHARE[r][c]+'</span><span class="pc">&middot;</span><span class="pb">'+(100-SHARE[r][c])+'</span>';
+    cells[r].push(d);mx.appendChild(d);
+  });
+});
+
+/* the last line standing on either side cannot be crossed out */
+function toggle(arr,i){
+  if(!arr[i]&&arr.filter(x=>!x).length===1)return;
+  arr[i]=!arr[i];
+  draw();
+}
+function draw(){
+  const rowsLeft=rowOut.filter(x=>!x).length, colsLeft=colOut.filter(x=>!x).length;
+  rowBtn.forEach((b,r)=>{b.classList.toggle('out',rowOut[r]);b.setAttribute('aria-pressed',rowOut[r]);});
+  colBtn.forEach((b,c)=>{b.classList.toggle('out',colOut[c]);b.setAttribute('aria-pressed',colOut[c]);});
+  cells.forEach((row,r)=>row.forEach((d,c)=>{
+    d.classList.toggle('rout',rowOut[r]);
+    d.classList.toggle('cout',colOut[c]);
+    d.classList.toggle('eq',rowsLeft===1&&colsLeft===1&&!rowOut[r]&&!colOut[c]);
+  }));
+}
+document.getElementById('again').addEventListener('click',()=>{
+  rowOut.fill(false);colOut.fill(false);draw();
+});
+draw();
+</script>
+</body></html>
