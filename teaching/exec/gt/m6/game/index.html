@@ -200,7 +200,10 @@ const app=document.getElementById('app'), q=document.getElementById('q'), st=doc
 const G=GAMES[qs.get('g')];
 const ROOM=G?(qs.get('room')||G.room):null;
 let name=null, roster=[], kitId=null;
-try{name=localStorage.getItem('gt-name');kitId=localStorage.getItem('gt-kit');}catch(_){}
+/* the team pick went in the plain pass (Ryan, 20 Sep 2026): kitId stays null, every
+   player wears pk.js's default colours, and no kit line is sent. renderKit and
+   the kit wire are left in place, unreached. */
+try{name=localStorage.getItem('gt-name');}catch(_){}
 if(name)claimOnce();
 fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
 function claimOnce(){
@@ -244,14 +247,13 @@ function render(){
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Boss battle</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=inspect">The inspection game</a></div>';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=inspect">The inspection game</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
     name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   },app,{clean}));return;}
-  if(G!==GAMES.rps&&G!==GAMES.inspect&&!myKit()){renderKit();return;}
   if(G===GAMES.solo)return renderSolo();
   if(G===GAMES.vs)return renderVs();
   /* rejoin a pair this phone already sat in (the shootout pair carries into RPS) */
@@ -366,7 +368,7 @@ function renderSolo(){
     go.addEventListener('click',()=>{
       game={kicks:[]};
       try{localStorage.setItem('m6-solo-'+ROOM,JSON.stringify(game));}catch(_){}
-      say(name+'|0|k-'+kitId).catch(()=>{});
+      if(kitId)say(name+'|0|k-'+kitId).catch(()=>{});
       renderSolo();
     });
     app.appendChild(go);
@@ -441,7 +443,7 @@ function renderVs(){
   app.appendChild(box);
   const stage=document.createElement('div');app.appendChild(stage);
   say(name+'|0|j').catch(()=>{});
-  say(name+'|0|k-'+kitId).catch(()=>{});
+  if(kitId)say(name+'|0|k-'+kitId).catch(()=>{});
   let shownKey='', posting=false, myKick={};
   const key='vs|'+norm(name);
   function parse(lines){
@@ -564,7 +566,7 @@ function renderPlay(A,B,seat,joined){
   let sc=null;
   if(isPK){
     const b=sceneBox();sc=b.sc;b.box.style.marginTop='12px';app.appendChild(b.box);
-    say(A+'|'+B+'|0|'+seat+'|k-'+kitId).catch(()=>{});
+    if(kitId)say(A+'|'+B+'|0|'+seat+'|k-'+kitId).catch(()=>{});
   }
   const stage=document.createElement('div');stage.style.marginTop='12px';
   app.appendChild(stage);
