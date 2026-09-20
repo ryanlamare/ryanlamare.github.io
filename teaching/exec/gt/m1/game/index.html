@@ -215,7 +215,8 @@ function pad(cv,undoBtn,clearBtn,sendBtn){
    the input only reopens when the instructor opens the next round. */
 function renderNumber(){
   q.textContent='I’m thinking of a number…';
-  rules.innerHTML='A number between <b>1 and 100</b>. The game runs in <b>five rounds</b>: one guess per round, and each one comes back <b>too high</b>, <b>too low</b>, or <b>correct</b>. Between rounds the board shows the whole room&rsquo;s guesses.';
+  /* Ryan, 21 Sep 2026: no rules on the phone, he has just explained them. The number, too high, too low or correct, and Watch the board. */
+  rules.innerHTML='';rules.style.display='none';
   app.innerHTML='';
   app.appendChild(meRow());
   const rdTag=document.createElement('div');rdTag.className='tag';rdTag.style.margin='10px 0 0';
@@ -240,11 +241,11 @@ function renderNumber(){
     const done=mine.some(x=>x.r==='correct'), out=mine.length>=5||round>5;
     const played=mine.some(x=>x.rd===round);
     row.style.display=(done||out||played||!opened)?'none':'flex';
-    if(done)st.innerHTML='<b>You got it in '+mine.length+'!</b> Watch the board.';
-    else if(out)st.innerHTML='<b>Out of guesses!</b> Watch the board.';
+    if(done)st.innerHTML='<b>Correct!</b> Please don’t tell anyone the number until the game ends!';
+    else if(out)st.textContent='Watch the board.';
     else if(!opened)st.textContent='Waiting for the game to open…';
-    else if(played)st.innerHTML='<b>Round '+round+' guess is in.</b> Watch the board — the next round opens from the front.';
-    else st.textContent=mine.length?'Higher or lower — one guess this round.':'';
+    else if(played)st.textContent='Watch the board.';
+    else st.textContent='';
   }
   function sync(){
     fetch(API+'/p/m1-number/guesses').then(r=>r.json()).then(d=>{
@@ -284,7 +285,8 @@ function renderNumber(){
 /* ---- added values: make an offer ---- */
 function renderOffer(){
   q.textContent='Make me an offer';
-  rules.innerHTML='A white and yellow pair is worth <b>£100</b>. <b>How much do you offer to pay for the £100?</b> Offers go to the board and are answered on the spot. <b>You get one offer per game</b>, so make it count.';
+  /* Ryan, 21 Sep 2026: too much text. The box, the button, and ACCEPTED or REJECTED. */
+  rules.innerHTML='';rules.style.display='none';
   app.innerHTML='';
   app.appendChild(meRow());
   const lbl=document.createElement('div');lbl.className='tag';lbl.style.margin='10px 0 6px';lbl.textContent='YOUR OFFER FOR THE £100';
@@ -317,13 +319,10 @@ function renderOffer(){
         const decPh=+dec[4]||0;
         const played=!gamePh||decPh>=gamePh;
         setLock(played);
-        const shot=played?' That was your one offer in this game.':' A new game is on the screen — you have one offer.';
-        st.innerHTML=dec[3]==='a'
-          ?'<div class="bigv ok">ACCEPTED</div>The £'+dec[2]+' offer was accepted.'+shot
-          :'<div class="bigv no">REJECTED</div>The £'+dec[2]+' offer was turned down.'+shot;
+        st.innerHTML=dec[3]==='a'?'<div class="bigv ok">ACCEPTED</div>':'<div class="bigv no">REJECTED</div>';
       }else{
         setLock(true);
-        st.innerHTML='<b>Offer in.</b> The answer lands here in a moment…';
+        st.innerHTML='<b>Offer in.</b>';
       }
     }).catch(()=>{});
   }
@@ -337,7 +336,7 @@ function renderOffer(){
       body:JSON.stringify({t:name+'|o|'+amt,v:voter})})
     .then(r=>{if(!r.ok)throw r.status;
       setLock(true);
-      st.innerHTML='<b>Offer in.</b> The answer lands here in a moment…';})
+      st.innerHTML='<b>Offer in.</b>';})
     .catch(code=>{st.textContent=code===429?'That’s plenty of offers from one phone!':'That didn’t send — try again.';})
     .finally(()=>{if(!locked)btn.disabled=false;});
   });
