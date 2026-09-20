@@ -730,12 +730,20 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
     el.innerHTML=html;el.classList.toggle('stay',!!stay);el.classList.add('on');
     clearTimeout(timers[id]);timers[id]=setTimeout(()=>el.classList.remove('on'),7000);
   }
+  const wasDemo={};
   function drawBoard(id,b,demo){
     const el=document.getElementById('csT-'+id);if(!el)return;
     el.querySelector('.demotag').style.display=demo?'':'none';
     const seatEl=document.getElementById('csSeatT');if(seatEl)seatEl.textContent=demo?0:b.seated;
     el.querySelector('.csc').textContent=b.phase==='lobby'?(b.seated+' seated, waiting to start'):(b.phase==='over'?(b.winner==='committee'?'the committee won':'the Manipulators won'):(b.alive+' of '+b.seated+' still at the table'));
     const box=el.querySelector('.names');
+    /* the box only ever gained names: the demo table stayed up beside the real one, and a
+       dropped seat never left. Start clean when demo and live swap, and drop any name the
+       table no longer holds. */
+    if(wasDemo[id]!==undefined&&wasDemo[id]!==demo){box.textContent='';prev[id]=null;}
+    wasDemo[id]=demo;
+    const held=new Set(b.seats.map(s=>s.n));
+    [...box.querySelectorAll('[data-n]')].forEach(sp=>{if(!held.has(sp.dataset.n))sp.remove();});
     const p=prev[id];
     b.seats.forEach(s=>{
       let sp=box.querySelector('[data-n="'+CSS.escape(s.n)+'"]');
