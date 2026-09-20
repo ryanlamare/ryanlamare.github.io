@@ -206,31 +206,45 @@ function mark(){var n=changed().length;if(bar)bar.classList.toggle('dirty',n>0);
 function b64(str){var by=new TextEncoder().encode(str),bin='',CH=0x8000;for(var i=0;i<by.length;i+=CH)bin+=String.fromCharCode.apply(null,by.subarray(i,i+CH));return btoa(bin);}
 function unb64(s){var bin=atob(s.replace(/\s/g,'')),by=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)by[i]=bin.charCodeAt(i);return new TextDecoder().decode(by);}
 var saving=false;
-function save(){
+/* a save that GitHub turns away never costs the edits: they stay on the page, and the message says which of the three things went wrong */
+function Refused(msg,retry){this.message=msg;this.retry=retry;}
+function save(retried){
+  retried=retried===true;
   if(saving)return;var ed=changed();if(!ed.length){setStatus('Nothing to save');return;}
-  var c=cfg();if(!c.token){askToken();return;}
+  var c=cfg();if(!c.token){if(askToken())save();return;}
   saving=true;setStatus('Saving…');
   var path=repoPath(),base='https://api.github.com/repos/'+c.owner+'/'+c.repo+'/contents/'+path.split('/').map(encodeURIComponent).join('/');
   var headers={'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
   fetch(base+'?ref='+encodeURIComponent(c.branch),{headers:headers,cache:'no-store'}).then(function(g){
-    if(g.status===401||g.status===403)throw new Error('GitHub refused the token ('+g.status+').');
-    if(g.status!==200)throw new Error('Could not read the file from GitHub ('+g.status+').');
+    /* 401: a token GitHub no longer knows (fine-grained tokens expire, after 30 days unless a longer life was chosen). 403: one it knows but will not let read this. */
+    if(g.status===401)throw new Refused('GitHub no longer accepts the saved token (401): it has most likely expired.',true);
+    if(g.status===403)throw new Refused('GitHub would not let the saved token read this file (403).',true);
+    if(g.status!==200)throw new Refused('Could not read the file from GitHub ('+g.status+').',false);
     return g.json();
   }).then(function(j){
     var res=applyEdits(unb64(j.content),ed);
-    if(res.error)throw new Error(res.error);
+    if(res.error)throw new Refused(res.error,false);
     var nums=ed.map(function(x){return x.slide+1;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;});
     var msg='Live text edit, '+path.replace(/^teaching\/exec\/gt\//,'exec/gt ').replace(/\/index\.html$/,'')+': slide'+(nums.length===1?' ':'s ')+nums.join(', ')+'. The transcript is not yet in step.';
     return fetch(base,{method:'PUT',headers:headers,body:JSON.stringify({message:msg,content:b64(res.src),sha:j.sha,branch:c.branch})});
   }).then(function(p){
-    if(p.status!==200&&p.status!==201)return p.text().then(function(t){throw new Error('GitHub did not take the save ('+p.status+'). '+t.slice(0,100));});
+    if(p.status===403||p.status===404)throw new Refused('The saved token can read this repository but not write to it ('+p.status+'). It needs Contents: Read and write on ryanlamare.github.io.',true);
+    if(p.status===409)throw new Refused('The file changed on GitHub while you were editing (409). Press Save again.',false);
+    if(p.status!==200&&p.status!==201)return p.text().then(function(x){throw new Refused('GitHub did not take the save ('+p.status+'). '+x.slice(0,100),false);});
     ed.forEach(function(x){x.pair.was=x.now;dirty.delete(x.pair.el);});
     mark();setStatus('Saved ✓ live in about a minute. The transcript is not yet in step.');
-  }).catch(function(err){setStatus('⚠ '+err.message,true);}).then(function(){saving=false;});
+  }).catch(function(err){
+    saving=false;
+    var msg=err&&err.message?err.message:'The save did not reach GitHub. Try again.';
+    /* a bad token: take a new one now and try once more, so nothing typed is lost to a reload */
+    if(err&&err.retry&&!retried&&askToken(msg+' Your edits are still on the page. ')){save(true);return;}
+    setStatus('⚠ '+msg+(err&&err.retry?' Press Token to paste a new one; your edits are still here.':''),true);
+  }).then(function(){saving=false;});
 }
-function askToken(){
-  var t=prompt('Paste a GitHub token with Contents: read and write on this repository. It stays in this browser only.');
-  if(t&&t.trim()){var c=loadCfg();c.token=t.trim();try{localStorage.setItem(LS,JSON.stringify(c));}catch(_){}setStatus('Connected ✓');}
+function askToken(lead){
+  var t=prompt((lead||'')+'Paste a GitHub token (fine-grained, this repository only, Contents: Read and write). It stays in this browser only.');
+  if(t&&t.trim()){var c=loadCfg();c.token=t.trim();try{localStorage.setItem(LS,JSON.stringify(c));}catch(_){}setStatus('Token saved');return true;}
+  return false;
 }
 function ui(){
   var st=document.createElement('style');
@@ -244,6 +258,7 @@ function ui(){
   var lab=document.createElement('b');lab.textContent='EDIT';bar.appendChild(lab);
   function btn(t,cls,fn){var x=document.createElement('button');x.type='button';x.textContent=t;if(cls)x.className=cls;x.addEventListener('click',fn);bar.appendChild(x);return x;}
   btn('Save','save',save);
+  btn('Token','',function(){askToken();});
   btn('Revert','',function(){if(!changed().length||confirm('Discard unsaved edits and reload?')){dirty.clear();location.reload();}});
   btn('Exit','',function(){if(!changed().length||confirm('Leave without saving?')){dirty.clear();location.href=location.pathname+location.hash;}});
   statusEl=document.createElement('span');bar.appendChild(statusEl);
