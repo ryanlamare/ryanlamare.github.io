@@ -120,8 +120,17 @@ if(!table||!CS_TABLES[table]){
     const B=(t,fn,quiet,dis)=>{const b=el('button','act'+(quiet?' quiet':''),t);b.disabled=!!dis;b.addEventListener('click',fn);btns.appendChild(b);return b;};
     const undealt=seats.some(s=>!s.role);
     if(S.phase==='lobby'){
-      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(!undealt&&!confirm('Roles are dealt. Deal again?'))return;if(seats.length>11&&!confirm(seats.length+' are seated and the slide says eleven. Two Manipulators will be dealt. Deal anyway?'))return;/* always two Manipulators, as the slide says: left alone the Worker deals a third at twelve seats (it still clamps to one at a table of five) */act('deal',Object.assign({backers:2},T.backed?{bidder:T.backed}:{}),d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Manipulators.';});},false,seats.length<5);
-      B('START NIGHT 1',()=>act('phase',{to:'night'},()=>{lastResult=null;}),true,undealt);
+      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}/* ask whenever anyone holds a role: a late, undealt seat used to skip this and deal again over roles people had seen */if(seats.some(s=>s.role)&&!confirm('Roles are dealt. Deal again?'))return;if(seats.length>11&&!confirm(seats.length+' are seated and the slide says eleven. Two Manipulators will be dealt. Deal anyway?'))return;/* always two Manipulators, as the slide says: left alone the Worker deals a third at twelve seats (it still clamps to one at a table of five) */act('deal',Object.assign({backers:2},T.backed?{bidder:T.backed}:{}),d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Manipulators.';});},false,seats.length<5);
+      /* someone who sits down after the deal has no role, and the Worker will not start a night with an undealt seat.
+         They are an observer who tapped the wrong button: drop them and start, never deal again over roles people have seen. */
+      const late=seats.filter(s=>!s.role), dealt=seats.some(s=>s.role);
+      B('START NIGHT 1',async()=>{
+        if(late.length){
+          if(!confirm(late.map(s=>s.n).join(', ')+' sat down after the roles were dealt. Drop them from the table and start?'))return;
+          for(const s of late){if(!await act('unseat',{v:s.v}))return;}
+        }
+        act('phase',{to:'night'},()=>{lastResult=null;});
+      },true,!dealt);
     }else if(S.phase==='night'){
       const n=S.nights[S.round]||{picks:{},notes:{}};
       const picks=backers.map(b=>n.picks[b.v]).filter(Boolean);

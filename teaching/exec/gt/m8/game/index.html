@@ -283,10 +283,14 @@ function renderCS(){
     q.textContent=CS_GAME;
     app.innerHTML='';app.appendChild(meRow());
     const ch=document.createElement('div');ch.className='bigrow';ch.style.marginTop='8px';
-    const b=document.createElement('button');b.className='opt';b.textContent='I AM AT THE TABLE';
+    const b=document.createElement('button');b.className='opt';b.textContent='I\u2019M A PARTICIPANT';
     b.addEventListener('click',()=>{try{localStorage.setItem('m8-cs-table','tapas');}catch(_){}renderCS.seatAs='tapas';renderCS();});
-    ch.appendChild(b);app.appendChild(ch);
-    const w=document.createElement('div');w.className='waitcard';w.textContent='Watching? You don\u2019t need your phone for this one.';app.appendChild(w);
+    /* two overall roles, participant and observer (Ryan, 21 Sep 2026); only a participant takes a seat and is dealt a role */
+    const o=document.createElement('button');o.className='opt';o.textContent='I\u2019M AN OBSERVER';
+    const w=document.createElement('div');w.className='waitcard';w.style.display='none';w.textContent='You don\u2019t need your phone for this one.';
+    o.addEventListener('click',()=>{w.style.display='';});
+    ch.style.flexDirection='column'; /* two long labels do not fit side by side on a phone */
+    ch.appendChild(b);ch.appendChild(o);app.appendChild(ch);app.appendChild(w);
     return;
   }
   const T=CS_TABLES[table], ROOM=qs.get('room')||T.room;
@@ -339,7 +343,7 @@ function renderCS(){
       if(!d.me){
         seat().then(r=>{
           if(r.taken)takenCard();
-          else if(r.late)showCard('late','This table has already started. Watch the big screen, and join the next one. (If your old phone died, the moderator can move your seat to this one: pick the same name.)');
+          else if(r.late)showCard('late','This table has already started. Watch the big screen. (If your old phone died, the moderator can move your seat to this one: pick the same name.)');
           else{shown='';tick();}
         }).catch(()=>{st.textContent='Couldn’t take a seat — try again.';});
         return; }
