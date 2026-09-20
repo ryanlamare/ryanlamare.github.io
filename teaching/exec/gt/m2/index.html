@@ -178,13 +178,6 @@
 .ccclip .medialink{flex-direction:column;text-align:center;gap:12px;padding:22px 20px;margin:0}
 .ccclip .mlt{text-align:center}
 /* live results: each pair's recorded game stacks as dots on an axis */
-.dstrip{display:block;width:100%;height:auto}
-.dstrip .axis{stroke:var(--ink);stroke-width:3}
-.dstrip .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
-.dstrip .dot{fill:var(--teal);opacity:.9}
-.dstrip .dot.bad{fill:var(--red)}
-.dstrip .meanline{stroke:var(--red);stroke-width:4;stroke-dasharray:8 6}
-.dstrip .meanlab{font-family:var(--display);font-weight:900;font-size:22px;fill:var(--red)}
 /* the ultimatum board (Ryan, 20 Sep 2026), in the style of m1's offers board:
    eleven columns, 99/1 to 1/99, each proposer's name under the split they
    proposed, outcomes hidden. A click on a name shows whether it was accepted
@@ -721,20 +714,15 @@
 <section class="slide content" data-i="16">
   <div class="kicker"><i></i>MODULE 2 · THE CENTIPEDE GAME</div>
   <h2>The centipede game: theory vs your results</h2>
-  <div class="pollwrap" style="top:186px;bottom:158px">
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px">
-      <div style="display:flex;align-items:flex-end;justify-content:space-between">
-        <div class="dplotlbl" style="font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)">The turn somebody took the pot</div>
-        <div class="livecount"><span class="n" id="centN">0</span><span class="l">PAIRS<br>IN</span></div>
-      </div>
-      <svg class="dstrip" id="centplot" viewBox="0 0 1000 240">
-        <line class="axis" x1="30" y1="200" x2="970" y2="200"/>
-        <g id="centticks"></g><g id="centdots"></g>
-      </svg>
-      <div class="dkey">
-        <div class="k"><span class="sw" style="background:var(--red)"></span>Taken early (turns 1&ndash;3)</div>
-        <div class="k"><span class="sw" style="background:var(--teal)"></span>Taken later, or ran to &pound;1,000</div>
-      </div>
+  <div class="ubboard">
+    <div class="ubtop">
+      <div class="dplotlbl" style="font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)">The turn somebody took the pot</div>
+      <div class="livecount"><span class="n" id="centN">0</span><span class="l">PAIRS<br>IN</span></div>
+    </div>
+    <div class="ubcols" id="centcols" style="grid-template-columns:repeat(10,1fr)"></div>
+    <div class="dkey" style="flex:none">
+      <div class="k"><span class="sw" style="background:var(--red)"></span>Taken early (turns 1&ndash;3)</div>
+      <div class="k"><span class="sw" style="background:var(--green)"></span>Taken later, or ran to &pound;1,000</div>
     </div>
   </div>
   <div class="resnotes">
@@ -966,19 +954,8 @@ T('t2hitKeep').addEventListener('pointerdown',()=>shake(T('tr2')));
 
 /* ---- live results from the pair recorder (m2/game/): ultimatum offers
    as "prop|resp|offer|a-or-r" lines, centipede endings as "a|b|turn".
-   Latest line per pair wins, dots reveal on a keypress, marked demo data
-   when the Worker is unreachable. ---- */
-function mkResStrip(dotsId,plotId,minV,maxV,ticks,tickLab){
-  const dots=document.getElementById(dotsId);
-  const tickG=document.getElementById(plotId.replace('plot','ticks'));
-  const X=v=>30+(v-minV)/(maxV-minV)*940;
-  ticks.forEach(v=>{
-    tickG.insertAdjacentHTML('beforeend',
-      '<line x1="'+X(v)+'" y1="194" x2="'+X(v)+'" y2="206" stroke="var(--ink)" stroke-width="2.5"/>'+
-      '<text class="lab" x="'+X(v)+'" y="228" text-anchor="middle">'+(tickLab?tickLab(v):v)+'</text>');
-  });
-  return {X,dots};
-}
+   Both are boards of names in columns, shown and frozen on a keypress, with
+   marked demo data when the Worker is unreachable. ---- */
 function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].sort().join('~');}
 (function(){
   /* proposer, what they offered the responder, accepted or rejected */
@@ -1067,21 +1044,36 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
   };
   build();
 })();
+/* the centipede board, the same board as the ultimatum's: ten columns, the
+   pot at each turn, and the name of whoever took it under the pot they took.
+   Nothing is hidden here, since the column is the outcome: early takes come up
+   red and the rest green, at the reveal keypress, which freezes the board. */
 (function(){
-  const DEMO=[6,4,8,10,5,7,3,10,6,9,4,7];
-  const strip=mkResStrip('centdots','centplot',1,10,[1,2,3,4,5,6,7,8,9,10],v=>v===10?'RAN':'T'+v);
-  const st={live:false,turns:[],revealed:false};
-  const nEl=document.getElementById('centN');
-  const turns=()=>st.live?st.turns:DEMO;
-  function draw(){
-    if(!st.revealed){strip.dots.innerHTML='';return;}
-    const stack={};let h='';
-    turns().forEach(t=>{
-      stack[t]=(stack[t]||0)+1;
-      const cy=188-(stack[t]-1)*17;
-      h+='<circle class="dot'+(t<=3?' bad':'')+'" cx="'+strip.X(t)+'" cy="'+Math.max(cy,10)+'" r="7.5"/>';
+  const DEMO=[['Aisha',6],['Ben',4],['Cara',8],['Dev',10],['Elena',5],['Ivan',7],['Kemi',3],['Mei',10],['Owen',6],['Theo',9],['Vik',1],['Yara',7]];
+  const COLS=[1,2,3,4,5,6,7,8,9,10], ROOM=222;
+  const wrap=document.getElementById('centcols'), nEl=document.getElementById('centN');
+  const st={live:false,rows:[],board:null};
+  const rows=()=>st.board||(st.live?st.rows:DEMO.map(([name,turn])=>({name,turn})));
+  const turns=()=>(st.board||[]).map(o=>o.turn);
+  function build(){
+    wrap.innerHTML='';
+    const R=st.board||[];
+    const most=Math.max(1,...COLS.map(c=>R.filter(o=>o.turn===c).length));
+    const gap=most>9?3:5, h=Math.max(16,Math.min(34,Math.floor((ROOM-(most-1)*gap)/most)));
+    const f=h>=30?15:h>=24?13:h>=19?12:11;
+    COLS.forEach(c=>{
+      const col=document.createElement('div');col.className='ubcol';col.style.gap=gap+'px';
+      const head=document.createElement('div');head.className='ubhead';head.style.cursor='default';
+      head.textContent='£'+(c===10?'1,000':c*100);
+      col.appendChild(head);
+      R.filter(o=>o.turn===c).forEach(o=>{
+        const el=document.createElement('div');el.className='ubname '+(c<=3?'r':'a');el.style.cursor='default';
+        el.style.height=h+'px';el.style.fontSize=f+'px';
+        const sp=document.createElement('span');sp.textContent=o.name;el.appendChild(sp);
+        col.appendChild(el);
+      });
+      wrap.appendChild(col);
     });
-    strip.dots.innerHTML=h;
   }
   function fetchIt(){
     fetch(POLL_API+'/p/m2-centipede/answers').then(r=>r.json()).then(d=>{
@@ -1091,19 +1083,20 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
       (d.answers||[]).forEach(t=>{
         const m=String(t).match(/^(.{1,30}?)\s*\|\s*(.{1,30}?)\s*\|\s*(10|[1-9])$/);
         if(!m)return;
-        const k=pairKey(m[1],m[2]);if(!byPair.has(k))byPair.set(k,+m[3]);
+        const k=pairKey(m[1],m[2]);if(!byPair.has(k))byPair.set(k,{name:m[1],turn:+m[3]});
       });
-      st.turns=[...byPair.values()];
-      nEl.textContent=st.turns.length;
-      draw();
-      const el=document.querySelector('[data-stepcall="centVerdict"]');
-      if(el&&el.dataset.stepon==='1')window.centVerdict(el,true);
+      st.rows=[...byPair.values()];
+      if(!st.board)nEl.textContent=st.rows.length;
     }).catch(()=>{});
   }
   setInterval(fetchIt,2500);fetchIt();
   let shown=0;
-  setInterval(()=>{if(!st.live&&shown<DEMO.length){shown++;nEl.textContent=shown;}},420);
-  window.centReveal=function(el,on){st.revealed=on;draw();};
+  setInterval(()=>{if(!st.live&&!st.board&&shown<DEMO.length){shown++;nEl.textContent=shown;}},420);
+  window.centReveal=function(el,on){
+    st.board=on?rows().slice():null;
+    if(on)nEl.textContent=st.board.length;
+    build();
+  };
   window.centVerdict=function(el,on){
     if(!on){el.innerHTML='';return;}
     const v=turns();
@@ -1114,6 +1107,7 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
     el.innerHTML='<b>Your play:</b> the most common ending was '+(mode===10?'<b>running it all the way</b>':'<b>turn '+mode+'</b>')+
       ', and '+ran+' of '+v.length+' pairs took the pot to &pound;1,000';
   };
+  build();
 })();
 
 

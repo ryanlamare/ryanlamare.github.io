@@ -488,7 +488,24 @@ function gameScreen(id,A,B,g,meIsA){
       cls=mine?'good':'bad';
       sub=s.ran?esc(s.taker)+' was up next and takes it all.':(mine?esc(s.other)+' walks away with nothing.':'You walk away with nothing.');
     }
-    /* the playback: the pot, or the last card, slides to whoever took it */
+    /* the centipede ends the way the ultimatum does: a colour, the pot and one
+       line. Green on the phone that took it, red on the other */
+    if(id==='cent'){
+      const mine=norm(s.taker)===norm(name);
+      document.body.classList.add(mine?'ult-a':'ult-r');
+      q.textContent='';st.textContent='';app.innerHTML='';
+      const end=document.createElement('div');end.className='ultend';
+      end.innerHTML='<div class="w">&pound;'+(s.ran?'1,000':s.pot)+'</div><div class="s">'+
+        (s.ran?'It ran all the way. '+(mine?'You were':esc(s.taker)+' was')+' up next and take'+(mine?'':'s')+' it all.'
+              :(mine?'You took it. '+esc(s.other)+' walks away with nothing.':esc(s.taker)+' took it. You walk away with nothing.'))+'</div>';
+      app.appendChild(end);
+      const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
+      again.textContent='PLAY AGAIN';
+      again.addEventListener('click',()=>renderRole('cent'));
+      app.appendChild(again);
+      return;
+    }
+    /* the card game's playback: the last card slides to whoever took it */
     const meLeft=true, takerIsMe=id==='cards'?norm(s.winner)===norm(name):norm(s.taker)===norm(name);
     const chipText=id==='cards'?'THE LAST CARD':'&pound;'+(s.ran?1000:s.pot);
     show('<div class="ustage"><div class="nm me">you</div><div class="mid"><div class="chip'+(id==='cards'?' card':'')+'">'+chipText+'</div></div><div class="nm them">'+esc(opp)+'</div></div>'+
@@ -501,7 +518,7 @@ function gameScreen(id,A,B,g,meIsA){
     stage.appendChild(note);
     const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
     again.textContent='PLAY AGAIN';
-    again.addEventListener('click',render);
+    again.addEventListener('click',()=>renderRole(id));
     stage.appendChild(again);
   }
   function renderState(moves){

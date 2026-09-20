@@ -1,17 +1,19 @@
-/* Headless test of the module 2 ultimatum game (the board of 20 Sep 2026): two
+/* Headless test of module 2's two boards, the ultimatum and the centipede (20 Sep 2026): two
    phones and the deck in real Chrome, against a MOCK Worker (a static server
    serves the repo with the Worker's host rewritten to the mock), so nothing
    touches the real m2-ultimatum room. The Chrome driver is the one in
    m1-offers.test.mjs.
 
-     node teaching/exec/gt/trial/m2-ult.test.mjs [folder for screenshots]
+     node teaching/exec/gt/trial/m2-boards.test.mjs [folder for screenshots]
 
    A proposer's phone picks one of eleven splits and locks it in, the
    responder's phone sees it and rejects, both phones go red; a second game is
    accepted and both go green. On the deck the count rises with the board
    empty, a keypress shows names under their splits with no outcomes, a name
    click, a column click and REVEAL ALL show green and red, a late pair does
-   not move the board, and the Your play line shows everything. */
+   not move the board, and the Your play line shows everything. Then the
+   centipede: two phones pass twice and take £300, green on the taker's phone
+   and red on the other, and the deck's ten columns of names. */
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -126,7 +128,7 @@ try {
   await sleep(3200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the deck is on the ultimatum results slide');
   check(await deck.ev(`document.getElementById('ultN').textContent`) === '13', 'the count reads 13 pairs (a replayed pair counts once)');
-  check(await deck.ev(`document.querySelectorAll('.ubhead').length===11 && !document.querySelector('.ubname')`), 'eleven columns and no names before the keypress');
+  check(await deck.ev(`document.querySelectorAll('#ultcols .ubhead').length===11 && !document.querySelector('#ultcols .ubname')`), 'eleven columns and no names before the keypress');
   check(await deck.ev(`!document.querySelector('.slide.active .qr')`), 'no QR on the results slide');
   await deck.shot('deck-1-before.png');
   await deck.key('ArrowRight'); await sleep(600);
@@ -153,6 +155,43 @@ try {
   check(await deck.ev(`document.querySelectorAll('.ubname.a,.ubname.r').length`) === 13, 'and every outcome shows with it');
   await deck.key('ArrowRight'); await sleep(400);
   await deck.shot('deck-5-notes.png');
+  /* ---------- the centipede: two phones ---------- */
+  /* the two phones share one browser's storage, and a page reads its name at load */
+  const go = async (p, who, g) => { await p.ev(`localStorage.setItem('gt-name',${JSON.stringify(who)});localStorage.setItem('gt-claimed',${JSON.stringify(who)})`); await p.send('Page.navigate', { url: base + '/teaching/exec/gt/m2/game/?g=' + g }); await sleep(2500); };
+  await go(A, 'Aisha', 'cent'); await go(T, 'Tom', 'cent');
+  check(await T.ev(`document.getElementById('q').textContent`) === 'The centipede game', 'the QR lands on the centipede game');
+  await click(A, btn('button.opt', 'partner starts')); await sleep(300);
+  await click(T, btn('button.opt', 'Player 1')); await sleep(300);
+  await T.ev(`(()=>{const i=document.querySelector('.namerow input');i.value='Aisha';document.querySelector('.namerow button').click();})()`); await sleep(2600);
+  await click(T, btn('.actions button', 'PASS')); await sleep(4500);
+  await A.shot('cent-1-turn.png');
+  await click(A, btn('.actions button', 'PASS')); await sleep(4500);
+  await click(T, btn('.actions button', 'TAKE')); await sleep(4500);
+  check((rooms['m2-centipede'] || []).some(a => a.t === 'Tom|Aisha|3'), 'the starter posts Tom|Aisha|3');
+  check(await T.ev(`document.body.classList.contains('ult-a')`), 'the taker goes green');
+  check(await A.ev(`document.body.classList.contains('ult-r')`), 'the other phone goes red');
+  check(await T.ev(`document.querySelector('.ultend .w').textContent`) === '£300', 'and shows the £300');
+  await T.shot('cent-2-green.png'); await A.shot('cent-3-red.png');
+  await click(T, btn('.send', 'PLAY AGAIN')); await sleep(400);
+  check(await T.ev(`document.getElementById('q').textContent`) === 'The centipede game' && await T.ev(`!document.body.classList.contains('ult-a')`), 'PLAY AGAIN goes back into the centipede, colour off');
+  /* ---------- the centipede: the deck ---------- */
+  [['Ben', 'Priya', 6], ['Cara', 'Marcus', 4], ['Dev', 'Sam', 10], ['Elena', 'Hana', 1], ['Ivan', 'Jo', 6], ['Kemi', 'Luis', 10], ['Mei', 'Noor', 7], ['Owen', 'Rosa', 6], ['Bartholomew', 'Zoe', 2]].forEach(o => rooms['m2-centipede'].push({ v: 'bot-' + o[0], t: o.join('|') }));
+  await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(300);
+  for (let i = 0; i < 3; i++) { await deck.key('ArrowRight'); await sleep(200); }
+  await sleep(3000);
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('centipede game: theory')`), 'the deck is on the centipede results slide');
+  check(await deck.ev(`document.getElementById('centN').textContent`) === '10', 'the count reads 10 pairs');
+  check(await deck.ev(`document.querySelectorAll('#centcols .ubhead').length===10 && !document.querySelector('#centcols .ubname') && !document.querySelector('.slide.active .qr')`), 'ten columns, no names and no QR before the keypress');
+  await deck.key('ArrowRight'); await sleep(600);
+  check(await deck.ev(`document.querySelectorAll('#centcols .ubname').length`) === 10, 'the keypress shows 10 names');
+  check(await deck.ev(`[...document.querySelectorAll('#centcols .ubcol')].find(c=>c.querySelector('.ubhead').textContent==='£300').textContent.includes('Tom')`), 'Tom sits under £300');
+  check(await deck.ev(`document.querySelectorAll('#centcols .ubname.r').length`) === 3 && await deck.ev(`document.querySelectorAll('#centcols .ubname.a').length`) === 7, 'three early takes in red, seven in green');
+  await deck.shot('cent-deck-1.png');
+  rooms['m2-centipede'].push({ v: 'bot-late', t: 'Late|Comer|5' }); await sleep(3000);
+  check(await deck.ev(`document.querySelectorAll('#centcols .ubname').length`) === 10, 'a late pair does not move the board');
+  await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(500);
+  check((await deck.ev(`document.querySelector('[data-stepcall="centVerdict"]').textContent`)).includes('turn 6') && (await deck.ev(`document.querySelector('[data-stepcall="centVerdict"]').textContent`)).includes('2 of 10'), 'Your play reads turn 6, and 2 of 10 ran');
+  await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
   for (const [n, p] of [['deck', deck], ['proposer', A], ['responder', T]]) check(!p.errors.length, 'no script errors on the ' + n + (p.errors.length ? ': ' + p.errors.join(' / ') : ''));
 } catch (e) { console.log('FAIL  the test threw: ' + (e.stack || e)); fails++; }
 chrome.kill(); srv.close(); await rm(dir, { recursive: true, force: true }).catch(() => {});
