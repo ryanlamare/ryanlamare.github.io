@@ -70,7 +70,7 @@ a.pick{display:block;text-align:center;font-weight:700;font-size:16px;color:var(
 const qs=new URLSearchParams(location.search);
 const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
 const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
-const table=qs.get('t');
+const table=qs.get('t')||'tapas'; /* one table since the plain pass; ?t=granito still opens the other */
 if(!table||!CS_TABLES[table]){
   q.textContent='Which table are you running?';
   app.innerHTML='<a class="pick" href="?t=tapas">The Tapas committee</a><br><a class="pick" href="?t=granito">The Granito management team</a>';
@@ -120,7 +120,7 @@ if(!table||!CS_TABLES[table]){
     const B=(t,fn,quiet,dis)=>{const b=el('button','act'+(quiet?' quiet':''),t);b.disabled=!!dis;b.addEventListener('click',fn);btns.appendChild(b);return b;};
     const undealt=seats.some(s=>!s.role);
     if(S.phase==='lobby'){
-      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(!undealt&&!confirm('Roles are dealt. Deal again?'))return;act('deal',{},d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Manipulators.';});},false,seats.length<5);
+      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(!undealt&&!confirm('Roles are dealt. Deal again?'))return;act('deal',T.backed?{bidder:T.backed}:{},d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Manipulators.';});},false,seats.length<5);
       B('START NIGHT 1',()=>act('phase',{to:'night'},()=>{lastResult=null;}),true,undealt);
     }else if(S.phase==='night'){
       const n=S.nights[S.round]||{picks:{},notes:{}};

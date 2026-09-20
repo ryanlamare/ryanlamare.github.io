@@ -1,0 +1,137 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 8 · A Car Market Game</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 8 car market as it stands after the plain
+   pass (20 Sep 2026): Ryan's LER 550 three-round card game, played face to
+   face, with the phone standing in for the card. It sends nothing and keeps
+   no score. A buyer's card says what a lemon and a peach are worth to them.
+   A seller gives the number they were counted off with, and each round the
+   page deals that number a car: sellers 1 and 2, 3 and 4, and so on are
+   pairs, one lemon and one peach in each, so the market is exactly half and
+   half whenever an even number of sellers is counted off, and a reload deals
+   the same car again. Round 1 the card is shown, so the whole screen takes
+   the car's colour. Rounds 2 and 3 it must not be shown, so the screen stays
+   plain and the car appears only while the seller holds a finger down;
+   SHOW MY CAR is for the end of the round, when Ryan asks. */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 16px 40px;transition:background .4s,color .4s;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.peach{background:var(--terracotta);color:var(--paper)}
+body.lemon{background:var(--ochre);color:var(--ink)}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-height:calc(100vh - 62px)}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+body.peach .tag,body.lemon .tag{color:inherit;opacity:.8}
+h1{font-weight:700;font-size:22px;line-height:1.3;color:var(--red)}
+body.peach h1,body.lemon h1{color:inherit}
+.big{display:flex;flex-direction:column;gap:12px}
+.opt{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.03em;color:var(--ink);background:var(--card);border:3px solid var(--ink);padding:22px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.opt.on{background:var(--ink);color:var(--paper)}
+.nums{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.nums .opt{font-size:22px;padding:14px 0}
+.rounds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rounds .opt{font-size:17px;padding:12px 0}
+.card{flex:1;border:3px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:28px 18px;min-height:300px;background:transparent}
+.card .kind{font-family:var(--display);font-weight:900;font-size:64px;line-height:1;letter-spacing:.02em}
+.card .what{font-weight:600;font-size:19px;line-height:1.35}
+.card .min{font-weight:700;font-size:22px;line-height:1.3}
+.card .hold{font-family:var(--display);font-weight:900;font-size:24px;letter-spacing:.04em;color:var(--muted)}
+.card.buyer{gap:22px}
+.card.buyer .row{font-weight:600;font-size:21px;line-height:1.35}
+.card.buyer .row b{font-family:var(--display);font-weight:900;font-size:34px;display:block}
+.note{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+body.peach .note,body.lemon .note{color:inherit;opacity:.85}
+.back{align-self:flex-start;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:inherit;background:none;border:none;text-decoration:underline;cursor:pointer;opacity:.7}
+</style>
+</head><body>
+<div class="wrap" id="app"></div>
+<script>
+/* which seller of each pair holds the peach, round by round: fixed, so a
+   reload deals the same car, and different each round, so nobody can carry
+   what they learned in round 1 into round 2. Twenty pairs, forty sellers. */
+const PEACH_FIRST={1:'10110010011010110100',2:'00111010110001100110',3:'11010100101101001101'};
+const CARS={
+  P:{cls:'peach',kind:'PEACH',what:'A good quality car',min:'You would sell it for a minimum of $3000'},
+  L:{cls:'lemon',kind:'LEMON',what:'A bad quality car',min:'You would sell it for a minimum of $1000'}
+};
+const app=document.getElementById('app');
+const st={side:null,num:null,round:1,shown:false};
+try{const s=JSON.parse(localStorage.getItem('m8-car')||'null');if(s){st.side=s.side||null;st.num=s.num||null;st.round=s.round||1;}}catch(_){}
+const save=()=>{try{localStorage.setItem('m8-car',JSON.stringify({side:st.side,num:st.num,round:st.round}));}catch(_){}};
+function carFor(num,round){
+  const pair=Math.floor((num-1)/2)%20, first=(num%2)===1;
+  const peachFirst=PEACH_FIRST[round][pair]==='1';
+  return CARS[first===peachFirst?'P':'L'];
+}
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
+function btn(cls,label,fn){const b=el('button',cls,label);b.type='button';b.addEventListener('click',fn);return b;}
+function head(title){
+  app.innerHTML='';
+  app.appendChild(el('div','tag','<i></i>APPLIED GAME THEORY · MODULE 8'));
+  app.appendChild(el('h1',null,title));
+}
+function render(){
+  document.body.className='';
+  if(!st.side)return renderSide();
+  if(st.side==='buyer')return renderBuyer();
+  if(!st.num)return renderNum();
+  renderSeller();
+}
+function renderSide(){
+  head('A car market game');
+  const box=el('div','big');
+  box.appendChild(btn('opt','I AM A SELLER',()=>{st.side='seller';save();render();}));
+  box.appendChild(btn('opt','I AM A BUYER',()=>{st.side='buyer';save();render();}));
+  app.appendChild(box);
+}
+function renderBuyer(){
+  head('You are a car buyer');
+  const c=el('div','card buyer');
+  c.appendChild(el('div','row','For a lemon you will pay up to<b>$1500</b>'));
+  c.appendChild(el('div','row','For a peach you will pay up to<b>$4000</b>'));
+  app.appendChild(c);
+  app.appendChild(btn('back','← back',()=>{st.side=null;save();render();}));
+}
+function renderNum(){
+  head('What is your seller number?');
+  const g=el('div','nums');
+  for(let i=1;i<=40;i++)g.appendChild(btn('opt',String(i),()=>{st.num=i;save();render();}));
+  app.appendChild(g);
+  app.appendChild(btn('back','← back',()=>{st.side=null;save();render();}));
+}
+function renderSeller(){
+  const car=carFor(st.num,st.round), open=st.round===1||st.shown;
+  head('Seller '+st.num);
+  const r=el('div','rounds');
+  [1,2,3].forEach(n=>r.appendChild(btn('opt'+(st.round===n?' on':''),'ROUND '+n,()=>{st.round=n;st.shown=false;save();render();})));
+  app.appendChild(r);
+  const c=el('div','card');
+  function face(on){
+    /* the colour wash is only for a card that is meant to be seen: a held peek stays plain, or the room could read it */
+    document.body.className=on&&open?car.cls:'';
+    c.innerHTML=on?'<div class="kind">'+car.kind+'</div><div class="what">'+car.what+'</div><div class="min">'+car.min+'</div>'
+                  :'<div class="hold">HOLD TO SEE YOUR CAR</div>';
+  }
+  face(open);
+  if(!open){
+    const down=e=>{e.preventDefault();face(true);}, up=()=>face(false);
+    c.addEventListener('pointerdown',down);
+    ['pointerup','pointercancel','pointerleave'].forEach(t=>c.addEventListener(t,up));
+    c.addEventListener('contextmenu',e=>e.preventDefault());
+  }
+  app.appendChild(c);
+  if(st.round===1)app.appendChild(el('div','note','Show this screen to buyers when they approach you.'));
+  else if(!st.shown){
+    app.appendChild(el('div','note','Do not show this screen to buyers, no matter how persistent they are.'));
+    app.appendChild(btn('opt','SHOW MY CAR',()=>{st.shown=true;render();}));
+    app.appendChild(el('div','note','Only when the round is over and you are asked to.'));
+  }
+  app.appendChild(btn('back','← change my number',()=>{st.num=null;st.shown=false;save();render();}));
+}
+render();
+</script>
+</body></html>

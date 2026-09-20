@@ -171,11 +171,8 @@ function renderName(title,done){
 }
 function render(){
   stopPolling();st.textContent='';
-  if(GAME!=='market'&&GAME!=='cs'){
-    q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=market">The car market</a><a class="pick" href="?g=cs">Hidden Agenda</a></div>';
-    return;
-  }
+  /* the plain pass (20 Sep 2026): the car market is played face to face from m8/car/, so this page opens
+     straight into Hidden Agenda; ?g=market still opens the old bidding game */
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean}));return;}
   if(GAME==='market')return renderMarket();
   return renderCS();
@@ -277,14 +274,20 @@ function renderMarket(){
 
 /* ================= Hidden Agenda ================= */
 function renderCS(){
-  let table=qs.get('t');
+  /* one table since the plain pass (20 Sep 2026): the Tapas committee, eleven to thirteen volunteers, the rest of
+     the room watching. Opening this page seats the phone, so the old which-table question stays as a gate: only
+     someone who says they are at the table takes a seat. ?t=granito still opens the other table. */
+  let table=qs.get('t')||renderCS.seatAs;
   try{table=table||localStorage.getItem('m8-cs-table');}catch(_){}
   if(!table||!CS_TABLES[table]){
-    q.textContent='Which table are you at?';
+    q.textContent=CS_GAME;
     app.innerHTML='';app.appendChild(meRow());
     const ch=document.createElement('div');ch.className='bigrow';ch.style.marginTop='8px';
-    [['TAPAS','tapas'],['GRANITO','granito']].forEach(([l,k])=>{const b=document.createElement('button');b.className='opt';b.textContent=l;b.addEventListener('click',()=>{try{localStorage.setItem('m8-cs-table',k);}catch(_){}renderCS();});ch.appendChild(b);});
-    app.appendChild(ch);return;
+    const b=document.createElement('button');b.className='opt';b.textContent='I AM AT THE TABLE';
+    b.addEventListener('click',()=>{try{localStorage.setItem('m8-cs-table','tapas');}catch(_){}renderCS.seatAs='tapas';renderCS();});
+    ch.appendChild(b);app.appendChild(ch);
+    const w=document.createElement('div');w.className='waitcard';w.textContent='Watching? You don\u2019t need your phone for this one.';app.appendChild(w);
+    return;
   }
   const T=CS_TABLES[table], ROOM=qs.get('room')||T.room;
   const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
@@ -296,8 +299,8 @@ function renderCS(){
   bar.innerHTML='<span class="r hidden">Your role is dealt to this phone</span><button type="button">SHOW</button>';
   app.appendChild(bar);
   const stage=document.createElement('div');stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';app.appendChild(stage);
-  const leave=document.createElement('button');leave.className='back';leave.type='button';leave.textContent='← change table';
-  leave.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/unseat',{v:voter}).finally(()=>{try{localStorage.removeItem('m8-cs-table');}catch(_){}renderCS();});});
+  const leave=document.createElement('button');leave.className='back';leave.type='button';leave.textContent='← give up my seat';
+  leave.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/unseat',{v:voter}).finally(()=>{renderCS.seatAs=null;try{localStorage.removeItem('m8-cs-table');}catch(_){}renderCS();});});
   app.appendChild(leave);
   let seated=false, shown='', roleShown=false, roleTimer=null, S=null;
   bar.querySelector('button').addEventListener('click',()=>{roleShown=!roleShown;drawBar();clearTimeout(roleTimer);if(roleShown)roleTimer=setTimeout(()=>{roleShown=false;drawBar();},8000);});
