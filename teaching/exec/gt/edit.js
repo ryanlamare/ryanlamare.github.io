@@ -232,14 +232,14 @@ function save(retried){
     if(p.status===409)throw new Refused('The file changed on GitHub while you were editing (409). Press Save again.',false);
     if(p.status!==200&&p.status!==201)return p.text().then(function(x){throw new Refused('GitHub did not take the save ('+p.status+'). '+x.slice(0,100),false);});
     ed.forEach(function(x){x.pair.was=x.now;dirty.delete(x.pair.el);});
-    mark();setStatus('Saved ✓ live in about a minute. The transcript is not yet in step.');
+    saving=false;mark();setStatus('Saved ✓ live in about a minute. The transcript is not yet in step.');
   }).catch(function(err){
     saving=false;
     var msg=err&&err.message?err.message:'The save did not reach GitHub. Try again.';
     /* a bad token: take a new one now and try once more, so nothing typed is lost to a reload */
     if(err&&err.retry&&!retried&&askToken(msg+' Your edits are still on the page. ')){save(true);return;}
     setStatus('⚠ '+msg+(err&&err.retry?' Press Token to paste a new one; your edits are still here.':''),true);
-  }).then(function(){saving=false;});
+  });
 }
 function askToken(lead){
   var t=prompt((lead||'')+'Paste a GitHub token (fine-grained, this repository only, Contents: Read and write). It stays in this browser only.');
