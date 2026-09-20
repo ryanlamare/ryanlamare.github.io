@@ -123,6 +123,11 @@ function applyEdits(src,edits){
   var cuts=[];
   for(var e=0;e<edits.length;e++){
     var ed=edits[e],r=slideRange(src,ed.slide);
+    /* a piece inside the text that appears on its own keypress, or sits on its own line, is part of the slide's build, not of its wording:
+       deleting one (m1 slide 13, 21 Sep 2026) ran two lines together and lost the reveal. Retype inside it, or send it to Claude. */
+    var tw=document.createElement('template'),tn=document.createElement('template');tw.innerHTML=ed.was;tn.innerHTML=ed.now;
+    if(tn.content.querySelectorAll('[data-step],[style]').length<tw.content.querySelectorAll('[data-step],[style]').length)
+      return {error:'That edit on slide '+(ed.slide+1)+' deleted a piece that appears on its own keypress or sits on its own line. Nothing was saved. Press Revert and retype inside that piece, or send this one to Claude.'};
     if(!r)return {error:'Slide '+(ed.slide+1)+' is not where it was in the file on GitHub. Reload and try again.'};
     var list=before[ed.slide]||[],same=list.filter(function(k){return k===ed.tag+'|'+ed.was;}).length;
     if(same<ed.ord+1)return {error:'The file on GitHub no longer has that text on slide '+(ed.slide+1)+'. Reload and try again.'};
@@ -158,6 +163,9 @@ function setStatus(t,bad){if(statusEl){statusEl.textContent=t;statusEl.style.col
 function typed(el,was){
   var c=el.cloneNode(true);
   c.querySelectorAll('[contenteditable]').forEach(function(n){n.removeAttribute('contenteditable');n.removeAttribute('spellcheck');});
+  /* the deck marks a revealed step with class "shown" while it runs; that is the state of the room, not of the file
+     (saved once by mistake on m1 slide 16, 21 Sep 2026: the two lines came up already revealed) */
+  c.querySelectorAll('[data-step]').forEach(function(n){n.classList.remove('shown');if(!n.getAttribute('class'))n.removeAttribute('class');n.removeAttribute('data-stepon');});
   c.querySelectorAll('font,span[style]').forEach(function(n){while(n.firstChild)n.parentNode.insertBefore(n.firstChild,n);n.remove();});
   c.querySelectorAll('div,p').forEach(function(n){while(n.firstChild)n.parentNode.insertBefore(n.firstChild,n);n.remove();});
   var h=c.innerHTML.replace(/(<br>)+$/,'');

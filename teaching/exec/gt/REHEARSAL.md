@@ -39,8 +39,9 @@ Two or three windows show that a game works; they do not show what a board looks
 
 - **Module 5 has them already.** Open the deck as `…/m5/?room=trial` (an ochre chip says REHEARSAL ROOM TRIAL) and run, between your presses:
   `node teaching/exec/gt/trial/m5.js --room trial invest 20`, `… votes bos 20`, `… votes chicken 20`, and `… state` to see what each room holds. `--rate 0.6` sets the share investing; `--a 0.3` the share on the first option. To sit among the bots yourself, open the phone page with the same switch: `m5/game/?room=trial`, `m5/tapas/?g=bos&room=trial`. A QR scanned off a rehearsal deck still opens the real rooms.
+- **Module 1:** `node teaching/exec/gt/trial/m1.js familiarity 22`, `… number 22` (one guess per bot in the round that is open: run it once a round, after CLOSE ROUND & SHOW; the bots know only what a phone knows, never the number), `… offers 22` and `… offers 22 --game 2`, and `… state`. Module 1 has no rehearsal rooms, so these go into the real ones: reset `m1-familiarity`, `m1-number` and `m1-av` afterwards.
 - **The Axelrod ranking:** `node teaching/exec/gt/trial/m4.js --room trial rank 5` posts five rankings. They go into the real poll, so reset `m4-axelrod` afterwards. The rest of that script drove the networked Price Wars and no longer applies.
-- **Everything else** (the number game, the offers, the quiz, the polls, the pair games) has no bots yet. In a chat, Claude can play the room from the terminal while you drive the deck; the whole-room games and polls are short scripts on the module 5 pattern, the pair games want a bot each.
+- **Everything else** (the quiz, the other polls, the pair games) has no bots yet. In a chat, Claude can play the room from the terminal while you drive the deck; the whole-room games and polls are short scripts on the module 5 pattern, the pair games want a bot each.
 - Before a bot run, type `trial` in the Poll Desk's rehearsal box and reset, so a leftover round-two marker does not start every phone in round 2.
 
 ## Hidden Agenda
