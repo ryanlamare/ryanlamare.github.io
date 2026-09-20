@@ -383,3 +383,11 @@ be running first.
 - `teaching/` holds self-contained lecture decks and in-class games.
 - `edit.js` is an in-browser editor for those teaching decks, authenticated with
   a GitHub token kept in the browser's localStorage. Unrelated to the CV.
+- `teaching/exec/gt/edit.js` is the exec suite's own editor (`?edit` on a deck),
+  and it is separate from `/edit.js` on purpose. `/edit.js` saves a copy of the
+  live page; the gt decks redraw themselves while they run (boards, counts, the
+  room's names), so that would commit participants' names to a public file. The
+  gt editor patches the one edited stretch of the *source* fetched from GitHub,
+  verifies that nothing else moved, and refuses what it cannot place. Text only.
+  It does not touch the `sr-only` transcript: a commit headed "Live text edit"
+  names the slides whose transcript entries then need bringing into line.

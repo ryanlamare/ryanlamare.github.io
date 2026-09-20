@@ -12,6 +12,10 @@ Rewritten 21 Sep 2026 for the plain suite as it is live. One person, one MacBook
 - Leave `go/roster.json` empty, so you see the typed-name path. Give each student a different first name the first time it asks (Ana, Ben, Cara; your phone is Fay).
 - **Keep a notes file open.** One line per thing you notice: module, slide number from the tick bar, what happened. Note everything and fix nothing as you go; the file is what the next chat works from.
 
+## Changing a word as you go
+
+Add `?edit` to a deck's address (`…/m5/?edit`, or `…/m5/?edit#6` to open on the seventh slide). Text you can change gets a dashed outline: click it, type, press **Save** (or Cmd+S), and it is live about a minute later. It uses the GitHub token the LER 565 editor already keeps in this browser; on a browser that has none it asks once. It changes words only, one stretch of the source file per edit, and it refuses an edit it cannot place for certain, in which case nothing is saved and the change goes in your notes instead. Not editable this way: bullets added or removed, text a board writes, text inside a drawing, single matrix cells, and the phones' pages. **The transcript at the foot of the deck is not kept in step**; each save's commit message names the slides you touched, and bringing the transcript into line is a job for the next chat. Reload the deck without `?edit` to present.
+
 ## How to run a module
 
 Open **ryanlamare.com/teaching/exec/gt/m1/** (and so on) and say the slides aloud at speaking pace. When a slide shows a QR, open the matching poll or game in the student windows from /go, answer from two or three of them, then press the arrow for the reveal. Look at what each student window shows *after* answering as well as what the deck shows. **Scan at least one QR per module with your real phone**, off the screen, so the codes themselves are tested and you see each page on a real screen.
