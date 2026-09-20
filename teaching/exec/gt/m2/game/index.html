@@ -21,7 +21,11 @@
                     pile sizes the winner left, last few, dash-joined —
                     the deck counts who was leaving multiples of four)
      m2-centipede: "taker|other|turn"     (taker first; turn 10 = it ran)
-   Ultimatum is a two-move handshake: the proposer's offer goes through
+   Ultimatum (rebuilt 20 Sep 2026, Ryan's design): the proposer taps one of
+   eleven splits, 99/1 to 1/99, and locks it in; the responder sees it and
+   accepts or rejects; both phones then go green or red, and that is all.
+   The offers are discrete so the deck's board has a column for each. It
+   is a two-move handshake: the proposer's offer goes through
    m2-ult-live as "prop|resp|offer", and the responder posts the final
    "prop|resp|offer|a-or-r" line into m2-ultimatum — exactly the line
    the deck's theory-vs-results slide already plots. Latest line per
@@ -72,27 +76,24 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
 .send:disabled{opacity:.4;cursor:default}
 .back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
   color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
-/* the split control */
-.split{border:2.5px solid var(--ink);background:var(--card);padding:16px 16px 18px}
-.split .vals{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-.split .vals b{font-size:26px;font-weight:700}
-.split .vals .yours{color:var(--ink)}
-.split .vals .theirs{color:var(--red)}
-.split .who{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;
-  letter-spacing:.1em;font-size:11px;color:var(--muted);margin-bottom:14px}
-.split input[type=range]{width:100%;accent-color:var(--red);height:34px}
+/* the eleven offers: one tap picks a split, LOCK IT IN sends it */
+.bandhead{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);padding:0 4px}
+.bands{display:flex;flex-direction:column;gap:5px}
+.bands button{display:flex;justify-content:space-between;align-items:baseline;width:100%;font-family:var(--sans);font-weight:700;
+  font-size:18px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:5px 16px;cursor:pointer}
+.bands button .t{color:var(--red)}
+.bands button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.bands button.mine .t{color:var(--paper)}
+/* the ending, on both phones: green if it was accepted, red if it was rejected */
+body.ult-a{background:var(--green)}
+body.ult-r{background:var(--red)}
+body.ult-a,body.ult-r,body.ult-a .tag,body.ult-r .tag,body.ult-a h1,body.ult-r h1{color:var(--paper)}
+body.ult-a .tag i,body.ult-r .tag i{background:var(--paper)}
+.ultend{text-align:center;padding:34px 0 10px}
+.ultend .w{font-family:var(--display);font-weight:900;font-size:50px;line-height:1;letter-spacing:.03em}
+.ultend .s{font-weight:600;font-size:17px;line-height:1.4;margin-top:16px}
+body.ult-a .send,body.ult-r .send{background:none;border-color:var(--paper);color:var(--paper)}
 /* the landed offer */
-/* the ultimatum's ending: the £1,000 splits into the two shares, or goes to nobody */
-.ubar{border:2.5px solid var(--ink);background:var(--card);padding:16px}
-.ubar .track{display:flex;height:54px;border:2.5px solid var(--ink);background:var(--paper-soft);overflow:hidden}
-.ubar .track i{display:block;height:100%;transition:width 1.2s cubic-bezier(.4,0,.2,1),opacity .8s}
-.ubar .track i.pro{background:var(--ink);width:100%} .ubar .track i.res{background:var(--red);width:0}
-.ubar.gone .track i{width:0!important;opacity:0}
-.ubar .ul{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-weight:700;font-size:15px}
-.ubar .ul span{opacity:0;transition:opacity .5s}
-.ubar .ul span.on{opacity:1}
-.ubar .ul .a{color:var(--ink)} .ubar .ul .b{color:var(--red)}
-.ubar .whole{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-bottom:8px}
 /* the turn games' ending: the pot, or the last card, goes to the taker */
 .ustage{border:2.5px solid var(--ink);background:var(--card);padding:18px 12px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
 .ustage .nm{flex:none;width:96px;text-align:center;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
@@ -201,6 +202,7 @@ try{jump=new URLSearchParams(location.search).get('g');}catch(_){}
 
 function render(){
   stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
   st.textContent='';
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
     name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
@@ -232,6 +234,7 @@ function render(){
 }
 function renderRole(id){
   stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
   q.textContent=GAMES[id].label;
   app.innerHTML='';
   const ch=document.createElement('div');ch.className='choices';
@@ -586,28 +589,33 @@ function renderUltPropose(partner){
   stopPolling();
   q.textContent='Your offer to '+partner;
   app.innerHTML='';
-  const card=document.createElement('div');card.className='split';
-  card.innerHTML='<div class="vals"><b class="yours">&pound;500</b><b class="theirs">&pound;500</b></div>'+
-    '<div class="who"><span>You keep</span><span>'+esc(partner)+' gets</span></div>'+
-    '<input type="range" min="0" max="1000" step="10" value="500" aria-label="Their share of the £1,000">';
-  const rng=card.querySelector('input');
-  const yv=card.querySelector('.yours'), tv=card.querySelector('.theirs');
-  rng.addEventListener('input',()=>{
-    tv.textContent='£'+rng.value;yv.textContent='£'+(1000-rng.value);
+  /* eleven splits, 99/1 to 1/99 (Ryan, 20 Sep 2026): the deck's board has one column for each */
+  const head=document.createElement('div');head.className='bandhead';
+  head.innerHTML='<span>You keep</span><span>'+esc(partner)+' gets</span>';
+  app.appendChild(head);
+  const card=document.createElement('div');card.className='bands';
+  let offer=null;
+  [10,100,200,300,400,500,600,700,800,900,990].forEach(v=>{
+    const b=document.createElement('button');b.type='button';
+    b.innerHTML='<span>&pound;'+(1000-v)+'</span><span class="t">&pound;'+v+'</span>';
+    b.addEventListener('click',()=>{offer=v;
+      card.querySelectorAll('button').forEach(x=>x.classList.remove('mine'));
+      b.classList.add('mine');send.disabled=false;});
+    card.appendChild(b);
   });
   app.appendChild(card);
-  const send=document.createElement('button');send.className='send';send.textContent='SEND THE OFFER';
+  const send=document.createElement('button');send.className='send';send.textContent='LOCK IT IN';send.disabled=true;
   send.style.marginTop='14px';
   send.addEventListener('click',()=>{
     send.disabled=true;
-    const offer=+rng.value;
+    card.querySelectorAll('button').forEach(x=>x.disabled=true);
     st.textContent='Sending…';
     /* count the pair's answered games first, so we know which reply is ours */
     answers('m2-ultimatum').catch(()=>[]).then(lines=>{
       const before=parseFinals(lines).filter(f=>pairKey(f.prop,f.resp)===pairKey(name,partner)).length;
       say('m2-ult-live',name+'|'+partner+'|'+offer)
         .then(()=>renderUltAwaitReply(partner,offer,before))
-        .catch(code=>{send.disabled=false;st.textContent=failMsg(code);});
+        .catch(code=>{send.disabled=false;card.querySelectorAll('button').forEach(x=>x.disabled=false);st.textContent=failMsg(code);});
     });
   });
   app.appendChild(send);
@@ -711,31 +719,17 @@ function renderUltRespond(o){
 }
 function renderUltDone(accepted,detail,x){
   stopPolling();
-  q.textContent='The deal is done';
+  document.body.classList.add(accepted?'ult-a':'ult-r');
+  q.textContent='';
   st.textContent='';
   app.innerHTML='';
-  /* the playback: the whole £1,000, then the split, or nothing */
-  if(x){
-    const u=document.createElement('div');u.className='ubar';
-    const keep=1000-x.offer;
-    u.innerHTML='<div class="whole">The &pound;1,000 on the table</div><div class="track"><i class="pro"></i><i class="res"></i></div>'+
-      '<div class="ul"><span class="a">'+(x.iPropose?'You keep':esc(x.other)+' keeps')+' &pound;'+keep+'</span><span class="b">'+(x.iPropose?esc(x.other)+' takes':'You take')+' &pound;'+x.offer+'</span></div>';
-    app.appendChild(u);
-    setTimeout(()=>{u.querySelector('.pro').style.width=(keep/10)+'%';u.querySelector('.res').style.width=(x.offer/10)+'%';u.querySelectorAll('.ul span').forEach(e=>e.classList.add('on'));},400);
-    if(!accepted)setTimeout(()=>{u.classList.add('gone');u.querySelector('.ul').innerHTML='<span class="on" style="color:var(--muted)">Rejected: nobody gets anything</span>';},2200);
-  }
-  const big=document.createElement('div');big.className='bigcard';big.style.marginTop='12px';
-  big.hidden=!!x;
-  setTimeout(()=>{big.hidden=false;},accepted?2200:3600);
-  big.innerHTML='<div class="head '+(accepted?'good':'bad')+'">'+(accepted?'Accepted':'Rejected')+'</div>'+
-    '<div class="sub">'+detail+'</div>';
-  app.appendChild(big);
-  const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-  note.textContent='Response recorded. Results on the screen soon. Play again any time — swap roles if you like.';
-  app.appendChild(note);
+  const end=document.createElement('div');end.className='ultend';
+  end.innerHTML='<div class="w">'+(accepted?'ACCEPTED':'REJECTED')+'</div><div class="s">'+detail+'</div>';
+  app.appendChild(end);
   const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
   again.textContent='PLAY AGAIN';
-  again.addEventListener('click',render);
+  /* straight back into this game, not to Pick your game */
+  again.addEventListener('click',()=>renderRole('ult'));
   app.appendChild(again);
 }
 </script>

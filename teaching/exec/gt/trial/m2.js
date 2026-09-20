@@ -23,8 +23,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /* fifteen pairs, the proposer / starter first */
 const PAIRS = [['Aisha N', 'Tom W'], ['Ben T', 'Priya K'], ['Cara L', 'Marcus B'], ['Dev P', 'Sam O'], ['Elena R', 'Hana S'], ['Ivan M', 'Jo F'], ['Kemi A', 'Luis G'], ['Mei C', 'Noor H'], ['Owen D', 'Rosa V'], ['Theo J', 'Uma R'], ['Vik S', 'Wen L'], ['Yara M', 'Zoe P'], ['Anna B', 'Carl E'], ['Dina F', 'Greg H'], ['Ines K', 'Jack M']];
-/* offer to the responder of the £1,000, and whether it was accepted */
-const ULT = [[500, 'a'], [400, 'a'], [450, 'a'], [200, 'r'], [500, 'a'], [300, 'a'], [100, 'r'], [350, 'a'], [500, 'a'], [250, 'r'], [400, 'a'], [480, 'a'], [300, 'r'], [600, 'a'], [50, 'r']];
+/* offer to the responder of the £1,000 (one of the phone's eleven: 10, 100 to 900, 990), and whether it was accepted */
+const ULT = [[500, 'a'], [400, 'a'], [500, 'a'], [200, 'r'], [500, 'a'], [300, 'a'], [100, 'r'], [400, 'r'], [500, 'a'], [200, 'a'], [400, 'a'], [600, 'a'], [300, 'r'], [500, 'a'], [10, 'r']];
 /* the turn the pot was taken; 10 = it ran to £1,000 */
 const CENT = [6, 4, 8, 10, 5, 7, 3, 10, 6, 9, 1, 7, 2, 8, 5];
 /* the piles the winner left, last few */
