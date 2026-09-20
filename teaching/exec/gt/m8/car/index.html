@@ -35,7 +35,7 @@ body.peach h1,body.lemon h1{color:inherit}
 .nums .opt{font-size:22px;padding:14px 0}
 .rounds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .rounds .opt{font-size:17px;padding:12px 0}
-.card{flex:1;border:3px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:28px 18px;min-height:300px;background:transparent}
+.card{touch-action:none;flex:1;border:3px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:28px 18px;min-height:300px;background:transparent}
 .card .kind{font-family:var(--display);font-weight:900;font-size:64px;line-height:1;letter-spacing:.02em}
 .card .what{font-weight:600;font-size:19px;line-height:1.35}
 .card .min{font-weight:700;font-size:22px;line-height:1.3}
@@ -74,7 +74,9 @@ function head(title){
   app.appendChild(el('div','tag','<i></i>APPLIED GAME THEORY · MODULE 8'));
   app.appendChild(el('h1',null,title));
 }
+let hidePeek=null;
 function render(){
+  hidePeek=null; /* a peek handler belongs to the card it was made for */
   document.body.className='';
   if(!st.side)return renderSide();
   if(st.side==='buyer')return renderBuyer();
@@ -103,6 +105,8 @@ function renderNum(){
   app.appendChild(g);
   app.appendChild(btn('back','← back',()=>{st.side=null;save();render();}));
 }
+['pointerup','pointercancel','blur'].forEach(t=>window.addEventListener(t,()=>{if(hidePeek)hidePeek();}));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&hidePeek)hidePeek();});
 function renderSeller(){
   const car=carFor(st.num,st.round), open=st.round===1||st.shown;
   head('Seller '+st.num);
@@ -118,9 +122,14 @@ function renderSeller(){
   }
   face(open);
   if(!open){
-    const down=e=>{e.preventDefault();face(true);}, up=()=>face(false);
+    /* face() replaces the node the finger landed on, so the lift must not depend on that node:
+       the card captures the pointer, and the window hides the car on any lift, cancel, blur or
+       tab switch, so a car can never stay up after the finger has gone. touch-action:none (in
+       the CSS) stops a few pixels of drift turning the hold into a scroll. */
+    const down=e=>{e.preventDefault();try{c.setPointerCapture(e.pointerId);}catch(_){}face(true);}, up=()=>face(false);
+    hidePeek=up;
     c.addEventListener('pointerdown',down);
-    ['pointerup','pointercancel','pointerleave'].forEach(t=>c.addEventListener(t,up));
+    ['pointerup','pointercancel','lostpointercapture'].forEach(t=>c.addEventListener(t,up));
     c.addEventListener('contextmenu',e=>e.preventDefault());
   }
   app.appendChild(c);
