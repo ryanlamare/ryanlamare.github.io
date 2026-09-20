@@ -103,7 +103,6 @@ function revenue(w,mine,theirs){
   else{r=mine===theirs?(mine==='h'?12:9):(mine==='c'?18:2);if(w===3)r*=2;}
   return r;
 }
-const BEST=[24,24,48,24,74,74]; /* the most a junction can take each week */
 const total=arr=>arr.reduce((t,_,i)=>t+revenue(i+1,S.mine[i],S.theirs[i]),0);
 const money=k=>'£'+k+'k';
 
@@ -271,11 +270,11 @@ function meetshow(){
 }
 function done(){
   const mineT=total(S.theirs), themT=S.theirs.reduce((t,_,i)=>t+revenue(i+1,S.theirs[i],S.mine[i]),0);
-  const best=BEST.reduce((a,b)=>a+b,0);
   app.appendChild(header());
   app.appendChild(el('h1','','Six weeks at the junction'));
-  app.appendChild(el('div','card','<div class="big">'+money(mineT)+'</div><div class="sub">your station&rsquo;s revenue &middot; theirs '+money(themT)+'</div>'));
-  app.appendChild(el('div','card','<div class="big">'+money(mineT+themT)+'</div><div class="sub">taken at your junction, of a possible '+money(best)+'</div>'));
+  /* what each side earned, and nothing else (Ryan, 21 Sep 2026): the "of a possible £268k" line measured a junction against one side undercutting alone, so it told a junction that held its price all six weeks it had left £100k behind */
+  app.appendChild(el('div','card','<div class="big">'+money(mineT)+'</div><div class="sub">your station&rsquo;s revenue</div>'));
+  app.appendChild(el('div','card','<div class="big">'+money(themT)+'</div><div class="sub">their station&rsquo;s revenue</div>'));
   app.appendChild(record(0));
   app.appendChild(footer());
 }
