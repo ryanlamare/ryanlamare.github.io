@@ -178,6 +178,34 @@
 .ccclip .medialink{flex-direction:column;text-align:center;gap:12px;padding:22px 20px;margin:0}
 .ccclip .mlt{text-align:center}
 /* live results: each pair's recorded game stacks as dots on an axis */
+/* the wall of trees (Ryan, 20 Sep 2026): the closer is a form on one phone per
+   pair (m2/draw/), and each finished tree is a card here, its name and the
+   outcome it wants. A click opens the tree full size; a click on it closes it. */
+/* as in m1, the QR comes up on a keypress in the place of the figure, big enough to scan from the back */
+.trjoin{position:absolute;right:80px;top:286px;width:520px;height:371px;display:none;flex-direction:column;gap:14px;align-items:center;justify-content:center;text-align:center}
+.slide.trq .trjoin{display:flex}
+.slide.trq .tree{visibility:hidden}
+.trjoin .qrb{width:224px;height:224px;border:2.5px solid var(--ink);background:#fff;padding:6px;flex:none}
+.trjoin .qrb img{width:100%;height:100%;display:block}
+.trjoin .ju{font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.trwall{position:absolute;left:96px;right:96px;top:196px;bottom:70px;display:grid;grid-template-columns:repeat(5,1fr);
+  grid-auto-rows:min-content;gap:12px;align-content:start}
+.trwall.many{grid-template-columns:repeat(6,1fr);gap:9px}
+.trcard{border:2.5px solid var(--ink);background:var(--card);padding:10px 12px;cursor:pointer;min-width:0;height:104px;overflow:hidden;
+  display:flex;flex-direction:column;gap:5px;transition:background .15s,color .15s}
+.trwall.many .trcard{height:84px;padding:8px 10px}
+.trcard:hover{background:var(--ink);color:var(--paper)}
+.trcard .n{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trcard .o{font-weight:600;font-size:15px;line-height:1.25}
+.trwall.many .trcard .o{font-size:13px}
+.trbig{position:absolute;left:96px;top:190px;width:1088px;height:450px;cursor:pointer}
+.trbig svg{position:absolute;inset:0;width:100%;height:100%}
+.trbig svg line{stroke:var(--ink);stroke-width:3}
+.trbox{position:absolute;border:2.5px solid var(--ink);background:var(--card);padding:9px 13px;display:flex;flex-direction:column;
+  justify-content:center;gap:4px;font-weight:600;font-size:18px;line-height:1.22;overflow:hidden}
+.trbox.root{font-size:20px}
+.trbox.them{border-style:dashed;font-size:17px}
+.trbox .trl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* the ultimatum board (Ryan, 20 Sep 2026), in the style of m1's offers board:
    eleven columns, 99/1 to 1/99, each proposer's name under the split they
    proposed, outcomes hidden. A click on a name shows whether it was accepted
@@ -738,14 +766,13 @@
 <section class="slide content" data-i="17">
   <div class="kicker"><i></i>MODULE 2 · YOUR WORLD</div>
   <h2>Charting a complete course of action in your world</h2>
-  <div class="leadline" style="text-align:left;max-width:1080px;margin-top:18px">In pairs, with pen and paper, try your best to chart a complete course of action on one thing you&rsquo;d like to get in the future.</div>
+  <div class="leadline" style="text-align:left;max-width:1080px;margin-top:18px">In pairs, on one phone, try your best to chart a complete course of action on one thing you&rsquo;d like to get in the future.</div>
   <div class="rail" style="left:96px;transform:none;top:312px;min-width:0;width:560px;gap:26px">
     <div class="ritem"><div class="rn">1</div><div class="rt">What outcome would you like to achieve?</div></div>
     <div class="ritem"><div class="rn">2</div><div class="rt">Who else is in this game?</div></div>
     <div class="ritem"><div class="rn">3</div><div class="rt">Your two opening moves, and how they react to each</div></div>
-    <div class="ritem"><div class="rn">4</div><div class="rt">Keep going as far as you can</div></div>
   </div>
-  <svg class="tree" viewBox="0 0 560 400" style="position:absolute;right:80px;top:286px;width:520px;height:371px" role="img" aria-label="A blank decision tree to copy: a first node marked you, two branches, a node marked them on each, and two replies from each running to an empty outcome box">
+  <svg class="tree" viewBox="0 0 560 400" style="position:absolute;right:80px;top:286px;width:520px;height:371px" role="img" aria-label="The blank decision tree the phone fills in: a first node marked you, two branches, a node marked them on each, and two replies from each running to an empty outcome box">
     <line class="edge" x1="130" y1="186" x2="240" y2="100"/>
     <line class="edge" x1="130" y1="214" x2="240" y2="300"/>
     <line class="edge" x1="350" y1="88" x2="470" y2="46"/>
@@ -763,9 +790,36 @@
     <rect x="470" y="230" width="70" height="32" rx="4" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="6 5"/>
     <rect x="470" y="338" width="70" height="32" rx="4" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="6 5"/>
   </svg>
+  <div class="trjoin">
+    <div class="qrb"><img src="qr-draw.svg" alt="QR code for the tree page"></div>
+    <div class="ju">ryanlamare.com/go</div>
+    <div class="livecount"><span class="n" data-trn>0</span><span class="l">TREES<br>IN</span></div>
+  </div>
+  <span data-step="1" data-stepcall="trJoin" style="position:absolute;width:0;height:0"></span>
 </section>
 
-<section class="slide content" data-i="18">
+<section class="slide content" data-i="18" id="trslide">
+  <div class="kicker"><i></i>MODULE 2 · YOUR WORLD</div>
+  <h2>Let&rsquo;s look at your trees</h2>
+  <div class="trwall" id="trwall"></div>
+  <div class="trbig" id="trbig" hidden>
+    <svg viewBox="0 0 1088 450" aria-hidden="true">
+      <line x1="250" y1="225" x2="400" y2="115"/><line x1="250" y1="225" x2="400" y2="335"/>
+      <line x1="690" y1="115" x2="830" y2="55"/><line x1="690" y1="115" x2="830" y2="170"/>
+      <line x1="690" y1="335" x2="830" y2="280"/><line x1="690" y1="335" x2="830" y2="395"/>
+    </svg>
+    <div class="trbox root" style="left:0;top:150px;width:250px;height:150px"><div class="trl" data-t="name"></div><div data-t="o"></div></div>
+    <div class="trbox" style="left:400px;top:65px;width:290px;height:100px"><div class="trl">Opening move</div><div data-t="m1"></div></div>
+    <div class="trbox" style="left:400px;top:285px;width:290px;height:100px"><div class="trl">Opening move</div><div data-t="m2"></div></div>
+    <div class="trbox them" style="left:830px;top:10px;width:258px;height:90px"><div class="trl" data-t="w"></div><div data-t="r11"></div></div>
+    <div class="trbox them" style="left:830px;top:125px;width:258px;height:90px"><div class="trl" data-t="w"></div><div data-t="r12"></div></div>
+    <div class="trbox them" style="left:830px;top:235px;width:258px;height:90px"><div class="trl" data-t="w"></div><div data-t="r21"></div></div>
+    <div class="trbox them" style="left:830px;top:350px;width:258px;height:90px"><div class="trl" data-t="w"></div><div data-t="r22"></div></div>
+  </div>
+  <div class="demotag" id="trD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="19">
   <div class="kicker"><i></i>MODULE 2</div>
   <h2>The limits of sequential reasoning</h2>
   <div class="anatrow" style="top:220px">
@@ -791,7 +845,7 @@
 
 
 
-<section class="slide content learn" data-i="19">
+<section class="slide content learn" data-i="20">
   <div class="kicker"><i></i>MODULE 2 · WHAT DID WE LEARN</div>
   <h2>What did we learn?</h2>
   <div class="tiles">
@@ -825,7 +879,7 @@
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
 
 <script>
@@ -1110,6 +1164,61 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
   build();
 })();
 
+
+/* ---- the wall of trees: the phones' three lines per tree (m2/draw/), read per
+   phone through /entries, the latest of each kind winning. The wall stays open
+   and fills as pairs finish; marked demo data when the Worker is unreachable. ---- */
+(function(){
+  const DEMO=[
+    {name:'Aisha',o:'A second engineer on my team next year',w:'My director',m1:'Ask for the hire in the budget round',r11:'Asks for the business case',r12:'Says the headcount is frozen',m2:'Borrow someone from another team first',r21:'Agrees to a three-month loan',r22:'Says the other team will object'},
+    {name:'Ben',o:'A two-year extension from our biggest customer',w:'Their procurement lead',m1:'Offer a price hold for the two years',r11:'Asks for a discount on top',r12:'Takes it to a tender anyway',m2:'Wait for them to raise the renewal',r21:'Opens with a lower price',r22:'Says nothing until the last month'},
+    {name:'Cara',o:'To move our delivery date back a month',w:'The client\u2019s project lead',m1:'Tell them now, with a new plan',r11:'Accepts, with a penalty clause',r12:'Escalates to my boss',m2:'Deliver part of it on time',r21:'Accepts the split delivery',r22:'Insists on everything at once'}];
+  const wall=document.getElementById('trwall'), big=document.getElementById('trbig'), slide=document.getElementById('trslide');
+  const st={live:false,trees:[]};
+  let sig='';
+  const trees=()=>st.live?st.trees:DEMO;
+  function open(t){
+    big.querySelectorAll('[data-t]').forEach(el=>{el.textContent=t[el.dataset.t]||'';});
+    big.hidden=false;wall.style.visibility='hidden';
+  }
+  function close(){big.hidden=true;wall.style.visibility='';}
+  big.addEventListener('click',close);
+  /* leaving the slide closes an open tree */
+  new MutationObserver(()=>{if(!slide.classList.contains('active'))close();}).observe(slide,{attributes:true,attributeFilter:['class']});
+  function draw(){
+    const T=trees();
+    document.querySelectorAll('[data-trn]').forEach(n=>n.textContent=T.length);
+    const s=JSON.stringify(T);if(s===sig)return;sig=s;
+    wall.innerHTML='';wall.classList.toggle('many',T.length>15);
+    T.forEach(t=>{
+      const c=document.createElement('div');c.className='trcard';
+      const n=document.createElement('div');n.className='n';n.textContent=t.name;
+      const o=document.createElement('div');o.className='o';o.textContent=t.o;
+      c.appendChild(n);c.appendChild(o);
+      c.addEventListener('click',()=>open(t));
+      wall.appendChild(c);
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m2-trees/entries').then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById('trD').style.display='none';
+      const by=new Map();
+      (d.entries||[]).forEach(e=>{
+        const p=String(e.t||'').split('\u2016');
+        if(!by.has(e.v))by.set(e.v,{});
+        const t=by.get(e.v);
+        if(p[0]==='1'&&p.length===4){t.name=p[1];t.o=p[2];t.w=p[3];}
+        else if(p[0]==='2'&&p.length===4){t.m1=p[1];t.r11=p[2];t.r12=p[3];}
+        else if(p[0]==='3'&&p.length===4){t.m2=p[1];t.r21=p[2];t.r22=p[3];}
+      });
+      st.trees=[...by.values()].filter(t=>t.name&&t.m1&&t.m2);
+      draw();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();draw();
+  window.trJoin=function(el,on){el.closest('.slide').classList.toggle('trq',on);};
+})();
 
 /* ---- last-card pairs play: the count of finished games from m2-lastcard;
    the solution slide's ladder line reads the same finals ---- */

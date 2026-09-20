@@ -1,4 +1,4 @@
-/* Headless test of module 2's two boards, the ultimatum and the centipede (20 Sep 2026): two
+/* Headless test of module 2's two boards and its closer (20 Sep 2026): two
    phones and the deck in real Chrome, against a MOCK Worker (a static server
    serves the repo with the Worker's host rewritten to the mock), so nothing
    touches the real m2-ultimatum room. The Chrome driver is the one in
@@ -13,7 +13,9 @@
    click, a column click and REVEAL ALL show green and red, a late pair does
    not move the board, and the Your play line shows everything. Then the
    centipede: two phones pass twice and take £300, green on the taker's phone
-   and red on the other, and the deck's ten columns of names. */
+   and red on the other, and the deck's ten columns of names. Then the closer:
+   a phone fills in the eight boxes, changes one, and the deck's wall of trees
+   opens that tree at a click. */
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -34,6 +36,7 @@ const srv = createServer(async (req, res) => {
     if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
     const m = url.pathname.match(/^\/mock\/p\/([a-z0-9-]+)\/?(\w+)?$/);
     if (m && m[2] === 'answers') { const L = rooms[m[1]] || []; res.writeHead(200, { ...CORS, 'content-type': 'application/json' }); return res.end(JSON.stringify({ answers: L.map(a => a.t), total: L.length })); }
+    if (m && m[2] === 'entries') { const L = rooms[m[1]] || []; res.writeHead(200, { ...CORS, 'content-type': 'application/json' }); return res.end(JSON.stringify({ entries: L, total: L.length })); }
     if (m && m[2] === 'say' && req.method === 'POST') {
       let b = ''; req.on('data', c => b += c); req.on('end', () => {
         const j = JSON.parse(b || '{}'); (rooms[m[1]] = rooms[m[1]] || []).push({ v: j.v, t: j.t });
@@ -192,6 +195,41 @@ try {
   await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(500);
   check((await deck.ev(`document.querySelector('[data-stepcall="centVerdict"]').textContent`)).includes('turn 6') && (await deck.ev(`document.querySelector('[data-stepcall="centVerdict"]').textContent`)).includes('2 of 10'), 'Your play reads turn 6, and 2 of 10 ran');
   await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
+  /* ---------- the closer: a tree filled in on a phone, and the wall ---------- */
+  await deck.key('ArrowRight'); await sleep(1500);
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`getComputedStyle(document.querySelector('.slide.active .trjoin')).display`) === 'none', 'the closer opens on the blank tree, no QR yet');
+  await deck.key('ArrowRight'); await sleep(500);
+  check(await deck.ev(`getComputedStyle(document.querySelector('.slide.active .trjoin')).display`) === 'flex' && await deck.ev(`getComputedStyle(document.querySelector('.slide.active .tree')).visibility`) === 'hidden', 'a keypress puts the QR in the place of the blank tree');
+  await deck.shot('tree-deck-0-setup.png');
+  await A.ev(`localStorage.setItem('gt-name','Aisha');localStorage.setItem('gt-claimed','Aisha')`);
+  await A.send('Page.navigate', { url: base + '/teaching/exec/gt/m2/draw/' }); await sleep(2500);
+  check(await A.ev(`document.querySelectorAll('.f input').length`) === 8 && await A.ev(`document.querySelector('.send').disabled`), 'the phone shows eight boxes, and the button waits for all of them');
+  const FILL = { o: 'A second engineer on my team next year', w: 'My director', m1: 'Ask in the budget round', r11: 'Asks for the business case', r12: 'Says headcount is frozen', m2: 'Borrow someone first', r21: 'Agrees to a loan', r22: 'Says the other team objects' };
+  for (const [k, v] of Object.entries(FILL)) await A.ev(`(()=>{const i=document.getElementById('b-${k}');i.value=${JSON.stringify(v)};i.dispatchEvent(new Event('input'));})()`);
+  await A.shot('tree-phone-1.png');
+  check(!(await A.ev(`document.querySelector('.send').disabled`)), 'the button opens once every box is filled');
+  await click(A, `document.querySelector('.send')`); await sleep(1500);
+  check((rooms['m2-trees'] || []).length === 3 && rooms['m2-trees'][0].t === '1‖Aisha‖A second engineer on my team next year‖My director', 'the phone sends its three lines');
+  check((await A.ev(`document.querySelector('.done').textContent`)).includes('on the screen'), 'the phone says the tree is on the screen');
+  await click(A, btn('.send', 'CHANGE IT')); await sleep(300);
+  check(await A.ev(`document.getElementById('b-o').value`) === FILL.o, 'CHANGE IT brings the boxes back, filled');
+  await A.ev(`(()=>{const i=document.getElementById('b-r22');i.value='Says yes';i.dispatchEvent(new Event('input'));})()`);
+  await click(A, `document.querySelector('.send')`); await sleep(1500);
+  ['Ben', 'Cara', 'Dev'].forEach((n, i) => { rooms['m2-trees'].push({ v: 'bot' + i, t: '1‖' + n + '‖An outcome for ' + n + '‖The other side' }, { v: 'bot' + i, t: '2‖Move one‖Reply a‖Reply b' }, { v: 'bot' + i, t: '3‖Move two‖Reply c‖Reply d' }); });
+  rooms['m2-trees'].push({ v: 'half', t: '1‖Half‖Only the first line arrived‖Someone' });
+  await sleep(3000);
+  check(await deck.ev(`document.querySelector('.slide.active [data-trn]').textContent`) === '4', 'the count beside the QR reads 4 trees (a half-sent one does not count)');
+  await deck.key('ArrowRight'); await sleep(800);
+  check(await deck.ev(`document.querySelectorAll('.slide.active .trcard').length`) === 4, 'the wall shows four cards');
+  await deck.shot('tree-deck-1-wall.png');
+  await deck.pressAt(`[...document.querySelectorAll('.trcard')].find(c=>c.textContent.includes('Aisha'))`, 60); await sleep(400);
+  check(await deck.ev(`!document.getElementById('trbig').hidden`) && await deck.ev(`document.querySelector('#trbig [data-t="r22"]').textContent`) === 'Says yes', 'a click opens Aisha\'s tree, with her changed box');
+  check(await deck.ev(`[...document.querySelectorAll('#trbig .trbox')].every(b=>b.scrollHeight<=b.clientHeight+1)`), 'every box holds its text');
+  await deck.shot('tree-deck-2-open.png');
+  await deck.pressAt(`document.getElementById('trbig')`, 60); await sleep(300);
+  check(await deck.ev(`document.getElementById('trbig').hidden`) && await deck.ev(`document.querySelectorAll('.slide.active .trcard').length`) === 4, 'a click on the tree closes it, back to the wall');
+  await deck.key('ArrowRight'); await sleep(400);
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('limits')`), 'the next slide is The limits of sequential reasoning');
   for (const [n, p] of [['deck', deck], ['proposer', A], ['responder', T]]) check(!p.errors.length, 'no script errors on the ' + n + (p.errors.length ? ': ' + p.errors.join(' / ') : ''));
 } catch (e) { console.log('FAIL  the test threw: ' + (e.stack || e)); fails++; }
 chrome.kill(); srv.close(); await rm(dir, { recursive: true, force: true }).catch(() => {});

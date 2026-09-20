@@ -3,14 +3,15 @@
    a terminal, so one person at the deck can watch the results slides fill.
 
    m2 has no rehearsal room: the deck reads the real finals rooms, so the bots
-   play into them. Reset m2-ultimatum, m2-centipede and m2-lastcard in the
-   Poll Desk before any real session. Bots post exactly the finals line a
+   play into them. Reset m2-ultimatum, m2-centipede, m2-lastcard and m2-trees
+   in the Poll Desk before any real session. Bots post exactly the finals line a
    pair's phone posts when its game ends.
 
      node trial/m2.js ultimatum 12     twelve pairs' offers, accepted or rejected
      node trial/m2.js centipede 12     the turn somebody took the pot
      node trial/m2.js cards 12         finished games of take the last card
-     node trial/m2.js state            what the three rooms hold, as the deck reads them
+     node trial/m2.js trees 12         twelve finished trees for the closer's wall (invented situations)
+     node trial/m2.js state            what the rooms hold, as the deck reads them
 
    --from K starts at pair K+1 (late arrivals). --gap ms sets the stagger
    between bot sends (default 350). --api overrides the Worker. */
@@ -34,6 +35,15 @@ const GAMES = {
   centipede: { room: 'm2-centipede', line: i => PAIRS[i][i % 2] + '|' + PAIRS[i][1 - i % 2] + '|' + CENT[i] },
   cards: { room: 'm2-lastcard', line: i => PAIRS[i][i % 2] + '|' + PAIRS[i][1 - i % 2] + '|' + CARDS[i] },
 };
+/* the closer's trees: the outcome, who else is in the game, then each opening move with two reactions */
+const TREES = [
+  ['A second engineer on my team next year', 'My director', ['Ask for the hire in the budget round', 'Asks for the business case', 'Says the headcount is frozen'], ['Borrow someone from another team first', 'Agrees to a three-month loan', 'Says the other team will object']],
+  ['A two-year extension from our biggest customer', 'Their procurement lead', ['Offer a price hold for the two years', 'Asks for a discount on top', 'Takes it to a tender anyway'], ['Wait for them to raise the renewal', 'Opens with a lower price', 'Says nothing until the last month']],
+  ['To move our delivery date back a month', 'The client’s project lead', ['Tell them now, with a new plan', 'Accepts, with a penalty clause', 'Escalates to my boss'], ['Deliver part of it on time', 'Accepts the split delivery', 'Insists on everything at once']],
+  ['The early hangar slot for our check', 'The maintenance planner', ['Book it six months ahead', 'Confirms the slot', 'Says another customer has priority'], ['Offer to take a night slot instead', 'Agrees, at a lower rate', 'Says nights are full too']],
+  ['A seat on the steering committee', 'The programme sponsor', ['Ask her directly', 'Says yes, from next quarter', 'Says the committee is too big already'], ['Get a committee member to propose me', 'Backs the proposal', 'Asks why I did not ask myself']],
+  ['Sign-off on the new supplier', 'Head of quality', ['Send the audit report first', 'Asks for a site visit', 'Signs off on the report'], ['Propose a three-month trial order', 'Agrees to the trial', 'Wants the full audit anyway']],
+];
 const voterOf = (g, i) => 'trial-m2-' + g + '-' + String(i).padStart(3, '0');
 
 async function say(room, line, voter) {
@@ -49,17 +59,32 @@ async function play(g, n, from) {
   for (let i = from; i < from + n; i++) { await say(GAMES[g].room, GAMES[g].line(i), voterOf(g, i)); await sleep(GAP); }
   console.log(n + ' pairs sent to ' + GAMES[g].room + '.');
 }
+async function trees(n, from) {
+  if (!Number.isInteger(n) || n < 1 || from + n > PAIRS.length) { console.error('How many trees? 1 to ' + (PAIRS.length - from) + ' from pair ' + (from + 1) + '.'); process.exit(2); }
+  console.log('  !! playing into the REAL room. Reset it in the Poll Desk when you are done.');
+  for (let i = from; i < from + n; i++) {
+    const t = TREES[i % TREES.length], v = voterOf('trees', i);
+    await say('m2-trees', '1‖' + PAIRS[i][0] + '‖' + t[0] + '‖' + t[1], v);
+    await say('m2-trees', '2‖' + t[2].join('‖'), v);
+    await say('m2-trees', '3‖' + t[3].join('‖'), v);
+    await sleep(GAP);
+  }
+  console.log(n + ' trees sent to m2-trees.');
+}
 async function state() {
   for (const g of Object.keys(GAMES)) {
     const L = await answers(GAMES[g].room);
     console.log(GAMES[g].room + ': ' + L.length + ' lines.');
     L.forEach(t => console.log('  ' + t));
   }
+  const T = await answers('m2-trees');
+  console.log('m2-trees: ' + T.length + ' lines (three to a tree).');
 }
 
 (async () => {
   const cmd = args[0];
   if (GAMES[cmd]) await play(cmd, +args[1] || 12, +(opt.from || 0));
+  else if (cmd === 'trees') await trees(+args[1] || 12, +(opt.from || 0));
   else if (cmd === 'state') await state();
-  else { console.error('Commands: ultimatum N, centipede N, cards N [--from K], state.'); process.exit(2); }
+  else { console.error('Commands: ultimatum N, centipede N, cards N, trees N [--from K], state.'); process.exit(2); }
 })().catch(e => { console.error(String(e.message || e)); process.exit(1); });
