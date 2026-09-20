@@ -7,8 +7,8 @@
      node teaching/exec/gt/trial/m2-boards.test.mjs [folder for screenshots]
 
    A proposer's phone picks one of six splits and locks it in, the
-   responder's phone sees it and rejects, both phones go red; a second game is
-   accepted and both go green. On the deck the count rises with the board
+   responder's phone sees it and rejects, both phones go red; a reload lands
+   on the ending (one game each), and a second pair is accepted and goes green. On the deck the count rises with the board
    empty, a keypress shows names under their splits with no outcomes, a name
    click, a column click and REVEAL ALL show green and red, a late pair does
    not move the board, and REVEAL ALL shows everything. Then the
@@ -110,16 +110,19 @@ try {
   await sleep(3200);
   check(await A.ev(`document.body.classList.contains('ult-r')`), 'the proposer goes red');
   await A.shot('phone-4-red.png');
-  /* ---------- play again, accepted ---------- */
-  await click(A, btn('.send', 'PLAY AGAIN')); await click(T, btn('.send', 'PLAY AGAIN')); await sleep(500);
-  check(await A.ev(`!document.body.classList.contains('ult-r')`), 'PLAY AGAIN takes the colour off');
-  await click(T, btn('button.opt', 'waiting')); await click(A, btn('button.opt', 'proposer')); await sleep(400);
-  await A.ev(`(()=>{const i=document.querySelector('.namerow input');i.value='Tom';document.querySelector('.namerow button').click();})()`); await sleep(500);
-  await click(A, btn('.bands button', '£500')); await click(A, `document.querySelector('.send')`); await sleep(4200);
-  await click(T, btn('button.opt', 'Accept')); await click(T, `document.querySelector('.send')`); await sleep(4000);
-  check(ult().includes('Aisha|Tom|500|a'), 'the second game posts Aisha|Tom|500|a');
-  check(await T.ev(`document.body.classList.contains('ult-a')`) && await A.ev(`document.body.classList.contains('ult-a')`), 'both phones go green');
-  await T.shot('phone-5-green.png');
+  /* ---------- one game each; a second pair is accepted ---------- */
+  check(await A.ev(`!document.querySelector('.send')`) && await T.ev(`!document.querySelector('.send')`), 'no PLAY AGAIN on either phone');
+  await A.send('Page.navigate', { url: base + '/teaching/exec/gt/m2/game/?g=ult' }); await sleep(3000);
+  check(await A.ev(`document.body.classList.contains('ult-r')`) && await A.ev(`!document.querySelector('button.opt')`), 'a reload lands on the red ending, with no way back into the game');
+  const go = async (p, who, g) => { await p.ev(`localStorage.setItem('gt-name',${JSON.stringify(who)});localStorage.setItem('gt-claimed',${JSON.stringify(who)})`); await p.send('Page.navigate', { url: base + '/teaching/exec/gt/m2/game/?g=' + g }); await sleep(3000); };
+  const G = await mk('Gina'), H = await mk('Hal');
+  await click(H, btn('button.opt', 'waiting')); await click(G, btn('button.opt', 'proposer')); await sleep(400);
+  await G.ev(`(()=>{const i=document.querySelector('.namerow input');i.value='Hal';document.querySelector('.namerow button').click();})()`); await sleep(500);
+  await click(G, btn('.bands button', '£500')); await click(G, `document.querySelector('.send')`); await sleep(4200);
+  await click(H, btn('button.opt', 'Accept')); await click(H, `document.querySelector('.send')`); await sleep(4000);
+  check(ult().includes('Gina|Hal|500|a'), 'a second pair posts Gina|Hal|500|a');
+  check(await H.ev(`document.body.classList.contains('ult-a')`) && await G.ev(`document.body.classList.contains('ult-a')`), 'both phones go green');
+  await H.shot('phone-5-green.png');
 
   /* ---------- the deck ---------- */
   const OTHERS = [['Ben', 'Priya', 400, 'a'], ['Cara', 'Marcus', 500, 'a'], ['Dev', 'Sam', 200, 'r'], ['Elena', 'Hana', 500, 'a'], ['Ivan', 'Jo', 10, 'r'], ['Kemi', 'Luis', 100, 'r'], ['Mei', 'Noor', 400, 'r'], ['Owen', 'Rosa', 500, 'a'], ['Theo', 'Uma', 300, 'a'], ['Vik', 'Wen', 500, 'a'], ['Bartholomew', 'Zoe', 500, 'a'], ['Yara', 'Al', 450, 'a']];
@@ -127,26 +130,26 @@ try {
   const deck = await page(base + '/teaching/exec/gt/m2/#14', 1280, 720);
   await sleep(3200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the deck is on the ultimatum results slide');
-  check(await deck.ev(`document.getElementById('ultN').textContent`) === '13', 'the count reads 13 pairs (a replayed pair counts once)');
+  check(await deck.ev(`document.getElementById('ultN').textContent`) === '14', 'the count reads 14 pairs');
   check(await deck.ev(`document.querySelectorAll('#ultcols .ubhead').length===6 && !document.querySelector('#ultcols .ubname')`), 'six columns and no names before the keypress');
   check(await deck.ev(`!document.querySelector('.slide.active .qr')`), 'no QR on the results slide');
   await deck.shot('deck-1-before.png');
   await deck.key('ArrowRight'); await sleep(600);
-  check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 13, 'the keypress shows 13 names');
+  check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 14, 'the keypress shows 14 names');
   check(await deck.ev(`!document.querySelector('.ubname.a,.ubname.r')`), 'no outcome shows at the reveal');
-  check(await deck.ev(`[...document.querySelectorAll('.ubcol')].find(c=>c.querySelector('.ubhead').textContent==='50/50').querySelectorAll('.ubname').length`) === 6, 'Aisha sits under 50/50 (her latest game) with five others');
+  check(await deck.ev(`[...document.querySelectorAll('.ubcol')].find(c=>c.querySelector('.ubhead').textContent==='50/50').querySelectorAll('.ubname').length`) === 6, 'six names sit under 50/50');
   await deck.shot('deck-2-names.png');
   const nm = n => `[...document.querySelectorAll('.ubname')].find(e=>e.textContent===${JSON.stringify(n)})`;
   await deck.pressAt(nm('Dev'), 60); await sleep(300);
   check(await deck.ev(`${nm('Dev')}.classList.contains('r')`) && await deck.ev(`document.querySelectorAll('.ubname.a,.ubname.r').length`) === 1, 'a click on Dev shows red, and nothing else');
-  check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 13 && await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the click does not move the deck');
+  check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 14 && await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the click does not move the deck');
   await deck.pressAt(`[...document.querySelectorAll('.ubhead')].find(e=>e.textContent==='60/40')`, 60); await sleep(300);
   check(await deck.ev(`${nm('Ben')}.classList.contains('a') && ${nm('Mei')}.classList.contains('r')`), 'a click on 60/40 shows its column: Ben green, Mei red');
   await deck.shot('deck-3-some.png');
   rooms['m2-ultimatum'].push({ v: 'bot-late', t: 'Late|Comer|300|a' }); await sleep(3000);
-  check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 13 && await deck.ev(`document.getElementById('ultN').textContent`) === '13', 'a late pair does not move the board or the count');
+  check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 14 && await deck.ev(`document.getElementById('ultN').textContent`) === '14', 'a late pair does not move the board or the count');
   await deck.pressAt(`document.getElementById('ultAll')`, 60); await sleep(300);
-  check(await deck.ev(`document.querySelectorAll('.ubname.a').length`) === 9 && await deck.ev(`document.querySelectorAll('.ubname.r').length`) === 4, 'REVEAL ALL: nine green, four red');
+  check(await deck.ev(`document.querySelectorAll('.ubname.a').length`) === 9 && await deck.ev(`document.querySelectorAll('.ubname.r').length`) === 5, 'REVEAL ALL: nine green, five red');
   await deck.shot('deck-4-all.png');
   await deck.pressAt(`document.getElementById('ultAll')`, 60); await sleep(300);
   check(await deck.ev(`!document.querySelector('.ubname.a,.ubname.r')`), 'REVEAL ALL again hides them');
@@ -156,7 +159,6 @@ try {
   await deck.shot('deck-5-notes.png');
   /* ---------- the centipede: two phones ---------- */
   /* the two phones share one browser's storage, and a page reads its name at load */
-  const go = async (p, who, g) => { await p.ev(`localStorage.setItem('gt-name',${JSON.stringify(who)});localStorage.setItem('gt-claimed',${JSON.stringify(who)})`); await p.send('Page.navigate', { url: base + '/teaching/exec/gt/m2/game/?g=' + g }); await sleep(2500); };
   await go(A, 'Aisha', 'cent'); await go(T, 'Tom', 'cent');
   check(await T.ev(`document.getElementById('q').textContent`) === 'The centipede game', 'the QR lands on the centipede game');
   await click(A, btn('button.opt', 'partner starts')); await sleep(300);
@@ -171,8 +173,9 @@ try {
   check(await A.ev(`document.body.classList.contains('ult-r')`), 'the other phone goes red');
   check(await T.ev(`document.querySelector('.ultend .w').textContent`) === '£300', 'and shows the £300');
   await T.shot('cent-2-green.png'); await A.shot('cent-3-red.png');
-  await click(T, btn('.send', 'PLAY AGAIN')); await sleep(400);
-  check(await T.ev(`document.getElementById('q').textContent`) === 'The centipede game' && await T.ev(`!document.body.classList.contains('ult-a')`), 'PLAY AGAIN goes back into the centipede, colour off');
+  check(await T.ev(`!document.querySelector('.send')`), 'no PLAY AGAIN after the centipede');
+  await go(T, 'Tom', 'cent');
+  check(await T.ev(`document.body.classList.contains('ult-a')`) && await T.ev(`!document.querySelector('button.opt')`), 'a reload lands on the green ending, with no way back in');
   /* ---------- the centipede: the deck ---------- */
   [['Ben', 'Priya', 6], ['Cara', 'Marcus', 4], ['Dev', 'Sam', 10], ['Elena', 'Hana', 1], ['Ivan', 'Jo', 6], ['Kemi', 'Luis', 10], ['Mei', 'Noor', 7], ['Owen', 'Rosa', 6], ['Bartholomew', 'Zoe', 2]].forEach(o => rooms['m2-centipede'].push({ v: 'bot-' + o[0], t: o.join('|') }));
   await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(300);
@@ -195,7 +198,7 @@ try {
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`!document.querySelector('.slide.active img, .slide.active svg')`), 'the closer is four questions, with no QR and no figure');
   await deck.key('ArrowRight'); await sleep(400);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('limits')`), 'the next slide is The limits of sequential reasoning');
-  for (const [n, p] of [['deck', deck], ['proposer', A], ['responder', T]]) check(!p.errors.length, 'no script errors on the ' + n + (p.errors.length ? ': ' + p.errors.join(' / ') : ''));
+  for (const [n, p] of [['deck', deck], ['proposer', A], ['responder', T], ['second proposer', G], ['second responder', H]]) check(!p.errors.length, 'no script errors on the ' + n + (p.errors.length ? ': ' + p.errors.join(' / ') : ''));
 } catch (e) { console.log('FAIL  the test threw: ' + (e.stack || e)); fails++; }
 chrome.kill(); srv.close(); await rm(dir, { recursive: true, force: true }).catch(() => {});
 console.log((fails ? fails + ' FAILED' : 'ALL OK') + '. Screenshots: ' + SHOTS);

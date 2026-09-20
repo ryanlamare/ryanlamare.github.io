@@ -209,7 +209,7 @@ function render(){
     claimOnce();render();
   },app,{clean}));return;}
   if(jump){
-    const g=jump;jump=null;
+    const g=jump; /* a phone that came in by a game's QR stays in that game: start over comes back here */
     if(g==='guess')return renderGuess();
     if(g==='decade')return renderDecade();
     if(GAMES[g])return renderRole(g);
@@ -232,7 +232,50 @@ function render(){
      outtakes deck can run them */
   app.appendChild(ch);
 }
+/* one game each (Ryan, 20 Sep 2026): a phone whose name is already in a game's
+   finished games gets that game's ending, and no way back in. A Poll Desk
+   reset of the finals room lets everyone play again. If the room cannot be
+   read, the game opens. */
+const FINALS={cards:'m2-lastcard',ult:'m2-ultimatum',cent:'m2-centipede'};
 function renderRole(id){
+  stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
+  q.textContent=GAMES[id].label;
+  app.innerHTML='';st.textContent='';
+  answers(FINALS[id]).catch(()=>[]).then(lines=>{
+    const mine=lines.map(t=>String(t).split('|').map(x=>x.trim()))
+      .filter(p=>p.length>=3&&(norm(p[0])===norm(name)||norm(p[1])===norm(name))).pop();
+    if(!mine)return renderRoleOpen(id);
+    if(id==='ult'){
+      const iProp=norm(mine[0])===norm(name), other=iProp?mine[1]:mine[0], offer=+mine[2], ok=String(mine[3]).toLowerCase()==='a';
+      renderUltDone(ok,ok?(iProp?'You keep &pound;'+(1000-offer)+' and '+esc(other)+' takes &pound;'+offer+'.':'You take &pound;'+offer+' and '+esc(other)+' keeps &pound;'+(1000-offer)+'.')
+                         :(iProp?esc(other)+' rejected the &pound;'+offer+', so nobody gets anything.':'You rejected the &pound;'+offer+', so nobody gets anything.'));
+    }else if(id==='cent'){
+      const turn=+mine[2];
+      centEnd({taker:mine[0],other:mine[1],ran:turn===10,pot:turn===10?1000:turn*100});
+    }else{
+      const won=norm(mine[0])===norm(name);
+      const big=document.createElement('div');big.className='bigcard';
+      big.innerHTML='<div class="head '+(won?'good':'bad')+'">'+(won?'You took the last card':esc(mine[0])+' took the last card')+'</div>'+
+        '<div class="sub">'+(won?'That wins it.':'That wins it for them.')+'</div>';
+      app.appendChild(big);
+    }
+  });
+}
+/* the centipede's ending, the ultimatum's way: a colour, the pot and one line.
+   Green on the phone that took it, red on the other */
+function centEnd(s){
+  stopPolling();
+  const mine=norm(s.taker)===norm(name);
+  document.body.classList.add(mine?'ult-a':'ult-r');
+  q.textContent='';st.textContent='';app.innerHTML='';
+  const end=document.createElement('div');end.className='ultend';
+  end.innerHTML='<div class="w">&pound;'+(s.ran?'1,000':s.pot)+'</div><div class="s">'+
+    (s.ran?'It ran all the way. '+(mine?'You were':esc(s.taker)+' was')+' up next and take'+(mine?'':'s')+' it all.'
+          :(mine?'You took it. '+esc(s.other)+' walks away with nothing.':esc(s.taker)+' took it. You walk away with nothing.'))+'</div>';
+  app.appendChild(end);
+}
+function renderRoleOpen(id){
   stopPolling();
   document.body.classList.remove('ult-a','ult-r');
   q.textContent=GAMES[id].label;
@@ -488,23 +531,7 @@ function gameScreen(id,A,B,g,meIsA){
       cls=mine?'good':'bad';
       sub=s.ran?esc(s.taker)+' was up next and takes it all.':(mine?esc(s.other)+' walks away with nothing.':'You walk away with nothing.');
     }
-    /* the centipede ends the way the ultimatum does: a colour, the pot and one
-       line. Green on the phone that took it, red on the other */
-    if(id==='cent'){
-      const mine=norm(s.taker)===norm(name);
-      document.body.classList.add(mine?'ult-a':'ult-r');
-      q.textContent='';st.textContent='';app.innerHTML='';
-      const end=document.createElement('div');end.className='ultend';
-      end.innerHTML='<div class="w">&pound;'+(s.ran?'1,000':s.pot)+'</div><div class="s">'+
-        (s.ran?'It ran all the way. '+(mine?'You were':esc(s.taker)+' was')+' up next and take'+(mine?'':'s')+' it all.'
-              :(mine?'You took it. '+esc(s.other)+' walks away with nothing.':esc(s.taker)+' took it. You walk away with nothing.'))+'</div>';
-      app.appendChild(end);
-      const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
-      again.textContent='PLAY AGAIN';
-      again.addEventListener('click',()=>renderRole('cent'));
-      app.appendChild(again);
-      return;
-    }
+    if(id==='cent'){centEnd(s);return;}
     /* the card game's playback: the last card slides to whoever took it */
     const meLeft=true, takerIsMe=id==='cards'?norm(s.winner)===norm(name):norm(s.taker)===norm(name);
     const chipText=id==='cards'?'THE LAST CARD':'&pound;'+(s.ran?1000:s.pot);
@@ -514,12 +541,8 @@ function gameScreen(id,A,B,g,meIsA){
     setTimeout(()=>{const d=Math.max(20,mid.getBoundingClientRect().width/2-chip.offsetWidth/2-4);chip.style.transform='translate(calc(-50% + '+((takerIsMe?-1:1)*d)+'px),-50%)';},400);
     setTimeout(()=>{stage.querySelector('.bigcard').hidden=false;},2000);
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-    note.textContent='Response recorded. Results on the screen soon. Play again any time.';
+    note.textContent='Response recorded. Results on the screen soon.';
     stage.appendChild(note);
-    const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
-    again.textContent='PLAY AGAIN';
-    again.addEventListener('click',()=>renderRole(id));
-    stage.appendChild(again);
   }
   function renderState(moves){
     const s=id==='cards'?cardState(moves,A,B):centState(moves,A,B);
@@ -744,11 +767,6 @@ function renderUltDone(accepted,detail,x){
   const end=document.createElement('div');end.className='ultend';
   end.innerHTML='<div class="w">'+(accepted?'ACCEPTED':'REJECTED')+'</div><div class="s">'+detail+'</div>';
   app.appendChild(end);
-  const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
-  again.textContent='PLAY AGAIN';
-  /* straight back into this game, not to Pick your game */
-  again.addEventListener('click',()=>renderRole('ult'));
-  app.appendChild(again);
 }
 </script>
 </body></html>
