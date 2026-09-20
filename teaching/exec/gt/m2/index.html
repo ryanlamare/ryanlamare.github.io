@@ -29,7 +29,11 @@
 /* game-tree anatomy row */
 .anatrow{position:absolute;left:96px;right:96px;top:200px;bottom:96px;display:flex;gap:48px;align-items:center}
 .anatrow .ptiles{display:flex;flex-direction:column;gap:20px;flex:1}
-.anatrow .ptile .pt{font-size:17px;white-space:nowrap}
+.anatrow .ptile .pt{font-size:20px}
+/* the limits slide uses the row for its layout, not its small type */
+.anatrow .ptiles.limits .ptile .pt{font-size:25px;white-space:normal;font-weight:600}
+.anatrow .ptiles.limits .ptile .pn{font-size:44px;width:52px}
+.anatrow .ptiles.limits .ptile svg{width:64px!important;height:64px!important}
 /* ultimatum split slider — drag the divider from 99/1 to 1/99, starts 50/50 */
 .deal2{width:740px}
 .deal2 .dtrack{height:78px;border:3px solid var(--ink);position:relative;touch-action:none;cursor:ew-resize;background:var(--paper)}
@@ -179,13 +183,14 @@
 .ccclip .mlt{text-align:center}
 /* live results: each pair's recorded game stacks as dots on an axis */
 /* the ultimatum board (Ryan, 20 Sep 2026), in the style of m1's offers board:
-   eleven columns, 99/1 to 1/99, each proposer's name under the split they
+   six columns, 99/1 to 50/50 (a proposer never needs to give away more than
+   half), each proposer's name under the split they
    proposed, outcomes hidden. A click on a name shows whether it was accepted
    (green) or rejected (red), a click on a column's head shows the column, and
    REVEAL ALL shows the lot. */
 .ubboard{position:absolute;left:72px;right:72px;top:192px;bottom:156px;display:flex;flex-direction:column;gap:8px}
 .ubtop{flex:none;display:flex;align-items:flex-end;justify-content:space-between}
-.ubcols{flex:1;display:grid;grid-template-columns:repeat(11,1fr);gap:8px;min-height:0}
+.ubcols{flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;min-height:0}
 .ubcol{display:flex;flex-direction:column;min-width:0}
 .ubhead,.ubname{cursor:pointer;user-select:none;-webkit-user-select:none;overflow:hidden}
 .ubhead{font-family:var(--display);font-weight:900;font-size:24px;line-height:1;text-align:center;
@@ -630,7 +635,6 @@
       <g data-step="5"><rect class="band" x="92" y="100" width="90" height="40"/><rect x="92" y="100" width="90" height="40" fill="none" stroke="var(--red)" stroke-width="2"/><text x="137" y="172" text-anchor="middle" font-family="var(--sans)" font-weight="600" font-size="15" fill="var(--red)">they face 1&ndash;3</text></g>
     </svg>
     <div class="cap" data-step="5" style="max-width:none"><b>Think forward and reason backward</b>: whoever faces four cards loses. Leave 20 after your first move, then answer every removal back to 16, 12, 8, and 4, and the last card will always be yours!</div>
-    <div class="cap" data-step="6" data-stepcall="ladderVerdict" style="max-width:none;color:var(--red);font-weight:600"></div>
   </div></div>
 </section>
 
@@ -672,8 +676,7 @@
   </div>
   <div class="resnotes">
     <div data-step="2"><b>Rollback theory:</b> the proposer should a token amount &ndash; and it should be accepted</div>
-    <div data-step="3" data-stepcall="ultVerdict"></div>
-    <div data-step="4"><b>The lesson:</b> a &ldquo;rational&rdquo; lowball offer is likely to be rejected!</div>
+    <div data-step="3"><b>The lesson:</b> a &ldquo;rational&rdquo; lowball offer is likely to be rejected!</div>
   </div>
   <span data-step="1" data-stepcall="ultReveal" style="position:absolute;width:0;height:0"></span>
   <div class="demotag" id="ultD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
@@ -727,8 +730,7 @@
   </div>
   <div class="resnotes">
     <div data-step="2"><b>Rollback theory:</b> someone takes at the end &ndash; so the logic says grab on turn one</div>
-    <div data-step="3" data-stepcall="centVerdict"></div>
-    <div data-step="4"><b>The lesson:</b> short-term grabs wreck relationships worth keeping</div>
+    <div data-step="3"><b>The lesson:</b> short-term grabs wreck relationships worth keeping</div>
   </div>
   <span data-step="1" data-stepcall="centReveal" style="position:absolute;width:0;height:0"></span>
   <div class="demotag" id="centD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
@@ -752,7 +754,7 @@
   <div class="kicker"><i></i>MODULE 2</div>
   <h2>The limits of sequential reasoning</h2>
   <div class="anatrow" style="top:220px">
-    <div class="ptiles" style="max-width:920px;margin:0 auto;gap:34px">
+    <div class="ptiles limits" style="max-width:980px;margin:0 auto;gap:38px">
       <div class="ptile" data-step="1" style="align-items:center">
         <svg style="width:54px;height:54px;flex:none" viewBox="0 0 64 64" aria-hidden="true"><circle cx="10" cy="32" r="5" fill="var(--ink)"/><g stroke="var(--ink)" stroke-width="3.5"><line x1="14" y1="30" x2="50" y2="8"/><line x1="14" y1="31" x2="54" y2="20"/><line x1="15" y1="32" x2="56" y2="32"/><line x1="14" y1="33" x2="54" y2="44"/><line x1="14" y1="34" x2="50" y2="56"/></g><g fill="var(--red)"><circle cx="50" cy="8" r="4"/><circle cx="54" cy="20" r="4"/><circle cx="56" cy="32" r="4"/><circle cx="54" cy="44" r="4"/><circle cx="50" cy="56" r="4"/></g></svg>
         <div class="pn">1</div><div class="pt">Complexity of drawing game trees to completion (even tic-tac-toe is hard!)</div></div>
@@ -943,7 +945,7 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
 (function(){
   /* proposer, what they offered the responder, accepted or rejected */
   const DEMO=[['Aisha',500,'a'],['Ben',400,'a'],['Cara',100,'r'],['Dev',500,'a'],['Elena',300,'a'],['Ivan',10,'r'],['Kemi',500,'a'],['Mei',400,'a'],['Owen',200,'r'],['Theo',400,'r'],['Vik',600,'a'],['Yara',300,'a']];
-  const COLS=[10,100,200,300,400,500,600,700,800,900,990], ROOM=222;
+  const COLS=[10,100,200,300,400,500], ROOM=222;
   const snap=v=>COLS.reduce((b,c)=>Math.abs(c-v)<Math.abs(b-v)?c:b);
   const wrap=document.getElementById('ultcols'), nEl=document.getElementById('ultN');
   /* rows: what the room holds now; board: the snapshot taken at the reveal
@@ -1001,7 +1003,9 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
         byPair.set(k,{key:k,name:m[1],offer,res:m[4].toLowerCase()});
       });
       st.rows=[...byPair.values()];
-      if(!st.board)nEl.textContent=st.rows.length;
+      /* a board drawn from the demo before the room answered (a reload on this slide) is redrawn from the room */
+      if(st.board&&st.fromDemo){st.fromDemo=false;st.seen={};st.board=st.rows.slice();build();}
+      nEl.textContent=(st.board||st.rows).length;
     }).catch(()=>{});
   }
   setInterval(fetchIt,2500);fetchIt();
@@ -1011,19 +1015,9 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
      Stepping back lets the room back in, and the next reveal is a new snapshot */
   window.ultReveal=function(el,on){
     st.seen={};
-    st.board=on?rows().slice():null;
+    st.board=on?rows().slice():null;st.fromDemo=on&&!st.live;
     if(on)nEl.textContent=st.board.length;
     build();
-  };
-  window.ultVerdict=function(el,on){
-    if(!on){el.innerHTML='';return;}
-    const v=st.board||[];
-    if(!v.length){el.innerHTML='';return;}
-    /* the line gives the rejections away, so every outcome shows with it */
-    v.forEach(o=>{st.seen[o.key]=true;});paint();
-    const mean=Math.round(v.reduce((a,x)=>a+x.offer,0)/v.length);
-    const rej=v.filter(x=>x.res==='r').length;
-    el.innerHTML='<b>Your play:</b> average offer <b>&pound;'+mean+'</b>, and '+rej+' of '+v.length+' offers were rejected';
   };
   build();
 })();
@@ -1037,7 +1031,6 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
   const wrap=document.getElementById('centcols'), nEl=document.getElementById('centN');
   const st={live:false,rows:[],board:null};
   const rows=()=>st.board||(st.live?st.rows:DEMO.map(([name,turn])=>({name,turn})));
-  const turns=()=>(st.board||[]).map(o=>o.turn);
   function build(){
     wrap.innerHTML='';
     const R=st.board||[];
@@ -1069,38 +1062,27 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
         const k=pairKey(m[1],m[2]);if(!byPair.has(k))byPair.set(k,{name:m[1],turn:+m[3]});
       });
       st.rows=[...byPair.values()];
-      if(!st.board)nEl.textContent=st.rows.length;
+      if(st.board&&st.fromDemo){st.fromDemo=false;st.board=st.rows.slice();build();}
+      nEl.textContent=(st.board||st.rows).length;
     }).catch(()=>{});
   }
   setInterval(fetchIt,2500);fetchIt();
   let shown=0;
   setInterval(()=>{if(!st.live&&!st.board&&shown<DEMO.length){shown++;nEl.textContent=shown;}},420);
   window.centReveal=function(el,on){
-    st.board=on?rows().slice():null;
+    st.board=on?rows().slice():null;st.fromDemo=on&&!st.live;
     if(on)nEl.textContent=st.board.length;
     build();
-  };
-  window.centVerdict=function(el,on){
-    if(!on){el.innerHTML='';return;}
-    const v=turns();
-    if(!v.length){el.innerHTML='';return;}
-    const counts={};v.forEach(t=>counts[t]=(counts[t]||0)+1);
-    let mode=v[0];Object.keys(counts).forEach(k=>{if(counts[k]>counts[mode])mode=+k;});
-    const ran=v.filter(t=>t===10).length;
-    el.innerHTML='<b>Your play:</b> the most common ending was '+(mode===10?'<b>running it all the way</b>':'<b>turn '+mode+'</b>')+
-      ', and '+ran+' of '+v.length+' pairs took the pot to &pound;1,000';
   };
   build();
 })();
 
 
-/* ---- last-card pairs play: the count of finished games from m2-lastcard;
-   the solution slide's ladder line reads the same finals ---- */
+/* ---- last-card pairs play: the count of finished games from m2-lastcard ---- */
 (function(){
   const DEMOF=[['A','B','12-8-4-0'],['C','D','9-6-2-0'],['E','F','16-12-8-4'],['G','H','11-7-4-0'],['I','J','8-4-0'],['K','L','10-5-1-0'],['M','N','13-8-4-0']];
   const nEl=document.getElementById('lcN');
   const st={live:false,n:0,demoShown:0};
-  window.lcFinals=DEMOF;
   function render(){
     const n=st.live?st.n:st.demoShown;
     nEl.textContent=n;
@@ -1114,7 +1096,6 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
         const p=String(t).split('|').map(x=>x.trim());
         if(p.length===3&&p[0]&&p[1]){const k=pairKey(p[0],p[1]);if(!byPair.has(k))byPair.set(k,p);}
       });
-      window.lcFinals=[...byPair.values()];
       st.n=byPair.size;
       render();
     }).catch(()=>{});
@@ -1122,17 +1103,6 @@ function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].s
   setInterval(fetchIt,2500);fetchIt();
   setInterval(()=>{if(!st.live&&st.demoShown<DEMOF.length){st.demoShown++;render();}},700);
 })();
-window.ladderVerdict=function(el,on){
-  if(!on){el.innerHTML='';return;}
-  const f=window.lcFinals||[];
-  if(!f.length){el.innerHTML='';return;}
-  const found=f.filter(p=>{
-    const leaves=String(p[2]||'').split('-').map(Number).filter(Number.isFinite);
-    const last=leaves.slice(-3);
-    return last.length>=2&&last.every(v=>v%4===0);
-  }).length;
-  el.innerHTML='<b>Your games:</b> '+found+' of '+f.length+' winners were already leaving multiples of four';
-};
 
 
 

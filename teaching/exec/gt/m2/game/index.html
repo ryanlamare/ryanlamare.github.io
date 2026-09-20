@@ -22,7 +22,7 @@
                     the deck counts who was leaving multiples of four)
      m2-centipede: "taker|other|turn"     (taker first; turn 10 = it ran)
    Ultimatum (rebuilt 20 Sep 2026, Ryan's design): the proposer taps one of
-   eleven splits, 99/1 to 1/99, and locks it in; the responder sees it and
+   six splits, 99/1 to 50/50, and locks it in; the responder sees it and
    accepts or rejects; both phones then go green or red, and that is all.
    The offers are discrete so the deck's board has a column for each. It
    is a two-move handshake: the proposer's offer goes through
@@ -78,9 +78,9 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
   color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
 /* the eleven offers: one tap picks a split, LOCK IT IN sends it */
 .bandhead{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);padding:0 4px}
-.bands{display:flex;flex-direction:column;gap:5px}
+.bands{display:flex;flex-direction:column;gap:8px}
 .bands button{display:flex;justify-content:space-between;align-items:baseline;width:100%;font-family:var(--sans);font-weight:700;
-  font-size:18px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:5px 16px;cursor:pointer}
+  font-size:18px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:11px 16px;cursor:pointer}
 .bands button .t{color:var(--red)}
 .bands button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
 .bands button.mine .t{color:var(--paper)}
@@ -606,13 +606,14 @@ function renderUltPropose(partner){
   stopPolling();
   q.textContent='Your offer to '+partner;
   app.innerHTML='';
-  /* eleven splits, 99/1 to 1/99 (Ryan, 20 Sep 2026): the deck's board has one column for each */
+  /* six splits, 99/1 to 50/50 (Ryan, 20 Sep 2026: a proposer never needs to give away more than
+     half): the deck's board has one column for each */
   const head=document.createElement('div');head.className='bandhead';
   head.innerHTML='<span>You keep</span><span>'+esc(partner)+' gets</span>';
   app.appendChild(head);
   const card=document.createElement('div');card.className='bands';
   let offer=null;
-  [10,100,200,300,400,500,600,700,800,900,990].forEach(v=>{
+  [10,100,200,300,400,500].forEach(v=>{
     const b=document.createElement('button');b.type='button';
     b.innerHTML='<span>&pound;'+(1000-v)+'</span><span class="t">&pound;'+v+'</span>';
     b.addEventListener('click',()=>{offer=v;

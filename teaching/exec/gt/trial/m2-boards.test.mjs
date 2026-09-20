@@ -6,12 +6,12 @@
 
      node teaching/exec/gt/trial/m2-boards.test.mjs [folder for screenshots]
 
-   A proposer's phone picks one of eleven splits and locks it in, the
+   A proposer's phone picks one of six splits and locks it in, the
    responder's phone sees it and rejects, both phones go red; a second game is
    accepted and both go green. On the deck the count rises with the board
    empty, a keypress shows names under their splits with no outcomes, a name
    click, a column click and REVEAL ALL show green and red, a late pair does
-   not move the board, and the Your play line shows everything. Then the
+   not move the board, and REVEAL ALL shows everything. Then the
    centipede: two phones pass twice and take £300, green on the taker's phone
    and red on the other, and the deck's ten columns of names. */
 import { createServer } from 'node:http';
@@ -93,7 +93,7 @@ try {
   await click(T, btn('button.opt', 'waiting')); await sleep(400);
   await click(A, btn('button.opt', 'proposer')); await sleep(400);
   await A.ev(`(()=>{const i=document.querySelector('.namerow input');i.value='Tom';document.querySelector('.namerow button').click();})()`); await sleep(500);
-  check(await A.ev(`document.querySelectorAll('.bands button').length`) === 11, 'the proposer sees eleven splits');
+  check(await A.ev(`document.querySelectorAll('.bands button').length`) === 6, 'the proposer sees six splits, none past 50/50');
   check(await A.ev(`document.querySelector('.send').disabled`), 'LOCK IT IN is off until a split is picked');
   check(await A.ev(`!document.querySelector('input[type=range]')`), 'no slider on the phone');
   await A.shot('phone-1-splits.png');
@@ -122,19 +122,19 @@ try {
   await T.shot('phone-5-green.png');
 
   /* ---------- the deck ---------- */
-  const OTHERS = [['Ben', 'Priya', 400, 'a'], ['Cara', 'Marcus', 500, 'a'], ['Dev', 'Sam', 200, 'r'], ['Elena', 'Hana', 500, 'a'], ['Ivan', 'Jo', 10, 'r'], ['Kemi', 'Luis', 100, 'r'], ['Mei', 'Noor', 400, 'r'], ['Owen', 'Rosa', 500, 'a'], ['Theo', 'Uma', 300, 'a'], ['Vik', 'Wen', 600, 'a'], ['Bartholomew', 'Zoe', 500, 'a'], ['Yara', 'Al', 450, 'a']];
+  const OTHERS = [['Ben', 'Priya', 400, 'a'], ['Cara', 'Marcus', 500, 'a'], ['Dev', 'Sam', 200, 'r'], ['Elena', 'Hana', 500, 'a'], ['Ivan', 'Jo', 10, 'r'], ['Kemi', 'Luis', 100, 'r'], ['Mei', 'Noor', 400, 'r'], ['Owen', 'Rosa', 500, 'a'], ['Theo', 'Uma', 300, 'a'], ['Vik', 'Wen', 500, 'a'], ['Bartholomew', 'Zoe', 500, 'a'], ['Yara', 'Al', 450, 'a']];
   OTHERS.forEach(o => rooms['m2-ultimatum'].push({ v: 'bot-' + o[0], t: o.join('|') }));
   const deck = await page(base + '/teaching/exec/gt/m2/#14', 1280, 720);
   await sleep(3200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the deck is on the ultimatum results slide');
   check(await deck.ev(`document.getElementById('ultN').textContent`) === '13', 'the count reads 13 pairs (a replayed pair counts once)');
-  check(await deck.ev(`document.querySelectorAll('#ultcols .ubhead').length===11 && !document.querySelector('#ultcols .ubname')`), 'eleven columns and no names before the keypress');
+  check(await deck.ev(`document.querySelectorAll('#ultcols .ubhead').length===6 && !document.querySelector('#ultcols .ubname')`), 'six columns and no names before the keypress');
   check(await deck.ev(`!document.querySelector('.slide.active .qr')`), 'no QR on the results slide');
   await deck.shot('deck-1-before.png');
   await deck.key('ArrowRight'); await sleep(600);
   check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 13, 'the keypress shows 13 names');
   check(await deck.ev(`!document.querySelector('.ubname.a,.ubname.r')`), 'no outcome shows at the reveal');
-  check(await deck.ev(`[...document.querySelectorAll('.ubcol')].find(c=>c.querySelector('.ubhead').textContent==='50/50').querySelectorAll('.ubname').length`) === 5, 'Aisha sits under 50/50 (her latest game) with four others');
+  check(await deck.ev(`[...document.querySelectorAll('.ubcol')].find(c=>c.querySelector('.ubhead').textContent==='50/50').querySelectorAll('.ubname').length`) === 6, 'Aisha sits under 50/50 (her latest game) with five others');
   await deck.shot('deck-2-names.png');
   const nm = n => `[...document.querySelectorAll('.ubname')].find(e=>e.textContent===${JSON.stringify(n)})`;
   await deck.pressAt(nm('Dev'), 60); await sleep(300);
@@ -150,9 +150,8 @@ try {
   await deck.shot('deck-4-all.png');
   await deck.pressAt(`document.getElementById('ultAll')`, 60); await sleep(300);
   check(await deck.ev(`!document.querySelector('.ubname.a,.ubname.r')`), 'REVEAL ALL again hides them');
-  await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(500);
-  check((await deck.ev(`document.querySelector('[data-stepcall="ultVerdict"]').textContent`)).includes('4 of 13'), 'Your play reads 4 of 13 rejected');
-  check(await deck.ev(`document.querySelectorAll('.ubname.a,.ubname.r').length`) === 13, 'and every outcome shows with it');
+  await deck.key('ArrowRight'); await sleep(300);
+  check(await deck.ev(`!document.querySelector('.slide.active .resnotes').textContent.includes('Your play')`), 'no Your play line on the ultimatum slide');
   await deck.key('ArrowRight'); await sleep(400);
   await deck.shot('deck-5-notes.png');
   /* ---------- the centipede: two phones ---------- */
@@ -189,8 +188,7 @@ try {
   await deck.shot('cent-deck-1.png');
   rooms['m2-centipede'].push({ v: 'bot-late', t: 'Late|Comer|5' }); await sleep(3000);
   check(await deck.ev(`document.querySelectorAll('#centcols .ubname').length`) === 10, 'a late pair does not move the board');
-  await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(500);
-  check((await deck.ev(`document.querySelector('[data-stepcall="centVerdict"]').textContent`)).includes('turn 6') && (await deck.ev(`document.querySelector('[data-stepcall="centVerdict"]').textContent`)).includes('2 of 10'), 'Your play reads turn 6, and 2 of 10 ran');
+  await deck.key('ArrowRight'); await sleep(300);
   await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
   /* ---------- the closer: four questions, nothing to scan ---------- */
   await deck.key('ArrowRight'); await sleep(1200);
