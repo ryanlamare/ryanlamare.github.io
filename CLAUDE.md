@@ -221,7 +221,11 @@ The engine is ~1.8 KB of inline JS at the bottom of every deck. It expects:
 - **`<section class="sr-only">`** — **required accessible transcript**: one nested
   `<section>` per slide, in order, describing the slide *including what any figure
   shows*. Screen readers cannot follow the visual deck. Keep it in sync when
-  slides are added or reordered; a deck without it is not finished.
+  slides are added or reordered; a deck without it is not finished. **Course
+  decks only.** The exec `gt/` suite carries no transcript (Ryan, 20 Sep 2026:
+  it is a private programme he presents in a room, not a class); the blocks
+  were removed from all eight decks and their outtakes that day. Do not add
+  them back or mention them in build reports.
 - Slides are laid out on a fixed 1280×720 canvas and scaled to the viewport via
   the `--scale` custom property. Design to that canvas, not to a screen size.
 
@@ -389,5 +393,5 @@ be running first.
   room's names), so that would commit participants' names to a public file. The
   gt editor patches the one edited stretch of the *source* fetched from GitHub,
   verifies that nothing else moved, and refuses what it cannot place. Text only.
-  It does not touch the `sr-only` transcript: a commit headed "Live text edit"
-  names the slides whose transcript entries then need bringing into line.
+  A commit headed "Live text edit" names the slides he changed; it is his
+  wording, and there is nothing to bring into line afterwards.

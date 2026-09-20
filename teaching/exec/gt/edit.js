@@ -18,9 +18,10 @@
 
    WHAT IT WILL NOT DO. Text only: no adding or removing bullets or slides.
    Text a script writes (board lines, counts, verdicts), text inside drawings
-   (SVG), and the phones' pages are not editable here. The screen-reader
-   transcript at the foot of the deck is NOT kept in step: the commit message
-   names the slides you touched so it can be brought into line afterwards.
+   (SVG), and the phones' pages are not editable here. The commit message
+   names the slides you touched. (The decks carried a screen-reader transcript
+   until 20 Sep 2026; Ryan dropped it for the exec suite, so there is nothing
+   to bring into line after an edit.)
 
    The GitHub token is the one /edit.js already keeps in this browser
    (localStorage, never written into any file). Nothing shows without ?edit.
@@ -233,14 +234,14 @@ function save(retried){
     var res=applyEdits(unb64(j.content),ed);
     if(res.error)throw new Refused(res.error,false);
     var nums=ed.map(function(x){return x.slide+1;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort(function(a,b){return a-b;});
-    var msg='Live text edit, '+path.replace(/^teaching\/exec\/gt\//,'exec/gt ').replace(/\/index\.html$/,'')+': slide'+(nums.length===1?' ':'s ')+nums.join(', ')+'. The transcript is not yet in step.';
+    var msg='Live text edit, '+path.replace(/^teaching\/exec\/gt\//,'exec/gt ').replace(/\/index\.html$/,'')+': slide'+(nums.length===1?' ':'s ')+nums.join(', ')+'.';
     return fetch(base,{method:'PUT',headers:headers,body:JSON.stringify({message:msg,content:b64(res.src),sha:j.sha,branch:c.branch})});
   }).then(function(p){
     if(p.status===403||p.status===404)throw new Refused('The saved token can read this repository but not write to it ('+p.status+'). It needs Contents: Read and write on ryanlamare.github.io.',true);
     if(p.status===409)throw new Refused('The file changed on GitHub while you were editing (409). Press Save again.',false);
     if(p.status!==200&&p.status!==201)return p.text().then(function(x){throw new Refused('GitHub did not take the save ('+p.status+'). '+x.slice(0,100),false);});
     ed.forEach(function(x){x.pair.was=x.now;dirty.delete(x.pair.el);});
-    saving=false;mark();setStatus('Saved ✓ live in about a minute. The transcript is not yet in step.');
+    saving=false;mark();setStatus('Saved ✓ live in about a minute.');
   }).catch(function(err){
     saving=false;
     var msg=err&&err.message?err.message:'The save did not reach GitHub. Try again.';
