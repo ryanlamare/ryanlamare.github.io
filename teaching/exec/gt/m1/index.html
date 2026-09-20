@@ -110,21 +110,38 @@
 .ktower .kt:nth-child(4){margin-left:72px;border-color:var(--red);color:var(--red);font-weight:700}
 /* live poll join chrome */
 .qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px}
-/* the offers board: pending offers queue up as cards, the instructor taps
-   accept or reject, deals land on the game strips. One board slide per
-   game version; the active slide decides which strip new decisions hit. */
+/* the offers board (Ryan, 21 Sep 2026): the QR and a count while offers come
+   in, hidden; a keypress reveals them and closes the game; then nine columns,
+   £10 to £90, a name under the number it offered. He decides in the room: a
+   short press accepts, a long press rejects, on a name or on a whole column,
+   and two buttons settle the rest. Green and red, nothing else. */
 .gamechip{width:100%;background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;
   letter-spacing:.08em;text-align:center;padding:10px 0}
-.offq{display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;min-height:76px}
-.offcard{display:flex;align-items:center;gap:10px;border:2.5px solid var(--ink);background:var(--card);padding:8px 8px 8px 14px}
-.offcard .on2{font-weight:700;font-size:16px;max-width:12ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.offcard .oa{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink)}
-.offcard button{font-family:var(--sans);font-weight:900;font-size:16px;width:38px;height:38px;border:2.5px solid var(--ink);
-  background:var(--paper);cursor:pointer}
-.offcard button.acc{color:var(--teal)}
-.offcard button.rej{color:var(--red)}
-.offcard button:hover{background:var(--ink);color:var(--paper)}
-.dstrip .dot2{fill:var(--teal);opacity:.9}
+.avjoin{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;align-items:center;justify-content:center}
+.avjoin .polltop{justify-content:center}
+.avboard{position:absolute;left:96px;right:96px;top:172px;bottom:50px;display:none;flex-direction:column;gap:10px}
+.slide.avopen .avjoin{display:none}
+.slide.avopen .avboard{display:flex}
+.avcols{flex:1;display:grid;grid-template-columns:repeat(9,1fr);gap:10px;min-height:0}
+.avcol{display:flex;flex-direction:column;min-width:0}
+.avhead,.avname{position:relative;overflow:hidden;cursor:pointer;user-select:none;-webkit-user-select:none;
+  -webkit-touch-callout:none;touch-action:none}
+.avhead{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;text-align:center;
+  padding:12px 0 8px;border-bottom:3px solid var(--ink);margin-bottom:8px}
+.avname{display:flex;align-items:center;justify-content:center;border:2.5px solid var(--ink);background:var(--card);
+  font-weight:700;padding:0 6px;flex:none;transition:background .2s,border-color .2s,color .2s}
+.avname span,.avhead span{position:relative;z-index:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avname.a{background:var(--green);border-color:var(--green);color:var(--paper)}
+.avname.r{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* the hold: red runs across while the press is held, and the rejection lands when it arrives */
+.avhead::before,.avname::before{content:"";position:absolute;inset:0;background:var(--red);opacity:.5;
+  transform:scaleX(0);transform-origin:left}
+.avhead.hold::before,.avname.hold::before{transform:scaleX(1);transition:transform .5s linear}
+.avrest{flex:none;display:flex;justify-content:flex-end;gap:10px}
+.avrest button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:8px 14px;cursor:pointer}
+.avrest button[data-avrest="a"]:hover{background:var(--green);border-color:var(--green);color:var(--paper)}
+.avrest button[data-avrest="r"]:hover{background:var(--red);border-color:var(--red);color:var(--paper)}
 
 /* the familiarity poll: isotype crowd rows, the m2 pattern with sentence labels */
 .pollrows{display:flex;flex-direction:column;gap:22px;margin-top:26px}
@@ -180,9 +197,9 @@
 <section aria-label="Slide 17"><h2>Slide 17 of 25: How to guess the correct number</h2><p>This is actually a game about common knowledge, not about guessing the right number. Remember — I am strategic too! The game actually started when you were sent the pre-course reading (if you read it, that is!). If I know that you've done the reading, how should I play this game? If you know that I know that you've done the reading, how should you play this game? On the right, a drawn figure: me on the left and you on the right, either side of the pre-course reading, each with a thought bubble holding the other's head. Under it, a tower of four cards builds one by one, each indented deeper: you might know something; but I know that you know it; and you should know that I know that you know it; and I should know that you know that I know that you kn…!</p></section>
 <section aria-label="Slide 18"><h2>Slide 18 of 25: Lessons from the "I'm thinking of a number" game</h2><p>Bullets on the left: you already know to always put yourself in the other person's shoes! But also know that, people are not random in their strategies! Let's take a look at another example of multidimensional thinking – with a twist. On the right, The Princess Bride battle of wits is embedded behind a click-to-play cover.</p></section>
 <section aria-label="Slide 19"><h2>Slide 19 of 25: Added value game</h2><p>Bullets on the left: game theory can result in paradoxical or unusual strategic choices if players maximize self-interest. Let's consider the idea of added value. I have one white card for every person in this training, and each of you has one yellow card. RRPF management has agreed to pay anyone who turns in a pair of white and yellow cards £100. You can make deals with me individually, but you cannot band together (this is key!). Make me an offer to purchase my card. On the right, a drawn figure: a fan of three white cards labeled mine, one per person, a plus sign, one yellow card labeled yours, and underneath, equals £100 a pair.</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 25: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones send offers in pounds, how much they offer to pay for the £100 (QR code shown, with a rising offers counter); each pending offer appears as a card with the sender's name and amount, and the deck decides it automatically against this game's rule — an offer between £40 and £60 is accepted, anything else rejected. The phone shows a big ACCEPTED or REJECTED — one offer per player per game, no second tries — and every decided offer lands as a dot on a zero-to-one-hundred-pound strip — accepted teal, rejected red — with the mean accepted deal and a count of deals and rejections. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 25: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones choose an offer from nine numbers, ten pounds to ninety pounds, how much they offer to pay for the £100, and lock it in (QR code shown, with a rising count of responses; the phone is yellow, like the card). The offers stay hidden until a keypress, which also closes the game. The board then shows nine columns, £10 to £90, with each person's name under the number they offered, so the room sees the spread of offers. Ryan decides every offer himself in the room: a short press on a name accepts it and turns it green, a long press rejects it and turns it red; a press on a column's number does the same for that whole column; and two buttons, accept the rest and reject the rest, settle whoever is left. Each phone turns green with ACCEPTED or red with REJECTED. If the poll server is unreachable the board shows marked demo data.</p></section>
 <section aria-label="Slide 21"><h2>Slide 21 of 25: What happens if I "lose" three cards?</h2><p>The rule change only — no analysis yet, so the game isn't given away. Say I "lose" three cards: now we have fewer white cards, but each of you still has 1 yellow card. Let's play again, does anything change? On the right, a drawn figure: the fan of three white cards each crossed out in red, labeled three of mine, gone, and the yellow card untouched, labeled still one each.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 25: Make me another offer</h2><p>The live offers board again, second game: after I lose three. New offers are decided the same way, now against a harder rule — only an offer of £90 or more is accepted — and land on a second strip labeled after I lose three, shown under the equal-cards strip so the room can compare the two distributions. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 25: Make me another offer</h2><p>The same offers board again, empty, for the second game: after I lose three. Phones are yellow again and choose a new offer from ten pounds to ninety pounds; the offers stay hidden until a keypress, then appear as names under the nine numbers, and Ryan accepts and rejects them in the room exactly as before, green and red. If the poll server is unreachable the board shows marked demo data.</p></section>
 <section aria-label="Slide 23"><h2>Slide 23 of 25: Added value matters</h2><p>The debrief, after the second game has been played. Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction without losing anything — you're lucky if I give you £10! The key stipulation was that you could not band together — what would the difference have been if you could have collectively interacted with me? The crossed-out-cards figure sits on the right.</p></section>
 <section aria-label="Slide 24"><h2>Slide 24 of 25: Game theory in your world</h2><p>The module's closing exercise, with no phones. Pick one real situation where your goal is to maximize your self-interest, then answer four questions. Four numbered questions: one, what prevents you from acting unilaterally to get what you want? Two, who is the other player or group of players in the game? Three, what do you need to know about the others to achieve your goal? Four, what do you think they know about you that matters in this game? The room discusses, and the debrief is spoken.</p></section>
 <section aria-label="Slide 25"><h2>Slide 25 of 25: A few key takeaways</h2><p>The module's debrief as five pictogram tiles, revealed one at a time. Decision or game? Does the other side react to what you choose? It's not just you: your choices affect you both, and both of you know it. Common knowledge: you might know something, but I know that you know it. Equilibrium: the goal, but not always the most optimal solution. Added value: if the other side can walk away, you're lucky to get £10. </p></section>
@@ -605,7 +622,8 @@
 <section class="slide content" data-i="19" data-avphase="1">
   <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
   <h2>Make me an offer</h2>
-  <div class="pollwrap" style="top:176px;bottom:56px">
+  <span data-step="1" data-stepcall="avReveal" style="position:absolute;width:0;height:0"></span>
+  <div class="avjoin">
     <div class="polltop">
       <div class="joinchip">
         <div class="qr"><img src="qr-offers.svg" alt="QR code for the offers page"></div>
@@ -614,16 +632,10 @@
       <div class="livecount"><span class="n" data-avn>0</span><span class="l">RESPONSES</span></div>
       <div class="gamechip">EQUAL CARDS</div>
     </div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:0">
-      <div class="offq" data-avq></div>
-      <div style="margin-top:auto">
-        <div class="dplotlbl" style="color:var(--ink)">The offers &middot; equal cards <span data-avr="1" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
-        <svg class="dstrip" viewBox="0 0 1000 130">
-          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
-          <g class="avticks"></g><g data-avdots="1"></g>
-        </svg>
-      </div>
-    </div>
+  </div>
+  <div class="avboard">
+    <div class="avcols" data-avcols></div>
+    <div class="avrest"><button type="button" data-avrest="a">ACCEPT THE REST</button><button type="button" data-avrest="r">REJECT THE REST</button></div>
   </div>
   <div class="demotag" data-avdemo style="position:absolute;top:168px;right:76px">DEMO DATA</div>
 </section>
@@ -650,7 +662,8 @@
 <section class="slide content" data-i="21" data-avphase="2">
   <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
   <h2>Make me another offer</h2>
-  <div class="pollwrap" style="top:176px;bottom:56px">
+  <span data-step="1" data-stepcall="avReveal" style="position:absolute;width:0;height:0"></span>
+  <div class="avjoin">
     <div class="polltop">
       <div class="joinchip">
         <div class="qr"><img src="qr-offers.svg" alt="QR code for the offers page"></div>
@@ -659,23 +672,10 @@
       <div class="livecount"><span class="n" data-avn>0</span><span class="l">RESPONSES</span></div>
       <div class="gamechip">AFTER I LOSE THREE</div>
     </div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:0">
-      <div class="offq" data-avq></div>
-      <div style="margin-top:auto">
-        <div class="dplotlbl">The offers &middot; equal cards <span data-avr="1" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
-        <svg class="dstrip" viewBox="0 0 1000 130">
-          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
-          <g class="avticks"></g><g data-avdots="1"></g>
-        </svg>
-      </div>
-      <div>
-        <div class="dplotlbl" style="color:var(--ink)">The offers &middot; after I lose three <span data-avr="2" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
-        <svg class="dstrip" viewBox="0 0 1000 130">
-          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
-          <g class="avticks"></g><g data-avdots="2"></g>
-        </svg>
-      </div>
-    </div>
+  </div>
+  <div class="avboard">
+    <div class="avcols" data-avcols></div>
+    <div class="avrest"><button type="button" data-avrest="a">ACCEPT THE REST</button><button type="button" data-avrest="r">REJECT THE REST</button></div>
   </div>
   <div class="demotag" data-avdemo style="position:absolute;top:168px;right:76px">DEMO DATA</div>
 </section>
@@ -962,139 +962,183 @@ clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle o
   };
 })();
 
-/* ---- the offers board (added value): phones send "name|o|amt" into
-   m1-av; pending offers appear as cards, and the deck DECIDES EACH ONE
-   ITSELF against the active game's rule — game 1 accepts an offer of 40 to 60,
-   game 2 accepts £90 or more (game 3, the one-person-leaves version,
-   moved to Module 7 with its rule kept here for it) — posting the
-   "name|d|amt|a-or-r|phase" decision line the phones watch for. Every
-   decided offer lands on that game's strip: accepted teal, rejected red,
-   with the mean of the accepted deals. The active slide's data-avphase
-   picks the rule, so nothing is decided until a board slide is up. ---- */
+/* ---- the offers board (added value). Ryan, 21 Sep 2026: he decides every
+   offer himself, in the room. Phones send "name|o|amt" into m1-av (amt is
+   one of £10 to £90). While a board slide is up the room holds a "=game|p|N"
+   marker for it, and game N's offers are the ones that arrived after that
+   marker. They stay hidden, only counted, until his keypress: that posts
+   "=game|r|N", which closes the game (a later offer is not shown, and the
+   phones stop offering), and the board opens as nine columns with each
+   name under the number it offered. A short press accepts and a long press
+   rejects, on one name or on a column's number; the two buttons settle
+   whoever is left. Each decision is the "name|d|amt|a-or-r|N" line the
+   phones watch for. Pressing again the other way changes a decision, and
+   the phone follows the latest line. A column press leaves alone anyone
+   already decided, unless the whole column is, and then it sets them all
+   (so a slip on a column is put right by pressing it again). ---- */
 (function(){
-  const DEMO=[['Priya','50','a','1'],['Tom','55','a','1'],['Sam','40','a','1'],['Elena','65','r','1'],
-              ['Marcus','90','a','2'],['Nadia','95','a','2'],['Chris','80','r','2'],['Elena','92','a','2'],
-              ['Priya','50','a','3'],['Tom','40','r','3'],['Sam','50','a','3']];
+  const DEMO={1:[['Priya',50],['Tom',50],['Sam',40],['Elena',60],['Marcus',50],['Nadia',30],['Chris',50],['Dana',20],['Omar',70],['Lucy',40],['Raj',50],['Ines',60],['Pete',10],['Mei',50]],
+              2:[['Priya',90],['Tom',50],['Sam',80],['Elena',90],['Marcus',70],['Nadia',90],['Chris',50],['Dana',60],['Omar',80],['Lucy',50],['Raj',90],['Ines',70],['Pete',40],['Mei',50]]};
+  const COLS=[10,20,30,40,50,60,70,80,90], HOLD=500, ROOM=385;
   const st={live:false,lines:[]};
-  const X=v=>30+(v/100)*940;
-  document.querySelectorAll('.avticks').forEach(g=>{
-    [0,25,50,75,100].forEach(v=>{
-      g.insertAdjacentHTML('beforeend',
-        '<line x1="'+X(v)+'" y1="90" x2="'+X(v)+'" y2="102" stroke="var(--ink)" stroke-width="2.5"/>'+
-        '<text class="lab" x="'+X(v)+'" y="122" text-anchor="middle">£'+v+'</text>');
-    });
-  });
+  const want={}, shown={}, localEnd={}, local={1:{},2:{}}, sig={};
+  const boards={};
+  document.querySelectorAll('.slide[data-avphase]').forEach(sl=>{boards[+sl.dataset.avphase]=sl;});
   let postN=0, deckBase=null;
   try{
     deckBase=localStorage.getItem('gt-deck-voter');
     if(!deckBase){deckBase='deck-'+Math.random().toString(36).slice(2,14);localStorage.setItem('gt-deck-voter',deckBase);}
     postN=+(localStorage.getItem('m1-av-postn')||0);
   }catch(_){deckBase='deck-fallback-000';}
+  /* the Worker caps one voter at 15 lines, so the deck moves to a fresh id every 12 */
   function deckVoter(){return deckBase+'-'+Math.floor(postN/12);}
-  function phase(){
-    const a=document.querySelector('.slide.active');
-    return a&&a.dataset.avphase?+a.dataset.avphase:1;
+  /* one line at a time, in order, each tried three times: REJECT THE REST is thirty posts */
+  const queue=[];let busy=false;
+  function say(t){if(!st.live)return;queue.push({t,n:0});pump();}
+  function pump(){
+    if(busy||!queue.length)return;
+    busy=true;const job=queue[0];
+    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
+    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:job.t,v:deckVoter()})})
+    .then(r=>{if(!r.ok)throw r.status;queue.shift();})
+    .catch(()=>{if(++job.n>=3)queue.shift();})
+    .finally(()=>{busy=false;if(queue.length)setTimeout(pump,job.n?600:0);else fetchIt();});
   }
-  function parsed(){
-    if(st.live)return st.lines.map(t=>String(t).split('|').map(s=>s.trim()));
-    return DEMO.map(([n,a,r,p])=>[n,'d',a,r,p]).concat([['Dana','o','3'],['Omar','o','6.5']]);
-  }
-  function render(){
-    const lines=parsed();
-    /* pending: latest offer per name with no later decision */
-    const state={};
-    lines.forEach((p,i)=>{
+  const snap=v=>Math.min(90,Math.max(10,Math.round(v/10)*10));
+  /* what the room says about game ph: its offers (the latest per name, inside
+     the game's window), whether it has been revealed, and the decisions */
+  function read(ph){
+    if(!st.live){
+      return {open:true,revealed:!!shown[ph],offers:DEMO[ph].map(([name,amt])=>({key:name.toLowerCase(),name,amt,col:amt})),dec:{}};
+    }
+    const L=st.lines.map(t=>String(t).split('|').map(x=>x.trim()));
+    let g=-1,r=-1,nextG=-1;
+    L.forEach((p,i)=>{if(p[0]==='=game'&&p[1]==='p'&&+p[2]===ph)g=i;});
+    L.forEach((p,i)=>{
+      if(i<=g||p[0]!=='=game')return;
+      if(p[1]==='r'&&+p[2]===ph&&r<0)r=i;
+      if(p[1]==='p'&&+p[2]!==ph&&nextG<0)nextG=i;
+    });
+    let end=L.length;
+    if(r>=0)end=Math.min(end,r);
+    if(nextG>=0)end=Math.min(end,nextG);
+    if(localEnd[ph]!==undefined)end=Math.min(end,localEnd[ph]);
+    const offers={},dec={};
+    if(g>=0)L.forEach((p,i)=>{
       const k=(p[0]||'').toLowerCase();
-      if(!k)return;
-      if(!state[k])state[k]={name:p[0]};
-      if(p[1]==='o'){state[k].offer=+p[2];state[k].oIdx=i;}
-      if(p[1]==='d'){state[k].dIdx=i;}
+      if(!k||k[0]==='='||i<=g)return;
+      if(p[1]==='o'&&i<end&&Number.isFinite(+p[2]))offers[k]={key:k,name:p[0],amt:+p[2],col:snap(+p[2])};
+      if(p[1]==='d'&&+p[4]===ph&&(p[3]==='a'||p[3]==='r'))dec[k]=p[3];
     });
-    const pending=Object.values(state).filter(s=>s.offer!==undefined&&(s.dIdx===undefined||s.dIdx<s.oIdx));
-    document.querySelectorAll('[data-avq]').forEach(q=>{
-      q.innerHTML='';
-      pending.forEach(s=>{
-        const card=document.createElement('div');card.className='offcard';
-        card.innerHTML='<span class="on2"></span><span class="oa">£'+s.offer+'</span>';
-        card.querySelector('.on2').textContent=s.name;
-        q.appendChild(card);
-      });
-    });
-    ensureMarker(lines);
-    autoDecide(pending);
-    const offers=lines.filter(p=>p[1]==='o').length||(st.live?0:DEMO.length);
-    document.querySelectorAll('[data-avn]').forEach(n=>n.textContent=offers);
-    /* strips: EVERY decided offer per game version — accepted teal,
-       rejected red — plus the mean of the accepted deals */
-    [1,2,3].forEach(ph=>{
-      const dec=lines.filter(p=>p[1]==='d'&&+p[4]===ph&&Number.isFinite(+p[2]));
-      const acc=dec.filter(p=>p[3]==='a').map(p=>+p[2]);
-      const rej=dec.length-acc.length;
-      const stack={};let h='';
-      dec.forEach(p=>{
-        const v=+p[2];
-        const key=Math.round(v/5)*5;
-        stack[key]=(stack[key]||0)+1;
-        const cy=84-(stack[key]-1)*15;
-        h+='<circle cx="'+X(Math.min(100,Math.max(0,v)))+'" cy="'+Math.max(cy,8)+'" r="6.5" fill="'+(p[3]==='a'?'var(--teal)':'var(--red)')+'" opacity=".9"/>';
-      });
-      if(acc.length){
-        const mean=acc.reduce((a,b)=>a+b,0)/acc.length;
-        h+='<line class="meanline" x1="'+X(mean)+'" y1="18" x2="'+X(mean)+'" y2="92"/>'+
-           '<text class="meanlab" x="'+X(mean)+'" y="14" text-anchor="middle" style="font-size:18px">£'+Math.round(mean)+'</text>';
-      }
-      document.querySelectorAll('[data-avdots="'+ph+'"]').forEach(dots=>{dots.innerHTML=h;});
-      const note=acc.length||rej?('· '+acc.length+' deals, '+rej+' rejected'):'';
-      document.querySelectorAll('[data-avr="'+ph+'"]').forEach(el=>{el.textContent=note;});
-    });
-    document.querySelectorAll('[data-avdemo]').forEach(d=>{d.style.display=st.live?'none':'';});
+    return {open:g>=0,revealed:r>=0||!!shown[ph],offers:Object.values(offers),dec};
   }
-  /* the deck's own acceptance rules, one per game version. Classroom-grade:
-     they live in this public source, like every game brief — the game is
-     played in minutes, live */
-  /* an offer is what the player pays for the £100 (Ryan, 21 Sep 2026: 90 means an offer of 90), so after I lose three only £90 or more is taken, the old "share of £10 or less" seen from the other side */
-  const RULE={1:a=>a>=40&&a<=60, 2:a=>a>=90, 3:a=>a===50};
-  /* one offer per game: when a board slide is up, make sure the room holds
-     a "=game|p|N" marker line for it — phones read the latest marker to
-     know which game is on and lock anyone who has already played it */
+  function code(ph,k,dec){return local[ph][k]||dec[k]||'';}
+  function render(){
+    Object.keys(boards).forEach(key=>{
+      const ph=+key, sl=boards[ph], R=read(ph);
+      sl.querySelectorAll('[data-avn]').forEach(n=>n.textContent=R.offers.length);
+      sl.querySelectorAll('[data-avdemo]').forEach(d=>{d.style.display=st.live?'none':'';});
+      /* his keypress asked for the reveal: it happens once there is an offer to show */
+      if(want[ph]&&!R.revealed&&R.offers.length&&sl.classList.contains('active')){
+        shown[ph]=true;R.revealed=true;
+        if(st.live){localEnd[ph]=st.lines.length;say('=game|r|'+ph);}
+      }
+      sl.classList.toggle('avopen',R.revealed&&R.offers.length>0);
+      if(!R.revealed)return;
+      const s=R.offers.map(o=>o.key+':'+o.col).join(',');
+      if(s!==sig[ph]){sig[ph]=s;build(ph,sl,R);}
+      sl.querySelectorAll('.avname').forEach(el=>{
+        const c=code(ph,el.dataset.k,R.dec);
+        el.classList.toggle('a',c==='a');el.classList.toggle('r',c==='r');
+      });
+    });
+    ensureMarker();
+  }
+  function build(ph,sl,R){
+    const wrap=sl.querySelector('[data-avcols]');wrap.innerHTML='';
+    const most=Math.max(1,...COLS.map(c=>R.offers.filter(o=>o.col===c).length));
+    const gap=most>12?3:5, h=Math.max(16,Math.min(38,Math.floor((ROOM-(most-1)*gap)/most)));
+    const f=h>=30?16:h>=24?14:h>=19?12:11;
+    COLS.forEach(c=>{
+      const col=document.createElement('div');col.className='avcol';col.style.gap=gap+'px';
+      const head=document.createElement('div');head.className='avhead';
+      const hs=document.createElement('span');hs.textContent='£'+c;head.appendChild(hs);
+      col.appendChild(head);
+      const mine=R.offers.filter(o=>o.col===c);
+      mine.forEach(o=>{
+        const el=document.createElement('div');el.className='avname';el.dataset.k=o.key;
+        el.style.height=h+'px';el.style.fontSize=f+'px';
+        const sp=document.createElement('span');sp.textContent=o.name;el.appendChild(sp);
+        press(el,cd=>decide(ph,[o],cd));
+        col.appendChild(el);
+      });
+      press(head,cd=>{
+        const dec=read(ph).dec, open=mine.filter(o=>!code(ph,o.key,dec));
+        decide(ph,open.length?open:mine,cd);
+      });
+      wrap.appendChild(col);
+    });
+  }
+  /* a short press accepts; held for half a second, it rejects, there and then */
+  function press(el,fn){
+    let t=null;
+    el.addEventListener('pointerdown',e=>{
+      if(e.button)return;e.preventDefault();
+      el.classList.add('hold');
+      t=setTimeout(()=>{t=null;el.classList.remove('hold');fn('r');},HOLD);
+    });
+    const up=e=>{if(!t)return;clearTimeout(t);t=null;el.classList.remove('hold');if(e.type==='pointerup')fn('a');};
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,up));
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+    el.addEventListener('webkitmouseforcewillbegin',e=>e.preventDefault());
+  }
+  function decide(ph,list,cd){
+    const dec=read(ph).dec;
+    list.forEach(o=>{
+      if(code(ph,o.key,dec)===cd)return;
+      local[ph][o.key]=cd;
+      say(o.name+'|d|'+o.amt+'|'+cd+'|'+ph);
+    });
+    render();
+  }
+  document.querySelectorAll('[data-avrest]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const ph=+b.closest('.slide').dataset.avphase, R=read(ph);
+      decide(ph,R.offers.filter(o=>!code(ph,o.key,R.dec)),b.dataset.avrest);
+      b.blur();
+    });
+  });
+  window.avReveal=function(el,on){
+    const sl=el.closest('.slide');if(!sl)return;
+    want[+sl.dataset.avphase]=on;
+    if(on)render();
+  };
+  /* when a board slide is up, make sure the room holds a "=game|p|N" marker
+     for it: phones read the latest marker to know which game is on */
   const markerPosted={};
-  function ensureMarker(lines){
+  function ensureMarker(){
     const act=document.querySelector('.slide.active');
     if(!st.live||!act||!act.dataset.avphase)return;
     const ph=+act.dataset.avphase;
-    const seen=lines.some(p=>p[0]==='=game'&&p[1]==='p'&&+p[2]===ph);
-    if(seen||markerPosted[ph])return;
+    if(markerPosted[ph]||read(ph).open)return;
     markerPosted[ph]=1;
-    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
-    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({t:'=game|p|'+ph,v:deckVoter()})})
-    .then(()=>fetchIt()).catch(()=>{});
-  }
-  const sched=new Set();
-  function autoDecide(pending){
-    const act=document.querySelector('.slide.active');
-    if(!st.live||!act||!act.dataset.avphase)return;
-    pending.forEach(s=>{
-      const key=(s.name||'').toLowerCase()+'|'+s.offer+'|'+s.oIdx;
-      if(sched.has(key))return;
-      sched.add(key);
-      setTimeout(()=>{
-        const ph=phase();
-        decide(s,(RULE[ph]||RULE[1])(s.offer)?'a':'r');
-      },900);
-    });
-  }
-  function decide(s,code){
-    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
-    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({t:s.name+'|d|'+s.offer+'|'+code+'|'+phase(),v:deckVoter()})})
-    .then(()=>fetchIt()).catch(()=>{});
+    say('=game|p|'+ph);
   }
   function fetchIt(){
     fetch(POLL_API+'/p/m1-av/answers').then(r=>r.json()).then(d=>{
-      st.live=true;st.lines=d.answers||[];render();
+      const lines=d.answers||[];
+      /* the Poll Desk emptied the room (a rehearsal starting over): forget what this page decided */
+      if(!lines.length&&seen&&!busy&&!queue.length){
+        seen=false;
+        [want,shown,localEnd,sig,markerPosted].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+        local[1]={};local[2]={};
+      }
+      if(lines.length)seen=true;
+      st.live=true;st.lines=lines;render();
     }).catch(()=>{});
   }
+  let seen=false;
   setInterval(fetchIt,2500);fetchIt();
   render();
 })();

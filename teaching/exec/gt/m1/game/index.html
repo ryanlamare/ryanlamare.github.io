@@ -11,11 +11,11 @@
    gt-poll drawing lane (room m1-dog), one drawing per phone, resubmit to
    redraw. NUMBER: the instructor's 1-100 number, played in five rounds —
    one guess per round, the Worker holds the number and the round and
-   answers too high / too low / correct (room m1-number).    values game — send a whole-pound
-   offer (what you pay for the £100 pair) into room m1-av as "name|o|amt"
-   lines; the deck's board queues it and decides it against the active
-   game's rule,
-   and this page watches for the "name|d|amt|a-or-r|phase" decision line.
+   answers too high / too low / correct (room m1-number). OFFER: the added
+   values game. The phone is the player's yellow card: nine numbers, £10 to
+   £90, pick one and LOCK IT IN, and the offer goes into room m1-av as
+   "name|o|amt". Ryan decides each offer on the deck, and this page watches
+   for his "name|d|amt|a-or-r|phase" line and turns green or red.
    Names come from the shared gt-name flow and are claimed into gt-names. */
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
@@ -60,6 +60,25 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
 .bigv{font-family:var(--display);font-weight:900;font-size:46px;letter-spacing:.04em;line-height:1;margin:12px 0 8px}
 .bigv.ok{color:var(--teal)}
 .bigv.no{color:var(--red)}
+/* the offers game: the phone is the yellow card, then green or red */
+body.av-y{background:var(--ochre)}
+body.av-a{background:var(--green)}
+body.av-r{background:var(--red)}
+body.av-y .tag,body.av-y h1,body.av-y .me .who b,body.av-y .me button,body.av-y .status{color:var(--ink)}
+body.av-y .tag i{background:var(--ink)}
+body.av-a,body.av-r,body.av-a .tag,body.av-r .tag,body.av-a h1,body.av-r h1,body.av-a .me .who b,body.av-r .me .who b,
+body.av-a .me button,body.av-r .me button{color:var(--paper)}
+body.av-a .tag i,body.av-r .tag i{background:var(--paper)}
+.avgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.avgrid button{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--ink);
+  background:var(--paper);border:3px solid var(--ink);padding:24px 0 20px;cursor:pointer}
+.avgrid button.on{background:var(--ink);color:var(--paper)}
+.avgrid button:disabled{opacity:.4;cursor:default}
+button.avlock{display:block;width:100%;margin-top:12px;font-family:var(--sans);font-weight:700;font-size:17px;
+  letter-spacing:.08em;color:var(--paper);background:var(--ink);border:3px solid var(--ink);padding:16px 0;cursor:pointer}
+button.avlock:disabled{opacity:.35;cursor:default}
+.avbig{font-family:var(--display);font-weight:900;font-size:110px;line-height:1;text-align:center;margin-top:48px}
+.avword{font-family:var(--display);font-weight:900;font-size:44px;letter-spacing:.04em;line-height:1;text-align:center;margin-top:18px}
 </style>
 </head><body>
 <div class="wrap">
@@ -96,6 +115,7 @@ function claimOnce(){
 }
 function render(){
   st.textContent='';rules.textContent='';
+  document.body.classList.remove('av-y','av-a','av-r');
   if(watcher){clearInterval(watcher);watcher=null;}
   if(!name){renderName();return;}
   if(MODE==='dog')renderDog();
@@ -282,64 +302,79 @@ function renderNumber(){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
 }
 
-/* ---- added values: make an offer ---- */
+/* ---- added values: make an offer ----
+   Ryan, 21 Sep 2026: as little text as we can. The phone is the yellow
+   card. Nine numbers, pick one, LOCK IT IN; then the number alone, on
+   yellow, until he decides it on the screen, and the phone turns green or
+   red with the one word. The deck posts "=game|p|N" when a board slide goes
+   up and "=game|r|N" when he reveals the offers, which closes the game: an
+   offer counts only between the two. A new game's marker brings the yellow
+   card back. */
 function renderOffer(){
   q.textContent='Make me an offer';
-  /* Ryan, 21 Sep 2026: too much text. The box, the button, and ACCEPTED or REJECTED. */
   rules.innerHTML='';rules.style.display='none';
-  app.innerHTML='';
-  app.appendChild(meRow());
-  const lbl=document.createElement('div');lbl.className='tag';lbl.style.margin='10px 0 6px';lbl.textContent='YOUR OFFER FOR THE £100';
-  app.appendChild(lbl);
-  const inp=document.createElement('input');inp.className='amt';inp.type='number';inp.min=0;inp.max=100;inp.step=1;inp.placeholder='0 – 100';
-  app.appendChild(inp);
-  const btn=document.createElement('button');btn.className='namerow'.replace('namerow','opt');
-  btn.style.cssText='margin-top:12px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-weight:700;letter-spacing:.06em';
-  btn.textContent='SEND THE OFFER';
-  app.appendChild(btn);
-  /* one offer per game version: the deck posts a "=game|p|N" marker line
-     when a board slide goes up; a phone that already has a decision in the
-     current game stays locked until the next game's marker appears */
-  let locked=false;
-  function setLock(on){locked=on;inp.disabled=on;btn.disabled=on;btn.style.opacity=on?'.4':'';}
+  let state='',pick=null,sending=false;
+  function paint(cls){document.body.classList.remove('av-y','av-a','av-r');document.body.classList.add(cls);}
+  function draw(next,info){
+    if(next===state)return;
+    if(next==='pick')pick=null; /* a new game starts with nothing picked */
+    state=next;st.textContent='';
+    app.innerHTML='';app.appendChild(meRow());
+    if(next==='pick'||next==='wait'||next==='closed'){
+      paint('av-y');
+      const grid=document.createElement('div');grid.className='avgrid';
+      const lock=document.createElement('button');lock.type='button';lock.className='avlock';lock.textContent='LOCK IT IN';lock.disabled=true;
+      [10,20,30,40,50,60,70,80,90].forEach(v=>{
+        const b=document.createElement('button');b.type='button';b.textContent='£'+v;
+        b.disabled=next!=='pick';
+        if(v===pick&&next==='pick')b.classList.add('on');
+        b.addEventListener('click',()=>{
+          pick=v;grid.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));lock.disabled=false;
+        });
+        grid.appendChild(b);
+      });
+      lock.disabled=!(next==='pick'&&pick);
+      lock.addEventListener('click',()=>{
+        if(!pick||sending)return;
+        sending=true;lock.disabled=true;
+        fetch(API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+          body:JSON.stringify({t:name+'|o|'+pick,v:voter})})
+        .then(r=>{if(!r.ok)throw r.status;draw('mine',{amt:pick});watch();})
+        .catch(()=>{st.textContent='That didn’t send. Try again.';lock.disabled=false;})
+        .finally(()=>{sending=false;});
+      });
+      app.appendChild(grid);app.appendChild(lock);
+      if(next==='closed')st.textContent='The offers are closed.';
+      return;
+    }
+    /* an offer is in: the number, and once he has decided, the colour and the word */
+    paint(next==='a'?'av-a':next==='r'?'av-r':'av-y');
+    const big=document.createElement('div');big.className='avbig';big.textContent='£'+info.amt;app.appendChild(big);
+    if(next==='a'||next==='r'){
+      const w=document.createElement('div');w.className='avword';w.textContent=next==='a'?'ACCEPTED':'REJECTED';app.appendChild(w);
+    }
+  }
   function watch(){
     fetch(API+'/p/m1-av/answers').then(r=>r.json()).then(d=>{
-      const lines=d.answers||[];
+      if(sending)return;
+      const L=(d.answers||[]).map(t=>String(t).split('|').map(x=>x.trim()));
       const nkey=name.trim().toLowerCase();
-      let oIdx=-1,dec=null,decIdx=-1,gamePh=0;
-      lines.forEach((t,i)=>{
-        const p=String(t).split('|').map(s=>s.trim());
-        if(p[0]==='=game'&&p[1]==='p'){gamePh=Math.max(gamePh,+p[2]||0);return;}
+      let g=-1,ph=0,r=-1,o=-1,amt=null,dec='';
+      L.forEach((p,i)=>{if(p[0]==='=game'&&p[1]==='p'){g=i;ph=+p[2]||0;}});
+      L.forEach((p,i)=>{
+        if(i<=g)return;
+        if(p[0]==='=game'&&p[1]==='r'&&+p[2]===ph&&r<0)r=i;
         if(p[0].toLowerCase()!==nkey)return;
-        if(p[1]==='o')oIdx=i;
-        if(p[1]==='d'){dec=p;decIdx=i;}
+        if(p[1]==='o'&&(r<0||i<r)){o=i;amt=+p[2];dec='';}
+        if(p[1]==='d'&&o>=0&&+p[4]===ph&&(p[3]==='a'||p[3]==='r'))dec=p[3];
       });
-      if(oIdx<0)return;
-      if(decIdx>oIdx&&dec){
-        const decPh=+dec[4]||0;
-        const played=!gamePh||decPh>=gamePh;
-        setLock(played);
-        st.innerHTML=dec[3]==='a'?'<div class="bigv ok">ACCEPTED</div>':'<div class="bigv no">REJECTED</div>';
-      }else{
-        setLock(true);
-        st.innerHTML='<b>Offer in.</b>';
-      }
+      if(g<0)draw('wait');
+      else if(o<0)draw(r>=0?'closed':'pick');
+      else draw(dec||'mine',{amt});
     }).catch(()=>{});
   }
-  watch();watcher=setInterval(watch,3000);
-  btn.addEventListener('click',()=>{
-    if(locked)return;
-    const amt=Math.round(Number(inp.value));
-    if(!Number.isFinite(amt)||amt<0||amt>100){st.textContent='The offer needs to be between 0 and 100.';return;}
-    btn.disabled=true;st.textContent='Sending…';
-    fetch(API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({t:name+'|o|'+amt,v:voter})})
-    .then(r=>{if(!r.ok)throw r.status;
-      setLock(true);
-      st.innerHTML='<b>Offer in.</b>';})
-    .catch(code=>{st.textContent=code===429?'That’s plenty of offers from one phone!':'That didn’t send — try again.';})
-    .finally(()=>{if(!locked)btn.disabled=false;});
-  });
+  draw('wait');
+  watch();watcher=setInterval(watch,2500);
 }
 </script>
 </body></html>

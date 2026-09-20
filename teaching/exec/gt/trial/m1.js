@@ -13,9 +13,10 @@
                                          knows: its own earlier guesses and whether each was high or low.
                                          It never knows the number. Most halve what is left; some wander
                                          inside it; a few creep in steps. Round 1 piles onto 50, as rooms do.
-     node trial/m1.js offers 22          twenty-two offers into whichever added value game is on the screen
-                                         (how much each pays for the £100); --game 2 shapes them for the
-                                         game after I lose three (higher, since Ryan can walk away)
+     node trial/m1.js offers 22          twenty-two offers (£10 to £90, as the phones send them) into the added
+                                         value game on the screen. The board slide has to be up first, and the
+                                         offers not yet revealed; --game 2 is for the game after I lose three
+                                         (higher, since Ryan can walk away)
      node trial/m1.js state              what the rooms hold
 
    The bots are the same people every time (Bot Ana … ), so a second run in the
@@ -63,12 +64,19 @@ const cmds = {
   },
   async offers() {
     const game = opt.game === '2' ? 2 : 1; let ok = 0;
+    /* an offer counts only after the deck's marker for this game and before Ryan reveals the offers, so look first */
+    const L = ((await get('/p/m1-av/answers')).answers || []).map(t => String(t).split('|').map(x => x.trim()));
+    let g = -1, ph = 0; L.forEach((p, i) => { if (p[0] === '=game' && p[1] === 'p') { g = i; ph = +p[2]; } });
+    if (g < 0) { console.log('No offers game is open yet: put the board slide (Make me an offer) on the screen first, then run this again.'); return; }
+    if (ph !== game) { console.log('The game on the screen is game ' + ph + ', not game ' + game + '. ' + (ph === 2 ? 'Add --game 2.' : 'Drop --game 2.')); return; }
+    if (L.some((p, i) => i > g && p[0] === '=game' && p[1] === 'r' && +p[2] === ph)) { console.log('The offers for game ' + ph + ' have been revealed, so the game is closed.'); return; }
     for (let i = 0; i < N; i++) { const b = bot(i), r = h01('off' + game + b.v);
-      /* game 1: most offer near an even split, a few try it on. Game 2: some see that Ryan can walk away and pay up, many still anchor on 50 */
-      const amt = game === 1 ? (r < 0.6 ? 45 + Math.floor(r / 0.6 * 11) : (r < 0.85 ? 20 + Math.floor((r - 0.6) / 0.25 * 20) : 60 + Math.floor((r - 0.85) / 0.15 * 15)))
-                             : (r < 0.35 ? 90 + Math.floor(r / 0.35 * 9) : (r < 0.7 ? 60 + Math.floor((r - 0.35) / 0.35 * 29) : 40 + Math.floor((r - 0.7) / 0.3 * 20)));
+      /* the phones offer in tens, £10 to £90. Game 1: most offer near an even split, a few try it on, a few overpay.
+         Game 2: some see that Ryan can walk away and pay up, many still anchor on 50 */
+      const amt = game === 1 ? (r < 0.4 ? 50 : r < 0.52 ? 40 : r < 0.62 ? 60 : r < 0.74 ? 30 : r < 0.82 ? 20 : r < 0.86 ? 10 : r < 0.94 ? 70 : 80)
+                             : (r < 0.3 ? 90 : r < 0.45 ? 80 : r < 0.58 ? 70 : r < 0.68 ? 60 : r < 0.9 ? 50 : 40);
       const res = await post('/p/m1-av/say', { t: b.n + '|o|' + amt, v: b.v + (game === 2 ? 'b' : 'a') }); if (res.status === 200) ok++; }
-    console.log(ok + ' of ' + N + ' offers in for game ' + game + '. The deck answers each one while its board slide is up.');
+    console.log(ok + ' of ' + N + ' offers in for game ' + game + '. They stay hidden on the slide until the next keypress reveals them; then Ryan decides each one.');
   },
   async state() {
     const f = await get('/p/m1-familiarity'), t = await get('/p/m1-number/target'), g = (await get('/p/m1-number/guesses')).guesses || [], a = (await get('/p/m1-av/answers')).answers || [];
