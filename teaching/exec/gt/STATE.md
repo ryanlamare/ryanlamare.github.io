@@ -4,6 +4,19 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## NEXT CHAT: the audit (agreed with Ryan 20 Sep 2026, after all eight modules went plain and live)
+
+Ryan will go through the live suite slide by slide and run every game, in a new chat. Before or alongside that he wants an audit like `AUDIT-2026-09-14.md`: where the suite stands, what is missing, what is inconsistent. Write it as `AUDIT-2026-09-20.md` in this folder; findings as a list for him, nothing changed without his word. A mechanical sweep on 20 Sep found the eight decks clean (slides, ticks, transcript entries and `data-i` agree; one active slide each; no missing script, image or QR file) and fixed the two things it turned up (a "Ten points" line on the Hidden Agenda phone page; a stray tick on the m1 and m3 outtakes). What the sweep cannot see, and the audit should:
+
+- **Across modules:** lines that still point at something cut (the opener and plan slides in m1, m4 and m5; learning objectives that name a game; What did we learn? slides; anything that says yesterday or later and means a cut scene, points, the dog, the hand, the tree, the engines, the prison, the jet, the cage, the Sirens). Read each deck's text, not only grep it.
+- **Phone pages and `/go`:** every QR lands on a page that matches its slide's words; pages for cut games are off `/go` and off the choosers; phone text that still promises points (the m2 and m7 game pages were only partly swept); `polls.json` entries with no slide, slides with no entry; the Poll Desk list and its scoring tag.
+- **Never run since the plain pass:** Hidden Agenda end to end as one table with the fixed bidder and the seat gate; the m6 phone page after the team pick came out; Price Wars held up across a room; the car market page on real phones (the held-finger peek on iOS Safari in particular: long-press menus and text selection are switched off in CSS, unverified on a device).
+- **Timing:** one table of estimates for both days against the boxes, from the honest figures in each module's paragraph below (m5 and m6 are the ones over), with the named time valves.
+- **Wording that is Claude's:** one consolidated list across the suite, by module and slide, from the veto lists below, for the pass he has said he will do himself. Do not resurface it piecemeal.
+- **Day-of list in one place:** pens and paper (m2), the two ends of the room and an even number of teams (m4), sellers count off and the room split by hand (m8), eleven at the Hidden Agenda table, the admin secret on his phone, Poll Desk reset of every room before the session.
+- **The documents themselves:** this file is long and its lower half describes a suite that no longer exists; `REHEARSAL.md` still has steps for Top of the table, `/go/points`, the boss battle and the old market keys; the project `CLAUDE.md` still calls modules 2 to 8 transfers awaiting a design pass. Propose a short rewrite of each; the history is in git.
+- **Dead code, harmless, list only:** unused CSS and scripts left in decks by earlier cuts (m1 and m2 write-in walls, m8 phone page market code), files left in place for cut games.
+
 ## The plain pass (19 Sep 2026) — READ THIS FIRST; it overrides the scene, points, awards and avatar plans everywhere below
 
 **Ryan's decision, 19 Sep 2026** (his wife's verdict on the suite: "way too over the top"): this is a class for executives, the themed animated scenes are a distraction, and **the discussion has to be about them, not the slides**. Agreed in conversation that day; nothing in this section was built when it was written.
