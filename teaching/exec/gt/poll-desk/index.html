@@ -90,6 +90,7 @@ const EXTRA=[
   {id:'m4-teams',q:'Price Wars team claims — who is on which station (Module 4) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
   {id:'m4-huddle',q:'Price Wars — each team’s leanings and locks, seen only by the team (Module 4) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
   {id:'m4-meet',q:'Price Wars — meeting asks and the reps’ notes of what was agreed (Module 4) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
+  {id:'m4-yourpd',q:'Where do prisoner’s dilemmas show up in your own world?, the write-in wall (Module 4; cut 16 Sep 2026 and off /go/polls.json 20 Sep; kept here so a reset still clears it)',text:true},
   {id:'m4-pds',q:'The room’s dilemmas as a prison (Module 4; cut in the plain pass 20 Sep 2026, both touches are now plain question slides talked through in twos or threes, no phones)',text:true},
   {id:'m4-tapas',q:'Tapas growth game joins, moves and round markers (Module 4; cut to the outtakes 16 Sep 2026)',text:true},
   {id:'m5-invest',q:'Investment game rounds (Module 5 game)',text:true},
@@ -116,7 +117,10 @@ const EXTRA=[
 ];
 /* rooms the class points system scores from: resetting one mid-cohort
    erases earned points, so they carry a tag and a sterner confirm */
-const SCORING=/^(gt-names|m1-dog|m1-number|m2-centipede|m2-lastcard|m3-engine|m4-prices|m4-teams|m5-k\d+|m6-pk|m6-vs|m7-chicken|m7-gb|m7-auction|m8-cs-tapas|m8-cs-granito)$/;
+/* the league went in the plain pass (20 Sep 2026): no room scores, so no room gets the SCORING tag or the
+   "erases points… only between cohorts" confirm, which argued against the reset every session needs.
+   The pattern is kept, matching nothing, so the tag and the confirm below need no other change. */
+const SCORING=/^(?!)$/;
 const secretEl=document.getElementById('secret'), msg=document.getElementById('msg');
 try{secretEl.value=localStorage.getItem('gt-admin')||'';}catch(_){}
 document.getElementById('saveSecret').addEventListener('click',()=>{
@@ -125,7 +129,7 @@ document.getElementById('saveSecret').addEventListener('click',()=>{
 });
 function say(t,bad){msg.textContent=t;msg.className='msg'+(bad?' bad':'');}
 const roomsEl=document.getElementById('rooms');
-/* bulk resets: every listed room (the scoring rooms included: between cohorts only), or one rehearsal's rooms by suffix */
+/* bulk resets: every listed room, or one rehearsal's rooms by suffix */
 let ALL_IDS=[];
 async function resetIds(ids,label){
   const s=secretEl.value.trim();
@@ -148,7 +152,7 @@ async function resetIds(ids,label){
   else say(label+': '+ok+' rooms cleared.');
   document.querySelectorAll('#rooms .ct').forEach(c=>{c.textContent='–';c.className='ct';});
 }
-document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room, scoring rooms included'));
+document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room'));
 document.getElementById('resetTrial').addEventListener('click',()=>{
   const suf=document.getElementById('suffix').value.trim().replace(/[^a-z0-9-]/g,'');
   if(!suf){say('Type the rehearsal room suffix first (the part after ?room=).',true);return;}
