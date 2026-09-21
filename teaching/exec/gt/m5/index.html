@@ -27,6 +27,8 @@
 .clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
 .clipframe.sm .clipcover{width:560px;height:315px}
+/* a clip beside three long bullets (Challenger): the text needs the width */
+.clipframe.xs iframe,.clipframe.xs .clipcover{width:480px;height:270px}
 .clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
 .clipcover .bigplay svg{width:24px;height:24px;display:block}
 .clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
@@ -606,14 +608,17 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 <section class="slide content" data-i="17">
   <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
   <h2>When coordination locks in</h2>
-  <div class="rowfig" style="align-items:center;gap:56px">
+  <div class="rowfig" style="align-items:center;gap:40px">
     <ul class="bullets">
       <li>The night before the Challenger launch in 1986, the engineers who built the booster rockets told NASA it was too cold to launch safely</li>
       <li data-step="1">NASA pushed back, and the engineers&rsquo; own managers reversed the recommendation. When the call resumed, NASA asked if anyone had anything to add, and the engineers in the room said nothing</li>
       <li data-step="2"><b>This is the investment game you just played!</b> Speaking up alone is costly, and it only pays if enough of the room speaks up with you</li>
     </ul>
-    <div class="ba" style="padding:0 30px">
-      <div class="station"><svg class="pg" style="height:210px" viewBox="0 0 116 132"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"></path><circle fill="var(--red,#CE1E32)" cx="52" cy="52" r="5"></circle><path fill="var(--red,#CE1E32)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"></path></svg><div class="slbl">Conformity &amp; silence</div></div>
+    <div class="clipframe xs" id="chwrap">
+      <button class="clipcover" id="chload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Challenger, the night before the launch</span>
+      </button>
     </div>
   </div>
 </section>
@@ -1319,13 +1324,13 @@ makeTapasBoard({gid:'chk',room:'m5-chicken'+M5SUF,n:'chkN',n2:'chkN2',
   }});
 
 /* ---- embedded clips: load YouTube only on click (the title spoils the punchline) ---- */
-function clipOnClick(btnId,wrapId,videoId,title){
+function clipOnClick(btnId,wrapId,videoId,title,start,end){
   const btn=document.getElementById(btnId);
   if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
   btn.addEventListener('click',()=>{
     const wrap=document.getElementById(wrapId);
     const f=document.createElement('iframe');
-    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1'+(start?'&start='+start:'')+(end?'&end='+end:'');
     f.title=title;
     f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     f.allowFullscreen=true;
@@ -1333,6 +1338,9 @@ function clipOnClick(btnId,wrapId,videoId,title){
   });
 }
 clipOnClick('jbload','jbwrap','9nB-JXH2Wyc','JetBlue customers, game theorists');
+/* Retro Report, Lessons From the Challenger Tragedy (2019, 18 min): only the teleconference,
+   6:36 'On the day before Challenger' to 9:56 'gave them what they wanted to hear' */
+clipOnClick('chload','chwrap','Ds6ie8IV-LI','Challenger, the night before the launch (Retro Report)',396,597);
 clipOnClick('mb1load','mb1wrap','pWgyy_rlmag','Moneyball: the coordination problem in scouting');
 clipOnClick('mb2load','mb2wrap','DtumWOsgFXc','Moneyball: how Billy Beane solved it');
 /* the second clip fades in over the first on the same keypress that brings in Billy Beane's room; a playing first clip is stopped */
