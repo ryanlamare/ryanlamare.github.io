@@ -65,3 +65,37 @@ function fromHash(){const m=location.hash.match(/^#(\d+)(?:\.(\d+))?$/);
   if(m){const i=+m[1];if(i>=0&&i<built){cur=i;step=m[2]?+m[2]:0;render();}}}
 addEventListener('hashchange',fromHash);fromHash();
 })();
+
+/* extra resources (a module's last slide): a card carrying data-yt plays in
+   place, over the slide, so the deck is never left; CLOSE or Esc goes back to
+   the list, and the deck does not move underneath while a clip is up. Without
+   script a card is an ordinary link. In ?edit the cards are text, not buttons. */
+(function(){
+let open=null;
+function close(){if(open){open.remove();open=null;}document.documentElement.classList.remove('rplaying');}
+document.addEventListener('click',e=>{
+  const a=e.target.closest&&e.target.closest('a.rcard');
+  if(!a)return;
+  if(new URLSearchParams(location.search).has('edit')){e.preventDefault();return;}
+  if(!a.dataset.yt)return;
+  e.preventDefault();close();
+  const slide=a.closest('.slide');
+  open=document.createElement('div');open.className='rplayer';
+  const f=document.createElement('iframe');
+  f.src='https://www.youtube.com/embed/'+a.dataset.yt+'?autoplay=1'+(a.dataset.start?'&start='+a.dataset.start:'');
+  f.title=a.querySelector('.rtt').textContent;
+  f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  f.allowFullscreen=true;
+  const bar=document.createElement('div');bar.className='rbar';
+  const now=document.createElement('div');now.className='rnow';now.textContent=f.title;
+  const b=document.createElement('button');b.type='button';b.textContent='Close';b.addEventListener('click',close);
+  bar.appendChild(now);bar.appendChild(b);open.appendChild(f);open.appendChild(bar);slide.appendChild(open);
+  document.documentElement.classList.add('rplaying');
+});
+addEventListener('keydown',e=>{
+  if(!open)return;
+  if(e.key==='Escape')close();
+  e.stopImmediatePropagation();
+  if(e.key!=='Escape'&&e.key!=='Tab')e.preventDefault();
+},true);
+})();
