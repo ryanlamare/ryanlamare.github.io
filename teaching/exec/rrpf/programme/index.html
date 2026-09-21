@@ -41,7 +41,12 @@ p.body:last-child{margin-bottom:0}
 .srule{border:0;border-top:1.5px solid var(--ink);margin:11px 0 22px}
 
 /* ---------- at a glance ---------- */
-.glance{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+/* One grid for both days: each day's nine rows (header + eight slots) flow down its own
+   column, so slot N of day one and slot N of day two share a grid row and line up even
+   when one title wraps. Both days must keep the same number of rows. */
+.glance{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(9,auto);
+  grid-auto-flow:column;column-gap:34px}
+.gday{display:contents}
 .gday .gdh{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;
   color:var(--terracotta);padding-bottom:9px;border-bottom:2px solid var(--ink);margin-bottom:4px}
 .grow{display:grid;grid-template-columns:92px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid var(--rule);
@@ -105,14 +110,16 @@ a.mtag:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   body{background:#fff;padding:0}
   .sheet{box-shadow:none;border:0;max-width:none;padding:26px 30px}
   .shead{break-after:avoid}
-  .mod,.pre,.obox,.gday{break-inside:avoid}
+  .mod,.pre,.obox,.glance{break-inside:avoid}
   .hword{font-size:64px}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 @media (max-width:720px){
   .sheet{padding:40px 22px}
   .hword{font-size:56px}
-  .glance{grid-template-columns:1fr;gap:30px}
+  .glance{display:block}
+  .gday{display:block}
+  .gday + .gday{margin-top:30px}
   .mod{grid-template-columns:1fr;gap:16px}
   .modmark{flex-direction:row;justify-content:flex-start;gap:16px}
   .mrow{grid-template-columns:1fr;gap:3px}
