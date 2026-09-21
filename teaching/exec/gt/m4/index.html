@@ -62,8 +62,6 @@
 .pwnews.on{display:flex}
 .pwnews .nk{font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:15px;color:var(--red)}
 .pwnews .nh{font-family:var(--display);font-weight:900;font-size:40px;line-height:1.12;color:var(--ink);max-width:22ch}
-.pwnews a.gaz{font-family:var(--display);font-weight:900;font-size:26px;color:var(--ink);background:var(--paper-soft);border:4px double var(--ink);padding:16px 30px 12px;text-decoration:none}
-.pwnews a.gaz:hover{background:var(--ochre)}
 /* the closer and the way out: plain question rails */
 .rail .ritem .rt .bqa{display:block;font-weight:700;font-size:19px;color:var(--red);margin-top:4px;opacity:0;transition:opacity .4s}
 .rail .ritem .rt .bqa.shown{opacity:1}
@@ -336,7 +334,6 @@
     <div class="pwnews" id="lvnews">
       <div class="nk">Before week 5</div>
       <div class="nh">Stop here. There is news from the junction.</div>
-      <a class="gaz" href="news/">The Junction Gazette</a>
     </div>
   </div>
   <span data-step="1" data-stepcall="pwStep" style="position:absolute;width:0;height:0"></span>
@@ -759,9 +756,10 @@ const POLL_API='https://gt-poll.rlamare.workers.dev';
 /* ---- the game slide: the week in play and what it pays, one keypress a
    step (week 1, week 2, Meet? before week 3, week 3 doubled, week 4, then
    a stop and a link). The FuelWatch news and the matrices for weeks 5 and
-   6 are NOT in this file: they live in news/, which Ryan opens from the
-   link, so no keypress here and nobody paging through this deck can bring
-   the twist up early (Ryan, 21 Sep 2026). Nothing here knows what the
+   6 are NOT in this file: they live in news/, and there is no link to it
+   on the slide either (Ryan, 21 Sep 2026: anyone clicking through the deck
+   could follow a link). Ryan presses G on the stop, and only there, and
+   the Gazette opens; typing m4/news/ does the same. Nothing here knows what the
    room is doing: the teams hold their phones up (m4/price/) and keep their
    own ledgers. Payoffs as the phone page scores them. ---- */
 (function(){
@@ -794,6 +792,11 @@ const POLL_API='https://gt-poll.rlamare.workers.dev';
     draw(Math.min(on,STATES.length-1));
   };
   draw(0);
+  addEventListener('keydown',e=>{
+    if((e.key==='g'||e.key==='G')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&
+       document.getElementById('lvnews').classList.contains('on')&&
+       document.getElementById('lvnews').closest('.slide').classList.contains('active'))location.href='news/';
+  });
 })();
 
 /* ---- Two stations, one junction: the road as a loop. Cars drive down
