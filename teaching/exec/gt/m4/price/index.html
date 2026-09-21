@@ -98,6 +98,7 @@ const ROOM='m4-results'+(()=>{const r=(new URLSearchParams(location.search).get(
 function voter(){let v=null;try{v=localStorage.getItem('gt-voter');if(!v){v=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));localStorage.setItem('gt-voter',v);}}catch(_){v='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}return v;}
 const FRESH=()=>({phase:'setup',station:null,j:null,week:1,pick:null,mine:[],theirs:[],news:false,meetPick:null,met:{},sent:false});
 let S=FRESH();
+try{if(new URLSearchParams(location.search).get('fresh')==='1')localStorage.removeItem(KEY);}catch(_){}
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.phase)S=Object.assign(FRESH(),s);}catch(_){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(_){}};
 const app=document.getElementById('app');
@@ -146,17 +147,13 @@ function record(cur){
   box.style.cssText='display:flex;flex-direction:column;gap:8px';
   return box;
 }
+/* No undo (Ryan, 21 Sep 2026): a locked price is locked, and a button that says otherwise confuses the room. The old Undo last week let a team pick its own price again for a week already played. What survives is the one honest mistake, a mistap on what the OTHER station posted, fixed on the week's result screen (it never touches this team's own price), and Start again, only before week 1 is played (wrong station or junction) and after week 6 (a rehearsal phone); ?fresh=1 on the URL clears a phone at any time. */
 function footer(){
   const f=el('div','foot');
-  if(S.theirs.length&&['price','meetask','metask','news','done'].includes(S.phase))
-    f.appendChild(btn('','Undo last week',()=>{
-      S.mine.pop();S.theirs.pop();S.week=S.theirs.length+1;S.pick=null;S.meetPick=null;S.sent=false;
-      if(S.week<5)S.news=false;
-      go('price');
+  if(!S.theirs.length||S.phase==='done')
+    f.appendChild(btn('','Start again',()=>{
+      if(confirm('Start again? This clears your station, your junction and every week so far.')){S=FRESH();save();render();}
     }));
-  f.appendChild(btn('','Start again',()=>{
-    if(confirm('Start again? This clears your station, your junction and every week so far.')){S=FRESH();save();render();}
-  }));
   return f;
 }
 function full(cls,parts,label,fn){
@@ -236,10 +233,14 @@ function result(){
   app.appendChild(el('h1','','Week '+w));
   app.appendChild(el('div','card','<div class="big">'+money(r)+'</div><div class="sub">this week'+(w===3?', doubled':'')+'</div>'));
   app.appendChild(record(w));
+  app.appendChild(el('div','lbl','They posted &pound;'+(S.theirs[w-1]==='h'?'1.50':'1.40')+'.'));
   app.appendChild(btn('go',w===6?'Finish':'Next week',()=>{
     S.week=w+1;S.pick=null;S.meetPick=null;
     go(w===6?'done':w===4?'news':w===2?'meetask':'price');
   }));
+  const fx=el('div','foot');
+  fx.appendChild(btn('','Wrong? They posted &pound;'+(S.theirs[w-1]==='h'?'1.40':'1.50'),()=>{S.theirs[w-1]=S.theirs[w-1]==='h'?'c':'h';S.sent=false;save();render();}));
+  app.appendChild(fx);
   app.appendChild(footer());
 }
 function news(){
