@@ -13,7 +13,11 @@
    colour, the price and the junction number large); then the team taps what
    the other side posted and the phone adds the week to the running total.
    Before weeks 3 and 5 the same lock, reveal and hold-up asks "Meet?".
-   The page sends nothing: no names, no pairing, no server. The ledger lives
+   A station that asked then taps whether the meeting happened.
+   The page sends nothing while the game is played: no names, no pairing,
+   no server. After week 6 one tap, Send to the screen, posts the six weeks
+   and the two meetings once to the gt-poll room m4-results for the results
+   slide (Ryan, 21 Sep 2026); ?room=x sends to m4-results-x. The ledger lives
    in this phone's localStorage, so a refresh loses nothing; a dead phone is
    replaced by another teammate re-entering the past weeks, two taps each.
    Scoring is the deck's: an ordinary week 12/12, 18 against 2, 9/9 (in
@@ -44,9 +48,9 @@ button.num{font-family:var(--display);font-weight:900;font-size:26px;text-align:
 button.price{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:150px;
   border:4px solid var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:50px;line-height:1}
 button.price small{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
-/* the two prices carry no verdict (Ryan, 21 Sep 2026: green and striped red read as go and stop), and they are loud, to be read across the room: gold and deep blue, one light and one dark, a pair that red-green colour blindness leaves alone. Green and red belong to Meet?, which really is yes and no. */
-button.price.hold{background:var(--ochre);color:var(--ink)}
-button.price.cut{background:var(--blue)}
+/* green and red, solid, for the prices and for Meet? alike (Ryan, 21 Sep 2026, after gold and blue, wine and tan): the quickest way to show a prisoner's dilemma is the bad outcome, and red against red IS the bad outcome; the same two colours carry the results slide, where red = bad needs no key. No stripes. The digits and the words carry it for anyone who cannot tell the two apart. */
+button.price.hold{background:var(--green)}
+button.price.cut{background:var(--red)}
 button.price.dim{opacity:.35}
 button.price.sel{outline:5px solid var(--ink);outline-offset:3px}
 button.go{width:100%;font-weight:700;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);
@@ -62,8 +66,8 @@ button.go:disabled{opacity:.3;cursor:default}
 .rec .wl em{font-style:normal;color:var(--red);margin-left:2px}
 .rec .wk.cur .wl{color:var(--ink)}
 .rec .sq{height:22px;border:1.5px solid var(--rule);background:transparent}
-.rec .sq.h{background:var(--ochre);border-color:var(--ochre)}
-.rec .sq.c{background:var(--blue);border-color:var(--blue)}
+.rec .sq.h{background:var(--green);border-color:var(--green)}
+.rec .sq.c{background:var(--red);border-color:var(--red)}
 .rec .rv{font-weight:700;font-size:11.5px;text-align:center;color:var(--ink);min-height:14px}
 .reckey{font-weight:600;font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
 .foot{display:flex;gap:18px;margin-top:6px}
@@ -72,8 +76,8 @@ button.go:disabled{opacity:.3;cursor:default}
 .full{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;
   padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);text-align:center;color:var(--paper)}
 .full.locked{background:var(--ink)}
-.full.hold{background:var(--ochre);color:var(--ink)}
-.full.cut{background:var(--blue)}
+.full.hold{background:var(--green)}
+.full.cut{background:var(--red)}
 .full.meety{background:var(--green)}
 .full.meetn{background:var(--red)}
 .full .fk{font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:14px;opacity:.85}
@@ -89,7 +93,10 @@ button.go:disabled{opacity:.3;cursor:default}
 <div class="wrap" id="app"></div>
 <script>
 const KEY='m4-price-v1';
-const FRESH=()=>({phase:'setup',station:null,j:null,week:1,pick:null,mine:[],theirs:[],news:false,meetPick:null});
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const ROOM='m4-results'+(()=>{const r=(new URLSearchParams(location.search).get('room')||'').replace(/[^a-z0-9-]/g,'');return r?'-'+r:'';})();
+function voter(){let v=null;try{v=localStorage.getItem('gt-voter');if(!v){v=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));localStorage.setItem('gt-voter',v);}}catch(_){v='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}return v;}
+const FRESH=()=>({phase:'setup',station:null,j:null,week:1,pick:null,mine:[],theirs:[],news:false,meetPick:null,met:{},sent:false});
 let S=FRESH();
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.phase)S=Object.assign(FRESH(),s);}catch(_){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(_){}};
@@ -135,15 +142,15 @@ function record(cur){
     rec.appendChild(wk);
   }
   box.appendChild(rec);
-  box.appendChild(el('div','reckey','<span>Top row: your sign</span><span>Bottom row: theirs</span><span>Gold &pound;1.50 &middot; blue &pound;1.40</span>'));
+  box.appendChild(el('div','reckey','<span>Top row: your sign</span><span>Bottom row: theirs</span><span>Green &pound;1.50 &middot; red &pound;1.40</span>'));
   box.style.cssText='display:flex;flex-direction:column;gap:8px';
   return box;
 }
 function footer(){
   const f=el('div','foot');
-  if(S.theirs.length&&['price','meetask','news','done'].includes(S.phase))
+  if(S.theirs.length&&['price','meetask','metask','news','done'].includes(S.phase))
     f.appendChild(btn('','Undo last week',()=>{
-      S.mine.pop();S.theirs.pop();S.week=S.theirs.length+1;S.pick=null;S.meetPick=null;
+      S.mine.pop();S.theirs.pop();S.week=S.theirs.length+1;S.pick=null;S.meetPick=null;S.sent=false;
       if(S.week<5)S.news=false;
       go('price');
     }));
@@ -164,7 +171,7 @@ function render(){
   document.querySelectorAll('.full').forEach(n=>n.remove());
   app.appendChild(el('div','tag','<i></i>APPLIED GAME THEORY &middot; MODULE 4'));
   if(S.phase!=='setup')awake();
-  ({setup,meetask,meetlocked,meetshow,price,locked,show,theirs,result,news,done})[S.phase]();
+  ({setup,meetask,meetlocked,meetshow,metask,price,locked,show,theirs,result,news,done})[S.phase]();
 }
 
 function setup(){
@@ -266,7 +273,17 @@ function meetshow(){
     el('div','fk',NAME[S.station]),
     el('div','fw',S.meetPick==='y'?'Meet':'No meeting'),
     el('div','fj','Junction '+S.j)
-  ],'Done',()=>go('price')));
+  ],'Done',()=>{if(S.meetPick==='y')go('metask');else{S.met[S.week]=false;go('price');}}));
+}
+/* only a station that asked can have met; its one tap is what the results slide shows */
+function metask(){
+  app.appendChild(header());
+  app.appendChild(el('h1','','Before week '+S.week+': did the two stations meet?'));
+  const st=el('div','choices');
+  [[true,'We met'],[false,'We did not meet']].forEach(([k,t])=>st.appendChild(btn('opt',t,()=>{S.met[S.week]=k;go('price');})));
+  app.appendChild(st);
+  app.appendChild(record(S.week));
+  app.appendChild(footer());
 }
 function done(){
   const mineT=total(S.theirs), themT=S.theirs.reduce((t,_,i)=>t+revenue(i+1,S.theirs[i],S.mine[i]),0);
@@ -276,6 +293,15 @@ function done(){
   app.appendChild(el('div','card','<div class="big">'+money(mineT)+'</div><div class="sub">your station&rsquo;s revenue</div>'));
   app.appendChild(el('div','card','<div class="big">'+money(themT)+'</div><div class="sub">their station&rsquo;s revenue</div>'));
   app.appendChild(record(0));
+  /* the only thing this page ever sends, and only on this tap: the station, the junction, the six weeks and the two meetings, for the results slide (m4/#6). No names. If it fails the game has lost nothing. */
+  const b=btn('go',S.sent?'Sent. Send again':'Send to the screen',()=>{
+    b.disabled=true;b.textContent='Sending';
+    const t=['r',S.station,S.j,S.mine.join(''),S.theirs.join(''),(S.met[3]?'y':'n')+(S.met[5]?'y':'n')].join('|');
+    fetch(POLL_API+'/p/'+ROOM+'/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:voter(),t})})
+      .then(r=>{if(!r.ok)throw 0;S.sent=true;save();render();})
+      .catch(()=>{b.disabled=false;b.textContent='Not sent. Try again';});
+  });
+  app.appendChild(b);
   app.appendChild(footer());
 }
 render();
