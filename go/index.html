@@ -352,12 +352,24 @@ function setupRank(opts,poll){
     }).catch(()=>{});
   }
 }
+/* a reset room forgets what this phone wrote: then it may answer again
+   (the write-in twin of the votes check in renderPoll). With two rooms, the
+   pair, the phone stays locked unless both have forgotten it. */
+function unsayIfReset(poll,ids){
+  const id=pollId;
+  Promise.all(ids.map(x=>fetch(API+'/p/'+x+'/entries').then(r=>r.json()))).then(ds=>{
+    if(pollId!==id||ds.some(d=>(d.entries||[]).some(e=>e.v===voter)))return;
+    ids.forEach(x=>{try{localStorage.removeItem('gt-said-'+x);}catch(_){}});
+    document.getElementById('status').textContent='';
+    renderPoll(poll,id);
+  }).catch(()=>{});
+}
 function setupText(opts,poll){
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
   const st=document.getElementById('status');
   let said=false;
   try{said=poll.once&&localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
-  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);unsayIfReset(poll,[pollId]);return;}
   const row=document.createElement('div');row.className='sayrow'+(poll.long?' long':'');
   /* a "long" poll wants a sentence or two: a bigger box, Enter makes a new line, the button sends */
   const inp=document.createElement(poll.long?'textarea':'input');
@@ -401,7 +413,7 @@ function setupForm(opts,poll){
   const st=document.getElementById('status');
   let said=false;
   try{said=localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
-  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);unsayIfReset(poll,[pollId]);return;}
   const max=poll.max||110, inputs=[], cards=[];
   poll.fields.forEach(([label,q],i)=>{
     const card=document.createElement('div');card.className='pcard s'+i;
@@ -442,7 +454,7 @@ function setupPair(opts,poll,poll2,id2){
   const st=document.getElementById('status');
   let said=false;
   try{said=localStorage.getItem('gt-said-'+pollId)==='1'&&localStorage.getItem('gt-said-'+id2)==='1';}catch(_){}
-  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);unsayIfReset(poll,[pollId,id2]);return;}
   const mk=(ph)=>{const i=document.createElement('input');i.maxLength=80;i.placeholder=ph||'Type an answer…';i.autocomplete='off';return i;};
   const inp1=mk(poll.ph), inp2=mk(poll2.ph);
   const wrap=i=>{const w=document.createElement('div');w.className='sayrow';w.appendChild(i);return w;};

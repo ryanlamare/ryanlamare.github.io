@@ -180,7 +180,7 @@ function render(){
 
 /* ================= the car market ================= */
 const MROOM=qs.get('room')||'m8-market';
-const money=v=>'$'+Math.abs(v).toLocaleString('en-GB');
+const money=v=>'£'+Math.abs(v).toLocaleString('en-GB');
 let sayN=0;
 function say(room,line){sayN++;return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});}
 const answers=room=>fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
@@ -202,9 +202,9 @@ function renderMarket(){
       const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.flexDirection='column';wrap.style.gap='8px';
       if(label)wrap.appendChild(lbl(label));
       const chips=document.createElement('div');chips.className='plist';
-      const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.placeholder='$';inp.min=0;inp.max=9999;inp.dataset.key=key;
+      const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.placeholder='£';inp.min=0;inp.max=9999;inp.dataset.key=key;
       if(val!==null&&val!==undefined)inp.value=val;
-      [1000,1500,2000,2500,3000,3500,4000].forEach(v=>{const b=document.createElement('button');b.textContent='$'+v.toLocaleString('en-GB');if(+inp.value===v)b.classList.add('on');b.addEventListener('click',()=>{inp.value=v;chips.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});chips.appendChild(b);});
+      [1000,1500,2000,2500,3000,3500,4000].forEach(v=>{const b=document.createElement('button');b.textContent='£'+v.toLocaleString('en-GB');if(+inp.value===v)b.classList.add('on');b.addEventListener('click',()=>{inp.value=v;chips.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});chips.appendChild(b);});
       const pr=document.createElement('div');pr.className='priceRow';pr.appendChild(inp);
       wrap.appendChild(chips);wrap.appendChild(pr);
       return {wrap,inp};

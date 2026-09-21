@@ -480,9 +480,9 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <div class="rowfig" style="top:200px">
     <ul class="bullets" style="max-width:640px">
       <li><b>Let&rsquo;s play a game where you can win lots of money!</b></li>
-      <li data-step="1">You have two choices &ndash; invest, or don&rsquo;t invest. Investing puts <b>$100</b> into the pot; sitting out puts in nothing, and risks nothing</li>
-      <li data-step="2">If you invest and <b>90% of the room</b> invests too, you get your $100 back and I&rsquo;ll give you another $50</li>
-      <li data-step="3">If less than 90% of the room invests, you lose your $100 and get nothing back</li>
+      <li data-step="1">You have two choices &ndash; invest, or don&rsquo;t invest. Investing puts <b>&pound;100</b> into the pot; sitting out puts in nothing, and risks nothing</li>
+      <li data-step="2">If you invest and <b>90% of the room</b> invests too, you get your &pound;100 back and I&rsquo;ll give you another &pound;50</li>
+      <li data-step="3">If less than 90% of the room invests, you lose your &pound;100 and get nothing back</li>
       <li data-step="4">We&rsquo;ll play <b>two rounds</b>, and your wins and losses add up</li>
       <li data-step="5">Round one is played in silence. Then <b>one volunteer can address the room</b> before round two</li>
     </ul>
@@ -539,10 +539,10 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
       <div class="cl" style="grid-column:4">Don&rsquo;t Invest</div>
       <div class="rl" style="grid-row:3">Invest</div>
       <div class="rl" style="grid-row:4">Don&rsquo;t Invest</div>
-      <div class="cell" id="iv11" style="grid-row:3;grid-column:3"><span class="pa">+$50</span><span class="pc">,</span><span class="pb">+$50</span></div>
-      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">&minus;$100</span><span class="pc">,</span><span class="pb">$0</span></div>
-      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">$0</span><span class="pc">,</span><span class="pb">+$50</span></div>
-      <div class="cell" id="iv22" style="grid-row:4;grid-column:4"><span class="pa">$0</span><span class="pc">,</span><span class="pb">$0</span></div>
+      <div class="cell" id="iv11" style="grid-row:3;grid-column:3"><span class="pa">+&pound;50</span><span class="pc">,</span><span class="pb">+&pound;50</span></div>
+      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">&minus;&pound;100</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
+      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">+&pound;50</span></div>
+      <div class="cell" id="iv22" style="grid-row:4;grid-column:4"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
     </div>
     <div class="mxnote">
       <span data-step="1">Two Nash equilibria on the diagonal &ndash; everyone invests, or nobody does&hellip;</span>
@@ -904,8 +904,8 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 </section>
 
 <section class="slide content learn" data-i="27">
-  <div class="kicker"><i></i>MODULE 5 · WHAT DID WE LEARN</div>
-  <h2>What did we learn?</h2>
+  <div class="kicker"><i></i>MODULE 5 · TAKEAWAYS</div>
+  <h2>a few key takeaways...</h2>
   <div class="tiles">
     <div class="tile">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><use href="#im-tower"/></svg></div>
@@ -995,7 +995,7 @@ function refreshShownCalls(){
       const ci=document.getElementById('inv-'+r+'-i'), cd=document.getElementById('inv-'+r+'-d');
       ci.querySelector('.tcount').textContent=on?x.inN:''; cd.querySelector('.tcount').textContent=on?x.out:'';
       lane(ci,on?x.inN:0); lane(cd,on?x.out:0);
-      document.getElementById('inv-'+r+'-v').innerHTML=on?(x.part?Math.round(x.rate*100)+'% invested &ndash; '+(x.pays?'<b>it pays out: $50 on top for every investor</b>':'<b>under 90%: every investor loses their $100</b>'):'Nobody answered'):'';
+      document.getElementById('inv-'+r+'-v').innerHTML=on?(x.part?Math.round(x.rate*100)+'% invested &ndash; '+(x.pays?'<b>it pays out: &pound;50 on top for every investor</b>':'<b>under 90%: every investor loses their &pound;100</b>'):'Nobody answered'):'';
     }
   }
   window.invReveal=function(r,on){
@@ -1090,7 +1090,14 @@ function krTop(k){
    dropped, a leading "the" ignored, digit-only answers compared without
    spaces ("50 - 50" is "50/50"), and a shorter answer joins a longer one
    that contains it as whole words ("Kelce" joins "Travis Kelce") */
-function fuzzyKey(t){
+function fuzzyKey(t,id){
+  /* the two piles: only the numbers count, larger first, and one number
+     alone is a pile and what it leaves ("50 and 50", "£50 each", "60" all land) */
+  if(id==='m5-k11'){
+    const n=(String(t).match(/\d+(\.\d+)?/g)||[]).map(Number);
+    if(n.length===1&&n[0]<=100)n.push(100-n[0]);
+    if(n.length===2)return n.sort((a,b)=>b-a).join('-');
+  }
   let s=String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   s=s.replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
   s=s.replace(/^(the|a|an) /,'');
