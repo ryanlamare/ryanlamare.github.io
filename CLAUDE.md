@@ -144,6 +144,16 @@ Dilemmas") is a good design reference — game staged first across several
 slides, theory named afterwards, business cases in the back half, 25–95
 words a slide.)
 
+**One page lives at `teaching/exec/rrpf/programme/` again, on purpose** (21 Sep
+2026): the client's front page for the training — agenda, the eight modules,
+pre-reading, practicalities. It is Ryan's own 28 July proposal page brought up
+to date, at the address RRPF already had. It sits outside `exec/gt/` so that
+trimming its URL does not land on the hub and spoil the games, so never link a
+deck from it before the training, and never give `exec/rrpf/` an index. Ryan
+edits it live with `/edit.js`, which commits straight to GitHub even from
+localhost: pull before touching it. The agenda's fixed points are the start,
+lunch and the finish; slot lengths inside them are his to bend on the day.
+
 Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
 including the decks. `robots.txt` does **not** disallow the path, and that is on
 purpose — a crawler has to fetch a page to see its noindex, so blocking would
