@@ -54,6 +54,9 @@
 .jrow.head .ta{color:var(--teal)} .jrow.head .tb{color:var(--terracotta)}
 .jrow .jn{font-family:var(--display);font-weight:900;font-size:22px;line-height:1;color:var(--ink)}
 .jrow .wk{display:flex;flex-direction:column;gap:3px}
+/* weeks 5 and 6 are the FuelWatch weeks: the same ochre that rings the changed cells on the week 5 matrix */
+.jrow .wk.fw{box-shadow:0 0 0 3.5px var(--ochre);background:var(--ochre)}
+.jrow.head .fw{background:var(--ochre);color:var(--ink);padding:4px 0 3px;box-shadow:0 0 0 3.5px var(--ochre)}
 .jrow .sq{height:var(--jh,24px);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;letter-spacing:.04em;color:var(--paper);cursor:pointer}
 .jrow .sq.h{background:var(--green)} .jrow .sq.c{background:var(--red)}
 .jrow .sq::before{font-weight:700;font-size:10px;letter-spacing:.1em;margin-right:6px;opacity:.75}
@@ -913,11 +916,11 @@ const POLL_API='https://gt-poll.rlamare.workers.dev';
     if(!R.length){host.innerHTML='<div class="jrempty">Press Send to the screen on your phone.</div>';return;}
     const n=R.length, jh=Math.max(15,Math.min(26,Math.floor((430/n-14)/2)));
     host.style.setProperty('--jh',jh+'px');host.style.setProperty('--jg',(n>6?7:12)+'px');
-    const wk=(r,w)=>'<div class="wk"><div class="sq sa '+r.a[w]+'" data-k="'+r.n+'a'+w+'">'+(r.a[w]==='h'?'1.50':'1.40')+'</div><div class="sq sb '+r.b[w]+'" data-k="'+r.n+'b'+w+'">'+(r.b[w]==='h'?'1.50':'1.40')+'</div></div>';
+    const wk=(r,w,fw)=>'<div class="wk'+(fw?' fw':'')+'"><div class="sq sa '+r.a[w]+'" data-k="'+r.n+'a'+w+'">'+(r.a[w]==='h'?'1.50':'1.40')+'</div><div class="sq sb '+r.b[w]+'" data-k="'+r.n+'b'+w+'">'+(r.b[w]==='h'?'1.50':'1.40')+'</div></div>';
     const mt=(r,i)=>'<div class="mt '+(r.met[i]?'y':'n')+'" data-k="'+r.n+'m'+i+'">'+(r.met[i]?'Met':'Didn&rsquo;t<br>meet')+'</div>';
     let h=(demo?'<div class="demotag">DEMO DATA</div>':'')+
-      '<div class="jrow head"><span></span><span>Week 1</span><span>Week 2</span><span></span><span>Week 3<em>&times;2</em></span><span>Week 4</span><span></span><span>Week 5</span><span>Week 6</span><span class="ta">Aura</span><span class="tb">Buco&rsquo;s</span></div>';
-    R.forEach(r=>{h+='<div class="jrow"><div class="jn">Junction '+r.n+'</div>'+wk(r,0)+wk(r,1)+mt(r,0)+wk(r,2)+wk(r,3)+mt(r,1)+wk(r,4)+wk(r,5)+
+      '<div class="jrow head"><span></span><span>Week 1</span><span>Week 2</span><span></span><span>Week 3<em>&times;2</em></span><span>Week 4</span><span></span><span class="fw">Week 5</span><span class="fw">Week 6</span><span class="ta">Aura</span><span class="tb">Buco&rsquo;s</span></div>';
+    R.forEach(r=>{h+='<div class="jrow"><div class="jn">Junction '+r.n+'</div>'+wk(r,0)+wk(r,1)+mt(r,0)+wk(r,2)+wk(r,3)+mt(r,1)+wk(r,4,1)+wk(r,5,1)+
       '<div class="tot a">&pound;'+r.ta+'k</div><div class="tot b">&pound;'+r.tb+'k</div></div>';});
     host.innerHTML=h;
   }
