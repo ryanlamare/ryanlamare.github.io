@@ -4,7 +4,47 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT: Ryan's rehearsal notes (21 Sep 2026)
+## NEXT CHAT (written 21 Sep 2026, late): Extra resources for m6, m7, m8, then the run continues
+
+**Read this section first. It is newer than everything below, including the section after it.**
+
+Ryan ran m5 on 21 Sep and the session grew into a pass over m1, m4, m5, m7 and m8. Everything here is merged to `main` and live. He is out of prompts for a day and will come back in a new chat to review m6 to m8 and do their Extra resources with Claude.
+
+**Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 25, m7 27, m8 33.
+
+**Standing rulings from the session**
+- **Game money is pounds.** Done in m5 and m8. m4's and m7's dollars are real American cases (the J. Crew shirt, the AI spending forecast, the states' bids for Amazon, Curb's "a dollar thirty a cup") and STAY in dollars, his ruling.
+- **Every module closes on "a few key takeaways..."** under a `MODULE N · TAKEAWAYS` kicker. All eight now have one (m8's is Takeaways from the two days). m4's and m7's were written on 21 Sep from his own slides; wording is his to change.
+- **Every module ends on an Extra resources slide, after the takeaways.** Done m1 to m5. **m6, m7, m8 are the next job.** How it works is below.
+- **No take-home page.** His ruling: the resources are in the decks, and the room gets the decks afterwards.
+- **Two clips back to back are fine when they show the same principle in two places** (m1's Friends and Princess Bride). Otherwise keep a slide between clip slides.
+- **Nothing that tips a game goes before the game** (Cartman sits after the second round of offers; Radiolab's Golden Balls episode is kept off day one).
+
+**Extra resources, how to add one to m6, m7, m8**
+- One `<section>` of markup as the LAST slide, plus a tick. Copy m5's. Styles (`.resrc`, `.rcard`, `.rplayer`) are in `deck.css`; the player is at the end of `deck.js`. Nothing else to wire.
+- Two columns, Watch and listen / Read, FOUR cards a column at most. Each card's title, source line and description must each fit on ONE line (about 46, 55 and 57 characters) or the column runs off the slide.
+- A card with `data-yt="<id>"` plays in place over the slide (optional `data-start`, `data-end`, in seconds); Close or Esc returns; the deck does not move underneath. Cards without it open in a new tab.
+- Use his LER 550 / 565 slide titles where he has one ("X, game theorist"). A Watch card carries a QUESTION for the room, which is what turns a clip into ten minutes.
+- Check every video for embedding and every link for a 200 before it goes on a slide. Never commit a publisher's article as a PDF (the repo is public): link to it.
+- **Waiting for m7:** Radiolab "The Golden Rule" (https://radiolab.org/podcast/golden-rule-2304, the Golden Balls episode, fits split or steal); The Economist on price-match guarantees (550 slide 305, Conditional moves); Rebel Without a Cause (cut from m5, in m5's outtakes; only AFTER Footloose has played). **From the 550 master for m6:** the penalty links on slide 257 (Guardian on Tim Krul, two YouTube clips), the NYT Upshot on Pete Carroll's call and its clip (slide 287). **For m8:** Seinfeld, Tommy Boy, The Big Short, Silver Blaze, Gladwell's Talking to Strangers, the Leonardo podcast (slides 326 to 334). The trawl that found these: parse `ppt/slides/_rels/*.rels` in the master pptm for http targets.
+
+**What changed in each module on 21 Sep**
+- **m1 (27):** Lessons from the "I'm thinking of a number" game lost its bullets and carries two clips, Friends then The Princess Bride (the slide before ends on the Friends line). Eric Cartman, game theorist is new, after Added value matters: two clips on one slide (the Cartmanland commercial from 0:15, `s1fzQ9PJfII`, his pick; then the "you can't come" technique, `9ZuDl8GvoJw`). The TED-Ed Common Knowledge clip STAYS: its job is to tell the room the answer to the two-thirds game. Both Cartman clips are fan uploads with no captions; open them on the morning.
+- **m4 (29):** Coffee Wars is the first example, after Strip out the story, under his 550 title, stopping at 70 seconds (it is the Price Wars game the room has just played, and it breaks the module's longest run of lecture). The war for talent in Silicon Valley (clip + his four questions) and its payoff matrix (firms? / employees?) replace Four lessons, which is in the outtakes. Takeaways added.
+- **m5 (30):** Rebel Without a Cause cut to the outtakes (same beat as Footloose in m7). Challenger came in: When coordination locks in (Retro Report clip, 6:36 to 10:43, through McDonald refusing to sign) and How do you break a bad focal point?, at the END of the module before the your-world closer, read as a battle of the sexes. Bank runs on Overcoming coordination problems. The closer stays at five questions, the last one his: did the equilibrium you coordinated on align with your personal preferences?
+- **m7 (27):** takeaways added. Nothing else touched.
+- **m8 (33):** guess two-thirds is back as the programme's CLOSING GAME, three slides from the m5 outtakes, straight before Takeaways from the two days. Room `m8-twothirds`, QR `m8/qr-twothirds.svg`. Played and resolved in one sitting; the reveal freezes at the first figure. Test: `trial/m8-twothirds.test.mjs`.
+- **/go/:** a Poll Desk reset now unlocks the write-in questions too (it only ever bit a phone that had answered before, i.e. his own in rehearsal). Test: `trial/go-reset.test.mjs`.
+
+**Wording Claude drafted that he has not yet vetoed or approved** (he said he will live-edit): both Challenger slides in m5; the last rules bullet of the two-thirds game in m8 ("You watched a video about this game on the first morning…"); the takeaways tiles in m4 and m7; the one-line descriptions on every resources card.
+
+**Practical**
+- QR links are `https://ryanlamare.com/go?p=<room>`, made with segno (error M, border 1).
+- The browser tests use fixed waits and can fail if two run at once. Run them one at a time.
+- Two loose files in this folder are untracked on purpose and safe for him to delete: `challenger_mistakes_article.pdf` (linked from m5 instead) and `padstow hotelling.jpg` (m3 uses its own committed copy, `m3/padstow.jpg`).
+- He edits live with `?edit` while he runs a deck: pull before touching anything, and again before committing.
+
+## EARLIER NEXT-CHAT NOTE, still true: Ryan's rehearsal notes (21 Sep 2026)
 
 The audit agreed on 20 Sep is done: `AUDIT-2026-09-20.md` in this folder. Its section 1 (twenty defects) is closed: the mechanical fixes went live on 20 Sep and the ten that needed Ryan's words were settled with him and went live on 21 Sep; the note at the top of that section says what each became. Three of the audit's first-draft opinions (Hidden Agenda as a risk, discussion as thin, modules 5 and 6 as crowded) and its timing verdicts were withdrawn after his challenge, and the file says why; do not revive them. `REHEARSAL.md` was rewritten on 21 Sep for the plain suite and one person with a laptop and a phone.
 
