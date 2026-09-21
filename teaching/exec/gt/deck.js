@@ -82,7 +82,7 @@ document.addEventListener('click',e=>{
   const slide=a.closest('.slide');
   open=document.createElement('div');open.className='rplayer';
   const f=document.createElement('iframe');
-  f.src='https://www.youtube.com/embed/'+a.dataset.yt+'?autoplay=1'+(a.dataset.start?'&start='+a.dataset.start:'');
+  f.src='https://www.youtube.com/embed/'+a.dataset.yt+'?autoplay=1'+(a.dataset.start?'&start='+a.dataset.start:'')+(a.dataset.end?'&end='+a.dataset.end:'');
   f.title=a.querySelector('.rtt').textContent;
   f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
   f.allowFullscreen=true;
