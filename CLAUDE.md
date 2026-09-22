@@ -263,7 +263,9 @@ authorized: adapting delivery-context words ("this class"→"these sessions",
 "students"→"people in the room"), consolidating for time *when he asks*, and
 design treatments from the 565 system plus interactive widgets. Two hard
 conditions: **every wording change is enumerated for his veto in the build
-report**, and each module goes **sample-first** — a short block he drives and
+report** (retired 23 Sep 2026, his word: he tweaks wording himself with
+`?edit`, so a build report says what is new and where, not a veto list), and
+each module goes **sample-first** — a short block he drives and
 redlines before the full build. Put open design questions to him as questions
 in prose and let him answer at whatever length he likes — do **not** package
 them as lettered picks or ask for "one line back" (Ryan, 31 Aug 2026: that

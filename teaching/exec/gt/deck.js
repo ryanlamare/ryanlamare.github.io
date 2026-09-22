@@ -70,11 +70,14 @@ addEventListener('hashchange',fromHash);fromHash();
    place, over the slide, so the deck is never left; CLOSE or Esc goes back to
    the list, and the deck does not move underneath while a clip is up. Without
    script a card is an ordinary link. In ?edit the cards are text, not buttons. */
+/* Since 23 Sep 2026 anything marked .ytplay with a data-yt (and a data-title
+   for the player's bar) opens the same player, so a tile on a teaching slide
+   can play its clip without a frame of its own (m7's Dr. Strangelove tile). */
 (function(){
 let open=null;
 function close(){if(open){open.remove();open=null;}document.documentElement.classList.remove('rplaying');}
 document.addEventListener('click',e=>{
-  const a=e.target.closest&&e.target.closest('a.rcard');
+  const a=e.target.closest&&e.target.closest('a.rcard,.ytplay');
   if(!a)return;
   if(new URLSearchParams(location.search).has('edit')){e.preventDefault();return;}
   if(!a.dataset.yt)return;
@@ -83,7 +86,7 @@ document.addEventListener('click',e=>{
   open=document.createElement('div');open.className='rplayer';
   const f=document.createElement('iframe');
   f.src='https://www.youtube.com/embed/'+a.dataset.yt+'?autoplay=1'+(a.dataset.start?'&start='+a.dataset.start:'')+(a.dataset.end?'&end='+a.dataset.end:'');
-  f.title=a.querySelector('.rtt').textContent;
+  f.title=a.dataset.title||(a.querySelector('.rtt')||{}).textContent||'';
   f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
   f.allowFullscreen=true;
   const bar=document.createElement('div');bar.className='rbar';
