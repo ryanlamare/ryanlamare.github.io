@@ -4,6 +4,22 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## m6 REBALANCED (22 Sep 2026, evening): read this first
+
+Ryan's read on the morning of 22 Sep: m6 stretched one idea (penalties), played the same guessing game twice (penalties, then inspections), parked its most distinctive idea (nobody is really random) at the end as flex, and was thin on application. The shape was agreed that morning, the running order talked through in the evening chat, and it was built and put live the same evening at his word ("please build"). **Tag `m6-before-rebalance`** is the deck before it.
+
+**m6 is 23 slides (was 25):** cover, objectives, the Machiavelli/Nixon/Clinton quotes, the penalty kick, Tim Krul, beat the keeper and its board, the three penalty debrief slides (*And this room?* now reads the kicks against the keeper), **rock, paper, scissors** (three slides, off flex, straight after the penalty debrief; "Pair up with the person next to you"), Pete Carroll (two), Mixed strategies in business, **How Volkswagen got caught cheating** (PBS NewsHour, 29 Sep 2015, 4:31, whole), **Where else mixing pays** in six tiles (his three, plus airport security at LAX, drug testing and Netflix's chaos engineering; JC Penney is his story to tell on the sales tile), **How Michelin inspectors stay secret** (Half as Interesting, from the top to 5:16, where a cookware advert starts; from the top was his call, the room may not know the guide), **The problem of bias in mixed strategies** (policing: his three points from the morning plus the predictive-policing feedback loop, and a figure, WHO GETS CHECKED), Unpredictability in your world (unchanged: question 4 is where the policing point lands, so no separate backfire exercise), the takeaways (tiles reordered to follow the module), **Extra resources** (new).
+
+**Out, whole, in `m6/outtakes.html` (12 slides, with a 22 Sep index):** the shootout (2), the inspection game (3) and Boeing (1); their boards still run there against the real rooms. The phone chooser offers only beat the keeper and rock, paper, scissors (`?g=pk` and `?g=inspect` still open); `/go` lists "Beat the keeper, rock paper scissors"; the Poll Desk marks `m6-pk` and `m6-inspect` cut. The deck takes `?api=` like m8, for a mock Worker in tests.
+
+**A correction, told to him:** the PBS VW clip is NOT the West Virginia road-test story, which Claude said it was on the morning of 22 Sep. It is John German of the ICCT on how the car knew it was on a test (strapped to rollers, the same temperature, a cold start, the same drive cycle) and on the deterrent as the size of the penalty plus "some chance that they could get caught", nearly his 550 enforcement bullet. The road test is his to tell out loud.
+
+**Settled in the same chat:** fifteen kicks stay (a simulation of the keeper against typical kicking patterns: it reads people mostly in kicks 11 to 15, and over ten kicks it sits near a coin toss against most of them). Michelin stays in m6; **no m8 callback is built**. If a Michelin slide goes into m8 it must stand on its own, facts on the slide, so skipping the clip in m6 never breaks m8; decide it in the m8 read.
+
+**Wording for his veto (all Claude's unless marked):** objective 2 ("Play penalties and rock, paper, scissors, and find out how random the room really is"); the RPS pairing line (the shootout's own words); the *And this room?* line; the VW bullets, with the reveal in his own words from chat ("The problem was the consistency of the inspections"); the three new tiles; the Michelin bullets; the policing bullets (the first three are his, lightly edited; the fourth, on predictive policing, is Claude's) and WHO GETS CHECKED; the clip cover labels; every resources card.
+
+**Next, his order (22 Sep evening):** m7 then m8, each a read like the m6 one, then its build with its Extra resources; then his run of m6 to m8; then one read across m1 to m5; then the Tapas and Granito sessions; then the hub.
+
 ## NEXT CHAT (written 21 Sep 2026, late): Extra resources for m6, m7, m8, then the run continues
 
 **Read this section first. It is newer than everything below, including the section after it.**
