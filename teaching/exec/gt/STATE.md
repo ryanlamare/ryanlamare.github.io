@@ -4,6 +4,10 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## m7 READ (22 Sep 2026, late): resources live, two in-room questions open
+
+The m7 read found no m6-type problem: it uses the whole 550 section (290 to 314, condensed) except the deterrence/compellence grid, cut on 3 Sep at his steer ("least wedded to the commit/threat/promise taxonomy"; do not bring it back); 565 week 6 has nothing more but HR slides; chicken is played in m5 (the hub lease, a room vote in two rounds) and in m7 (pairs on a clock), and m7's first three rounds are the baseline the thrown wheel is measured against, with the hub lease already m5's named skip. **Extra resources is live as slide 28 of 28**, eight cards, his list with his yes: Listen (Radiolab The Golden Rule, Radiolab Lose Lose, Freakonomics Save Me From Myself, In Our Time on Sun Tzu) and Watch and read (the Rebel chickie run, playing in place; The Economist on price-match guarantees, his 550 slide 305 link; The Art of Strategy chapters 6 and 7; Schelling's The Strategy of Conflict). The headings differ from the other modules on purpose: four of his five audio-visual items are podcasts, and "Watch and listen" / "Read" would have held only seven. **Open, put to him:** the Dr. Strangelove doomsday-machine scene (SpBAFOmdNgU, 2:44, captions read) in the room, and the 2012 Olympic badminton story (AP clip GSIP3CIwmd4, 1:38) as a flex slide; Claude's recommendations are in the chat and the next STATE entry when built.
+
 ## m6 REBALANCED (22 Sep 2026, evening): read this first
 
 Ryan's read on the morning of 22 Sep: m6 stretched one idea (penalties), played the same guessing game twice (penalties, then inspections), parked its most distinctive idea (nobody is really random) at the end as flex, and was thin on application. The shape was agreed that morning, the running order talked through in the evening chat, and it was built and put live the same evening at his word ("please build"). **Tag `m6-before-rebalance`** is the deck before it.
