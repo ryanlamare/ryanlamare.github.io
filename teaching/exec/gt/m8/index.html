@@ -219,6 +219,10 @@
 .hwgrid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:12px;min-height:0}
 .hwcard{position:relative;border:2.5px solid var(--ink);background:var(--card);padding:10px 12px;display:flex;flex-direction:column;gap:6px;overflow:hidden;cursor:pointer;min-height:0}
 .hwcard .hwn{font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.hwcard.shut{align-items:center;justify-content:center;text-align:center}
+.hwcard.shut .hwn{font-size:22px}
+.hwcard.shut::after{display:none}
+.hwcard .hwtap{font-weight:600;font-size:12px;letter-spacing:.08em;color:var(--muted)}
 .hwcard ul{list-style:none;display:flex;flex-direction:column;gap:3px;font-weight:600;font-size:13px;line-height:1.3;color:var(--ink)}
 .hwcard::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34px;background:linear-gradient(transparent,var(--card))}
 .hwcard .hwbadge{display:none;position:absolute;top:8px;right:8px;background:var(--red);color:var(--paper);font-weight:700;font-size:11px;letter-spacing:.1em;padding:3px 8px}
@@ -663,7 +667,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <div class="kicker"><i></i>MODULE 8 &middot; LET&rsquo;S PLAY</div>
   <h2>What did you find?</h2>
   <div class="huntwall" id="huntWall">
-    <div class="hwbar"><div class="livecount"><span class="n" id="hwTeams">0</span><span class="l">TEAMS</span></div><div class="livecount"><span class="n" id="hwFinds">0</span><span class="l">FINDS</span></div><div class="demotag" id="hwDemo" style="position:static">DEMO DATA</div><div class="hwhint">Click a team to read its finds</div></div>
+    <div class="hwbar"><div class="livecount"><span class="n" id="hwTeams">0</span><span class="l">TEAMS</span></div><div class="livecount"><span class="n" id="hwFinds">0</span><span class="l">FINDS</span></div><div class="demotag" id="hwDemo" style="position:static">DEMO DATA</div><div class="hwhint">Click a team to reveal its finds</div></div>
     <div class="hwgrid" id="hwGrid"></div>
     <div class="hwopen" id="hwOpen" hidden></div>
   </div>
@@ -672,11 +676,11 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 <section class="slide content" data-i="22">
   <div class="kicker"><i></i>MODULE 8 &middot; YOUR WORLD</div>
   <h2 style="max-width:40ch">Screening in your world</h2>
-  <div class="leadline" style="top:230px;font-size:26px">In twos or threes: where in your own deals does the other side know something you don&rsquo;t?</div>
-  <div class="fig f565" style="top:330px;bottom:100px;gap:22px">
-    <div class="s4note" data-step="1" style="font-size:24px">What could you offer, or ask for, that the right type would accept and the <b>wrong type would refuse</b>?</div>
-    <div class="s4note" data-step="2" style="font-size:24px">How might the other side <b>fake their way through it</b>?</div>
-    <div class="s4note" data-step="3" style="font-size:24px">And where is someone <b>screening you</b>?</div>
+  <div class="rail" style="min-width:1040px;max-width:1040px;top:200px;gap:26px">
+    <div class="ritem"><div class="rn">1</div><div class="rt">Do you think the other side has hidden information only they know?</div></div>
+    <div class="ritem"><div class="rn">2</div><div class="rt">How could you get them to reveal that information to you?</div></div>
+    <div class="ritem"><div class="rn">3</div><div class="rt">How confident are you that they would be unable to fake the information they give you?</div></div>
+    <div class="ritem"><div class="rn">4</div><div class="rt">Have you ever had someone use screening devices on you?</div></div>
   </div>
 </section>
 <section class="slide content flex" data-i="23">
@@ -873,7 +877,7 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
     ['Tom',['A big logo on the building – we are here to stay','Flags of many countries – we are global','Quiet floors – serious work happens here']],
     ['Elena',['Fresh flowers at the desk – we can afford the details','Visitor badges printed with your name – we expected you','A wall of patents – we invent things','Standing desks – modern workplace','A gym – we look after our people']],
     ['Marcus',['A company history timeline – we have lasted','Photos of customers’ aircraft – proud of who we work with']]];
-  const st={live:false,teams:[],most:false,names:{}};
+  const st={live:false,teams:[],most:false,names:{},seen:new Set()};
   const esc2=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   function teams(){return st.live?st.teams:DEMO.map(([n,f])=>({name:n,finds:f}));}
   function draw(){
@@ -882,13 +886,16 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
     document.querySelectorAll('[data-huntn]').forEach(e=>e.textContent=st.live?total:0);
     document.getElementById('hwDemo').style.display=st.live?'none':'';
     const top=Math.max(0,...T.map(t=>t.finds.length));
-    const sig=JSON.stringify([T.map(t=>[t.name,t.finds.length]),st.most]);
+    const sig=JSON.stringify([T.map(t=>[t.name,t.finds.length]),st.most,[...st.seen]]);
     if(sig===grid.dataset.sig)return;grid.dataset.sig=sig;
-    grid.innerHTML=T.map((t,i)=>'<div class="hwcard'+(st.most&&top>0&&t.finds.length===top?' most':'')+'" data-t="'+i+'"><span class="hwbadge">MOST FINDS &middot; '+t.finds.length+'</span><div class="hwn">'+esc2(t.name)+'</div><ul>'+t.finds.map(f=>'<li>'+esc2(f)+'</li>').join('')+'</ul></div>').join('')||'<div class="hwhint">No finds yet</div>';
+    /* a team's list stays hidden until Ryan clicks the team; once opened, the card keeps it */
+    grid.innerHTML=T.map((t,i)=>{const open=st.seen.has(t.name);
+      return '<div class="hwcard'+(open?'':' shut')+(st.most&&top>0&&t.finds.length===top?' most':'')+'" data-t="'+i+'"><span class="hwbadge">MOST FINDS &middot; '+t.finds.length+'</span><div class="hwn">'+esc2(t.name)+'</div>'+
+        (open?'<ul>'+t.finds.map(f=>'<li>'+esc2(f)+'</li>').join('')+'</ul>':'<div class="hwtap">CLICK TO REVEAL</div>')+'</div>';}).join('')||'<div class="hwhint">No finds yet</div>';
   }
   grid.addEventListener('click',e=>{const c=e.target.closest('.hwcard');if(!c)return;const t=teams()[+c.dataset.t];if(!t)return;
-    openEl.innerHTML='<div class="hwn">'+esc2(t.name)+'</div><ol>'+t.finds.map(f=>'<li>'+esc2(f)+'</li>').join('')+'</ol>';openEl.hidden=false;});
-  openEl.addEventListener('click',()=>{openEl.hidden=true;});
+    openEl.innerHTML='<div class="hwn">'+esc2(t.name)+'</div><ol>'+t.finds.map(f=>'<li>'+esc2(f)+'</li>').join('')+'</ol>';openEl.hidden=false;st.seen.add(t.name);});
+  openEl.addEventListener('click',()=>{openEl.hidden=true;draw();});
   function fetchIt(){
     Promise.all([fetch(POLL_API+'/p/m8-hunt/entries').then(r=>r.json()),fetch(POLL_API+'/p/gt-names/entries').then(r=>r.json()).catch(()=>({entries:[]}))]).then(([h,n])=>{
       (n.entries||[]).forEach(e=>{st.names[e.v]=e.t;});
