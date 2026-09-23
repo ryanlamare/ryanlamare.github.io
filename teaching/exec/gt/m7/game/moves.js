@@ -9,9 +9,10 @@
 
    SPLIT OR STEAL (room m7-gb), two rounds, a £1,000 pot each round.
      both rounds   x = s (split) or t (steal)
-     round 2 only  seat b, BEFORE choosing: x = n (used the move: told the
+     round 2 only  seat b, BEFORE choosing: x = n (said it: told the
                    partner they will steal no matter what and hand over
-                   half afterwards) or q (did not say it)
+                   half afterwards; since 23 Sep the phone makes the move
+                   compulsory, so q (did not say it) is no longer sent)
                    seat b, AFTER a steal against a split: x = h (hand over
                    half) or k (keep it all)
      Money: split/split 500 each; steal/split 1000 to the stealer, then

@@ -11,7 +11,7 @@
                  clock: two cars close over the clock, swerve or straight
                  is one tap, and a driver who has not chosen when it runs
                  out goes straight (their own phone sends it). From round
-                 four each round opens with a ten-second window to hold
+                 four each round opens with a ten-second window to tap
                  the red button and throw the steering wheel out; a driver
                  who does not sends k when it closes, and the cars set off
                  only when both wheel lines are in, so both drivers read
@@ -132,6 +132,9 @@ button.hold span{position:relative}
 .wheelnote{border:2.5px solid var(--red);background:var(--card);padding:14px 16px;font-weight:600;font-size:15px;line-height:1.4;color:var(--ink)}
 .wheelnote b{color:var(--red)}
 .wheelnote q{font-style:italic}
+.wheelnote ul{margin:10px 0 10px 20px;display:flex;flex-direction:column;gap:6px}
+.wheelnote li{font-style:italic}
+button.opt.pick{outline:4px solid var(--red);outline-offset:-4px}
 .msg{border-left:6px solid var(--teal);background:var(--card);padding:12px 16px;font-weight:600;font-size:16px;line-height:1.35;color:var(--ink);font-style:italic}
 /* split or steal: the two golden balls open in turn, then the pot moves */
 .gbstage{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:10px;padding:16px 8px 30px;border:2.5px solid var(--ink);background:var(--card);position:relative;overflow:hidden}
@@ -475,7 +478,7 @@ function renderPlay(A,B,seat){
     else car.style.transform='translateX('+x+'px)';
   }
   const RULE={
-    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>ten seconds</b> to decide whether to <b>throw your steering wheel out of the window</b>. To throw it out, hold the red button. If you do, you cannot swerve this round, and the other driver is told that you are locked in to going straight.',
+    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>ten seconds</b> to decide whether to <b>throw your steering wheel out of the window</b>. To throw it out, tap the red button. If you do, you cannot swerve this round, and the other driver is told that you are locked in to going straight.',
     5:'<div class="rl">Round 5</div>Ten seconds to decide again, do you throw the steering wheel out or not?',
     6:'<div class="rl">Round 6, the last</div>Ten seconds to decide again, do you throw the steering wheel out or not?'
   };
@@ -634,6 +637,31 @@ function renderPlay(A,B,seat){
     }
   }
   /* swerve or straight: one tap commits, and carries the seconds it took */
+  /* split or steal: pick, then LOCK IT IN; once sent it cannot change
+     (Ryan, 23 Sep: otherwise they just tap and that is it) */
+  function lockButtons(n,opts,cls){
+    const wrap=document.createElement('div');
+    const row=document.createElement('div');row.className='bigrow'+(cls?' '+cls:'');row.style.marginTop='10px';
+    const lock=document.createElement('button');lock.className='send';lock.type='button';lock.style.marginTop='12px';lock.textContent='LOCK IT IN';lock.disabled=true;
+    let picked=null;
+    opts.forEach(o=>{
+      const b=document.createElement('button');b.className='opt';
+      if(o.ball)b.innerHTML='<span class="ball">'+o.ball+'</span>'+esc(o.n); else b.textContent=o.n;
+      b.addEventListener('click',()=>{if(posting)return;picked=o.k;row.querySelectorAll('.opt').forEach(x=>x.classList.remove('pick'));b.classList.add('pick');lock.disabled=false;});
+      row.appendChild(b);
+    });
+    lock.addEventListener('click',()=>{if(!picked||posting)return;lock.disabled=true;row.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+      const b=[...row.querySelectorAll('.opt')][opts.findIndex(o=>o.k===picked)];b.classList.remove('pick');
+      post(n,picked,row,b);});
+    wrap.appendChild(row);wrap.appendChild(lock);
+    return wrap;
+  }
+  /* the locked choice, shown while the other side decides */
+  function lockedButtons(n,opts,cls,picked){
+    const row=buttons(n,opts,cls,picked);
+    row.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+    return row;
+  }
   function buttonsTimed(n,opts){
     const row=document.createElement('div');row.className='bigrow';row.style.marginTop='10px';
     opts.forEach(o=>{
@@ -645,19 +673,13 @@ function renderPlay(A,B,seat){
     });
     return row;
   }
-  /* press and hold for a second to throw the wheel: the act of commitment,
-     and a wrong finger cannot do it */
+  /* one tap throws the wheel: on a clock, one tap commits (Ryan, 23 Sep) */
   function holdButton(n,svg){
     const b=document.createElement('button');b.className='hold';b.type='button';
-    b.innerHTML='<i class="fill"></i><span>Throw the wheel out (hold)</span>';
-    let timer=null;
-    const start=e=>{if(posting||b.disabled)return;e.preventDefault();b.classList.add('holding');
-      timer=setTimeout(()=>{timer=null;b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
-        svg.querySelector('#myWheel')?.classList.add('go');post(n,'w',null,null,Math.min(WCLOCK,Math.round(wElapsed(n))));},1000);};
-    const stop=()=>{b.classList.remove('holding');if(timer){clearTimeout(timer);timer=null;}};
-    b.addEventListener('pointerdown',start);
-    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));
-    b.addEventListener('contextmenu',e=>e.preventDefault());
+    b.innerHTML='<span>Throw the wheel out</span>';
+    b.addEventListener('click',()=>{if(posting||b.disabled)return;
+      b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
+      svg.querySelector('#myWheel')?.classList.add('go');post(n,'w',null,null,Math.min(WCLOCK,Math.round(wElapsed(n))));});
     return b;
   }
 
@@ -739,25 +761,24 @@ function renderPlay(A,B,seat){
       head(n,totalRow);
       const r2=document.createElement('div');r2.className='role';r2.textContent='Before you both choose';stage.appendChild(r2);
       const note=document.createElement('div');note.className='wheelnote';
-      note.innerHTML='<b>You have an extra option this round.</b> You may tell '+esc(them)+': <q>I am going to steal, no matter what you do. If you split, I will give you half of the pot afterwards.</q> If you steal and they split, your phone will ask you whether to hand over half.';
+      note.innerHTML='<b>This round, you must tell '+esc(them)+' the following, in this exact order:</b><ul><li>I am going to steal, no matter what you do.</li><li>If you play the split ball, I promise to give you half the pot after the game ends.</li></ul>You must say the entire statement in full, not just part of it. If you steal and they split, your phone will ask you whether to hand over half.';
       stage.appendChild(note);
-      const hint=document.createElement('div');hint.className='status';hint.style.marginTop='10px';hint.textContent='Talk it over. Did you say it to them?';stage.appendChild(hint);
-      stage.appendChild(buttons(n,[{k:'n',n:'I SAID IT'},{k:'q',n:'I DIDN’T SAY IT'}],'words',mineSlot.c));
+      stage.appendChild(buttons(n,[{k:'n',n:'I’VE SAID IT'}],'words',mineSlot.c));
     }else if(k.startsWith('waitmove:')){
-      head(n,totalRow);waiting('Talk it over with '+them+'. Your choice opens in a moment…');
+      head(n,totalRow);waiting('Listen to what '+them+' has to say. Your choice opens in a moment…');
     }else if(k.startsWith('choose:')){
       head(n,totalRow);
       const hint=document.createElement('div');hint.className='status';hint.textContent=(n===1?'A £1,000 pot. Talk it over, then choose':'Another £1,000 pot. Talk it over, then choose');stage.appendChild(hint);
-      stage.appendChild(buttons(n,BALLS,'balls',mineSlot.d));
+      stage.appendChild(lockButtons(n,BALLS,'balls'));
     }else if(k.startsWith('hand:')){
       head(n,totalRow);
       const r2=document.createElement('div');r2.className='role';r2.textContent='You have the whole £1,000';stage.appendChild(r2);
       const hint=document.createElement('div');hint.className='status';hint.textContent=them+' split. Hand over half?';stage.appendChild(hint);
-      stage.appendChild(buttons(n,[{k:'h',n:'HAND OVER HALF'},{k:'k',n:'KEEP IT ALL'}],'words',mineSlot.e));
+      stage.appendChild(lockButtons(n,[{k:'h',n:'HAND OVER HALF'},{k:'k',n:'KEEP IT ALL'}],'words'));
     }else{
       head(n,totalRow);
-      stage.appendChild(buttons(n,BALLS,'balls',mineSlot.d));
-      st.textContent='Sent. Waiting for '+them+'…';
+      stage.appendChild(lockedButtons(n,BALLS,'balls',mineSlot.d));
+      st.textContent='Locked in. Waiting for '+them+'…';
     }
   }
 
