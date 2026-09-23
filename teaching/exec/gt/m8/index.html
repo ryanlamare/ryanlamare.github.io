@@ -237,6 +237,11 @@ ul.rl2 b{color:var(--red)} .night2 ul.rl2 b{color:var(--ochre)}
 .cs.revealed .names span .rtag{display:block}
 .names span .sus{display:none;position:absolute;top:-13px;right:-13px;min-width:30px;height:30px;border-radius:15px;background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-style:normal;font-size:16px;line-height:30px;text-align:center;padding:0 7px;z-index:1}
 .cs.revealed .names span .sus{display:block}
+/* the dawn (Ryan, 23 Sep): night lifts slowly, then the name is struck slowly, then the banner */
+.slide.csboard{transition:opacity .40s ease, visibility 0s linear .40s, background-color 4s ease}
+.slide.csboard.active{transition:opacity .40s ease, background-color 4s ease}
+.csboard h2,.csboard .kicker,.csboard .cstable,.csboard .names span,.csboard .cshead .csph,.csboard .cshead .csc{transition:background-color 4s ease,color 4s ease,border-color 4s ease}
+.csboard .names span::after{transition:transform 3s cubic-bezier(.55,0,.35,1)}
 .cs.revealed .names span.au{color:var(--teal);border-color:var(--teal)}
 .cstables.one .names{gap:16px 20px;margin-top:10px}
 .cstables.one .names span{font-size:42px;padding:10px 18px}
@@ -652,7 +657,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
     <div class="cap" data-step="2">Everyone introduces themselves before the first night. <b>The committee wins</b> when every Manipulator is removed. <b>The Manipulators win</b> when they are half the committee</div>
   </div>
 </section>
-<section class="slide content" data-i="24">
+<section class="slide content csboard" data-i="24">
   <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
   <h2>The committee</h2>
   <div class="cs">
@@ -933,6 +938,12 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
       2:[{by:'Priya',s:['Marcus']},{by:'Tom',s:['Marcus']},{by:'Alex',s:['Dana']},{by:'Bea',s:['Marcus']},{by:'Fay',s:['Gus']},{by:'Chris',s:['Dana']}],
       3:[{by:'Priya',s:['Dana']},{by:'Tom',s:['Dana']},{by:'Alex',s:['Bea']},{by:'Bea',s:['Dana']},{by:'Fay',s:['Tom']}]}};
   let prev=null, wasDemo, timer=null;
+  /* a name removed overnight waits for the dawn (DAWN), then is struck slowly (STRIKE), then the banner;
+     a name voted off by day is struck at once, slowly, then the banner */
+  const DAWN=5000, STRIKE=3000, hold={};
+  let last=null;
+  /* the count waits with the strike, or it would give the name away */
+  function count(el,b){const held=Object.keys(hold).length;el.querySelector('.csc').textContent=b.phase==='lobby'?(b.seated+' seated, waiting to start'):(b.phase==='over'&&!held?(b.winner==='committee'?'the committee won':'the Manipulators won'):((b.alive+held)+' of '+b.seated+' still at the table'));}
   function banner(el,html,stay){
     const b=el.querySelector('.banner');if(!b)return;
     b.innerHTML=html;b.classList.toggle('stay',!!stay);b.classList.add('on');
@@ -949,7 +960,7 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
     el.querySelector('.demotag').style.display=demo?'':'none';
     el.closest('.slide').classList.toggle('night',b.phase==='night');
     el.querySelector('.csph').textContent=b.phase==='night'?'Night '+b.round:(b.phase==='day'||b.phase==='vote'?'Day '+b.round:'');
-    el.querySelector('.csc').textContent=b.phase==='lobby'?(b.seated+' seated, waiting to start'):(b.phase==='over'?(b.winner==='committee'?'the committee won':'the Manipulators won'):(b.alive+' of '+b.seated+' still at the table'));
+    last=b;
     const box=el.querySelector('.names');
     if(wasDemo!==undefined&&wasDemo!==demo){box.textContent='';prev=null;}
     wasDemo=demo;
@@ -962,11 +973,19 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
       sp.innerHTML=esc(s.n)+(m?'<small class="rtag">'+(s.role==='b'?'MANIPULATOR':(s.role==='a'?'AUDITOR':'&nbsp;'))+'</small><i class="sus">'+m[s.n]+'</i>':'');
       const wasAlive=prev?(prev.alive[s.n]!==false):true;
       sp.classList.toggle('bk',s.role==='b');sp.classList.toggle('au',s.role==='a');
-      if(!s.alive&&wasAlive&&prev&&!demo){sp.classList.add('fresh');setTimeout(()=>sp.classList.remove('fresh'),700);
-        banner(el,(s.out&&s.out.how==='recused')?'<small>The committee has voted</small>'+esc(s.n)+' is removed':'<small>Overnight</small>'+esc(s.n)+' was pulled off the committee');}
-      sp.classList.toggle('out',!s.alive);
+      if(!s.alive&&wasAlive&&prev&&!demo){
+        const msg=(s.out&&s.out.how==='recused')?'<small>The committee has voted</small>'+esc(s.n)+' is removed':'<small>Overnight</small>'+esc(s.n)+' was pulled off the committee';
+        hold[s.n]=1;
+        setTimeout(()=>{delete hold[s.n];
+          const x=box.querySelector('[data-n="'+CSS.escape(s.n)+'"]');if(!x)return;
+          x.classList.add('out');if(last)count(el,last);
+          setTimeout(()=>{x.classList.add('fresh');setTimeout(()=>x.classList.remove('fresh'),700);banner(el,msg);},STRIKE);
+        },prev.phase==='night'?DAWN:200);
+      }
+      if(!hold[s.n])sp.classList.toggle('out',!s.alive);
     });
-    if(prev&&!demo&&prev.phase==='night'&&b.phase!=='night'&&!b.seats.some(s=>!s.alive&&prev.alive[s.n]!==false))banner(el,'<small>Overnight</small>Nobody was removed',true);
+    count(el,b);
+    if(prev&&!demo&&prev.phase==='night'&&b.phase!=='night'&&!b.seats.some(s=>!s.alive&&prev.alive[s.n]!==false))setTimeout(()=>banner(el,'<small>Overnight</small>Nobody was removed',true),DAWN);
     prev={phase:b.phase,alive:Object.fromEntries(b.seats.map(s=>[s.n,s.alive]))};
   }
   function tick(){
