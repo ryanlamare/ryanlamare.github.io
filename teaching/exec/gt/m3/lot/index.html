@@ -4,8 +4,11 @@
 <title>Module 3 · One aircraft, two buyers</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* The bare address holds no brief. A phone that already opened one goes
-   back to it; any other phone is told to scan its side's code. */
+/* The one code on the screen lands here, and so does ryanlamare.com/go.
+   Each person types their own first name and their partner's; the two names
+   decide the side, the same way on both phones, so a pair always gets one
+   brief each without anything being sent: whoever comes first in the
+   alphabet plays Harrow. A phone that already holds a brief goes back to it. */
 *{margin:0;padding:0;box-sizing:border-box}
 [hidden]{display:none !important}
 .briefwrap{display:flex;flex-direction:column;gap:20px}
@@ -16,6 +19,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
 .side{display:flex;flex-direction:column;gap:4px;padding-bottom:12px;border-bottom:3px solid currentColor}
 .side .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.08;text-transform:uppercase}
 .side .k{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--ink)}
+.side .who{font-weight:600;font-size:15px;color:var(--ink)}
 .hp{color:var(--terracotta)} .nm{color:var(--teal)}
 .meridian{width:100%;max-width:560px;height:auto;display:block;margin:0 auto}
 .memo{border:2.5px solid var(--ink);background:var(--card);padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
@@ -26,7 +30,21 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
 .foot{font-weight:600;font-size:15px;color:var(--muted);text-align:center}
 .locked{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:16px;color:var(--muted)}
 .locked a{color:var(--red);font-weight:700}
-@media (max-width:520px){.side .n{font-size:24px}.memo{padding:16px}.memo p{font-size:16px}}
+.form{display:flex;flex-direction:column;gap:14px}
+.form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:16px}
+.form input,.form textarea{font:inherit;font-weight:500;font-size:17px;line-height:1.4;padding:11px 13px;border:2.5px solid var(--ink);border-radius:0;background:var(--paper-soft);color:var(--ink);width:100%;-webkit-appearance:none;appearance:none}
+.form textarea{resize:vertical}
+.form input:focus,.form textarea:focus{outline:3px solid var(--red);outline-offset:0}
+.btn{font-family:var(--sans);font-weight:800;font-size:16px;letter-spacing:.14em;text-transform:uppercase;background:var(--red);color:var(--paper);border:none;border-radius:0;padding:15px 18px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.msg{font-weight:600;font-size:15px;color:var(--red)}
+.msg:empty{display:none}
+.hint{font-weight:500;font-size:15px;color:var(--muted);text-align:center}
+.report{border:2.5px solid var(--ink);background:var(--card);padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.report .rt{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--red)}
+.report .rn{font-weight:500;font-size:16px}
+.report .done{font-weight:600;font-size:17px;border:2.5px solid var(--green);color:var(--green);padding:14px 16px}
+@media (max-width:520px){.side .n{font-size:24px}.memo,.report{padding:16px}.memo p{font-size:16px}}
 </style>
 </head><body>
 <div class="wrap">
@@ -69,9 +87,36 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
   <ellipse cx="604" cy="160" rx="6" ry="40" fill="var(--ink)" opacity=".2"/>
   <path d="M604 122 L604 198" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" opacity=".8"/>
 </svg>
-  <div class="locked">Scan the code for your side on the screen to open your brief.</div>
+  <form class="form" id="names" autocomplete="off" hidden>
+    <label>Your first name<input id="me" maxlength="30" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+    <label>Your partner&rsquo;s first name<input id="them" maxlength="30" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+    <button class="btn" type="submit">OPEN MY BRIEF</button>
+    <div class="msg" id="msg"></div>
+    <div class="hint">Your partner types the same two names on their own phone or laptop.</div>
+  </form>
 </div>
 <script>
-try{const h=localStorage.getItem('gt-m3-lot');if(h==='h7q'||h==='n4w')location.replace(h+'/');}catch(_){}
+(function(){
+  const KEY='gt-m3-lot', PAIR='gt-m3-lot-pair';
+  try{
+    if(new URLSearchParams(location.search).has('fresh')){localStorage.removeItem(KEY);localStorage.removeItem(PAIR);}
+    const h=localStorage.getItem(KEY);
+    if(h==='h7q'||h==='n4w'){location.replace(h+'/');return;}
+  }catch(_){}
+  const f=document.getElementById('names'), me=document.getElementById('me'), them=document.getElementById('them'), msg=document.getElementById('msg');
+  f.hidden=false;
+  try{const n=localStorage.getItem('gt-name');if(n)me.value=n;}catch(_){}
+  const clean=s=>s.trim().replace(/\s+/g,' ').slice(0,30);
+  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+  f.addEventListener('submit',e=>{
+    e.preventDefault();
+    const a=clean(me.value), b=clean(them.value), x=norm(a), y=norm(b);
+    if(!x||!y){msg.textContent='Type both names.';return;}
+    if(x===y){msg.textContent='You two share a name. Add an initial to each, the same way on both phones.';return;}
+    const k=x<y?'h7q':'n4w';
+    try{localStorage.setItem(KEY,k);localStorage.setItem(PAIR,JSON.stringify({me:a,them:b}));}catch(_){}
+    location.replace(k+'/');
+  });
+})();
 </script>
 </body></html>
