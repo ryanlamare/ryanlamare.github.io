@@ -1,8 +1,8 @@
-/* Headless test of guess two-thirds, the programme's closing game in module 8
-   (21 Sep 2026): the deck in real Chrome against a MOCK Worker, through the
+/* Headless test of guess two-thirds, a flex block in module 7 since 23 Sep 2026
+   (moved from the end of module 8; the room is still m8-twothirds): the deck in real Chrome against a MOCK Worker, through the
    deck's own ?api= switch, so nothing touches the real m8-twothirds room.
 
-     node teaching/exec/gt/trial/m8-twothirds.test.mjs
+     node teaching/exec/gt/trial/m7-twothirds.test.mjs
 
    The count on the rules slide follows the room; two slides on, the average,
    two-thirds of it and the winning guess come up a press at a time and are
@@ -42,12 +42,11 @@ let fails = 0; const check = (ok, what) => { console.log((ok ? 'ok    ' : 'FAIL 
 try {
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
-  const titles = await (async () => { await send('Page.navigate', { url: `http://localhost:${PORT}/teaching/exec/gt/m8/?api=http://localhost:${PORT}/mock` }); await sleep(3200);
+  const titles = await (async () => { await send('Page.navigate', { url: `http://localhost:${PORT}/teaching/exec/gt/m7/?api=http://localhost:${PORT}/mock` }); await sleep(3200);
     return ev(`JSON.stringify([...document.querySelectorAll('section.slide')].map(s=>(s.querySelector('h1,h2')||{}).textContent))`); })();
   const T = JSON.parse(titles), rules = T.indexOf('Guess two-thirds of the average');
-  check(rules > 0 && T[rules + 1].includes('Finding the Nash equilibrium') && T[rules + 2].includes('Finding the Nash equilibrium') && T[rules + 3] === 'Takeaways from the two days', 'three slides, straight before Takeaways from the two days');
-  check(T[rules - 1].includes('in your world'), 'and straight after Information asymmetries in your world');
-  await send('Page.navigate', { url: `http://localhost:${PORT}/teaching/exec/gt/m8/?api=http://localhost:${PORT}/mock#${rules}` }); await sleep(3200);
+  check(rules > 0 && T[rules + 1].includes('Finding the Nash equilibrium') && T[rules + 2].includes('Finding the Nash equilibrium') && T[rules - 1] === 'What is a strategic move?' && T[rules + 3] === 'Strategic moves in sequential games', 'three slides in m7, after What is a strategic move? (moved from m8, 23 Sep 2026)');
+  await send('Page.navigate', { url: `http://localhost:${PORT}/teaching/exec/gt/m7/?api=http://localhost:${PORT}/mock#${rules}` }); await sleep(3200);
   check(await txt('ttN') === '4', 'the rules slide counts four guesses: "abc" and 150 are not guesses');
   check(await ev(`getComputedStyle(document.getElementById('ttD')).display`) === 'none', 'no DEMO DATA tag while the room answers');
   check(await ev(`document.querySelector('.slide.active .qr img').naturalWidth>0`), 'the QR image loads');
