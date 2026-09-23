@@ -21,7 +21,7 @@ to pick the work up on another computer.
 
 **Open, in order:** his read of the new m8 end and the m7 two-thirds placement; then the m1–m5 read; Tapas and Granito sessions; the hub. The Hidden Agenda watchers' vote is moot.
 
-**His notes on the new m8 end (23 Sep, last message of the chat), NOT YET BUILT; build them first next chat, after his answer:**
+**His notes on the new m8 end (23 Sep, late) — ALL BUILT AND LIVE the same night, as below; the wrap-up options are HIS eight lines ("all 8 relatively even and somewhat narrow"), the vote shows ONLY the top choice of each question. Record of the discussion:**
 - **Keep it simple** (his words: "the whole point is a simple signaling game late on day 2, followed by a screening exercise"). Claude agreed: drop the debrief questions Claude added (costly to fake, countersignals, what isn't there). "Credibly defend", in his own 550 line, happens out loud when he challenges a find.
 - **One common benchmark, not a website of their choosing:** the backup is RRPF's own site, https://www.rrpf-leasing.com/ (checked 23 Sep: services, engines, about, customers with 40+ airline logos, two video testimonials, sustainability, innovation, news; taglines "The best partner to help you reach your destination" and "We finance engines, but our business is partnership"). The building (RR HQ) stays the first choice, with the WHERE switch.
 - **A competition, recorded on phones:** one phone per team, a /go write-in (as many as they like, one line each: the signal, then what it conveys), and **What did you find?** becomes the wall of each team's finds with a count, not a question slide. Team with the most it can defend wins (his 550 wording).

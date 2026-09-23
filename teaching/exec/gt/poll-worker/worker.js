@@ -163,7 +163,9 @@ export class PollRoom {
          array is one storage value, and a value holds 128 KiB, so the write-in
          walls (200-character lines) are capped by size, the games by count */
       if (answers.length >= 2000 || JSON.stringify(answers).length + t.length + 80 > 110000) return json({ error: 'full' }, 429);
-      if (answers.filter(a => a.v === v).length >= 15) return json({ error: 'enough' }, 429);
+      /* one phone per team records a scavenger hunt's finds (m8, 23 Sep 2026), so a *-hunt room takes 40 lines a phone */
+      const cap = /-hunt$/.test(url.pathname.split('/')[2] || '') ? 40 : 15;
+      if (answers.filter(a => a.v === v).length >= cap) return json({ error: 'enough' }, 429);
       answers.push({ v, t });
       await this.storage.put('answers', answers);
       return json({ ok: true });
