@@ -4,7 +4,27 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (written 23 Sep 2026): m6 to m8 done and live; what comes next
+## NEXT CHAT STARTS HERE (written 23 Sep 2026, evening): his m6 to m8 run, and what it changed
+
+**Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 23, m7 30, m8 32. Everything below is on `main` and live.
+
+**From his run of m6 to m8 (23 Sep), all built and pushed the same day:**
+- **m6 rock, paper, scissors:** an angular rock (it read as a cloud); the phone keeps a strip of every throw, yours over theirs, the winner boxed in its colour, on the choice and final screens.
+- **m7 chicken:** the wheel window is ten seconds and throwing is ONE TAP (his call on Claude's advice; the suite's rule, one tap commits on a clock); the lines under the road are gone; a swerving car leaves the road instead of landing on the text; one label size; the wheel only in rounds 4 to 6; the bar names the round played back (also on m6). Who swerved? lost its two Froze at the wheel tiles (it fed the old awards). Sun Tzu lost its TOY NUMBERS tag.
+- **m7 split or steal:** the picked partner MUST make Nick's move (his wording, as bullets: "I am going to steal, no matter what you do." / "If you play the split ball, I promise to give you half the pot after the game ends.", "You must say the entire statement in full"); every choice is picked then sent once with LOCK IT IN; the board lost Used the move. **A way out of the prisoner's dilemma** is new after Nick and Ibrahim (the £13,600 matrix: steal-steal, Nick's split row gone, Ibrahim's two cells).
+- **m7 reordered** (his "a bit all over the place"): what a strategic move is and moving first (definition, sequential, smoking, sleep, Clocky); commitment in chicken (chicken, Who swerved?, Ren, irreversibility with Strangelove still after the game, both wheels out, the auction, Campeau, Sun Tzu); threats and promises (the card-game deal, fierce negotiator, TV airtime, badminton flex, split or steal, Nick, the PD slide, price-matching, reputation). **Objectives and takeaways were not touched**: check they still read in this order when he next reads m7.
+- **m8:** Information asymmetries at the rental-car desk is its own slide after Adverse selection (his three asymmetries; the insurance is the adverse-selection one); the chip is off Signaling. Adverse selection's captions reworded. Netflix on The dog that didn't bark (for the pass/fail grade), Berkshire Hathaway's plain-text website on countersignals (for the law-school gunners); his picks from Claude's four.
+- **Hidden Agenda, the simple table** (his "overbuilt, a relic"; tag `m8-before-simple-agenda`): two Manipulators and an Auditor, no General Counsel; the phone is a role card and one tap a night (Manipulators' name, Auditor's check, everyone else's suspect); days are talk and a show of hands; the moderator page (Poll Desk button "Hidden Agenda · run the table") is one big button at a time with the morning sentence to read out; the game ends itself; the deck is six slides (committee, shortlist, The roles, How a round works, The committee board that follows the Worker and reveals roles plus suspect counts on one press, What was hidden?). Worker deployed with `counsel:false` on the deal. REHEARSAL.md's Hidden Agenda section is rewritten for it. The admin secret is the Poll Desk one; never write it in this public repo.
+- **The car market, rebuilt** (his design: m2 boards on his card game): join by name; the deck deals at "Try to make a deal!" (half sellers, half buyers, roles fixed; cars re-dealt each round, half peaches); rounds open on the last step of each rules slide and close on arriving at the board; sellers type the price agreed and lock it in; three boards, What sold in round one/two/three?, names on a price line, the unsold beside, one press colours lemon/peach with the bands. Rules in `m8/car/car.js`; room `m8-car` (in the Poll Desk; reset before the session); bots `trial/m8-car.js`, deck `?car=` for a scratch room.
+
+**Open, in order:**
+1. **Ryan tests Hidden Agenda and the car market** (bots: `node trial/m8-cs.js play` / `seat N`, `node trial/m8-car.js join 14`), then finishes his m6 to m8 notes.
+2. The watchers' vote for Hidden Agenda, only at his go: the one-tap suspect now exists for the table, so it is the same tap opened to unseated phones plus a tally on the board.
+3. One read across m1 to m5 (the wizard standoff clip for m3).
+4. Tapas and Granito follow-up sessions (self-contained files for RRPF, never in this repo).
+5. The hub on the programme page after day two.
+
+## EARLIER (23 Sep 2026, morning): m6 to m8 done and live; what comes next
 
 **Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 23, m7 29, m8 35. Every module ends on Extra resources. Ryan's standing rule from 23 Sep: **no veto lists**; he tweaks wording himself with `?edit`, so a build report says what is new and where.
 
