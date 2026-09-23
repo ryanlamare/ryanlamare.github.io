@@ -4,6 +4,16 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## The final pass on m1–m5 (opened 23 Sep 2026, night)
+
+Ryan's brief: module by module, a careful last pass on (a) resources and real business cases (the decks lean on pop culture), (b) flow, (c) exec-friendly redesigns, plus timing and bugs. m6–m8 already had it.
+
+**m1 done and live (28 slides, tag `m1-before-final-pass`):** Defining game theory is now three named definitions as quote cards (Myerson 1991, Dixit and Nalebuff *Thinking Strategically* 1991, Levitt on Freakonomics 2013 with his "game theory sucks so bad because it's so hard" on its own keypress, then "What do all three have in common?"); the old dictionary slide and its traced sources are in m1/outtakes. New slide 24, **What happens when you bring no added value?** (Holland Sweetener vs NutraSweet, from The Right Game), between Added value matters and Cartman. Resources: Shivakumar's CMR piece (the programme page promised it) in place of the New Statesman reply. Phone menu "Added value" typo; the dead Tapas-wall CSS gone.
+
+**Suite-wide, his ruling:** no group sizes on slides ("In twos or threes", "In pairs", "In teams of three" for discussion and exercises); he allocates groups out loud. Two-player games keep "Pair up" / "Play it in pairs". Changed: m2 closer, m3 solve slide and m3/solve/ page, m4 x2, m6 closer, m7 closer, m8 hunt.
+
+**Next: m2**, same shape (resources/business cases, flow, redesigns, timing, bugs), talked through before building.
+
 ## NEXT CHAT STARTS HERE (written 23 Sep 2026, late): m8 now ends in their world
 
 **Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 23, m7 33, m8 26. All on `main` and live.
