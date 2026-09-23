@@ -29,7 +29,7 @@
 //   GET  /p/:id/cs/me?v=   (own role, own night, own notes)  -> {...}
 //   POST /p/:id/cs/act     {v, kind, target|s|a|c|y|b}  -> {ok, role?}  pick/check/clear/notes/vote/reco
 //   GET  /p/:id/cs/board   (public: seats, log, vote tallies; roles+notes only once over)
-//   POST /p/:id/cs/deal    {s, backers, bidder?}        -> {ok, roster}   admin: deal roles
+//   POST /p/:id/cs/deal    {s, backers, bidder?, counsel?} -> {ok, roster}   admin: deal roles (counsel:false, no General Counsel)
 //   POST /p/:id/cs/setrole {s, v, role}                 -> {ok}    admin: card fallback
 //   POST /p/:id/cs/phase   {s, to: night|day|over}      -> {ok, result}  admin: run the clock
 //   POST /p/:id/cs/vote    {s, accused}                 -> {ok}    admin: open a recusal vote
@@ -479,7 +479,9 @@ export class PollRoom {
       let nb = Number.isInteger(body.backers) ? body.backers : (ids.length >= 12 ? 3 : 2);
       nb = Math.max(1, Math.min(nb, Math.floor((ids.length - 2) / 2)));
       for (let i = ids.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [ids[i], ids[k]] = [ids[k], ids[i]]; }
-      ids.forEach((v, i) => { cs.seats[v].role = i < nb ? 'b' : (i === nb ? 'a' : (i === nb + 1 ? 'c' : 'm')); });
+      /* counsel:false deals no General Counsel (m8's simple table, 23 Sep 2026); left out, the old deal stands */
+      const gc = body.counsel !== false;
+      ids.forEach((v, i) => { cs.seats[v].role = i < nb ? 'b' : (i === nb ? 'a' : (gc && i === nb + 1 ? 'c' : 'm')); });
       cs.bidder = /^[A-D]$/.test(String(body.bidder || '')) ? body.bidder : 'ABCD'[Math.floor(Math.random() * 4)];
       await save();
       return json({ ok: true, roster: Object.entries(cs.seats).map(([id, s]) => ({ v: id, n: s.n, role: s.role })), bidder: cs.bidder });

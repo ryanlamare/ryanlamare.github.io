@@ -4,14 +4,15 @@
 <title>Hidden Agenda · Moderator</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* The moderator's phone for one Hidden Agenda table (?t=tapas or
-   ?t=granito). Everything here needs the admin secret (shared with Poll
-   Desk, kept in localStorage gt-admin). The page is the night checklist,
-   the day's vote control and the log; nothing is written down by hand.
-   The buttons in the FALLBACK section are for a table played by pointing
-   and cards: enter roles, remove and restore by hand. A dead phone: release
-   the seat ("new phone") and the same name from a new phone takes it over.
-   Votes by hand are added at the tally for phones that cannot vote. */
+/* The moderator's phone for Hidden Agenda (the simple table, 23 Sep 2026).
+   Everything here needs the admin secret (shared with Poll Desk, kept in
+   localStorage gt-admin). One big button at a time: DEAL ROLES, START
+   NIGHT, MORNING (with the sentence to read out), then by day the name
+   voted off by a show of hands, if anyone, and the next NIGHT. The game
+   ends itself when a side wins; END THE GAME ends it early. The deal has
+   two Manipulators and an Auditor, no General Counsel. A dead phone: open
+   "If a phone dies" and release the seat; the same name from a new phone
+   takes it over. */
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
 .wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
@@ -55,6 +56,15 @@ summary{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:
 .hand span.st{display:inline-flex;align-items:center;gap:8px}
 .hand button{font-family:var(--sans);font-weight:900;font-size:18px;line-height:1;width:34px;height:34px;background:var(--paper);border:2px solid var(--ink);color:var(--ink);cursor:pointer}
 .hand b{font-family:var(--display);font-weight:900;font-size:22px;min-width:1.2em;text-align:center}
+.big{font-family:var(--sans);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:20px 16px;cursor:pointer;width:100%}
+.big.ready{background:var(--teal);border-color:var(--teal)}
+.big:disabled{opacity:.35;cursor:default}
+.readout{border:2.5px solid var(--ink);background:var(--card);padding:14px 16px;font-weight:600;font-size:17px;line-height:1.45}
+.readout .lbl{display:block;margin-bottom:6px}
+.readout b{color:var(--red)}
+.names{display:flex;flex-wrap:wrap;gap:8px}
+.names button{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2px solid var(--ink);padding:9px 14px;cursor:pointer}
+.endbtn{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start;padding:0}
 .seat .mini .wait{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--red);align-self:center}
 a.pick{display:block;text-align:center;font-weight:700;font-size:16px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px;text-decoration:none}
 </style>
@@ -105,109 +115,105 @@ if(!table||!CS_TABLES[table]){
   }
   function render(){
     if(!S)return;
-    const key=JSON.stringify([S.phase,S.round,Object.values(S.seats).map(s=>[s.n,s.role,s.alive,!!s.open]),S.nights[S.round],S.days[S.round],S.log.length,lastResult]);
+    const key=JSON.stringify([S.phase,S.round,Object.values(S.seats).map(s=>[s.n,s.role,s.alive,!!s.open,s.out]),S.nights[S.round],S.log.length,lastResult,S.winner]);
     if(key===shown)return;shown=key;
     app.innerHTML='';
     const seats=Object.entries(S.seats).map(([v,s])=>({v,...s}));
     const alive=seats.filter(s=>s.alive), backers=alive.filter(s=>s.role==='b');
+    const dealt=seats.some(s=>s.role);
     const ph=el('div','phase');
-    const P={lobby:'LOBBY',night:'NIGHT '+S.round,day:'DAY '+S.round,vote:'VOTE · DAY '+S.round,over:'GAME OVER'};
-    ph.innerHTML='<span class="p '+S.phase+'">'+P[S.phase]+'</span><span class="n">'+seats.length+' seated · '+alive.length+' still in · '+backers.length+' Manipulator'+(backers.length===1?'':'s')+' left</span>';
+    const P={lobby:'LOBBY',night:'NIGHT '+S.round,day:'DAY '+S.round,vote:'DAY '+S.round,over:'GAME OVER'};
+    ph.innerHTML='<span class="p '+S.phase+'">'+P[S.phase]+'</span><span class="n">'+alive.length+' of '+seats.length+' still in'+(dealt?' · '+backers.length+' Manipulator'+(backers.length===1?'':'s')+' left':'')+'</span>';
     app.appendChild(ph);
-    if(S.bidder)app.appendChild(el('div','lbl','The Manipulators are backing '+esc(bidderName(S.bidder))+' (only you and they know)'));
-    if(lastResult){app.appendChild(el('div','res',lastResult));}
-    const btns=el('div','btns');
-    const B=(t,fn,quiet,dis)=>{const b=el('button','act'+(quiet?' quiet':''),t);b.disabled=!!dis;b.addEventListener('click',fn);btns.appendChild(b);return b;};
-    const undealt=seats.some(s=>!s.role);
+    const big=(t,fn,cls)=>{const b=el('button','big'+(cls?' '+cls:''),t);b.addEventListener('click',fn);app.appendChild(b);return b;};
+    const readout=html=>{const r=el('div','readout','<span class="lbl">Read this out</span>'+html);app.appendChild(r);};
+    /* the morning's sentence, rebuilt from the Worker's record of the night, so a reload keeps it */
+    const morning=r=>{const n=S.nights[r], x=n&&n.result, nm=v=>S.seats[v]?S.seats[v].n:'';
+      return (x&&x.removed?'Overnight, an anonymous allegation was made against <b>'+esc(nm(x.removed))+'</b>. The airline has pulled them off the committee while it is investigated.':'No allegation was agreed overnight. <b>Nobody leaves.</b>');};
+    const winLine=w=>w?' <b>'+(w==='committee'?'Every Manipulator is out. The committee wins.':'The Manipulators are half the committee. They win.')+'</b>':'';
     if(S.phase==='lobby'){
-      B('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}/* ask whenever anyone holds a role: a late, undealt seat used to skip this and deal again over roles people had seen */if(seats.some(s=>s.role)&&!confirm('Roles are dealt. Deal again?'))return;if(seats.length>11&&!confirm(seats.length+' are seated and the slide says eleven. Two Manipulators will be dealt. Deal anyway?'))return;/* always two Manipulators, as the slide says: left alone the Worker deals a third at twelve seats (it still clamps to one at a table of five) */act('deal',Object.assign({backers:2},T.backed?{bidder:T.backed}:{}),d=>{lastResult='Dealt: '+d.roster.filter(x=>x.role==='b').map(x=>esc(x.n)).join(', ')+' are the Manipulators.';});},false,seats.length<5);
-      /* someone who sits down after the deal has no role, and the Worker will not start a night with an undealt seat.
-         They are an observer who tapped the wrong button: drop them and start, never deal again over roles people have seen. */
-      const late=seats.filter(s=>!s.role), dealt=seats.some(s=>s.role);
-      B('START NIGHT 1',async()=>{
-        if(late.length){
-          if(!confirm(late.map(s=>s.n).join(', ')+' sat down after the roles were dealt. Drop them from the table and start?'))return;
-          for(const s of late){if(!await act('unseat',{v:s.v}))return;}
-        }
-        act('phase',{to:'night'},()=>{lastResult=null;});
-      },true,!dealt);
+      if(!dealt){
+        app.appendChild(el('div','lbl',seats.length+' at the table'));
+        app.appendChild(el('div','log',seats.map(s=>esc(s.n)).join(', ')||'Nobody yet.'));
+        const b=big('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(seats.length>11&&!confirm(seats.length+' are seated and the slide says eleven. Two Manipulators will be dealt. Deal anyway?'))return;
+          act('deal',Object.assign({backers:2,counsel:false},T.backed?{bidder:T.backed}:{}),d=>{lastResult=null;});});
+        b.disabled=seats.length<5;
+      }else{
+        const man=seats.filter(s=>s.role==='b').map(s=>esc(s.n)), aud=seats.filter(s=>s.role==='a').map(s=>esc(s.n));
+        app.appendChild(el('div','res','Dealt. <b>'+man.join('</b> and <b>')+'</b> are the Manipulators, backing '+esc(bidderName(S.bidder))+'. <b>'+aud.join(', ')+'</b> is the Auditor. Only you can see this.'));
+        /* someone who sat down after the deal has no role, and a night will not start with an undealt seat: drop them */
+        const late=seats.filter(s=>!s.role);
+        big('START NIGHT 1',async()=>{
+          if(late.length){if(!confirm(late.map(s=>s.n).join(', ')+' sat down after the roles were dealt. Drop them from the table and start?'))return;
+            for(const s of late){if(!await act('unseat',{v:s.v}))return;}}
+          act('phase',{to:'night'},()=>{lastResult=null;});
+        });
+        const again=el('button','endbtn','deal again');again.addEventListener('click',()=>{if(confirm('Deal the roles again? Everyone gets a new role.'))act('deal',Object.assign({backers:2,counsel:false},T.backed?{bidder:T.backed}:{}),()=>{lastResult=null;});});app.appendChild(again);
+      }
     }else if(S.phase==='night'){
       const n=S.nights[S.round]||{picks:{},notes:{}};
+      const nm=v=>S.seats[v]?S.seats[v].n:'—';
       const picks=backers.map(b=>n.picks[b.v]).filter(Boolean);
       const agreed=backers.length>0&&picks.length===backers.length&&picks.every(p=>p===picks[0]);
+      const auditor=alive.find(s=>s.role==='a');
+      const tappers=alive.filter(s=>s.role!=='b'&&s.role!=='a'), tapped=tappers.filter(s=>n.notes[s.v]).length;
       const ck=el('div','check');
-      const nm=v=>S.seats[v]?S.seats[v].n:'—';
-      ck.appendChild(el('div','c'+(agreed?' done':''),'<span>Manipulators '+(agreed?'agreed on <b>'+esc(nm(picks[0]))+'</b>':'still deciding')+'</span><small>'+picks.length+' of '+backers.length+' picked'+(picks.length&&!agreed?': '+[...new Set(picks)].map(nm).map(esc).join(' / '):'')+'</small>'));
-      ck.appendChild(el('div','c'+(n.check?' done':''),'<span>Auditor '+(n.check?'checked <b>'+esc(nm(n.check.target))+'</b>':'has not checked yet')+'</span>'));
-      ck.appendChild(el('div','c'+(n.clear?' done':''),'<span>General Counsel '+(n.clear?'is shielding <b>'+esc(nm(n.clear.target))+'</b>':'has not shielded anyone yet')+'</span>'));
-      ck.appendChild(el('div','c','<span>Notes in</span><small>'+Object.keys(n.notes).length+' phones</small>'));
+      ck.appendChild(el('div','c'+(agreed?' done':''),'<span>Manipulators '+(agreed?'agreed on <b>'+esc(nm(picks[0]))+'</b>':(picks.length?'split: '+[...new Set(picks)].map(nm).map(esc).join(' / '):'still deciding'))+'</span><small>'+picks.length+' of '+backers.length+'</small>'));
+      if(auditor)ck.appendChild(el('div','c'+(n.check?' done':''),'<span>Auditor '+(n.check?'has checked':'still to check')+'</span>'));
+      ck.appendChild(el('div','c'+(tapped===tappers.length?' done':''),'<span>Everyone else</span><small>'+tapped+' of '+tappers.length+' tapped</small>'));
       app.appendChild(ck);
-      B('END NIGHT · ANNOUNCE THE MORNING',()=>act('phase',{to:'day'},d=>{const r=d.result||{};lastResult=r.removed?'Overnight an anonymous allegation was made against <b>'+esc(r.removed)+'</b>. The airline has pulled them off the committee while it is investigated. They keep their phone.':(r.target?'An allegation was made against '+esc(r.target)+', but General Counsel had shielded them, so it is <b>dismissed</b>. Nobody leaves. (Do not say who was named.)':'No allegation was agreed overnight. <b>Nobody leaves.</b>');if(d.winner)lastResult+=' <b>'+(d.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b>';}));
-    }else if(S.phase==='day'){
-      const day=S.days[S.round];
-      if(day&&day.result)app.appendChild(el('div','res','Today’s vote is done: <b>'+esc(S.seats[day.accused].n)+'</b> '+(day.result.recused?'removed':'stays')+', '+day.result.yes+' to '+day.result.no+'.'));
+      const allIn=agreed&&(!auditor||!!n.check)&&tapped===tappers.length;
+      big('MORNING',()=>{
+        if(!allIn&&!confirm('Not every phone has tapped yet. Morning anyway?'))return;
+        act('phase',{to:'day'},d=>{const r=d.result||{};
+          lastResult=(r.removed?'Overnight, an anonymous allegation was made against <b>'+esc(r.removed)+'</b>. The airline has pulled them off the committee while it is investigated.':'No allegation was agreed overnight. <b>Nobody leaves.</b>')+winLine(d.winner);});
+      },allIn?'ready':'');
+    }else if(S.phase==='day'||S.phase==='vote'){
+      readout(morning(S.round));
+      const today=seats.find(s=>s.out&&s.out.how==='recused'&&s.out.r===S.round);
+      if(today)app.appendChild(el('div','res','<b>'+esc(today.n)+'</b> was voted off today.'));
       else{
-        app.appendChild(el('div','lbl','Accusation seconded? Pick the accused and open the vote'));
-        const pl=el('div','btns');
-        alive.forEach(s=>{const b=el('button','act quiet',esc(s.n));b.style.flex='0 0 auto';b.style.minWidth='0';b.addEventListener('click',()=>{if(confirm('Open the vote to remove '+s.n+'?'))act('vote',{accused:s.v},()=>{lastResult=null;});});pl.appendChild(b);});
+        app.appendChild(el('div','lbl','Voted off by a show of hands? Tap the name'));
+        const pl=el('div','names');
+        alive.forEach(s=>{const b=el('button','',esc(s.n));b.addEventListener('click',()=>{if(confirm(s.n+' is voted off?'))act('remove',{v:s.v,how:'recused'},d=>{lastResult='<b>'+esc(s.n)+'</b> is off the committee.'+winLine(d.winner);});});pl.appendChild(b);});
         app.appendChild(pl);
       }
-      B('START NIGHT '+(S.round+1),()=>act('phase',{to:'night'},()=>{lastResult=null;}),true);
-      B('GAME OVER',()=>{if(confirm('End the game now?'))act('phase',{to:'over'},d=>{lastResult='<b>'+(d.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b> Send everyone to the big screen.';});},true);
-    }else if(S.phase==='vote'){
-      const day=S.days[S.round];
-      const yes=Object.entries(day.votes).filter(([,y])=>y==='y').map(([v])=>S.seats[v].n), no=Object.entries(day.votes).filter(([,y])=>y==='n').map(([v])=>S.seats[v].n);
-      app.appendChild(el('div','res','Vote open: remove <b>'+esc(S.seats[day.accused].n)+'</b>?'));
-      const hand=day.hand||{yes:0,no:0};
-      app.appendChild(el('div','votes','<span>Remove <b>'+(yes.length+hand.yes)+'</b></span><span>Keep <b>'+(no.length+hand.no)+'</b></span><span style="color:var(--muted)">'+Math.max(0,alive.length-1-yes.length-no.length-hand.yes-hand.no)+' still to vote</span>'));
-      app.appendChild(el('div','log',(yes.length?'Remove: '+yes.map(esc).join(', ')+'. ':'')+(no.length?'Keep: '+no.map(esc).join(', ')+'.':'')));
-      /* votes by hand, for anyone whose phone cannot vote: counted at the tally */
-      const hr=el('div','hand');
-      hr.appendChild(el('span','lbl','By hand, for phones that can’t vote'));
-      [['Remove','yes'],['Keep','no']].forEach(([label,k])=>{
-        const sp=el('span','st',esc(label)+' ');
-        const minus=el('button','','−'), num=el('b','',String(hand[k])), plus=el('button','','+');
-        minus.addEventListener('click',()=>act('hand',{...hand,[k]:Math.max(0,hand[k]-1)}));
-        plus.addEventListener('click',()=>act('hand',{...hand,[k]:hand[k]+1}));
-        sp.appendChild(minus);sp.appendChild(num);sp.appendChild(plus);hr.appendChild(sp);
-      });
-      app.appendChild(hr);
-      B('CLOSE THE VOTE',()=>act('tally',{},d=>{lastResult='<b>'+esc(S.seats[day.accused].n)+'</b> '+(d.result.recused?'is removed, ':'stays, ')+d.result.yes+' to '+d.result.no+'.'+(d.winner?' <b>'+(d.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b>':'');}));
+      big('START NIGHT '+(S.round+1),()=>act('phase',{to:'night'},()=>{lastResult=null;}));
     }else{
-      app.appendChild(el('div','res','<b>'+(S.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b> Send everyone to the big screen for the reveal. Their phones are asking for a recommendation.'));
+      readout('<b>'+(S.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b>');
+      app.appendChild(el('div','res','Go to The committee on the big screen and press the arrow for the reveal.'));
     }
-    app.appendChild(btns);
-    /* the table */
-    app.appendChild(el('div','lbl','The table'));
-    const sl=el('div','seats');
-    seats.sort((a,b)=>a.n.localeCompare(b.n)).forEach(s=>{
-      const row=el('div','seat'+(s.alive?'':' out'));
-      row.innerHTML='<span>'+esc(s.n)+' <span class="role '+(s.role||'')+'">'+(s.role?RN[s.role]:'undealt')+(s.out?' · '+(s.out.how==='recused'?'voted off day ':'removed night ')+s.out.r:'')+'</span></span>';
-      const mini=el('div','mini');
-      if(S.phase==='lobby'){
-        const sel=document.createElement('select');['','m','b','a','c'].forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r?RN[r]:'role…';if(r===s.role)o.selected=true;sel.appendChild(o);});
-        sel.addEventListener('change',()=>{if(sel.value)act('setrole',{v:s.v,role:sel.value});});mini.appendChild(sel);
-        const d=el('button','','drop');d.addEventListener('click',()=>{if(confirm('Drop '+s.n+' from the table? A dead phone’s seat, or someone who has left; they can rejoin from any phone.'))act('unseat',{v:s.v});});mini.appendChild(d);
-      }else{
-        /* a dead phone: release the seat, and the same name from a new phone takes it over, role and history included */
-        if(s.open){
-          mini.appendChild(el('span','wait','waiting for '+esc(s.n)+'’s new phone'));
-          const c=el('button','','cancel');c.addEventListener('click',()=>act('release',{v:s.v,off:true}));mini.appendChild(c);
-        }else{
-          const np=el('button','','new phone');np.addEventListener('click',()=>{if(confirm('Move '+s.n+' to a new phone? Their seat opens; on the new phone they pick the same name at this table and it becomes theirs.'))act('release',{v:s.v});});mini.appendChild(np);
-        }
-        if(s.alive){
-          const b=el('button','','remove');b.addEventListener('click',()=>{if(confirm('Remove '+s.n+' by hand? Only for a table played by pointing.'))act('remove',{v:s.v,how:S.phase==='night'?'complaint':'recused'});});mini.appendChild(b);
-        }else{
-          const b=el('button','','restore');b.addEventListener('click',()=>{if(confirm('Put '+s.n+' back at the table?'))act('restore',{v:s.v});});mini.appendChild(b);
-        }
-      }
-      row.appendChild(mini);sl.appendChild(row);
-    });
-    app.appendChild(sl);
+    if(dealt&&S.phase!=='lobby'&&S.phase!=='over'){
+      const e=el('button','endbtn','end the game now');
+      e.addEventListener('click',()=>{const left=backers.map(b=>b.n);
+        if(confirm(left.length?'End now? '+left.join(' and ')+' '+(left.length>1?'are':'is')+' still at the table, so the Manipulators win.':'End now? The committee wins.'))
+          act('phase',{to:'over',winner:left.length?'backers':'committee'},d=>{lastResult=null;});});
+      app.appendChild(e);
+    }
+    /* the table, for the moderator's eyes */
+    if(dealt){
+      app.appendChild(el('div','lbl','The table'));
+      const RN2={m:'Member',b:'Manipulator',a:'Auditor',c:'Counsel'};
+      const sl=el('div','seats');
+      seats.slice().sort((a,b)=>a.n.localeCompare(b.n)).forEach(s=>{
+        const row=el('div','seat'+(s.alive?'':' out'));
+        row.innerHTML='<span>'+esc(s.n)+' <span class="role '+(s.role||'')+'">'+(s.role?RN2[s.role]:'no role')+(s.out?' · '+(s.out.how==='recused'?'voted off day ':'removed night ')+s.out.r:'')+'</span></span>';
+        row.appendChild(el('div','mini'));sl.appendChild(row);
+      });
+      app.appendChild(sl);
+    }
+    /* a dead phone: release the seat, and the same name picked on a new phone takes it over, role and history included */
+    if(S.phase!=='lobby'&&S.phase!=='over'){
+      const dp=document.createElement('details');dp.innerHTML='<summary>If a phone dies</summary>';
+      const box=el('div','seats');box.style.marginTop='10px';
+      alive.forEach(s=>{const row=el('div','seat');row.innerHTML='<span>'+esc(s.n)+'</span>';const mini=el('div','mini');
+        if(s.open){mini.appendChild(el('span','wait','waiting for the new phone'));const c=el('button','','cancel');c.addEventListener('click',()=>act('release',{v:s.v,off:true}));mini.appendChild(c);}
+        else{const np=el('button','','new phone');np.addEventListener('click',()=>{if(confirm('Move '+s.n+' to a new phone? On the new phone they open the game and pick the same name.'))act('release',{v:s.v});});mini.appendChild(np);}
+        row.appendChild(mini);box.appendChild(row);});
+      dp.appendChild(box);app.appendChild(dp);
+    }
     const dt=document.createElement('details');dt.innerHTML='<summary>Log</summary>';
-    const lg=el('div','log',S.log.slice().reverse().map(l=>'<b>'+(l.when==='night'?'Night ':'Day ')+l.r+'</b> '+esc(l.text)).join('<br>')||'Nothing yet.');dt.appendChild(lg);app.appendChild(dt);
-    const help=document.createElement('details');help.innerHTML='<summary>Printed script</summary><div class="log">The full script, including the pointing fallback, is at <b>/teaching/exec/gt/m8/game/moderator-script.html?t='+table+'</b>. Print it before the day.</div>';app.appendChild(help);
+    dt.appendChild(el('div','log',S.log.slice().reverse().map(l=>'<b>'+(l.when==='night'?'Night ':'Day ')+l.r+'</b> '+esc(l.text)).join('<br>')||'Nothing yet.'));app.appendChild(dt);
   }
   setInterval(tick,2000);tick();
 }

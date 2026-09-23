@@ -46,22 +46,16 @@ Two or three windows show that a game works; they do not show what a board looks
 
 ## Hidden Agenda
 
-One table, you moderating. It takes **six seats** to be dealt two Manipulators (five deals one).
+The simple table (23 Sep 2026): two Manipulators and an Auditor, no General Counsel; a night is one tap on every phone; a day is talk and a show of hands; the reveal is one arrow press on The committee once the game is over. You moderate from your phone. The quickest full test is eleven seats with bots:
 
-- The phone page takes rehearsal overrides, so use six *tabs* in one student profile, not six profiles:
-  ```
-  ryanlamare.com/teaching/exec/gt/m8/game/?g=cs&v=seat-0001-aaaaaaaa&n=Ana
-  ryanlamare.com/teaching/exec/gt/m8/game/?g=cs&v=seat-0002-aaaaaaaa&n=Ben
-  … 0003 Cara, 0004 Dev, 0005 Eli, 0006 Fay
-  ```
-  The first tab asks **I'M A PARTICIPANT** or **I'M AN OBSERVER**; tap participant. The profile remembers that, so tabs opened afterwards sit straight down; a tab that was already open asks too, so tap it there as well. If a tab sits nowhere the deck can see, that profile is remembering an old table: add `&t=tapas` to the address.
-- Your phone opens **ryanlamare.com/teaching/exec/gt/m8/game/mod.html** with the admin secret. The deck's keys on The committee are **D** for a day, **N** for a night, **P** to pause; the clock is the deck's own, so you press N on the deck *and* START NIGHT on the phone.
-- **Check on the first deal:** the name board shows your six names and none of the demo names; DEAL ROLES names two Manipulators; the moderator page says they are backing Northlake Leasing.
-- **The late seat:** after the deal, open a seventh tab (`seat-0007`, `n=Gil`) and tap participant. START NIGHT 1 should name Gil, offer to drop him, and start. DEAL ROLES should ask before dealing again.
-- **Play every branch once:** a night where the Manipulators agree and nobody is shielded (someone leaves); a day whose vote ties (they stay); a night where General Counsel shields the person named; a day whose vote removes; a night where the Manipulators name different people (nobody leaves); then **GAME OVER** from the phone. Watch the recommendation, the reveal of the backed bidder, and What the phones recorded.
-- **The dead-phone drill:** during a night close Ben's tab, tap **new phone** on Ben on the moderator page, open a new tab with `v=seat-0099-aaaaaaaa&n=Ben`; it should land in Ben's seat with his role. During a vote, use the **by hand** buttons and check the count on the deck.
-- **The duplicate-name drill:** a tab with `n=ana` should be refused and told to add an initial.
-- The printed script is linked from the moderator page (Printed script). Read it through once against what you actually did.
+- Your phone opens the Poll Desk and taps **Hidden Agenda · run the table** (or goes straight to **ryanlamare.com/teaching/exec/gt/m8/game/mod.html**; the secret is the Poll Desk one).
+- Reset `m8-cs-tapas` in the Poll Desk, seat yourself from a second phone or tab (**ryanlamare.com/go**, Hidden Agenda, I'M A PARTICIPANT), then from a terminal `node teaching/exec/gt/trial/m8-cs.js seat 10` fills the other ten seats with bots that play whatever they are dealt. They follow a human Manipulator's pick, and act a few seconds after a night opens.
+- **One button at a time on the moderator page:** DEAL ROLES (it tells you who the Manipulators and the Auditor are), START NIGHT 1, then MORNING once the checklist is green (it asks if you press early), and read out the sentence it gives you. By day, if the room votes someone off by a show of hands, tap their name; then START NIGHT 2. The game ends itself when a side wins; **end the game now** ends it early (a Manipulator still at the table means the Manipulators win).
+- **On the deck**, The committee follows the table by itself: it goes dark at night, strikes names through as people leave, and after the game the arrow reveals every role and how many times the table named each person as a suspect.
+- **An observer**: a third phone or tab taps I'M AN OBSERVER; it is told it does not need its phone.
+- **The late seat:** after the deal, a new phone that taps participant has no role; START NIGHT 1 offers to drop it.
+- **The dead-phone drill:** during a night, open **If a phone dies** on the moderator page, tap **new phone** on a name, and open the game on a new tab with that same name; it lands in the seat with its role.
+- Bots stop by themselves when the game is over. `node teaching/exec/gt/trial/m8-cs.js leave` takes them out of a table still in the lobby; otherwise reset the room in the Poll Desk.
 
 ## Finish
 

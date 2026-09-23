@@ -11,10 +11,13 @@
                  the round and every phone computes its own result from the
                  same bids and seed (lot.js), so nothing is posted back. A
                  sale washes the whole screen peach or lemon. Unscored.
-     ?g=cs       Hidden Agenda, the capstone: pick your table, take a seat,
-                 and the Worker deals you a role only this phone can read.
-                 Nights are played here; the day vote is here; the reveal is
-                 on the big screen. Scored: ten to the winning side.
+     ?g=cs       Hidden Agenda: take a seat, and the Worker deals you a role
+                 only this phone can read. A night is one tap here (the
+                 Manipulators' name, the Auditor's check, everyone else's
+                 suspect); a day is talk and a show of hands, run by the
+                 moderator; the reveal is on the big screen. (The simple
+                 table, 23 Sep 2026: no General Counsel, no phone vote by
+                 day, no bidder vote at the end.)
 
    Names come from the shared gt-name and are claimed into gt-names for the
    points system. ?room=<id> plays into a scratch room (rehearsals) and
@@ -340,6 +343,7 @@ function renderCS(){
   function tick(){
     fetch(API+'/p/'+ROOM+'/cs/me?v='+encodeURIComponent(voter)).then(r=>r.json()).then(d=>{
       S=d;
+      leave.style.display=d.phase==='lobby'?'':'none'; /* a seat can only be given up before the deal */
       if(!d.me){
         seat().then(r=>{
           if(r.taken)takenCard();
@@ -352,33 +356,33 @@ function renderCS(){
         return; }
       drawBar();
       const me=d.me, role=me.role;
-      const key=[d.phase,d.round,role,me.alive,JSON.stringify(d.night||null),JSON.stringify(d.day||null),d.reco,(d.mates||[]).map(m=>m.pick).join(',')].join('#');
+      const key=[d.phase,d.round,role,me.alive,JSON.stringify(d.night||null),(d.mates||[]).map(m=>m.n+(m.alive?'':'~out')+':'+(m.pick||'')).join(','),d.winner,d.seats.map(x=>x.n+(x.alive?'':'~out')).join(',')].join('#');
       if(key===shown)return;shown=key;
       stage.innerHTML='';
       const put=el=>stage.appendChild(el);
       const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
       const wait=t=>{const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>'+esc(t);return w;};
+      const act=body=>post('/p/'+ROOM+'/cs/act',Object.assign({v:voter},body)).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});
+      function roleCard(){
+        const c=document.createElement('div');c.className='card';
+        c.innerHTML='<div class="head '+(role==='b'?'red':'')+'">'+esc(CS_ROLES[role].title.toUpperCase())+'</div><div class="sub">'+esc(CS_ROLES[role].line)+'</div>'+(role==='b'?'<div class="sub">You back <b>'+esc(bidderName(d.bidder))+'</b>.'+((d.mates||[]).length?' Your fellow Manipulator'+(d.mates.length>1?'s':'')+': <b>'+d.mates.map(m=>esc(m.n)).join(', ')+'</b>.':'')+'</div>':'')+'<div class="small">Keep this to yourself. Tap HIDE and nobody beside you sees it.</div>';
+        put(c);
+        const hb=document.createElement('button');hb.className='send quiet';hb.textContent='HIDE MY ROLE';hb.addEventListener('click',()=>{c.style.display='none';hb.style.display='none';roleShown=false;drawBar();});put(hb);
+      }
       if(d.phase==='lobby'){
         if(!role){put(lbl('Seated · '+d.seats.length+' at this table'));put(wait('You have a seat. Keep this page open; your role is dealt from the moderator’s phone.'));return;}
-        roleCard();put(wait('Everyone introduces themselves. The first night starts from the big screen.'));return;
+        roleCard();put(wait('Everyone introduces themselves. Then the first night begins.'));return;
       }
       if(d.phase==='over'){
         const c=document.createElement('div');c.className='card';
         const won=(d.winner==='backers')===(role==='b');
         c.innerHTML='<div class="head '+(won?'teal':'terra')+'">'+(d.winner==='backers'?'THE MANIPULATORS WIN':'THE COMMITTEE WINS')+'</div><div class="sub">'+(won?'Your side won.':'Your side lost this one.')+' You were the <b>'+CS_ROLES[role].title+'</b>'+(role==='b'?', backing '+esc(bidderName(d.bidder)):'')+'.</div>';
-        put(c);
-        put(lbl('Last thing: which bidder should '+T.airline+' choose?'));
-        const pl=document.createElement('div');pl.className='choices';
-        T.bidders.forEach(b=>{const bt=document.createElement('button');bt.className='opt'+(d.reco===b.k?' mine':'');bt.innerHTML='<b>'+esc(b.name)+'</b><br><span style="font-weight:500;font-size:14px">'+esc(b.arch)+'</span>';
-          bt.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'reco',b:b.k}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});pl.appendChild(bt);});
-        put(pl);
-        if(d.reco)put(wait('Response recorded. Results on the screen soon.'));
+        put(c);put(wait('Look at the big screen for the reveal.'));
         return;
       }
       if(!me.alive){
-        put(lbl((me.out&&me.out.how==='recused'?'Voted off on day ':'Removed on night ')+(me.out?me.out.r:'')+' · you keep watching'));
-        if(d.phase==='night')notesPage(d,true);
-        else put(wait('You are off the committee, but your read still counts: your notes go into the reveal.'));
+        put(lbl('Off the committee since '+(me.out&&me.out.how==='recused'?'day ':'night ')+(me.out?me.out.r:'')));
+        put(wait('Keep watching. Your role stays secret until the end.'));
         return;
       }
       if(d.phase==='night'){
@@ -386,80 +390,38 @@ function renderCS(){
         if(role==='b'){
           const mates=d.mates||[];
           const c=document.createElement('div');c.className='rule';
-          c.innerHTML='You back <b>'+esc(bidderName(d.bidder))+'</b>. '+(mates.length?'Your fellow Manipulator'+(mates.length>1?'s':'')+': <b>'+mates.map(m=>esc(m.n)+(m.alive?'':' (out)')).join(', ')+'</b>. Agree on one name for tonight\u2019s allegation.':'You are the last Manipulator at the table. Name one person for tonight\u2019s allegation.');
+          c.innerHTML='You back <b>'+esc(bidderName(d.bidder))+'</b>. '+(mates.filter(m=>m.alive).length?'Tap one honest member to remove tonight. You and <b>'+mates.filter(m=>m.alive).map(m=>esc(m.n)).join(', ')+'</b> must pick the same name, or nobody is removed.':'You are the last Manipulator at the table. Tap one honest member to remove tonight.');
           put(c);
           const mateNames=new Set(mates.map(m=>norm(m.n)));
           const targets=alive().filter(s=>s.n!==name&&!mateNames.has(norm(s.n)));
-          put(nameBtns(targets,d.night&&d.night.myPick,(s,b,pl)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'pick',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
+          put(nameBtns(targets,d.night&&d.night.myPick,s=>act({kind:'pick',target:s.v})));
           const live=mates.filter(m=>m.alive);
           if(live.length){const h=document.createElement('div');h.className='hist';h.innerHTML=live.map(m=>'<b>'+esc(m.n)+'</b> has picked '+(m.pick?'<b>'+esc(m.pick)+'</b>':'nobody yet')).join(' · ');put(h);}
           const myPick=d.night&&d.night.myPick;
           if(myPick&&live.every(m=>m.pick&&norm(m.pick)===norm(myPick)))put(wait('Agreed on '+myPick+'. Wait for the morning.'));
-          else if(myPick)put(wait('You picked '+myPick+'. The allegation needs every Manipulator on the same name, or nobody is removed tonight.'));
           return;
         }
         if(role==='a'){
           const c=d.night&&d.night.myCheck;
-          put(lbl('Auditor · check one committee member for a hidden agenda'));
-          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> '+(c.role==='b'?'has a <b>hidden agenda</b>: a Manipulator':'is honest, '+CS_ROLES[c.role].title.toLowerCase())+'.';put(r);}
-          else put(nameBtns(others().filter(s=>s.alive),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'check',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
+          put(lbl('Auditor · tap one member to check'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> '+(c.role==='b'?'has a <b>hidden agenda</b>: a Manipulator':'is honest')+'.';put(r);put(wait('Wait for the morning.'));}
+          else put(nameBtns(others().filter(s=>s.alive),null,s=>act({kind:'check',target:s.v})));
           const past=(d.checks||[]).filter(x=>x.r<d.round);
           if(past.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your checks so far: '+past.map(x=>'night '+x.r+', <b>'+esc(x.target)+'</b>, '+(x.role==='b'?'a Manipulator':'honest')).join(' · ');put(h);}
-          if(c)notesPage(d,false);
           return;
         }
-        if(role==='c'){
-          const c=d.night&&d.night.myClear;
-          put(lbl('General Counsel · shield one committee member tonight'));
-          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='You are shielding <b>'+esc(c)+'</b>. Any allegation against them tonight is dismissed.';put(r);}
-          else{
-            const lastV=d.lastClear;
-            put(nameBtns(alive(),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'clear',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=cd===409?'Not the same person two nights running.':failMsg(cd);});},s=>lastV&&s.v===lastV));
-            if(lastV){const h=document.createElement('div');h.className='hist';h.textContent='Not the same person as last night. You may shield yourself.';put(h);}
-          }
-          if(c)notesPage(d,false);
-          return;
-        }
-        notesPage(d,false);return;
-      }
-      /* day */
-      put(lbl('Day '+d.round+' · the committee is in session'));
-      if(d.lastNotes&&d.lastNotes.s&&d.lastNotes.s.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Last night you suspected <b>'+d.lastNotes.s.map(v=>esc((d.seats.find(x=>x.v===v)||{}).n||'')).join(', ')+'</b>';put(h);}
-      const day=d.day;
-      if(day&&day.open){
-        if(day.accusedV===voter){put(wait('The vote is about you. Thirty seconds to make your case, then the committee decides.'));return;}
-        const c=document.createElement('div');c.className='rule';c.innerHTML='The committee has moved to remove <b>'+esc(day.accused)+'</b>. Your vote:';put(c);
-        const row=document.createElement('div');row.className='bigrow';
-        [['REMOVE','y'],['KEEP','n']].forEach(([l,y])=>{const b=document.createElement('button');b.className='opt'+(day.myVote===y?' mine':'');b.textContent=l;
-          b.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'vote',y}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});row.appendChild(b);});
-        put(row);
-        if(day.myVote)put(wait('Vote in. It lands on the big screen by name.'));
+        /* everyone else: one name. It keeps every head down, and it is the record the reveal shows */
+        const mineV=d.night&&d.night.myNotes&&d.night.myNotes.s&&d.night.myNotes.s[0];
+        const mine=mineV?((d.seats.find(x=>x.v===mineV)||{}).n||null):null;
+        put(lbl('Who do you suspect? Tap one name'));
+        put(nameBtns(others().filter(s=>s.alive),mine,s=>act({kind:'notes',s:[s.v],a:null,c:null})));
+        if(mine)put(wait('Saved. You can change it until the morning.'));
         return;
       }
-      if(day&&day.result){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(day.accused)+'</b> '+(day.result.recused?'was removed':'stays')+', '+day.result.yes+' to '+day.result.no+'.';put(r);}
-      put(wait('Debate. Accuse someone, get it seconded, and the vote comes to this phone.'));
-      function roleCard(){
-        const c=document.createElement('div');c.className='card';
-        c.innerHTML='<div class="head '+(role==='b'?'red':'')+'">'+esc(CS_ROLES[role].title.toUpperCase())+'</div><div class="sub">'+esc(CS_ROLES[role].line)+'</div>'+(role==='b'?'<div class="sub">You back <b>'+esc(bidderName(d.bidder))+'</b>.'+((d.mates||[]).length?' Your fellow Manipulator'+(d.mates.length>1?'s':'')+': <b>'+d.mates.map(m=>esc(m.n)).join(', ')+'</b>.':'')+'</div>':'')+'<div class="small">Keep this to yourself. Tap HIDE and nobody beside you sees it.</div>';
-        put(c);
-        const hb=document.createElement('button');hb.className='send quiet';hb.textContent='HIDE MY ROLE';hb.addEventListener('click',()=>{c.style.display='none';hb.style.display='none';roleShown=false;drawBar();});put(hb);
-      }
+      /* day: talk, and a show of hands */
+      put(lbl('Day '+d.round+' · the committee is in session'));
+      put(wait('Talk it over. Votes are by a show of hands.'));
     }).catch(()=>{});
-  }
-  function notesPage(d,spectator){
-    const n=(d.night&&d.night.myNotes)||{s:[]};
-    const sel=new Set(n.s||[]);
-    const put=el=>stage.appendChild(el);
-    const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
-    put(lbl(spectator?'You still get a say · who do you suspect?':'Who do you suspect? Up to three'));
-    const list=others().filter(s=>s.alive);
-    const pl=document.createElement('div');pl.className='plist';
-    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(sel.has(s.v))b.classList.add('on');
-      b.addEventListener('click',()=>{if(sel.has(s.v))sel.delete(s.v);else{if(sel.size>=3){st.textContent='Three at most. Untap one first.';return;}sel.add(s.v);}b.classList.toggle('on',sel.has(s.v));});pl.appendChild(b);});
-    put(pl);
-    const go=document.createElement('button');go.className='send';go.textContent=n.s&&n.s.length?'UPDATE':'SAVE';
-    go.addEventListener('click',()=>{go.disabled=true;post('/p/'+ROOM+'/cs/act',{v:voter,kind:'notes',s:[...sel],a:null,c:null}).then(r=>{if(!r.ok)throw r.status;st.textContent='Saved. It comes back to you in the morning.';go.disabled=false;go.textContent='UPDATE';}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
-    put(go);
   }
   poller=setInterval(tick,2000);tick();
 }

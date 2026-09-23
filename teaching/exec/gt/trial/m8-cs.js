@@ -2,13 +2,12 @@
 /* The Hidden Agenda tester: bot seats at m8's table, so one person with a
    phone and the moderator page can play a full game.
 
-   Bots take seats in the lobby, then play whatever the deal gives them:
-   a Manipulator copies a human Manipulator's pick (or, with no human
-   Manipulator left, the bots agree on one name), the Auditor checks someone
-   new each night, General Counsel shields someone other than last night's,
-   everyone else sends a night note, every seated bot votes on an accusation,
-   and at the end every bot recommends a bidder. Each bot waits a few seconds
-   before acting, as a person would.
+   Bots take seats in the lobby, then play whatever the deal gives them
+   (the simple table, 23 Sep 2026): a Manipulator copies a human
+   Manipulator's pick (or, with no human Manipulator left, the bots agree on
+   one name), the Auditor checks someone new each night, and everyone else
+   taps one suspect. Days are a show of hands, so bots do nothing by day.
+   Each bot waits a few seconds before acting, as a person would.
 
      node trial/m8-cs.js seat 9          nine bots take seats, then play until the game is over
      node trial/m8-cs.js play            play the bots already seated (after a restart)
@@ -67,10 +66,7 @@ if (cmd === 'state') {
         if (!me.me) continue;
         const key = v + '|' + me.phase + '|' + me.round + '|' + (me.day && me.day.accused || '');
         if (me.phase + me.round !== lastPhase) { lastPhase = me.phase + me.round; console.log('  --', me.phase, 'round', me.round); }
-        if (me.phase === 'over') {
-          if (!me.reco && !done[key]) { done[key] = 1; await post('act', { v, kind: 'reco', b: pickOne(['A', 'B', 'B', 'C', 'D']) }); }
-          over = true; continue;
-        }
+        if (me.phase === 'over') { over = true; continue; }
         if (!me.me.alive || !me.me.role) continue;
         if (!due[key]) due[key] = Date.now() + 3000 + Math.random() * 9000;
         const ready = Date.now() >= due[key];
@@ -102,29 +98,15 @@ if (cmd === 'state') {
               const r = await post('act', { v, kind: 'check', target: t.v });
               console.log('   ', me.me.n, '(Auditor) checks', t.n, '->', r.role === 'b' ? 'MANIPULATOR' : 'clean');
             }
-            if (role === 'c' && !me.night.myClear) {
-              const pool = others.filter(s => s.v !== me.lastClear);
-              const t = pickOne(pool.length ? pool : others);
-              await post('act', { v, kind: 'clear', target: t.v });
-              console.log('   ', me.me.n, '(General Counsel) shields', t.n);
+            if (role !== 'a' && !me.night.myNotes) {
+              const t = pickOne(others);
+              await post('act', { v, kind: 'notes', s: [t.v], a: null, c: null });
+              console.log('   ', me.me.n, 'suspects', t.n);
             }
-            if (!me.night.myNotes) {
-              const s = shuffle(others).slice(0, 1 + Math.floor(Math.random() * 3)).map(x => x.v);
-              await post('act', { v, kind: 'notes', s, a: pickOne(others).v, c: pickOne(others).v });
-            }
-          }
-        } else if (me.phase === 'vote' && me.day && me.day.open) {
-          if (ready && !me.day.myVote && me.day.accusedV !== v && !done[key]) {
-            done[key] = 1;
-            /* a Manipulator saves a mate and helps remove anyone else; the rest lean towards removing */
-            const mateNames = new Set((me.mates || []).map(m => m.n));
-            const y = role === 'b' ? (mateNames.has(me.day.accused) ? 'n' : 'y') : (Math.random() < 0.6 ? 'y' : 'n');
-            await post('act', { v, kind: 'vote', y });
-            console.log('   ', me.me.n, 'votes', y === 'y' ? 'remove' : 'keep', me.day.accused);
           }
         }
       }
-      if (over) { console.log('  game over; bots recommended. Stopping.'); break; }
+      if (over) { console.log('  game over. Stopping.'); break; }
       await sleep(1500);
     }
   })();
