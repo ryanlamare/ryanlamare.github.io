@@ -23,6 +23,13 @@
 .dfcard .qafter{font-weight:700;font-style:italic;font-size:19px;line-height:1.35;color:var(--red);margin-top:14px}
 .dfcard .qwho{font-weight:700;font-size:19px;color:var(--ink);margin-top:auto;padding-top:14px;text-transform:uppercase;letter-spacing:.06em}
 .dfcard .qctx{font-weight:500;font-size:15px;color:var(--muted);margin-top:2px}
+.dfcard .dfplay{margin-top:12px;align-self:flex-start;display:flex;align-items:center;gap:10px;position:relative;overflow:hidden;
+  font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.12em;color:var(--ink);background:var(--paper);
+  border:2.5px solid var(--ink);padding:6px 14px 6px 6px;cursor:pointer}
+.dfcard .dfplay .dfi{width:24px;height:24px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.dfcard .dfplay .dfi svg{width:10px;height:10px;display:block}
+.dfcard .dfplay .dfbar{position:absolute;left:0;right:0;bottom:0;height:3px}
+.dfcard .dfplay .dfbar i{display:block;height:100%;width:0;background:var(--red)}
 /* the programme opener: the eight modules in two days */
 .days{position:absolute;left:64px;right:64px;top:196px;display:flex;justify-content:center;gap:44px}
 .day{width:554px}
@@ -325,6 +332,7 @@
       <div class="qafter" data-step="4">&ldquo;&hellip;you know game theory sucks so bad because it&rsquo;s so hard&rdquo;</div>
       <div class="qwho">Steven Levitt</div>
       <div class="qctx">Asked to define it on <i>Freakonomics Radio</i>, 2013</div>
+      <button type="button" class="dfplay" id="lvPlay"><span class="dfi"><svg viewBox="0 0 12 12" aria-hidden="true"><path class="ip" d="M2 1l9 5-9 5z" fill="var(--paper)"/><g class="iz" style="display:none"><rect x="2" y="1" width="3" height="10" fill="var(--paper)"/><rect x="7" y="1" width="3" height="10" fill="var(--paper)"/></g></svg></span><span class="dfl">LISTEN &middot; 2 MIN</span><span class="dfbar"><i></i></span></button>
     </div>
   </div>
   <div class="chiprow" data-step="5" style="bottom:52px">
@@ -1233,6 +1241,49 @@ clipOnClick('c2load','c2wrap','9ZuDl8GvoJw','South Park: the “you can’t come
   let seen=false;
   setInterval(fetchIt,2500);fetchIt();
   render();
+})();
+/* ---- Levitt defining game theory (Freakonomics Radio, "Jane Austen, Game
+   Theorist", 2013): plays 1:17.8 to 3:15.1 of the episode, from "Alright
+   Levitt, define game theory for me" to "I don't know how Michael does it".
+   Streamed from the publisher's own ad-free file (the injector host serves
+   the 27:12.7 original; the stitcher host adds ads and moves the times), so
+   nothing is copied into this repo. If the stream ever comes back a different
+   length, ads have crept in: the button says so rather than play the wrong
+   stretch. Stops when the slide is left. ---- */
+(function(){
+  const SRC='https://injector.simplecastaudio.com/2be48404-a43c-4fa8-a32c-760a3216272e/episodes/c5cf2c0b-65f7-49b2-8172-fc205f58b06d/audio/128/default.mp3';
+  const START=77.8, END=195.1, LEN=1632.7;
+  const btn=document.getElementById('lvPlay'); if(!btn)return;
+  const lbl=btn.querySelector('.dfl'), bar=btn.querySelector('.dfbar i');
+  const ip=btn.querySelector('.ip'), iz=btn.querySelector('.iz'), PLAY=0, PAUSE=1;
+  let au=null, bad=false;
+  function setIcon(p){ip.style.display=p?'none':'';iz.style.display=p?'':'none';}
+  function stop(){if(au){au.pause();}setIcon(PLAY);}
+  btn.addEventListener('click',()=>{
+    btn.blur();
+    if(bad)return;
+    if(!au){
+      au=new Audio();au.preload='auto';au.src=SRC;
+      au.addEventListener('loadedmetadata',()=>{
+        if(Math.abs(au.duration-LEN)>3){bad=true;au.pause();lbl.textContent='ADS IN THE STREAM · PLAY IT FROM THE PODCAST';setIcon(PLAY);return;}
+        au.currentTime=START;au.play().catch(()=>{});
+      });
+      au.addEventListener('timeupdate',()=>{
+        const f=Math.max(0,Math.min(1,(au.currentTime-START)/(END-START)));bar.style.width=(f*100)+'%';
+        if(au.currentTime>=END){au.pause();au.currentTime=START;bar.style.width='0';lbl.textContent='LISTEN AGAIN';setIcon(PLAY);}
+      });
+      au.addEventListener('play',()=>{setIcon(PAUSE);lbl.textContent='PAUSE';});
+      au.addEventListener('pause',()=>{if(!bad&&lbl.textContent==='PAUSE'){lbl.textContent='RESUME';}setIcon(PLAY);});
+      au.addEventListener('error',()=>{lbl.textContent='COULD NOT LOAD · PLAY IT FROM THE PODCAST';});
+      lbl.textContent='LOADING…';
+      return;
+    }
+    if(au.paused){if(au.currentTime<START||au.currentTime>=END)au.currentTime=START;au.play().catch(()=>{});}
+    else au.pause();
+  });
+  const slide=btn.closest('.slide');
+  new MutationObserver(()=>{if(!slide.classList.contains('active'))stop();}).observe(slide,{attributes:true,attributeFilter:['class']});
+  addEventListener('keydown',e=>{if(e.key==='Escape')stop();});
 })();
 </script>
 <script src="/teaching/exec/gt/deck.js"></script>
