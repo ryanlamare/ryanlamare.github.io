@@ -4,6 +4,10 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## NEXT CHAT STARTS HERE (24 Sep 2026)
+
+Ryan's own small-tweak pass through m1–m8, module by module, his wording. Everything below is live (c13ce27). Slide counts: m1 28, m2 23, m3 28, m4 28, m5 32, m6 23, m7 34, m8 26. Pull before touching anything: he edits live with ?edit. The m3 briefs and other phone pages take no ?edit, so their wording comes through a session. Before 1 Oct: reset m3-lot (and any room holding test lines) on the Poll Desk, and check the fan-upload clips (m5's two Moneyball scenes, Bert and Ernie) still play.
+
 ## The final pass on m1–m5 (opened 23 Sep 2026, night)
 
 Ryan's brief: module by module, a careful last pass on (a) resources and real business cases (the decks lean on pop culture), (b) flow, (c) exec-friendly redesigns, plus timing and bugs. m6–m8 already had it.
