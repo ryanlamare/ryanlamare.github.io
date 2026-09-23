@@ -21,6 +21,13 @@ to pick the work up on another computer.
 
 **Open, in order:** his read of the new m8 end and the m7 two-thirds placement; then the m1–m5 read; Tapas and Granito sessions; the hub. The Hidden Agenda watchers' vote is moot.
 
+**His notes on the new m8 end (23 Sep, last message of the chat), NOT YET BUILT; build them first next chat, after his answer:**
+- **Keep it simple** (his words: "the whole point is a simple signaling game late on day 2, followed by a screening exercise"). Claude agreed: drop the debrief questions Claude added (costly to fake, countersignals, what isn't there). "Credibly defend", in his own 550 line, happens out loud when he challenges a find.
+- **One common benchmark, not a website of their choosing:** the backup is RRPF's own site, https://www.rrpf-leasing.com/ (checked 23 Sep: services, engines, about, customers with 40+ airline logos, two video testimonials, sustainability, innovation, news; taglines "The best partner to help you reach your destination" and "We finance engines, but our business is partnership"). The building (RR HQ) stays the first choice, with the WHERE switch.
+- **A competition, recorded on phones:** one phone per team, a /go write-in (as many as they like, one line each: the signal, then what it conveys), and **What did you find?** becomes the wall of each team's finds with a count, not a question slide. Team with the most it can defend wins (his 550 wording).
+- **The wrap-up vote:** he does not want the "Always…" lines as the options, and does not want the room adjudicating the best and worst parts of the training, or a lesson left on zero. Claude's answer: the eight "Always" lines are already one per module, so it's the phrasing, not the set, that he objects to (ask him for eight short lesson names, one per module); frame the question as USE, not value ("Which of these will you use first?" / "…and which will the room pick?"); and show only the top three of each question, his top-five-never-a-full-ranking rule, so no lesson is ever shown on zero; the coordination point (do the two tops match?) survives.
+
+
 ## EARLIER (23 Sep 2026, evening): his m6 to m8 run, and what it changed
 
 **Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 23, m7 30, m8 32. Everything below is on `main` and live.
