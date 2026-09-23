@@ -16,7 +16,9 @@ Ryan's brief: module by module, a careful last pass on (a) resources and real bu
 
 **m2 done and live 23 Sep (23 slides, tag `m2-before-final-pass`), his calls:** The limits of sequential reasoning moved up to straight after the centipede results (closer, takeaways, resources follow). New slide 9 **Boeing versus Airbus**: HIS entry tree from LER 565/590GT slide 298 ("With what will we compete?", HR framing dropped), Airbus enter/stay out, Boeing block (price war)/accommodate, his five bullets, source line on Boeing's 1997 production crisis (747 line halted 20 days, $2.6bn, first loss since 1959). First-mover slide now four cards: A380 added as a second "Not always" beside Siri (his "why not both"; quotes fixed). New slide 11 **Did moving first pay off for the A380?**: the FT clip (eham-LbLjp8, 1:33, Feb 2019). Yahoo and GM are resources only (he doesn't know them well enough to tell): AP "Yahoo formally rejects Microsoft offer" (mskP3qbmhR4, 1:02, plays in place), Esty & Ghemawat on SSRN, Liker & Choi HBR 2004, Working Backwards. trial/m2-boards.test.mjs updated for the new slide numbers.
 
-**Next: m3**, same shape: read and proposal first.
+**m3 done and live 23 Sep (25 slides, tag `m3-before-final-pass`), built while he napped at his word:** typo IDOLOGIES fixed on the median voter slide; new slide 23 **Is it really a zero-sum game?** after the closer, his own MG478 week 2 lecture lines (slide 26, global HR framing dropped) plus a fixed pie / bigger pie figure; resources gained his wizard standoff find (TED-Ed, mmkCS5eA4f8; on the resources slide it cannot spoil the truel) and Borenstein and Netz 1999, "Why do all the flights leave at 8 am?" (airlines bunch departures more as competition rises: Hotelling in time). Put to him, not built: the wizard clip in content after the truel results, and Borenstein and Netz as a spoken line on Hotelling in real life.
+
+**Next: m4**, proposal while he naps; he wants "big car good" in (Morning Brew, "Big car safe...?", DEd1HXrX6-4, 43 s, his MG478 "one final ode to the prisoner's dilemma").
 
 ## NEXT CHAT STARTS HERE (written 23 Sep 2026, late): m8 now ends in their world
 
