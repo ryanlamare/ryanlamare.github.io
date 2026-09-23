@@ -111,6 +111,18 @@ button.opt:disabled{opacity:.55;cursor:default}
 .hand .who{position:absolute;top:100%;left:-10px;right:-10px;text-align:center;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .hands .vs{font-family:var(--display);font-weight:900;font-size:22px;color:var(--muted)}
 @keyframes pump{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.hand svg .ink.facet,.hist svg .ink.facet{fill:none!important;stroke-width:4}
+/* rock, paper, scissors: every throw so far, yours over theirs, the winning throw in its player's colour */
+.hist{display:grid;grid-template-columns:auto repeat(10,1fr);gap:3px;margin-top:12px;align-items:center}
+.hist .hl{font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-right:6px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist .hl.me{color:var(--teal)} .hist .hl.them{color:var(--terracotta)}
+.hist .hc{aspect-ratio:1;border:2px solid var(--rule);background:var(--paper-soft);display:flex;align-items:center;justify-content:center;min-width:0}
+.hist .hc svg{width:86%;height:86%;display:block}
+.hist svg .ink{fill:var(--paper-soft);stroke:var(--ink);stroke-width:7;stroke-linejoin:round;stroke-linecap:round}
+.hist .hc.lose svg{opacity:.4}
+.hist .hc.won.me{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 20%,var(--card))}
+.hist .hc.won.them{border-color:var(--terracotta);background:color-mix(in srgb,var(--terracotta) 20%,var(--card))}
+.hist .hc.empty{border-style:dashed;background:none}
 .beats{font-weight:700;font-size:16px;color:var(--ink);margin-top:10px;min-height:1.4em;opacity:0;transition:opacity .4s}
 .beats.on{opacity:1}
 /* the inspection game: the matrix, with the round's cell lighting up */
@@ -192,6 +204,13 @@ const INSPECT_PAY={if:[-1,0],ik:[4,-8],tf:[0,0],tk:[-5,2]};
 const INSPECT_HEAD={if:['NOTHING TO FIND','ALL CLEAR'],ik:['CAUGHT IT','CAUGHT'],tf:['QUIET ROUND','QUIET ROUND'],tk:['MISSED IT','GOT AWAY WITH IT']};
 const regSeat=n=>n<=4?'a':'b';
 /* r beats s, s beats p, p beats r: 1 = first wins, -1 = second wins, 0 draw */
+/* the three throws, drawn on a 100 by 100 box: an angular stone with its
+   facets, a sheet with a folded corner, open scissors */
+const RPS_SH={
+  r:'<path class="ink" d="M12 70 L20 44 L38 26 L62 22 L82 34 L90 58 L80 78 L54 86 L28 84 Z"/><path class="ink facet" d="M20 44 L46 50 L62 22 M46 50 L82 34 M46 50 L54 86"/>',
+  p:'<path class="ink" d="M28 14 H62 L76 28 V86 H28 Z"/><path class="ink" d="M62 14 V28 H76"/>',
+  s:'<path class="ink" d="M34 30 L70 68"/><path class="ink" d="M66 30 L30 68"/><circle class="ink" cx="26" cy="78" r="9"/><circle class="ink" cx="74" cy="78" r="9"/>'
+};
 const rpsWin=(a,b)=>a===b?0:((a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r')?1:-1);
 
 let voter=null;
@@ -614,6 +633,21 @@ function renderPlay(A,B,seat,joined){
     if(isPK)return '<div class="score"><span class="me"><b>'+t.mine+'</b><small>your goals</small></span><span class="me"><b>'+t.mySaves+'</b><small>your saves</small></span><span class="them"><b>'+t.theirs+'</b><small>'+esc(them)+'’s goals</small></span><span class="them"><b>'+t.theirSaves+'</b><small>'+esc(them)+'’s saves</small></span></div>';
     return '<div class="score"><span class="me"><b>'+t.mine+'</b> you</span><span><b>'+t.draws+'</b> drawn</span><span class="them"><b>'+t.theirs+'</b> '+esc(them)+'</span></div>';
   }
+  /* rock, paper, scissors: the throws so far, so a player can see what
+     they have leaned on and what they have not thrown in a while */
+  function histRow(per,upto){
+    const ico=x=>'<svg viewBox="0 0 100 100">'+RPS_SH[x]+'</svg>';
+    let me='<div class="hl me">You</div>', th='<div class="hl them">'+esc(them)+'</div>';
+    for(let i=1;i<=G.n;i++){
+      const k=per[i];
+      if(i>upto||!k||!k.a||!k.b){me+='<div class="hc empty"></div>';th+='<div class="hc empty"></div>';continue;}
+      const mx=k[seat], tx=k[seat==='a'?'b':'a'], w=rpsWin(mx,tx);
+      me+='<div class="hc me'+(w>0?' won':(w<0?' lose':''))+'">'+ico(mx)+'</div>';
+      th+='<div class="hc them'+(w<0?' won':(w>0?' lose':''))+'">'+ico(tx)+'</div>';
+    }
+    const d=document.createElement('div');d.className='hist';d.setAttribute('aria-label','Your throws and theirs so far');d.innerHTML=me+th;
+    return d;
+  }
   function paintKits(n){
     if(!sc)return;
     const ks=kickerSeat(n);
@@ -659,6 +693,7 @@ function renderPlay(A,B,seat,joined){
     });
     stage.appendChild(row);
     if(n>1){const t=tally(per,n-1);const sc2=document.createElement('div');sc2.innerHTML=scoreRow(t);stage.appendChild(sc2);}
+    if(n>1&&!isPK&&!isAudit)stage.appendChild(histRow(per,n-1));
   }
   let animatedN=0;
   function resultUI(n,per){
@@ -724,11 +759,7 @@ function renderPlay(A,B,seat,joined){
       const T=animatedN<n?1:0.3;animatedN=n;
       stage.innerHTML='';
       const lead=document.createElement('div');lead.className='lbl';lead.textContent='Throw '+n+' of '+G.n;stage.appendChild(lead);
-      const SH={
-        r:'<path class="ink" d="M24 62 C16 46 26 34 38 36 C40 22 56 18 64 28 C78 26 86 40 80 52 C90 62 82 78 68 78 L36 80 C24 80 20 72 24 62 Z"/>',
-        p:'<path class="ink" d="M28 14 H62 L76 28 V86 H28 Z"/><path class="ink" d="M62 14 V28 H76"/>',
-        s:'<path class="ink" d="M34 30 L70 68"/><path class="ink" d="M66 30 L30 68"/><circle class="ink" cx="26" cy="78" r="9"/><circle class="ink" cx="74" cy="78" r="9"/>'
-      };
+      const SH=RPS_SH;
       const hand=(x,cls2,who)=>'<div class="hand '+cls2+'"><svg class="fist" viewBox="0 0 100 100">'+SH.r+'</svg><svg class="shape" viewBox="0 0 100 100">'+SH[x]+'</svg><div class="who">'+esc(who)+'</div></div>';
       const hs=document.createElement('div');hs.className='hands';
       hs.innerHTML=hand(mineX,'me','you')+'<div class="vs">VS</div>'+hand(theirsX,'them',them);
@@ -773,6 +804,7 @@ function renderPlay(A,B,seat,joined){
         '<div class="sub">Ten throws</div>'+scoreRow(t);
     }
     stage.appendChild(card);
+    if(!isPK&&!isAudit)stage.appendChild(histRow(per,G.n));
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
     note.textContent='Response recorded. Results on the screen soon.';
     stage.appendChild(note);
@@ -780,9 +812,9 @@ function renderPlay(A,B,seat,joined){
   function tick(){
     answers().then(lines=>{
       const s=state(parseLines(lines));
-      document.getElementById('rdlbl').textContent=(isPK?'KICK ':(isAudit?'ROUND ':'THROW '))+Math.min(s.n,G.n)+' OF '+G.n;
       /* show the last completed kick's result until it is acknowledged */
       const last=s.n-1;
+      document.getElementById('rdlbl').textContent=(isPK?'KICK ':(isAudit?'ROUND ':'THROW '))+(last>=1&&ackN<last?last:Math.min(s.n,G.n))+' OF '+G.n;
       let k;
       if(last>=1&&ackN<last)k='res:'+last;
       else if(s.n>G.n)k='final';

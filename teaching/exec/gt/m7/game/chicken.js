@@ -30,7 +30,7 @@
    straight -100,-100. The time field is never a rule: it feeds the board's
    frozen count and the Quick draw / Careful marksman awards. */
 (function(root){
-  const N=6, WHEEL_FROM=4, CLOCK=20, WHEEL_CLOCK=5;
+  const N=6, WHEEL_FROM=4, CLOCK=20, WHEEL_CLOCK=10;
   const PAY={ss:[0,0],sg:[-10,10],gs:[10,-10],gg:[-100,-100]};
   const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
   const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');

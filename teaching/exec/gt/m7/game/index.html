@@ -11,7 +11,7 @@
                  clock: two cars close over the clock, swerve or straight
                  is one tap, and a driver who has not chosen when it runs
                  out goes straight (their own phone sends it). From round
-                 four each round opens with a five-second window to hold
+                 four each round opens with a ten-second window to hold
                  the red button and throw the steering wheel out; a driver
                  who does not sends k when it closes, and the cars set off
                  only when both wheel lines are in, so both drivers read
@@ -98,7 +98,7 @@ button.send:disabled{opacity:.45;cursor:default}
    cars closing over the clock. Car transforms are set from JS so a reload
    mid-round resumes where the cars were */
 .proad{width:100%;height:auto;display:block;overflow:visible;margin-top:8px}
-.proad .car{transition:transform 30s linear}
+.proad .car{transition:transform 30s linear;transform-box:fill-box;transform-origin:center}
 .proad .wheelfly{transition:transform 1.2s cubic-bezier(.2,.6,.3,1),opacity 1.2s;transform-box:fill-box;transform-origin:center}
 .proad .wheelfly.go{transform:translate(-90px,-150px) rotate(-260deg);opacity:0}
 .proad .wheelfly.go.r{transform:translate(90px,-150px) rotate(260deg)}
@@ -445,12 +445,13 @@ function renderPlay(A,B,seat){
   function road(n){
     const lab=s=>esc(String(s).toUpperCase().slice(0,9));
     const wheel=(cx,id,cls)=>'<g id="'+id+'" class="wheelfly'+cls+'"><circle cx="'+cx+'" cy="140" r="13" fill="none" stroke="var(--red)" stroke-width="5"/><circle cx="'+cx+'" cy="140" r="3.5" fill="var(--red)"/><line x1="'+cx+'" y1="127" x2="'+cx+'" y2="153" stroke="var(--red)" stroke-width="3"/><line x1="'+(cx-13)+'" y1="140" x2="'+(cx+13)+'" y2="140" stroke="var(--red)" stroke-width="3"/></g>';
+    const wheels=n>=CHICKEN.WHEEL_FROM;
     const d=document.createElement('div');
-    d.innerHTML='<svg class="proad" viewBox="0 100 440 120" role="img" aria-label="Two cars head to head on a road">'+
+    d.innerHTML='<svg class="proad" viewBox="0 100 440 185" role="img" aria-label="Two cars head to head on a road">'+
       '<rect x="0" y="120" width="440" height="90" fill="var(--ink)" opacity=".85"/>'+
       '<line x1="10" y1="165" x2="430" y2="165" stroke="var(--paper)" stroke-width="4" stroke-dasharray="26 18"/>'+
-      '<g id="myCar" class="car"><rect x="30" y="140" width="120" height="44" rx="10" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><rect x="62" y="128" width="58" height="24" rx="8" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><circle cx="56" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="126" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="90" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;fill:var(--paper)">YOU</text>'+wheel(104,'myWheel','')+'</g>'+
-      '<g id="theirCar" class="car"><rect x="290" y="140" width="120" height="44" rx="10" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><rect x="320" y="128" width="58" height="24" rx="8" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><circle cx="314" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="384" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="350" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;fill:var(--paper)">'+lab(them)+'</text>'+wheel(336,'theirWheel',' r')+'</g>'+
+      '<g id="myCar" class="car"><rect x="30" y="140" width="120" height="44" rx="10" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><rect x="62" y="128" width="58" height="24" rx="8" fill="var(--teal)" stroke="var(--paper)" stroke-width="3"/><circle cx="56" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="126" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="90" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;fill:var(--paper)">YOU</text>'+(wheels?wheel(104,'myWheel',''):'')+'</g>'+
+      '<g id="theirCar" class="car"><rect x="290" y="140" width="120" height="44" rx="10" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><rect x="320" y="128" width="58" height="24" rx="8" fill="var(--terracotta)" stroke="var(--paper)" stroke-width="3"/><circle cx="314" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><circle cx="384" cy="186" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><text x="350" y="169" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;fill:var(--paper)">'+lab(them)+'</text>'+(wheels?wheel(336,'theirWheel',' r'):'')+'</g>'+
       '<g id="boom" class="boom"><polygon points="220,90 240,126 286,106 270,146 322,152 282,172 300,222 244,196 222,238 204,198 148,212 184,172 122,150 190,144" fill="var(--ochre)" stroke="var(--ink)" stroke-width="3"/><text x="220" y="178" text-anchor="middle" textLength="112" lengthAdjust="spacingAndGlyphs" style="font-family:var(--display);font-weight:900;font-size:30px;fill:var(--red)">CRASH</text></g>'+
       '</svg>';
     return d.firstChild;
@@ -469,20 +470,20 @@ function renderPlay(A,B,seat){
   }
   function carMove(car,x,dir,how,secs){
     car.style.transition='transform '+secs+'s cubic-bezier(.4,0,.2,1)';
-    if(how==='s')car.style.transform='translate('+(x-dir*16)+'px,80px) rotate('+(dir*28)+'deg)';
+    if(how==='s')car.style.transform='translate('+(x+dir*12)+'px,74px) rotate('+(dir*28)+'deg)';
     else if(how==='through')car.style.transform='translateX('+(dir*330)+'px)';
     else car.style.transform='translateX('+x+'px)';
   }
-  const did=(x,froze,threw)=>threw?'threw the wheel out':(froze?'froze, and went straight':(x==='s'?'swerved':'went straight'));
   const RULE={
-    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>five seconds</b> to decide whether to <b>throw your steering wheel out of the window</b>. To throw it out, hold the red button. If you do, you cannot swerve this round, and the other driver is told that you are locked in to going straight.',
-    5:'<div class="rl">Round 5</div>Five seconds to decide again, do you throw the steering wheel out or not?',
-    6:'<div class="rl">Round 6, the last</div>Five seconds to decide again, do you throw the steering wheel out or not?'
+    4:'<div class="rl">New rule for rounds 4 to 6</div>Before the cars set off, you have <b>ten seconds</b> to decide whether to <b>throw your steering wheel out of the window</b>. To throw it out, hold the red button. If you do, you cannot swerve this round, and the other driver is told that you are locked in to going straight.',
+    5:'<div class="rl">Round 5</div>Ten seconds to decide again, do you throw the steering wheel out or not?',
+    6:'<div class="rl">Round 6, the last</div>Ten seconds to decide again, do you throw the steering wheel out or not?'
   };
   function chTick(pr,ready){
     const t=CHICKEN.totals(pr), n=t.next;
-    document.getElementById('rdlbl').textContent='ROUND '+Math.min(n,G.n)+' OF '+G.n;
     const last=n-1;
+    /* while a finished round plays back, the bar names that round */
+    document.getElementById('rdlbl').textContent='ROUND '+(last>=1&&ackN<last?last:Math.min(n,G.n))+' OF '+G.n;
     const r=(pr.r[n]||{a:{},b:{}}), mineSlot=r[seat]||{}, rd=CHICKEN.round(pr,n);
     const theirSlot=r[seat==='a'?'b':'a']||{};
     const iThrew=!!mineSlot.w, theyThrew=n>=CHICKEN.WHEEL_FROM&&!!(seat==='a'?rd.wb:rd.wa);
@@ -507,9 +508,8 @@ function renderPlay(A,B,seat){
       const rr=CHICKEN.round(pr,last);
       const mine=seat==='a'?rr.a:rr.b, theirs=seat==='a'?rr.b:rr.a;
       const iT=!!(seat==='a'?rr.wa:rr.wb), theyT=!!(seat==='a'?rr.wb:rr.wa);
-      const iF=seat==='a'?rr.fa:rr.fb, theyF=seat==='a'?rr.fb:rr.fa;
       const myPay=rr.pay[seat==='a'?0:1], theirPay=rr.pay[seat==='a'?1:0];
-      head(last,totalRow);
+      head(last,'');
       const svg=road(last);stage.appendChild(svg);
       const myCar=svg.querySelector('#myCar'), theirCar=svg.querySelector('#theirCar');
       /* the cars sit where the clock left them: nose to nose, or short of it */
@@ -517,12 +517,9 @@ function renderPlay(A,B,seat){
       const x=posAt(ts.length?Math.max(...ts):CLOCK);
       [myCar,theirCar].forEach(c=>c.style.transition='none');
       myCar.style.transform='translateX('+x+'px)';theirCar.style.transform='translateX('+(-x)+'px)';
-      if(iT)svg.querySelector('#myWheel').classList.add('go');
-      if(theyT)svg.querySelector('#theirWheel').classList.add('go');
+      if(iT)svg.querySelector('#myWheel')?.classList.add('go');
+      if(theyT)svg.querySelector('#theirWheel')?.classList.add('go');
       void svg.getBoundingClientRect();
-      const moves=document.createElement('div');moves.className='moves';
-      moves.innerHTML='<div class="mv me">You '+esc(did(mine,iF,iT))+'</div><div class="mv them">'+esc(them)+' '+esc(did(theirs,theyF,theyT))+'</div>';
-      stage.appendChild(moves);
       const card=document.createElement('div');card.className='bigcard enter';card.style.marginTop='10px';card.hidden=true;
       card.innerHTML='<div class="score" style="margin-top:0"><span class="me"><b>'+sign(myPay)+'</b><small>you</small></span><span class="them"><b>'+sign(theirPay)+'</b><small>'+esc(them)+'</small></span></div><div class="sub" style="margin-top:6px">this round</div>';
       stage.appendChild(card);
@@ -539,8 +536,8 @@ function renderPlay(A,B,seat){
       const at=(ms,f)=>revealTimer.push(setTimeout(f,ms));
       const replayed=prev.startsWith('waitd:'+last)||prev.startsWith('thrown:'+last)||prev.startsWith('drive:'+last);
       const T=replayed?1:0.35; /* a reload after the round shows it again, briskly */
-      at(400,()=>{moves.children[0].classList.add('on');if(mine==='s')carMove(myCar,x,1,'s',1.4*T);});
-      at(1800*T+400,()=>{moves.children[1].classList.add('on');if(theirs==='s')carMove(theirCar,-x,-1,'s',1.4*T);});
+      at(400,()=>{if(mine==='s')carMove(myCar,x,1,'s',1.4*T);});
+      at(1800*T+400,()=>{if(theirs==='s')carMove(theirCar,-x,-1,'s',1.4*T);});
       at(3400*T+500,()=>{
         if(mine==='g'&&theirs==='g'){carMove(myCar,CLOSE+8,1,'g',0.9*T);carMove(theirCar,-CLOSE-8,-1,'g',0.9*T);
           at(900*T,()=>{svg.querySelector('#boom').classList.add('on');svg.classList.add('shake');});}
@@ -570,7 +567,7 @@ function renderPlay(A,B,seat){
       head(n,totalRow);
       waiting('Waiting for '+them+' to proceed. The clock starts when you both have…');
     }else if(k.startsWith('wheel:')){
-      /* five seconds: throw the wheel, or keep it. Keeping needs no tap;
+      /* ten seconds: throw the wheel, or keep it. Keeping needs no tap;
          the phone sends k when the window closes */
       head(n,totalRow);
       const svg=road(n);stage.appendChild(svg);
@@ -601,15 +598,15 @@ function renderPlay(A,B,seat){
       const mine=svg.querySelector('#myCar'), theirs=svg.querySelector('#theirCar');
       [mine,theirs].forEach(c=>c.style.transition='none');
       mine.style.transform='translateX('+START+'px)';theirs.style.transform='translateX('+(-START)+'px)';
-      if(iThrew)svg.querySelector('#myWheel').classList.add('go');
+      if(iThrew)svg.querySelector('#myWheel')?.classList.add('go');
       waiting((iThrew?'Your wheel is out of the window. ':'You kept the wheel. ')+'Waiting for '+them+'’s decision. The cars set off when it is in…');
     }else{
       /* the approach: the clock runs, the cars close, you choose */
       head(n,totalRow);
       const svg=road(n);stage.appendChild(svg);
       driveCars(svg,n);
-      if(iThrew)svg.querySelector('#myWheel').classList.add('go');
-      if(theyThrew)svg.querySelector('#theirWheel').classList.add('go');
+      if(iThrew)svg.querySelector('#myWheel')?.classList.add('go');
+      if(theyThrew)svg.querySelector('#theirWheel')?.classList.add('go');
       const row=document.createElement('div');row.className='clockrow';
       row.innerHTML='<span class="cl">'+(k.startsWith('drive:')?'Swerve, or go straight?':'Locked in')+'</span><span class="clock" id="chClock"></span>';
       stage.appendChild(row);
@@ -656,7 +653,7 @@ function renderPlay(A,B,seat){
     let timer=null;
     const start=e=>{if(posting||b.disabled)return;e.preventDefault();b.classList.add('holding');
       timer=setTimeout(()=>{timer=null;b.disabled=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
-        svg.querySelector('#myWheel').classList.add('go');post(n,'w',null,null,Math.min(WCLOCK,Math.round(wElapsed(n))));},1000);};
+        svg.querySelector('#myWheel')?.classList.add('go');post(n,'w',null,null,Math.min(WCLOCK,Math.round(wElapsed(n))));},1000);};
     const stop=()=>{b.classList.remove('holding');if(timer){clearTimeout(timer);timer=null;}};
     b.addEventListener('pointerdown',start);
     ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,stop));

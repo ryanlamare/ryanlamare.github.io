@@ -478,17 +478,15 @@
       <div class="livecount"><span class="n" id="chRounds">0</span><span class="l">ROUNDS<br>PLAYED</span></div>
       <div class="demotag" id="chDemo" style="position:static">DEMO DATA</div>
     </div>
-    <div class="stats four">
+    <div class="stats">
       <div class="rowlab" data-step="1"><div class="rn">1&ndash;3</div><div class="rt">Rounds one to three. Two drivers, one road</div></div>
       <div class="stat" data-step="1" data-stepcall="chTile" data-t="sw1"><div class="sl">Drivers swerved</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time</div></div>
       <div class="stat" data-step="1" data-stepcall="chTile" data-t="cr1"><div class="sl">Crashes</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of rounds ended with both going straight</div></div>
       <div class="stat" data-step="1" data-stepcall="chTile" data-t="bs1"><div class="sl">Both swerved</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of rounds</div></div>
-      <div class="stat" data-step="1" data-stepcall="chTile" data-t="fr1"><div class="sl">Froze at the wheel</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of drivers let the clock run out, and went straight</div></div>
       <div class="rowlab" data-step="2"><div class="rn">4&ndash;6</div><div class="rt">Rounds four to six. <b>The steering wheel could go out of the window</b></div></div>
       <div class="stat" data-step="2" data-stepcall="chTile" data-t="th2"><div class="sl">Threw the wheel out</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of drivers, each round</div></div>
       <div class="stat" data-step="3" data-stepcall="chTile" data-t="fs2"><div class="sl">Facing a thrown wheel, swerved</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time <b>the commitment worked</b></div></div>
       <div class="stat" data-step="4" data-stepcall="chTile" data-t="bt2"><div class="sl">Both threw the wheel</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of rounds &ndash; <b>every one of them a crash</b></div></div>
-      <div class="stat" data-step="4" data-stepcall="chTile" data-t="fr2"><div class="sl">Froze at the wheel</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of drivers, with a wheel to throw</div></div>
     </div>
   </div>
 </section>
@@ -884,7 +882,6 @@
     </div>
   </div>
   <div class="stquote" data-step="3">&ldquo;When you surround an army, leave an outlet free. Do not press a desperate foe too hard&rdquo; <span style="font-style:normal;font-weight:700;color:var(--red)">&ndash; Sun Tzu, The Art of War</span></div>
-  <div class="demotag" style="position:absolute;top:168px;right:76px">TOY NUMBERS</div>
   <span data-step="1" data-stepcall="stPlay" data-scene="A" style="position:absolute;width:0;height:0"></span>
   <span data-step="2" data-stepcall="stPlay" data-scene="B" style="position:absolute;width:0;height:0"></span>
 </section>
@@ -1131,24 +1128,22 @@ clipOnClick('bmload','bmwrap',CLIPS.badminton,'Olympic badminton players kicked 
   function stats(){
     const lines=st.live?st.lines:demoLines();
     const {joins,pairs}=CHICKEN.parse(lines);
-    let r1=0,sw1=0,cr1=0,bs1=0,fr1=0, r2=0,dec2=0,th2=0,face=0,fs=0,bt2=0,fr2=0;
+    let r1=0,sw1=0,cr1=0,bs1=0, r2=0,dec2=0,th2=0,face=0,fs=0,bt2=0;
     pairs.forEach(pr=>{
       for(let n=1;n<=CHICKEN.N;n++){
         const rd=CHICKEN.round(pr,n); if(!rd.done)continue;
         if(n<CHICKEN.WHEEL_FROM){
           r1++; if(rd.a==='s')sw1++; if(rd.b==='s')sw1++;
           if(rd.a==='g'&&rd.b==='g')cr1++; if(rd.a==='s'&&rd.b==='s')bs1++;
-          if(rd.fa)fr1++; if(rd.fb)fr1++;
         }else{
           r2++; dec2+=2; if(rd.ca==='w')th2++; if(rd.cb==='w')th2++;
-          if(rd.fa)fr2++; if(rd.fb)fr2++;
           if(rd.ca==='w'&&rd.cb==='w')bt2++;
           if(rd.ca==='w'&&rd.cb!=='w'){face++;if(rd.b==='s')fs++;}
           if(rd.cb==='w'&&rd.ca!=='w'){face++;if(rd.a==='s')fs++;}
         }
       }
     });
-    return {pairs:joins.size,rounds:r1+r2,sw1:pct(sw1,2*r1),cr1:pct(cr1,r1),bs1:pct(bs1,r1),fr1:pct(fr1,2*r1),th2:pct(th2,dec2),fs2:pct(fs,face),bt2:pct(bt2,r2),fr2:pct(fr2,dec2)};
+    return {pairs:joins.size,rounds:r1+r2,sw1:pct(sw1,2*r1),cr1:pct(cr1,r1),bs1:pct(bs1,r1),th2:pct(th2,dec2),fs2:pct(fs,face),bt2:pct(bt2,r2)};
   }
   function render(){
     const s=stats();
