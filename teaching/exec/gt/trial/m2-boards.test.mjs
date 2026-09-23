@@ -127,7 +127,7 @@ try {
   /* ---------- the deck ---------- */
   const OTHERS = [['Ben', 'Priya', 400, 'a'], ['Cara', 'Marcus', 500, 'a'], ['Dev', 'Sam', 200, 'r'], ['Elena', 'Hana', 500, 'a'], ['Ivan', 'Jo', 10, 'r'], ['Kemi', 'Luis', 100, 'r'], ['Mei', 'Noor', 400, 'r'], ['Owen', 'Rosa', 500, 'a'], ['Theo', 'Uma', 300, 'a'], ['Vik', 'Wen', 500, 'a'], ['Bartholomew', 'Zoe', 500, 'a'], ['Yara', 'Al', 450, 'a']];
   OTHERS.forEach(o => rooms['m2-ultimatum'].push({ v: 'bot-' + o[0], t: o.join('|') }));
-  const deck = await page(base + '/teaching/exec/gt/m2/#14', 1280, 720);
+  const deck = await page(base + '/teaching/exec/gt/m2/#16', 1280, 720);
   await sleep(3200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the deck is on the ultimatum results slide');
   check(await deck.ev(`document.getElementById('ultN').textContent`) === '14', 'the count reads 14 pairs');
@@ -193,11 +193,13 @@ try {
   check(await deck.ev(`document.querySelectorAll('#centcols .ubname').length`) === 10, 'a late pair does not move the board');
   await deck.key('ArrowRight'); await sleep(300);
   await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
-  /* ---------- the closer: four questions, nothing to scan ---------- */
-  await deck.key('ArrowRight'); await sleep(1200);
+  /* ---------- the closer: four questions, nothing to scan (slide 20: the limits slide sits between since 23 Sep) ---------- */
+  await deck.ev(`location.hash='#20'`); await sleep(1200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`!document.querySelector('.slide.active img, .slide.active svg')`), 'the closer is four questions, with no QR and no figure');
   await deck.key('ArrowRight'); await sleep(400);
-  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('limits')`), 'the next slide is The limits of sequential reasoning');
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.toLowerCase().includes('takeaways')`), 'the next slide is the takeaways');
+  await deck.ev(`location.hash='#19'`); await sleep(600);
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('limits')`), 'The limits of sequential reasoning comes straight before the closer');
   for (const [n, p] of [['deck', deck], ['proposer', A], ['responder', T], ['second proposer', G], ['second responder', H]]) check(!p.errors.length, 'no script errors on the ' + n + (p.errors.length ? ': ' + p.errors.join(' / ') : ''));
 } catch (e) { console.log('FAIL  the test threw: ' + (e.stack || e)); fails++; }
 chrome.kill(); srv.close(); await rm(dir, { recursive: true, force: true }).catch(() => {});

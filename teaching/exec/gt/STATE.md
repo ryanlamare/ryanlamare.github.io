@@ -14,7 +14,9 @@ Ryan's brief: module by module, a careful last pass on (a) resources and real bu
 
 **Suite-wide, his ruling:** no group sizes on slides ("In twos or threes", "In pairs", "In teams of three" for discussion and exercises); he allocates groups out loud. Two-player games keep "Pair up" / "Play it in pairs". Changed: m2 closer, m3 solve slide and m3/solve/ page, m4 x2, m6 closer, m7 closer, m8 hunt.
 
-**m2: read done 23 Sep, nothing built, proposal with Ryan** (limits slide up to after the centipede; A380 for the first-mover "not always" tile; Microsoft–Yahoo 2008 for the ultimatum; GM vs Toyota suppliers for the centipede; Working Backwards as a resource; straight quotes on slides 8 and 9). Build at his word.
+**m2 done and live 23 Sep (23 slides, tag `m2-before-final-pass`), his calls:** The limits of sequential reasoning moved up to straight after the centipede results (closer, takeaways, resources follow). New slide 9 **Boeing versus Airbus**: HIS entry tree from LER 565/590GT slide 298 ("With what will we compete?", HR framing dropped), Airbus enter/stay out, Boeing block (price war)/accommodate, his five bullets, source line on Boeing's 1997 production crisis (747 line halted 20 days, $2.6bn, first loss since 1959). First-mover slide now four cards: A380 added as a second "Not always" beside Siri (his "why not both"; quotes fixed). New slide 11 **Did moving first pay off for the A380?**: the FT clip (eham-LbLjp8, 1:33, Feb 2019). Yahoo and GM are resources only (he doesn't know them well enough to tell): AP "Yahoo formally rejects Microsoft offer" (mskP3qbmhR4, 1:02, plays in place), Esty & Ghemawat on SSRN, Liker & Choi HBR 2004, Working Backwards. trial/m2-boards.test.mjs updated for the new slide numbers.
+
+**Next: m3**, same shape: read and proposal first.
 
 ## NEXT CHAT STARTS HERE (written 23 Sep 2026, late): m8 now ends in their world
 
