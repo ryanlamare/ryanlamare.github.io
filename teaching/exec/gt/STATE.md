@@ -14,7 +14,7 @@ Ryan's brief: module by module, a careful last pass on (a) resources and real bu
 
 **Suite-wide, his ruling:** no group sizes on slides ("In twos or threes", "In pairs", "In teams of three" for discussion and exercises); he allocates groups out loud. Two-player games keep "Pair up" / "Play it in pairs". Changed: m2 closer, m3 solve slide and m3/solve/ page, m4 x2, m6 closer, m7 closer, m8 hunt.
 
-**Next: m2**, same shape (resources/business cases, flow, redesigns, timing, bugs), talked through before building.
+**m2: read done 23 Sep, nothing built, proposal with Ryan** (limits slide up to after the centipede; A380 for the first-mover "not always" tile; Microsoft–Yahoo 2008 for the ultimatum; GM vs Toyota suppliers for the centipede; Working Backwards as a resource; straight quotes on slides 8 and 9). Build at his word.
 
 ## NEXT CHAT STARTS HERE (written 23 Sep 2026, late): m8 now ends in their world
 
