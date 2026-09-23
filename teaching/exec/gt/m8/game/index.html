@@ -398,13 +398,13 @@ function renderCS(){
           const live=mates.filter(m=>m.alive);
           if(live.length){const h=document.createElement('div');h.className='hist';h.innerHTML=live.map(m=>'<b>'+esc(m.n)+'</b> has picked '+(m.pick?'<b>'+esc(m.pick)+'</b>':'nobody yet')).join(' · ');put(h);}
           const myPick=d.night&&d.night.myPick;
-          if(myPick&&live.every(m=>m.pick&&norm(m.pick)===norm(myPick)))put(wait('Agreed on '+myPick+'. Wait for the morning.'));
+          if(myPick&&live.every(m=>m.pick&&norm(m.pick)===norm(myPick)))put(wait('Agreed on '+myPick+'. Heads down until the morning.'));
           return;
         }
         if(role==='a'){
           const c=d.night&&d.night.myCheck;
           put(lbl('Auditor · tap one member to check'));
-          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> '+(c.role==='b'?'has a <b>hidden agenda</b>: a Manipulator':'is honest')+'.';put(r);put(wait('Wait for the morning.'));}
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> '+(c.role==='b'?'has a <b>hidden agenda</b>: a Manipulator':'is honest')+'.';put(r);put(wait('Heads down until the morning.'));}
           else put(nameBtns(others().filter(s=>s.alive),null,s=>act({kind:'check',target:s.v})));
           const past=(d.checks||[]).filter(x=>x.r<d.round);
           if(past.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your checks so far: '+past.map(x=>'night '+x.r+', <b>'+esc(x.target)+'</b>, '+(x.role==='b'?'a Manipulator':'honest')).join(' · ');put(h);}
@@ -415,7 +415,7 @@ function renderCS(){
         const mine=mineV?((d.seats.find(x=>x.v===mineV)||{}).n||null):null;
         put(lbl('Who do you suspect? Tap one name'));
         put(nameBtns(others().filter(s=>s.alive),mine,s=>act({kind:'notes',s:[s.v],a:null,c:null})));
-        if(mine)put(wait('Saved. You can change it until the morning.'));
+        if(mine)put(wait('Saved. Heads down until the morning; you can change it until then.'));
         return;
       }
       /* day: talk, and a show of hands */

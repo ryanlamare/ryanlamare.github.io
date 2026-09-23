@@ -113,6 +113,17 @@ if(!table||!CS_TABLES[table]){
     if(!secret){if(shown!=='secret'){shown='secret';askSecret();}return;}
     fetch(API+'/p/'+ROOM+'/cs/mod?s='+encodeURIComponent(secret)).then(r=>{if(r.status===403){secret='';try{localStorage.removeItem('gt-admin');}catch(_){}shown='';return null;}return r.json();}).then(d=>{if(!d){tick();return;}S=d;render();}).catch(()=>{});
   }
+  const NIGHT_MIN=30;
+  const nk=r=>'gt-cs-night-'+ROOM+'-'+r;
+  function nightStart(r){let t=null;try{t=+localStorage.getItem(nk(r))||null;}catch(_){}if(!t){t=Date.now();try{localStorage.setItem(nk(r),String(t));}catch(_){}}return t;}
+  const nightLeft=r=>Math.max(0,NIGHT_MIN-Math.floor((Date.now()-nightStart(r))/1000));
+  function paintMorning(){
+    const b=document.getElementById('morningBtn');if(!b||!S||S.phase!=='night')return;
+    const left=nightLeft(S.round);
+    b.disabled=left>0;b.textContent=left>0?'MORNING IN '+left:'MORNING';
+    b.classList.toggle('ready',left<=0&&b.dataset.ready==='1');
+  }
+  setInterval(paintMorning,500);
   function render(){
     if(!S)return;
     const key=JSON.stringify([S.phase,S.round,Object.values(S.seats).map(s=>[s.n,s.role,s.alive,!!s.open,s.out]),S.nights[S.round],S.log.length,lastResult,S.winner]);
@@ -163,11 +174,16 @@ if(!table||!CS_TABLES[table]){
       ck.appendChild(el('div','c'+(tapped===tappers.length?' done':''),'<span>Everyone else</span><small>'+tapped+' of '+tappers.length+' tapped</small>'));
       app.appendChild(ck);
       const allIn=agreed&&(!auditor||!!n.check)&&tapped===tappers.length;
-      big('MORNING',()=>{
+      /* a minimum night (Ryan, 23 Sep): MORNING waits NIGHT_MIN seconds from the start of the night, so the
+         clock sets the pace and a slow tap (the Manipulators have more to agree) tells the room nothing */
+      nightStart(S.round);
+      const mb=big('MORNING',()=>{
+        if(nightLeft(S.round)>0)return;
         if(!allIn&&!confirm('Not every phone has tapped yet. Morning anyway?'))return;
         act('phase',{to:'day'},d=>{const r=d.result||{};
           lastResult=(r.removed?'Overnight, an anonymous allegation was made against <b>'+esc(r.removed)+'</b>. The airline has pulled them off the committee while it is investigated.':'No allegation was agreed overnight. <b>Nobody leaves.</b>')+winLine(d.winner);});
       },allIn?'ready':'');
+      mb.id='morningBtn';mb.dataset.ready=allIn?'1':'';paintMorning();
     }else if(S.phase==='day'||S.phase==='vote'){
       readout(morning(S.round));
       const today=seats.find(s=>s.out&&s.out.how==='recused'&&s.out.r===S.round);
