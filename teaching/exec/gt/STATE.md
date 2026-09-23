@@ -4,7 +4,24 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (written 23 Sep 2026, evening): his m6 to m8 run, and what it changed
+## NEXT CHAT STARTS HERE (written 23 Sep 2026, late): m8 now ends in their world
+
+**Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 23, m7 33, m8 26. All on `main` and live.
+
+**Hidden Agenda is OUT of m8** (Ryan, 23 Sep, after playing it with bots: "too complicated… werewolf feels a bit tacked on"). Nothing deleted: the simple table is at tag `m8-before-hunt`, the earlier build at `m8-before-simple-agenda`; `m8/game/` and the Worker's /cs lane stay, unlinked. **Do not bring it back.** He also rejected the lost-heirloom (King Solomon) game: the car market is already one game not from their world.
+
+**m8's end, as agreed** (his principle: end the day in discussion and their world, not more games):
+- **Signaling scavenger hunt!** his LER 550 slide 345, his words; a **WHERE switch** on the slide (click) swaps the one line between walking the building (RR corporate HQ, King's Cross; access unknown, he will judge it on the day, do NOT ask Diego or Jaime) and a website from their world; ten-minute clock on a click.
+- **What did you find?** the debrief (costly to fake or cheap talk, countersignals, what isn't there, which team defends the most).
+- **Screening in your world** replaces Information asymmetries in your world (his opening question kept, the rest Claude's sketch, his to reword).
+- **What matters most to you, and to the room?** FLEX wrap-up before the takeaways: one QR, two chained /go polls (`m8-wrap-me` then `m8-wrap-room`), options = his eight takeaways, each column of bars revealed on a keypress; his framing: "thinking only about yourself… then what do you think the room thinks… game theory in a nutshell".
+- Objective 4 now reads signals and screening in your world.
+
+**Guess two-thirds moved to m7**, three FLEX slides after What is a strategic move? (room still `m8-twothirds`, test `trial/m7-twothirds.test.mjs`).
+
+**Open, in order:** his read of the new m8 end and the m7 two-thirds placement; then the m1–m5 read; Tapas and Granito sessions; the hub. The Hidden Agenda watchers' vote is moot.
+
+## EARLIER (23 Sep 2026, evening): his m6 to m8 run, and what it changed
 
 **Slide counts now:** m1 27, m2 21, m3 24, m4 29, m5 30, m6 23, m7 30, m8 32. Everything below is on `main` and live.
 
