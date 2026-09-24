@@ -1,5 +1,6 @@
-/* gt-names — the duplicate-name guard, shared by every page that asks
-   "who are you?" (the /go/ polls and the module game pages).
+/* gt-names — the duplicate-name guard and the attendee list, shared by
+   every page that asks "who are you?" (the /go/ polls and the module game
+   pages).
 
    Two people typing "Mike" would share one row in the points system:
    scores pool by name, so a collision silently merges two people. Before a
@@ -110,5 +111,17 @@ const GT_NAMES = (() => {
     const a = document.createElement('button'); a.className = 'back'; a.type = 'button'; a.style.marginTop = '14px'; a.textContent = o.alone || 'I’m on my own this time'; a.addEventListener('click', () => o.done('-')); host.appendChild(a);
   }
 
-  return { guard, others, norm, partner };
+  /* roster(): the attendee list every "who are you?" picker shows. It is
+     kept on the poll server and edited on the Poll Desk, never in this
+     public repo, where a name would stay in git history. Resolves [] when
+     the list is empty or the server is slow or out of reach, and a picker
+     with no names asks people to type theirs. A picker that reads it again
+     while it is up passes null, so a failed read keeps the names it has. */
+  function roster(failed = []) {
+    const ask = fetch(API + '/p/gt-roster/roster', { cache: 'no-store' })
+      .then(r => r.json()).then(d => Array.isArray(d.names) ? d.names : failed).catch(() => failed);
+    return Promise.race([ask, new Promise(r => setTimeout(() => r(failed), 4000))]);
+  }
+
+  return { guard, others, norm, partner, roster };
 })();

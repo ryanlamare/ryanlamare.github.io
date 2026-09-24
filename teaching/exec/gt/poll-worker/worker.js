@@ -20,6 +20,16 @@
 //   POST /p/:id/guess    {v, n, g: 1..100}             -> {r:"high"|"low"|"correct", left}
 //   GET  /p/:id/guesses                                -> {guesses:[{v,n,g,r,rd}], total}
 //   POST /p/:id/reset    {s: "<ADMIN_SECRET>"}         -> {ok:true}
+//   GET  /p/gt-roster/roster                           -> {names:[..], total}
+//   POST /p/gt-roster/roster {s, names:[..]}           -> {ok:true, names}
+//
+//   The roster lane (24 Sep 2026) is the attendee list the "who are you?"
+//   pickers show. It lives here and not in the site's /go/roster.json
+//   because the repo is public and a name committed once stays in git
+//   history. The Poll Desk replaces the list whole; phones only read it.
+//   Only gt-roster (and gt-roster-<x> for tests) carries one, and /reset
+//   leaves it alone: RESET EVERY ROOM before a session must never empty
+//   the list.
 //
 //   The Hidden Agenda lane (Module 8's capstone, a hidden-role game at one
 //   table; one room per table). Roles are a secret the server holds — a
@@ -79,7 +89,7 @@ export default {
   async fetch(req, env) {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     const url = new URL(req.url);
-    const m = url.pathname.match(/^\/p\/([a-z0-9-]{1,64})(\/(vote|say|answers|votes|entries|draw|draws|target|round|guess|guesses|reset)|\/cs\/[a-z]+)?$/);
+    const m = url.pathname.match(/^\/p\/([a-z0-9-]{1,64})(\/(vote|say|answers|votes|entries|draw|draws|target|round|guess|guesses|reset|roster)|\/cs\/[a-z]+)?$/);
     if (!m) return json({ error: 'not found' }, 404);
     const stub = env.POLLS.get(env.POLLS.idFromName(m[1]));
     return stub.fetch(req);
@@ -105,6 +115,31 @@ export class PollRoom {
     const url = new URL(req.url);
     const action = url.pathname.split('/')[3] || '';
     if (action === 'cs') return this.closedSession(req, url, url.pathname.split('/')[4] || '');
+
+    if (action === 'roster') {
+      if (!/^gt-roster(-[a-z0-9-]+)?$/.test(url.pathname.split('/')[2] || '')) return json({ error: 'not found' }, 404);
+      if (req.method === 'GET') {
+        const names = (await this.storage.get('roster')) || [];
+        return json({ names, total: names.length });
+      }
+      if (req.method === 'POST') {
+        let body;
+        try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); }
+        const secret = this.env.ADMIN_SECRET;
+        if (!secret || body.s !== secret) return json({ error: 'no' }, 403);
+        if (!Array.isArray(body.names) || body.names.length > 80) return json({ error: 'bad names' }, 400);
+        /* the games write names into "name|..." lines, so a bar goes too */
+        const seen = new Set(), names = [];
+        body.names.forEach(n => {
+          // eslint-disable-next-line no-control-regex
+          const t = String(n || '').replace(/[\x00-\x1f\x7f|]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+          const k = t.toLowerCase();
+          if (t && !seen.has(k)) { seen.add(k); names.push(t); }
+        });
+        await this.storage.put('roster', names);
+        return json({ ok: true, names });
+      }
+    }
 
     if (req.method === 'GET' && action === 'answers') {
       const answers = (await this.storage.get('answers')) || [];

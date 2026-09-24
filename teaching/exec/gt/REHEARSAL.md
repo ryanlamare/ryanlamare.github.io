@@ -9,7 +9,7 @@ Rewritten 21 Sep 2026 for the plain suite as it is live. One person, one MacBook
 - **The deck stays in your normal profile**, full screen. Right arrow or space moves on, left goes back, **F** skips or restores the flex slides. Adding `#6` to a deck's address opens its seventh slide (the count starts at zero), which saves arrowing back to a game.
 - In each student window open **ryanlamare.com/go** and bookmark it. It lists every poll, then every game page. **The two module 5 vote games are not on it**; they open only from their QR or the addresses given below.
 - Open **ryanlamare.com/teaching/exec/gt/poll-desk/** in your normal profile, paste the admin secret, and press **Reset every room** before you start.
-- Leave `go/roster.json` empty, so you see the typed-name path. Give each student a different first name the first time it asks (Ana, Ben, Cara; your phone is Fay).
+- Leave the Poll Desk's attendee list empty, so you see the typed-name path. Give each student a different first name the first time it asks (Ana, Ben, Cara; your phone is Fay).
 - **Keep a notes file open.** One line per thing you notice: module, slide number from the tick bar, what happened. Note everything and fix nothing as you go; the file is what the next chat works from.
 
 ## Changing a word as you go

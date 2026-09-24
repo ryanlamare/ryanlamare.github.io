@@ -45,6 +45,32 @@ h1 .r{color:var(--red)}
 .msg.bad{color:var(--red);opacity:1}
 .sctag{font-weight:700;font-size:9.5px;letter-spacing:.12em;color:var(--red);
   border:1px solid var(--red);padding:1px 6px;vertical-align:2px}
+/* the attendee list (24 Sep 2026): the names phones pick from */
+.roster{border:2px solid var(--red);padding:18px 16px 16px;margin-bottom:26px}
+.roster h2{font-family:var(--display);font-weight:900;font-size:22px;margin-bottom:4px}
+.roster .sub{margin-bottom:14px}
+.rcount{font-weight:700;font-size:13px;letter-spacing:.06em;margin-bottom:10px}
+.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:14px}
+.rrow{display:flex;align-items:center;gap:8px;border:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);padding:7px 8px 7px 12px}
+.rrow .nm{flex:1;min-width:0;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow input{flex:1;min-width:0;font-family:var(--sans);font-weight:600;font-size:15px;color:var(--paper);
+  background:transparent;border:0;border-bottom:1.5px dashed color-mix(in srgb, var(--paper) 40%, transparent);padding:3px 0}
+.rrow input:focus{outline:none;border-bottom-color:var(--red)}
+.rrow input.clash{border-bottom:2px solid var(--red)}
+.rrow .x{flex:none;font-family:var(--sans);font-weight:700;font-size:18px;line-height:1;width:32px;height:32px;
+  background:transparent;color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);cursor:pointer}
+.rrow .x:hover{background:var(--red);border-color:var(--red)}
+.roster textarea{width:100%;font-family:var(--sans);font-weight:600;font-size:14.5px;line-height:1.45;padding:11px 14px;
+  background:color-mix(in srgb, var(--paper) 8%, transparent);color:var(--paper);
+  border:2px solid color-mix(in srgb, var(--paper) 30%, transparent);resize:vertical;min-height:150px;margin-bottom:10px}
+.roster details{border-top:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);padding-top:14px;margin-top:4px}
+.roster summary{font-weight:700;font-size:12px;letter-spacing:.12em;cursor:pointer;margin-bottom:10px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.btnrow button,.roster .go{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;
+  background:var(--red);color:var(--paper);border:0;padding:11px 18px;cursor:pointer}
+.btnrow button.ghost{background:transparent;border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent)}
+.roster .msg button{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.1em;margin-left:10px;
+  background:transparent;color:var(--paper);border:1.5px solid var(--paper);padding:4px 10px;cursor:pointer}
 </style>
 </head><body>
 <div class="wrap">
@@ -56,6 +82,34 @@ h1 .r{color:var(--red)}
     <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
     <button id="saveSecret" type="button">SAVE</button>
   </div>
+  <section class="roster" id="roster">
+    <h2>The attendee list</h2>
+    <p class="sub">The names phones show under “Who are you?”. A change here reaches the phones within a few
+    seconds. People not on the list can still type their name.</p>
+    <div class="rcount" id="rcount"></div>
+    <div class="rlist" id="rlist"></div>
+    <div class="secretrow">
+      <input type="text" id="addName" placeholder="Add a late joiner’s name" autocomplete="off">
+      <button id="addBtn" type="button">ADD</button>
+    </div>
+    <details id="paste">
+      <summary>PASTE A NEW LIST</summary>
+      <p class="sub">Copy the names straight from the spreadsheet or the email and paste them here, one
+      person per line. Extra columns such as email or company are fine: TIDY IT keeps first names only,
+      adding a last initial where two people share a first name.</p>
+      <textarea id="pasteIn" placeholder="Paste the list here" autocomplete="off" spellcheck="false"></textarea>
+      <div class="btnrow"><button id="tidyBtn" type="button">TIDY IT</button></div>
+      <div id="preview" hidden>
+        <p class="sub" id="pvHead" style="margin:18px 0 10px"></p>
+        <div class="rlist" id="pvList"></div>
+        <div class="btnrow">
+          <button id="saveList" type="button">SAVE THIS LIST</button>
+          <button id="cancelList" class="ghost" type="button">CANCEL</button>
+        </div>
+      </div>
+    </details>
+    <div class="msg" id="rmsg"></div>
+  </section>
   <div class="bulk" id="bulk">
     <button id="resetAll" type="button">RESET EVERY ROOM</button>
     <span class="or">or a rehearsal:</span><input type="text" id="suffix" placeholder="room suffix, e.g. trial11" autocomplete="off"><button id="resetTrial" type="button">RESET THAT REHEARSAL</button>
@@ -203,6 +257,204 @@ fetch('/go/polls.json').then(r=>r.json()).then(cfg=>{
     refresh();setInterval(refresh,4000);
   });
 }).catch(()=>{say('Could not load polls.json.',true);});
+})();
+</script>
+<script>
+/* The attendee list (24 Sep 2026). It lives on the poll server in its own
+   room, gt-roster, never in the repo: the repo is public and a name
+   committed once stays in git history. So the list is pasted here, not
+   into a file or a chat. The server keeps whatever this page last saved,
+   RESET EVERY ROOM leaves it alone, and every change fetches the list
+   afresh first, so two devices cannot undo each other's edits. */
+(function(){
+const API='https://gt-poll.rlamare.workers.dev', ROOM='gt-roster';
+const $=id=>document.getElementById(id);
+const secret=()=>$('secret').value.trim();
+const msg=$('rmsg');
+function say(t,bad,undo){
+  msg.textContent=t;msg.className='msg'+(bad?' bad':'');
+  if(undo){const b=document.createElement('button');b.type='button';b.textContent='UNDO';b.addEventListener('click',undo);msg.appendChild(b);}
+}
+const fold=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const byName=(a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'});
+
+/* ---- tidying a pasted list ----
+   A spreadsheet pastes as tab-separated columns; an email as one person a
+   line. Headed columns are read by their headings (First name / Last name,
+   Nombre / Apellidos, Name); unheaded, the first cell that looks like a
+   name is used, emails and anything with a digit skipped. Then: first
+   names only, capitals fixed when a name came in all caps or all lower
+   case, a last initial where two people share a first name (the whole
+   surname if the initials match too), duplicates out, A to Z. */
+const cap=s=>s.split(/([-'’ ])/).map(p=>/^\p{L}/u.test(p)?p[0].toUpperCase()+p.slice(1).toLowerCase():p).join('');
+const fixCase=s=>(s===s.toUpperCase()||s===s.toLowerCase())?cap(s):s;
+const tidyPart=s=>fixCase(String(s||'').replace(/[\x00-\x1f\x7f|]/g,' ').replace(/\s+/g,' ').trim()).slice(0,30);
+const cellsOf=l=>l.includes('\t')?l.split('\t'):(((l.match(/,/g)||[]).length>=2||l.includes(';'))?l.split(/[;,]/):[l]);
+function splitFull(raw){
+  let t=String(raw||'');
+  let pref=null; /* "Robert (Bob) Smith" or 'Robert "Bob" Smith' goes by Bob */
+  t=t.replace(/\s*(?:\(([^)]+)\)|["“]([^"”]+)["”])\s*/,(m,a,b)=>{pref=(a||b).trim();return ' ';});
+  t=t.replace(/\s+[–—-]\s+.*$/,'').replace(/^((mr|mrs|ms|miss|mx|dr|prof|professor|sir|dame|sr|sra|srta|dña)\.?|d\.)\s+/i,'').trim();
+  let f,s;
+  if(t.includes(',')){const i=t.indexOf(',');s=t.slice(0,i).trim();f=t.slice(i+1).trim().split(/\s+/)[0]||'';}
+  else{const w=t.split(/\s+/);f=w[0]||'';s=w.slice(1).join(' ');}
+  if(pref)f=pref;
+  return [f,s];
+}
+function fromEmail(e){
+  const w=e.split('@')[0].split(/[._-]+/).map(x=>x.replace(/\d+/g,'')).filter(Boolean);
+  return [w[0]||'',w.slice(1).join(' ')];
+}
+const PARTICLE=/^(de|del|la|las|los|da|das|do|dos|di|du|le|van|von|der|den|ter|y|e|st\.?)$/i;
+function initial(s){
+  const w=s.split(/\s+/).filter(Boolean);const k=w.find(x=>!PARTICLE.test(x))||w[0]||'';
+  return k?[...k][0].toUpperCase():'';
+}
+function tidy(text){
+  const lines=String(text||'').replace(/\r/g,'').split('\n').map(l=>l.replace(/^\s*(\d+[.)]\s+|[-•*·–—]\s+)/,'').trim()).filter(Boolean);
+  const notes=[];
+  if(!lines.length)return {names:[],notes};
+  const HEAD=/^((first|given|fore|last|family|sur|full|preferred)[\s_-]*)?names?$|^(forename|surname|nombres?|nombre completo|apellidos?|e-?mail( address)?|correo( electr[oó]nico)?|company|empresa|organi[sz]ation|title|job title|position|role|cargo|puesto|department|departamento)$/i;
+  const head=cellsOf(lines[0]).map(c=>c.trim());
+  let F=-1,L=-1,N=-1,headed=false;
+  if(head.some(c=>HEAD.test(c))&&!head.some(c=>c.includes('@'))){
+    headed=true;lines.shift();notes.push('The first line looked like column headings, so it was left out.');
+    const find=re=>head.findIndex(c=>re.test(c));
+    const P=find(/preferred|known as/i);
+    L=find(/last|family|sur|apellido/i);F=P>=0?P:find(/first|given|fore|^nombres?$/i);
+    N=find(/^(full[\s_-]*)?names?$|^nombre( completo)?$/i);
+    if(!(F>=0&&L>=0)&&N<0)N=F>=0?F:0;
+  }
+  const people=[];let skipped=0;
+  lines.forEach(l=>{
+    const c=cellsOf(l).map(x=>x.trim());
+    let f='',s='';
+    if(headed&&F>=0&&L>=0){f=(c[F]||'');s=c[L]||'';}
+    else if(headed){[f,s]=splitFull(c[N]||'');}
+    else{
+      const cand=c.filter(x=>x&&!x.includes('@')&&!/\d/.test(x)&&/\p{L}/u.test(x));
+      if(!cand.length){const e=c.find(x=>x.includes('@'));if(e)[f,s]=fromEmail(e);}
+      else if(cand.length>=2&&!/\s/.test(cand[0])&&!/\s/.test(cand[1])){f=cand[0];s=cand[1];}
+      else [f,s]=splitFull(cand[0]);
+    }
+    f=tidyPart(f);s=tidyPart(s);
+    if(f)people.push({f,s});else skipped++;
+  });
+  if(skipped)notes.push(skipped+(skipped>1?' lines had':' line had')+' no name I could find, so '+(skipped>1?'they were':'it was')+' left out.');
+  const seen=new Set(),uniq=[];
+  people.forEach(p=>{const k=fold(p.f+' '+p.s);if(!seen.has(k)){seen.add(k);uniq.push(p);}});
+  if(uniq.length<people.length)notes.push((people.length-uniq.length)+' repeated '+(people.length-uniq.length>1?'names were':'name was')+' listed once.');
+  const groups={};
+  uniq.forEach(p=>(groups[fold(p.f)]=groups[fold(p.f)]||[]).push(p));
+  Object.values(groups).forEach(g=>g.forEach(p=>{
+    if(g.length===1||!p.s){p.d=p.f;return;}
+    const same=g.some(q=>q!==p&&initial(q.s)===initial(p.s));
+    p.d=same?p.f+' '+p.s:p.f+' '+initial(p.s)+'.';
+  }));
+  return {names:uniq.map(p=>p.d).sort(byName),notes};
+}
+window.GT_ROSTER={tidy};
+
+/* ---- the server ---- */
+const read=()=>fetch(API+'/p/'+ROOM+'/roster',{cache:'no-store'}).then(r=>r.json()).then(d=>d.names||[]);
+function write(names){
+  const s=secret();
+  if(!s)return Promise.reject(new Error('Paste the admin secret at the top of this page and press SAVE first.'));
+  return fetch(API+'/p/'+ROOM+'/roster',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s,names:names.slice().sort(byName)})})
+    .then(r=>{if(r.status===403)throw new Error('The poll server refused the secret. Check it at the top of this page.');return r.json();})
+    .then(d=>{if(!d.ok)throw new Error('The poll server did not take the list.');show(d.names);return d.names;});
+}
+const fail=e=>say(e instanceof TypeError||!e||!e.message?'No connection to the poll server. Try again in a moment.':e.message,true);
+
+/* ---- the list as it stands ---- */
+let current=[],shownKey=null;
+function show(names){
+  current=names;
+  const key=JSON.stringify(names);if(key===shownKey)return;shownKey=key;
+  $('rcount').textContent=names.length?names.length+(names.length>1?' names':' name')+' on the list':'No list yet. Phones ask people to type their name.';
+  const box=$('rlist');box.innerHTML='';
+  names.forEach(n=>{
+    const row=document.createElement('div');row.className='rrow';
+    const nm=document.createElement('div');nm.className='nm';nm.textContent=n;
+    const x=document.createElement('button');x.type='button';x.className='x';x.textContent='×';x.title='Take '+n+' off the list';
+    x.addEventListener('click',()=>remove(n));
+    row.appendChild(nm);row.appendChild(x);box.appendChild(row);
+  });
+}
+function remove(n){
+  say('Taking '+n+' off…');
+  read().then(list=>write(list.filter(x=>fold(x)!==fold(n))))
+    .then(()=>say(n+' is off the list.',false,()=>add(n,true))).catch(fail);
+}
+function add(raw,undoing){
+  const n=tidyPart(raw);
+  if(!n){say('Type the name first, then press ADD.',true);return;}
+  say('Adding '+n+'…');
+  read().then(list=>{
+    if(list.some(x=>fold(x)===fold(n))){say(n+' is already on the list.');$('addName').value='';return;}
+    const first=fold(n.split(' ')[0]);
+    if(!undoing&&!n.includes(' ')&&list.some(x=>fold(x.split(' ')[0])===first)){
+      const k=list.find(x=>fold(x.split(' ')[0])===first);
+      say('There is already '+k+' on the list. Add a last initial so the two can tell their names apart, for example '+n+' K., then press ADD.',true);
+      $('addName').focus();return;
+    }
+    return write(list.concat([n])).then(()=>{$('addName').value='';say(n+' is on the list.');});
+  }).catch(fail);
+}
+$('addBtn').addEventListener('click',()=>add($('addName').value));
+$('addName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add($('addName').value);}});
+
+/* ---- pasting a new list ---- */
+function preview(names,notes){
+  const box=$('pvList');box.innerHTML='';
+  names.forEach(n=>{
+    const row=document.createElement('div');row.className='rrow';
+    const inp=document.createElement('input');inp.value=n;inp.maxLength=30;inp.autocomplete='off';inp.spellcheck=false;
+    inp.addEventListener('input',()=>inp.classList.remove('clash'));
+    const x=document.createElement('button');x.type='button';x.className='x';x.textContent='×';x.title='Leave '+n+' out';
+    x.addEventListener('click',()=>{row.remove();count();});
+    row.appendChild(inp);row.appendChild(x);box.appendChild(row);
+  });
+  const count=()=>{
+    const k=box.children.length;
+    $('pvHead').textContent=k+(k===1?' name. This is':' names. This is')+' how the list will read on the phones. Tap a name to change it, or × to leave someone out. Nothing is saved until you press SAVE THIS LIST.'+(notes.length?' '+notes.join(' '):'');
+  };
+  count();
+  $('preview').hidden=!names.length;
+}
+$('tidyBtn').addEventListener('click',()=>{
+  const r=tidy($('pasteIn').value);
+  if(!r.names.length){$('preview').hidden=true;say('I could not find any names in that. Paste the list into the box, then press TIDY IT.',true);return;}
+  preview(r.names,r.notes);say('');
+});
+$('cancelList').addEventListener('click',()=>{$('preview').hidden=true;$('pvList').innerHTML='';say('Nothing saved. The list above is unchanged.');});
+$('saveList').addEventListener('click',()=>{
+  const inputs=[...$('pvList').querySelectorAll('input')];
+  const names=inputs.map(i=>tidyPart(i.value)).filter(Boolean);
+  const seen={};let clash=null;
+  inputs.forEach(i=>{const k=fold(tidyPart(i.value));if(!k)return;if(seen[k]){i.classList.add('clash');seen[k].classList.add('clash');clash=clash||tidyPart(i.value);}else seen[k]=i;});
+  if(clash){say('Two people would both show as '+clash+'. Change one of them (they are underlined in red), then save.',true);return;}
+  if(!names.length){say('The list is empty. Nothing saved.',true);return;}
+  if(current.length&&!confirm('This replaces the '+current.length+' names on the list now with these '+names.length+'. Go ahead?'))return;
+  say('Saving…');
+  write(names).then(saved=>{
+    $('preview').hidden=true;$('pvList').innerHTML='';$('pasteIn').value='';$('paste').open=false;
+    say('Saved: '+saved.length+' names. Phones will show them within a few seconds.');
+  }).catch(fail);
+});
+
+/* ---- clearing it, after the programme ---- */
+const clr=document.createElement('button');clr.type='button';clr.className='ghost';clr.textContent='CLEAR THE WHOLE LIST';
+const crow=document.createElement('div');crow.className='btnrow';crow.style.marginTop='16px';crow.appendChild(clr);
+$('paste').after(crow);
+clr.addEventListener('click',()=>{
+  if(!current.length){say('The list is already empty.');return;}
+  if(!confirm('Take all '+current.length+' names off the list? Phones go back to asking people to type their name.'))return;
+  write([]).then(()=>say('The list is empty.')).catch(fail);
+});
+
+read().then(n=>{show(n);if(!n.length)$('paste').open=true;}).catch(()=>{$('rcount').textContent='Could not reach the poll server to read the list.';});
+setInterval(()=>read().then(show).catch(()=>{}),5000);
 })();
 </script>
 </body></html>

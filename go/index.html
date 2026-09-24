@@ -217,25 +217,40 @@ function renderNamePicker(poll,id){
     renderPoll(poll,id);
   };
   const pick=n=>{const v=clean(n);if(v)GT_NAMES.guard(v,voter,commit,opts,{clean});};
-  fetch('roster.json').then(r=>r.json()).then(d=>(d.names||[])).catch(()=>[]).then(names=>{
+  /* the attendee list comes from the Poll Desk and is read again every few
+     seconds while the picker is up: a late joiner added on the desk appears
+     and a name taken off it goes, with no reload */
+  const list=document.createElement('div');list.style.cssText='display:flex;flex-direction:column;gap:10px';
+  const row=document.createElement('div');row.className='sayrow';
+  const inp=document.createElement('input');
+  inp.maxLength=40;inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='THAT’S ME';
+  btn.addEventListener('click',()=>pick(inp.value));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pick(inp.value);}});
+  row.appendChild(inp);row.appendChild(btn);
+  let shown=null;
+  const fill=names=>{
+    const key=JSON.stringify(names);if(key===shown)return;shown=key;
+    list.innerHTML='';
     names.forEach(n=>{
       const b=document.createElement('button');
       b.className='pick';
       b.innerHTML='<span class="pq"></span>';
       b.querySelector('.pq').textContent=n;
       b.addEventListener('click',()=>pick(n));
-      opts.appendChild(b);
+      list.appendChild(b);
     });
-    const row=document.createElement('div');row.className='sayrow';
-    if(names.length)row.style.marginTop='6px';
-    const inp=document.createElement('input');
-    inp.maxLength=40;inp.placeholder=names.length?'Not on the list? Type your name':'Type your first name';
-    inp.autocomplete='off';
-    const btn=document.createElement('button');btn.textContent='THAT’S ME';
-    btn.addEventListener('click',()=>pick(inp.value));
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pick(inp.value);}});
-    row.appendChild(inp);row.appendChild(btn);
-    opts.appendChild(row);
+    list.style.display=names.length?'flex':'none';
+    row.style.marginTop=names.length?'6px':'0';
+    inp.placeholder=names.length?'Not on the list? Type your name':'Type your first name';
+  };
+  GT_NAMES.roster().then(names=>{
+    fill(names);
+    opts.appendChild(list);opts.appendChild(row);
+    const t=setInterval(()=>{
+      if(!document.body.contains(list)){clearInterval(t);return;}
+      GT_NAMES.roster(null).then(n=>{if(n&&document.body.contains(list))fill(n);});
+    },5000);
   });
 }
 function renderPoll(poll,id){
