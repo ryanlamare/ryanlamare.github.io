@@ -137,7 +137,7 @@ try {
   await sleep(500);
   check(await phone.ev(`document.getElementById('q').textContent`) === 'First, who are you?', 'the named poll asks who you are first');
   check(same(await phone.ev(`[...document.querySelectorAll('#opts button.pick')].map(b=>b.textContent)`), ['John', 'Mei', 'Sarah J.', 'Sarah K.', 'Tomás']), 'the phone lists the saved names');
-  check(await phone.ev(`document.querySelector('#opts input').placeholder`) === 'Not on the list? Type your name', 'with a write-in underneath');
+  check(await phone.ev(`document.querySelector('#opts input').placeholder`) === 'Not on the list?', 'with a write-in underneath');
   await phone.shot('phone-list.png');
 
   await desk.ev(`document.getElementById('addName').value='Sarah';document.getElementById('addBtn').click()`); await sleep(600);
@@ -199,6 +199,47 @@ try {
   await p3.ev(`localStorage.setItem('gt-name','Priya');localStorage.setItem('gt-claimed','Priya')`);
   await p3.nav('http://localhost:' + DEAD + '/go/?p=m1-familiarity'); await sleep(1000);
   check(/familiar/.test(await p3.ev(`document.getElementById('q').textContent`)), 'a server out of reach never makes a phone forget its name');
+
+  /* ---- the rooms by module (24 Sep 2026) ---- */
+  const J = { method: 'POST', headers: { 'content-type': 'application/json' } };
+  const seed = (room, kind, body) => call('/p/' + room + '/' + kind, { ...J, body: JSON.stringify({ v: 'seed-voter-0001', ...body }) });
+  await seed('m1-familiarity', 'vote', { o: 0 }); await seed('m3-lot', 'say', { t: 'a deal' }); await seed('m2-decade', 'say', { t: 'old' });
+  await seed('m2-ult-live', 'say', { t: 'offer' }); await seed('m2-ultimatum', 'say', { t: 'deal' });
+  await seed('m4-axelrod', 'say', { t: 'rank|0,1,2,3,4,5' }); await seed('m5-k1', 'vote', { o: 1 }); await seed('m5-k2', 'say', { t: '7' });
+  await desk.ev(`localStorage.setItem('gt-admin',${JSON.stringify(SECRET)})`); /* the second phone's clear() took it: same origin */
+  await desk.nav('http://localhost:' + PORT + '/teaching/exec/gt/poll-desk/'); await sleep(2500);
+  const heads = await desk.ev(`[...document.querySelectorAll('#rooms h3.mod')].map(h=>h.textContent)`);
+  check(same(heads, ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5', 'Module 6', 'Module 7', 'Module 8', 'Across the programme']), 'a section per module in order, and nothing left unsorted', heads);
+  const polls = Object.keys(JSON.parse(await readFile(join(ROOT, 'go', 'polls.json'), 'utf8')).polls);
+  const deskSrc = await readFile(join(ROOT, 'teaching', 'exec', 'gt', 'poll-desk', 'index.html'), 'utf8');
+  const extra = [...deskSrc.matchAll(/\{id:'([^']+)',q:/g)].map(m => m[1]);
+  const shown = (await desk.ev(`[...document.querySelectorAll('#rooms > .room, details.fold .room')].map(r=>r.dataset.ids)`)).flatMap(x => x.split(' '));
+  check(shown.length === new Set(shown).size && same([...shown].sort(), [...polls, ...extra].sort()), 'every room is on the desk exactly once (' + (polls.length + extra.length) + ')', { shown: shown.length, all: polls.length + extra.length });
+  check(await desk.ev(`!document.querySelector('details.fold').open && document.querySelectorAll('details.fold .room').length===34`), 'the 34 retired rooms are folded away, closed');
+  check(await desk.ev(`[...document.querySelectorAll('#rooms > h3, #rooms > .room')].reduce((m,e)=>e.tagName==='H3'?(m.h=e.textContent,m):(e.dataset.ids==='m8-twothirds'&&(m.at=m.h),m),{}).at`) === 'Module 7', 'the two-thirds guess sits in module 7, where its deck is');
+  const ct = ids => desk.ev(`document.querySelector('.room[data-ids="${ids}"] .ct').textContent`);
+  check(await ct('m4-axelrod') === '1', 'the ranking poll counts its answers (it read 0 before)');
+  check(await ct(Array.from({ length: 16 }, (_, i) => 'm5-k' + (i + 1)).join(' ')) === '2', 'the quiz row adds up its sixteen questions');
+  await desk.ev(`document.querySelector('details.each').open=true`); await sleep(800);
+  check(await desk.ev(`document.querySelectorAll('details.each')[0].querySelectorAll('.room').length`) === 16, 'and folds out each question with its own reset');
+  await desk.ev(`window.confirm=()=>true;document.querySelector('.room[data-ids="m2-ult-live m2-ultimatum"] button').click()`); await sleep(1500);
+  const n = async room => (await (await call('/p/' + room + '/answers')).json()).total;
+  check((await n('m2-ult-live')) === 0 && (await n('m2-ultimatum')) === 0, 'a game row resets both its rooms');
+  check(await desk.ev(`document.querySelector('.room[data-ids="m2-ult-live m2-ultimatum"] .rs').textContent`) === 'CLEARED', 'and says so in its own row');
+  await post('gt-roster', { s: SECRET, names: ['Ana', 'Ben'] });
+  await desk.ev(`window.prompt=()=>'RESET';document.getElementById('resetAll').click()`);
+  for (let i = 0; i < 60 && !/rooms cleared/.test(await desk.ev(`document.getElementById('msg').textContent`)); i++) await sleep(500);
+  const votes = (await (await call('/p/m1-familiarity')).json()).total;
+  check(votes === 0 && (await n('m3-lot')) === 0 && (await n('m2-decade')) === 0, 'RESET EVERY ROOM still clears every room, retired ones too', { votes, lot: await n('m3-lot'), decade: await n('m2-decade') });
+  check(same((await get('gt-roster')).names, ['Ana', 'Ben']), 'and leaves the attendee list alone');
+  check(/80 rooms cleared/.test(await desk.ev(`document.getElementById('msg').textContent`)), 'its message sits under the button', await desk.ev(`document.getElementById('msg').textContent`));
+  await desk.shot('desk-rooms.png');
+  await desk.ev(`window.scrollTo(0, document.querySelector('#rooms h3.mod').getBoundingClientRect().top + scrollY - 20)`); await sleep(300);
+  await desk.shot('desk-modules.png');
+  await desk.ev(`window.scrollTo(0, [...document.querySelectorAll('#rooms h3.mod')].find(h=>h.textContent==='Module 5').getBoundingClientRect().top + scrollY - 20)`); await sleep(300);
+  await desk.shot('desk-module5.png');
+  await desk.ev(`window.scrollTo(0, document.body.scrollHeight)`); await sleep(300);
+  await desk.shot('desk-bottom.png');
 
   for (const [n, p] of [['desk', desk], ['desk on a phone', deskPhone], ['phone', phone], ['empty', p2], ['dead', p3]]) check(!p.errors.length, n + ' page: no script errors', p.errors);
 } catch (e) { console.log('FAIL  ' + e.message); fails++; }

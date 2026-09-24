@@ -103,7 +103,7 @@ const GT_NAMES = (() => {
     (o.roster || []).filter(n => norm(n) !== norm(o.not)).forEach(n => { const b = document.createElement('button'); b.className = 'pick'; b.type = 'button'; b.textContent = n; b.addEventListener('click', () => o.done(clean(n))); list.appendChild(b); });
     host.appendChild(list);
     const row = document.createElement('div'); row.className = 'namerow'; row.style.marginTop = list.children.length ? '12px' : '0';
-    const inp = document.createElement('input'); inp.maxLength = 30; inp.placeholder = list.children.length ? 'Not on the list? Type the name' : 'Type their first name'; inp.autocomplete = 'off';
+    const inp = document.createElement('input'); inp.maxLength = 30; inp.placeholder = list.children.length ? 'Not on the list?' : 'Type their first name'; inp.autocomplete = 'off';
     const ok = document.createElement('button'); ok.type = 'button'; ok.textContent = 'OK';
     const go = () => { const v = clean(inp.value); if (v) o.done(v); };
     ok.addEventListener('click', go); inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });

@@ -45,6 +45,17 @@ h1 .r{color:var(--red)}
 .msg.bad{color:var(--red);opacity:1}
 .sctag{font-weight:700;font-size:9.5px;letter-spacing:.12em;color:var(--red);
   border:1px solid var(--red);padding:1px 6px;vertical-align:2px}
+/* the rooms by module (24 Sep 2026) */
+h3.mod{font-family:var(--display);font-weight:900;font-size:19px;margin:28px 0 10px}
+h3.mod:first-child{margin-top:8px}
+.room .rid .rs{font-weight:700;font-size:11px;letter-spacing:.1em;color:var(--red);margin-left:8px}
+.room .rc{font-size:11.5px;opacity:.45;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.each{margin:-4px 0 12px 18px}
+details.each summary,details.fold summary{font-weight:700;font-size:11.5px;letter-spacing:.12em;cursor:pointer;padding:6px 0;opacity:.75}
+details.each .room{padding:9px 12px;margin-bottom:6px}
+details.fold{margin-top:30px;border-top:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);padding-top:14px}
+details.fold .sub{margin:6px 0 14px}
+details.fold .room{opacity:.8}
 /* the attendee list (24 Sep 2026): the names phones pick from */
 .roster{border:2px solid var(--red);padding:18px 16px 16px;margin-bottom:26px}
 .roster h2{font-family:var(--display);font-weight:900;font-size:22px;margin-bottom:4px}
@@ -76,8 +87,8 @@ h1 .r{color:var(--red)}
 <div class="wrap">
   <div class="hkick">Applied Game Theory · Facilitator only</div>
   <h1>POLL <span class="r">DESK</span></h1>
-  <p class="sub">Live answer counts for every room, and a reset for each. Reset every room you plan to
-  use before a session starts. The secret is remembered on this device only.</p>
+  <p class="sub">The rooms by module, in teaching order, with live answer counts and a reset for each.
+  Press RESET EVERY ROOM before a session starts. The secret is remembered on this device only.</p>
   <div class="secretrow">
     <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
     <button id="saveSecret" type="button">SAVE</button>
@@ -114,8 +125,8 @@ h1 .r{color:var(--red)}
     <button id="resetAll" type="button">RESET EVERY ROOM</button>
     <span class="or">or a rehearsal:</span><input type="text" id="suffix" placeholder="room suffix, e.g. trial11" autocomplete="off"><button id="resetTrial" type="button">RESET THAT REHEARSAL</button>
   </div>
-  <div id="rooms"></div>
   <div class="msg" id="msg"></div>
+  <div id="rooms"></div>
 </div>
 <script>
 (function(){
@@ -133,8 +144,8 @@ const EXTRA=[
   {id:'m2-centipede',q:'Centipede finished games (Module 2 live game)',text:true},
   {id:'m2-quit',q:'The second smoking poll (Module 2; cut to the outtakes 14 Sep 2026)'},
   {id:'m2-flops',q:'First movers who lost, the write-in wall (Module 2; cut to the outtakes 14 Sep 2026)',text:true},
-  {id:'m2-decade',q:'Long-term-deal votes (Module 2 live game)',text:true},
-  {id:'m2-tapasguess',q:'How-many-ways guesses (Module 2 live game)',text:true},
+  {id:'m2-decade',q:'Long-term-deal votes (Module 2; off the m2 game menu 14 Sep 2026, in the outtakes)',text:true},
+  {id:'m2-tapasguess',q:'How-many-ways guesses (Module 2; off the m2 game menu 14 Sep 2026, in the outtakes)',text:true},
   {id:'m2-trees',q:'The closer’s trees (Module 2; a phone form tried and cut the same day, 20 Sep 2026: the closer is four questions, talked through out loud. Holds bot trees; reset and forget)',text:true},
   {id:'m2-branch',q:'Branches of the room’s tree (Module 2; cut in the plain pass 19 Sep 2026; the closer is four questions talked through out loud, no phones, no paper)',text:true},
   {id:'m2-tree',q:'The room’s tree, first wire format (14 Sep, superseded the same day; reset and forget)',text:true},
@@ -173,7 +184,7 @@ const EXTRA=[
   {id:'m8-cs-tapas',q:'Hidden Agenda (Module 8; cut 23 Sep 2026 for the signaling scavenger hunt, the game is at tag m8-before-hunt)',text:true},
   {id:'m8-cs-granito',q:'Hidden Agenda, the Granito table (Module 8; cut in the plain pass 20 Sep 2026, the game runs as one table)',text:true},
   {id:'m8-yourworld',q:'Information asymmetries in your world, the write-in wall (Module 8; cut in the plain pass 20 Sep 2026, the closer is now a plain question slide talked through in twos or threes, no phones)',text:true},
-  {id:'gt-names',q:'Class name claims — the points system’s join table',text:true},
+  {id:'gt-names',q:'The names phones have picked (the join table from phone to name)',text:true},
 ];
 /* rooms the class points system scores from: resetting one mid-cohort
    erases earned points, so they carry a tag and a sterner confirm */
@@ -195,22 +206,26 @@ async function resetIds(ids,label){
   const s=secretEl.value.trim();
   if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
   if(prompt('Type RESET to clear '+label+' ('+ids.length+' rooms). This cannot be undone.')!=='RESET'){say('Nothing reset.');return;}
-  /* one try, and one retry a moment later: a dropped request or a throttled
-     one used to read as "refused (is the secret right?)" with no room named
-     (Ryan's rehearsal, 17 Sep). A wrong secret is a 403 on every room. */
-  const once=async id=>{try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});
-    if(r.status===403)return 'secret';const d=await r.json();return d.ok?'ok':'failed';}catch(_){return 'failed';}};
   let ok=0;const failed=[];let wrong=0;
   for(const id of ids){
-    let res=await once(id);
-    if(res==='failed'){await new Promise(z=>setTimeout(z,900));res=await once(id);}
+    const res=await resetOne(id,s);
     if(res==='ok')ok++;else if(res==='secret')wrong++;else failed.push(id);
     say('Resetting '+label+': '+ok+' done'+(failed.length+wrong?', '+(failed.length+wrong)+' not yet':'')+'…');
   }
   if(wrong)say(label+': '+ok+' rooms cleared, '+wrong+' refused: the secret is wrong.',true);
   else if(failed.length)say(label+': '+ok+' rooms cleared. Did not clear after a retry: '+failed.join(', ')+'. Press reset on '+(failed.length>1?'those rooms':'that room')+' below.',true);
   else say(label+': '+ok+' rooms cleared.');
-  document.querySelectorAll('#rooms .ct').forEach(c=>{c.textContent='–';c.className='ct';});
+  refreshAll();
+}
+/* one try, and one retry a moment later: a dropped request or a throttled
+   one used to read as "refused (is the secret right?)" with no room named
+   (Ryan's rehearsal, 17 Sep). A wrong secret is a 403 on every room. */
+async function resetOne(id,s){
+  const once=async()=>{try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});
+    if(r.status===403)return 'secret';const d=await r.json();return d.ok?'ok':'failed';}catch(_){return 'failed';}};
+  let res=await once();
+  if(res==='failed'){await new Promise(z=>setTimeout(z,900));res=await once();}
+  return res;
 }
 document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room'));
 document.getElementById('resetTrial').addEventListener('click',()=>{
@@ -218,44 +233,146 @@ document.getElementById('resetTrial').addEventListener('click',()=>{
   if(!suf){say('Type the rehearsal room suffix first (the part after ?room=).',true);return;}
   resetIds(['m3-engines','m4-results','m4-teams','m4-prices','m4-huddle','m4-meet','m4-pds','m5-invest','m5-bos','m5-chicken','m5-games','m6-world','m7-world'].map(r=>r+'-'+suf),'rehearsal '+suf);
 });
+/* The desk as the programme runs (24 Sep 2026; it had been one list of 80
+   rooms, each module in two places and the cut rooms among the live ones).
+   A section per module in teaching order; each row is one thing he runs,
+   titled as its slide is, with the room or rooms behind it, and a row with
+   several rooms resets them together (a rerun of the ultimatum clears both
+   its rooms). "each" rows fold out their questions, so one quiz question
+   can be reset alone. Rooms placed by the deck that uses them, not by their
+   name (the two-thirds guess, m8-twothirds, runs in module 7). The rooms no
+   deck reads any more are folded away at the bottom, and RESET EVERY ROOM
+   still clears them; a room on neither list shows under "Not sorted yet". */
+const LAYOUT=[
+  ['Module 1',[
+    {t:'How familiar are you with game theory as a strategic concept?',ids:['m1-familiarity']},
+    {t:'I’m thinking of a number',ids:['m1-number']},
+    {t:'Added value game',ids:['m1-av']},
+  ]],
+  ['Module 2',[
+    {t:'Should you smoke?',ids:['m2-smoke']},
+    {t:'A game of backward reasoning (last card)',ids:['m2-cards-live','m2-lastcard']},
+    {t:'The ultimatum game',ids:['m2-ult-live','m2-ultimatum']},
+    {t:'The centipede game',ids:['m2-cent-live','m2-centipede']},
+  ]],
+  ['Module 3',[
+    {t:'A zero-sum truel game',ids:['m3-truel']},
+    {t:'One aircraft, two buyers',ids:['m3-lot']},
+  ]],
+  ['Module 4',[
+    {t:'Price Wars',ids:['m4-results']},
+    {t:'Rank the strategies',ids:['m4-axelrod']},
+  ]],
+  ['Module 5',[
+    {t:'The common knowledge quiz',ids:Array.from({length:16},(_,i)=>'m5-k'+(i+1)),each:true},
+    {t:'The investment game',ids:['m5-invest']},
+    {t:'Whose system?',ids:['m5-bos']},
+    {t:'The hub lease',ids:['m5-chicken']},
+  ]],
+  ['Module 6',[
+    {t:'Beat the keeper',ids:['m6-solo']},
+    {t:'Rock, paper, scissors',ids:['m6-rps']},
+  ]],
+  ['Module 7',[
+    {t:'Guess two-thirds of the average',ids:['m8-twothirds']},
+    {t:'Chicken',ids:['m7-chicken']},
+    {t:'Surround them, or leave a way out?',ids:['m7-suntzu']},
+    {t:'Would you take the deal?',ids:['m7-av-take','m7-av-who'],each:true},
+    {t:'Split or steal',ids:['m7-gb']},
+  ]],
+  ['Module 8',[
+    {t:'A car market game',ids:['m8-car']},
+    {t:'Signaling scavenger hunt',ids:['m8-hunt']},
+    {t:'What will you use first?',ids:['m8-wrap-me','m8-wrap-room'],each:true},
+  ]],
+  ['Across the programme',[
+    {t:'The names phones have picked',ids:['gt-names'],q:'A reset makes every phone ask who it is again.'},
+  ]],
+];
+const RETIRED=['m1-dog','m1-hands','m2-quit','m2-flops','m2-decade','m2-tapasguess','m2-trees','m2-branch','m2-tree',
+  'm3-engine','m3-matrix','m3-beach','m3-hotelling','m3-engines','m4-prices','m4-teams','m4-huddle','m4-meet','m4-yourpd','m4-pds','m4-tapas',
+  'm5-games','m5-twothirds','m6-pk','m6-vs','m6-inspect','m6-world','m6-yourworld','m7-auction','m7-world',
+  'm8-market','m8-cs-tapas','m8-cs-granito','m8-yourworld'];
+const ROWS=[];
+function refreshAll(){ROWS.forEach(r=>r.refresh(true));}
 fetch('/go/polls.json').then(r=>r.json()).then(cfg=>{
-  const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:p.type==='text'||p.type==='form'})).concat(EXTRA);
+  const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:['text','form','rank'].includes(p.type)})).concat(EXTRA);
+  const byId=Object.fromEntries(rooms.map(r=>[r.id,r]));
   ALL_IDS=rooms.map(r=>r.id);
-  rooms.forEach(room=>{
-    const div=document.createElement('div');div.className='room';
-    div.innerHTML='<div class="rn"><div class="rid"></div><div class="rq"></div></div>'+
+  const countOf=room=>fetch(API+'/p/'+room.id+(room.draws?'/draws':(room.guesses?'/guesses':(room.text?'/answers':''))),{cache:'no-store'})
+    .then(r=>r.json()).then(d=>d.total||0);
+  /* one row: a title, a line under it, the count, RESET */
+  function row(host,title,line,ids){
+    ids=ids.filter(id=>byId[id]);
+    if(!ids.length)return null;
+    const div=document.createElement('div');div.className='room';div.dataset.ids=ids.join(' ');
+    div.innerHTML='<div class="rn"><div class="rid"><span class="rt"></span><span class="rs"></span></div><div class="rq"></div><div class="rc"></div></div>'+
       '<div class="ct">–</div><button type="button">RESET</button>';
-    div.querySelector('.rid').textContent=room.id;
-    if(SCORING.test(room.id))div.querySelector('.rid').insertAdjacentHTML('beforeend',' <span class="sctag">SCORING</span>');
-    div.querySelector('.rq').textContent=room.q;
-    const ct=div.querySelector('.ct'), btn=div.querySelector('button');
-    function refresh(){
-      const url=API+'/p/'+room.id+(room.draws?'/draws':(room.guesses?'/guesses':(room.text?'/answers':'')));
-      fetch(url).then(r=>r.json()).then(d=>{
-        const n=d.total||0;
-        ct.textContent=n;
-        ct.className='ct'+(n>0?' hot':'');
+    div.querySelector('.rt').textContent=title;
+    if(ids.some(id=>SCORING.test(id)))div.querySelector('.rid').insertAdjacentHTML('beforeend',' <span class="sctag">SCORING</span>');
+    div.querySelector('.rq').textContent=line||'';
+    div.querySelector('.rc').textContent=ids.length>3?ids.length+' rooms: '+ids[0]+' to '+ids[ids.length-1]:ids.join(' · ');
+    const ct=div.querySelector('.ct'), btn=div.querySelector('button'), rs=div.querySelector('.rs');
+    function refresh(now){
+      if(!now&&div.closest('details:not([open])'))return; /* folded away: no polling */
+      Promise.all(ids.map(id=>countOf(byId[id]))).then(ns=>{
+        const n=ns.reduce((a,b)=>a+b,0);
+        ct.textContent=n;ct.className='ct'+(n>0?' hot':'');
       }).catch(()=>{ct.textContent='?';});
     }
-    btn.addEventListener('click',()=>{
+    btn.addEventListener('click',async()=>{
       const s=secretEl.value.trim();
       if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
-      const warn=SCORING.test(room.id)
-        ?'Reset '+room.id+'? This is a SCORING room — clearing it erases points the class has already earned. Only do this between cohorts.'
-        :'Reset '+room.id+'? This clears every answer in the room.';
+      const what=ids.length>1?'This clears every answer in its '+ids.length+' rooms.':'This clears every answer in the room.';
+      const warn=ids.some(id=>SCORING.test(id))
+        ?'Reset '+title+'? This is a SCORING room — clearing it erases points the class has already earned. Only do this between cohorts.'
+        :'Reset '+title+'? '+what;
       if(!confirm(warn))return;
-      btn.disabled=true;say('Resetting '+room.id+'…');
-      fetch(API+'/p/'+room.id+'/reset',{method:'POST',headers:{'content-type':'application/json'},
-        body:JSON.stringify({s:s})})
-      .then(r=>r.json()).then(d=>{
-        if(d.ok){say(room.id+' is clear.');refresh();}
-        else{say('The worker said no – is the secret right?',true);}
-      }).catch(()=>{say('No connection to the poll server.',true);})
-      .finally(()=>{btn.disabled=false;});
+      btn.disabled=true;rs.textContent='CLEARING…';
+      const res=[];for(const id of ids)res.push(await resetOne(id,s));
+      btn.disabled=false;
+      if(res.every(r=>r==='ok'))rs.textContent='CLEARED';
+      else if(res.includes('secret')){rs.textContent='';say('The poll server refused the secret. Check it at the top of this page.',true);}
+      else rs.textContent='DID NOT CLEAR, PRESS RESET AGAIN';
+      setTimeout(()=>{if(rs.textContent==='CLEARED')rs.textContent='';},5000);
+      refresh(true);
     });
-    roomsEl.appendChild(div);
-    refresh();setInterval(refresh,4000);
+    host.appendChild(div);
+    ROWS.push({refresh});
+    return div;
+  }
+  const placed=new Set();
+  LAYOUT.forEach(([name,items])=>{
+    const h=document.createElement('h3');h.className='mod';h.textContent=name;roomsEl.appendChild(h);
+    items.forEach(it=>{
+      it.ids.forEach(id=>placed.add(id));
+      const one=it.ids.length===1&&byId[it.ids[0]];
+      const line=it.q||(one&&one.q!==it.t&&!EXTRA.includes(one)?one.q:'');
+      row(roomsEl,it.t,line,it.ids);
+      if(it.each){
+        const det=document.createElement('details');det.className='each';
+        det.innerHTML='<summary>EACH QUESTION ON ITS OWN</summary>';
+        it.ids.filter(id=>byId[id]).forEach((id,i)=>row(det,(it.ids.length>3?'Question '+(i+1)+': ':'')+byId[id].q,'',[id]));
+        det.addEventListener('toggle',()=>{if(det.open)refreshAll();});
+        roomsEl.appendChild(det);
+      }
+    });
   });
+  const rest=rooms.filter(r=>!placed.has(r.id)&&!RETIRED.includes(r.id));
+  if(rest.length){
+    const h=document.createElement('h3');h.className='mod';h.textContent='Not sorted yet';roomsEl.appendChild(h);
+    rest.forEach(r=>row(roomsEl,r.id,r.q,[r.id]));
+  }
+  const old=rooms.filter(r=>!placed.has(r.id)&&RETIRED.includes(r.id));
+  if(old.length){
+    const det=document.createElement('details');det.className='fold';
+    det.innerHTML='<summary></summary><p class="sub">Rooms from games and polls cut in earlier passes. No deck reads them any more; they are listed so RESET EVERY ROOM still clears them.</p>';
+    det.querySelector('summary').textContent='RETIRED ROOMS ('+old.length+')';
+    old.forEach(r=>row(det,r.id,r.q,[r.id]));
+    det.addEventListener('toggle',()=>{if(det.open)refreshAll();});
+    roomsEl.appendChild(det);
+  }
+  refreshAll();setInterval(()=>ROWS.forEach(r=>r.refresh()),4000);
 }).catch(()=>{say('Could not load polls.json.',true);});
 })();
 </script>
