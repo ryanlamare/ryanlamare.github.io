@@ -14,8 +14,13 @@
    the other side posted and the phone adds the week to the running total.
    Before weeks 3 and 5 the same lock, reveal and hold-up asks "Meet?".
    A station that asked then taps whether the meeting happened.
-   The page sends nothing while the game is played: no names, no pairing,
-   no server. After week 6 one tap, Send to the screen, posts the six weeks
+   The page needs nothing from a server while the game is played: no
+   names, no pairing. It says one thing at Start, a plain vote in m4-results
+   ("this phone has a game"), so that a Poll Desk reset of Price Wars
+   reaches the phone: a phone whose vote is gone forgets its game and opens
+   on the station picker again (Ryan, 24 Sep 2026: every QR scan showed him
+   his last test game). A phone that could not reach the server keeps its
+   game, and a server out of reach changes nothing. After week 6 one tap, Send to the screen, posts the six weeks
    and the two meetings once to the gt-poll room m4-results for the results
    slide (Ryan, 21 Sep 2026); ?room=x sends to m4-results-x. The ledger lives
    in this phone's localStorage, so a refresh loses nothing; a dead phone is
@@ -96,11 +101,30 @@ const KEY='m4-price-v1';
 const POLL_API='https://gt-poll.rlamare.workers.dev';
 const ROOM='m4-results'+(()=>{const r=(new URLSearchParams(location.search).get('room')||'').replace(/[^a-z0-9-]/g,'');return r?'-'+r:'';})();
 function voter(){let v=null;try{v=localStorage.getItem('gt-voter');if(!v){v=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));localStorage.setItem('gt-voter',v);}}catch(_){v='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}return v;}
-const FRESH=()=>({phase:'setup',station:null,j:null,week:1,pick:null,mine:[],theirs:[],news:false,meetPick:null,met:{},sent:false});
+const FRESH=()=>({phase:'setup',station:null,j:null,week:1,pick:null,mine:[],theirs:[],news:false,meetPick:null,met:{},sent:false,at:0,reg:false});
 let S=FRESH();
 try{if(new URLSearchParams(location.search).get('fresh')==='1')localStorage.removeItem(KEY);}catch(_){}
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.phase)S=Object.assign(FRESH(),s);}catch(_){}
+/* a game begun before phones told the server (24 Sep 2026) has no start time: nothing can say whether it was reset, and every one of them is a test */
+if(S.phase!=='setup'&&!S.at)S=FRESH();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(_){}};
+save();
+/* Start tells the server this phone has a game; tried again on every screen until it lands */
+function register(){
+  if(S.reg||!S.at)return;
+  const at=S.at;
+  fetch(POLL_API+'/p/'+ROOM+'/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({o:0,v:voter()})})
+    .then(r=>{if(r.ok&&S.at===at){S.reg=true;save();}}).catch(()=>{});
+}
+/* a Poll Desk reset of the room took this phone's vote with it: the game is over, start from the station picker */
+function wasReset(){
+  if(!S.reg)return Promise.resolve(false);
+  const ask=fetch(POLL_API+'/p/'+ROOM+'/votes',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+    if(!d||typeof d.votes!=='object'||d.votes[voter()]!==undefined)return false;
+    S=FRESH();save();return true;
+  }).catch(()=>false);
+  return Promise.race([ask,new Promise(r=>setTimeout(()=>r(false),4000))]);
+}
 const app=document.getElementById('app');
 const NAME={a:'Aura Fuels',b:'Buco’s Petrol'};
 
@@ -167,7 +191,7 @@ function render(){
   app.innerHTML='';
   document.querySelectorAll('.full').forEach(n=>n.remove());
   app.appendChild(el('div','tag','<i></i>APPLIED GAME THEORY &middot; MODULE 4'));
-  if(S.phase!=='setup')awake();
+  if(S.phase!=='setup'){awake();register();}
   ({setup,meetask,meetlocked,meetshow,metask,price,locked,show,theirs,result,news,done})[S.phase]();
 }
 
@@ -181,7 +205,7 @@ function setup(){
   const g=el('div','grid6');
   for(let n=1;n<=6;n++)g.appendChild(btn('opt num'+(S.j===n?' sel':''),String(n),()=>{S.j=n;save();render();}));
   app.appendChild(g);
-  const b=btn('go','Start',()=>go('price'));b.disabled=!(S.station&&S.j);
+  const b=btn('go','Start',()=>{S.at=Date.now();S.reg=false;go('price');});b.disabled=!(S.station&&S.j);
   app.appendChild(b);
 }
 
@@ -305,6 +329,6 @@ function done(){
   app.appendChild(b);
   app.appendChild(footer());
 }
-render();
+wasReset().then(render);
 </script>
 </body></html>
