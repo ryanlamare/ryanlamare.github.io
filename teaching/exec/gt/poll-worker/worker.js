@@ -24,9 +24,9 @@
 //   POST /p/gt-roster/roster {s, names:[..]}           -> {ok:true, names}
 //
 //   The roster lane (24 Sep 2026) is the attendee list the "who are you?"
-//   pickers show. It lives here and not in the site's /go/roster.json
-//   because the repo is public and a name committed once stays in git
-//   history. The Poll Desk replaces the list whole; phones only read it.
+//   pickers show. It lives here and not in a file on the site (it was
+//   /go/roster.json until 24 Sep 2026) because the repo is public and a
+//   name committed once stays in git history. The Poll Desk replaces the list whole; phones only read it.
 //   Only gt-roster (and gt-roster-<x> for tests) carries one, and /reset
 //   leaves it alone: RESET EVERY ROOM before a session must never empty
 //   the list.

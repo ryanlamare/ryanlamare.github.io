@@ -241,7 +241,30 @@ try {
   await desk.ev(`window.scrollTo(0, document.body.scrollHeight)`); await sleep(300);
   await desk.shot('desk-bottom.png');
 
-  for (const [n, p] of [['desk', desk], ['desk on a phone', deskPhone], ['phone', phone], ['empty', p2], ['dead', p3]]) check(!p.errors.length, n + ' page: no script errors', p.errors);
+  /* ---- the game pages read the same list (24 Sep 2026: go/roster.json is gone) ---- */
+  const G = 'http://localhost:' + PORT + '/teaching/exec/gt/';
+  const gp = await page(G + 'm1/game/', 390, 844, true);
+  const names = () => gp.ev(`[...document.querySelectorAll('button')].map(b=>b.textContent.trim())`);
+  for (const path of ['m1/game/', 'm2/game/', 'm5/game/', 'm6/game/?g=solo', 'm6/game/?g=rps', 'm7/game/?g=chicken', 'm7/game/?g=gb', 'm8/car/']) { /* m6 and m7 open on a game menu; their QR codes carry the game */
+    await gp.ev('localStorage.clear()'); await gp.nav(G + path); await sleep(800);
+    const b = await names();
+    check(b.includes('Ana') && b.includes('Ben'), path + ' lists the attendee list', b.slice(0, 8));
+  }
+  /* a phone that claimed a name, then a reset of the name room: the game page asks again */
+  for (const path of ['m1/game/', 'm8/car/']) {
+    await gp.ev(`localStorage.clear();localStorage.setItem('gt-voter','game-voter-0001');localStorage.setItem('gt-name','Ana');localStorage.setItem('gt-claimed','Ana')`);
+    await call('/p/gt-names/say', { ...J, body: JSON.stringify({ t: 'Ana', v: 'game-voter-0001' }) });
+    await gp.nav(G + path); await sleep(1200);
+    check(!(await names()).includes('Ben'), path + ' keeps the name while the name room stands');
+    await call('/p/gt-names/reset', { ...J, body: JSON.stringify({ s: SECRET }) });
+    await gp.nav(G + path); await sleep(1200);
+    check((await names()).includes('Ben') && (await gp.ev(`localStorage.getItem('gt-name')`)) === null, path + ' asks again after a reset of the name room');
+  }
+  await gp.ev('localStorage.clear()'); await gp.nav(G + 'm3/lot/'); await sleep(1000);
+  check(same(await gp.ev(`[...document.querySelectorAll('#gt-roster-list option')].map(o=>o.value)`), ['Ana', 'Ben']) && await gp.ev(`document.getElementById('me').getAttribute('list')==='gt-roster-list'&&document.getElementById('them').getAttribute('list')==='gt-roster-list'`), 'm3/lot suggests the attendee list in both name boxes');
+  await gp.shot('m1-game-picker.png');
+
+  for (const [n, p] of [['desk', desk], ['desk on a phone', deskPhone], ['phone', phone], ['empty', p2], ['dead', p3], ['game pages', gp]]) check(!p.errors.length, n + ' page: no script errors', p.errors);
 } catch (e) { console.log('FAIL  ' + e.message); fails++; }
 
 console.log(fails ? '\n' + fails + ' FAILED' : '\nALL OK', ' (screenshots in ' + SHOTS + ')');

@@ -101,9 +101,9 @@ const app=document.getElementById('app'), q=document.getElementById('q'),
       st=document.getElementById('status'), rules=document.getElementById('rules');
 let name=null, roster=[], watcher=null;
 try{name=localStorage.getItem('gt-name');}catch(_){}
-if(name)claimOnce();
+if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
 const MODE=new URLSearchParams(location.search).get('g');
-fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}

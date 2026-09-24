@@ -211,8 +211,8 @@ const G=GAMES[qs.get('g')];
 const ROOM=G?(qs.get('room')||G.room):null;
 let name=null, roster=[];
 try{name=localStorage.getItem('gt-name');}catch(_){}
-if(name)claimOnce();
-fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
+GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}

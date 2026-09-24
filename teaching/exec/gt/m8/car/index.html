@@ -96,8 +96,9 @@ function claimOnce(){
     .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
 }
 const say=t=>fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
-fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>render());
-if(name)claimOnce();
+GT_NAMES.roster().then(n=>{roster=n;if(shown==='name')shown='';render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk; a name screen drawn before it arrived is redrawn with it */
+if(name){if(qs.get('n'))claimOnce(); /* the rehearsal override keeps its name */
+  else GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();});} /* a Poll Desk reset of the name room: ask again */
 
 function renderName(){
   head('A car market game');

@@ -8,7 +8,9 @@
    Each person types their own first name and their partner's; the two names
    decide the side, the same way on both phones, so a pair always gets one
    brief each without anything being sent: whoever comes first in the
-   alphabet plays Harrow. A phone that already holds a brief goes back to it. */
+   alphabet plays Harrow. A phone that already holds a brief goes back to it.
+   Both boxes suggest names from the attendee list as people type (24 Sep
+   2026); any name can still be typed. */
 *{margin:0;padding:0;box-sizing:border-box}
 [hidden]{display:none !important}
 .briefwrap{display:flex;flex-direction:column;gap:20px}
@@ -95,6 +97,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
     <div class="hint">Your partner types the same two names on their own phone or laptop.</div>
   </form>
 </div>
+<script src="/go/names.js"></script>
 <script>
 (function(){
   const KEY='gt-m3-lot', PAIR='gt-m3-lot-pair';
@@ -106,6 +109,12 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
   const f=document.getElementById('names'), me=document.getElementById('me'), them=document.getElementById('them'), msg=document.getElementById('msg');
   f.hidden=false;
   try{const n=localStorage.getItem('gt-name');if(n)me.value=n;}catch(_){}
+  GT_NAMES.roster().then(ns=>{
+    if(!ns.length)return;
+    const dl=document.createElement('datalist');dl.id='gt-roster-list';
+    ns.forEach(n=>{const o=document.createElement('option');o.value=n;dl.appendChild(o);});
+    document.body.appendChild(dl);me.setAttribute('list',dl.id);them.setAttribute('list',dl.id);
+  });
   const clean=s=>s.trim().replace(/\s+/g,' ').slice(0,30);
   const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
   f.addEventListener('submit',e=>{

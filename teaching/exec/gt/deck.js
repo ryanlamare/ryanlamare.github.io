@@ -35,9 +35,15 @@ function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>{
   if(e.dataset.stepcall){const was=e.dataset.stepon==='1';
     if(was!==on){e.dataset.stepon=on?'1':'0';try{window[e.dataset.stepcall](e,on);}catch(_){}}}
 });}
+/* the slide goes into the address as #N, so a reload (a clicker's F5, a
+   stray Cmd-R) lands on the same slide, at its first step, not on slide 1
+   (Ryan, 24 Sep 2026). The step stays out on purpose: replaying one could
+   re-run a reveal. Written only once the deck has read its own address. */
+let armed=false;
 function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
   [...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));
-  ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();}
+  ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();
+  if(armed&&location.hash!=='#'+cur){try{history.replaceState(null,'','#'+cur);}catch(_){}}}
 function next(){if(step<maxStep(cur)){step++;applySteps();return;}
   let n=cur+1;while(skipFlex&&n<built&&isFlex(n))n++;
   if(n<built){cur=n;step=0;render();}}
@@ -63,7 +69,7 @@ window.deckGoto=function(i){if(i>=0&&i<built){cur=i;step=0;render();}};
 /* #N in the URL opens slide N (zero-based); #N.S also applies S reveal steps */
 function fromHash(){const m=location.hash.match(/^#(\d+)(?:\.(\d+))?$/);
   if(m){const i=+m[1];if(i>=0&&i<built){cur=i;step=m[2]?+m[2]:0;render();}}}
-addEventListener('hashchange',fromHash);fromHash();
+addEventListener('hashchange',fromHash);fromHash();armed=true;
 })();
 
 /* extra resources (a module's last slide): a card carrying data-yt plays in

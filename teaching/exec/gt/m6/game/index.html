@@ -227,8 +227,8 @@ let name=null, roster=[], kitId=null;
    player wears pk.js's default colours, and no kit line is sent. renderKit and
    the kit wire are left in place, unreached. */
 try{name=localStorage.getItem('gt-name');}catch(_){}
-if(name)claimOnce();
-fetch('/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
+GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
