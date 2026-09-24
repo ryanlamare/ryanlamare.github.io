@@ -192,6 +192,10 @@ function start(served){
       pairs.push({el:twin,slide:n,tag:p.tagName,was:p.innerHTML,ord:ord});
     });
   });
+  /* text inside a link, a clip tile or a clip cover is edited, not followed: a click in it would open the article
+     or start the clip instead (the dating apps tile on m4, 24 Sep 2026). */
+  window.addEventListener('click',function(e){var h=e.target&&e.target.closest&&e.target.closest('[contenteditable="true"]');
+    if(h&&h.closest('a,button,.ytplay')){e.preventDefault();e.stopPropagation();}},true);
   document.addEventListener('input',function(e){var h=e.target&&e.target.closest&&e.target.closest('[contenteditable="true"]');if(h){dirty.add(h);mark();}});
   document.addEventListener('paste',function(e){var el=document.activeElement;if(!el||!el.isContentEditable)return;e.preventDefault();
     document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text/plain'));});
