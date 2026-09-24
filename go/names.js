@@ -123,5 +123,27 @@ const GT_NAMES = (() => {
     return Promise.race([ask, new Promise(r => setTimeout(() => r(failed), 4000))]);
   }
 
-  return { guard, others, norm, partner, roster };
+  /* forgotten(voter): a Poll Desk reset of the name room (gt-names; RESET
+     EVERY ROOM includes it) means the name this phone remembers no longer
+     counts, so the phone forgets it too and the page asks "who are you?"
+     again, as a reset room already unlocks the phones that answered in it
+     (Ryan, 24 Sep 2026: his phone stayed registered through every reset).
+     Only a phone that has reached the server with a claim at some point is
+     checked (its last claim may be an older name: the name room takes 15
+     claims a phone), so a name picked while offline is kept, and a server
+     that is slow or out of reach changes nothing. Resolves true when the
+     name was forgotten. */
+  function forgotten(voter) {
+    let name = null, claimed = null;
+    try { name = localStorage.getItem('gt-name'); claimed = localStorage.getItem('gt-claimed'); } catch (_) {}
+    if (!name || !claimed) return Promise.resolve(false);
+    const ask = fetch(API + '/p/gt-names/entries', { cache: 'no-store' }).then(r => r.json()).then(d => {
+      if (!Array.isArray(d.entries) || d.entries.some(e => e.v === voter)) return false;
+      try { localStorage.removeItem('gt-name'); localStorage.removeItem('gt-claimed'); } catch (_) { return false; }
+      return true;
+    }).catch(() => false);
+    return Promise.race([ask, new Promise(r => setTimeout(() => r(false), 4000))]);
+  }
+
+  return { guard, others, norm, partner, roster, forgotten };
 })();

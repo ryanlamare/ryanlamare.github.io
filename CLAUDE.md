@@ -198,7 +198,7 @@ marked DEMO DATA if the Worker is unreachable. **Answers lock** (Ryan, 13 Sep
 offers a change; the deck takes a snapshot at the reveal keypress and stops
 refreshing that tally, so nothing can move the bars once the room has seen
 them. The Worker stays last-vote-wins — the lock lives in the phone and the
-deck, and a Poll Desk reset of a room unlocks the phones that voted in it.
+deck, and a Poll Desk reset of a room unlocks the phones that voted in it (a reset of `gt-names` makes phones ask their name again, 24 Sep 2026).
 Write-in polls stay open on purpose. The exception is a game on a clock
 (chicken, from 13 Sep 2026): there one tap commits, because the clock is
 the commitment device and a confirm step under a countdown would be cruel. The `/reset` admin secret is a

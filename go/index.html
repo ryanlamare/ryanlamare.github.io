@@ -195,6 +195,14 @@ const GAMES=[
    the join key for the points system. One picker, once per phone. */
 let myName=null;
 try{myName=localStorage.getItem('gt-name');}catch(_){}
+/* after a Poll Desk reset of the name room the phone forgets its name, and
+   a named poll on screen asks who you are again */
+GT_NAMES.forgotten(voter).then(f=>{
+  if(!f)return;
+  myName=null;
+  const poll=pollId&&CFG&&CFG.polls[pollId];
+  if(poll&&poll.named){document.getElementById('status').textContent='';renderPoll(poll,pollId);}
+});
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===myName;}catch(_){}

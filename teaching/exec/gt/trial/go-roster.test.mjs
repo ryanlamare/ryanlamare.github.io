@@ -11,8 +11,9 @@
    /reset leaves the list alone); the tidy rules on spreadsheet, email and
    Spanish-headed pastes; the desk (tidy, fix a name, drop one, save, add a
    late joiner, the clash refusal, remove and undo); and /go on a phone,
-   following each change without a reload, then falling back to typing a
-   name when the list is empty or the server is out of reach. */
+   following each change without a reload, forgetting its name after a
+   reset of the name room, then falling back to typing a name when the list
+   is empty or the server is out of reach. */
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -166,6 +167,26 @@ try {
   check(await phone.ev(`localStorage.getItem('gt-name')`) === 'Priya', 'tapping a name claims it');
   check(/familiar/.test(await phone.ev(`document.getElementById('q').textContent`)), 'and the poll itself follows');
 
+  /* a Poll Desk reset of the name room makes the phone ask again (Ryan, 24 Sep:
+     his phone stayed registered through every reset) */
+  const goUrl = 'http://localhost:' + PORT + '/go/?p=m1-familiarity';
+  check(await phone.ev(`localStorage.getItem('gt-claimed')`) === 'Priya', 'the claim reached the server');
+  await phone.nav(goUrl); await sleep(500);
+  check(/familiar/.test(await phone.ev(`document.getElementById('q').textContent`)), 'a reload keeps the name while the name room stands');
+  await call('/p/gt-names/reset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ s: SECRET }) });
+  await phone.nav(goUrl); await sleep(500);
+  check(await phone.ev(`document.getElementById('q').textContent`) === 'First, who are you?', 'after a reset of the name room the phone asks who you are again');
+  check(await phone.ev(`localStorage.getItem('gt-name')`) === null, 'and has forgotten the old name');
+  check((await phone.ev(`document.querySelectorAll('#opts button.pick').length`)) > 0, 'with the list to pick from');
+  /* a phone past the name room's 15 claims still has an older claim on record:
+     after a reset it must be forgotten too (Ryan's own phone) */
+  await phone.ev(`localStorage.setItem('gt-name','Zoe');localStorage.setItem('gt-claimed','Old name')`);
+  await phone.nav(goUrl); await sleep(500);
+  check(await phone.ev(`document.getElementById('q').textContent`) === 'First, who are you?', 'a phone whose last claim was an older name is forgotten after a reset too');
+  await phone.ev(`localStorage.setItem('gt-name','Zoe');localStorage.removeItem('gt-claimed')`);
+  await phone.nav(goUrl); await sleep(500);
+  check(/familiar/.test(await phone.ev(`document.getElementById('q').textContent`)), 'a name whose claim never reached the server is kept');
+
   /* ---- the fallbacks ---- */
   const clear = await (await post('gt-roster', { s: SECRET, names: [] })).json();
   check(clear.ok && same(clear.names, []), 'the list can be cleared');
@@ -175,6 +196,9 @@ try {
   const p3 = await page('http://localhost:' + DEAD + '/go/?p=m1-familiarity', 390, 844, true);
   await sleep(1500);
   check((await p3.ev(`document.querySelector('#opts input')?.placeholder`)) === 'Type your first name', 'a server out of reach falls back to typing a name');
+  await p3.ev(`localStorage.setItem('gt-name','Priya');localStorage.setItem('gt-claimed','Priya')`);
+  await p3.nav('http://localhost:' + DEAD + '/go/?p=m1-familiarity'); await sleep(1000);
+  check(/familiar/.test(await p3.ev(`document.getElementById('q').textContent`)), 'a server out of reach never makes a phone forget its name');
 
   for (const [n, p] of [['desk', desk], ['desk on a phone', deskPhone], ['phone', phone], ['empty', p2], ['dead', p3]]) check(!p.errors.length, n + ' page: no script errors', p.errors);
 } catch (e) { console.log('FAIL  ' + e.message); fails++; }
