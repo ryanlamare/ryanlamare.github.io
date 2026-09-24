@@ -257,7 +257,6 @@
         <div class="joinchip"><div class="qr"><img src="qr-solo.svg" alt="QR code for beat the keeper at ryanlamare.com/teaching/exec/gt/m6/game/?g=solo"></div><div class="ju">ryanlamare.com/go</div></div>
         <div class="livecount"><span class="n" id="soloPlayers0">0</span><span class="l">RESPONSES</span></div>
       </div>
-      <div class="scenebox" id="soloPreview" style="width:330px"></div>
     </div>
   </div>
 </section>
@@ -268,7 +267,6 @@
   <div class="board">
     <div class="bbar">
       <div class="livecount"><span class="n" id="soloPlayers">0</span><span class="l">RESPONSES</span></div>
-      <div class="livecount"><span class="n" id="soloKicks">0</span><span class="l">KICKS<br>TAKEN</span></div>
       <div class="demotag" id="soloDemo" style="position:static">DEMO DATA</div>
     </div>
     <div class="stats">
@@ -372,7 +370,6 @@
       <li>Can strategic thinking be applied to a game like rock-paper-scissors? <b>Let&rsquo;s find out</b></li>
       <li data-step="1"><b>Pair up with the person next to you</b>, on your phones &ndash; ten throws</li>
       <li data-step="2">Both of you throw at the same time: rock beats scissors, scissors beat paper, paper beats rock</li>
-      <li data-step="3">We&rsquo;re playing it for <b>the pattern it leaves behind</b></li>
     </ul>
     <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
       <div style="display:flex;align-items:center;gap:24px">
@@ -394,7 +391,6 @@
   <div class="board">
     <div class="bbar">
       <div class="livecount"><span class="n" id="rpsPairs">0</span><span class="l">PAIRS<br>IN</span></div>
-      <div class="livecount"><span class="n" id="rpsThrows">0</span><span class="l">THROWS<br>MADE</span></div>
       <div class="demotag" id="rpsDemo" style="position:static">DEMO DATA</div>
     </div>
     <div class="rmix">
@@ -773,13 +769,13 @@ function parsePairLines(lines,codes){
     let kicks=0,goals=0,read=0,left=0;
     ps.forEach(p=>{kicks+=p.n;goals+=p.goals;read+=p.read;left+=p.left;});
     const pct=(a,b)=>b?Math.round(a/b*100):null;
-    const top=ps.filter(p=>p.n>0).sort((a,b)=>b.goals-a.goals||a.read-b.read||b.n-a.n||a.name.localeCompare(b.name)).slice(0,5);
+    /* shown as a percentage (Ryan, 25 Sep 2026); anyone who took all fifteen ranks ahead of anyone still kicking, so one lucky kick cannot top the list */
+    const top=ps.filter(p=>p.n>0).sort((a,b)=>(b.n>=15)-(a.n>=15)||b.goals/b.n-a.goals/a.n||b.goals-a.goals||a.read-b.read||a.name.localeCompare(b.name)).slice(0,5);
     return {players:ps.length,kicks,goals:pct(goals,kicks),read:pct(read,kicks),kl:pct(left,kicks),top};
   }
   function render(){
     const s=stats();
     ['soloPlayers0','soloPlayers'].forEach(id=>{document.getElementById(id).textContent=st.live?s.players:0;});
-    document.getElementById('soloKicks').textContent=st.live?s.kicks:0;
     document.getElementById('soloDemo').style.display=st.live?'none':'';
     refreshShownCalls();
   }
@@ -800,7 +796,7 @@ function parsePairLines(lines,codes){
       for(let i=0;i<5;i++){
         const p=on?s.top[i]:null, li=document.createElement('li');
         li.innerHTML=p?'<span></span><b></b>':'&ndash;';
-        if(p){li.querySelector('span').textContent=p.name;li.querySelector('b').textContent=p.goals+' of '+p.n;}
+        if(p){li.querySelector('span').textContent=p.name;li.querySelector('b').textContent=Math.round(p.goals/p.n*100)+'%';}
         ol.appendChild(li);
       }
       return;
@@ -813,8 +809,6 @@ function parsePairLines(lines,codes){
     fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
   }
   setInterval(fetchIt,2500);fetchIt();render();
-  /* the still picture beside the rules */
-  PK.Scene(document.getElementById('soloPreview'));
 })();
 
 /* ---- rock, paper, scissors board: room m6-rps (?rpsroom= for rehearsals) ---- */
@@ -869,7 +863,6 @@ function parsePairLines(lines,codes){
   function render(){
     const s=stats();
     ['rpsPairs0','rpsPairs'].forEach(id=>{document.getElementById(id).textContent=st.live?s.pairs:0;});
-    document.getElementById('rpsThrows').textContent=st.live?s.throws:0;
     document.getElementById('rpsDemo').style.display=st.live?'none':'';
     ['r','p','s'].forEach(t=>{const v=s.mix[t];document.getElementById('rb-'+t).style.width=(v||0)+'%';document.getElementById('rp-'+t).textContent=v===null?'–':v+'%';});
     refreshShownCalls();
