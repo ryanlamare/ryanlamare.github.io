@@ -228,7 +228,30 @@ let name=null, roster=[], kitId=null;
    the kit wire are left in place, unreached. */
 try{name=localStorage.getItem('gt-name');}catch(_){}
 if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
-GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
+GT_NAMES.roster().then(n=>{roster=n;return roomReset();}).then(render); /* the attendee list, kept on the poll server and edited on the Poll Desk */
+/* a Poll Desk reset empties the room, and a phone that finds nothing of its
+   own game left there forgets it, so the page opens on its first screen
+   (Ryan, 24 Sep 2026: the phones kept their games through every reset).
+   Beat the keeper forgets its kicks once none of this name's lines is left;
+   a pair game forgets the pairing, and the results it has already shown,
+   once no line of the pair is left. A phone whose lines never reached the
+   room is not judged, and a server out of reach changes nothing. */
+function roomReset(){
+  if(!G||!ROOM)return Promise.resolve();
+  let solo=null,pair=null;
+  try{solo=JSON.parse(localStorage.getItem('m6-solo-'+ROOM)||'null');pair=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||'null');}catch(_){}
+  const soloHeld=!!(name&&solo&&Array.isArray(solo.kicks)&&solo.kicks.length);
+  const pairHeld=!!(pair&&pair.A&&pair.B&&pair.joined);
+  if(!soloHeld&&!pairHeld)return Promise.resolve();
+  const ask=answers().then(lines=>{
+    if(soloHeld&&!lines.some(t=>{const f=String(t).split('|');return f.length===3&&norm(f[0])===norm(name);}))
+      try{localStorage.removeItem('m6-solo-'+ROOM);}catch(_){}
+    if(pairHeld){const key=pairKey(pair.A,pair.B);
+      if(!parseLines(lines).some(m=>pairKey(m.A,m.B)===key))
+        try{localStorage.removeItem('m6-pair-'+ROOM);localStorage.removeItem('m6-ack-'+ROOM+'-'+key);}catch(_){}}
+  }).catch(()=>{});
+  return Promise.race([ask,new Promise(r=>setTimeout(r,4000))]);
+}
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
@@ -284,8 +307,12 @@ function render(){
   let saved=null;
   try{saved=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||localStorage.getItem('m6-pair-'+G.room)||'null');}catch(_){}
   if(saved&&saved.A&&saved.B&&(norm(saved.seat==='a'?saved.A:saved.B)===norm(name))){
-    if(saved.seat==='a'&&!saved.joined){say(saved.A+'|'+saved.B+'|0|a|j').catch(()=>{});}
-    return renderPlay(saved.A,saved.B,saved.seat);
+    /* a pair keeps knowing it has joined across reloads: until 25 Sep 2026 a reload stored joined:false, so every
+       reload posted the join again, and after a Poll Desk reset that put the old pair straight back into the room */
+    if(saved.seat==='a'&&!saved.joined){say(saved.A+'|'+saved.B+'|0|a|j').then(()=>{
+      try{const x=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||'null');if(x&&x.A===saved.A&&x.B===saved.B){x.joined=true;localStorage.setItem('m6-pair-'+ROOM,JSON.stringify(x));}}catch(_){}
+    }).catch(()=>{});}
+    return renderPlay(saved.A,saved.B,saved.seat,saved.joined);
   }
   q.textContent=G.title;
   app.innerHTML='';
