@@ -29,9 +29,11 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
 .locked a{color:var(--red);font-weight:700}
 .form{display:flex;flex-direction:column;gap:14px}
 .form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:16px}
-.form input,.form textarea{font:inherit;font-weight:500;font-size:17px;line-height:1.4;padding:11px 13px;border:2.5px solid var(--ink);border-radius:0;background:var(--paper-soft);color:var(--ink);width:100%;-webkit-appearance:none;appearance:none}
+.form input:not([type=checkbox]),.form textarea{font:inherit;font-weight:500;font-size:17px;line-height:1.4;padding:11px 13px;border:2.5px solid var(--ink);border-radius:0;background:var(--paper-soft);color:var(--ink);width:100%;-webkit-appearance:none;appearance:none}
 .form textarea{resize:vertical}
-.form input:focus,.form textarea:focus{outline:3px solid var(--red);outline-offset:0}
+.form label.nodeal{flex-direction:row;align-items:center;gap:12px;font-weight:600;cursor:pointer}
+.form label.nodeal input{width:24px;height:24px;flex:none;accent-color:var(--red);margin:0}
+.form input:not([type=checkbox]):focus,.form textarea:focus{outline:3px solid var(--red);outline-offset:0}
 .btn{font-family:var(--sans);font-weight:800;font-size:16px;letter-spacing:.14em;text-transform:uppercase;background:var(--red);color:var(--paper);border:none;border-radius:0;padding:15px 18px;cursor:pointer}
 .btn:disabled{opacity:.5;cursor:default}
 .msg{font-weight:600;font-size:15px;color:var(--red)}
@@ -97,9 +99,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
     <div class="obj">Your objective: get <i>Blue Skies</i> its aircraft, at the lowest possible cost to the production.</div>
     <div class="report" id="report">
       <div class="rt">What your pair agreed</div>
-      <p class="rn">When you have a deal, or when time is up, type it in here and lock it in. Once it is locked in, it stays.</p>
+      <p class="rn">When you have a deal, or when time is up, type it in here and lock it in. If you did not reach a deal, tick the box. Once it is locked in, it stays.</p>
       <form class="form" id="agree" autocomplete="off">
         <label>Your pair<input id="a0" maxlength="60" autocomplete="off" placeholder="Your first name and your partner&rsquo;s"></label>
+        <label class="nodeal"><input type="checkbox" id="anone"> We did not reach a deal</label>
         <label>What do you plan to do?<textarea id="a1" maxlength="190" rows="3"></textarea></label>
         <label>What price will you offer the executor?<textarea id="a2" maxlength="110" rows="2"></textarea></label>
         <label>Any special conditions?<textarea id="a3" maxlength="190" rows="3"></textarea></label>
@@ -149,6 +152,10 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
   const F=[0,1,2,3].map(i=>document.getElementById('a'+i));
   try{const p=JSON.parse(localStorage.getItem('gt-m3-lot-pair')||'null');if(p&&p.me&&p.them)F[0].value=p.me+' & '+p.them;}catch(_){}
   function lock(on){f.hidden=on;done.hidden=!on;}
+  /* No deal (24 Sep 2026): the box hides the three questions and sends the
+     pair with line 1 "No deal was reached", which the deck's wall shows as such. */
+  const none=document.getElementById('anone'), NODEAL='No deal was reached';
+  none.addEventListener('change',()=>{[1,2,3].forEach(i=>F[i].closest('label').hidden=none.checked);msg.textContent='';});
   let said=false;try{said=localStorage.getItem(SAID)==='1';}catch(_){}
   if(said){
     lock(true);
@@ -160,8 +167,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
   }
   f.addEventListener('submit',e=>{
     e.preventDefault();
-    const vals=F.map(x=>x.value.trim().replace(/\s+/g,' '));
-    if(vals.some(v=>!v)){msg.textContent='Fill in all four, then lock it in.';return;}
+    const vals=none.checked?[F[0].value.trim().replace(/\s+/g,' '),NODEAL]:F.map(x=>x.value.trim().replace(/\s+/g,' '));
+    if(vals.some(v=>!v)){msg.textContent=none.checked?'Fill in your pair, then lock it in.':'Fill in all four, then lock it in.';return;}
     btn.disabled=true;msg.textContent='Sending\u2026';
     const post=(k,t)=>fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({t:k+'\u2016'+t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
