@@ -119,7 +119,7 @@
 .isofigs{flex:1;display:flex;justify-content:space-between;align-items:flex-end;height:96px}
 .isofigs.balls{height:60px;align-items:center}
 .isof{height:96px;width:62px;color:var(--ink);opacity:.45;display:block}
-.isof.on{color:var(--red);opacity:1;--fillc:var(--red)}
+.isof.on{color:var(--red);opacity:1;--fillc:var(--red);--pentc:var(--paper)} /* a scored ball keeps its pentagon, so all ten read as one ball symbol */
 .isofigs.balls .isof{height:44px;width:44px}
 #negNote{margin-top:10px;min-height:1.4em;text-align:center}
 </style>
@@ -343,7 +343,7 @@
   <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
   <h2>Real-life penalty kick strategies</h2>
   <svg style="display:none" aria-hidden="true">
-    <symbol id="iso-ball" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3.5" fill="var(--fillc,none)"/><polygon points="20,11 28,17 25,26 15,26 12,17" fill="currentColor"/></symbol>
+    <symbol id="iso-ball" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3.5" fill="var(--fillc,none)"/><polygon points="20,11 28,17 25,26 15,26 12,17" fill="var(--pentc,currentColor)"/></symbol>
     <symbol id="iso-kicker" viewBox="-4 0 68 128"><g fill="currentColor"><circle cx="24" cy="14" r="13"/><path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/><rect x="9" y="84" width="11" height="30"/><path d="M28 84 L52 110" stroke="currentColor" stroke-width="11" stroke-linecap="round" fill="none"/></g><circle cx="58" cy="118" r="7" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
     <symbol id="iso-keeper" viewBox="-28 0 104 120"><g fill="currentColor"><path d="M4 40 L-24 20 M44 40 L72 20" stroke="currentColor" stroke-width="10" stroke-linecap="round" fill="none"/><circle cx="24" cy="14" r="13"/><path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/><rect x="9" y="84" width="11" height="30"/><rect x="28" y="84" width="11" height="30"/></g></symbol>
   </svg>
@@ -902,24 +902,33 @@ const EL=document.getElementById('pkEL'), ER=document.getElementById('pkER');
 const Pv=document.getElementById('pkPv'), Qv=document.getElementById('pkQv');
 const note=document.getElementById('pkNote');
 const chart=document.getElementById('pkChart');
-const W=380,H=300,PADL=44,PADB=34,PADT=16,PADR=24; /* room for the "100%" under the right end */
+const W=380,H=300,PADL=58,PADB=54,PADT=16,PADR=24; /* room for the axis titles (25 Sep 2026) and the "100%" under the right end */
 const y0=55,y1=100;
 function X(p){return PADL+p*(W-PADL-PADR);}
 function Y(v){return H-PADB-(v-y0)/(y1-y0)*(H-PADB-PADT);}
 function el(p){return 58*p+93*(1-p);}
 function er(p){return 95*p+70*(1-p);}
+/* built with createElementNS, never innerHTML on SVG (Safari) */
+function mk(tag,at,txt){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in at)n.setAttribute(k,at[k]);if(txt!=null)n.textContent=txt;chart.appendChild(n);return n;}
 function baseChart(){
-  let s='';
-  s+=`<line x1="${PADL}" y1="${H-PADB}" x2="${W-PADR}" y2="${H-PADB}" stroke="var(--ink)" stroke-width="2"/>`;
-  s+=`<line x1="${PADL}" y1="${PADT}" x2="${PADL}" y2="${H-PADB}" stroke="var(--ink)" stroke-width="2"/>`;
-  [60,70,80,90,100].forEach(v=>{s+=`<text x="${PADL-8}" y="${Y(v)+5}" text-anchor="end" font-size="13" fill="var(--muted)" font-family="var(--sans)">${v}</text>`;});
-  [0,0.5,1].forEach(p=>{s+=`<text x="${X(p)}" y="${H-PADB+22}" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="var(--sans)">${Math.round(p*100)}%</text>`;});
-  s+=`<line x1="${X(0)}" y1="${Y(el(0))}" x2="${X(1)}" y2="${Y(el(1))}" stroke="var(--teal)" stroke-width="4"/>`;
-  s+=`<line x1="${X(0)}" y1="${Y(er(0))}" x2="${X(1)}" y2="${Y(er(1))}" stroke="var(--terracotta)" stroke-width="4"/>`;
-  s+=`<line id="pkCursor" x1="${X(.5)}" y1="${PADT}" x2="${X(.5)}" y2="${H-PADB}" stroke="var(--red)" stroke-width="3"/>`;
-  s+=`<circle id="pkDotL" cx="${X(.5)}" cy="${Y(el(.5))}" r="7" fill="var(--teal)"/>`;
-  s+=`<circle id="pkDotR" cx="${X(.5)}" cy="${Y(er(.5))}" r="7" fill="var(--terracotta)"/>`;
-  chart.innerHTML=s;
+  const T={'font-size':13,fill:'var(--muted)','font-family':'var(--sans)'};
+  mk('line',{x1:PADL,y1:H-PADB,x2:W-PADR,y2:H-PADB,stroke:'var(--ink)','stroke-width':2});
+  mk('line',{x1:PADL,y1:PADT,x2:PADL,y2:H-PADB,stroke:'var(--ink)','stroke-width':2});
+  [60,70,80,90,100].forEach(v=>mk('text',Object.assign({x:PADL-8,y:Y(v)+5,'text-anchor':'end'},T),v));
+  [0,0.5,1].forEach(p=>mk('text',Object.assign({x:X(p),y:H-PADB+22,'text-anchor':'middle'},T),Math.round(p*100)+'%'));
+  /* axis titles */
+  mk('text',{x:(PADL+W-PADR)/2,y:H-8,'text-anchor':'middle','font-size':12,'font-weight':700,'letter-spacing':'.1em',fill:'var(--muted)','font-family':'var(--sans)'},'KICKS GOING LEFT');
+  mk('text',{x:16,y:(PADT+H-PADB)/2,'text-anchor':'middle','font-size':12,'font-weight':700,'letter-spacing':'.1em',fill:'var(--muted)','font-family':'var(--sans)',transform:'rotate(-90 16 '+((PADT+H-PADB)/2)+')'},'KICKER SCORES %');
+  mk('line',{x1:X(0),y1:Y(el(0)),x2:X(1),y2:Y(el(1)),stroke:'var(--teal)','stroke-width':4});
+  mk('line',{x1:X(0),y1:Y(er(0)),x2:X(1),y2:Y(er(1)),stroke:'var(--terracotta)','stroke-width':4});
+  /* where the lines cross: the best mix, p = 23/60, about 38% */
+  const px=23/60;
+  mk('line',{x1:X(px),y1:Y(el(px)),x2:X(px),y2:H-PADB,stroke:'var(--red)','stroke-width':1.5,'stroke-dasharray':'4 4'});
+  mk('circle',{cx:X(px),cy:Y(el(px)),r:9,fill:'none',stroke:'var(--red)','stroke-width':3});
+  mk('text',{x:X(px),y:H-PADB+22,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'var(--red)','font-family':'var(--sans)'},'38%');
+  mk('line',{id:'pkCursor',x1:X(.5),y1:PADT,x2:X(.5),y2:H-PADB,stroke:'var(--red)','stroke-width':3});
+  mk('circle',{id:'pkDotL',cx:X(.5),cy:Y(el(.5)),r:7,fill:'var(--teal)'});
+  mk('circle',{id:'pkDotR',cx:X(.5),cy:Y(er(.5)),r:7,fill:'var(--terracotta)'});
 }
 function update(){
   const p=slider.value/100;
