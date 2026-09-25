@@ -4,7 +4,11 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (25 Sep 2026, morning)
+## NEXT CHAT STARTS HERE (25 Sep 2026, afternoon)
+
+**The 25 Sep audit is done: read `AUDIT-2026-09-25.md` first.** Its section 1 is everything fixed and live that day: pair games that could deadlock, the m5 quiz demo freeze, the m7 Sun Tzu phone, the m3 same-brief trap, the two-thirds parsing and ties, four car-market traps, seven facts, and every figure that was visibly wrong (title widows, Holland's $200M, the dominant tile, the JetBlue icon, m4's rings, m5's takeaway icons and QR sizes, m6's chart, Chuck's car, m8's clipped figures and unreadable lemons chart, poll rows that left one figure alone). New: a typed ryanlamare.com/go offers whatever QR the deck is showing (room `gt-now`, written by deck.js, read by /go; listed on the Poll Desk). New tests: trial/go-now, m3-lot, m8-car-board. Open for him: the five redraws in section 5 (Claude's call: top five, m4 slide 15 first as the sample), a presenter jump key (offered), the five questions of fact in section 8, and the exec-training gaps in section 6. Next for Claude: the print pack (games are final).
+
+## EARLIER: NEXT CHAT (25 Sep 2026, morning)
 
 **His pass is done through m7; m8 was checked by Claude overnight.** Slide counts now: m1 30, m8 27 (others unchanged by the night). Pull first: he edits live.
 
