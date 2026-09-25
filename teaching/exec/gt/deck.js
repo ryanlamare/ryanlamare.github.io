@@ -96,6 +96,8 @@ window.deckGoto=function(i){if(i>=0&&i<built){cur=i;step=0;render();}};
 function fromHash(){const m=location.hash.match(/^#(\d+)(?:\.(\d+))?$/);
   if(m){const i=+m[1];if(i>=0&&i<built){cur=i;step=m[2]?+m[2]:0;render();}}}
 addEventListener('hashchange',fromHash);fromHash();armed=true;
+/* the page's head may have shown the addressed slide early (#deckjump); from here the deck draws it */
+{const dj=document.getElementById('deckjump');if(dj)dj.remove();}
 })();
 
 /* extra resources (a module's last slide): a card carrying data-yt plays in
