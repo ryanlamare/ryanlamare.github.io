@@ -838,13 +838,13 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
     const key=n=>n.toLowerCase(), cars={}, sales={};
     [1,2,3].forEach(n=>{cars[n]={};sales[n]={};names.forEach((nm,i)=>{cars[n][key(nm)]=((i*5+n*3)%14)<7?'P':'L';});});
     names.forEach((nm,i)=>{const k=key(nm),P=cars[1][k]==='P';if(i%7!==3)sales[1][k]={k,name:nm,price:P?3100+((i*137)%800):1050+((i*89)%450)};});
-    names.forEach((nm,i)=>{const k=key(nm),P=cars[2][k]==='P';if(!P||i%5===0)sales[2][k]={k,name:nm,price:2250+((i*113)%600)};});
+    names.forEach((nm,i)=>{const k=key(nm),P=cars[2][k]==='P';if(!P)sales[2][k]={k,name:nm,price:1700+((i*113)%1000)};}); /* round two pools: no peach sells below its £3,000 floor */
     names.forEach((nm,i)=>{const k=key(nm),P=cars[3][k]==='P';if(i%6!==2)sales[3][k]={k,name:nm,price:P?(i%3?3000+((i*97)%700):2700):1150+((i*71)%450)};});
     return {demo:true,joins:names.map(n=>({k:key(n),name:n})),names:Object.fromEntries(names.map(n=>[key(n),n])),sellers:names.map(key),cars,sales};
   })();
   const X=(p,W)=>Math.min(MAXP,Math.max(0,p))/MAXP*W;
   function draw(sl){
-    const n=+sl.dataset.carboard, D=live&&R&&R.joins.length?R:DEMO;
+    const n=+sl.dataset.carboard, D=live&&R?R:DEMO; /* demo only if the server was never reached (25 Sep 2026): a skipped market is an empty board, not invented names */
     sl.querySelector('[data-cardemo]').style.display=D.demo?'':'none';
     const sold=Object.values(D.sales[n]||{}).sort((a,b)=>a.price-b.price);
     sl.querySelector('[data-carsold]').textContent=sold.length;
@@ -887,11 +887,14 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
   /* arriving on a round's board closes that round: a sale reported after it does not count */
   boards.forEach(sl=>new MutationObserver(()=>{
     const n=+sl.dataset.carboard;
-    if(sl.classList.contains('active')&&live&&R&&R.open[n]!==undefined&&R.close[n]===undefined&&!closing[n]){closing[n]=1;deckSay(ROOM,'=close|'+n).then(fetchIt).catch(()=>{closing[n]=0;});}
+    /* a stray double press on the rules slide lands here mid-round, so the round closes only
+       once the board has stayed up four seconds; going back before then leaves it open (25 Sep 2026) */
+    if(sl.classList.contains('active')&&live&&R&&R.open[n]!==undefined&&R.close[n]===undefined&&!closing[n]){closing[n]=1;
+      setTimeout(()=>{if(!sl.classList.contains('active')){closing[n]=0;return;}deckSay(ROOM,'=close|'+n).then(fetchIt).catch(()=>{closing[n]=0;});},4000);}
     render();
   }).observe(sl,{attributes:true,attributeFilter:['class']}));
   function fetchIt(){
-    return fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{live=true;R=CAR.parse(d.answers||[]);render();}).catch(()=>{live=false;render();});
+    return fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{live=true;R=CAR.parse(d.answers||[]);render();}).catch(()=>{if(!R)live=false;render();}); /* a blip keeps the last board */
   }
   setInterval(fetchIt,2500);fetchIt();
 })();
