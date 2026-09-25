@@ -11,6 +11,23 @@ window.mxMark=function(el,on){
     if(c)c.classList.toggle(el.dataset.cls||'hot',on);
   });
 };
+/* poll rows of figures (25 Sep 2026): every option's figures stay on one line,
+   at one size for all the rows of a poll, so the longest row is the biggest
+   count and no figure is left alone on a second line (his filled-grid rule).
+   Pass the poll's lanes after drawing them; figures shrink only when the
+   biggest count would not fit at their own size. */
+window.fitLanes=function(lanes){
+  lanes=[...lanes].filter(Boolean);
+  const units=lanes.map(l=>[...l.querySelectorAll('.u')]);
+  units.flat().forEach(u=>u.style.width='');
+  const max=Math.max(0,...units.map(u=>u.length));if(!max)return;
+  const u0=units.find(u=>u.length)[0], w0=u0.offsetWidth;
+  const inner=l=>{const c=getComputedStyle(l);return l.clientWidth-parseFloat(c.paddingLeft)-parseFloat(c.paddingRight);};
+  const W=Math.min(...lanes.map(inner)), gap=parseFloat(getComputedStyle(lanes[0]).columnGap)||0;
+  if(W<=0||max*(w0+gap)-gap<=W)return;
+  const w=Math.max(8,Math.floor(((W+gap)/max-gap)*10)/10);
+  units.flat().forEach(u=>u.style.width=w+'px');
+};
 (function(){
 const slides=[...document.querySelectorAll('.slide')];
 const ticksEl=document.querySelector('.ticks');
