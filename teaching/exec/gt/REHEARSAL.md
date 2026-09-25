@@ -68,7 +68,7 @@ Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-
 **Day one**
 - **m1:** the Wi-Fi is on slide 4.
 - **Pair games** (m2, and later m6 and m7): the person opposite, then anywhere. With an odd number, the spare person shares a pair's phone.
-- **m3:** pairs go anywhere, back by the time you give.
+- **m3:** pairs go anywhere, back by the time you give. On *What was each side really buying?* (slide 24), the calendar opens with **G** only; a right arrow moves on without it.
 - **m4:** give every team its station and junction out loud (A1, B1, …), with rivals out of earshot of each other. The meetings before weeks 3 and 6 can go to the hall. Reveals are called junction by junction. G on the "Stop here" step opens the Gazette; your line about week 6 goes with the news. The tournament runs on a mouse click, not the clicker.
 - **End of day one:** **Reset every room** again, so nobody answers a day-two poll early. Phones ask for their name again in the morning.
 
