@@ -4,7 +4,16 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (25 Sep 2026, late)
+## NEXT CHAT STARTS HERE (25 Sep 2026, night)
+
+He was out for the evening and said to proceed. Done and live, one commit each:
+- the five fact questions (AUDIT-2026-09-25, section 8);
+- the five top redraws plus seven of the next-in-line pictures, and m2's icons (section 5 lists them);
+- "anywhere, back by a time he gives" in REHEARSAL's list for the day.
+
+Nothing is waiting on him. The old m2 lesson line and the old m6 "Read by the keeper" tile are in git if he wants either back. Next, if he asks: deck PDFs on the night of 30 Sep (laptop only).
+
+## EARLIER: NEXT CHAT (25 Sep 2026, late)
 
 **No print pack** (his call: the tech and Wi-Fi were fine at the visit). **The room:** five small tables of about six, three a side, and the hall is free for any game. Diego leaves after m6; others may come and go, which breaks nothing built. **m4 seating is his:** he gives each team its station and junction out loud (A1, B1, …) and keeps rivals out of earshot; no layout from Claude. The one list for the day is now "The day, at Limehouse" at the end of `REHEARSAL.md` (it supersedes section 8 of `AUDIT-2026-09-20.md`). Next: the five questions of fact (AUDIT-2026-09-25 section 8), then the redraws one at a time from m4 slide 15.
 
