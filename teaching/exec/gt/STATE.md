@@ -4,7 +4,19 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (25 Sep 2026, night)
+## NEXT CHAT STARTS HERE (25 Sep 2026, later that night)
+
+His read: "all looking great"; he asked for the audit's flow and exec points to be built. Done and live:
+- m7's auction now comes before "Is commitment always a good thing?" (games are played blind).
+- m5 slide 15 runs best response on the stag hunt, and its wrong lower-left cell is fixed.
+- m4 has Arms races in place of the dating-apps tile.
+- The day list gains introductions, a day-two look back, a flip chart, the FuelWatch line and G on m3 slide 24.
+- His bug is fixed: m3 slide 24 flashed the cover when coming back from the calendar. Every deck opened at a slide now shows it from the first paint; a line in each head, removed by deck.js.
+- The iPhone held peek passes under touch emulation (trial/m8-car-peek.test.mjs).
+
+Nothing is waiting on him. Left: deck PDFs on the night of 30 Sep, and the resets.
+
+## EARLIER: NEXT CHAT (25 Sep 2026, night)
 
 He was out for the evening and said to proceed. Done and live, one commit each:
 - the five fact questions (AUDIT-2026-09-25, section 8);
