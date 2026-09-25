@@ -52,4 +52,6 @@ Cut from module 8 on 23 Sep 2026 for the signaling scavenger hunt. The game and 
 
 Poll Desk, **Reset every room**, gt-names included, and the `trial` rehearsal rooms if you used them. Then send the notes file.
 
+**What a check leaves behind (25 Sep 2026).** Pressing through a deck with the keyboard and no phones now leaves nothing that matters: m1's offers reopen whichever game's QR is on the screen, and m5's round markers and m8's deal count only once someone has played. Anything done *with* a phone (a vote, an offer, a guess, a game played) or a button (the number game's CLOSE ROUND) stays in its room until **Reset every room**, so press it after any check like that, and on the night of 30 Sep.
+
 The day-of list (pens and paper, the two ends of the room, sellers counting off, ten or eleven at the table, the secret on your phone) is section 8 of `AUDIT-2026-09-20.md`.
