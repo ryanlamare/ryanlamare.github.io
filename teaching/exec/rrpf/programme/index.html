@@ -82,6 +82,18 @@ a.mtag .ch{margin-left:6px;font-weight:700}
 a.mtag:hover,a.mtag:focus-visible{background:var(--ink)}
 a.mtag:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
+/* ---------- the hub (after day two) ---------- */
+.hub{margin-bottom:34px}
+.hub .hubmods .mod:first-child{border-top:0}
+.hub .mrow.slides .ml{color:var(--red)}
+.hub .mrow .mv a{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--rule)}
+.hub .mrow .mv a:hover{border-bottom-color:var(--red)}
+.hub .hlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.hub .hlist .hm{color:var(--muted);font-size:13.5px}
+.hub .open{font-weight:700;color:var(--red)!important;border-bottom:0!important}
+.hub .hubfollow{margin-top:22px}
+.hub .hubme{margin-top:18px}
+.hub .hubme a{color:var(--red);font-weight:600;text-decoration:none;border-bottom:1.5px solid var(--rule)}
 /* ---------- practicalities ---------- */
 .prac{display:grid;grid-template-columns:auto 1fr;gap:11px 24px;font-size:16px}
 .prac dt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:11.5px;color:var(--muted);padding-top:4px}
@@ -160,6 +172,24 @@ a.mtag:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   </header>
 
   <hr class="hrule">
+
+  <!-- The hub (planned with Ryan 22 Sep 2026, built 25 Sep): after day two this page becomes the
+       one place for everything from the programme. The section below stays hidden until 16:30 on
+       2 October (data-after, in UTC), or at once on ?hub, which the QR on the last slide of module 8
+       opens. The module list is drawn at load from the decks themselves, so it always matches their
+       Extra resources. /edit.js saves this section hidden and the list empty ([data-after],
+       [data-runtime]), so an edit made while the hub is showing never freezes it into the file. -->
+  <section class="hub" id="hub" data-after="2026-10-02T15:30:00Z" hidden>
+    <div class="shead"><span class="sq"></span><h2>Everything from the two days</h2></div>
+    <hr class="srule">
+    <p class="body">The slides from all eight modules are here to keep, with the clips, podcasts and readings that go with each one.</p>
+    <div class="hubmods" data-runtime></div>
+    <div class="pre hubfollow">
+      <div class="pk">Two follow-up sessions</div>
+      <p>Built on RRPF&rsquo;s own role plays, <b>Tapas Airways</b> and <b>Granito Air</b>, for your teams to run once they have the vocabulary of the two days. Each comes with printable briefs for every role and a debrief in the terms of the course. Ask RRPF for the files.</p>
+    </div>
+    <p class="body hubme">More about me and my work: <a href="https://ryanlamare.com/">ryanlamare.com</a></p>
+  </section>
 
   <p class="lead">Game theory is the art and science of strategic thinking, where your best course of action requires consideration of what the <i>other</i>&nbsp;side intends to do. Almost every commercial interaction can be structured as a set of strategic games. Yet we often make the mistake of deciding what outcome we want and blindly advancing towards it, seeing ourselves as operating within a narrow vacuum, rather than asking what the other party will rationally do in
   response and choosing our strategy accordingly.</p>
@@ -360,6 +390,43 @@ a.mtag:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   </div>
 
 </main>
+<script>
+/* The hub: shows itself after day two (or on ?hub) and lists every module's slides and Extra
+   resources, read from the decks at load. See the note above the section. */
+(function(){
+  var hub=document.getElementById('hub'); if(!hub)return;
+  var after=Date.parse(hub.getAttribute('data-after'));
+  if(!(Date.now()>=after||/[?&]hub(?:[=&]|$)/.test(location.search)))return;
+  hub.hidden=false;
+  var box=hub.querySelector('[data-runtime]');
+  var mods=[].slice.call(document.querySelectorAll('main > section.mod'));
+  function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+  function txt(n){return n?n.textContent.replace(/\s+/g,' ').trim():'';}
+  mods.forEach(function(m,i){
+    var n=i+1, sec=el('section','mod'), mark=m.querySelector('.modmark'), body=el('div');
+    if(mark)sec.appendChild(mark.cloneNode(true));
+    var h=el('h3');h.textContent=txt(m.querySelector('h3'));body.appendChild(h);
+    var row=el('div','mrow slides');row.appendChild(el('span','ml','slides'));
+    var mv=el('span','mv');var a=el('a','open','Open the slides for module '+n+' &rsaquo;');a.href='/teaching/exec/gt/m'+n+'/';a.target='_blank';a.rel='noopener';mv.appendChild(a);row.appendChild(mv);
+    body.appendChild(row);sec.appendChild(body);box.appendChild(sec);
+    fetch('/teaching/exec/gt/m'+n+'/',{cache:'no-store'}).then(function(r){return r.text();}).then(function(src){
+      var doc=new DOMParser().parseFromString(src,'text/html'), res=doc.querySelector('.resrc'); if(!res)return;
+      [].slice.call(res.querySelectorAll('.rhead')).forEach(function(head){
+        var col=head.parentNode, cards=col.querySelectorAll('a.rcard'); if(!cards.length)return;
+        var r=el('div','mrow take');r.appendChild(el('span','ml'));r.lastChild.textContent=txt(head).toLowerCase();
+        var ul=el('ul','hlist');
+        [].slice.call(cards).forEach(function(c){
+          var li=el('li'), link=el('a');link.href=c.getAttribute('href');link.target='_blank';link.rel='noopener';
+          link.textContent=txt(c.querySelector('.rtt'));li.appendChild(link);
+          var meta=txt(c.querySelector('.rmeta'));if(meta){li.appendChild(document.createTextNode(' '));li.appendChild(el('span','hm'));li.lastChild.textContent=meta;}
+          ul.appendChild(li);
+        });
+        var v=el('span','mv');v.appendChild(ul);r.appendChild(v);body.appendChild(r);
+      });
+    }).catch(function(){});
+  });
+})();
+</script>
 <script defer="" src="/edit.js"></script>
 
 

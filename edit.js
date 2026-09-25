@@ -122,6 +122,11 @@
     clone.querySelectorAll('.pub-group.open').forEach(function(n){ n.classList.remove('open'); });
     clone.querySelectorAll('.pub-toggle[aria-expanded="true"]').forEach(function(n){ n.setAttribute('aria-expanded','false'); });
     clone.querySelectorAll('.pub-chevron').forEach(function(n){ n.textContent = '+'; });
+    // runtime-only parts of a page (the RRPF programme page's hub, 25 Sep 2026): a [data-runtime]
+    // container is filled by the page's own script and saved empty; a [data-after] section shows
+    // itself when its time comes and is saved hidden. No-ops on every other page.
+    clone.querySelectorAll('[data-runtime]').forEach(function(n){ n.innerHTML = ''; });
+    clone.querySelectorAll('[data-after]').forEach(function(n){ n.setAttribute('hidden', ''); });
     clone.removeAttribute('style');
     return '<!doctype html>' + String.fromCharCode(10) + clone.outerHTML + String.fromCharCode(10);
   }
