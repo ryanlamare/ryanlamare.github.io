@@ -4,7 +4,19 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (24 Sep 2026)
+## NEXT CHAT STARTS HERE (25 Sep 2026, morning)
+
+**His pass is done through m7; m8 was checked by Claude overnight.** Slide counts now: m1 30, m8 27 (others unchanged by the night). Pull first: he edits live.
+
+**Built overnight 24–25 Sep, at his ask, all live except the follow-ups (which are off the repo on purpose):**
+- **m1 slide 2, A little about me:** headshot, the places on a line (Cornell to LSE), four cards (education, research, teaching, editing) and his teaching philosophy line, all from cv_data.py and the About me on the programme page.
+- **m1 slide 4, A few practical things:** Wi-Fi (a red slot, "Network and password to follow", to fill with ?edit once the venue's details are known), phone, chargers, joining a game, your name, in the room. trial/m1-offers.test.mjs follows the two-slide shift.
+- **m8 slide 27, Thank you:** the wall of every module's six cover icons (a column a module), a QR to the programme page's hub with `?hub`, RYANLAMARE.COM on the byline.
+- **The hub** on `exec/rrpf/programme/`: a hidden section that shows itself at 16:30 on 2 Oct (data-after, UTC) or at once on `?hub`; eight modules with deck links and every Extra resources card, read from the decks at load; the two follow-ups described, not hosted ("ask RRPF for the files"). /edit.js saves `[data-after]` hidden and `[data-runtime]` empty.
+- **The Tapas Airways and Granito Air follow-up sessions:** two self-contained files in `~/Documents/RRPF follow-up sessions/` (with RRPF's original case text in `source/`, read from Jaime's and Diego's emails, and `build_sessions.py`). Never in this repo. Their debrief questions are Claude's drafts, his to approve line by line; then he sends the two files to RRPF before the hub switches on (it tells people to ask RRPF for them).
+- m4 to m8 across the night: the F-key flex switch is gone from deck.js; every real-world example picture or card in m1 to m8 opens its source (a.exlink); phones in m4, m6 and m7 start fresh after a Poll Desk reset (trial/*-reset tests).
+
+## EARLIER: NEXT CHAT (24 Sep 2026)
 
 Ryan's own small-tweak pass through m1–m8, module by module, his wording. Everything below is live (c13ce27). Slide counts: m1 28, m2 23, m3 28, m4 28, m5 32, m6 23, m7 34, m8 26. Pull before touching anything: he edits live with ?edit. The m3 briefs and other phone pages take no ?edit, so their wording comes through a session. Before 1 Oct: reset m3-lot (and any room holding test lines) on the Poll Desk, and check the fan-upload clips (m5's two Moneyball scenes, Bert and Ernie) still play.
 
