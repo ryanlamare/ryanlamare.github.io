@@ -212,7 +212,26 @@ const ROOM=G?(qs.get('room')||G.room):null;
 let name=null, roster=[];
 try{name=localStorage.getItem('gt-name');}catch(_){}
 if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
-GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
+GT_NAMES.roster().then(n=>{roster=n;return roomReset();}).then(render); /* the attendee list, kept on the poll server and edited on the Poll Desk */
+/* a Poll Desk reset empties the room, and a phone whose pair has no line
+   left there forgets the pairing, its clocks and the rounds it has shown,
+   so the page opens on pairing up again (Ryan, 24 Sep 2026: the phones kept
+   their games through every reset; a kept chicken clock would even start a
+   new game already run out). A server out of reach changes nothing. */
+function roomReset(){
+  if(!G||!ROOM||G===GAMES.auction)return Promise.resolve();
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('m7-pair-'+ROOM)||'null');}catch(_){}
+  if(!saved||!saved.A||!saved.B)return Promise.resolve();
+  const key=pairKey(saved.A,saved.B);
+  const ask=answers().then(lines=>{
+    if(lines.some(t=>{const p=String(t).split('|').map(x=>x.trim());return p.length>=5&&pairKey(p[0],p[1])===key;}))return;
+    try{
+      localStorage.removeItem('m7-pair-'+ROOM);
+      Object.keys(localStorage).filter(k=>k.startsWith('m7-clk-'+ROOM+'-')||k.startsWith('m7-wclk-'+ROOM+'-')||k.startsWith('m7-ack-'+ROOM+'-')).forEach(k=>localStorage.removeItem(k));
+    }catch(_){}
+  }).catch(()=>{});
+  return Promise.race([ask,new Promise(r=>setTimeout(r,4000))]);
+}
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
