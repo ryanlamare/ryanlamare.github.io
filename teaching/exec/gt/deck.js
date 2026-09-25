@@ -39,7 +39,23 @@ let armed=false;
 function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
   [...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));
   ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();
-  if(armed&&location.hash!=='#'+cur){try{history.replaceState(null,'','#'+cur);}catch(_){}}}
+  if(armed&&location.hash!=='#'+cur){try{history.replaceState(null,'','#'+cur);}catch(_){}}
+  tellNow();}
+/* On the screen now (25 Sep 2026): arriving at a slide with a QR tells the
+   poll server which QR it is (room gt-now, "date|path of the QR image"), so
+   someone too far back to scan can type ryanlamare.com/go and find that page
+   first, in red. /go keeps the list of what each QR opens. Only a change is
+   sent, and nothing from ?edit. */
+let nowSent='';
+function tellNow(){
+  const q=slides[cur].querySelector('img[src*="qr-"]');
+  if(!q||typeof POLL_API==='undefined'||/[?&]edit\b/.test(location.search))return;
+  const path=new URL(q.getAttribute('src'),location.href).pathname;
+  if(path===nowSent)return;nowSent=path;
+  const d=new Date(),day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  fetch(POLL_API+'/p/gt-now/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:day+'|'+path,v:'deck-'+Math.random().toString(36).slice(2,12)})}).catch(()=>{});
+}
 function next(){if(step<maxStep(cur)){step++;applySteps();return;}
   if(cur+1<built){cur++;step=0;render();}}
 function prev(){if(step>0){step--;applySteps();return;}

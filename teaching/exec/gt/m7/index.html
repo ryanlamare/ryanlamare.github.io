@@ -907,7 +907,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <h2>Nick and Ibrahim</h2>
   <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
     <ul class="bullets" style="margin-top:0">
-      <li><b>Golden Balls</b>, 2012. Nick and Ibrahim, and a pot of &pound;13,600</li>
+      <li><b>Golden Balls</b> on ITV. Nick and Ibrahim, and a pot of &pound;13,600</li>
       <li data-step="1">Nick tells Ibrahim he is going to <b>steal, no matter what</b> &ndash; and promises to split the money with him after the show</li>
       <li data-step="2">Nick grabs FMA and declares an <b>unconditional strategic move</b></li>
       <li data-step="3"><b>Do you think Ibrahim would have split without Nick&rsquo;s strategic move?</b></li>
@@ -1553,7 +1553,8 @@ clipOnClick('bmload','bmwrap',CLIPS.badminton,'Olympic badminton players kicked 
   function fetchIt(){
     fetch(POLL_API+'/p/m8-twothirds/answers').then(r=>r.json()).then(d=>{
       st.live=true;
-      st.nums=(d.answers||[]).map(t=>parseInt(String(t).replace(/[^0-9-]/g,''),10))
+      /* the first number in each answer, decimals rounded ("7.5" is 8, not 75) */
+      st.nums=(d.answers||[]).map(t=>{const m=String(t).replace(',','.').match(/\d+(\.\d+)?/);return m?Math.round(parseFloat(m[0])):NaN;})
         .filter(v=>Number.isInteger(v)&&v>=0&&v<=100);
       renderCount();
     }).catch(()=>{});
@@ -1573,8 +1574,11 @@ clipOnClick('bmload','bmwrap',CLIPS.badminton,'Olympic badminton players kicked 
     if(!on){el.innerHTML='';return;}
     const v=nums(), target=avg()*2/3;
     if(!v.length){el.innerHTML='';return;}
-    let best=v[0];v.forEach(x=>{if(Math.abs(x-target)<Math.abs(best-target))best=x;});
-    el.innerHTML='The winning guess is <b>'+best+'</b> &ndash; who had it? But also, a shout out to anyone who said <b>0</b> (the equilibrium answer)!';
+    /* every guess that is equally close wins: 15 and 17 both win when the target is 16 */
+    const gap=Math.min(...v.map(x=>Math.abs(x-target)));
+    const best=[...new Set(v.filter(x=>Math.abs(x-target)===gap))].sort((a,b)=>a-b);
+    const who=best.length>1?'The winning guesses are <b>'+best.join('</b> and <b>')+'</b>':'The winning guess is <b>'+best[0]+'</b>';
+    el.innerHTML=who+' &ndash; who had it? But also, a shout out to anyone who said <b>0</b> (the equilibrium answer)!';
   };
 })();
 </script>

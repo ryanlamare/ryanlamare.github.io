@@ -69,6 +69,11 @@ button.pick .pq,a.pick .pq{display:block;font-weight:600;font-size:15.5px;line-h
 button.pick.nextq{background:var(--red);border-color:var(--red);margin-top:6px;padding:22px 18px}
 button.pick.nextq .pm{color:var(--paper);font-size:16px;margin:0}
 button.pick.nextq .pm::after{content:" →"}
+/* a typed /go: whatever QR the deck is showing, one tap away (25 Sep 2026) */
+a.pick.now{background:var(--red);border-color:var(--red);padding:18px 18px 20px}
+a.pick.now .pm{color:var(--paper);opacity:.85}
+a.pick.now .pq{color:var(--paper);font-weight:800;font-size:20px}
+a.pick.now .pq::after{content:" →"}
 /* the points system's participant view */
 .ptslink{align-self:flex-end;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
   font-size:11px;color:var(--muted);text-decoration:none;margin-top:6px}
@@ -158,7 +163,7 @@ function renderChooser(cfg){
     if(paired.has(id))return; /* shown on its partner's screen */
     const b=document.createElement('button');
     b.className='pick';
-    const mod=id.match(/^m(\d+)/);
+    const mod=poll.mod?[0,poll.mod]:id.match(/^m(\d+)/); /* "mod": a room kept under an old id (m8-twothirds runs in m7) */
     b.innerHTML='<span class="pm">'+(mod?'Module '+mod[1]:'Poll')+'</span><span class="pq"></span>';
     b.querySelector('.pq').textContent=poll.q;
     b.addEventListener('click',()=>{
@@ -178,6 +183,54 @@ function renderChooser(cfg){
     gl.appendChild(a);
   });
   opts.appendChild(gl);
+  offerNow(opts,gl);
+}
+/* On the screen now (25 Sep 2026). A long room can be too far from the screen
+   to scan, so people type ryanlamare.com/go. On arriving at a slide with a QR
+   the deck tells the poll server which QR it is (room gt-now, "date|path of the
+   QR image", see deck.js), and this page offers that QR's page first, in red.
+   Only the QRs listed here count, and only today's: a stale or unknown line
+   leaves the ordinary list as it was. */
+const NOW={
+  '/teaching/exec/gt/m1/qr-familiarity.svg':['/go/?p=m1-familiarity','How familiar are you with game theory?'],
+  '/teaching/exec/gt/m1/qr-number.svg':['/teaching/exec/gt/m1/game/?g=number','The number game'],
+  '/teaching/exec/gt/m1/qr-offers.svg':['/teaching/exec/gt/m1/game/?g=offer','The added value game'],
+  '/teaching/exec/gt/m2/qr-smoke.svg':['/go/?p=m2-smoke','Should you smoke?'],
+  '/teaching/exec/gt/m2/qr-cards.svg':['/teaching/exec/gt/m2/game/?g=cards','Take the last card'],
+  '/teaching/exec/gt/m2/qr-ult.svg':['/teaching/exec/gt/m2/game/?g=ult','The ultimatum game'],
+  '/teaching/exec/gt/m2/qr-cent.svg':['/teaching/exec/gt/m2/game/?g=cent','The centipede game'],
+  '/teaching/exec/gt/m3/qr-truel.svg':['/go/?p=m3-truel','The truel'],
+  '/teaching/exec/gt/m3/qr-solve.svg':['/teaching/exec/gt/m3/solve/','The engine game'],
+  '/teaching/exec/gt/m3/qr-brief.svg':['/teaching/exec/gt/m3/lot/','One aircraft, two buyers: your brief'],
+  '/teaching/exec/gt/m4/qr-price.svg':['/teaching/exec/gt/m4/price/','Price Wars'],
+  '/teaching/exec/gt/m4/qr-axelrod.svg':['/go/?p=m4-axelrod','Rank the strategies'],
+  '/teaching/exec/gt/m5/qr-quiz.svg':['/go/?p=m5-k1','How good is your coordination?'],
+  '/teaching/exec/gt/m5/qr-investgame.svg':['/teaching/exec/gt/m5/game/','The investment game'],
+  '/teaching/exec/gt/m5/qr-tapasbos.svg':['/teaching/exec/gt/m5/tapas/?g=bos','Whose system?'],
+  '/teaching/exec/gt/m5/qr-tapaschicken.svg':['/teaching/exec/gt/m5/tapas/?g=chicken','The hub lease'],
+  '/teaching/exec/gt/m6/qr-solo.svg':['/teaching/exec/gt/m6/game/?g=solo','Beat the keeper'],
+  '/teaching/exec/gt/m6/qr-rps.svg':['/teaching/exec/gt/m6/game/?g=rps','Rock, paper, scissors'],
+  '/teaching/exec/gt/m7/qr-twothirds.svg':['/go/?p=m8-twothirds','Guess two-thirds of the average'],
+  '/teaching/exec/gt/m7/qr-chicken.svg':['/teaching/exec/gt/m7/game/?g=chicken','Chicken'],
+  '/teaching/exec/gt/m7/qr-suntzu.svg':['/go/?p=m7-suntzu','Surround, or leave a way out?'],
+  '/teaching/exec/gt/m7/qr-av-poll.svg':['/go/?p=m7-av-take','A good deal? For whom?'],
+  '/teaching/exec/gt/m7/qr-gb.svg':['/teaching/exec/gt/m7/game/?g=gb','Split or steal'],
+  '/teaching/exec/gt/m8/qr-car.svg':['/teaching/exec/gt/m8/car/','The car market'],
+  '/teaching/exec/gt/m8/qr-hunt.svg':['/go/?p=m8-hunt','The signaling scavenger hunt'],
+  '/teaching/exec/gt/m8/qr-wrap.svg':['/go/?p=m8-wrap-me','What will you use first?'],
+  '/teaching/exec/gt/m8/qr-hub.svg':['/teaching/exec/rrpf/programme/?hub','Everything from the two days']
+};
+function offerNow(opts,gl){
+  const d=new Date(),day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  fetch(API+'/p/gt-now/answers').then(r=>r.json()).then(r=>{
+    const a=r.answers||[];if(!a.length||!gl.isConnected)return; /* the chooser may have given way to a poll */
+    const [when,path]=String(a[a.length-1]).split('|');
+    if(when!==day||!NOW[path])return;
+    const b=document.createElement('a');b.className='pick now';b.href=NOW[path][0];
+    b.innerHTML='<span class="pm">On the screen now</span><span class="pq"></span>';
+    b.querySelector('.pq').textContent=NOW[path][1];
+    opts.prepend(b);
+  }).catch(()=>{});
 }
 const GAMES=[
   [1,'The number game, the offers','/teaching/exec/gt/m1/game/'],
@@ -399,12 +452,16 @@ function setupText(opts,poll){
   const inp=document.createElement(poll.long?'textarea':'input');
   if(poll.long)inp.rows=3;
   inp.maxLength=poll.long?200:80;inp.placeholder=poll.ph||(poll.long?'Type a sentence or two…':'Type an example…');inp.autocomplete='off';
+  /* "num": [lo, hi] opens the number pad and checks the number before it goes (25 Sep 2026) */
+  if(poll.num)inp.inputMode='numeric';
   const btn=document.createElement('button');btn.textContent='SEND';
   row.appendChild(inp);row.appendChild(btn);opts.appendChild(row);
   const sent=document.createElement('div');sent.className='sent';opts.appendChild(sent);
   function send(){
     const t=inp.value.trim();
     if(!t)return;
+    if(poll.num){const n=Number(t.replace(',','.'));
+      if(!/^\d+([.,]\d+)?$/.test(t)||n<poll.num[0]||n>poll.num[1]){st.textContent='A number from '+poll.num[0]+' to '+poll.num[1]+', please.';return;}}
     btn.disabled=true;st.textContent='Sending…';
     fetch(API+'/p/'+pollId+'/say',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({t:t,v:voter})})

@@ -232,7 +232,7 @@ try {
   const votes = (await (await call('/p/m1-familiarity')).json()).total;
   check(votes === 0 && (await n('m3-lot')) === 0 && (await n('m2-decade')) === 0, 'RESET EVERY ROOM still clears every room, retired ones too', { votes, lot: await n('m3-lot'), decade: await n('m2-decade') });
   check(same((await get('gt-roster')).names, ['Ana', 'Ben']), 'and leaves the attendee list alone');
-  check(/80 rooms cleared/.test(await desk.ev(`document.getElementById('msg').textContent`)), 'its message sits under the button', await desk.ev(`document.getElementById('msg').textContent`));
+  check(/81 rooms cleared/.test(await desk.ev(`document.getElementById('msg').textContent`)), 'its message sits under the button', await desk.ev(`document.getElementById('msg').textContent`));
   await desk.shot('desk-rooms.png');
   await desk.ev(`window.scrollTo(0, document.querySelector('#rooms h3.mod').getBoundingClientRect().top + scrollY - 20)`); await sleep(300);
   await desk.shot('desk-modules.png');
