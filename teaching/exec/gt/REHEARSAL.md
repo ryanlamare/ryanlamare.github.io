@@ -6,7 +6,7 @@ Rewritten 21 Sep 2026 for the plain suite as it is live. One person, one MacBook
 
 - **Two or three extra "phones" on the laptop.** A phone is whatever its browser remembers, so every Chrome *profile* is a separate phone. Click your avatar at the top right of Chrome, **Add**, **Continue without an account**, name it **Student 1**, pick a colour. Repeat for Student 2 and Student 3. Each opens as its own window with its name in the top bar. (Private windows do not work for this: they all share one identity.)
 - **Your real phone is one more player**, and in Hidden Agenda it is the moderator.
-- **The deck stays in your normal profile**, full screen. Right arrow or space moves on, left goes back, **F** skips or restores the flex slides. Adding `#6` to a deck's address opens its seventh slide (the count starts at zero), which saves arrowing back to a game.
+- **The deck stays in your normal profile**, full screen. Right arrow or space moves on, left goes back. (The F key that skipped flex slides was removed on 25 Sep 2026; every slide always shows, and a slide is skipped by pressing on.) Adding `#6` to a deck's address opens its seventh slide (the count starts at zero), which saves arrowing back to a game.
 - In each student window open **ryanlamare.com/go** and bookmark it. It lists every poll, then every game page. **The two module 5 vote games are not on it**; they open only from their QR or the addresses given below.
 - Open **ryanlamare.com/teaching/exec/gt/poll-desk/** in your normal profile, paste the admin secret, and press **Reset every room** before you start.
 - Leave the Poll Desk's attendee list empty, so you see the typed-name path. Give each student a different first name the first time it asks (Ana, Ben, Cara; your phone is Fay).
