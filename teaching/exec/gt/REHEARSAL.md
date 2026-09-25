@@ -58,6 +58,8 @@ Poll Desk, **Reset every room**, gt-names included, and the `trial` rehearsal ro
 
 Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-09-20.md`. Five small tables of about six, three a side, and the hall is free for any game. No printed materials: the tech and the Wi-Fi were fine at the visit. People may come and go, and nothing built breaks when they do: late arrivals pick their name from the list, and nobody needs taking off it. Diego leaves after module 6.
 
+**Anywhere, back by a time you give** (his plan, 25 Sep: nobody feels stuck in a windowless room). These games play on the phone at the pair's or team's own pace, so they can go anywhere: m2's three games, m3's negotiation, m6 beat the keeper and rock paper scissors, m7 chicken and split or steal, and the m8 scavenger hunt. The rest move with the screen, so they stay in sight of it: m1's number and offers games, every poll, m4 Price Wars (the deck calls each week; a team can step out to decide, and comes back for the reveal), m5's quiz (its timer is on the slide), investment game and two votes (each round opens from the deck), the m7 auction, and the m8 car market (the room and the hall together).
+
 **The night of 30 Sep**
 - Poll Desk, **Reset every room**. The live rooms still hold the venue test.
 - The Poll Desk secret saved on the work Mac, and on your phone.
@@ -65,8 +67,8 @@ Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-
 
 **Day one**
 - **m1:** the Wi-Fi is on slide 4.
-- **Pair games** (m2, and later m6 and m7): the person opposite. With an odd number, the spare person shares a pair's phone.
-- **m3:** pairs may take the hall, back within fifteen minutes.
+- **Pair games** (m2, and later m6 and m7): the person opposite, then anywhere. With an odd number, the spare person shares a pair's phone.
+- **m3:** pairs go anywhere, back by the time you give.
 - **m4:** give every team its station and junction out loud (A1, B1, …), with rivals out of earshot of each other. The meetings before weeks 3 and 6 can go to the hall. Reveals are called junction by junction. G on the "Stop here" step opens the Gazette; your line about week 6 goes with the news. The tournament runs on a mouse click, not the clicker.
 - **End of day one:** **Reset every room** again, so nobody answers a day-two poll early. Phones ask for their name again in the morning.
 
