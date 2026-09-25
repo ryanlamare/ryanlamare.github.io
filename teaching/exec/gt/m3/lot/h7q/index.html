@@ -38,6 +38,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
 .btn:disabled{opacity:.5;cursor:default}
 .msg{font-weight:600;font-size:15px;color:var(--red)}
 .msg:empty{display:none}
+.swap{text-align:center;font-weight:500;font-size:14px}
+.swap a{color:var(--muted)}
 .hint{font-weight:500;font-size:15px;color:var(--muted);text-align:center}
 .report{border:2.5px solid var(--ink);background:var(--card);padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
 .report .rt{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--red)}
@@ -112,6 +114,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
       <div class="done" id="adone" hidden><b>Locked in.</b> It goes up on the screen at the debrief.</div>
     </div>
   </div>
+  <div class="swap" id="swapbox" hidden><a href="../" id="swap">Same brief as your partner? One of you tap here to switch.</a></div>
 </div>
 <script>
 /* One brief per phone or laptop. The first brief it opens is the one it
@@ -133,6 +136,12 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26
   }
   try{const p=JSON.parse(localStorage.getItem('gt-m3-lot-pair')||'null');
     if(p&&p.them){const w=document.getElementById('who');w.textContent='Your partner: '+p.them;w.hidden=false;}}catch(_){}
+  /* A pair who both landed on one studio (a nickname or a copied order can
+     do it) switch one phone here: it keeps the names and takes the other
+     brief (25 Sep 2026). */
+  document.getElementById('swapbox').hidden=false;
+  document.getElementById('swap').addEventListener('click',e=>{e.preventDefault();
+    const o=ME==='h7q'?'n4w':'h7q';try{localStorage.setItem(KEY,o);}catch(_){}location.replace('../'+o+'/');});
 })();
 </script>
 <script>
