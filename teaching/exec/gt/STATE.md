@@ -4,7 +4,11 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (25 Sep 2026, evening)
+## NEXT CHAT STARTS HERE (25 Sep 2026, late)
+
+**No print pack** (his call: the tech and Wi-Fi were fine at the visit). **The room:** five small tables of about six, three a side, and the hall is free for any game. Diego leaves after m6; others may come and go, which breaks nothing built. **m4 seating is his:** he gives each team its station and junction out loud (A1, B1, …) and keeps rivals out of earshot; no layout from Claude. The one list for the day is now "The day, at Limehouse" at the end of `REHEARSAL.md` (it supersedes section 8 of `AUDIT-2026-09-20.md`). Next: the five questions of fact (AUDIT-2026-09-25 section 8), then the redraws one at a time from m4 slide 15.
+
+## EARLIER: NEXT CHAT (25 Sep 2026, evening)
 
 **Venue confirmed: Kings Place, Limehouse room.** Ryan visited on 25 Sep: screen and Wi-Fi fine. Wi-Fi KingsPlaceEvents / Oak2026Tree, now on m1 slide 4. He found a real bug: m1's first QR sent its offers to the second board after both QRs had been shown. Fixed (d79a66d): the QR on the screen decides the open game; and the same click-through hazard is closed in m5 (round markers count only once someone has played) and m8 (a deal counts only if someone had joined; the deck never deals an empty market). A keyboard click-through of any deck now leaves nothing that matters; anything played on a phone still needs RESET EVERY ROOM (the live rooms hold his venue test as of 25 Sep evening: m1-number at round 6, m1-av, m5, m8-car, gt-names). New tests: m1-offers-order, m5-markers, m8-car-leftovers.
 

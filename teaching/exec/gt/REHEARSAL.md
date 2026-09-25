@@ -54,4 +54,25 @@ Poll Desk, **Reset every room**, gt-names included, and the `trial` rehearsal ro
 
 **What a check leaves behind (25 Sep 2026).** Pressing through a deck with the keyboard and no phones now leaves nothing that matters: m1's offers reopen whichever game's QR is on the screen, and m5's round markers and m8's deal count only once someone has played. Anything done *with* a phone (a vote, an offer, a guess, a game played) or a button (the number game's CLOSE ROUND) stays in its room until **Reset every room**, so press it after any check like that, and on the night of 30 Sep.
 
-The day-of list (pens and paper, the two ends of the room, sellers counting off, ten or eleven at the table, the secret on your phone) is section 8 of `AUDIT-2026-09-20.md`.
+## The day, at Limehouse
+
+Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-09-20.md`. Five small tables of about six, three a side, and the hall is free for any game. No printed materials: the tech and the Wi-Fi were fine at the visit. People may come and go, and nothing built breaks when they do: late arrivals pick their name from the list, and nobody needs taking off it. Diego leaves after module 6.
+
+**The night of 30 Sep**
+- Poll Desk, **Reset every room**. The live rooms still hold the venue test.
+- The Poll Desk secret saved on the work Mac, and on your phone.
+- Claude makes a PDF of each deck for the laptop, as a quiet backup.
+
+**Day one**
+- **m1:** the Wi-Fi is on slide 4.
+- **Pair games** (m2, and later m6 and m7): the person opposite. With an odd number, the spare person shares a pair's phone.
+- **m3:** pairs may take the hall, back within fifteen minutes.
+- **m4:** give every team its station and junction out loud (A1, B1, …), with rivals out of earshot of each other. The meetings before weeks 3 and 6 can go to the hall. Reveals are called junction by junction. G on the "Stop here" step opens the Gazette; your line about week 6 goes with the news. The tournament runs on a mouse click, not the clicker.
+- **End of day one:** **Reset every room** again, so nobody answers a day-two poll early. Phones ask for their name again in the morning.
+
+**Day two**
+- **m5:** the room keeps its own quiz count. The two vote games open only from their QR.
+- **m6:** the Krul clip opens a YouTube tab; close the tab to come back.
+- **m7:** may run odd once Diego has gone (the spare person shares a phone). You set the auction's opening bid and its steps.
+- **m8 car market:** nobody changes seats. Once the phones deal the roles, sellers stay put and buyers get up and shop, into the hall if it is tight. Wait for IN THE MARKET to match the room before the last keypress on slide 6.
+- **m8 scavenger hunt:** a table is a team, one phone per table. Check WHERE, top right, before you start.
