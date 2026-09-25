@@ -360,6 +360,10 @@ function renderWaitPick(){
   const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
   hint.textContent='They need to pick exactly “'+name+'”';
   app.appendChild(hint);
+  /* both chose "My partner picks me" (25 Sep 2026): nobody would ever pick, so after a while say how out */
+  const both=document.createElement('div');both.className='lbl';both.style.marginTop='8px';both.hidden=true;
+  both.textContent='Both waiting? One of you: \u2190 start over, then \u201cI\u2019ll pick my partner\u201d.';
+  app.appendChild(both);setTimeout(()=>{if(both.isConnected)both.hidden=false;},20000);
   const rn=roomNote();if(rn)app.appendChild(rn);
   app.appendChild(backBtn());
   const check=()=>{
@@ -864,6 +868,10 @@ function renderPlay(A,B,seat){
 
   function tick(){
     answers().then(lines=>{
+      /* both partners picked each other (25 Sep 2026): each phone posted its own join as the picker, so
+         both claimed seat a and no round could complete. The pair settles itself: the name that sorts
+         first keeps seat a, and the other phone becomes seat b of the same pair. */
+      if(seat==='a'&&norm(me)>norm(them)&&lines.some(t=>{const p=String(t).split('|').map(x=>x.trim());return p.length===5&&p[4]==='j'&&p[3]==='a'&&norm(p[0])===norm(them)&&norm(p[1])===norm(me);})){renderPlay(them,me,'b');return;}
       if(isChicken){
         const {pairs}=CHICKEN.parse(lines);
         /* "A|B|n|seat|r": this driver is ready for round n. Ignored by the rules */

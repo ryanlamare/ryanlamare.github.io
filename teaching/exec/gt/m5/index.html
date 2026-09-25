@@ -1289,10 +1289,14 @@ function fuzzyGroups(counts){
 
 window.krRow=function(el,on){
   const k=KROWS[el.dataset.k];
-  if(k)k.frozen=on; /* the reveal is a snapshot: the row stops taking new answers from the room */
+  /* the reveal is a snapshot: the row stops taking new answers from the room. A row that has not
+     yet heard from the room is fetched at once and freezes when its answers arrive: until 25 Sep 2026
+     a reload on this slide could freeze a row on its demo numbers, with no DEMO DATA tag */
+  if(k){k.frozen=on&&!!k.live;if(on&&!k.live&&window.krFetch)window.krFetch(k);}
   const qa=el.querySelector('.qa'), bar=el.querySelector('.qbar i'),
         qp=el.querySelector('.qp'), qm=el.querySelector('.qm');
   if(!on||!k){qa.textContent='';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  if(!k.live&&Object.values(KROWS).some(x=>x.live)){qa.textContent='\u2026';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
   const t=krTop(k);
   if(!t){qa.textContent='no answers yet';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
   const pct=Math.round(t.n/t.total*100);
@@ -1309,6 +1313,9 @@ window.krRow=function(el,on){
   function fetchOne(){
     const k=KROWS[keys[i%keys.length]];i++;
     if(k.frozen)return;
+    fetchRow(k);
+  }
+  function fetchRow(k){
     const url=POLL_API+'/p/'+k.id+(k.type==='t'?'/answers':'');
     fetch(url).then(r=>r.json()).then(d=>{
       k.live=true;
@@ -1319,6 +1326,7 @@ window.krRow=function(el,on){
       refreshShownCalls();
     }).catch(()=>{});
   }
+  window.krFetch=fetchRow;
   setInterval(fetchOne,700);fetchOne();
 })();
 
