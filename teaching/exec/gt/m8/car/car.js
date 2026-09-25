@@ -38,10 +38,13 @@
     const joins=[], names={};
     let deal=null;
     const open={}, close={};
+    /* A deal counts only if someone had joined before it, and a round's open and close only
+       after that deal, the close after its open (25 Sep 2026): a click-through of the deck with
+       no phones in the market leaves a deal and six markers that must not decide the day's game. */
     L.forEach((p,i)=>{
-      if(p[0]==='=deal'&&deal===null&&/^\d+$/.test(p[1]||'')){deal={seed:+p[1],at:i};return;}
-      if(p[0]==='=open'&&/^[1-3]$/.test(p[1]||'')&&open[p[1]]===undefined){open[p[1]]=i;return;}
-      if(p[0]==='=close'&&/^[1-3]$/.test(p[1]||'')&&close[p[1]]===undefined){close[p[1]]=i;return;}
+      if(p[0]==='=deal'&&deal===null&&/^\d+$/.test(p[1]||'')){if(joins.length)deal={seed:+p[1],at:i};return;}
+      if(p[0]==='=open'&&/^[1-3]$/.test(p[1]||'')){if(deal&&open[p[1]]===undefined)open[p[1]]=i;return;}
+      if(p[0]==='=close'&&/^[1-3]$/.test(p[1]||'')){if(open[p[1]]!==undefined&&close[p[1]]===undefined)close[p[1]]=i;return;}
       if(p[1]==='j'&&p[0]&&p[0][0]!=='='){const k=norm(p[0]);if(!names[k]){names[k]=p[0];joins.push({k,name:p[0],at:i});}}
     });
     const sellers=[], buyers=[];

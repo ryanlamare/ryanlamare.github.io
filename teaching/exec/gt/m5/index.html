@@ -1184,12 +1184,16 @@ function refreshShownCalls(){
   function fetchIt(){
     return fetch(POLL_API+'/p/m5-invest'+M5SUF+'/answers').then(r=>r.json()).then(d=>{
       st.live=true; st.players=new Map(); st.open2=false;
+      /* a marker counts only once someone has played before it (25 Sep 2026): a click-through
+         of the deck with no phones leaves markers that must not move the day's phones to round 2 */
+      let played1=false;
       (d.answers||[]).forEach(t=>{
         const line=String(t).trim();
-        if(line==='::open|2'){st.open2=true;return;}
+        if(line==='::open|2'){if(played1)st.open2=true;return;}
         const m=line.match(/^(.{1,40}?)\s*\|\s*([12])\s*\|\s*([id])$/i);
         if(!m)return;
         const key=m[1].trim().toLowerCase();
+        if(+m[2]===1)played1=true;
         if(!st.players.has(key))st.players.set(key,{name:m[1].trim(),rounds:['','']});
         st.players.get(key).rounds[+m[2]-1]=m[3].toLowerCase();
       });
@@ -1377,7 +1381,7 @@ function makeTapasBoard(cfg){
     const votes={1:{},2:{}}; let open2=false;
     lines.forEach(t=>{
       const p=String(t).split('|').map(s=>s.trim());
-      if(p[0]==='::open'&&p[1]==='2')open2=true;
+      if(p[0]==='::open'&&p[1]==='2'){if(Object.keys(votes[1]).length)open2=true;} /* only once round 1 has votes before it (25 Sep 2026) */
       else if(p[0]==='v'&&p.length===5&&/^[A-Za-z0-9-]{8,64}$/.test(p[1])&&/^[rt]$/.test(p[2])&&/^[12]$/.test(p[3])&&/^[ab]$/.test(p[4]))
         votes[+p[3]][p[1]]={side:p[2],opt:p[4]};
     });

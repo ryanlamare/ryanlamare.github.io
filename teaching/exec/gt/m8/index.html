@@ -878,6 +878,7 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
   /* the last step of a rules slide: deal once, then open the round */
   window.carOpen=function(el,on){
     if(!on||!live||!R)return;
+    if(!R.joins.length)return; /* nobody in the market: a click-through deals and opens nothing (25 Sep 2026) */
     const n=+el.dataset.round;
     const open=()=>R.open[n]===undefined?deckSay(ROOM,'=open|'+n):null;
     (R.deal?Promise.resolve():deckSay(ROOM,'=deal|'+(1+Math.floor(Math.random()*1e9)))).then(open).then(fetchIt).catch(()=>{});

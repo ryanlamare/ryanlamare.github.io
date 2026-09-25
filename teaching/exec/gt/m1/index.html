@@ -285,8 +285,8 @@
   </div>
 </section>
 
-<!-- A few practical things (Ryan's ask, 25 Sep 2026). The Wi-Fi line is a slot for the venue's
-     network and password, to fill with ?edit once they are known. Phones need no Wi-Fi for the
+<!-- A few practical things (Ryan's ask, 25 Sep 2026). The Wi-Fi line carries Kings Place's event
+     network and password (Ryan, 25 Sep 2026, after the venue visit; Limehouse room). Phones need no Wi-Fi for the
      games: they talk to the poll server over their own data just as well. Times of the breaks
      are on the programme page (10:45, lunch 12:15, mid-afternoon). -->
 <section class="slide content" data-i="3">
@@ -296,7 +296,7 @@
     <div class="tip">
       <svg class="pg" viewBox="0 0 120 90" aria-hidden="true"><g fill="none" stroke="var(--ink)" stroke-width="9" stroke-linecap="round"><path d="M14 36 Q60 -4 106 36"/><path d="M32 54 Q60 30 88 54"/></g><circle class="red" cx="60" cy="74" r="10"/></svg>
       <div class="tipt">Wi-Fi</div>
-      <div class="tipx"><span class="slot">Network and password to follow</span>. Your phone&rsquo;s own data works just as well</div>
+      <div class="tipx">Network <span class="slot">KingsPlaceEvents</span>, password <span class="slot">Oak2026Tree</span> (case sensitive). Your phone&rsquo;s own data works just as well</div>
     </div>
     <div class="tip">
       <svg class="pg" viewBox="0 0 120 90" aria-hidden="true"><rect class="ink" x="38" y="2" width="44" height="86" rx="8"/><rect class="knock" x="44" y="12" width="32" height="60" rx="2"/><rect class="red" x="49" y="46" width="22" height="20"/><circle class="knock" cx="60" cy="80" r="4"/></svg>
@@ -1245,7 +1245,7 @@ clipOnClick('c2load','c2wrap','9ZuDl8GvoJw','South Park: the “you can’t come
       /* arriving on the board slide is the reveal, once there is an offer to show */
       if(!R.revealed&&R.offers.length&&sl.classList.contains('active')){
         shown[ph]=true;R.revealed=true;
-        if(st.live){localEnd[ph]=st.lines.length;say('=game|r|'+ph);}
+        if(st.live){localEnd[ph]=st.lines.length;say('=game|r|'+ph+'|'+Date.now());}
       }
       if(!R.revealed)R.offers=[];
       const s=R.offers.map(o=>o.key+':'+o.col).join(',');
@@ -1318,16 +1318,36 @@ clipOnClick('c2load','c2wrap','9ZuDl8GvoJw','South Park: the “you can’t come
     sl.classList.toggle('avq',on);
     if(on)render();
   };
-  /* once a game's QR is up, make sure the room holds a "=game|p|N" marker
-     for it: phones read the latest marker to know which game is on */
-  const markerPosted={};
+  /* once a game's QR is up, make sure that game is the open one: phones follow
+     the latest "=game|p|N", and game N's offers are the ones after its latest
+     marker. Showing QR N opens game N afresh whenever another game's marker came
+     since, or game N's run in the room is an old one; never when its board was
+     revealed in this session or within the last three hours, so going back past
+     the QR never wipes a board the room has seen. Markers carry the time they
+     were posted. (25 Sep 2026: at the venue both QRs had been shown before anyone
+     offered, and the first game's offers landed on the second board.) */
+  const pending={}, FRESH=3*3600e3;
+  function lines(){return st.lines.map(t=>String(t).split('|').map(x=>x.trim()));}
+  function latestGame(){let ph=0;lines().forEach(p=>{if(p[0]==='=game'&&p[1]==='p')ph=+p[2]||0;});return ph;}
+  /* when game ph's latest marker was posted: 0 if none, 1 if undated (an old run) */
+  function openedAt(ph){let at=0;lines().forEach(p=>{if(p[0]==='=game'&&p[1]==='p'&&+p[2]===ph)at=+p[3]||1;});return at;}
+  /* when game ph's board was revealed after its latest marker: 0 if not, 1 if undated (an old run) */
+  function revealedAt(ph){
+    const L=lines();let g=-1,at=0;
+    L.forEach((p,i)=>{if(p[0]==='=game'&&p[1]==='p'&&+p[2]===ph)g=i;});
+    if(g<0)return 0;
+    L.forEach((p,i)=>{if(!at&&i>g&&p[0]==='=game'&&p[1]==='r'&&+p[2]===ph)at=+p[3]||1;});
+    return at;
+  }
   function ensureMarker(){
     const j=document.querySelector('.slide.active.avq [data-stepcall="avJoin"]');
     if(!st.live||!j)return;
-    const ph=+j.dataset.ph;
-    if(markerPosted[ph]||read(ph).open)return;
-    markerPosted[ph]=1;
-    say('=game|p|'+ph);
+    const ph=+j.dataset.ph, rev=revealedAt(ph), now=Date.now();
+    if(latestGame()===ph&&!rev&&now-openedAt(ph)<FRESH)return; /* this game is open, from this session, not yet revealed */
+    if(shown[ph]||(rev&&now-rev<FRESH))return;            /* its board has been seen: leave it be */
+    if(pending[ph]!==undefined&&st.lines.length<=pending[ph])return; /* a marker is on its way */
+    pending[ph]=st.lines.length;
+    say('=game|p|'+ph+'|'+Date.now());
   }
   /* the engine marks the slide on the screen with a class: watch the boards for it */
   Object.values(boards).forEach(sl=>new MutationObserver(render).observe(sl,{attributes:true,attributeFilter:['class']}));
@@ -1337,7 +1357,7 @@ clipOnClick('c2load','c2wrap','9ZuDl8GvoJw','South Park: the “you can’t come
       /* the Poll Desk emptied the room (a rehearsal starting over): forget what this page decided */
       if(!lines.length&&seen&&!busy&&!queue.length){
         seen=false;
-        [shown,localEnd,sig,markerPosted].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
+        [shown,localEnd,sig,pending].forEach(o=>Object.keys(o).forEach(k=>delete o[k]));
         local[1]={};local[2]={};
       }
       if(lines.length)seen=true;

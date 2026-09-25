@@ -125,7 +125,10 @@ if(!g){
   function tick(){
     const t0=Date.now();
     fetch(API+'/p/'+g.room+'/answers').then(r=>r.json()).then(d=>{
-      const open2=(d.answers||[]).some(t=>String(t).trim()==='::open|2');
+      /* the marker counts only once round 1 has a vote before it (25 Sep 2026): a click-through
+         of the deck with no phones must not move anyone to round 2 */
+      let voted1=false,open2=false;
+      (d.answers||[]).forEach(t=>{const p=String(t).trim().split('|');if(p[0]==='v'&&+p[3]===1)voted1=true;else if(p.join('|')==='::open|2'&&voted1)open2=true;});
       /* a Poll Desk reset empties the room: a vote this phone holds that the
          room no longer has is forgotten, so the phone starts again */
       [1,2].forEach(r=>{

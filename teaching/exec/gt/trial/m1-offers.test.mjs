@@ -91,7 +91,7 @@ try {
   await deck.key('ArrowRight'); await sleep(1200);
   check(before === await deck.ev(`JSON.stringify([...document.querySelectorAll('.slide.active ul.bullets li')].map(e=>{const r=e.getBoundingClientRect();return [r.left,r.top,r.width,r.height];}))`), 'the text does not move when the QR comes up');
   check(await deck.ev(`getComputedStyle(document.querySelector('.slide.active .avqr')).display`) === 'flex' && await deck.ev(`getComputedStyle(document.querySelector('.slide.active .sidefig')).visibility`) === 'hidden', 'the QR takes the place of the cards on the sixth press');
-  check(room.some(a => a.t === '=game|p|1'), 'deck posts the game 1 marker when the QR comes up');
+  check(room.some(a => /^=game\|p\|1\|\d+$/.test(a.t)), 'deck posts the game 1 marker when the QR comes up');
   const phone = await page(base + '/teaching/exec/gt/m1/game/?g=offer', 390, 800, true);
   await phone.ev(`localStorage.setItem('gt-name','Priya');localStorage.setItem('gt-claimed','Priya');location.reload()`); await sleep(3500);
   check(await phone.ev(`document.body.classList.contains('av-y')`), 'phone is yellow');
@@ -110,7 +110,7 @@ try {
   await deck.shot('deck-1-hidden.png');
   await deck.key('ArrowRight'); await sleep(1200);
   check(await deck.ev(`document.querySelectorAll('.slide.active .avname').length`) === 22, 'moving on to the board slide reveals the 22 names');
-  check(room.some(a => a.t === '=game|r|1'), 'reveal posts the closing marker');
+  check(room.some(a => /^=game\|r\|1\|\d+$/.test(a.t)), 'reveal posts the closing marker');
   check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '21', 'still on the board slide after the reveal');
   await deck.shot('deck-2-revealed.png');
   /* a late offer must not appear */
@@ -156,7 +156,7 @@ try {
   await deck.key('ArrowRight'); await sleep(1500);
   check(b2 === await deck.ev(`JSON.stringify([...document.querySelectorAll('.slide.active ul.bullets li')].map(e=>{const r=e.getBoundingClientRect();return [r.left,r.top,r.width,r.height];}))`), 'nor on the lose-three slide');
   await deck.shot('deck-4c-lose-three-qr.png');
-  check(room.some(a => a.t === '=game|p|2'), 'deck posts the game 2 marker when the second QR comes up');
+  check(room.some(a => /^=game\|p\|2\|\d+$/.test(a.t)), 'deck posts the game 2 marker when the second QR comes up');
   check(await deck.ev(`document.querySelector('.slide.active [data-avn]').textContent`) === '0', 'the second count starts at nought');
   await sleep(2600);
   check(await phone.ev(`document.body.classList.contains('av-y') && !document.querySelector('.avgrid button').disabled && !document.querySelector('.avgrid button.on')`), 'Priya\'s phone is a fresh yellow card for game 2');

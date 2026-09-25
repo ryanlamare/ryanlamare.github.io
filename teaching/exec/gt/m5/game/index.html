@@ -205,7 +205,11 @@ function tick(){
   const t0=Date.now();
   fetch(API+'/p/m5-invest'+SUF+'/answers').then(r=>r.json()).then(d=>{
     const lines=(d.answers||[]).map(t=>String(t).trim());
-    const open2=lines.some(t=>t==='::open|2');
+    /* a marker counts only once someone has played before it (25 Sep 2026): a click-through
+       of the deck with no phones must not move anyone to round 2, or show them a result */
+    const choice=t=>t.match(/^(.{1,40}?)\s*\|\s*([12])\s*\|\s*([id])$/i);
+    const markAt=(mark,r)=>{let n=0;for(let i=0;i<lines.length;i++){const m=choice(lines[i]);if(m&&+m[2]===r)n++;else if(lines[i]===mark&&n)return i;}return -1;};
+    const open2=markAt('::open|2',1)>=0;
     let changed=false;
     /* a Poll Desk reset empties the room: a pick this phone holds that the
        room no longer has under this name is forgotten, so the phone starts
@@ -218,7 +222,7 @@ function tick(){
         if(!held){delete mine[r];delete seen[r];delete outcomes[r];saveMine();saveSeen();changed=true;}
       });}
     [1,2].forEach(r=>{
-      const at=lines.indexOf('::reveal|'+r);
+      const at=markAt('::reveal|'+r,r);
       if(at<0&&outcomes[r]){delete outcomes[r];changed=true;}
       if(at<0||outcomes[r])return;
       const latest=new Map();
