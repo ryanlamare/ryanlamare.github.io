@@ -81,7 +81,7 @@ const base = 'http://localhost:' + PORT;
 
 try {
   /* ---------- the deck, game 1 ---------- */
-  const deck = await page(base + '/teaching/exec/gt/m1/#18', 1280, 720);
+  const deck = await page(base + '/teaching/exec/gt/m1/#20', 1280, 720);
   await sleep(2800);
   check(!room.length, 'nothing is posted before the QR is up');
   for (let i = 0; i < 5; i++) { await deck.key('ArrowRight'); await sleep(150); }
@@ -111,7 +111,7 @@ try {
   await deck.key('ArrowRight'); await sleep(1200);
   check(await deck.ev(`document.querySelectorAll('.slide.active .avname').length`) === 22, 'moving on to the board slide reveals the 22 names');
   check(room.some(a => a.t === '=game|r|1'), 'reveal posts the closing marker');
-  check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '19', 'still on the board slide after the reveal');
+  check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '21', 'still on the board slide after the reveal');
   await deck.shot('deck-2-revealed.png');
   /* a late offer must not appear */
   say('Latecomer|o|50'); await sleep(3000);
@@ -149,7 +149,7 @@ try {
   check(await deck.ev(`[...document.querySelectorAll('.slide.active .avname')].filter(e=>['Sam','Lucy','Eli'].includes(e.textContent)).every(e=>e.classList.contains('r'))`), 'a fully decided column can be pressed again the other way');
   /* ---------- game 2 ---------- */
   await deck.key('ArrowRight'); await sleep(300);
-  check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '20', 'on What happens if I lose three cards');
+  check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '22', 'on What happens if I lose three cards');
   await deck.shot('deck-4b-lose-three.png');
   await deck.key('ArrowRight'); await sleep(900);
   const b2 = await deck.ev(`JSON.stringify([...document.querySelectorAll('.slide.active ul.bullets li')].map(e=>{const r=e.getBoundingClientRect();return [r.left,r.top,r.width,r.height];}))`);
@@ -164,7 +164,7 @@ try {
   Object.keys(G1).forEach((n, i) => say(n + '|o|' + [90, 50, 80, 90, 70, 50, 60][i % 7], 'bot2-' + n));
   await sleep(3000);
   await deck.key('ArrowRight'); await sleep(1200);
-  check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '21' && await deck.ev(`document.querySelectorAll('.slide.active .avname').length`) === 22, 'second board shows 22 names');
+  check(await deck.ev(`document.querySelector('.slide.active').dataset.i`) === '23' && await deck.ev(`document.querySelectorAll('.slide.active .avname').length`) === 22, 'second board shows 22 names');
   await deck.pressAt(head(90), 80); await sleep(300);
   await deck.ev(`document.querySelector('.slide.active [data-avrest="r"]').click()`); await sleep(3500);
   await deck.shot('deck-5-game2.png');
@@ -177,7 +177,7 @@ try {
   await late.shot('phone-6-closed.png');
   /* reload of the deck keeps the board and the colours */
   await deck.ev(`location.reload()`); await sleep(4000);
-  await deck.ev(`location.hash='#21'`); await sleep(3000);
+  await deck.ev(`location.hash='#23'`); await sleep(3000);
   check(await deck.ev(`document.querySelectorAll('.slide.active .avname.a').length`) === 6, 'reload keeps game 2: accepted ' + await deck.ev(`document.querySelectorAll('.slide.active .avname.a').length`) + ', rejected ' + await deck.ev(`document.querySelectorAll('.slide.active .avname.r').length`));
   console.log('deck errors:', deck.errors); console.log('phone errors:', phone.errors);
 } catch (e) { console.log('TEST CRASHED', e); fails++; }
