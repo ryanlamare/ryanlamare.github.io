@@ -51,7 +51,7 @@
 .board{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:18px}
 .bbar{display:flex;align-items:center;gap:30px;justify-content:center}
 .stats{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:18px}
-.stat{border:2.5px solid var(--ink);background:var(--paper-soft);padding:16px 22px;display:flex;flex-direction:column;justify-content:center;gap:6px;position:relative}
+.stat{border:2.5px solid var(--ink);background:var(--paper-soft);padding:26px 22px 16px;display:flex;flex-direction:column;justify-content:flex-start;gap:6px;position:relative}
 .stat .sl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
 .stat .sv{font-family:var(--display);font-weight:900;font-size:76px;line-height:.9;color:var(--ink)}
 .stat .sv small{font-size:34px;color:var(--muted);margin-left:6px}
@@ -276,7 +276,7 @@
     </div>
     <div class="stats">
       <div class="stat" data-step="1" data-stepcall="soloTile" data-t="goals"><div class="sl">Goals</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the room&rsquo;s kicks went in</div></div>
-      <div class="stat" data-step="2" data-stepcall="soloTile" data-t="read"><div class="sl">Read by the keeper</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of kicks, the keeper dived <b>the way the ball went</b></div></div>
+      <div class="stat" data-step="2" data-stepcall="soloTile" data-t="sw"><div class="sl">Switched sides</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of kicks went the other way from the kick before. A random kicker switches <b>half the time</b></div></div>
       <div class="stat" data-step="3" data-stepcall="soloTile" data-t="kl"><div class="sl">Kickers went left</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time</div></div>
       <div class="stat" data-step="4" data-stepcall="soloTile" data-t="top"><div class="sl">Top scorers</div><ol class="toplist"><li>&ndash;</li><li>&ndash;</li><li>&ndash;</li><li>&ndash;</li><li>&ndash;</li></ol></div>
     </div>
@@ -773,18 +773,20 @@ function parsePairLines(lines,codes){
     per.forEach(pl=>{
       const seq=[];for(let n=1;n<=15&&pl.kicks[n];n++)seq.push(pl.kicks[n]);
       const hist=PK.soloReplay(pl.name,seq);
-      out.push({name:pl.name,n:seq.length,goals:hist.filter(x=>x.goal).length,read:hist.filter(x=>x.dive===x.kick).length,left:seq.filter(k=>k==='l').length});
+      out.push({name:pl.name,n:seq.length,goals:hist.filter(x=>x.goal).length,read:hist.filter(x=>x.dive===x.kick).length,left:seq.filter(k=>k==='l').length,sw:seq.filter((k,i)=>i&&k!==seq[i-1]).length});
     });
     return out;
   }
   function stats(){
     const ps=players();
-    let kicks=0,goals=0,read=0,left=0;
-    ps.forEach(p=>{kicks+=p.n;goals+=p.goals;read+=p.read;left+=p.left;});
+    /* "Read by the keeper" was always 100 minus Goals under the guess rule, so the
+       tile repeated a number (25 Sep audit); switching is one of the patterns the keeper reads */
+    let kicks=0,goals=0,left=0,sw=0,pairs=0;
+    ps.forEach(p=>{kicks+=p.n;goals+=p.goals;left+=p.left;sw+=p.sw;pairs+=Math.max(p.n-1,0);});
     const pct=(a,b)=>b?Math.round(a/b*100):null;
     /* shown as a percentage (Ryan, 25 Sep 2026); anyone who took all fifteen ranks ahead of anyone still kicking, so one lucky kick cannot top the list */
     const top=ps.filter(p=>p.n>0).sort((a,b)=>(b.n>=15)-(a.n>=15)||b.goals/b.n-a.goals/a.n||b.goals-a.goals||a.read-b.read||a.name.localeCompare(b.name)).slice(0,5);
-    return {players:ps.length,kicks,goals:pct(goals,kicks),read:pct(read,kicks),kl:pct(left,kicks),top};
+    return {players:ps.length,kicks,goals:pct(goals,kicks),sw:pct(sw,pairs),kl:pct(left,kicks),top};
   }
   function render(){
     const s=stats();
