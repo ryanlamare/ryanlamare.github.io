@@ -4,6 +4,22 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## HIS REHEARSAL RUN, 27 Sep 2026 (m1 and m2 notes done, all live)
+
+- **Names:** Kimberly, scrolling to the write-in, brushed Laura and played as Laura. Every name list now confirms a tap ("Is that you?"), typed names join the list for everyone, and your own name is off your partner list (15ac9b4, trial/names-confirm.test.mjs).
+- **m2:**
+  - The card game asks "How many cards do you want to remove?" over REMOVE 1/2/3 CARD(S).
+  - The ultimatum offers all eleven splits, and both boards show both players.
+  - Boeing's 1997 line is now a fourth bullet.
+  - CVS reads First mover?, and its band comes after the cards.
+  - The closer has a numbered tree beside its questions.
+- **m1:**
+  - The common knowledge video comes after the bullets.
+  - The number-game lessons slide is Friends only, with four draft set-up lines.
+  - Added value matters opens on his 550 definition.
+- **m3:** the Westley and Vizzini tile plays the film's battle of wits, and its old explainer is in resources.
+- **Not a bug:** "play again" in the m2 games is his one-game-each rule (20 Sep). A Poll Desk reset of a game's room lets a rehearser replay it.
+
 ## NEXT CHAT STARTS HERE (27 Sep 2026)
 
 His question: he is on his feet about six hours a day, so should the modules have more group work or "do this on your own" time? Claude's call, and his yes: it is normal for executives, and the programme already has most of it. Each module's your-world closer becomes table work: two minutes alone, the table takes one case, and you hear two or three tables. Earlier talking points go in every module, some of them polls argued at the tables. All of this is written into REHEARSAL's day list; no deck changed for it. m1's familiarity poll is now table talk, in his version (27 Sep): vote, reveal, then each table talks it through, including one situation at work where they would like to read the other side better. One voice per table gives him its temperature and its situation. Table visits happen while the tables work: listen, one question, move on.
