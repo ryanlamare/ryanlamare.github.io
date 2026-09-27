@@ -76,7 +76,7 @@ const card = `(()=>{const c=document.querySelector('.card');if(!c)return null;co
 try {
   /* six phones join; the deck deals and opens round 1 */
   for (const n of BOTS) await say(n + '|j', 'bot-' + n.toLowerCase() + '-0000');
-  const deck = await page(SITE + '#5');
+  const deck = await page(SITE + '#6');
   await sleep(1500);
   for (let i = 0; i < 6; i++) await deck.key('ArrowRight');
   await sleep(2500);
@@ -90,7 +90,7 @@ try {
   await deck.key('ArrowRight'); await sleep(600);
   for (let i = 0; i < 8 && !(await lines()).includes('=open|2'); i++) { await deck.key('ArrowRight'); await sleep(900); }
   L = await lines();
-  check(L.includes('=open|2') && (await deck.ev(`document.querySelector('.slide.active').dataset.i`)) === '7', 'round 2 opens on its rules slide', L.filter(l => l[0] === '='));
+  check(L.includes('=open|2') && (await deck.ev(`document.querySelector('.slide.active').dataset.i`)) === '8', 'round 2 opens on its rules slide', L.filter(l => l[0] === '='));
 
   /* the seller's phone, iPhone-sized, touch only */
   const ph = await page('http://localhost:' + PORT + '/teaching/exec/gt/m8/car/?n=' + Name + '&v=bot-' + seller + '-0000', true);

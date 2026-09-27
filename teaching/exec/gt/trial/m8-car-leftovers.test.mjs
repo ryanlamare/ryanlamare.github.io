@@ -70,7 +70,7 @@ try {
   for (const t of ['=deal|782090228', '=open|1', '=close|1', '=open|2', '=close|2', '=open|3', '=close|3']) await say(t);
 
   /* a click-through again, still nobody in the market: the last step of slide 6 posts nothing */
-  const deck = await page(B + '#5', 1280, 720);
+  const deck = await page(B + '#6', 1280, 720);
   await sleep(3000);
   for (let i = 0; i < 6; i++) await deck.key('ArrowRight');
   await sleep(3500);

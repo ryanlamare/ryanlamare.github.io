@@ -73,14 +73,14 @@ const SITE = 'http://localhost:' + PORT + '/teaching/exec/gt/m8/';
 const BOTS = ['Ana', 'Ben', 'Cal', 'Dee', 'Eli', 'Fay'];
 try {
   /* an empty market: the room is reachable and nobody has joined */
-  const deck = await page(SITE + '#6');
+  const deck = await page(SITE + '#7');
   await sleep(1500);
   const b0 = await deck.ev(board);
   check(!b0.demo && b0.sold === 0 && b0.chips.length === 0, 'an empty market is an empty board, with no demo names', b0);
 
   /* six phones join, the deck deals and opens round 1 */
   for (const n of BOTS) await say(n + '|j', 'bot-' + n.toLowerCase() + '-0000');
-  await deck.nav(SITE + '#5'); await sleep(2800);
+  await deck.nav(SITE + '#6'); await sleep(2800);
   for (let i = 0; i < 6; i++) await deck.key('ArrowRight');
   await sleep(2500);
   let L = await lines();
@@ -107,7 +107,7 @@ try {
   check(!b2.demo && JSON.stringify(b2.chips) === JSON.stringify(b1.chips), 'a server that drops out leaves the room\'s board, not the demo', b2);
 
   /* the demo, when the server was never reached: round two pools, no peach sells */
-  const off = await page('http://localhost:' + DEAD + '/teaching/exec/gt/m8/#8');
+  const off = await page('http://localhost:' + DEAD + '/teaching/exec/gt/m8/#9'   /* one on since 27 Sep, when the battle of wits went in after Manipulating information */);
   await sleep(4500);
   const b3 = await off.ev(board);
   check(b3.demo && b3.chips.length > 0 && b3.chips.every(c => c.endsWith(':L')), 'with no server, round two\'s demo sells lemons only', b3);
