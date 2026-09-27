@@ -60,7 +60,7 @@ Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-
 
 **Anywhere, back by a time you give** (his plan, 25 Sep: nobody feels stuck in a windowless room). These games play on the phone at the pair's or team's own pace, so they can go anywhere: m2's three games, m3's negotiation, m6 beat the keeper and rock paper scissors, m7's Who blinks first?, m7 chicken and split or steal, and the m8 scavenger hunt. The rest move with the screen, so they stay in sight of it: m1's number and offers games, every poll, m4 Price Wars (the deck calls each week; a team can step out to decide, and comes back for the reveal), m5's quiz (its timer is on the slide), investment game and two votes (each round opens from the deck), the m7 auction, and the m8 car market (the room and the hall together).
 
-**Getting them talking** (his yes, 27 Sep 2026). Each module's your-world closer: two minutes alone to pick a situation, then the table takes one person's case through the questions, and you hear two or three tables, not all five. If a module runs late, keep the beat and cut it to one question. Earlier talking points are under each module below.
+**Getting them talking** (his yes, 27 Sep 2026). Each module's your-world closer: two minutes alone to pick a situation, then the table takes one person's case through the questions, and you hear two or three tables, not all five. If a module runs late, keep the beat and cut it to one question. While the tables work, go round them: listen first, ask one question, move on, and bring the best thing you heard back to the room. Never sit with one table while the others wait with nothing to do. Earlier talking points are under each module below.
 
 **The night of 30 Sep**
 - Poll Desk, **Reset every room**. The live rooms still hold the venue test.
@@ -68,7 +68,7 @@ Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-
 - Claude makes a PDF of each deck for the laptop, as a quiet backup.
 
 **Day one**
-- **m1:** the Wi-Fi is on slide 4. At *How familiar are you?* (slide 6), names and one line each round the tables, so the room has introduced itself (his yes, 25 Sep).
+- **m1:** the Wi-Fi is on slide 4. At *How familiar are you?* (slide 6) everyone votes first, then the reveal, then each table talks it through: names, which option each picked, and one situation at work where they would like to be better at reading the other side. One voice per table gives you the table's temperature and its one situation (his version, 27 Sep; it replaces the introductions round the room). Note them, on the flip chart if there is one, for day two.
 - **A flip chart** for questions to come back to, if the room has one (optional).
 - **m2:** on *The first-mover advantage* (slide 10), before the four cards come up, the tables trade one example each way of moving first.
 - **Pair games** (m2, and later m6 and m7): the person opposite, then anywhere. With an odd number, the spare person shares a pair's phone.
@@ -83,3 +83,4 @@ Written 25 Sep 2026 after the venue visit; it replaces section 8 of `AUDIT-2026-
 - **m7:** Who blinks first? comes straight after slide 3: pairs go anywhere with their briefs, back by the time you give (ten minutes to talk), and G on *Who really meant it?* (slide 7) opens the answer. On *Guess two-thirds of the average* (slide 8), once the guesses are in, the tables compare their numbers and how they got there before slide 9 walks the elimination. Sun Tzu (slide 22): everyone votes alone, the tables argue, then the reveal. *A good deal? For whom?* (slide 25): the first question alone, then the table talks, then the second (the phone shows the second at once, so say to hold it). May run odd once Diego has gone (the spare person shares a phone). You set the auction's opening bid and its steps.
 - **m8 car market:** nobody changes seats. Once the phones deal the roles, sellers stay put and buyers get up and shop, into the hall if it is tight. Wait for IN THE MARKET to match the room before the last keypress on slide 6.
 - **m8 scavenger hunt:** a table is a team, one phone per table. Check WHERE, top right, before you start.
+- **m8, before *What will you use first?* (slide 24):** come back to the situations the tables gave you on the first morning.
