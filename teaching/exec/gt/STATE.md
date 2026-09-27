@@ -4,7 +4,35 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
-## NEXT CHAT STARTS HERE (25 Sep 2026, later that night)
+## NEXT CHAT STARTS HERE (27 Sep 2026)
+
+His question: he is on his feet about six hours a day, so should the modules have more group work or "do this on your own" time? Claude's call, and his yes: it is normal for executives, and the programme already has most of it. Each module's your-world closer becomes table work: two minutes alone, the table takes one case, and you hear two or three tables. Earlier talking points go in every module, some of them polls argued at the tables. All of this is written into REHEARSAL's day list; no deck changed for it. m1's familiarity poll as table talk (vote, reveal, then each table introduces itself and gives him its temperature, in place of twenty-six introductions round the room) is Claude's call, **awaiting his yes**; the day list still has the old m1 line.
+
+**Built at his word ("we'll build the m7 game and see how it looks"): Who blinks first?, an m3-style negotiation in m7** (tag `m7-before-tea`; m7 is now 38 slides). It sits straight after What is a strategic move? (slides 4 to 7: the standoff, the rules with one QR, What did your pair agree?, and Who really meant it?).
+- Hartwell's, the family firm behind the country's best-selling tea, wants 10% more from Selwood's, a national supermarket, from Monday; the talks end Friday.
+- Each boss tells its negotiator to threaten: the lorries stop on Monday; the tea comes off the shelves.
+- Each side has a reputation for carrying out such threats, against a small partner, and a public statement that makes backing down awkward: the MD to the press, Selwood's bus adverts.
+- **The one twist: both threats are bluffs.** Each brief shows privately that carrying out its own threat costs more than the whole rise. Hartwell's: Selwood's sells a quarter of its tea, and a new packing line must run flat out. Selwood's: one in ten Hartwell's buyers would do their weekly shop elsewhere, and its own-label tea is six months away.
+- Each brief carries one buried hint about the other side: "the best-selling tea in Selwood's stores" and "just borrowed to build a new packing line".
+- The briefs run 242 and 232 words. Any deal beats no deal for both sides.
+
+Pages and wire:
+- `m7/tea/` is the landing: names decide the side, alphabetical, as in m3.
+- `m7/tea/h2x/` is Hartwell's brief and `m7/tea/s9k/` is Selwood's.
+- `m7/tea/q4d/` is the answer page, opened by **G on slide 7 only**. It shows each threat and what carrying it out would cost, "Neither side would have carried out its threat", his line "Strategic moves are only as valuable as they are credible", and Tesco and Unilever in October 2016 (Marmite off the website, settled within a day; ITV ↗).
+- Room `m7-tea`. Hartwell's phone sends `0‖pair`, `1‖rise` (0 to 10, or "No deal was reached") and `2‖anything else`; both phones send `b‖h|s‖Yes|No`, which answers "would they really have done it?".
+- The board shows a row a pair with the rise as a bar. The second keypress shows each side's count ("4 of 6 thought Selwood's would really pull the tea").
+- Registered on the Poll Desk (LAYOUT, Module 7, first row) and on /go (the game list and the ON THE SCREEN NOW map, `qr-tea.svg`, made with segno M border 1, decoded back).
+- No page a participant can reach, and no deck comment, names the answer. The phone pages take no `?edit`; his wording comes through a session: pull first and patch the pages, and never rerun the scratchpad helpers.
+
+Tests:
+- `trial/m7-tea.test.mjs` (42 checks, mock Worker) is new and passes.
+- `m7-twothirds` and `go-now` were updated for the four new slides and pass.
+- A press-through of all 38 m7 slides and their steps is clean.
+
+**Open, his call:** his read of the game and its wording; whether it opens m7 (Claude's call: play first, right after lunch, and the rest of the module names credibility on the room's own threats) or closes it, as m3's does; and what makes room for it in m7's slot.
+
+## EARLIER: NEXT CHAT (25 Sep 2026, later that night)
 
 His read: "all looking great"; he asked for the audit's flow and exec points to be built. Done and live:
 - m7's auction now comes before "Is commitment always a good thing?" (games are played blind).
