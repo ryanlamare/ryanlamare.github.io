@@ -4,6 +4,21 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## YOUR NOTES AND THE BATTLE OF WITS, 27 Sep 2026 (his go, all live)
+
+- **Your notes** (Kimberly's idea, his shape):
+  - It lives at `/go/notes/` (ryanlamare.com/go/notes), with a link on /go's list. It's optional and easiest on a laptop.
+  - There's a section per module, holding the your-world questions exactly as the closers have them. m3 adds "Was the game from your world really zero-sum?" and m4 adds "How would you get out of yours?".
+  - It saves in the browser (localStorage `gt-notes`) and sends nothing; SAVE AS A WORD FILE and COPY ALL take it away.
+  - **When a closer's question changes on a slide, change it in go/notes/index.html too**; trial/notes.test.mjs catches a mismatch.
+  - Every closer's AT YOUR TABLES band now ends in a YOUR NOTES, OPTIONAL tag with the address; its line got shorter to stay on one line.
+  - His flow: people type on their own, add to it after the table picks one or more to discuss, he goes round, and the debrief draws out a couple.
+- **The battle of wits:**
+  - It's m8 slide 5, after Manipulating information. Two set-up bullets, the clip, then the lesson, which is Claude's wording for him to edit.
+  - He asked m7 or m8. Claude's call was m8: Westley's hidden move fails m7's own observability test, and m8 has room.
+  - m3's Zero-sum game players slide is down to three tiles. The Pop Culture Economics explainer moved from m3's resources to m6's (it reads the duel as mixed strategies).
+  - m8 is 28 slides, and the car-market tests address slides one lower.
+
 ## HIS REHEARSAL RUN, 27 Sep 2026 (m1 and m2 notes done, all live)
 
 - **Names:** Kimberly, scrolling to the write-in, brushed Laura and played as Laura. Every name list now confirms a tap ("Is that you?"), typed names join the list for everyone, and your own name is off your partner list (15ac9b4, trial/names-confirm.test.mjs).
