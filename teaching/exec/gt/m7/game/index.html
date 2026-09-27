@@ -303,9 +303,11 @@ function renderName(title,done){
   q.textContent=title;
   app.innerHTML='';
   const list=document.createElement('div');list.className='choices';
-  roster.forEach(n=>{
+  const me=title==='Who are you?'?'':String(name||'').toLowerCase();   /* your own name is not on your partner list */
+  roster.filter(n=>n.toLowerCase()!==me).forEach(n=>{
     const b=document.createElement('button');b.className='pick';b.textContent=n;
-    b.addEventListener('click',()=>done(clean(n)));
+    /* a tapped name asks once (27 Sep 2026: a stray tap had made Kimberly "Laura") */
+    b.addEventListener('click',()=>GT_NAMES.confirm(app,clean(n),title==='Who are you?'?'Is that you?':'Is that your partner?',()=>done(clean(n)),()=>renderName(title,done)));
     list.appendChild(b);
   });
   app.appendChild(list);

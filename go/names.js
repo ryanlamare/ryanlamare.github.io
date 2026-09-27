@@ -111,16 +111,62 @@ const GT_NAMES = (() => {
     const a = document.createElement('button'); a.className = 'back'; a.type = 'button'; a.style.marginTop = '14px'; a.textContent = o.alone || 'I’m on my own this time'; a.addEventListener('click', () => o.done('-')); host.appendChild(a);
   }
 
-  /* roster(): the attendee list every "who are you?" picker shows. It is
-     kept on the poll server and edited on the Poll Desk, never in this
-     public repo, where a name would stay in git history. Resolves [] when
-     the list is empty or the server is slow or out of reach, and a picker
-     with no names asks people to type theirs. A picker that reads it again
-     while it is up passes null, so a failed read keeps the names it has. */
+  /* roster(): the names every "who are you?" and "who's your partner?"
+     picker shows. The attendee list is kept on the poll server and edited on
+     the Poll Desk, never in this public repo, where a name would stay in git
+     history. Since 27 Sep 2026 the names phones have typed for themselves
+     (each phone's latest claim in gt-names) join it, so a guest who typed
+     "Kimberly" once can be tapped by a partner after that instead of typed
+     again. A Poll Desk reset of the name room clears the typed names; the
+     attendee list stays. Resolves [] when the list is empty or the server is
+     slow or out of reach, and a picker with no names asks people to type
+     theirs. A picker that reads it again while it is up passes null, so a
+     failed read keeps the names it has. */
   function roster(failed = []) {
-    const ask = fetch(API + '/p/gt-roster/roster', { cache: 'no-store' })
-      .then(r => r.json()).then(d => Array.isArray(d.names) ? d.names : failed).catch(() => failed);
+    const list = fetch(API + '/p/gt-roster/roster', { cache: 'no-store' })
+      .then(r => r.json()).then(d => Array.isArray(d.names) ? d.names : null).catch(() => null);
+    const typed = fetch(API + '/p/gt-names/entries', { cache: 'no-store' })
+      .then(r => r.json()).then(d => { const latest = new Map(); (d.entries || []).forEach(e => latest.set(e.v, e.t)); return [...latest.values()]; })
+      .catch(() => []);
+    const ask = Promise.all([list, typed]).then(([ns, ts]) => {
+      if (ns === null) return failed;
+      const seen = new Set(), all = [];
+      ns.concat(ts).forEach(n => { const v = String(n || '').trim().replace(/\s+/g, ' '), k = norm(v); if (k && k !== '-' && !seen.has(k)) { seen.add(k); all.push(v); } });
+      return all.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    });
     return Promise.race([ask, new Promise(r => setTimeout(() => r(failed), 4000))]);
+  }
+
+  /* confirm(host, name, ask, yes, no): a name tapped on a list asks once
+     before it counts (27 Sep 2026: scrolling down to type her own name,
+     Kimberly brushed Laura on the way and played as Laura until she noticed).
+     The list gives way to the name, one question and two buttons; "no" puts
+     the list back. */
+  function confirm(host, name, ask, yes, no) {
+    host.innerHTML = '';
+    const box = document.createElement('div');
+    box.className = 'gt-confirm';
+    box.style.cssText = 'display:flex;flex-direction:column;gap:12px';
+    const n = document.createElement('div');
+    n.style.cssText = 'font-weight:800;font-size:30px;line-height:1.15;overflow-wrap:anywhere';
+    n.textContent = name;
+    const q = document.createElement('div');
+    q.style.cssText = 'font-weight:600;font-size:17px;line-height:1.35';
+    q.textContent = ask;
+    const btn = (label, primary) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.style.cssText = 'font-family:inherit;font-weight:800;font-size:16px;letter-spacing:.1em;padding:15px 16px;cursor:pointer;border:2.5px solid var(--ink,#111);' +
+        (primary ? 'background:var(--ink,#111);color:var(--paper,#fff)' : 'background:var(--card,#fff);color:var(--ink,#111)');
+      return b;
+    };
+    const y = btn('YES', true), b = btn('NO, GO BACK', false);
+    y.addEventListener('click', () => { y.disabled = b.disabled = true; yes(); });
+    b.addEventListener('click', () => no());
+    box.appendChild(n); box.appendChild(q); box.appendChild(y); box.appendChild(b);
+    host.appendChild(box);
+    try { window.scrollTo({ top: 0 }); } catch (_) {}
   }
 
   /* forgotten(voter): a Poll Desk reset of the name room (gt-names; RESET
@@ -145,5 +191,5 @@ const GT_NAMES = (() => {
     return Promise.race([ask, new Promise(r => setTimeout(() => r(false), 4000))]);
   }
 
-  return { guard, others, norm, partner, roster, forgotten };
+  return { guard, others, norm, partner, roster, confirm, forgotten };
 })();

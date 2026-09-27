@@ -163,8 +163,10 @@ try {
   await desk.ev(`[...document.querySelectorAll('#rlist .rrow')].find(r=>r.querySelector('.nm').textContent==='Mei').querySelector('.x').click()`); await sleep(600);
   check(same((await get('gt-roster')).names, ['John', 'Priya', 'Sarah J.', 'Sarah K.', 'Tomás', 'Zara']), 'a remove reads the list first, so a name added elsewhere survives');
 
-  await phone.ev(`[...document.querySelectorAll('#opts button.pick')].find(b=>b.textContent==='Priya').click()`); await sleep(3200);
-  check(await phone.ev(`localStorage.getItem('gt-name')`) === 'Priya', 'tapping a name claims it');
+  await phone.ev(`[...document.querySelectorAll('#opts button.pick')].find(b=>b.textContent==='Priya').click()`); await sleep(400);
+  check(await phone.ev(`!!document.querySelector('.gt-confirm') && localStorage.getItem('gt-name')===null`), 'a tapped name asks first (27 Sep 2026), and claims nothing yet');
+  await phone.ev(`[...document.querySelectorAll('.gt-confirm button')].find(b=>b.textContent==='YES').click()`); await sleep(3200);
+  check(await phone.ev(`localStorage.getItem('gt-name')`) === 'Priya', 'tapping a name and then YES claims it');
   check(/familiar/.test(await phone.ev(`document.getElementById('q').textContent`)), 'and the poll itself follows');
 
   /* a Poll Desk reset of the name room makes the phone ask again (Ryan, 24 Sep:
@@ -190,6 +192,8 @@ try {
   /* ---- the fallbacks ---- */
   const clear = await (await post('gt-roster', { s: SECRET, names: [] })).json();
   check(clear.ok && same(clear.names, []), 'the list can be cleared');
+  /* names phones typed for themselves join the list (27 Sep 2026), and this run's phones typed some: clear the name room so the list is truly empty */
+  await call('/p/gt-names/reset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ s: SECRET }) });
   const p2 = await page('http://localhost:' + PORT + '/go/?p=m1-familiarity', 390, 844, true);
   await p2.ev('localStorage.clear()'); await p2.nav('http://localhost:' + PORT + '/go/?p=m1-familiarity'); /* same origin as the phone that claimed Priya */
   check((await p2.ev(`document.querySelectorAll('#opts button.pick').length`)) === 0 && (await p2.ev(`document.querySelector('#opts input').placeholder`)) === 'Type your first name', 'an empty list asks people to type their name');
@@ -232,7 +236,7 @@ try {
   const votes = (await (await call('/p/m1-familiarity')).json()).total;
   check(votes === 0 && (await n('m3-lot')) === 0 && (await n('m2-decade')) === 0, 'RESET EVERY ROOM still clears every room, retired ones too', { votes, lot: await n('m3-lot'), decade: await n('m2-decade') });
   check(same((await get('gt-roster')).names, ['Ana', 'Ben']), 'and leaves the attendee list alone');
-  check(/81 rooms cleared/.test(await desk.ev(`document.getElementById('msg').textContent`)), 'its message sits under the button', await desk.ev(`document.getElementById('msg').textContent`));
+  check(/82 rooms cleared/.test(await desk.ev(`document.getElementById('msg').textContent`)), 'its message sits under the button', await desk.ev(`document.getElementById('msg').textContent`));
   await desk.shot('desk-rooms.png');
   await desk.ev(`window.scrollTo(0, document.querySelector('#rooms h3.mod').getBoundingClientRect().top + scrollY - 20)`); await sleep(300);
   await desk.shot('desk-modules.png');
