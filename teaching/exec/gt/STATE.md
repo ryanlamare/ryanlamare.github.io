@@ -6,7 +6,9 @@ to pick the work up on another computer.
 
 ## NEXT CHAT STARTS HERE (27 Sep 2026)
 
-His question: he is on his feet about six hours a day, so should the modules have more group work or "do this on your own" time? Claude's call, and his yes: it is normal for executives, and the programme already has most of it. Each module's your-world closer becomes table work: two minutes alone, the table takes one case, and you hear two or three tables. Earlier talking points go in every module, some of them polls argued at the tables. All of this is written into REHEARSAL's day list; no deck changed for it. m1's familiarity poll is now table talk, in his version (27 Sep): vote, reveal, then each table talks it through, including one situation at work where they would like to read the other side better. One voice per table gives him its temperature and its situation, and he comes back to them on day two before What will you use first?. Table visits happen while the tables work: listen, one question, move on. All of it is in the day list.
+His question: he is on his feet about six hours a day, so should the modules have more group work or "do this on your own" time? Claude's call, and his yes: it is normal for executives, and the programme already has most of it. Each module's your-world closer becomes table work: two minutes alone, the table takes one case, and you hear two or three tables. Earlier talking points go in every module, some of them polls argued at the tables. All of this is written into REHEARSAL's day list; no deck changed for it. m1's familiarity poll is now table talk, in his version (27 Sep): vote, reveal, then each table talks it through, including one situation at work where they would like to read the other side better. One voice per table gives him its temperature and its situation. Table visits happen while the tables work: listen, one question, move on.
+
+**His rulings, 27 Sep 2026, after Claude wrote his ideas into REHEARSAL.md instead of the slides:** (1) **No flip chart, ever**, and no pen and paper: the flip chart was Claude's suggestion from the 25 Sep audit, never his, and it is out of every note. (2) REHEARSAL.md is Claude's notes; he does not use it. **Anything he needs in the room goes on the slides**, as a step he presses to. The first of these is m1 slide 6: after the reveal, a step with the table-talk line, as the sample. The same treatment for the other talking points and the closers waits for his look.
 
 **Built at his word ("we'll build the m7 game and see how it looks"): Who blinks first?, an m3-style negotiation in m7** (tag `m7-before-tea`; m7 is now 38 slides). It sits straight after What is a strategic move? (slides 4 to 7: the standoff, the rules with one QR, What did your pair agree?, and Who really meant it?).
 - Hartwell's, the family firm behind the country's best-selling tea, wants 10% more from Selwood's, a national supermarket, from Monday; the talks end Friday.
@@ -38,7 +40,7 @@ His read: "all looking great"; he asked for the audit's flow and exec points to 
 - m7's auction now comes before "Is commitment always a good thing?" (games are played blind).
 - m5 slide 15 runs best response on the stag hunt, and its wrong lower-left cell is fixed.
 - m4 has Arms races in place of the dating-apps tile.
-- The day list gains introductions, a day-two look back, a flip chart, the FuelWatch line and G on m3 slide 24.
+- The day list gains introductions, a day-two look back, a flip chart (withdrawn 27 Sep, his ruling: there is no flip chart and nothing uses pen and paper), the FuelWatch line and G on m3 slide 24.
 - His bug is fixed: m3 slide 24 flashed the cover when coming back from the calendar. Every deck opened at a slide now shows it from the first paint; a line in each head, removed by deck.js.
 - The iPhone held peek passes under touch emulation (trial/m8-car-peek.test.mjs).
 
