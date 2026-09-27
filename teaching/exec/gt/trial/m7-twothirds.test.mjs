@@ -50,7 +50,7 @@ try {
   check(await txt('ttN') === '4', 'the rules slide counts four guesses: "abc" and 150 are not guesses');
   check(await ev(`getComputedStyle(document.getElementById('ttD')).display`) === 'none', 'no DEMO DATA tag while the room answers');
   check(await ev(`document.querySelector('.slide.active .qr img').naturalWidth>0`), 'the QR image loads');
-  for (let i = 0; i < 5; i++) await key('ArrowRight', 39);              /* four steps, then the ladder */
+  for (let i = 0; i < 6; i++) await key('ArrowRight', 39);              /* five steps (the fifth is AT YOUR TABLES, 27 Sep), then the ladder */
   check((await ev(`document.querySelector('.slide.active h2').textContent`)).includes('Finding the Nash'), 'on to the elimination ladder');
   for (let i = 0; i < 5; i++) await key('ArrowRight', 39);              /* its four steps, then the reveal */
   check(await txt('ttcN2') === '4' && await txt('ttAvg') === '–', 'the reveal opens on the count alone');

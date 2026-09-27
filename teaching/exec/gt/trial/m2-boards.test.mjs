@@ -195,7 +195,9 @@ try {
   await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
   /* ---------- the closer: four questions, nothing to scan (slide 19: the limits slide sits between since 23 Sep; the A380 slide went into the first-mover cards 24 Sep) ---------- */
   await deck.ev(`location.hash='#19'`); await sleep(1200);
-  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`!document.querySelector('.slide.active img, .slide.active svg')`), 'the closer is four questions, with no QR and no figure');
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`[...document.querySelectorAll('.slide.active img, .slide.active svg')].every(e=>e.closest('.talk'))`), 'the closer is four questions, with no QR and no figure (the AT YOUR TABLES band\u2019s icon aside, 27 Sep)');
+  await deck.key('ArrowRight'); await sleep(400);
+  check(await deck.ev(`document.querySelector('.slide.active .talk').classList.contains('shown')`), 'one press brings up AT YOUR TABLES');
   await deck.key('ArrowRight'); await sleep(400);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.toLowerCase().includes('takeaways')`), 'the next slide is the takeaways');
   await deck.ev(`location.hash='#18'`); await sleep(600);
