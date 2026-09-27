@@ -110,7 +110,7 @@ try {
 
   /* the deck reads it: 7.5 is 8, and equally close guesses share the win */
   await say('m8-twothirds', '15'); await say('m8-twothirds', '17');
-  const m7 = await page(SITE + '/teaching/exec/gt/m7/#5', 1280, 720);
+  const m7 = await page(SITE + '/teaching/exec/gt/m7/#9', 1280, 720);   /* the two-thirds reveal, four slides on since Who blinks first? (27 Sep 2026) */
   await sleep(3200);
   const res = await m7.ev(`(()=>{const e=document.createElement('div');ttAvgFill(e,true);const a=document.getElementById('ttAvg').textContent;ttWinner(e,true);const w=e.textContent;ttAvgFill(e,false);return [a,w]})()`);
   check(res[0] === '13.3', 'the average counts 7.5 as 8: (8 + 15 + 17) / 3', res[0]);
