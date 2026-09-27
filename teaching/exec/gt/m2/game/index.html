@@ -115,6 +115,8 @@ body.ult-a .send,body.ult-r .send{background:none;border-color:var(--paper);colo
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 6px;cursor:pointer}
 .actions button.alt{background:var(--card);color:var(--ink);border-color:var(--ink)}
 .actions button:disabled{opacity:.4;cursor:default}
+.actions.stack{flex-direction:column}   /* the card game's three removes, one above the other (27 Sep 2026) */
+.askline{font-weight:700;font-size:17px;margin-top:16px}
 /* the pile: plain cards in one colour */
 .cardpile{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:12px}
 .cardpile i{display:block;aspect-ratio:2/3;position:relative;border-radius:4px;border:2px solid var(--ink);background:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.12)}
@@ -296,9 +298,11 @@ function renderName(title,done){
   q.textContent=title;
   app.innerHTML='';
   const list=document.createElement('div');list.className='choices';
-  roster.forEach(n=>{
+  const me=title==='Who are you?'?'':String(name||'').toLowerCase();   /* your own name is not on your partner list */
+  roster.filter(n=>n.toLowerCase()!==me).forEach(n=>{
     const b=document.createElement('button');b.className='pick';b.textContent=n;
-    b.addEventListener('click',()=>done(clean(n)));
+    /* a tapped name asks once (27 Sep 2026: a stray tap had made Kimberly "Laura") */
+    b.addEventListener('click',()=>GT_NAMES.confirm(app,clean(n),title==='Who are you?'?'Is that you?':'Is that your partner?',()=>done(clean(n)),()=>renderName(title,done)));
     list.appendChild(b);
   });
   app.appendChild(list);
@@ -555,8 +559,8 @@ function gameScreen(id,A,B,g,meIsA){
       pile+='</div>';
       show('<div class="pot"><div class="big">'+s.pile+' card'+(s.pile===1?'':'s')+'</div>'+
         '<div class="sub">'+(myTurn?'your turn: taking the last card wins':esc(opp)+' is choosing…')+'</div>'+pile+'</div>'+
-        (myTurn?'<div class="actions">'+
-          [1,2,3].map(n=>'<button data-n="'+n+'"'+(n>s.pile?' disabled':'')+'>TAKE '+n+'</button>').join('')+'</div>'
+        (myTurn?'<div class="askline">How many cards do you want to remove?</div><div class="actions stack" style="margin-top:10px">'+
+          [1,2,3].map(n=>'<button data-n="'+n+'"'+(n>s.pile?' disabled':'')+'>REMOVE '+n+' CARD'+(n===1?'':'S')+'</button>').join('')+'</div>'
         :'<div class="waitcard" style="margin-top:14px"><span class="pulse"></span>Waiting on '+esc(opp)+'…</div>'));
       if(myTurn)stage.querySelectorAll('.actions button').forEach(b=>
         b.addEventListener('click',()=>act(b.dataset.n)));
@@ -629,14 +633,14 @@ function renderUltPropose(partner){
   stopPolling();
   q.textContent='Your offer to '+partner;
   app.innerHTML='';
-  /* six splits, 99/1 to 50/50 (Ryan, 20 Sep 2026: a proposer never needs to give away more than
-     half): the deck's board has one column for each */
+  /* every split, 99/1 through 50/50 to 1/99 (Ryan, 27 Sep 2026: six splits that stopped at half
+     looked odd; it was six from 20 Sep): the deck's board has one column for each */
   const head=document.createElement('div');head.className='bandhead';
   head.innerHTML='<span>You keep</span><span>'+esc(partner)+' gets</span>';
   app.appendChild(head);
   const card=document.createElement('div');card.className='bands';
   let offer=null;
-  [10,100,200,300,400,500].forEach(v=>{
+  [10,100,200,300,400,500,600,700,800,900,990].forEach(v=>{
     const b=document.createElement('button');b.type='button';
     b.innerHTML='<span>&pound;'+(1000-v)+'</span><span class="t">&pound;'+v+'</span>';
     b.addEventListener('click',()=>{offer=v;

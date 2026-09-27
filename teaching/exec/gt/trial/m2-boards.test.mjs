@@ -93,7 +93,7 @@ try {
   await click(T, btn('button.opt', 'waiting')); await sleep(400);
   await click(A, btn('button.opt', 'proposer')); await sleep(400);
   await A.ev(`(()=>{const i=document.querySelector('.namerow input');i.value='Tom';document.querySelector('.namerow button').click();})()`); await sleep(500);
-  check(await A.ev(`document.querySelectorAll('.bands button').length`) === 6, 'the proposer sees six splits, none past 50/50');
+  check(await A.ev(`document.querySelectorAll('.bands button').length`) === 11, 'the proposer sees every split, 99/1 to 1/99 (eleven since 27 Sep)');
   check(await A.ev(`document.querySelector('.send').disabled`), 'LOCK IT IN is off until a split is picked');
   check(await A.ev(`!document.querySelector('input[type=range]')`), 'no slider on the phone');
   await A.shot('phone-1-splits.png');
@@ -131,7 +131,8 @@ try {
   await sleep(3200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the deck is on the ultimatum results slide');
   check(await deck.ev(`document.getElementById('ultN').textContent`) === '14', 'the count reads 14 pairs');
-  check(await deck.ev(`document.querySelectorAll('#ultcols .ubhead').length===6 && !document.querySelector('#ultcols .ubname')`), 'six columns and no names before the keypress');
+  check(await deck.ev(`document.querySelectorAll('#ultcols .ubhead').length===11 && !document.querySelector('#ultcols .ubname')`), 'eleven columns, 99/1 to 1/99, and no names before the keypress');
+  check(await deck.ev(`[...document.querySelectorAll('#ultcols .ubhead')].map(e=>e.textContent).join(' ')`) === '99/1 90/10 80/20 70/30 60/40 50/50 40/60 30/70 20/80 10/90 1/99', 'the column heads run 99/1 to 1/99');
   check(await deck.ev(`!document.querySelector('.slide.active .qr')`), 'no QR on the results slide');
   await deck.shot('deck-1-before.png');
   await deck.key('ArrowRight'); await sleep(600);
@@ -139,7 +140,8 @@ try {
   check(await deck.ev(`!document.querySelector('.ubname.a,.ubname.r')`), 'no outcome shows at the reveal');
   check(await deck.ev(`[...document.querySelectorAll('.ubcol')].find(c=>c.querySelector('.ubhead').textContent==='50/50').querySelectorAll('.ubname').length`) === 6, 'six names sit under 50/50');
   await deck.shot('deck-2-names.png');
-  const nm = n => `[...document.querySelectorAll('.ubname')].find(e=>e.textContent===${JSON.stringify(n)})`;
+  const nm = n => `[...document.querySelectorAll('.ubname')].find(e=>e.querySelector('b').textContent===${JSON.stringify(n)})`;
+  check(await deck.ev(`${nm('Dev')}.querySelector('span').textContent`) === 'Sam', 'each box shows both players: Dev, and under him Sam (27 Sep)');
   await deck.pressAt(nm('Dev'), 60); await sleep(300);
   check(await deck.ev(`${nm('Dev')}.classList.contains('r')`) && await deck.ev(`document.querySelectorAll('.ubname.a,.ubname.r').length`) === 1, 'a click on Dev shows red, and nothing else');
   check(await deck.ev(`document.querySelectorAll('.ubname').length`) === 14 && await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('ultimatum')`), 'the click does not move the deck');
@@ -187,6 +189,7 @@ try {
   await deck.key('ArrowRight'); await sleep(600);
   check(await deck.ev(`document.querySelectorAll('#centcols .ubname').length`) === 10, 'the keypress shows 10 names');
   check(await deck.ev(`[...document.querySelectorAll('#centcols .ubcol')].find(c=>c.querySelector('.ubhead').textContent==='£300').textContent.includes('Tom')`), 'Tom sits under £300');
+  check(await deck.ev(`[...document.querySelectorAll('#centcols .ubname')].find(e=>e.querySelector('b').textContent==='Tom').querySelector('span').textContent`) === 'Aisha', 'with Aisha, his partner, under his name (27 Sep)');
   check(await deck.ev(`[...document.querySelectorAll('#centcols .ubname')].filter(e=>+e.dataset.turn<=3).length`) === 3 && await deck.ev(`[...document.querySelectorAll('#centcols .ubname')].filter(e=>+e.dataset.turn>3).length`) === 7, 'three early takes and seven later ones, one colour deepening by turn');
   await deck.shot('cent-deck-1.png');
   rooms['m2-centipede'].push({ v: 'bot-late', t: 'Late|Comer|5' }); await sleep(3000);
@@ -195,7 +198,7 @@ try {
   await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
   /* ---------- the closer: four questions, nothing to scan (slide 19: the limits slide sits between since 23 Sep; the A380 slide went into the first-mover cards 24 Sep) ---------- */
   await deck.ev(`location.hash='#19'`); await sleep(1200);
-  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`[...document.querySelectorAll('.slide.active img, .slide.active svg')].every(e=>e.closest('.talk'))`), 'the closer is four questions, with no QR and no figure (the AT YOUR TABLES band\u2019s icon aside, 27 Sep)');
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`!document.querySelector('.slide.active img') && [...document.querySelectorAll('.slide.active svg')].every(e=>e.closest('.talk')||e.closest('.ctree'))`) && await deck.ev(`!!document.querySelector('.slide.active svg.ctree')`), 'the closer is four questions and a picture of them as a tree, with no QR (the tree since 27 Sep, his idea)');
   await deck.key('ArrowRight'); await sleep(400);
   check(await deck.ev(`document.querySelector('.slide.active .talk').classList.contains('shown')`), 'one press brings up AT YOUR TABLES');
   await deck.key('ArrowRight'); await sleep(400);
