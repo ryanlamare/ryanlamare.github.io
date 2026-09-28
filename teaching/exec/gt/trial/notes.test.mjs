@@ -96,7 +96,7 @@ try {
   await L.ev(`(()=>{window.__blob=null;const o=URL.createObjectURL;URL.createObjectURL=b=>{window.__blob=b;return o.call(URL,b)};HTMLAnchorElement.prototype.click=function(){window.__name=this.download};return 1})()`);
   await L.ev(`document.getElementById('doc').click()`); await sleep(300);
   const doc = await L.ev(`window.__blob.text()`);
-  check(await L.ev(`window.__name`) === 'Applied game theory notes.doc' && /Module 2: Charting a complete course of action in your world/.test(doc) && /A lease extension with a regional airline/.test(doc) && !/Module 1:/.test(doc), 'SAVE AS A WORD FILE: a .doc with module 2 and its answer, and no empty module');
+  check(await L.ev(`window.__name`) === 'Applied game theory notes.doc' && /Module 2: Sequential strategies/.test(doc) && /A lease extension with a regional airline/.test(doc) && !/Module 1:/.test(doc), 'SAVE AS A WORD FILE: a .doc with module 2 and its answer, and no empty module');
   await L.ev(`(()=>{window.__copied=null;Object.defineProperty(navigator,'clipboard',{value:{writeText:t=>{window.__copied=t;return Promise.resolve()}},configurable:true});return 1})()`);
   await L.ev(`document.getElementById('copy').click()`); await sleep(300);
   const copied = await L.ev(`window.__copied`);
