@@ -5,11 +5,11 @@
 
      node teaching/exec/gt/trial/m3-solve.test.mjs [folder for screenshots]
 
-   A tap crosses a pitch out and a second tap brings it back. A press and hold
-   circles a pitch and crosses out the rest of its side; holding it again puts
-   the side back as it was, cross-outs included. A tap on any pitch takes the
-   circle off. Charm crossed out on both sides and Solve circled on both
-   sides lands the red box on 50 · 50. Start again clears the circles. */
+   A tap on a name crosses its line out and a second tap brings it back; the
+   last line on a side stays. A tap on a number flashes its two names. Since
+   28 Sep there is no press-and-hold circle: a hold is just a tap. Charm out on
+   both sides, then Price and Terms, lands the red box on 50 · 50, the way the
+   debrief slide solves it. Start again clears everything. */
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -53,7 +53,9 @@ const touch = async (side, i, ms) => {
   await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(120);
 };
 const tap = (side, i) => touch(side, i, 40), hold = (side, i) => touch(side, i, 750);
-const state = side => ev(`[...document.querySelectorAll('.mx button.${side}')].map(b=>b.classList.contains('dom')?'O':b.classList.contains('out')?'x':'.').join('')`);
+const state = side => ev(`[...document.querySelectorAll('.mx button.${side}')].map(b=>b.classList.contains('out')?'x':'.').join('')`);
+const tapCell = async (r, c) => { const [x, y] = await ev(`(()=>{const d=document.querySelectorAll('.cell')[${r}*4+${c}].getBoundingClientRect();return [d.left+d.width/2,d.top+d.height/2];})()`);
+  await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] }); await sleep(40); await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(120); };
 const eq = () => ev(`[...document.querySelectorAll('.cell.eq')].map(c=>c.textContent).join('|')`);
 
 let fails = 0;
@@ -63,21 +65,22 @@ const PRICE = 0, TERMS = 1, SOLVE = 2, CHARM = 3;
 await is('nothing crossed out to start', await state('rl') + await state('cl'), '........');
 await tap('rl', CHARM); await is('a tap crosses Charm out', await state('rl'), '...x');
 await tap('rl', CHARM); await is('a second tap brings it back', await state('rl'), '....');
-await tap('rl', CHARM);
-await hold('rl', SOLVE); await is('a hold circles Solve and crosses out the rest', await state('rl'), 'xxOx');
-await hold('rl', SOLVE); await is('holding it again puts the side back, Charm still out', await state('rl'), '...x');
-await hold('rl', SOLVE);
-await tap('rl', PRICE); await is('a tap on another pitch takes the circle off', await state('rl'), '.x.x');
-await hold('rl', PRICE); await hold('rl', SOLVE); await hold('rl', SOLVE);
-await is('moving the circle keeps the side as it was before the first circle', await state('rl'), '.x.x');
-await hold('rl', SOLVE);
-await is('no red box while the rival still has four', await eq(), '');
-await tap('cl', CHARM); await hold('cl', SOLVE);
-await is('the rival: Charm out, Solve circled', await state('cl'), 'xxOx');
+await tapCell(SOLVE, PRICE);
+await is('a tap on a number flashes its row name and its column name', await ev(`[...document.querySelectorAll('.mx button.hint')].map(b=>b.className.split(' ')[0]+':'+b.textContent).join(',')`), 'cl:Price,rl:Solve');
+await is('and crosses nothing out', await state('rl') + await state('cl'), '........');
+await hold('rl', SOLVE); await is('a hold is only a tap: it crosses Solve out, no circle', await state('rl') + await ev(`document.querySelectorAll('.mx button.dom').length`), '..x.0');
+await tap('rl', SOLVE);
+await tap('rl', CHARM); await tap('cl', CHARM);
+await is('Charm out on both sides', await state('rl') + await state('cl'), '...x...x');
+await tap('rl', PRICE); await tap('rl', TERMS);
+await is('Solve alone on your side', await state('rl'), 'xx.x');
+await tap('rl', SOLVE); await is('the last line on a side stays', await state('rl'), 'xx.x');
+await is('no red box while the rival still has three', await eq(), '');
+await tap('cl', PRICE); await tap('cl', TERMS);
 await is('the red box is on 50 · 50', await eq(), '50·50');
-await shot('solve-circled.png');
+await shot('solve-solved.png');
 await ev(`document.getElementById('again').click()`);
-await is('Start again clears the circles', await state('rl') + await state('cl') + await eq(), '........');
+await is('Start again clears everything', await state('rl') + await state('cl') + await eq(), '........');
 await is('no page errors', errors.join(' / '), '');
 
 console.log('screenshots: ' + SHOTS);
