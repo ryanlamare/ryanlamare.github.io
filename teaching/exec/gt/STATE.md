@@ -4,6 +4,23 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## WHERE GAME THEORY CAME FROM, AND FRIENDS IN M7, 28 Sep 2026 (his go, all live)
+
+- **m1 slides 10 and 11**, straight after *Is an act a singular decision or a broader game?*. His point: m1 defined game theory but never said where it came from, how it spread, or why it sometimes sucks.
+  - The familiarity poll is now slide 12, and m1 has 31 slides.
+  - *Why game theory is so useful…* is his 550 slide on m6's timeline pattern. The lead line is the 2024 master's.
+  - The four stations are 1944, Economics, The Cold War and Biology, one press each, then "The application possibilities are seemingly endless!".
+  - The stations come from his fuller 590GT/565 version of the slide, which names von Neumann, Morgenstern and *The Theory of Games and Economic Behavior*; the master had trimmed them to "mathematicians and economists".
+  - Only 1944 carries a date, because it is the only one his slide gives.
+  - *…and why game theory sometimes sucks* is his master slide word for word, as four cards with a pictogram each (his ask: "a tiny bit less powerpointy").
+  - Left out at his two-slide cap: the 550 "mixing art and science in GT", the one intro slide never brought over and never cut (Claude recommended it). The paradoxes and Types of games stay his cuts.
+- **m7 slide 21, Commitment and brinkmanship:** a third press, between "Parties may remain committed…" and the escape route, reads "Recall Phoebe and Chandler in *Friends*: if they had kept going, god knows where they might have ended up!" (his words).
+  - Its WATCH chip plays the official Friends clip "Phoebe Tries to Seduce Chandler" (`LDtqv_7oZLw`) over the slide, as the Dr. Strangelove tile does. The chip does nothing until its step shows.
+  - m1's clip is the set-up ("they don't know that we know"); this one is the showdown.
+  - A copy elsewhere runs 4:54; the YouTube one could not be timed from here.
+- Tags `m1-before-history` and `m7-before-friends`. The m1 offers tests address the added value slides two higher.
+- m1-offers, m1-offers-order, notes, go-now, m7-tea, m7-twothirds and m7-reset all pass, and a press-through of m1 and m7 is clean.
+
 ## YOUR NOTES AND THE BATTLE OF WITS, 27 Sep 2026 (his go, all live)
 
 - **Your notes** (Kimberly's idea, his shape):
