@@ -63,6 +63,13 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m3's aircraft briefs, fourth pass (29 Sep; tag `m3-before-goals`). Harrow is HIS text** (Debtflix, Kanley Stubrick, British United Airways; "All exterior shots are filmed using CGI"; the only plane "with an authentic interior pristine enough"), with one doubled "the" fixed. Larkfield mirrors it clause for clause: the interiors were shot on green screen this spring, and it's "the only surviving plane from the era that still holds a permit to fly".
+  - **His calls:**
+    - the goal is ACCESS to the plane, not the lowest price;
+    - the £300,000 resale is the same for both, so it's background in the executor paragraph, not a goal;
+    - the separate objective box is gone, and "Your goals for the meeting" (three) is the objective.
+  - **The goals:** access (Harrow 1 June–30 September for Stage 4; Larkfield at Manston, flying, all of July and August); price near the guide under the ceiling; screen first.
+  - **Claude's additions:** goal 3 gets back its reason ("since whichever reaches the screen first will take most of the audience"), which his cut of the twin-films sentence had taken out. The deck's setup slide says "set in the early 1960s", to match. m3-lot passes.
 - **m3's aircraft briefs, third pass (29 Sep; tag `m3-before-needs`).** He edited Larkfield himself, and Claude applied his text (typos fixed) and mirrored it for Harrow in his register (Harrow's director is Margot Heller, the counterpart of his Nistopher Colan).
   - **His diagnosis:** the briefs gave only an amount to bargain over, and "assume you will never see it again" made a win-win look impossible.
   - **Now:** "it's unlikely you will ever see the plane again unless you can work something out with your rival", and the meeting is "to persuade them to back out of the bidding or work out a deal you can live with".
