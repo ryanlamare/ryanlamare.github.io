@@ -4,6 +4,23 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## M7 WITHOUT WHO BLINKS FIRST?, 28 Sep 2026 (his call, live)
+
+- **His question:** "do we really need this game? perhaps m7 has enough in it". Claude's answer, and his yes: no.
+  - m7 already has more for the room to do than any module: five phone activities, the £100 auction out loud, and four table-talk moments.
+  - The game went in on 27 Sep to get him off his feet, not for a gap in the teaching.
+  - Its lesson (credibility) is already played twice: chicken's rounds four to six, and split or steal with Nick and Ibrahim.
+  - **His rule:** if an activity has no substantive teaching reason, it goes.
+- **Where it went:** slides 4 to 7 moved whole to `m7/outtakes.html`, as slides 6 to 9 there, and still play there.
+  - The QR opens the briefs, and the board reads room m7-tea.
+  - G on the last slide opens `tea/q4d/`, whose arrows and link now lead back to the outtakes.
+  - The outtakes log has the entry.
+- **m7 now:** 34 slides. What is a strategic move? runs straight into two-thirds (slide 4), and it goes on to brinkmanship with Friends (17), Sun Tzu (18), the deal (21) and the closer (31).
+- **Poll Desk:** m7-tea left the Module 7 row for RETIRED ROOMS (still resettable), as m6's cut games did.
+- **/go:** the list never showed the brief. The NOW map keeps it, for the outtakes.
+- **Tests:** tag `m7-before-tea-cut`. m7-tea follows the game to the outtakes; m7-twothirds, go-now and go-roster (35 retired rooms) follow the new layout.
+  - m7-tea, m7-twothirds, m7-reset, go-now and go-roster all pass, and a press-through of m7 is clean.
+
 ## /GO, MODULE BY MODULE, AND YOUR NOTES BY MODULE NAME, 28 Sep 2026 (his go, all live)
 
 - **A typed ryanlamare.com/go** was one long list: every poll as a button (15 were the quiz), then eleven game links. It is now the programme, a card per module under the names from m1's *How the next two days will run*.
