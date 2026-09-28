@@ -80,12 +80,17 @@
 /* first-mover example cards (565 lecture) */
 /* Boeing versus Airbus: his LER 565 entry tree, drawn wide across the top, three bullets under it (24 Sep 2026) */
 .bvwrap{position:absolute;left:96px;right:96px;top:164px;display:flex;flex-direction:column;gap:6px;align-items:center}
-.bvtree{flex:none;width:730px;height:auto;overflow:visible}   /* 830 until 27 Sep, when the 1997 line became a fourth bullet */
+.bvtree{flex:none;width:710px;height:auto;overflow:visible}   /* 730 for a 900-wide tree until 28 Sep, when the payoffs came in beside the leaves and the rollback line became a fifth bullet */   /* 830 until 27 Sep, when the 1997 line became a fourth bullet */
 .bvtree .leaf{font-weight:700;font-size:18px;fill:var(--ink)}
 .bvtree .leaf.red{fill:var(--red);font-size:16px}
 .bvtree .owner{font-weight:700;font-size:15px;letter-spacing:.06em}
+/* 28 Sep 2026: rollback on the tree, his 565 slides 40-41: blocking greys, accommodating goes red */
+.bvtree .blk,.bvtree #bvBlockPath{transition:opacity .35s,stroke .35s}
+.bvtree:has(.bvsolve.shown) .blk{opacity:.3}
+.bvtree:has(.bvsolve.shown) #bvBlockPath{stroke:var(--grey)}
 .bvlist{margin:0;max-width:1010px}
 .bvlist li{font-size:20px;line-height:1.3;margin-bottom:6px}
+ul.bullets.bvlist li{line-height:1.28;margin-top:10px}   /* 28 Sep 2026: the deck's 16px gaps, tightened so the fifth bullet (rollback) clears the tick bar; the text size is unchanged */
 /* the first-mover cards, four across */
 .exgrid.four{gap:22px;margin-top:90px}
 .exgrid.four .excard{width:252px}
@@ -407,8 +412,8 @@
   </div>
   <div class="chiprow">
     <div class="chips" data-step="1">
-      <div class="chead2">Recall a key requirement from our first session:</div>
-      <div class="chip">Always put yourself in the other person&rsquo;s shoes!</div>
+      <div class="chead2">Recall the first rule of game theory from our first session:</div>
+      <div class="chip">It&rsquo;s not (just) about you!</div>
     </div>
     <div class="chips" data-step="2">
       <div class="chead2">Let&rsquo;s add another key requirement:   </div>
@@ -596,12 +601,12 @@
   <div class="kicker"><i></i>MODULE 2 &middot; TWO FIRMS</div>
   <h2>Boeing versus Airbus</h2>
   <div class="bvwrap">
-    <a class="exlink" href="https://www.csmonitor.com/2000/0112/p1s3.html" target="_blank" rel="noopener"><svg class="tree bvtree" viewBox="0 0 900 250" role="img" aria-label="Airbus chooses to enter the market or stay out; if it enters, Boeing chooses to accommodate it or block entry with a price war">
+    <a class="exlink" href="https://www.csmonitor.com/2000/0112/p1s3.html" target="_blank" rel="noopener"><svg class="tree bvtree" viewBox="0 0 1010 250" role="img" aria-label="Airbus chooses to enter the market or stay out; if it enters, Boeing chooses to accommodate it or block entry with a price war. Payoffs (Airbus, Boeing): price war -1, -1; share the market 2, 1; stay out 0, 2. Rollback strikes blocking: Airbus enters and Boeing accommodates">
       <line class="edge" x1="210" y1="126" x2="420" y2="72"/>
       <line class="edge" x1="210" y1="150" x2="700" y2="222"/>
       <line class="edge" x1="610" y1="58" x2="700" y2="22"/>
       <line class="edge" x1="610" y1="80" x2="700" y2="118"/>
-      <g data-step="2"><line class="path" x1="210" y1="126" x2="420" y2="72"/><line class="path" x1="610" y1="58" x2="700" y2="22"/></g>
+      <g data-step="2"><line class="path" x1="210" y1="126" x2="420" y2="72"/><line class="path" id="bvBlockPath" x1="610" y1="58" x2="700" y2="22"/></g>
       <text class="elabel" x="300" y="88" text-anchor="middle">ENTER</text>
       <text class="elabel" x="455" y="212" text-anchor="middle">STAY OUT</text>
       <text class="elabel" x="640" y="24" text-anchor="end">BLOCK</text>
@@ -612,16 +617,27 @@
       <rect class="node" x="420" y="40" width="190" height="56" rx="6"/>
       <text class="q" x="515" y="74" text-anchor="middle">Block or not?</text>
       <text class="owner" x="515" y="28" text-anchor="middle" fill="var(--terracotta)">BOEING</text>
-      <text class="leaf" x="712" y="28">A price war</text>
+      <text class="leaf blk" x="712" y="28">A price war</text>
       <text class="leaf" x="712" y="124">Share the market</text>
       <text class="leaf" x="712" y="228">Boeing keeps it</text>
-      <g data-step="3"><text class="leaf red" x="712" y="50">Orders delayed</text></g>
+      <g data-step="3"><text class="leaf red blk" x="712" y="50">Orders delayed</text></g>
+      <!-- 28 Sep 2026: his 565 slide 41 payoffs (Airbus, Boeing), then rollback -->
+      <g data-step="5">
+        <text class="pay blk" x="895" y="32"><tspan>&minus;1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)">&minus;1</tspan></text>
+        <text class="pay" x="895" y="128"><tspan>2</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)">1</tspan></text>
+        <text class="pay" x="895" y="232"><tspan>0</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)">2</tspan></text>
+      </g>
+      <g data-step="6" class="bvsolve">
+        <line class="path" x1="610" y1="80" x2="700" y2="118"/>
+        <line x1="640" y1="30" x2="664" y2="58" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><line x1="656" y1="24" x2="680" y2="52" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/>
+      </g>
     </svg></a>
     <ul class="bullets bvlist">
       <li data-step="1">Airbus enters into the market for planes, and Boeing has a <b>sequential choice</b>: accommodate or block entry</li>
       <li data-step="2">Boeing <b>blocks entry</b> with a price war, and the lower prices win <b>large orders</b> from Singapore Airlines, Delta, etc.</li>
       <li data-step="3">But the cost cuts came through <b>workforce reductions</b>, orders were delayed, and <b>Airbus sold more planes than Boeing</b></li>
       <li data-step="4">In 1997 the production crisis cost Boeing <b>$2.6 billion</b></li>
+      <li data-step="6">Under perfect information, Airbus will enter the market and Boeing will <b>accommodate</b> it</li>
     </ul>
   </div>
 </section>
@@ -836,8 +852,8 @@
     </div>
   </div>
   <div class="resnotes">
-    <div data-step="2"><b>Rollback theory:</b> someone takes at the end &ndash; so the logic says grab on turn one</div>
-    <div data-step="3"><b>The problem:</b> you&rsquo;re incentivized to wait</div>
+    <div data-step="2"><b>Rollback theory:</b> Player 2 will surely take the pot at &pound;1,000, so Player 1 should take it at &pound;900. But Player 2 should know this and take it at &pound;800, and so on, so Player 1 should take the first &pound;100 and end the game</div>
+    <div data-step="3"><b>The problem:</b> you&rsquo;re incentivized to wait, because you do better as a group if you wait!</div>
   </div>
   <span data-step="1" data-stepcall="centReveal" style="position:absolute;width:0;height:0"></span>
   <div class="demotag" id="centD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
