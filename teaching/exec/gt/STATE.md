@@ -4,6 +4,21 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## NEXT CHAT STARTS HERE (28 Sep 2026, evening): the m1–m8 run-through
+
+- **His ask, one module at a time from m1:** are we missing anything important? Is there a lesson they aren't learning that he should add, from old slides or new content? If you were taking game theory for the first time, what isn't covered, or isn't explained well enough?
+- **How:** talk it through in prose first, one call per module. He decides, then it gets built.
+- **Sources for each module:**
+  - its section of the 550 master;
+  - his fuller older decks where the master trimmed (the 590GT and 565 intros);
+  - the 565 week decks;
+  - MG478;
+  - a first-timer's view of the standard material.
+- **Don't re-propose his cuts:** the paradoxes, Types of games, the median dog, Who blinks first?.
+- **State:** m1 is 32 slides, m7 is 34, and m3's aircraft game is kept. He's playing it with his wife tonight, so ask how it went; brief edits come through a session.
+- **Logistics settled today:** pens, paper and playing cards as a phone fallback only, plus a portable charger. The Satechi R2 clicker: arrows and air mouse, but G needs the laptop keyboard.
+  - Run the decks full screen, with the day's four decks open in tabs (Ctrl+Tab between them).
+
 ## M7 WITHOUT WHO BLINKS FIRST?, 28 Sep 2026 (his call, live)
 
 - **His question:** "do we really need this game? perhaps m7 has enough in it". Claude's answer, and his yes: no.
