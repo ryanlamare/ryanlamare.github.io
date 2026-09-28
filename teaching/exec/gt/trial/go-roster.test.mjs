@@ -219,7 +219,7 @@ try {
   const extra = [...deskSrc.matchAll(/\{id:'([^']+)',q:/g)].map(m => m[1]);
   const shown = (await desk.ev(`[...document.querySelectorAll('#rooms > .room, details.fold .room')].map(r=>r.dataset.ids)`)).flatMap(x => x.split(' '));
   check(shown.length === new Set(shown).size && same([...shown].sort(), [...polls, ...extra].sort()), 'every room is on the desk exactly once (' + (polls.length + extra.length) + ')', { shown: shown.length, all: polls.length + extra.length });
-  check(await desk.ev(`!document.querySelector('details.fold').open && document.querySelectorAll('details.fold .room').length===34`), 'the 34 retired rooms are folded away, closed');
+  check(await desk.ev(`!document.querySelector('details.fold').open && document.querySelectorAll('details.fold .room').length===35`), 'the 35 retired rooms are folded away, closed (m7-tea joined them 28 Sep 2026)');
   check(await desk.ev(`[...document.querySelectorAll('#rooms > h3, #rooms > .room')].reduce((m,e)=>e.tagName==='H3'?(m.h=e.textContent,m):(e.dataset.ids==='m8-twothirds'&&(m.at=m.h),m),{}).at`) === 'Module 7', 'the two-thirds guess sits in module 7, where its deck is');
   const ct = ids => desk.ev(`document.querySelector('.room[data-ids="${ids}"] .ct').textContent`);
   check(await ct('m4-axelrod') === '1', 'the ranking poll counts its answers (it read 0 before)');

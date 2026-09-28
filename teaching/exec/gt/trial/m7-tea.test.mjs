@@ -13,8 +13,9 @@
    everything locks once sent and a Poll Desk reset unlocks it. On the deck,
    the board counts pairs, one keypress shows a row a pair with the rise as a
    bar, a click opens a row, the second keypress shows each side's count, G
-   on the next slide opens the answer page, and its arrows lead back into
-   the deck on either side. ?demo=1 shows invented pairs marked DEMO DATA. */
+   on the next slide opens the answer page, and its arrows lead back to it.
+   Since 28 Sep 2026 the game lives in m7's outtakes (slides 6 to 9), not the
+   deck. ?demo=1 shows invented pairs marked DEMO DATA. */
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -88,7 +89,7 @@ const all = [];
 try {
   /* ---- the brief pages hold only their own side, and nothing points at the answer ---- */
   const src = async path => (await readFile(join(ROOT, 'teaching/exec/gt/' + path))).toString();
-  const H = await src('m7/tea/h2x/index.html'), S = await src('m7/tea/s9k/index.html'), L = await src('m7/tea/index.html'), D = await src('m7/index.html');
+  const H = await src('m7/tea/h2x/index.html'), S = await src('m7/tea/s9k/index.html'), L = await src('m7/tea/index.html'), D = await src('m7/index.html') + await src('m7/outtakes.html');
   check(!H.includes('one in ten') && !H.includes('six months away'), "Hartwell's page holds none of Selwood's private lines");
   check(!S.includes('a quarter of it') && !S.includes('flat out'), "Selwood's page holds none of Hartwell's private lines");
   check(![H, S, L].some(x => /q4d|bluff|neither side/i.test(x)), 'no phone page names the answer page or the answer');
@@ -150,9 +151,9 @@ try {
   check(await f.ev('location.pathname').then(p => p.endsWith('/s9k/')), 'and one tap switches that phone to the other brief');
 
   /* ---- the deck: the board ---- */
-  const d = await page(U(8173, 'm7/#5'), 1280, 720); all.push(d);
+  const d = await page(U(8173, 'm7/outtakes.html#7'), 1280, 720); all.push(d);
   await sleep(2500);
-  check(await d.ev(`document.querySelector('.slide.active h2').textContent`) === 'What did your pair agree?', 'slide 6 is the board');
+  check(await d.ev(`document.querySelector('.slide.active h2').textContent`) === 'What did your pair agree?', 'the board');
   check(await d.ev(`document.getElementById('twN').textContent`) === '2' && await d.ev(`getComputedStyle(document.getElementById('twDemo')).display`) === 'none', 'it counts two pairs, and no DEMO DATA tag');
   check(await d.ev(`document.getElementById('twBody').hidden`), 'the table waits for the keypress');
   await d.key('ArrowRight', 39); await sleep(400);
@@ -179,12 +180,12 @@ try {
   for (let i = 1; i <= 5; i++) await d.key('ArrowRight', 39);
   await d.shot('tea-answer.png');
   await d.key('ArrowRight', 39); await sleep(2200);
-  check(await d.ev(`location.pathname.endsWith('/m7/')&&location.hash==='#7'`) && await d.ev(`document.querySelector('.slide.active h2').textContent`) === 'Guess two-thirds of the average', 'after its last step the right arrow goes on to the two-thirds game');
+  check(await d.ev(`location.pathname.endsWith('/m7/outtakes.html')&&location.hash==='#8'`) && await d.ev(`document.querySelector('.slide.active h2').textContent`) === 'Who really meant it?', 'after its last step the right arrow goes back to Who really meant it? in the outtakes');
   await d.nav(U(8173, 'm7/tea/q4d/')); await d.key('ArrowLeft', 37); await sleep(2200);
-  check(await d.ev(`location.hash==='#6'&&document.querySelector('.slide.active h2').textContent==='Who really meant it?'`), 'before its first step the left arrow goes back');
+  check(await d.ev(`location.pathname.endsWith('/m7/outtakes.html')&&location.hash==='#8'&&document.querySelector('.slide.active h2').textContent==='Who really meant it?'`), 'before its first step the left arrow goes back');
 
   /* ---- the slides around it ---- */
-  await d.nav(U(8173, 'm7/#3')); await sleep(800);
+  await d.nav(U(8173, 'm7/outtakes.html#5')); await sleep(800);
   for (let i = 0; i < 2; i++) await d.key('ArrowRight', 39);
   await d.shot('tea-standoff.png');
   await d.key('ArrowRight', 39); await sleep(600);
@@ -198,7 +199,7 @@ try {
   check(await a.ev(`!document.getElementById('agree').hidden`), 'after a reset of the room the form is open again');
 
   /* ---- demo ---- */
-  await d.nav(U(8173, 'm7/?demo=1#5')); await sleep(1500);
+  await d.nav(U(8173, 'm7/outtakes.html?demo=1#7')); await sleep(1500);
   check(await d.ev(`getComputedStyle(document.getElementById('twDemo')).display`) !== 'none' && await d.ev(`document.getElementById('twN').textContent`) === '6', '?demo=1 shows six invented pairs, marked DEMO DATA');
   await d.key('ArrowRight', 39); await d.key('ArrowRight', 39); await sleep(500);
   check(await d.ev(`document.getElementById('twBh').textContent`) === '4 of 6', 'and invented counts');

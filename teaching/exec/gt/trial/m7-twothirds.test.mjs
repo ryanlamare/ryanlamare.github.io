@@ -45,7 +45,7 @@ try {
   const titles = await (async () => { await send('Page.navigate', { url: `http://localhost:${PORT}/teaching/exec/gt/m7/?api=http://localhost:${PORT}/mock` }); await sleep(3200);
     return ev(`JSON.stringify([...document.querySelectorAll('section.slide')].map(s=>(s.querySelector('h1,h2')||{}).textContent))`); })();
   const T = JSON.parse(titles), rules = T.indexOf('Guess two-thirds of the average');
-  check(rules > 0 && T[rules + 1].includes('Finding the Nash equilibrium') && T[rules + 2].includes('Finding the Nash equilibrium') && T[rules - 1] === 'Who really meant it?' && T[rules + 3] === 'Strategic moves in sequential games', 'three slides in m7, after the debrief of Who blinks first? (moved from m8 23 Sep 2026; the tea game went in before it 27 Sep)');
+  check(rules > 0 && T[rules + 1].includes('Finding the Nash equilibrium') && T[rules + 2].includes('Finding the Nash equilibrium') && T[rules - 1] === 'What is a strategic move?' && T[rules + 3] === 'Strategic moves in sequential games', 'three slides in m7, straight after What is a strategic move? (moved from m8 23 Sep 2026; Who blinks first? stood before it from 27 to 28 Sep)');
   await send('Page.navigate', { url: `http://localhost:${PORT}/teaching/exec/gt/m7/?api=http://localhost:${PORT}/mock#${rules}` }); await sleep(3200);
   check(await txt('ttN') === '4', 'the rules slide counts four guesses: "abc" and 150 are not guesses');
   check(await ev(`getComputedStyle(document.getElementById('ttD')).display`) === 'none', 'no DEMO DATA tag while the room answers');
