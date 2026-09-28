@@ -15,7 +15,14 @@ to pick the work up on another computer.
   - MG478;
   - a first-timer's view of the standard material.
 - **Don't re-propose his cuts:** the paradoxes, Types of games, the median dog, Who blinks first?.
-- **State:** m1 is 32 slides, m7 is 34, and m3's aircraft game is kept. He's playing it with his wife tonight, so ask how it went; brief edits come through a session.
+- **State:** m1 is 33 slides, m7 is 34, and m3's aircraft game is kept. He hasn't played it with his wife yet; he'll time it for m3's round or hold it until after the run-through. Brief edits come through a session.
+- **m1's round: DONE and live, 28 Sep evening** (his "yes sounds great"; tag `m1-before-answers`). m1 needed no new lesson, only three answers to questions it asked:
+  - **Slide 14**, *Common knowledge and equilibrium*: a second bullet in plain words (his ask, rather than a line under the matrix): "That is, an equilibrium is a stable outcome, where no player can get a better payoff by switching to some other strategy on their own". It's stitched from his 565/590GT lines ("a stable outcome", "no player can get a better payoff by switching to some other strategy"). The junction cells light with it.
+  - **Slide 22, new**, *So what is the answer?*, between the efficient sequence and *This is actually a game about common knowledge*: his 565/590GT slides 17–18 word for word ("the correct answer they give is… 48", "…that number is… 47!", "Actually no it isn't… 46!!!"; "chapter 1 of the book" became "of the pre-course reading" in the first line). The number line is lifted from the 565 week 1 live deck. It's its own slide because slide 20 had no room, and it follows his 565 order (the answer, then the lesson).
+  - **Slide 27**, *Added value matters*: his 550 master s29–30 as the second bullet: "In the first game, to complete each pair I need you just as much as you need me, so the most likely outcome is a 50-50 split (£50 each)". It had gone out when the games were rebuilt on 26 Aug. The card figure is 250px tall so the four bullets fit.
+  - Tests: both m1 offers tests address the slides one higher, and pass. m1 presses through clean.
+- **His question on the cuts** (paradoxes and the rest): keep them out. Each paradox is taught where a module plays it (the truel, the PD, m6's "sometimes it pays to be unpredictable", m7's commitment). Types of games is how m2 and m3 open.
+- **For m2's round:** m2 slide 2 says "Recall a key requirement from our first session: Always put yourself in the other person's shoes!". m1 hasn't said that since 21 Sep; it teaches the idea as *The first rule of game theory: it's not (just) about you!*, so the recall should point there.
 - **Logistics settled today:** pens, paper and playing cards as a phone fallback only, plus a portable charger. The Satechi R2 clicker: arrows and air mouse, but G needs the laptop keyboard.
   - Run the decks full screen, with the day's four decks open in tabs (Ctrl+Tab between them).
 
