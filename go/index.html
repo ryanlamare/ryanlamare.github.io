@@ -103,6 +103,27 @@ a.pick{text-decoration:none}
 .rank button.opt{display:block;padding:12px 14px}
 .rank button.opt .rn,.rank button.opt .rd{display:block}
 .rank.locked .slot.filled{cursor:default}
+
+/* the typed-visit chooser, module by module (28 Sep 2026): on a laptop the two days sit side by side */
+body.chooser .wrap{max-width:1180px}
+.days{display:flex;flex-direction:column;gap:22px;margin-top:2px}
+.day{display:flex;flex-direction:column;gap:10px}
+.dayh{font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.dmods{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
+@media (min-width:900px){.dmods{grid-template-columns:repeat(4,1fr);gap:14px}}
+.mod{border:2.5px solid var(--ink);background:var(--card,#DED6C1)}
+.mod.cur{border-color:var(--red)}
+.modh{padding:10px 14px 8px;border-bottom:1.5px solid var(--rule,#C9BFA6)}
+.modh b{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:3px}
+.modh span{display:block;font-weight:700;font-size:15.5px;line-height:1.3;color:var(--ink)}
+.mod a.row{display:flex;align-items:baseline;gap:8px;padding:7px 14px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14.5px;line-height:1.35;border-top:1px solid var(--rule,#C9BFA6)}
+.mod a.row:first-of-type{border-top:0}
+.mod a.row:hover{background:var(--paper)}
+.mod a.row .rn{flex:1}
+.mod a.row .rx{font-weight:500;font-size:13px;color:var(--muted)}
+.mod a.row::after{content:"\2192";color:var(--red);font-weight:700}
+.mod a.row.cur .rn{color:var(--red)}
+a.pick.notes{margin-top:6px}
 </style>
 </head><body>
 <svg style="display:none" aria-hidden="true">
@@ -154,41 +175,48 @@ function showNext(poll){
 }
 function renderChooser(cfg){
   document.getElementById('dealsLink').hidden=true;
-  document.getElementById('q').textContent='Which question is on the screen?';
+  document.body.classList.add('chooser');
+  document.getElementById('q').textContent='Which game or poll is on the screen?';
   const opts=document.getElementById('opts');
   opts.innerHTML='';
-  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='10px';
-  const paired=new Set(Object.values(cfg.polls).map(p=>p.pair).filter(Boolean));
-  Object.entries(cfg.polls).forEach(([id,poll])=>{
-    if(paired.has(id))return; /* shown on its partner's screen */
-    const b=document.createElement('button');
-    b.className='pick';
-    const mod=poll.mod?[0,poll.mod]:id.match(/^m(\d+)/); /* "mod": a room kept under an old id (m8-twothirds runs in m7) */
-    b.innerHTML='<span class="pm">'+(mod?'Module '+mod[1]:'Poll')+'</span><span class="pq"></span>';
-    b.querySelector('.pq').textContent=poll.q;
-    b.addEventListener('click',()=>{
-      history.replaceState(null,'','?p='+id);
-      document.getElementById('status').textContent='';
-      renderPoll(poll,id);
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='16px';
+  /* every game and poll the decks put on a QR, in running order, a card per
+     module (NOW below is the one list: its paths say the module). Two kinds stay
+     off it: the negotiation briefs, offered only as On the screen now while their
+     QR is up, so nobody can read one (or both sides) early; and the hub, which
+     opens only at the end of day two, from the last slide. */
+  const days=document.createElement('div');days.className='days';
+  const cards={};
+  [['Day one',[1,2,3,4]],['Day two',[5,6,7,8]]].forEach(([dh,ms])=>{
+    const d=document.createElement('div');d.className='day';
+    d.innerHTML='<div class="dayh"></div><div class="dmods"></div>';d.firstChild.textContent=dh;
+    const g=d.lastChild;
+    ms.forEach(m=>{
+      const c=document.createElement('div');c.className='mod';c.dataset.m=m;
+      c.innerHTML='<div class="modh"><b>Module '+m+'</b><span></span></div>';
+      c.querySelector('.modh span').textContent=MODS[m-1];
+      cards[m]=c;g.appendChild(c);
     });
-    opts.appendChild(b);
+    days.appendChild(d);
   });
-  /* the game pages, so ryanlamare.com/go is the one address anyone ever types */
-  const gl=document.createElement('div');gl.className='games';
-  gl.innerHTML='<div class="gh">Or, which game is on the screen?</div>';
-  GAMES.forEach(([mod,label,href])=>{
-    const a=document.createElement('a');a.className='pick';a.href=href;
-    a.innerHTML='<span class="pm">Module '+mod+'</span><span class="pq"></span>';
-    a.querySelector('.pq').textContent=label;
-    gl.appendChild(a);
+  Object.entries(NOW).forEach(([path,[href,label]])=>{
+    const m=+(path.match(/\/m(\d)\//)||[])[1];
+    if(!cards[m]||/[?&]hub\b/.test(href)||/your brief$/i.test(label))return;
+    const r=document.createElement('a');r.className='row';r.href=href;r.dataset.path=path;
+    r.innerHTML='<span class="rn"></span>';r.querySelector('.rn').textContent=label;
+    if(EXTRA[path]){const x=document.createElement('span');x.className='rx';x.textContent=EXTRA[path];r.appendChild(x);}
+    cards[m].appendChild(r);
   });
-  opts.appendChild(gl);
+  opts.appendChild(days);
   /* your notes (27 Sep 2026): optional, kept on the device, easiest on a laptop; typed as ryanlamare.com/go/notes */
-  const nl=document.createElement('div');nl.className='games';
-  nl.innerHTML='<div class="gh">Or, your own notes</div><a class="pick" href="/go/notes/"><span class="pm">Optional</span><span class="pq">Your notes from each module, kept on this device</span></a>';
+  const nl=document.createElement('a');nl.className='pick notes';nl.href='/go/notes/';
+  nl.innerHTML='<span class="pm">Optional</span><span class="pq">Your notes from each module, kept on this device</span>';
   opts.appendChild(nl);
-  offerNow(opts,gl);
+  offerNow(opts,days);
 }
+const MODS=['Introduction to game theory and strategic thinking','Sequential strategies','Simultaneous zero-sum games','Prisoner’s dilemmas and how to overcome them','Coordination games','Mixed strategies','Credibility, commitment, and strategic moves','Information asymmetries'];
+/* a line after a name, where one entry opens several questions */
+const EXTRA={'/teaching/exec/gt/m5/qr-quiz.svg':'16 questions'};
 /* On the screen now (25 Sep 2026). A long room can be too far from the screen
    to scan, so people type ryanlamare.com/go. On arriving at a slide with a QR
    the deck tells the poll server which QR it is (room gt-now, "date|path of the
@@ -214,7 +242,7 @@ const NOW={
   '/teaching/exec/gt/m5/qr-tapaschicken.svg':['/teaching/exec/gt/m5/tapas/?g=chicken','The hub lease'],
   '/teaching/exec/gt/m6/qr-solo.svg':['/teaching/exec/gt/m6/game/?g=solo','Beat the keeper'],
   '/teaching/exec/gt/m6/qr-rps.svg':['/teaching/exec/gt/m6/game/?g=rps','Rock, paper, scissors'],
-  '/teaching/exec/gt/m7/qr-tea.svg':['/teaching/exec/gt/m7/tea/','Who blinks first?: your brief'],
+  '/teaching/exec/gt/m7/qr-tea.svg':['/teaching/exec/gt/m7/tea/','Who blinks first? Your brief'],
   '/teaching/exec/gt/m7/qr-twothirds.svg':['/go/?p=m8-twothirds','Guess two-thirds of the average'],
   '/teaching/exec/gt/m7/qr-chicken.svg':['/teaching/exec/gt/m7/game/?g=chicken','Chicken'],
   '/teaching/exec/gt/m7/qr-suntzu.svg':['/go/?p=m7-suntzu','Surround, or leave a way out?'],
@@ -235,21 +263,11 @@ function offerNow(opts,gl){
     b.innerHTML='<span class="pm">On the screen now</span><span class="pq"></span>';
     b.querySelector('.pq').textContent=NOW[path][1];
     opts.prepend(b);
+    const row=gl.querySelector('a.row[data-path="'+path+'"]'), m=(path.match(/\/m(\d)\//)||[])[1];
+    if(row)row.classList.add('cur');
+    const card=m&&gl.querySelector('.mod[data-m="'+m+'"]');if(card)card.classList.add('cur');
   }).catch(()=>{});
 }
-const GAMES=[
-  [1,'The number game, the offers','/teaching/exec/gt/m1/game/'],
-  [2,'The centipede, last card, the ultimatum','/teaching/exec/gt/m2/game/'],
-  [3,'The engine game','/teaching/exec/gt/m3/solve/'],
-  [3,'One aircraft, two buyers','/teaching/exec/gt/m3/lot/'],
-  [4,'Price Wars: one phone per team','/teaching/exec/gt/m4/price/'],
-  [5,'The investment game','/teaching/exec/gt/m5/game/'],
-  [5,'Whose system?, the hub lease','/teaching/exec/gt/m5/tapas/'],
-  [6,'Beat the keeper, rock paper scissors','/teaching/exec/gt/m6/game/'],
-  [7,'Who blinks first?','/teaching/exec/gt/m7/tea/'],
-  [7,'Chicken, split or steal','/teaching/exec/gt/m7/game/'],
-  [8,'The car market','/teaching/exec/gt/m8/car/'],
-];
 /* a "named" poll makes sure this phone has claimed a class name first —
    the join key for the points system. One picker, once per phone. */
 let myName=null;

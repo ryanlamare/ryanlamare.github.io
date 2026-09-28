@@ -91,13 +91,13 @@ try {
   /* a line from another day, and a path the page does not know */
   await say('gt-now', '2026-01-01|/teaching/exec/gt/m4/qr-price.svg');
   await ph.nav(SITE + '/go/');
-  check(await ph.ev(NOWBTN) === null && await ph.ev(`document.querySelectorAll('button.pick').length`) > 10, 'a line from another day leaves the ordinary list');
+  check(await ph.ev(NOWBTN) === null && await ph.ev(`document.querySelectorAll('.mod a.row').length`) > 10, 'a line from another day leaves the ordinary list');
   await say('gt-now', TODAY + '|/somewhere/else.svg');
   await ph.nav(SITE + '/go/');
   check(await ph.ev(NOWBTN) === null, 'an unknown QR is ignored');
 
   /* the two-thirds phone */
-  check(await ph.ev(`[...document.querySelectorAll('button.pick')].some(b=>b.querySelector('.pm').textContent==='Module 7'&&/two-thirds/.test(b.textContent))`), 'the chooser lists the two-thirds guess under Module 7');
+  check(await ph.ev(`[...document.querySelectorAll('.mod[data-m="7"] a.row')].some(a=>/two-thirds/.test(a.textContent))`), 'the chooser lists the two-thirds guess under Module 7');
   await ph.nav(SITE + '/go/?p=m8-twothirds');
   check(await ph.ev(`document.querySelector('.sayrow input').inputMode`) === 'numeric', 'the two-thirds phone opens the number pad');
   const sendT = t => ph.ev(`(()=>{const i=document.querySelector('.sayrow input');i.value=${JSON.stringify(t)};document.querySelector('.sayrow button').click();return document.getElementById('status').textContent})()`);
