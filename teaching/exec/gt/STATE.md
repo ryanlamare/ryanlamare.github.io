@@ -63,6 +63,15 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m3's aircraft briefs, third pass (29 Sep; tag `m3-before-needs`).** He edited Larkfield himself, and Claude applied his text (typos fixed) and mirrored it for Harrow in his register (Harrow's director is Margot Heller, the counterpart of his Nistopher Colan).
+  - **His diagnosis:** the briefs gave only an amount to bargain over, and "assume you will never see it again" made a win-win look impossible.
+  - **Now:** "it's unlikely you will ever see the plane again unless you can work something out with your rival", and the meeting is "to persuade them to back out of the bidding or work out a deal you can live with".
+  - **The missing Ugli piece:** each side must claim the WHOLE thing at the same time, in terms it can see (Ugli: all 3,000 oranges, now). So each brief ends with **What you need from any deal**, four tangible targets:
+    - where and when: Harrow wants the Meridian 1 June–30 September for its cabin on Stage 4 in London; Larkfield wants it at Manston in Kent, flying, all of July and August. That's the apparent clash that only the cabin/flight split resolves;
+    - price near the £450,000 guide, under a private ceiling;
+    - as much as possible of the £300,000 resale;
+    - reaching the screen before the rival.
+  - The last three stay zero-sum and tradeable after the discovery. m3-lot passes.
 - **m3, same night: every matrix dims, nothing is crossed out** (his call; tag `m3-before-dim`).
   - Kenney, Casey and Pat, the engine game and its solution are all `.mx.solvable`: a click on a row or column name toggles the same `gone` dim his keypresses use, the last line on a side stays, and one row and one column left takes the red box. Casey and Pat's steps use `mxLine`.
   - m3/solve dims too (labels at .3, cells at .18, no strike lines) and says "rule out that whole line".
