@@ -4,6 +4,21 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## /GO, MODULE BY MODULE, AND YOUR NOTES BY MODULE NAME, 28 Sep 2026 (his go, all live)
+
+- **A typed ryanlamare.com/go** was one long list: every poll as a button (15 were the quiz), then eleven game links. It is now the programme, a card per module under the names from m1's *How the next two days will run*.
+  - On a laptop that's a Day one row and a Day two row, on one screen; on a phone the cards stack.
+  - *On the screen now* stays the red button on top, and its module (and row) are outlined in red.
+  - The quiz is one row, "How good is your coordination? · 16 questions"; the phone chains the questions with NEXT.
+  - The list is built from the page's NOW map, so a new QR added there shows up in its module by itself.
+  - QR visits (`?p=`) are untouched: phones still go straight to the question.
+- **Kept off the list, on purpose:**
+  - The two negotiation briefs (m3's One aircraft, two buyers; m7's Who blinks first?). /go used to list them, so anyone could read a brief early, or both sides by typing a different partner. They appear only as *On the screen now* while their QR is up; m7's reads "Who blinks first? Your brief".
+  - The hub, which opens only at the end.
+- **Your notes** heads each section with the module's name instead of six "… in your world" titles (his point: repetitive). The leads and questions are unchanged, and still checked against the slides.
+- **QR labels on the slides** read just ryanlamare.com/go: the red button already takes a typed visitor to whatever the deck is showing.
+- Tag `go-before-modules`. go-now (two checks follow the new rows), notes (the Word file's heading), names-confirm, go-roster, go-reset and pairs-quiz all pass.
+
 ## WHERE GAME THEORY CAME FROM, AND FRIENDS IN M7, 28 Sep 2026 (his go, all live)
 
 - **m1 slides 10 to 12**, straight after *Is an act a singular decision or a broader game?*. His point: m1 defined game theory but never said where it came from, how it spread, or why it sometimes sucks, and the pre-reading is optional, so the room needs the context on the slides.
