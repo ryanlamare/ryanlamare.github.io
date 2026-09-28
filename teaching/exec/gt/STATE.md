@@ -57,4 +57,14 @@ to pick the work up on another computer.
   - **Slide 12, *Best response analysis*:** walked the way his 550 (s205–214) and 590GT (s157–166) do. One press per column for Player 1, then one per row for Player 2; the line being read stays lit, the rest fades, and its best payoff gets a ring that stays. The last press boxes the Nash cell. There's a key line, "Each cell is Player 1's payoff · Player 2's". This was the m3-shaped gap.
   - **Slide 17** answers "Would strategic communication matter under a PD?" at a fifth press: "Not really: in a PD each side still gains by breaking its word (remember your Price Wars meetings), but in a coordination game nobody gains by misleading the other, so talking works." The wording is Claude's.
   - m5-markers, m5-reset and pairs-quiz pass; m5 presses through clean.
-- **m5's round, part two: OPEN.** Bargaining as a battle of the sexes (his 550 s245 promise, "we'll return to this later"; 590GT s353–354). "Bargain" appears nowhere in m5–m8. He asked for a larger fix than one step; Claude's proposal is in the chat, awaiting his read.
+- **m5's round, part two: BUILT and live 28–29 Sep** (his "yes build the examples"; tag `m5-before-bargaining`; 33 slides). **Slide 26, *Bargaining as a coordination game*** (his 590GT title), after *Solving games of chicken*:
+  - It opens with his 590GT s353 lines.
+  - Two cards name the room's own negotiations: *Whose system?* is a battle of the sexes; *The hub lease* is chicken, with his 590GT s355 brinkmanship ("deals often come in the final minutes").
+  - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
+  - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
+  - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m3, same night: every matrix dims, nothing is crossed out** (his call; tag `m3-before-dim`).
+  - Kenney, Casey and Pat, the engine game and its solution are all `.mx.solvable`: a click on a row or column name toggles the same `gone` dim his keypresses use, the last line on a side stays, and one row and one column left takes the red box. Casey and Pat's steps use `mxLine`.
+  - m3/solve dims too (labels at .3, cells at .18, no strike lines) and says "rule out that whole line".
+  - m5's best-response rings are a different method, on purpose.
+  - m3-solve and notes pass; m3 presses through clean.
