@@ -57,7 +57,7 @@ const clean = x => x.replace(/<[^>]+>/g, '').replace(/&rsquo;/g, '’').replace(
 /* the questions as the decks have them: each YOUR WORLD slide's lead line and rail items */
 async function deckQuestions(m) {
   const s = String(await readFile(join(ROOT, 'teaching/exec/gt/m' + m + '/index.html')));
-  const secs = s.split('<section class="slide').slice(1).filter(x => x.includes('YOUR WORLD') && x.includes('class="talk"'));
+  const secs = s.split('<section class="slide').slice(1).filter(x => /MODULE \d (?:·|&middot;) YOUR WORLD</.test(x) && x.includes('class="talk"'));   /* the closers' own label, not m3's Game theory in your world (the engine game, whose tables band is not a closer, 28 Sep 2026) */
   return secs.map(x => ({
     lead: (x.match(/class="leadline"[^>]*>([\s\S]*?)<\/div>/) || [, ''])[1],
     items: [...x.matchAll(/<div class="rt">([\s\S]*?)<\/div>\s*<\/div>/g)].map(r => r[1]),

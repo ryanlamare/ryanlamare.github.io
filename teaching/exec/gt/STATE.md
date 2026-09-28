@@ -42,3 +42,14 @@ to pick the work up on another computer.
   - **The reveal page** (G on slide 26) shows the briefs' own Meridian twice: Harrow's faded except the cabin, Larkfield's in the air. Its caption reads "The same aircraft, but different parts of it", and the deal is "one of you buys the Meridian, Harrow takes the cabin for its stage, and Larkfield flies what is left. Then you settle the price, and the sale afterwards."
   - The setup and rules slides, the board, the form and the Worker room (m3-lot) are unchanged. The solve page now opens with "Solve it together with your table."
   - Briefs are about 350 words each (his Ugli: 439 and 469). The wording is Claude's; he rereads it on the brief pages with `?fresh=1`.
+- **m4's round: BUILT and live 28 Sep night** (tag `m4-before-ranking`; still 28 slides). His notes plus Claude's two:
+  - **Slide 15** (*Can repeated games…?*) answers its own question at the fourth press: "It assumes everyone knows which round is the last. Real rivals rarely know when they will stop meeting, so there is always a next round worth protecting." The wording is Claude's; his master ends on "And yet…".
+  - **The tables band moved** from Axelrod's setup (slide 17) to *Rank the strategies* (slide 18). His point: the tables can't argue the options before they've seen them.
+  - **Slide 19 is now *The room's ranking versus the actual result*** (his redesign; "the room's tournament" and "Run the tournament" confused him).
+    - Arriving shows the room's order 1–7.
+    - The next press freezes it and brings up how the seven actually finished, with scores, joined by lines: teal if it finished higher than the room thought, terracotta if lower, grey if the room had it right.
+    - A key line and a line on where the result comes from (five of each, 200 moves) sit under it.
+    - The verdict adds his 550 envy lesson: "Tit for Tat never beats anyone in a single game: it wins on its own total."
+    - No button and no animation; the script draws with createElementNS.
+  - **Slide 24, *How would you get out of yours?*** gains a context line ("Go back to the prisoner's dilemma your table built. Which of these could get you out of it?"). The four ways out are now questions ("Could you make it repeat?" … "Or is there no way out?"), and the band reads "Agree which way out would work for the dilemma you built." /go/notes' m4 question follows.
+  - **Tests:** notes.test now finds closers by their own "MODULE N · YOUR WORLD" label (m3's engine game is labelled "Game theory in your world" and its band is not a closer). notes, go-now and m4-price-reset pass, and m4 presses through clean.
