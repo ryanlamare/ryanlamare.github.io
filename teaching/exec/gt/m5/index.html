@@ -41,6 +41,9 @@
 .mx .cell .pa,.mx .cell .pb{position:relative;display:inline-block}
 .mx .cell .circ::after{content:"";position:absolute;inset:-5px -10px;border:3.5px solid currentColor;border-radius:50%;pointer-events:none}
 .brx .cell .pc{margin:0 .6em}   /* room for a ring either side of the comma */
+/* best response, one line at a time (28 Sep 2026): the column or row being read stays full strength, the rest fades */
+.brx .cell{transition:opacity .3s}
+.brx .cell.brdim{opacity:.28}
 .mkey{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
 .mkey .k{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--muted)}
 .mkey .sw{width:22px;height:22px;background:var(--card);flex:none}
@@ -472,28 +475,36 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
         <div class="rl" style="grid-row:4">High</div>
         <div class="rl" style="grid-row:5">Low</div>
         <div class="rl" style="grid-row:6">Bottom</div>
-        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">3</span><span class="pc">,</span><span class="pb">1</span></div>
-        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb" id="b2c1">3</span></div>
-        <div class="cell" style="grid-row:3;grid-column:5"><span class="pa">10</span><span class="pc">,</span><span class="pb">2</span></div>
-        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">4</span><span class="pc">,</span><span class="pb" id="b2c2">5</span></div>
-        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">3</span><span class="pc">,</span><span class="pb">0</span></div>
-        <div class="cell" style="grid-row:4;grid-column:5"><span class="pa">6</span><span class="pc">,</span><span class="pb">4</span></div>
-        <div class="cell" id="n32" style="grid-row:5;grid-column:4"><span class="pa" id="b1c2">5</span><span class="pc">,</span><span class="pb" id="b2c3">4</span></div>
-        <div class="cell" style="grid-row:5;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">2</span></div>
-        <div class="cell" style="grid-row:5;grid-column:5"><span class="pa" id="b1c3">12</span><span class="pc">,</span><span class="pb">3</span></div>
-        <div class="cell" style="grid-row:6;grid-column:3"><span class="pa" id="b1c1">5</span><span class="pc">,</span><span class="pb">6</span></div>
-        <div class="cell" style="grid-row:6;grid-column:4"><span class="pa">4</span><span class="pc">,</span><span class="pb">5</span></div>
-        <div class="cell" style="grid-row:6;grid-column:5"><span class="pa">9</span><span class="pc">,</span><span class="pb" id="b2c4">7</span></div>
+        <div class="cell" data-r="3" data-c="3" style="grid-row:3;grid-column:3"><span class="pa">3</span><span class="pc">,</span><span class="pb">1</span></div>
+        <div class="cell" data-r="3" data-c="4" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb" id="b2c1">3</span></div>
+        <div class="cell" data-r="3" data-c="5" style="grid-row:3;grid-column:5"><span class="pa">10</span><span class="pc">,</span><span class="pb">2</span></div>
+        <div class="cell" data-r="4" data-c="3" style="grid-row:4;grid-column:3"><span class="pa">4</span><span class="pc">,</span><span class="pb" id="b2c2">5</span></div>
+        <div class="cell" data-r="4" data-c="4" style="grid-row:4;grid-column:4"><span class="pa">3</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" data-r="4" data-c="5" style="grid-row:4;grid-column:5"><span class="pa">6</span><span class="pc">,</span><span class="pb">4</span></div>
+        <div class="cell" data-r="5" data-c="4" id="n32" style="grid-row:5;grid-column:4"><span class="pa" id="b1c2">5</span><span class="pc">,</span><span class="pb" id="b2c3">4</span></div>
+        <div class="cell" data-r="5" data-c="3" style="grid-row:5;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">2</span></div>
+        <div class="cell" data-r="5" data-c="5" style="grid-row:5;grid-column:5"><span class="pa" id="b1c3">12</span><span class="pc">,</span><span class="pb">3</span></div>
+        <div class="cell" data-r="6" data-c="3" style="grid-row:6;grid-column:3"><span class="pa" id="b1c1">5</span><span class="pc">,</span><span class="pb">6</span></div>
+        <div class="cell" data-r="6" data-c="4" style="grid-row:6;grid-column:4"><span class="pa">4</span><span class="pc">,</span><span class="pb">5</span></div>
+        <div class="cell" data-r="6" data-c="5" style="grid-row:6;grid-column:5"><span class="pa">9</span><span class="pc">,</span><span class="pb" id="b2c4">7</span></div>
       </div>
+      <div class="mxnote" style="color:var(--ink);font-size:17px;margin-top:-6px">Each cell is <b style="color:var(--teal)">Player 1&rsquo;s payoff</b> &middot; <b style="color:var(--terracotta)">Player 2&rsquo;s</b></div>
       <div class="mkey">
         <div class="k" data-step="1"><span class="sw circA"></span><span><b>Player 1&rsquo;s best response</b> in each column</span></div>
-        <div class="k" data-step="2"><span class="sw circB"></span><span><b>Player 2&rsquo;s best response</b> in each row</span></div>
-        <div class="k" data-step="3"><span class="sw eq"></span><span><b>Nash equilibrium.</b> Any cell with both circles.</span></div>
+        <div class="k" data-step="4"><span class="sw circB"></span><span><b>Player 2&rsquo;s best response</b> in each row</span></div>
+        <div class="k" data-step="8"><span class="sw eq"></span><span><b>Nash equilibrium.</b> Any cell with both circles.</span></div>
       </div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="b1c1,b1c2,b1c3" data-cls="circ" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="b2c1,b2c2,b2c3,b2c4" data-cls="circ" style="position:absolute;width:0;height:0"></span>
-    <span data-step="3" data-stepcall="mxMark" data-cells="n32" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <!-- 28 Sep 2026: his LER 550 slides 205-214 (590GT 157-166): one column at a time for Player 1, then one row at a time for Player 2, then the cell with both circles -->
+    <span data-step="1" data-stepcall="brFocus" data-line="c3" data-circ="b1c1" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="brFocus" data-line="c4" data-circ="b1c2" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="brFocus" data-line="c5" data-circ="b1c3" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="brFocus" data-line="r3" data-circ="b2c1" style="position:absolute;width:0;height:0"></span>
+    <span data-step="5" data-stepcall="brFocus" data-line="r4" data-circ="b2c2" style="position:absolute;width:0;height:0"></span>
+    <span data-step="6" data-stepcall="brFocus" data-line="r5" data-circ="b2c3" style="position:absolute;width:0;height:0"></span>
+    <span data-step="7" data-stepcall="brFocus" data-line="r6" data-circ="b2c4" style="position:absolute;width:0;height:0"></span>
+    <span data-step="8" data-stepcall="brFocus" data-line="" data-circ="" style="position:absolute;width:0;height:0"></span>
+    <span data-step="8" data-stepcall="mxMark" data-cells="n32" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
@@ -626,6 +637,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
       <li data-step="2">This is why key figureheads give speeches to restore confidence</li>
       <li data-step="3"><b>This is also one reason why leadership matters!</b></li>
       <li data-step="4">Would strategic communication matter under a PD?</li>
+      <li data-step="5">Not really: in a PD each side still gains by breaking its word (remember your Price Wars meetings), but in a coordination game nobody gains by misleading the other, so <b>talking works</b></li>   <!-- 28 Sep 2026: the answer, Claude's line for his edit -->
     </ul>
     <div class="clipframe xs" id="jbwrap">
       <button class="clipcover" id="jbload" type="button">
@@ -1535,6 +1547,25 @@ clipOnClick('mb2load','mb2wrap','DtumWOsgFXc','Moneyball: how Billy Beane solved
 window.mbSwap=function(el,on){const w1=document.getElementById('mb1wrap');w1.classList.toggle('gone',on);document.getElementById('mb2wrap').classList.toggle('shown2',on);
   if(on){const f=w1.querySelector('iframe');if(f)f.remove();}};
 
+/* ---- Best response analysis (28 Sep 2026): each press reads one column
+   (Player 1) or one row (Player 2): that line stays lit, the rest fades, and
+   its best payoff gets a ring that stays. The last press lights nothing and
+   boxes the cell with both rings. A stack keeps going back exact. ---- */
+(function(){
+  const stack=[];
+  function paint(){
+    const line=stack.length?stack[stack.length-1]:'';
+    document.querySelectorAll('.brx .cell').forEach(c=>{
+      const on=!line||(line[0]==='c'?c.dataset.c===line.slice(1):c.dataset.r===line.slice(1));
+      c.classList.toggle('brdim',!on);
+    });
+  }
+  window.brFocus=function(el,on){
+    if(on){stack.push(el.dataset.line);}else{stack.pop();}
+    if(el.dataset.circ){const t=document.getElementById(el.dataset.circ);if(t)t.classList.toggle('circ',on);}
+    paint();
+  };
+})();
 </script>
 <script src="/teaching/exec/gt/deck.js"></script>
 <script defer src="/teaching/exec/gt/edit.js"></script>
