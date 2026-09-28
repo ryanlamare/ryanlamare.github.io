@@ -6,19 +6,21 @@ to pick the work up on another computer.
 
 ## WHERE GAME THEORY CAME FROM, AND FRIENDS IN M7, 28 Sep 2026 (his go, all live)
 
-- **m1 slides 10 and 11**, straight after *Is an act a singular decision or a broader game?*. His point: m1 defined game theory but never said where it came from, how it spread, or why it sometimes sucks.
-  - The familiarity poll is now slide 12, and m1 has 31 slides.
+- **m1 slides 10 to 12**, straight after *Is an act a singular decision or a broader game?*. His point: m1 defined game theory but never said where it came from, how it spread, or why it sometimes sucks, and the pre-reading is optional, so the room needs the context on the slides.
+  - The familiarity poll is now slide 13, and m1 has 32 slides.
+  - *Mixing art and science in game theory* (slide 10) is his 550 master slide 9, word for word: his lead line, an art card and a science card (each label begins his sentence), and "Good strategic thinkers mix both elements" last. It went in the same evening, after he said he hadn't meant to cap the addition at two slides, only to watch for sprawl.
   - *Why game theory is so useful…* is his 550 slide on m6's timeline pattern. The lead line is the 2024 master's.
   - The four stations are 1944, Economics, The Cold War and Biology, one press each, then "The application possibilities are seemingly endless!".
   - The stations come from his fuller 590GT/565 version of the slide, which names von Neumann, Morgenstern and *The Theory of Games and Economic Behavior*; the master had trimmed them to "mathematicians and economists".
   - Only 1944 carries a date, because it is the only one his slide gives.
   - *…and why game theory sometimes sucks* is his master slide word for word, as four cards with a pictogram each (his ask: "a tiny bit less powerpointy").
-  - Left out at his two-slide cap: the 550 "mixing art and science in GT", the one intro slide never brought over and never cut (Claude recommended it). The paradoxes and Types of games stay his cuts.
+  - The paradoxes and Types of games stay his cuts.
+  - The two offers QRs (slides 23 and 25) read just ryanlamare.com/go, as his others do; m2's "proposers pick their partner" stays, being an instruction, not a name.
 - **m7 slide 21, Commitment and brinkmanship:** a third press, between "Parties may remain committed…" and the escape route, reads "Recall Phoebe and Chandler in *Friends*: if they had kept going, god knows where they might have ended up!" (his words).
   - Its WATCH chip plays the official Friends clip "Phoebe Tries to Seduce Chandler" (`LDtqv_7oZLw`) over the slide, as the Dr. Strangelove tile does. The chip does nothing until its step shows.
   - m1's clip is the set-up ("they don't know that we know"); this one is the showdown.
   - A copy elsewhere runs 4:54; the YouTube one could not be timed from here.
-- Tags `m1-before-history` and `m7-before-friends`. The m1 offers tests address the added value slides two higher.
+- Tags `m1-before-history`, `m1-before-art` and `m7-before-friends`. The m1 offers tests address the added value slides three higher.
 - m1-offers, m1-offers-order, notes, go-now, m7-tea, m7-twothirds and m7-reset all pass, and a press-through of m1 and m7 is clean.
 
 ## YOUR NOTES AND THE BATTLE OF WITS, 27 Sep 2026 (his go, all live)
