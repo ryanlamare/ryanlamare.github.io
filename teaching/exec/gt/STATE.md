@@ -15,7 +15,7 @@ to pick the work up on another computer.
 - **His rulings:** m5 slide 3's "So far…" stays; m6's "And this room?" is deleted; no minimax (m6's widget carries the idea).
 - **The winner's curse: dropped** (his call).
 - **Price Wars is now run by Ryan in person (29 Sep, his design; BUILT and live).**
-  - Aura is in the room and Buco's in the hall. He goes team to team with **m4/desk/** on his phone, taps each price, and taps **Reveal** in front of a team to tell it its rival's price.
+  - Aura is in the room and Buco's in the hall. He goes team to team with **m4/desk/** on his phone and taps each price. The desk shows every junction as his sheet of paper: both stations' prices, week by week, from the moment they are tapped. His 29 Sep ask: "I can't see the previous weeks' info, and can't see the current week's either, until I press reveal". **Told B1** (naming what A1 posted) then puts it on that team's phone.
   - He wanted the tension of walking up to a team knowing something it doesn't: "it's not as climactic if I just press a button for everyone".
   - The teams' phones (**m4/price/**) only display: the week's matrix (the hall can't see the screen), their own price at once, the rival's only after his reveal, and the revenue. Their one tap is Meet?, before weeks 3 and 5.
   - The desk works out the number of junctions itself (the highest any phone picked, else 4: for 26 people, eight teams of three or four, 13 in the room and 13 in the hall), with a row of numbers to change it.
