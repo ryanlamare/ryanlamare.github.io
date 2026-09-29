@@ -56,7 +56,7 @@ const GT_NAMES = (() => {
     h.textContent = 'Someone has already joined as ' + name + '.';
     const p = document.createElement('div');
     p.style.cssText = 'font-weight:600;font-size:14px;line-height:1.4;color:var(--muted,#666)';
-    p.textContent = 'If that’s you on another phone, tap the black button. If not, add your last initial so the points stay yours.';
+    p.textContent = 'If that’s you on another phone, tap the black button. If not, add your last initial so the boards can tell you apart.';
     const me = document.createElement('button');
     me.type = 'button';
     me.style.cssText = 'font-family:inherit;font-weight:700;font-size:14px;letter-spacing:.08em;background:var(--ink,#111);color:var(--paper,#fff);border:2.5px solid var(--ink,#111);padding:12px 16px;cursor:pointer';
