@@ -48,9 +48,11 @@ table.pm th,table.pm td{padding:0;text-align:center}
 table.pm th{font-weight:700;font-size:15px;letter-spacing:.04em;padding:4px 6px}
 table.pm th.ax{text-transform:uppercase;letter-spacing:.14em;font-size:11px}
 table.pm th.ax.a{color:var(--teal)} table.pm th.ax.b{color:var(--terracotta)}
-table.pm td.c{border:2.5px solid var(--ink);background:var(--card);font-weight:600;font-size:22px;width:120px;height:84px;color:var(--muted)}
-table.pm td.c span.me{font-weight:800;font-size:34px}
-table.pm td.c .a.me{color:var(--teal)} table.pm td.c .b.me{color:var(--terracotta)}
+/* the normal matrix, both stations' numbers alike (his call, 29 Sep: showing only
+   their own numbers big pushes everyone to defect; seeing them evenly leaves room
+   to cooperate) */
+table.pm td.c{border:2.5px solid var(--ink);background:var(--card);font-weight:700;font-size:28px;width:120px;height:84px}
+table.pm td.c .a{color:var(--teal)} table.pm td.c .b{color:var(--terracotta)}
 table.pm td.c .s{margin:0 .25em}
 .cap{font-weight:500;font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
 .mtag{display:inline-block;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);background:var(--red);padding:5px 10px}
@@ -181,8 +183,10 @@ function render(){
   }
   const tag=PW.tagOf(w);
   app.appendChild(el('h1','','Week '+w+(tag?'<span class="wt">'+tag+'</span>':'')));
+  const mine=PW.p(g,t,w);
+  if(!mine)app.appendChild(el('div','lbl','Decide your price and tell Ryan when he comes to your table.'));
   app.appendChild(matrix(w,t));
-  const mine=PW.p(g,t,w), st=el('div','status');
+  const st=el('div','status');
   st.appendChild(el('div','chip'+(mine?' '+mine:''),'<div class="ck">Your price</div><div class="cv">'+(mine?PW.PRICE[mine]:'&ndash;')+'</div>'));
   const last=w>1?PW.p(g,r,w-1):null;   /* the latest price Ryan has told them, week w-1 */
   st.appendChild(el('div','chip'+(last?' '+last:''),'<div class="ck">'+(w>1?'Theirs, week '+(w-1):'Theirs')+'</div><div class="cv">'+(last?PW.PRICE[last]:'&ndash;')+'</div>'));

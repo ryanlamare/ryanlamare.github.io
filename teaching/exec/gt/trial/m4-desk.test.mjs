@@ -122,11 +122,14 @@ try {
   await desk.shot('desk-1-board.png');
   check((await h1('a1')).startsWith('Week 1'), 'phones show week 1', await h1('a1'));
   check(await phone.b1.ev(`document.querySelectorAll('table.pm td.c').length`) === 4, 'every phone shows the payoff matrix');
+  check((await phone.b1.ev(`document.body.innerText`)).includes('Decide your price and tell Ryan when he comes to your table.'), 'and says what to do: decide your price and tell Ryan');
+  check(await phone.b1.ev(`(()=>{const c=document.querySelector('table.pm td.c');return getComputedStyle(c.querySelector('.a')).fontSize===getComputedStyle(c.querySelector('.b')).fontSize})()`), 'both stations\' numbers are the same size');
   await phone.b1.shot('phone-1-week1-hall.png');
 
   /* week 1: the room first */
   await price('a1', 'h');
   check(await ownChip('a1') === '£1.50', 'A1\'s phone shows its own price as soon as Ryan taps it', await ownChip('a1'));
+  check(!(await phone.a1.ev(`document.body.innerText`)).includes('Decide your price'), 'and the decide-your-price line goes once it has');
   check(await ownChip('b1') === '–', 'B1\'s phone shows nothing of A1\'s price', await ownChip('b1'));
   await desk.shot('desk-2-a1-price-set.png');
   await price('a2', 'c');
