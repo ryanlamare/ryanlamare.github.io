@@ -78,8 +78,9 @@ const click = (sel, text) => `(()=>{const b=[...document.querySelectorAll(${JSON
 
 try {
   const B = 'http://localhost:' + PORT + '/teaching/exec/gt/m4/';
+  await fetch(W + '/p/gt-roster/roster', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ s: SECRET, names: ['Ana', 'Ben', 'Cara', 'Dev'] }) });
   const desk = await page(B + 'desk/', 390, 844, true);
-  await desk.ev('window.confirm=()=>true');
+  await desk.ev('window.confirm=()=>true;window.prompt=()=>"Zoe"');
   const phone = {};
   for (const t of ['a1', 'b1', 'a2', 'b2']) {
     phone[t] = await page(B + 'price/', 390, 844, true);
@@ -160,21 +161,28 @@ try {
   check((await desk.ev(`document.querySelector('h1').textContent`)).includes('Before week 3'), 'the desk heads the board Before week 3');
   check((await desk.ev(`document.body.textContent`)).includes('2 teams still to hear week 2'), 'it says two teams still need week 2');
   check(!(await h1('b1')).includes('meet'), 'B1\'s phone does not ask to meet before it has heard week 2', await h1('b1'));
-  check((await h1('a1')).includes('meet'), 'A1\'s phone asks: before week 3, do you want to meet them?', await h1('a1'));
+  check((await h1('a1')) === 'Before week 3', 'A1\'s phone says Before week 3, and asks nothing', await h1('a1'));
+  check(await phone.a1.ev(`document.querySelectorAll('button').length`) === 0, 'there is nothing to tap on it');
   await desk.shot('desk-7-meeting-round.png');
   await reveal('b1', 2); await reveal('b2', 2); await desk.ev(`view='board';render()`);
-  check((await h1('b1')).includes('meet'), 'once told, B1\'s phone asks too');
-  await phone.a1.ev(click('button.meet', 'Yes')); await phone.b1.ev(click('button.meet', 'Yes'));
-  await phone.a2.ev(click('button.meet', 'Yes')); await phone.b2.ev(click('button.meet', 'No'));
-  await sleep(600); await settle();
-  await phone.a1.shot('phone-4-meet-ask.png');
-  const mrow = await desk.ev(`[...document.querySelectorAll('.jcard .jm')].map(x=>x.textContent).join(' | ')`);
-  check(mrow === 'Meet? A Yes · B Yes | Meet? A Yes · B No', 'the desk shows each junction\'s answers on its card', mrow);
-  await desk.ev(click('button.go', 'Close the asks')); await settle();
-  check((await desk.ev(`document.querySelector('.panel .pt').textContent`)).includes('junction 1'), 'junction 1 meets, junction 2 does not');
+  check((await h1('b1')) === 'Before week 3', 'once told week 2, B1\'s phone says Before week 3 too');
+  const meet = async (t, yn, who) => { await tile(t); check(await desk.ev(click('button.yn', yn)), `desk: ${t.toUpperCase()} ${yn === 'Yes' ? 'wants' : 'does not want'} to meet`); await settle();
+    if (who) { check(await desk.ev(click('button.nm', who)), `desk: ${t.toUpperCase()}'s rep is ${who === 'Someone else' ? 'typed in' : who}`); await settle(); } };
+  await meet('a1', 'Yes', 'Ana');
+  await desk.shot('desk-7b-a1-rep.png');
+  await meet('b1', 'Yes', 'Ben'); await meet('a2', 'Yes', 'Someone else'); await meet('b2', 'No');
+  await tile('a1');
+  check((await desk.ev(`document.querySelector('.set').textContent`)) === 'Tell A1: you’re meeting Ben from B1.', 'at A1 the desk says what to tell them', await desk.ev(`document.querySelector('.set').textContent`));
+  await tile('a2');
+  check((await desk.ev(`document.querySelector('.set').textContent`)) === 'Tell A2: no meeting.', 'and at A2: no meeting', await desk.ev(`document.querySelector('.set').textContent`));
+  check(await desk.ev(`[...document.querySelectorAll('button.nm')].some(b=>b.classList.contains('sel')&&b.textContent==='Zoe')`), 'a typed rep shows as chosen');
+  await desk.ev(`view='board';render()`);
+  const outcome = await desk.ev(`document.querySelectorAll('.panel .pt')[1].textContent`);
+  check(outcome === 'Junction 1: meeting, Ana (A1) and Ben (B1)Junction 2: no meeting', 'the board lists each junction\'s outcome, with the reps', outcome);
+  const jl = await desk.ev(`[...document.querySelectorAll('.jcard .jm2')].map(x=>x.textContent).join(' | ')`);
+  check(jl === 'Meet before week 3? A1 yes (Ana) · B1 yes (Ben) | Meet before week 3? A2 yes (Zoe) · B2 no', 'each junction card shows its answers and reps', jl);
   await desk.shot('desk-8-meetings.png');
-  check((await phone.a1.ev(`document.body.textContent`)).includes('Your meeting is on'), 'A1\'s phone: your meeting is on');
-  check((await phone.a2.ev(`document.body.textContent`)).includes('No meeting'), 'A2\'s phone: no meeting');
+  check((await h1('a1')) === 'Before week 3', 'the phones show nothing of the meetings');
   await tile('a1');
   check(await desk.ev(`!document.querySelector('button.price')`), 'no week 3 prices before Ryan opens the week');
   await desk.ev(`view='board';render()`); await desk.ev(click('button.go', 'Open week 3')); await settle();
@@ -199,12 +207,11 @@ try {
   await reveal('b1', 4); await reveal('b2', 4); await desk.ev(`view='board';render()`);
   await desk.shot('desk-9-news.png');
   await desk.ev(click('button.go', 'The news is out')); await settle();
-  check((await h1('b1')).includes('meet'), 'after the news, the phones ask about meeting before week 5');
+  check((await h1('b1')) === 'Before week 5', 'after the news, the phones say Before week 5');
   check(await phone.b1.ev(`[...document.querySelectorAll('table.pm td.c')].map(c=>c.textContent).join(' ')`) === '12,12 2,72 72,2 9,9', 'and show the FuelWatch matrix');
-  /* A2's phone never answers: Ryan answers for it at the desk */
-  await phone.a1.ev(click('button.meet', 'No')); await phone.b1.ev(click('button.meet', 'No')); await phone.b2.ev(click('button.meet', 'No'));
-  await tile('a2'); check(await desk.ev(click('.mq2 button', 'No')), 'the desk can answer Meet? for a team whose phone cannot'); await settle();
-  await desk.ev(`view='board';render()`); await desk.ev(click('button.go', 'Close the asks')); await settle();
+  /* junction 1 meets again, with a new rep for Aura; junction 2 does not */
+  await meet('a1', 'Yes', 'Cara'); await meet('b1', 'Yes', 'Ben'); await meet('a2', 'No'); await meet('b2', 'No');
+  await desk.ev(`view='board';render()`);
   await desk.ev(click('button.go', 'Open week 5')); await settle();
   check((await h1('a1')).includes('Week 5') && (await h1('a1')).includes('FuelWatch'), 'week 5 opens under the FuelWatch rules', await h1('a1'));
   await phone.b2.shot('phone-6-week5.png');
@@ -230,7 +237,8 @@ try {
   await sleep(3500);
   const rows = await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')].map(r=>r.querySelector('.jn').textContent+' '+[...r.querySelectorAll('.tot')].map(x=>x.textContent).join(' '))`);
   check(rows.length === 2 && rows[0] === `Junction 1 £${exp(A1, B1)}k £${exp(B1, A1)}k` && rows[1] === `Junction 2 £${exp(A2, B2)}k £${exp(B2, A2)}k`, 'What happened at each junction shows both junctions and their totals', rows);
-  check(await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')][0].querySelectorAll('.mt')[0].textContent`) === 'Met', 'junction 1\'s meeting before week 3 shows as Met');
+  const mts = await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')].map(r=>[...r.querySelectorAll('.mt')].map(m=>m.textContent).join('/')).join(' | ')`);
+  check(mts === 'MetAnaBen/MetCaraBen | Didn’tmeet/Didn’tmeet', 'the results slide names each meeting\'s reps (Ana and Ben, then Cara and Ben)', mts);
   await deck.shot('deck-6-results.png');
 
   /* a Poll Desk reset: phones back to the picker, the desk back to its setup */

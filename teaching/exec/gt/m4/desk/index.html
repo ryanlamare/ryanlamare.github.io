@@ -93,6 +93,15 @@ button.reveal small{display:block;font-size:12px;letter-spacing:.14em;opacity:.7
 .link{background:none;border:none;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:underline;padding:6px 0}
 .nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
 .nav button{font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;padding:15px 8px;background:var(--paper);border:2.5px solid var(--ink);color:var(--ink)}
+.jm2{font-weight:600;font-size:13px;color:var(--muted)} .jm2 b{color:var(--ink)}
+/* the meeting round: yes or no, then who goes */
+.mh{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+button.yn{height:96px;font-weight:700;font-size:24px;color:var(--paper);border:4px solid var(--ink)}
+button.yn.y{background:var(--green)} button.yn.n{background:var(--red)}
+button.yn.dim{opacity:.35} button.yn.sel{outline:5px solid var(--ink);outline-offset:3px}
+.names{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button.nm{font-weight:600;font-size:15px;padding:12px 4px;background:var(--card);border:2px solid var(--ink);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.nm.sel{background:var(--ink);color:var(--paper)}
 .mq2{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;color:var(--muted)}
 .mq2 button{font-weight:700;font-size:13px;padding:8px 14px;border:2px solid var(--ink);background:var(--paper)}
 .mq2 button.sel{background:var(--ink);color:var(--paper)}
@@ -110,6 +119,21 @@ const keep=()=>{try{localStorage.setItem(LK,JSON.stringify(D));}catch(_){}};
 let view='board', justRevealed=null, junctions=0, flushing=false, lastOk=0, flushedAt=0;
 const app=document.getElementById('app');
 const G=()=>PW.parse(D.seen.concat(D.pending));
+/* the attendee list (kept on the poll server, never in this repo) and any names
+   phones have typed, for picking a meeting's rep */
+let names=[];
+function loadNames(){
+  const list=fetch(PW.API+'/p/gt-roster/roster',{cache:'no-store'}).then(r=>r.json()).then(d=>Array.isArray(d.names)?d.names:[]).catch(()=>[]);
+  const typed=fetch(PW.API+'/p/gt-names/entries',{cache:'no-store'}).then(r=>r.json()).then(d=>{const m=new Map();(d.entries||[]).forEach(e=>m.set(e.v,e.t));return [...m.values()];}).catch(()=>[]);
+  Promise.all([list,typed]).then(([a,b])=>{
+    const seen=new Set(), all=[];
+    a.concat(b).forEach(n=>{const v=PW.clean(n), key=v.toLowerCase();if(v&&v!=='-'&&!seen.has(key)){seen.add(key);all.push(v);}});
+    names=all.sort((x,y)=>x.localeCompare(y,undefined,{sensitivity:'base'}));render();
+  });
+}
+/* the meeting round a team is in, if Ryan still needs its answer */
+const meetDue=(g,t)=>PW.GATES.find(gw=>PW.asking(g,gw)&&PW.isTold(g,t,gw-1)&&!PW.ans(g,t,gw))||0;
+const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
 function push(line){D.pending.push(line);keep();render();flush();}
 function flush(){
@@ -141,6 +165,12 @@ function postResults(){
     const met=(PW.meets(g,3,j)?'y':'n')+(PW.meets(g,5,j)?'y':'n');
     [['a',A,B],['b',B,A]].forEach(([s,m,t])=>{
       const line=['r',s,j,m,t,met].join('|'), v='pwresult-'+s+j;   /* voter ids are 8 to 64 characters */
+      if(said[v]===line)return;
+      PW.say(v,line).then(()=>{said[v]=line;try{localStorage.setItem(LK+'-r',JSON.stringify(said));}catch(_){}}).catch(()=>{});
+    });
+    PW.GATES.forEach(gw=>{
+      if(!PW.meets(g,gw,j))return;
+      const line=['rm',j,gw,PW.rep(g,'a'+j,gw),PW.rep(g,'b'+j,gw)].join('|'), v='pwresult-m'+j+gw;
       if(said[v]===line)return;
       PW.say(v,line).then(()=>{said[v]=line;try{localStorage.setItem(LK+'-r',JSON.stringify(said));}catch(_){}}).catch(()=>{});
     });
@@ -188,18 +218,12 @@ function setup(g){
    for that week; a red dot on a name = that team is waiting for him. */
 function sheet(g,j,big,focus){
   const w=PW.week(g), card=el('div','jcard');
-  const meet=PW.GATES.map(gw=>{
-    if(g.mc[gw])return PW.meets(g,gw,j)?'Met before week '+gw:'';
-    if(!PW.asking(g,gw))return '';
-    const a=(g.ans['a'+j]||{})[gw], b=(g.ans['b'+j]||{})[gw], x=v=>v==='y'?'Yes':v==='n'?'No':'–';
-    return 'Meet? A '+x(a)+' · B '+x(b);
-  }).filter(Boolean).join(' · ');
-  card.appendChild(el('div','jh','<span>Junction '+j+'</span><span class="jm">'+meet+'</span>'));
+  card.appendChild(el('div','jh','<span>Junction '+j+'</span>'));
   const sh=el('div','sheet'+(big?' big':''));
   sh.appendChild(el('div',''));
   for(let u=1;u<=6;u++)sh.appendChild(el('div','wh'+(u===w?' cur':''),'W'+u+(u===3||(u===6&&!g.news)?'<em>&times;2</em>':'')));
   ['a','b'].forEach(s=>{
-    const t=s+j, need=PW.nextReveal(g,t)||(w<=6&&PW.isOpen(g,w)&&!PW.p(g,t,w));
+    const t=s+j, need=PW.nextReveal(g,t)||(w<=6&&PW.isOpen(g,w)&&!PW.p(g,t,w))||meetDue(g,t);
     const lb=btn('tl '+s+(focus===t?' me':''),label(t),()=>{view=t;justRevealed=null;render();scrollTo(0,0);});
     if(need)lb.appendChild(el('span','dot'));
     sh.appendChild(lb);
@@ -212,6 +236,11 @@ function sheet(g,j,big,focus){
   card.appendChild(sh);
   let ta=0,tb=0;for(let u=1;u<=6;u++){const a=PW.p(g,'a'+j,u),b=PW.p(g,'b'+j,u);if(a&&b){ta+=PW.rev(u,a,b);tb+=PW.rev(u,b,a);}}
   card.appendChild(el('div','jt','A'+j+' <b>'+k(ta)+'</b> &middot; B'+j+' <b>'+k(tb)+'</b>'));
+  PW.GATES.forEach(gw=>{
+    const one=t=>{const a=PW.ans(g,t,gw);return label(t)+' '+(a==='y'?'<b>yes</b>'+(PW.rep(g,t,gw)?' ('+esc(PW.rep(g,t,gw))+')':''):a==='n'?'<b>no</b>':'&ndash;');};
+    if(g.mc[gw])card.appendChild(el('div','jm2',PW.meets(g,gw,j)?'Met before week '+gw+': <b>'+esc(PW.rep(g,'a'+j,gw)||'A'+j)+'</b> &amp; <b>'+esc(PW.rep(g,'b'+j,gw)||'B'+j)+'</b>':'No meeting before week '+gw));
+    else if(PW.asking(g,gw))card.appendChild(el('div','jm2','Meet before week '+gw+'? '+one('a'+j)+' &middot; '+one('b'+j)));
+  });
   return card;
 }
 
@@ -237,24 +266,54 @@ function board(g){
     app.appendChild(p);
   }
   PW.GATES.forEach(gw=>{
-    if(!PW.allIn(g,gw-1)||(gw===5&&!g.news)||g.open[gw])return;
+    if(!PW.asking(g,gw))return;
     const p=el('div','panel');
-    if(!g.mc[gw]){
-      p.appendChild(el('div','pt','Before week '+gw+': the phones ask each team whether it wants to meet. The answers are on each junction below.'));
-      const b=behind(gw-1);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week '+(gw-1)+'. Their phones ask once you have told them.'));
-      p.appendChild(btn('go','Close the asks',()=>{
-        const js=[];for(let j=1;j<=g.nj;j++)if((g.ans['a'+j]||{})[gw]==='y'&&(g.ans['b'+j]||{})[gw]==='y')js.push(j);
-        push('pw|mc|'+gw+'|'+js.join(','));
-      }));
-    }else{
-      const js=g.mc[gw];
-      p.appendChild(el('div','pt',js.length?'Meeting before week '+gw+': junction'+(js.length>1?'s ':' ')+js.join(', ')+'. One person from each station, two minutes.':'No meetings before week '+gw+'.'));
-      p.appendChild(btn('go ink','Open week '+gw,()=>push('pw|o|'+gw)));
+    p.appendChild(el('div','pt','Before week '+gw+': the meeting round'));
+    p.appendChild(el('div','pl','At each team: do you want to meet, and who would go?'));
+    const b=behind(gw-1);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week '+(gw-1)+' first.'));
+    const left=teams.filter(t=>!PW.ans(g,t,gw));
+    if(left.length)p.appendChild(el('div','pl',(teams.length-left.length)+' of '+teams.length+' teams have answered.'));
+    else{
+      const lines=[];
+      for(let j=1;j<=g.nj;j++){
+        const a='a'+j, bb='b'+j, ok=PW.ans(g,a,gw)==='y'&&PW.ans(g,bb,gw)==='y';
+        lines.push('<b>Junction '+j+':</b> '+(ok?'meeting, '+esc(PW.rep(g,a,gw)||'A'+j)+' ('+label(a)+') and '+esc(PW.rep(g,bb,gw)||'B'+j)+' ('+label(bb)+')':'no meeting'));
+      }
+      p.appendChild(el('div','pt',lines.join('<br>')));
+      p.appendChild(el('div','pl','Tell each team, let the reps meet, then open the week.'));
     }
+    p.appendChild(btn('go ink','Open week '+gw,()=>{
+      if(left.length&&!confirm(left.map(label).join(', ')+' '+(left.length===1?'has':'have')+' not answered. Count '+(left.length===1?'it':'them')+' as no?'))return;
+      const js=[];for(let j=1;j<=g.nj;j++)if(PW.ans(g,'a'+j,gw)==='y'&&PW.ans(g,'b'+j,gw)==='y')js.push(j);
+      push('pw|mc|'+gw+'|'+js.join(','));push('pw|o|'+gw);
+    }));
     app.appendChild(p);
   });
   for(let j=1;j<=g.nj;j++)app.appendChild(sheet(g,j,false,null));
   app.appendChild(el('div','key','Tap a team&rsquo;s name to go to it. <i></i>that team has not been told the other station&rsquo;s price that week.'));
+}
+
+/* before weeks 3 and 5: does the team want to meet, and who would go? */
+function meetRound(g,t,gw){
+  const a=PW.ans(g,t,gw), who=PW.rep(g,t,gw), r=PW.rival(t);
+  app.appendChild(el('div','lbl','Before week '+gw+' &middot; the meeting round'));
+  app.appendChild(el('div','mh','Does '+label(t)+' want to meet?'));
+  const row=el('div','row2');
+  [['y','Yes'],['n','No']].forEach(([x,l])=>row.appendChild(btn('yn '+x+(a?(a===x?' sel':' dim'):''),l,()=>push('pw|q|'+t+'|'+gw+'|'+x+(x==='y'?'|'+who:'')))));
+  app.appendChild(row);
+  if(a==='y'){
+    app.appendChild(el('div','mh','Who would go for '+label(t)+'?'));
+    const grid=el('div','names');
+    names.forEach(n=>grid.appendChild(btn('nm'+(n===who?' sel':''),esc(n),()=>push('pw|q|'+t+'|'+gw+'|y|'+PW.clean(n)))));
+    grid.appendChild(btn('nm'+(who&&!names.includes(who)?' sel':''),who&&!names.includes(who)?esc(who):'Someone else',()=>{const n=PW.clean(prompt('Who would go for '+label(t)+'?',who)||'');if(n)push('pw|q|'+t+'|'+gw+'|y|'+n);}));
+    app.appendChild(grid);
+  }
+  /* once both stations have answered, what to tell this team */
+  const ra=PW.ans(g,r,gw);
+  if(a&&ra){
+    const on=a==='y'&&ra==='y';
+    app.appendChild(el('div','set','<span>'+(on?'Tell '+label(t)+': you&rsquo;re meeting <b>'+esc(PW.rep(g,r,gw)||label(r))+'</b> from '+label(r)+'.':'Tell '+label(t)+': no meeting.')+'</span>'));
+  }
 }
 
 function visit(g,t){
@@ -272,7 +331,8 @@ function visit(g,t){
       const row=el('div','row2');
       ['h','c'].forEach(p=>row.appendChild(btn('price '+p,'<small>'+label(t)+'</small>'+PW.PRICE[p],()=>{justRevealed=null;push('pw|p|'+t+'|'+w+'|'+p);})));
       app.appendChild(row);
-    }else app.appendChild(el('div','lbl','Week '+w+' opens after '+(w===5&&!g.news?'the news and ':'')+'the meetings.'));
+    }else if(PW.GATES.includes(w)&&PW.asking(g,w))meetRound(g,t,w);
+    else app.appendChild(el('div','lbl','Week '+w+' opens after '+(w===5&&!g.news?'the news and ':'')+'the meeting round.'));
   }
   /* this week's price, once given; it can change until the rival has heard it */
   const cw=w<=6&&PW.p(g,t,w)?w:(w>1&&PW.p(g,t,w-1)&&!PW.isTold(g,r,w-1)?w-1:0);
@@ -281,13 +341,6 @@ function visit(g,t){
     if(!PW.isTold(g,r,cw))set.appendChild(btn('link','Change to '+PW.PRICE[p==='h'?'c':'h'],()=>{justRevealed=null;push('pw|p|'+t+'|'+cw+'|'+(p==='h'?'c':'h'));}));
     app.appendChild(set);
   }
-  /* the meeting ask, for a team whose phone can't */
-  PW.GATES.forEach(gw=>{
-    if(!PW.asking(g,gw))return;
-    const a=(g.ans[t]||{})[gw], m=el('div','mq2','<span>Meet before week '+gw+'?</span>');
-    [['y','Yes'],['n','No']].forEach(([x,l])=>m.appendChild(btn(a===x?'sel':'',l,()=>push('pw|q|'+t+'|'+gw+'|'+x))));
-    app.appendChild(m);
-  });
   const nav=el('div','nav');
   nav.appendChild(btn('','&lsaquo; All teams',()=>{view='board';justRevealed=null;render();scrollTo(0,0);}));
   const nx=j<g.nj?s+(j+1):null;
@@ -298,6 +351,6 @@ function visit(g,t){
 let wl=null;
 function awake(){try{if('wakeLock' in navigator&&!wl)navigator.wakeLock.request('screen').then(l=>{wl=l;l.addEventListener('release',()=>{wl=null;});}).catch(()=>{});}catch(_){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){awake();pull();}});
-awake();render();pull();flush();setInterval(pull,2500);
+awake();render();pull();flush();loadNames();setInterval(pull,2500);
 </script>
 </body></html>

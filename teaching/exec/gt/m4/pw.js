@@ -4,8 +4,9 @@
    team what its rival posted by tapping Reveal in front of it. The teams'
    phones (m4/price/) only display: the week's payoff matrix, their own
    price once Ryan has tapped it, the rival's once he has revealed it, and
-   the running revenue. The one thing a team taps is Meet?, before weeks 3
-   and 5.
+   the running revenue. Teams tap nothing. Before weeks 3 and 5 comes a
+   meeting round of its own: Ryan walks it team to team, asking whether they
+   want to meet and who would go, and taps the answer and the rep's name.
 
    Everything is one append-only log of lines in the gt-poll room
    m4-results (the room the results slide and the Poll Desk already know),
@@ -15,13 +16,13 @@
      pw|g|N           the game starts, with N junctions      (desk)
      pw|p|a3|2|h      Aura at junction 3 posted £1.50 in week 2 (c = £1.40)
      pw|t|a3|2        Aura at junction 3 has been told its rival's week 2
-     pw|mc|3|1,3      the meeting asks before week 3 close; junctions 1 and 3 meet
+     pw|q|a3|3|y|Sam  Aura at junction 3 wants to meet before week 3, and sends Sam (n = no)
+     pw|mc|3|1,3      the meeting round before week 3 closes; junctions 1 and 3 met
      pw|o|3           week 3 opens (after its meetings)
      pw|n             the FuelWatch news is out
      pw|j|a3          a phone joined as Aura, junction 3        (phones)
-     pw|q|a3|3|y      Aura at junction 3 asks to meet before week 3 (n = no)
    The results slide still reads its own "r|…" lines, which the desk writes
-   once all six weeks are in. Scoring is the deck's, in thousands of pounds. */
+   once all six weeks are in, and an "rm|…" line naming each meeting's reps. Scoring is the deck's, in thousands of pounds. */
 (function(){
 const PW={};
 PW.API='https://gt-poll.rlamare.workers.dev';
@@ -39,7 +40,7 @@ PW.matrix=w=>[['h','h'],['h','c'],['c','h'],['c','c']].map(([a,b])=>[PW.rev(w,a,
 PW.tagOf=w=>w===3?'Pays double':w>=5?'FuelWatch rules':'';
 
 PW.parse=function(lines){
-  const G={nj:0,price:{},told:{},ans:{},mc:{},open:{},news:false,joins:{}};
+  const G={nj:0,price:{},told:{},ans:{},rep:{},mc:{},open:{},news:false,joins:{}};
   lines.forEach(line=>{
     const f=String(line).split('|');if(f[0]!=='pw')return;
     const team=/^[ab][1-6]$/.test(f[2]||'')?f[2]:null, w=+f[3];
@@ -47,7 +48,7 @@ PW.parse=function(lines){
       case 'g':if(/^[1-6]$/.test(f[2]))G.nj=+f[2];break;
       case 'p':if(team&&w>=1&&w<=6&&/^[hc]$/.test(f[4]))(G.price[team]=G.price[team]||[])[w]=f[4];break;
       case 't':if(team&&w>=1&&w<=6)(G.told[team]=G.told[team]||[])[w]=true;break;
-      case 'q':if(team&&(w===3||w===5)&&/^[yn]$/.test(f[4]))(G.ans[team]=G.ans[team]||{})[w]=f[4];break;
+      case 'q':if(team&&(w===3||w===5)&&/^[yn]$/.test(f[4])){(G.ans[team]=G.ans[team]||{})[w]=f[4];(G.rep[team]=G.rep[team]||{})[w]=f[4]==='y'?(f[5]||'').trim():'';}break;
       case 'mc':{const g=+f[2];if(g===3||g===5)G.mc[g]=(f[3]||'').split(',').filter(x=>/^[1-6]$/.test(x)).map(Number);break;}
       case 'o':if(+f[2]===3||+f[2]===5)G.open[+f[2]]=true;break;
       case 'n':G.news=true;break;
@@ -65,10 +66,13 @@ PW.allIn=(G,w)=>G.nj>0&&PW.teams(G).every(t=>PW.p(G,t,w));
    weeks 3 and 5, once Ryan has opened it after the meetings */
 PW.isOpen=(G,w)=>G.nj>0&&(w===1||(PW.allIn(G,w-1)&&(!PW.GATES.includes(w)||!!G.open[w])));
 PW.week=G=>{for(let w=1;w<=6;w++)if(!PW.allIn(G,w))return w;return 7;};
-/* the meeting round before week g: its asks run once week g-1 is all in (and,
-   before week 5, once the news is out) until Ryan closes them */
+/* the meeting round before week g: it runs once week g-1 is all in (and,
+   before week 5, once the news is out) until Ryan opens week g */
 PW.asking=(G,g)=>PW.allIn(G,g-1)&&(g===3||G.news)&&!G.mc[g];
 PW.meets=(G,g,j)=>!!(G.mc[g]||[]).includes(j);
+PW.ans=(G,t,g)=>(G.ans[t]||{})[g]||null;
+PW.rep=(G,t,g)=>(G.rep[t]||{})[g]||'';
+PW.clean=n=>String(n||'').replace(/[|\u0000-\u001f]/g,' ').replace(/\s+/g,' ').trim().slice(0,30);
 /* what a team has earned: only the weeks it has been told */
 PW.earned=(G,t)=>{let s=0;for(let w=1;w<=6;w++)if(PW.isTold(G,t,w)&&PW.p(G,t,w)&&PW.p(G,PW.rival(t),w))s+=PW.rev(w,PW.p(G,t,w),PW.p(G,PW.rival(t),w));return s;};
 /* the first week this team has not yet been told, and whether Ryan can reveal it now */

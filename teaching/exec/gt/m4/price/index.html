@@ -10,8 +10,9 @@
    each team its rival's price by tapping Reveal in front of it. This page
    only shows what he has already said: the week's payoff matrix (the hall
    cannot see the screen), the team's own price once he has tapped it, the
-   rival's only once he has revealed it, and the revenue. The one thing a
-   team taps is Meet?, before weeks 3 and 5. Any number of phones can follow
+   rival's only once he has revealed it, and the revenue. Teams tap nothing
+   once they have picked their station: before weeks 3 and 5 Ryan asks each
+   team in person whether it wants to meet and who would go. Any number of phones can follow
    one team. The plan B hold-up version is at m4/hold/. A Poll Desk reset of
    Price Wars sends the phone back to the station picker. */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -84,7 +85,7 @@ let S={team:null,joined:false};
 try{if(new URLSearchParams(location.search).get('fresh')==='1')localStorage.removeItem(KEY);}catch(_){}
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.team)S=Object.assign(S,s);}catch(_){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(_){}};
-let lines=[], pickS=null, pickJ=null, myAns={};
+let lines=[], pickS=null, pickJ=null;
 const app=document.getElementById('app');
 const me=PW.voter();
 
@@ -163,22 +164,9 @@ function render(){
     app.appendChild(record(g,t,0));
     return;
   }
-  if(gate&&!g.mc[w]){
-    app.appendChild(el('h1','','Before week '+w+': do you want to meet them?'));
-    const a=(g.ans[t]||{})[w]||myAns[w];
-    const row=el('div','row2');
-    [['y','Yes'],['n','No']].forEach(([x,l])=>row.appendChild(btn('meet '+x+(a?(a===x?' sel':' dim'):''),l,()=>{
-      myAns[w]=x;render();PW.say(me,'pw|q|'+t+'|'+w+'|'+x).then(pull).catch(()=>{});
-    })));
-    app.appendChild(row);
-    app.appendChild(el('div','lbl','Two minutes, one person from each station, and only if both of you ask. Nothing said in it binds anyone.'));
-    app.appendChild(matrix(w,t));
-    app.appendChild(record(g,t,w));
-    return;
-  }
-  if(gate){
+  if(gate){   /* the meeting round: Ryan comes to ask; the phone only gives the time to decide */
     app.appendChild(el('h1','','Before week '+w));
-    app.appendChild(el('div','lbl',PW.meets(g,w,+t.slice(1))?'Your meeting is on: one person to the door.':'No meeting.'));
+    app.appendChild(el('div','lbl','Decide whether you want to meet the other station, and who would go.'));
     app.appendChild(matrix(w,t));
     app.appendChild(record(g,t,w));
     return;

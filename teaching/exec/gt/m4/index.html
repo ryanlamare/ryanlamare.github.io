@@ -62,6 +62,8 @@
 .jrow .sq.sa::before{content:"A"} .jrow .sq.sb::before{content:"B"}
 .jrow .mt{background:#fff;border:2px solid var(--ink);align-self:stretch;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;line-height:1.2;cursor:pointer}
 .jrow .mt.y{color:var(--green)} .jrow .mt.n{color:var(--red)}
+.jrow .mt{flex-direction:column;gap:1px}
+.jrow .mt .mtn{display:block;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:10px;letter-spacing:0;text-transform:none;color:var(--ink)}
 .jrow .tot{font-family:var(--display);font-weight:900;font-size:24px;line-height:1;text-align:center}
 .jrow .tot.a{color:var(--teal)} .jrow .tot.b{color:var(--terracotta)}
 .jres .demotag{position:static;align-self:center}
@@ -1201,17 +1203,20 @@ const POLL_API='https://gt-poll.rlamare.workers.dev';
   const rev=(w,m,t)=>w>=5?(m==='c'&&t==='h'?72:m==='h'&&t==='c'?2:m==='h'?12:9):(m===t?(m==='h'?12:9):(m==='c'?18:2))*(w===3?2:1);
   function junctions(){
     const J={};
+    /* the desk's rm|junction|week|Aura's rep|Buco's rep, one line a meeting (29 Sep 2026) */
+    const reps={};lines.forEach(t=>{const f=String(t).split('|');if(f[0]==='rm'&&/^\d{1,2}$/.test(f[1])&&(f[2]==='3'||f[2]==='5'))(reps[+f[1]]=reps[+f[1]]||[null,null])[f[2]==='3'?0:1]=[f[3]||'',f[4]||''];});
     lines.forEach(t=>{const f=String(t).split('|');
       if(f[0]!=='r'||!/^[ab]$/.test(f[1])||!/^\d{1,2}$/.test(f[2])||!/^[hc]{6}$/.test(f[3])||!/^[hc]{6}$/.test(f[4]))return;
-      const j=J[+f[2]]=J[+f[2]]||{own:{},seen:{},met:[false,false]}, other=f[1]==='a'?'b':'a';
+      const j=J[+f[2]]=J[+f[2]]||{own:{},seen:{},met:[false,false],reps:[null,null]}, other=f[1]==='a'?'b':'a';
       j.own[f[1]]=f[3];j.seen[other]=f[4];
       if(/^[yn]{2}$/.test(f[5]||'')){if(f[5][0]==='y')j.met[0]=true;if(f[5][1]==='y')j.met[1]=true;}});
     return Object.keys(J).map(Number).sort((x,y)=>x-y).map(n=>{const j=J[n];
       let a=(j.own.a||j.seen.a).split(''), b=(j.own.b||j.seen.b).split(''), met=j.met.slice();
       for(let w=0;w<6;w++){if(flip[n+'a'+w])a[w]=a[w]==='h'?'c':'h';if(flip[n+'b'+w])b[w]=b[w]==='h'?'c':'h';}
       [0,1].forEach(i=>{if(flip[n+'m'+i])met[i]=!met[i];});
+      j.reps=reps[n]||[null,null];
       let ta=0,tb=0;for(let w=0;w<6;w++){ta+=rev(w+1,a[w],b[w]);tb+=rev(w+1,b[w],a[w]);}
-      return {n,a,b,met,ta,tb};});
+      return {n,a,b,met,ta,tb,reps:j.reps};});
   }
   function draw(){
     const R=junctions();
@@ -1219,7 +1224,8 @@ const POLL_API='https://gt-poll.rlamare.workers.dev';
     const n=R.length, jh=Math.max(15,Math.min(26,Math.floor((430/n-14)/2)));
     host.style.setProperty('--jh',jh+'px');host.style.setProperty('--jg',(n>6?7:12)+'px');
     const wk=(r,w,fw)=>'<div class="wk'+(fw?' fw':'')+'"><div class="sq sa '+r.a[w]+'" data-k="'+r.n+'a'+w+'">'+(r.a[w]==='h'?'1.50':'1.40')+'</div><div class="sq sb '+r.b[w]+'" data-k="'+r.n+'b'+w+'">'+(r.b[w]==='h'?'1.50':'1.40')+'</div></div>';
-    const mt=(r,i)=>'<div class="mt '+(r.met[i]?'y':'n')+'" data-k="'+r.n+'m'+i+'">'+(r.met[i]?'Met':'Didn&rsquo;t<br>meet')+'</div>';
+    const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const mt=(r,i)=>'<div class="mt '+(r.met[i]?'y':'n')+'" data-k="'+r.n+'m'+i+'">'+(r.met[i]?'Met'+(r.reps[i]?r.reps[i].filter(Boolean).map(x=>'<span class="mtn">'+esc(x)+'</span>').join(''):''):'Didn&rsquo;t<br>meet')+'</div>';
     let h=(demo?'<div class="demotag">DEMO DATA</div>':'')+
       '<div class="jrow head"><span></span><span>Week 1</span><span>Week 2</span><span></span><span>Week 3<em>&times;2</em></span><span>Week 4</span><span></span><span class="fw">Week 5</span><span class="fw">Week 6</span><span class="ta">Aura</span><span class="tb">Buco&rsquo;s</span></div>';
     R.forEach(r=>{h+='<div class="jrow"><div class="jn">Junction '+r.n+'</div>'+wk(r,0)+wk(r,1)+mt(r,0)+wk(r,2)+wk(r,3)+mt(r,1)+wk(r,4,1)+wk(r,5,1)+
