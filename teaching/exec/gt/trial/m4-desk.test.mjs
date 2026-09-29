@@ -82,15 +82,18 @@ try {
   const desk = await page(B + 'desk/', 390, 844, true);
   await desk.ev('window.confirm=()=>true;window.prompt=()=>"Zoe"');
   const phone = {};
-  const TEAM = { a1: ['Ana', 'Dev'], b1: ['Ben', 'Eve'], a2: ['Cara', 'Finn'], b2: ['Gus', 'Hal'] };
-  for (const t of ['a1', 'b1', 'a2', 'b2']) {
-    phone[t] = await page(B + 'price/', 390, 844, true);
-    await phone[t].ev(click('button.opt', t[0] === 'a' ? 'Aura' : 'Buco'));
-    await phone[t].ev(click('button.num', t[1]));
-    await phone[t].ev(click('button.go', 'Next')); await sleep(300);
-    if (t === 'a1') { check((await phone.a1.ev(`document.body.textContent`)).includes('Who’s on your team?'), 'after the junction, the phone asks who is on the team'); await phone.a1.shot('phone-0-team.png'); }
-    for (const n of TEAM[t]) check(await phone[t].ev(click('button.nm', n)), `${t.toUpperCase()}'s phone: ${n} tapped`);
-    await phone[t].ev(click('button.go', 'Start'));
+  /* one phone a person: A1 has two people (Ana and Dev), each on their own phone */
+  const WHO = { a1: 'Ana', a1b: 'Dev', b1: 'Ben', a2: 'Cara', b2: 'Gus' };
+  for (const k of ['a1', 'a1b', 'b1', 'a2', 'b2']) {
+    const t = k.slice(0, 2);
+    phone[k] = await page(B + 'price/', 390, 844, true);
+    await phone[k].ev(click('button.opt', t[0] === 'a' ? 'Aura' : 'Buco'));
+    await phone[k].ev(click('button.num', t[1]));
+    await phone[k].ev(click('button.go', 'Next')); await sleep(300);
+    if (k === 'a1') { check((await phone.a1.ev(`document.body.innerText`)).includes('Which one is you?'), 'after the junction, the phone asks which one is you'); await phone.a1.shot('phone-0-who.png'); }
+    check(await phone[k].ev(click('button.nm', WHO[k])), `${t.toUpperCase()}'s phone: ${WHO[k]} taps their own name`);
+    if (k === 'a1') { await phone.a1.ev(click('button.nm', 'Ben')); check(await phone.a1.ev(`[...document.querySelectorAll('button.nm.sel')].map(b=>b.textContent).join()`) === 'Ben', 'only one name can be picked'); await phone.a1.ev(click('button.nm', 'Ana')); }
+    await phone[k].ev(click('button.go', 'Start'));
   }
   await sleep(800);
   await phone.a1.shot('phone-picker-done.png');
@@ -225,9 +228,9 @@ try {
   await meet('a2', 'No');
   await tile('b2');
   check(!(await desk.ev(`!!document.querySelector('button.yn')`)) && (await desk.ev(`document.querySelector('.set').textContent`)) === 'A2 said no. Tell B2: sorry, no meeting.', 'once A2 says no, B2 is not asked: sorry, no meeting', await desk.ev(`(document.querySelector('.set')||{}).textContent`));
-  await meet('a1', 'Yes', 'Dev'); await meet('b1', 'Yes', 'Eve');
+  await meet('a1', 'Yes', 'Dev'); await meet('b1', 'Yes', 'Ben');
   await desk.ev(`view='board';render()`);
-  check((await desk.ev(`document.querySelectorAll('.panel .pt')[1].textContent`)) === 'Junction 1: meeting, Dev (A1) and Eve (B1)Junction 2: no meeting', 'the round is settled without asking B2', await desk.ev(`document.querySelectorAll('.panel .pt')[1]?.textContent`));
+  check((await desk.ev(`document.querySelectorAll('.panel .pt')[1].textContent`)) === 'Junction 1: meeting, Dev (A1) and Ben (B1)Junction 2: no meeting', 'the round is settled without asking B2', await desk.ev(`document.querySelectorAll('.panel .pt')[1]?.textContent`));
   check((await phone.b2.ev(`document.querySelector('.mtag').textContent`)) === 'Weeks 5 and 6: FuelWatch rules', 'before week 5 the phone heads its matrix with the FuelWatch rules');
   await desk.ev(click('button.go', 'Open week 5')); await settle();
   check((await h1('a1')).includes('Week 5') && (await h1('a1')).includes('FuelWatch'), 'week 5 opens under the FuelWatch rules', await h1('a1'));
@@ -255,7 +258,7 @@ try {
   const rows = await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')].map(r=>r.querySelector('.jn').textContent+' '+[...r.querySelectorAll('.tot')].map(x=>x.textContent).join(' '))`);
   check(rows.length === 2 && rows[0] === `Junction 1 £${exp(A1, B1)}k £${exp(B1, A1)}k` && rows[1] === `Junction 2 £${exp(A2, B2)}k £${exp(B2, A2)}k`, 'What happened at each junction shows both junctions and their totals', rows);
   const mts = await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')].map(r=>[...r.querySelectorAll('.mt')].map(m=>m.textContent).join('/')).join(' | ')`);
-  check(mts === 'MetAnaBen/MetDevEve | Didn’tmeet/Didn’tmeet', 'the results slide names each meeting\'s reps (Ana and Ben, then Dev and Eve)', mts);
+  check(mts === 'MetAnaBen/MetDevBen | Didn’tmeet/Didn’tmeet', 'the results slide names each meeting\'s reps (Ana and Ben, then Dev and Ben)', mts);
   await deck.shot('deck-6-results.png');
 
   /* a Poll Desk reset: phones back to the picker, the desk back to its setup */

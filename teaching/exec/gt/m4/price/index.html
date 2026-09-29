@@ -206,14 +206,16 @@ function setup(){
     app.appendChild(b);
     return;
   }
-  /* who is on the team, so Ryan's desk can offer just these names for a meeting */
+  /* who is holding this phone (his 29 Sep call: each person their own name, no
+     naming colleagues they may not know); the desk puts a team's names together,
+     so it can offer just these for a meeting */
   app.appendChild(el('div','who '+pickS,PW.NAME[pickS]+' &middot; Junction '+pickJ));
-  app.appendChild(el('div','lbl','Who&rsquo;s on your team? Tap each of you.'));
+  app.appendChild(el('div','lbl','Which one is you?'));
   const all=roster.slice();picked.forEach(n=>{if(!all.some(x=>x.toLowerCase()===n.toLowerCase()))all.push(n);});
   const gr=el('div','names');
   all.forEach(n=>{const on=picked.some(x=>x.toLowerCase()===n.toLowerCase());
-    gr.appendChild(btn('nm'+(on?' sel':''),n.replace(/&/g,'&amp;').replace(/</g,'&lt;'),()=>{picked=on?picked.filter(x=>x.toLowerCase()!==n.toLowerCase()):picked.concat([n]);render();}));});
-  gr.appendChild(btn('nm','Not on the list',()=>{const n=PW.clean(prompt('Your name')||'');if(n&&!picked.some(x=>x.toLowerCase()===n.toLowerCase())){picked=picked.concat([n]);render();}}));
+    gr.appendChild(btn('nm'+(on?' sel':''),n.replace(/&/g,'&amp;').replace(/</g,'&lt;'),()=>{picked=[n];render();}));});
+  gr.appendChild(btn('nm','Not on the list',()=>{const n=PW.clean(prompt('Your name')||'');if(n){picked=[n];render();}}));
   app.appendChild(gr);
   const b=btn('go','Start',()=>{S={team:pickS+pickJ,joined:false,names:picked.map(PW.clean).filter(Boolean)};save();render();join();scrollTo(0,0);});b.disabled=!picked.length;
   app.appendChild(b);
