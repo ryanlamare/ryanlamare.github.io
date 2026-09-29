@@ -989,19 +989,14 @@ const CLIPS={krul:'XMF6uu_HpZk',carroll:'6d90ijd2Cx0',vw:'2mp6tM4vUsk',michelin:
    YouTube itself in a new window instead of in the slide. */
 const NEWTAB={krul:true};
 function clipOnClick(btnId,wrapId,videoId,title,start,end){
+  /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
+     whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
   const btn=document.getElementById(btnId);
   if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
   const key=Object.keys(CLIPS).find(k=>CLIPS[k]===videoId);
   if(NEWTAB[key]){btn.addEventListener('click',()=>{window.open('https://www.youtube.com/watch?v='+videoId,'_blank','noopener');});return;}
-  btn.addEventListener('click',()=>{
-    const wrap=document.getElementById(wrapId);
-    const f=document.createElement('iframe');
-    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1'+(start?'&start='+start:'')+(end?'&end='+end:'');
-    f.title=title;
-    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    f.allowFullscreen=true;
-    wrap.replaceChildren(f);
-  });
+  btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
+  if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
 }
 clipOnClick('krulload','krulwrap',CLIPS.krul,'Tim Krul and the psychology of penalties');
 clipOnClick('carrollload','carrollwrap',CLIPS.carroll,'Super Bowl XLIX: the pass at the one');
