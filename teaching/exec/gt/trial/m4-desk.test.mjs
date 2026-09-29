@@ -89,7 +89,8 @@ try {
     phone[k] = await page(B + 'price/', 390, 844, true);
     await phone[k].ev(click('button.opt', t[0] === 'a' ? 'Aura' : 'Buco'));
     await phone[k].ev(click('button.num', t[1]));
-    await phone[k].ev(click('button.go', 'Next')); await sleep(300);
+    await phone[k].ev(click('button.go', 'Next'));
+    for (let i = 0; i < 40 && !(await phone[k].ev(`[...document.querySelectorAll('button.nm')].some(b=>b.textContent===${JSON.stringify(WHO[k])})`)); i++) await sleep(250);   /* the attendee list loads */
     if (k === 'a1') { check((await phone.a1.ev(`document.body.innerText`)).includes('Who are you?'), 'after the junction, the phone asks who are you'); await phone.a1.shot('phone-0-who.png'); }
     check(await phone[k].ev(click('button.nm', WHO[k])), `${t.toUpperCase()}'s phone: ${WHO[k]} taps their own name`);
     if (k === 'a1') { await phone.a1.ev(click('button.nm', 'Ben')); check(await phone.a1.ev(`[...document.querySelectorAll('button.nm.sel')].map(b=>b.textContent).join()`) === 'Ben', 'only one name can be picked'); await phone.a1.ev(click('button.nm', 'Ana')); }
@@ -155,7 +156,14 @@ try {
   await phone.b1.shot('phone-2-b1-told-week1.png');
   await price('b2', 'h'); await told('b2', 1);
   await told('a1', 1); await told('a2', 1);
-  check((await h1('a1')).startsWith('Week 1') && await theirChip('a1') === '£1.40', 'A1 now sees B1\'s £1.40, still in week 1');
+  check((await h1('a1')).startsWith('Week 1') && await theirChip('a1') === '£1.40', 'A1 now sees B1\'s £1.40, still in week 1 (going A1, B1, A1 moves nobody on)');
+  /* one team at a time: at A1, once it has its results */
+  await tile('a1');
+  check(await desk.ev(click('button.go', 'Move A1 to week 2')), 'at A1 the desk offers Move A1 to week 2'); await settle();
+  check((await h1('a1')).startsWith('Week 2') && (await h1('b1')).startsWith('Week 1'), 'A1 moves to week 2 on its own; B1 stays in week 1', [await h1('a1'), await h1('b1')]);
+  check(await ownChip('a1') === '–' && await theirChip('a1') === '–', 'A1\'s week 2 starts fresh');
+  await board();
+  check((await desk.ev(`document.querySelector('h1').textContent`)).startsWith('Week 1'), 'the board still says week 1 (it follows the team furthest behind)');
   await board();
   check((await desk.ev(`document.querySelector('.panel .pt').textContent`)) === '4 of 4 prices in · 4 of 4 told', 'the board counts prices in and teams told', await desk.ev(`document.querySelector('.panel .pt').textContent`));
   await desk.shot('desk-5-week1-done.png');
@@ -188,6 +196,7 @@ try {
   check(await desk.ev(`[...document.querySelectorAll('button.nm')].map(b=>b.textContent).join(',')`) === 'Ana,Dev,Someone else', 'Who would go for A1? offers only A1\'s own names', await desk.ev(`[...document.querySelectorAll('button.nm')].map(b=>b.textContent).join(',')`));
   await meet('a1', 'Yes', 'Ana');
   await desk.shot('desk-7b-a1-rep.png');
+  check(await desk.ev(`[...document.querySelectorAll('button.go')].some(b=>b.textContent.includes('Move A1 to week 3'))`), 'once A1 has answered, the desk offers Move A1 to week 3');
   await meet('b1', 'Yes', 'Ben'); await meet('a2', 'Yes', 'Zoe'); await meet('b2', 'No');
   await tile('a1');
   check((await desk.ev(`document.querySelector('.set').textContent`)) === 'Tell A1: you’re meeting Ben from B1.', 'at A1 the desk says what to tell them', await desk.ev(`document.querySelector('.set').textContent`));
@@ -199,7 +208,7 @@ try {
   await desk.shot('desk-8-meetings.png');
   await tile('a1');
   check(await desk.ev(`!document.querySelector('button.price')`), 'no week 3 prices before Ryan opens the week');
-  await move('Open week 3');
+  await move('Move everyone to week 3');
   check((await h1('a1')).includes('Week 3') && (await h1('a1')).includes('Pays double'), 'week 3 opens, and the phones say it pays double', await h1('a1'));
   check(await phone.a1.ev(`[...document.querySelectorAll('table.pm td.c')].map(c=>c.textContent).join(' ')`) === '24,24 4,36 36,4 18,18', 'the week 3 matrix is doubled');
 
@@ -231,7 +240,7 @@ try {
   await meet('a1', 'Yes', 'Dev'); await meet('b1', 'Yes', 'Ben');
   await board();
   check((await desk.ev(`document.querySelectorAll('.panel .pt')[1].textContent`)) === 'Junction 1: meeting, Dev (A1) and Ben (B1)Junction 2: no meeting', 'the round is settled without asking B2', await desk.ev(`document.querySelectorAll('.panel .pt')[1]?.textContent`));
-  await move('Open week 5');
+  await move('Move everyone to week 5');
   check((await h1('a1')).includes('Week 5') && (await h1('a1')).includes('FuelWatch'), 'week 5 opens under the FuelWatch rules', await h1('a1'));
   await phone.b2.shot('phone-6-week5.png');
   /* weeks 5 and 6: taking turns at junction 1, both cutting at junction 2 */
