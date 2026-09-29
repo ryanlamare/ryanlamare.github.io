@@ -100,7 +100,7 @@ try {
   const tile = async t => { await desk.ev(`view=${JSON.stringify(t)};justRevealed=null;render()`); };
   const price = async (t, p) => { await tile(t); check(await desk.ev(click('button.price', p === 'h' ? '1.50' : '1.40')), `desk: ${t.toUpperCase()}'s price ${p === 'h' ? '£1.50' : '£1.40'} tapped`); await settle(); };
   const reveal = async (t, w) => { await tile(t); const txt = await desk.ev(`(document.querySelector('button.reveal')||{}).textContent||''`);
-    check(txt.replace(/\s+/g, ' ').includes('Reveal to ' + t.toUpperCase()) && txt.includes('week ' + w), `desk: Reveal to ${t.toUpperCase()}, week ${w}, is the next thing`, txt);
+    check(txt.replace(/\s+/g, ' ').includes('Told ' + t.toUpperCase() + ' week ' + w), `desk: Told ${t.toUpperCase()} week ${w} is the next thing`, txt);
     await desk.ev(`document.querySelector('button.reveal').click()`); await settle(); };
   const ownChip = t => phone[t].ev(`(document.querySelector('.status .chip .cv')||{}).textContent||''`);
   const rivalRow = t => phone[t].ev(`[...document.querySelectorAll('.rec .wk')].map(w=>(w.querySelectorAll('.sq')[1].className.split(' ')[1]||'-')).join('')`);
@@ -127,6 +127,9 @@ try {
   await price('b1', 'c');
   check(await desk.ev(`!!document.querySelector('button.reveal')`), 'after B1\'s price the desk offers Reveal to B1');
   check((await rivalRow('b1'))[0] === '-', 'before the tap, B1\'s phone does not show A1\'s price', await rivalRow('b1'));
+  const sheetB1 = await desk.ev(`[...document.querySelectorAll('.sheet .pc')].slice(0,6).map(c=>c.textContent).join(',')+' | '+[...document.querySelectorAll('.sheet .pc')].slice(6,12).map(c=>c.textContent).join(',')`);
+  check(sheetB1.startsWith('1.50,') && sheetB1.includes('| 1.40,'), 'at B1 Ryan\'s sheet already shows week 1: A1 1.50, B1 1.40', sheetB1);
+  check((await desk.ev(`document.querySelector('button.reveal').textContent`)).includes('A1 posted £1.50'), 'and the Told button names what A1 posted');
   await desk.shot('desk-4-b1-reveal-button.png');
   await reveal('b1', 1);
   await desk.shot('desk-5-b1-revealed.png');
@@ -165,8 +168,8 @@ try {
   await phone.a2.ev(click('button.meet', 'Yes')); await phone.b2.ev(click('button.meet', 'No'));
   await sleep(600); await settle();
   await phone.a1.shot('phone-4-meet-ask.png');
-  const mrow = await desk.ev(`document.querySelector('.mrow').textContent`);
-  check(/J1Aura YesBuco.s Yes/.test(mrow) && /J2Aura YesBuco.s No/.test(mrow), 'the desk shows each junction\'s answers', mrow);
+  const mrow = await desk.ev(`[...document.querySelectorAll('.jcard .jm')].map(x=>x.textContent).join(' | ')`);
+  check(mrow === 'Meet? A Yes · B Yes | Meet? A Yes · B No', 'the desk shows each junction\'s answers on its card', mrow);
   await desk.ev(click('button.go', 'Close the asks')); await settle();
   check((await desk.ev(`document.querySelector('.panel .pt').textContent`)).includes('junction 1'), 'junction 1 meets, junction 2 does not');
   await desk.shot('desk-8-meetings.png');

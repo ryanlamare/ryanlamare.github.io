@@ -49,6 +49,28 @@ button.go:disabled{opacity:.3;cursor:default}
 .tile .sq.h{background:var(--green);border-color:var(--green)} .tile .sq.c{background:var(--red);border-color:var(--red)}
 .tile .dot{position:absolute;top:6px;right:6px;width:12px;height:12px;border-radius:50%;background:var(--red)}
 .tile .mq{position:absolute;top:5px;left:7px;font-weight:700;font-size:11px}
+/* the sheet: one card a junction, the six weeks across, both stations' prices
+   written in, like his sheet of paper (29 Sep 2026, his ask) */
+.jcard{border:2.5px solid var(--ink);background:var(--card);padding:10px 10px 8px;display:flex;flex-direction:column;gap:6px}
+.jcard .jh{display:flex;justify-content:space-between;gap:10px;font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.jcard .jh .jm{letter-spacing:.04em;text-transform:none;font-weight:600;color:var(--muted)}
+.sheet{display:grid;grid-template-columns:56px repeat(6,1fr);gap:4px;align-items:stretch}
+.sheet .wh{font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--muted);text-align:center;padding-bottom:1px}
+.sheet .wh.cur{color:var(--ink)} .sheet .wh em{font-style:normal;color:var(--red);margin-left:1px}
+.sheet .tl{position:relative;font-family:var(--display);font-weight:900;font-size:20px;line-height:1;background:none;border:none;text-align:left;padding:6px 0}
+.sheet .tl.a{color:var(--teal)} .sheet .tl.b{color:var(--terracotta)}
+.sheet .tl .dot{position:absolute;top:2px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--red)}
+.sheet .pc{position:relative;display:flex;align-items:center;justify-content:center;height:32px;border:1.5px solid var(--rule);font-weight:700;font-size:13px;color:var(--paper)}
+.sheet .pc.h{background:var(--green);border-color:var(--green)} .sheet .pc.c{background:var(--red);border-color:var(--red)}
+.sheet .pc.cur{outline:2px solid var(--ink);outline-offset:1px}
+.sheet .pc .nt{position:absolute;top:-4px;right:-4px;width:9px;height:9px;border-radius:50%;background:var(--ink);border:1.5px solid var(--paper)}
+.sheet.big .pc{height:46px;font-size:16px}
+.sheet.big .tl{font-size:24px}
+.sheet .me{outline:3px solid var(--ink);outline-offset:2px}
+.jcard .jt{font-weight:600;font-size:13px;color:var(--muted)}
+.jcard .jt b{color:var(--ink)}
+.key{font-weight:600;font-size:12px;color:var(--muted);line-height:1.4}
+.key i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink);margin:0 4px 0 2px;vertical-align:0}
 /* a visit */
 .team{display:flex;align-items:baseline;gap:14px}
 .team .big{font-family:var(--display);font-weight:900;font-size:72px;line-height:.9}
@@ -58,7 +80,8 @@ button.go:disabled{opacity:.3;cursor:default}
 button.price{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;height:150px;border:4px solid var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:48px;line-height:1}
 button.price small{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
 button.price.h{background:var(--green)} button.price.c{background:var(--red)}
-button.reveal{width:100%;min-height:120px;font-weight:700;font-size:20px;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--paper);background:var(--ink);border:none;padding:18px}
+button.reveal{width:100%;min-height:96px;font-weight:700;font-size:20px;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--paper);background:var(--ink);border:none;padding:16px}
+button.reveal small{display:block;font-size:12px;letter-spacing:.14em;opacity:.75;margin-top:4px}
 .card{padding:18px;text-align:center;color:var(--paper)}
 .card.h{background:var(--green)} .card.c{background:var(--red)}
 .card .ck{font-weight:700;font-size:13px;letter-spacing:.18em;text-transform:uppercase;opacity:.9}
@@ -160,6 +183,38 @@ function setup(g){
   app.appendChild(grid);
 }
 
+/* one junction as Ryan's sheet: every price he has tapped, whoever has heard it.
+   A dark dot on a price = that station has not yet been told the other's price
+   for that week; a red dot on a name = that team is waiting for him. */
+function sheet(g,j,big,focus){
+  const w=PW.week(g), card=el('div','jcard');
+  const meet=PW.GATES.map(gw=>{
+    if(g.mc[gw])return PW.meets(g,gw,j)?'Met before week '+gw:'';
+    if(!PW.asking(g,gw))return '';
+    const a=(g.ans['a'+j]||{})[gw], b=(g.ans['b'+j]||{})[gw], x=v=>v==='y'?'Yes':v==='n'?'No':'–';
+    return 'Meet? A '+x(a)+' · B '+x(b);
+  }).filter(Boolean).join(' · ');
+  card.appendChild(el('div','jh','<span>Junction '+j+'</span><span class="jm">'+meet+'</span>'));
+  const sh=el('div','sheet'+(big?' big':''));
+  sh.appendChild(el('div',''));
+  for(let u=1;u<=6;u++)sh.appendChild(el('div','wh'+(u===w?' cur':''),'W'+u+(u===3||(u===6&&!g.news)?'<em>&times;2</em>':'')));
+  ['a','b'].forEach(s=>{
+    const t=s+j, need=PW.nextReveal(g,t)||(w<=6&&PW.isOpen(g,w)&&!PW.p(g,t,w));
+    const lb=btn('tl '+s+(focus===t?' me':''),label(t),()=>{view=t;justRevealed=null;render();scrollTo(0,0);});
+    if(need)lb.appendChild(el('span','dot'));
+    sh.appendChild(lb);
+    for(let u=1;u<=6;u++){
+      const p=PW.p(g,t,u), c=el('div','pc'+(p?' '+p:'')+(u===w&&p?' cur':''),p?(p==='h'?'1.50':'1.40'):'');
+      if(p&&PW.p(g,PW.rival(t),u)&&!PW.isTold(g,t,u))c.appendChild(el('span','nt'));
+      sh.appendChild(c);
+    }
+  });
+  card.appendChild(sh);
+  let ta=0,tb=0;for(let u=1;u<=6;u++){const a=PW.p(g,'a'+j,u),b=PW.p(g,'b'+j,u);if(a&&b){ta+=PW.rev(u,a,b);tb+=PW.rev(u,b,a);}}
+  card.appendChild(el('div','jt','A'+j+' <b>'+k(ta)+'</b> &middot; B'+j+' <b>'+k(tb)+'</b>'));
+  return card;
+}
+
 function board(g){
   const w=PW.week(g);
   let head, sub='';
@@ -185,14 +240,8 @@ function board(g){
     if(!PW.allIn(g,gw-1)||(gw===5&&!g.news)||g.open[gw])return;
     const p=el('div','panel');
     if(!g.mc[gw]){
-      p.appendChild(el('div','pt','Before week '+gw+': the phones ask each team whether it wants to meet.'));
+      p.appendChild(el('div','pt','Before week '+gw+': the phones ask each team whether it wants to meet. The answers are on each junction below.'));
       const b=behind(gw-1);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week '+(gw-1)+'. Their phones ask once you have told them.'));
-      const m=el('div','mrow');
-      for(let j=1;j<=g.nj;j++){
-        const a=(g.ans['a'+j]||{})[gw], bb=(g.ans['b'+j]||{})[gw], s=x=>x==='y'?'<span class="y">Yes</span>':x==='n'?'<span class="n">No</span>':'<span class="u">–</span>';
-        m.appendChild(el('span','jn','J'+j));m.appendChild(el('span','','Aura '+s(a)));m.appendChild(el('span','','Buco&rsquo;s '+s(bb)));
-      }
-      p.appendChild(m);
       p.appendChild(btn('go','Close the asks',()=>{
         const js=[];for(let j=1;j<=g.nj;j++)if((g.ans['a'+j]||{})[gw]==='y'&&(g.ans['b'+j]||{})[gw]==='y')js.push(j);
         push('pw|mc|'+gw+'|'+js.join(','));
@@ -204,20 +253,8 @@ function board(g){
     }
     app.appendChild(p);
   });
-  ['a','b'].forEach(s=>{
-    const side=el('div','side '+s);side.appendChild(el('div','sn',PW.NAME[s]));
-    const tiles=el('div','tiles');tiles.style.gridTemplateColumns='repeat('+g.nj+',1fr)';   /* one row a side, never a lone tile */
-    if(g.nj>4)tiles.style.setProperty('--tn','24px');
-    for(let j=1;j<=g.nj;j++){
-      const t=s+j, pr=w<=6?PW.p(g,t,w):null, rv=PW.nextReveal(g,t);
-      const need=rv||(w<=6&&PW.isOpen(g,w)&&!pr);
-      const tile=btn('tile'+(need?' need':''),'<span class="tn">'+label(t)+'</span><span class="sq'+(pr?' '+pr:'')+'"></span>',()=>{view=t;justRevealed=null;render();scrollTo(0,0);});
-      if(rv)tile.appendChild(el('span','dot'));
-      PW.GATES.forEach(gw=>{if(PW.asking(g,gw)){const a=(g.ans[t]||{})[gw];if(a)tile.appendChild(el('span','mq '+(a==='y'?'y':'n'),a==='y'?'MEET':'NO'));}});
-      tiles.appendChild(tile);
-    }
-    side.appendChild(tiles);app.appendChild(side);
-  });
+  for(let j=1;j<=g.nj;j++)app.appendChild(sheet(g,j,false,null));
+  app.appendChild(el('div','key','Tap a team&rsquo;s name to go to it. <i></i>that team has not been told the other station&rsquo;s price that week.'));
 }
 
 function visit(g,t){
@@ -225,18 +262,10 @@ function visit(g,t){
   const head=el('div','team '+s);head.appendChild(el('div','big',label(t)));
   head.appendChild(el('div','who',PW.NAME[s]+'<br>Junction '+j+' &middot; '+k(PW.earned(g,t))+' so far'));
   app.appendChild(head);
-  /* the reveal just tapped stays up, to read out or to turn round */
-  if(justRevealed&&justRevealed.t===t){
-    const u=justRevealed.w, rp=PW.p(g,r,u), mine=PW.p(g,t,u);
-    const c=el('div','card '+rp);
-    c.appendChild(el('div','ck','Week '+u+' &middot; '+PW.SHORT[r[0]]+' posted'));
-    c.appendChild(el('div','cp',PW.PRICE[rp]));
-    c.appendChild(el('div','cs','You posted '+PW.PRICE[mine]+' and earned '+k(PW.rev(u,mine,rp))));
-    app.appendChild(c);
-  }
+  app.appendChild(sheet(g,j,true,t));
   const u=PW.nextReveal(g,t);
   if(u){
-    app.appendChild(btn('reveal','Reveal to '+label(t)+'<br>week '+u,()=>{justRevealed={t,w:u};push('pw|t|'+t+'|'+u);}));
+    app.appendChild(btn('reveal','Told '+label(t)+' week '+u+'<small>'+label(r)+' posted '+PW.PRICE[PW.p(g,r,u)]+' &middot; puts it on their phone</small>',()=>{push('pw|t|'+t+'|'+u);}));
   }else if(w<=6&&!PW.p(g,t,w)){
     if(PW.isOpen(g,w)){
       app.appendChild(el('div','lbl','Week '+w+(PW.tagOf(w)?' &middot; '+PW.tagOf(w).toLowerCase():'')+': '+label(t)+'&rsquo;s price'));
