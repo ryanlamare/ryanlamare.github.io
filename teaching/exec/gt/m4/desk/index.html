@@ -144,16 +144,20 @@ function render(){
 }
 
 function setup(g){
+  /* how many junctions: the highest any team's phone has picked, or 4 (26 people:
+     eight teams of three or four, thirteen in the room and thirteen in the hall);
+     a tap below changes it for a different turnout */
+  const picked=Object.keys(g.joins).reduce((m,t)=>Math.max(m,+t.slice(1)),0);
+  const n=junctions||picked||4;
   app.appendChild(el('h1','','Price Wars<small>Your desk for the game</small>'));
-  app.appendChild(el('div','lbl','How many junctions?'));
+  app.appendChild(el('div','panel','<div class="pt">'+n+' junction'+(n>1?'s':'')+': '+(2*n)+' teams</div><div class="pl">Aura A1'+(n>1?'&ndash;A'+n:'')+' in the room, Buco&rsquo;s B1'+(n>1?'&ndash;B'+n:'')+' in the hall.</div>'));
+  const inn=[];['a','b'].forEach(s=>{for(let j=1;j<=n;j++)inn.push(label(s+j)+(g.joins[s+j]?' ✓':' –'));});
+  app.appendChild(el('div','lbl','Phones in: '+inn.join(' &middot; ')));
+  app.appendChild(btn('go','Start the game',()=>push('pw|g|'+n)));
+  app.appendChild(el('div','lbl','A different number of junctions?'));
   const grid=el('div','grid6');
-  for(let n=1;n<=6;n++)grid.appendChild(btn('opt'+(junctions===n?' sel':''),String(n),()=>{junctions=n;render();}));
+  for(let k=1;k<=6;k++)grid.appendChild(btn('opt'+(n===k?' sel':''),String(k),()=>{junctions=k;render();}));
   app.appendChild(grid);
-  if(junctions){
-    const inn=[];['a','b'].forEach(s=>{for(let j=1;j<=junctions;j++)inn.push(label(s+j)+(g.joins[s+j]?' ✓':' –'));});
-    app.appendChild(el('div','lbl','Phones in: '+inn.join(' &middot; ')));
-  }
-  app.appendChild(btn('go','Start the game',()=>{if(junctions)push('pw|g|'+junctions);})).disabled=!junctions;
 }
 
 function board(g){

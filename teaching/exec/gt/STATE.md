@@ -18,6 +18,7 @@ to pick the work up on another computer.
   - Aura is in the room and Buco's in the hall. He goes team to team with **m4/desk/** on his phone, taps each price, and taps **Reveal** in front of a team to tell it its rival's price.
   - He wanted the tension of walking up to a team knowing something it doesn't: "it's not as climactic if I just press a button for everyone".
   - The teams' phones (**m4/price/**) only display: the week's matrix (the hall can't see the screen), their own price at once, the rival's only after his reveal, and the revenue. Their one tap is Meet?, before weeks 3 and 5.
+  - The desk works out the number of junctions itself (the highest any phone picked, else 4: for 26 people, eight teams of three or four, 13 in the room and 13 in the hall), with a row of numbers to change it.
   - Everything is an append-only log in m4-results (see m4/pw.js), so no Worker change and the Poll Desk reset already covers it. The desk writes the results slide's r lines when all six weeks are in.
   - The hold-up phone is plan B at **m4/hold/**.
   - `trial/m4-desk.test.mjs` plays all six weeks with four phones (alternating order, both meetings, the news, a changed price, the results slide, a reset). `m4-price-reset` now tests m4/hold/.

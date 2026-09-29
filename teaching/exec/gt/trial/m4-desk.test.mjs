@@ -107,8 +107,7 @@ try {
   const h1 = t => phone[t].ev(`(document.querySelector('h1')||{}).textContent||''`);
 
   check(await desk.ev(`document.querySelector('h1').textContent.includes('Price Wars')`), 'the desk opens on its setup');
-  check((await desk.ev(`document.body.textContent`)).includes('How many junctions'), 'it asks how many junctions');
-  await desk.ev(click('button.opt', '2'));
+  check((await desk.ev(`document.querySelector('.panel .pt').textContent`)) === '2 junctions: 4 teams', 'it works out 2 junctions from the phones that joined', await desk.ev(`document.querySelector('.panel .pt').textContent`));
   check((await desk.ev(`document.body.textContent`)).includes('A1 ✓'), 'it shows which phones are in', await desk.ev(`[...document.querySelectorAll('.lbl')].map(x=>x.textContent).join(' | ')`));
   await desk.shot('desk-0-setup.png');
   await desk.ev(click('button.go', 'Start the game')); await settle();
@@ -237,7 +236,7 @@ try {
   for (const t in phone) await phone[t].ev('pull()');
   await desk.ev('pull()'); await sleep(900);
   check((await h1('a1')) === 'Price Wars' && (await phone.a1.ev(`document.body.textContent`)).includes('Which station'), 'after a reset, the phones open on the station picker', await h1('a1'));
-  check((await desk.ev(`document.body.textContent`)).includes('How many junctions'), 'and the desk on its setup');
+  check((await desk.ev(`document.querySelector('.panel .pt').textContent`)) === '4 junctions: 8 teams', 'and the desk on its setup, at four junctions when no phone has joined', await desk.ev(`document.querySelector('.panel .pt').textContent`));
 
   const errs = [desk, deck, ...Object.values(phone)].flatMap(p => p.errors);
   check(errs.length === 0, 'no script errors on the desk, the phones or the deck', errs);
