@@ -82,7 +82,7 @@ try {
   check(JSON.stringify(await ph.ev(NOWBTN)) === JSON.stringify(['Price Wars', '/teaching/exec/gt/m4/price/']), 'a typed /go offers Price Wars first, in red', await ph.ev(NOWBTN));
   check(await ph.ev(`document.querySelector('#opts').firstElementChild.classList.contains('now')`), 'it sits above every question');
 
-  await deck.nav(SITE + '/teaching/exec/gt/m4/#17'); await sleep(600);
+  await deck.nav(SITE + '/teaching/exec/gt/m4/#18'); await sleep(600);
   await ph.nav(SITE + '/go/');
   check(JSON.stringify(await ph.ev(NOWBTN)) === JSON.stringify(['Rank the strategies', '/go/?p=m4-axelrod']), 'moving on to the ranking\'s QR moves the offer with it', await ph.ev(NOWBTN));
   await ph.ev(`document.querySelector('a.pick.now').click()`); await sleep(1500);
