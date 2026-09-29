@@ -24,6 +24,7 @@
 .clipframe iframe{width:560px;height:315px;border:0;display:block}
 .clipcover{width:560px;height:315px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+#lehwrap .clipcover{width:470px;height:264px}   /* 30 Sep 2026: the clip plays over the whole slide now, so its cover can make room for the bullets */
 .clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
 .clipcover .bigplay svg{width:24px;height:24px;display:block}
 .clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
@@ -249,12 +250,17 @@ ul.bullets li.aosq span{display:block;font-style:normal;font-weight:600;font-siz
     <ul class="bullets" style="margin-top:0">
       <li>Penalties are often thought of as a psychological game</li>
       <li data-step="1">Neither side wants to reveal to the other which way he or she will go</li>
-      <li data-step="2">So what is a penalty? A lottery?</li>
-      <li data-step="3">A psychological game?</li>
-      <li data-step="4">Or something that can be <b>conquered using game theory</b>?</li>
+      <li data-step="2">In 2006, Germany&rsquo;s keeper Jens Lehmann read from a note before each Argentine penalty, as if he knew where each of them was going</li>
+      <li data-step="3">So what is a penalty? A lottery?</li>
+      <li data-step="4">A psychological game?</li>
+      <li data-step="5">Or something that can be <b>conquered using game theory</b>?</li>
     </ul>
-    <div class="clipframe" id="krulwrap" style="align-self:center">
-      <button class="clipcover" id="krulload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">Tim Krul and the psychology of penalties</span></button>
+    <!-- 30 Sep 2026, his swap: Jens Lehmann's note in place of Tim Krul (7:35, now in Extra resources). Checked: Germany v Argentina,
+         30 June 2006, 4-2 on penalties; Andreas Koepke's pencil note named eight Argentines; Lehmann saved Ayala (on it) and Cambiasso
+         (not on it: "He was the only one who wasn't on the list"); he called it "pretty illegible". The clip is a fan upload of a TV
+         countdown, 1:59, and embeds here -->
+    <div class="clipframe" id="lehwrap" style="align-self:center">
+      <button class="clipcover" id="lehload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">Jens Lehmann&rsquo;s note, 2006</span></button>
     </div>
   </div>
 </section>
@@ -677,6 +683,10 @@ ul.bullets li.aosq span{display:block;font-style:normal;font-weight:600;font-siz
         <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
         <span><div class="rtt">How to win a penalty shootout with game theory</div><div class="rmeta">Planet Money &middot; NPR &middot; 20 minutes</div><div class="rwhy">Do the pros really kick the way the theory says?</div></span>
       </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=XMF6uu_HpZk" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Tim Krul and the psychology of penalties</div><div class="rmeta">FIFA &middot; 8 minutes</div><div class="rwhy">The keeper sent on for a shootout, who told each taker he knew where they would shoot</div></span>
+      </a>
       <a class="rcard" href="https://radiolab.org/podcast/91684-stochasticity" target="_blank" rel="noopener">
         <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
         <span><div class="rtt">Stochasticity</div><div class="rmeta">Radiolab &middot; podcast</div><div class="rwhy">Can a statistician tell who faked a hundred coin tosses?</div></span>
@@ -983,11 +993,11 @@ update();
 
 /* ---- embedded clips: load YouTube only on click (the title spoils the punchline).
    CLIP IDS TO ADD — paste the YouTube video ids here: */
-const CLIPS={krul:'XMF6uu_HpZk',carroll:'6d90ijd2Cx0',vw:'2mp6tM4vUsk',michelin:'FojXOowiCA4'};
-/* FIFA's upload of the Krul clip only embeds on sites FIFA has allowed, so on
-   this site the frame says "blocked from display". Clips listed here open on
-   YouTube itself in a new window instead of in the slide. */
-const NEWTAB={krul:true};
+const CLIPS={lehmann:'ZisCOUzpL_Y',carroll:'6d90ijd2Cx0',vw:'2mp6tM4vUsk',michelin:'FojXOowiCA4'};
+/* Clips listed in NEWTAB open on YouTube itself in a new window instead of over the slide, for an upload
+   that only embeds on sites its owner allows (FIFA's Tim Krul clip was one; since 30 Sep 2026 it is a link in
+   Extra resources, so nothing is listed). */
+const NEWTAB={};
 function clipOnClick(btnId,wrapId,videoId,title,start,end){
   /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
      whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
@@ -998,7 +1008,7 @@ function clipOnClick(btnId,wrapId,videoId,title,start,end){
   btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
   if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
 }
-clipOnClick('krulload','krulwrap',CLIPS.krul,'Tim Krul and the psychology of penalties');
+clipOnClick('lehload','lehwrap',CLIPS.lehmann,'Jens Lehmann’s note, 2006');
 clipOnClick('carrollload','carrollwrap',CLIPS.carroll,'Super Bowl XLIX: the pass at the one');
 /* PBS NewsHour, 29 Sep 2015 (4:31, whole): John German of the ICCT, one of the
    engineers who caught VW, on how the car knew it was on a test (strapped to
