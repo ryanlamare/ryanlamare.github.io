@@ -4,6 +4,20 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## 29 Sep 2026: the final audit, and what is still open
+
+- **Ten read-only auditors** (one per module, one for the shared pages, one for the two days as a course) found nothing broken. Every slide presses through clean, every QR and poll matches, every test passes, and Price Wars and chicken were played in full against a local Worker. No standard topic a first-timer needs is missing.
+- **His yes, built and live the same day** (tag `gt-before-final-audit` is the state before):
+  - deck.js stops a clip when the deck leaves its slide.
+  - m1–m8 each got their fixes. The largest: m4's new slide 7, *What FuelWatch changed in weeks 5 and 6*, which makes m4 29 slides; m6's figures and its named mixed equilibrium; m7's escape-route line moved past the Sun Tzu vote; m8's £2,750 working and `www.rrpf-leasing.com`.
+  - The client page's m8 game is the car market, and its resources lines match the decks.
+  - The Poll Desk retires m3-lot, and REHEARSAL.md is brought up to date.
+- **His rulings:** m5 slide 3's "So far…" stays; m6's "And this room?" is deleted; no minimax (m6's widget carries the idea).
+- **Open, awaiting his word:**
+  - **The winner's curse:** Claude's call is one slide in m8 after *Adverse selection*, not on the m7 auction, which teaches escalation. He teaches it in his negotiations class; ask which deck, and use his wording.
+  - **Price Wars split across two rooms:** Aura inside, Buco's in the hall, and the phones carry the prices (tap a price, LOCK IT IN). His desk shows who has locked and reveals every phone at once. The hold-up version stays live as plan B.
+- **m1 correction to the note below:** *So what is the answer?* is #21, after #20 *This is actually a game about common knowledge*, not before it. The deck is right and matches his 565 order; don't "fix" it.
+
 ## NEXT CHAT STARTS HERE (28 Sep 2026, evening): the m1–m8 run-through
 
 - **His ask, one module at a time from m1:** are we missing anything important? Is there a lesson they aren't learning that he should add, from old slides or new content? If you were taking game theory for the first time, what isn't covered, or isn't explained well enough?
