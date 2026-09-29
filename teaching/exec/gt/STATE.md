@@ -63,6 +63,11 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m8's round: BUILT and live 29 Sep** (tag `m8-before-jamming`). Nothing was missing against his master; the Hustler and Werewolf were cut on purpose.
+  - ***Pooling and separating equilibria* (slide 20)** names signal jamming at a first press ("Cleaning away the problems is signal jamming, so cleanliness stops telling buyers anything"), the one device not shown in action. Pooling, separating and the question follow a press later each.
+  - **Extra resources** gains *The Hustler, season 2*, ABC's own YouTube featurette (tc0Q715ENX8, Craig Ferguson setting up the game). His ask was the episode "Next Level Hustle" (S2E2, aired 24 June 2021), which is not legally streamable in the UK (JustWatch lists nothing; ABC.com is US-only). The only full copies online are unofficial uploads, which aren't fit for a client's slide.
+  - m8-car tests pass; m8 presses through clean.
+- **The m1–m8 run-through is COMPLETE (29 Sep).**
 - **m7's round: BUILT and live 29 Sep** (tag `m7-before-costs`).
   - **The grid is skipped:** he never got to it, so it was never cut on purpose, but he doesn't want it.
   - **Instead, *What is a strategic move?* (slide 3)** gives each kind its catch at a fourth press: commitment, "you can't back out, even when you'd like to"; threat, "if it fails, you have to carry it out"; promise, "if it works, you have to pay up" (his 550 s303–304 "consequences" and "compliance").
