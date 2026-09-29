@@ -158,22 +158,23 @@ function render(){
   if(!S.team)return setup();
   const g=PW.parse(lines), t=S.team, r=PW.rival(t);
   app.appendChild(header(g,t));
-  let w=1;while(w<=6&&PW.isTold(g,t,w))w++;
-  if(w===7){
+  /* the phone shows the stage Ryan has moved everyone to, and nothing ahead of it */
+  const st=g.stage||'w1';
+  if(st==='end'){
     app.appendChild(el('h1','','Six weeks at the junction'));
-    let theirs=0;for(let u=1;u<=6;u++)theirs+=PW.rev(u,PW.p(g,r,u),PW.p(g,t,u));
+    let theirs=0;for(let u=1;u<=6;u++)if(PW.isTold(g,t,u))theirs+=PW.rev(u,PW.p(g,r,u),PW.p(g,t,u));
     app.appendChild(el('div','card','<div class="big">'+k(PW.earned(g,t))+'</div><div class="sub">your station&rsquo;s revenue</div>'));
     app.appendChild(el('div','card','<div class="big">'+k(theirs)+'</div><div class="sub">their station&rsquo;s revenue</div>'));
     app.appendChild(record(g,t,0));
     return;
   }
-  const gate=PW.GATES.includes(w)&&!g.open[w]&&PW.allIn(g,w-1);
-  if(w>=5&&!g.news){   /* nothing about weeks 5 and 6 until the news is out */
+  if(st==='stop'){   /* nothing about weeks 5 and 6 until the news is out */
     app.appendChild(el('h1','','Stop here. There is news from the junction.'));
     app.appendChild(record(g,t,0));
     return;
   }
-  if(gate){   /* the meeting round: Ryan comes to ask; the phone shows what they are deciding about */
+  if(st==='m3'||st==='m5'){   /* the meeting round: Ryan comes to ask; the phone shows what they are deciding about */
+    const w=+st[1];
     app.appendChild(el('h1','','Before week '+w));
     app.appendChild(el('div','lbl','Decide whether you want to meet the other station, and who would go.'));
     app.appendChild(el('div','','<span class="mtag">'+(w===3?'Week 3 pays double':'Weeks 5 and 6: FuelWatch rules')+'</span>'));
@@ -181,16 +182,17 @@ function render(){
     app.appendChild(record(g,t,w));
     return;
   }
-  const tag=PW.tagOf(w);
+  const w=+st[1], tag=PW.tagOf(w);
   app.appendChild(el('h1','','Week '+w+(tag?'<span class="wt">'+tag+'</span>':'')));
-  const mine=PW.p(g,t,w);
+  const mine=PW.p(g,t,w), theirs=PW.isTold(g,t,w)?PW.p(g,r,w):null;
   if(!mine)app.appendChild(el('div','lbl','Decide your price and tell Ryan when he comes to your table.'));
   app.appendChild(matrix(w,t));
-  const st=el('div','status');
-  st.appendChild(el('div','chip'+(mine?' '+mine:''),'<div class="ck">Your price</div><div class="cv">'+(mine?PW.PRICE[mine]:'&ndash;')+'</div>'));
-  const last=w>1?PW.p(g,r,w-1):null;   /* the latest price Ryan has told them, week w-1 */
-  st.appendChild(el('div','chip'+(last?' '+last:''),'<div class="ck">'+(w>1?'Theirs, week '+(w-1):'Theirs')+'</div><div class="cv">'+(last?PW.PRICE[last]:'&ndash;')+'</div>'));
-  app.appendChild(st);
+  /* this week only: their price once Ryan has told them */
+  const sb=el('div','status');
+  sb.appendChild(el('div','chip'+(mine?' '+mine:''),'<div class="ck">Your price</div><div class="cv">'+(mine?PW.PRICE[mine]:'&ndash;')+'</div>'));
+  sb.appendChild(el('div','chip'+(theirs?' '+theirs:''),'<div class="ck">Theirs</div><div class="cv">'+(theirs?PW.PRICE[theirs]:'&ndash;')+'</div>'));
+  app.appendChild(sb);
+  if(theirs)app.appendChild(el('div','lbl','You earned '+k(PW.rev(w,mine,theirs))+' this week.'));
   app.appendChild(record(g,t,w));
   app.appendChild(footer(g,t));
 }

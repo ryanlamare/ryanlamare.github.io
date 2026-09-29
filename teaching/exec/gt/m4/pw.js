@@ -8,18 +8,24 @@
    meeting round of its own: Ryan walks it team to team, asking whether they
    want to meet and who would go, and taps the answer and the rep's name.
 
+   RYAN MOVES THE GAME ON, never the phones (his correction, 29 Sep 2026):
+   each week every phone stays on that week, showing the team's price and,
+   once he has told them, the rival's, until he moves everyone to the next
+   stage: week 1, week 2, the meeting round, week 3, week 4, the stop for
+   the news, the meeting round, week 5, week 6, the end.
+
    Everything is one append-only log of lines in the gt-poll room
    m4-results (the room the results slide and the Poll Desk already know),
    each beginning "pw|". Lines only ever add or overwrite (the last line for
    a thing wins), so a line sent twice or late changes nothing, and the desk
    and every phone rebuild the same game from the same lines:
-     pw|g|N           the game starts, with N junctions      (desk)
+     pw|g|N           the game starts, with N junctions, in week 1 (desk)
+     pw|st|w2         Ryan moves everyone on: w1–w6, m3 and m5 (the meeting
+                      rounds), stop (after week 4, for the news), end
      pw|p|a3|2|h      Aura at junction 3 posted £1.50 in week 2 (c = £1.40)
      pw|t|a3|2        Aura at junction 3 has been told its rival's week 2
      pw|q|a3|3|y|Sam  Aura at junction 3 wants to meet before week 3, and sends Sam (n = no)
      pw|mc|3|1,3      the meeting round before week 3 closes; junctions 1 and 3 met
-     pw|o|3           week 3 opens (after its meetings)
-     pw|n             the FuelWatch news is out
      pw|j|a3|<phone>|Ana,Ben  a phone joined Aura, junction 3, and said who is on the team (phones)
    The results slide still reads its own "r|…" lines, which the desk writes
    once all six weeks are in, and an "rm|…" line naming each meeting's reps. Scoring is the deck's, in thousands of pounds. */
@@ -31,6 +37,11 @@ PW.NAME={a:'Aura Fuels',b:'Buco’s Petrol'};
 PW.SHORT={a:'Aura',b:'Buco’s'};
 PW.PRICE={h:'£1.50',c:'£1.40'};
 PW.GATES=[3,5];   /* a meeting round comes before each of these weeks */
+PW.STAGES=['w1','w2','m3','w3','w4','stop','m5','w5','w6','end'];
+/* what Ryan's button does from each stage */
+PW.NEXT={w1:['w2','Move everyone to week 2'],w2:['m3','Move everyone to the meeting round'],m3:['w3','Open week 3'],
+  w3:['w4','Move everyone to week 4'],w4:['stop','Stop everyone for the news'],stop:['m5','The news is out'],
+  m5:['w5','Open week 5'],w5:['w6','Move everyone to week 6'],w6:['end','End the game']};
 
 /* the deck's scoring: an ordinary week 12/12, 18 against 2, 9/9; week 3 doubles;
    from week 5 the FuelWatch rules (undercutting alone pays 72, week 6 no longer doubles) */
@@ -40,19 +51,18 @@ PW.matrix=w=>[['h','h'],['h','c'],['c','h'],['c','c']].map(([a,b])=>[PW.rev(w,a,
 PW.tagOf=w=>w===3?'Pays double':w>=5?'FuelWatch rules':'';
 
 PW.parse=function(lines){
-  const G={nj:0,price:{},told:{},ans:{},rep:{},mc:{},open:{},news:false,joins:{},members:{}};
+  const G={nj:0,stage:'',price:{},told:{},ans:{},rep:{},mc:{},news:false,joins:{},members:{}};
   const by={};   /* each phone's latest join: a phone that picks again moves */
   lines.forEach(line=>{
     const f=String(line).split('|');if(f[0]!=='pw')return;
     const team=/^[ab][1-6]$/.test(f[2]||'')?f[2]:null, w=+f[3];
     switch(f[1]){
-      case 'g':if(/^[1-6]$/.test(f[2]))G.nj=+f[2];break;
+      case 'g':if(/^[1-6]$/.test(f[2])){G.nj=+f[2];G.stage='w1';}break;
+      case 'st':if(PW.STAGES.includes(f[2])){G.stage=f[2];if(f[2]==='m5'||f[2]==='w5'||f[2]==='w6'||f[2]==='end')G.news=true;}break;
       case 'p':if(team&&w>=1&&w<=6&&/^[hc]$/.test(f[4]))(G.price[team]=G.price[team]||[])[w]=f[4];break;
       case 't':if(team&&w>=1&&w<=6)(G.told[team]=G.told[team]||[])[w]=true;break;
       case 'q':if(team&&(w===3||w===5)&&/^[yn]$/.test(f[4])){(G.ans[team]=G.ans[team]||{})[w]=f[4];(G.rep[team]=G.rep[team]||{})[w]=f[4]==='y'?(f[5]||'').trim():'';}break;
       case 'mc':{const g=+f[2];if(g===3||g===5)G.mc[g]=(f[3]||'').split(',').filter(x=>/^[1-6]$/.test(x)).map(Number);break;}
-      case 'o':if(+f[2]===3||+f[2]===5)G.open[+f[2]]=true;break;
-      case 'n':G.news=true;break;
       case 'j':if(team)by[f[3]||('old'+Math.random())]={team,names:(f[4]||'').split(',').map(n=>n.trim()).filter(Boolean)};break;
     }
   });
@@ -68,13 +78,10 @@ PW.rival=t=>(t[0]==='a'?'b':'a')+t.slice(1);
 PW.p=(G,t,w)=>(G.price[t]||[])[w]||null;
 PW.isTold=(G,t,w)=>!!(G.told[t]||[])[w];
 PW.allIn=(G,w)=>G.nj>0&&PW.teams(G).every(t=>PW.p(G,t,w));
-/* week w takes prices once every team has posted the week before, and, before
-   weeks 3 and 5, once Ryan has opened it after the meetings */
-PW.isOpen=(G,w)=>G.nj>0&&(w===1||(PW.allIn(G,w-1)&&(!PW.GATES.includes(w)||!!G.open[w])));
-PW.week=G=>{for(let w=1;w<=6;w++)if(!PW.allIn(G,w))return w;return 7;};
-/* the meeting round before week g: it runs once week g-1 is all in (and,
-   before week 5, once the news is out) until Ryan opens week g */
-PW.asking=(G,g)=>PW.allIn(G,g-1)&&(g===3||G.news)&&!G.mc[g];
+/* the week everyone is in (0 outside a week: a meeting round, the stop, the end) */
+PW.week=G=>/^w[1-6]$/.test(G.stage)?+G.stage[1]:0;
+PW.isOpen=(G,w)=>G.nj>0&&G.stage==='w'+w;
+PW.asking=(G,g)=>G.stage==='m'+g;
 PW.meets=(G,g,j)=>!!(G.mc[g]||[]).includes(j);
 PW.ans=(G,t,g)=>(G.ans[t]||{})[g]||null;
 PW.rep=(G,t,g)=>(G.rep[t]||{})[g]||'';
@@ -85,7 +92,7 @@ PW.clean=n=>String(n||'').replace(/[|,\u0000-\u001f]/g,' ').replace(/\s+/g,' ').
 PW.earned=(G,t)=>{let s=0;for(let w=1;w<=6;w++)if(PW.isTold(G,t,w)&&PW.p(G,t,w)&&PW.p(G,PW.rival(t),w))s+=PW.rev(w,PW.p(G,t,w),PW.p(G,PW.rival(t),w));return s;};
 /* the first week this team has not yet been told, and whether Ryan can reveal it now */
 PW.nextReveal=(G,t)=>{for(let w=1;w<=6;w++){if(PW.isTold(G,t,w))continue;return PW.p(G,t,w)&&PW.p(G,PW.rival(t),w)?w:0;}return 0;};
-PW.over=G=>G.nj>0&&PW.allIn(G,6)&&PW.teams(G).every(t=>PW.isTold(G,t,6));
+PW.over=G=>G.stage==='end';
 
 PW.voter=function(){let v=null;try{v=localStorage.getItem('gt-voter');if(!v){v=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));localStorage.setItem('gt-voter',v);}}catch(_){v='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}return v;};
 PW.entries=()=>fetch(PW.API+'/p/'+PW.ROOM+'/entries',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json();}).then(d=>d.entries||[]);

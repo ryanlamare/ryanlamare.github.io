@@ -218,7 +218,7 @@ function setup(g){
    A dark dot on a price = that station has not yet been told the other's price
    for that week; a red dot on a name = that team is waiting for him. */
 function sheet(g,j,big,focus){
-  const w=PW.week(g), card=el('div','jcard');
+  const w=PW.week(g)||(g.stage[0]==='m'?+g.stage[1]:0), card=el('div','jcard');
   card.appendChild(el('div','jh','<span>Junction '+j+'</span>'));
   const sh=el('div','sheet'+(big?' big':''));
   sh.appendChild(el('div',''));
@@ -246,34 +246,28 @@ function sheet(g,j,big,focus){
 }
 
 function board(g){
-  const w=PW.week(g);
-  let head, sub='';
-  if(PW.over(g)){head='Six weeks done';sub='The results slide has them';}
-  else if(w<=6&&!PW.isOpen(g,w)){head=w===5&&!g.news?'After week 4':'Before week '+w;}
-  else if(w<=6){head='Week '+w;sub=PW.tagOf(w);}
-  else {head='Week 6';sub='Tell the last teams';}
+  const st=g.stage, w=PW.week(g), teams=PW.teams(g);
+  const head=st==='end'?'Six weeks done':st==='stop'?'After week 4':st[0]==='m'?'Before week '+st[1]:'Week '+w;
+  const sub=st==='end'?'The results slide has them':w?PW.tagOf(w):st==='stop'?'Stop for the news':'The meeting round';
   app.appendChild(el('h1','',head+(sub?'<small>'+sub+'</small>':'')));
-  const teams=PW.teams(g), behind=wk=>teams.filter(t=>!PW.isTold(g,t,wk)).length;
-  /* what the game needs from Ryan now */
-  if(w<=6&&PW.isOpen(g,w)){
-    const n=teams.filter(t=>PW.p(g,t,w)).length;
-    app.appendChild(el('div','lbl',n+' of '+teams.length+' prices in for week '+w+'.'));
+  /* what the game needs from Ryan now, and the one button that moves everyone on */
+  const p=el('div','panel'), nx=PW.NEXT[st];
+  if(w){
+    const priced=teams.filter(t=>PW.p(g,t,w)).length, told=teams.filter(t=>PW.isTold(g,t,w)).length;
+    p.appendChild(el('div','pt',priced+' of '+teams.length+' prices in &middot; '+told+' of '+teams.length+' told'));
+    if(priced<teams.length)p.appendChild(el('div','pl','Tap a team&rsquo;s name to take its price.'));
+    else if(told<teams.length)p.appendChild(el('div','pl','Every price is in. Tell the teams still marked with a dot.'));
+    else p.appendChild(el('div','pl','Every team knows week '+w+'.'));
   }
-  if(w===5&&PW.allIn(g,4)&&!g.news){
-    const p=el('div','panel');
-    p.appendChild(el('div','pt','Tell every team its week 4, then everyone into the room for the Gazette.'));
-    const b=behind(4);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week 4.'));
-    p.appendChild(btn('go','The news is out',()=>{if(confirm('The news is out? Every phone switches to the FuelWatch rules.'))push('pw|n');}));
-    app.appendChild(p);
+  if(st==='stop'){
+    p.appendChild(el('div','pt','Everyone into the room for the Gazette.'));
+    p.appendChild(el('div','pl','G on the Stop here step of The junction, week by week opens it. Then tap The news is out: every phone switches to the FuelWatch rules and the meeting round before week 5 starts.'));
   }
-  PW.GATES.forEach(gw=>{
-    if(!PW.asking(g,gw))return;
-    const p=el('div','panel');
+  if(st==='m3'||st==='m5'){
+    const gw=+st[1], left=teams.filter(t=>!PW.settled(g,t,gw));
     p.appendChild(el('div','pt','Before week '+gw+': the meeting round'));
-    p.appendChild(el('div','pl','At each team: do you want to meet, and who would go?'));
-    const b=behind(gw-1);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week '+(gw-1)+' first.'));
-    const left=teams.filter(t=>!PW.settled(g,t,gw));
-    if(left.length)p.appendChild(el('div','pl',(teams.length-left.length)+' of '+teams.length+' teams settled (one no settles a junction).'));
+    p.appendChild(el('div','pl','At each team: do you want to meet, and who would go? One no settles a junction.'));
+    if(left.length)p.appendChild(el('div','pl',(teams.length-left.length)+' of '+teams.length+' teams settled.'));
     else{
       const lines=[];
       for(let j=1;j<=g.nj;j++){
@@ -283,15 +277,27 @@ function board(g){
       p.appendChild(el('div','pt',lines.join('<br>')));
       p.appendChild(el('div','pl','Tell each team, let the reps meet, then open the week.'));
     }
-    p.appendChild(btn('go ink','Open week '+gw,()=>{
-      if(left.length&&!confirm(left.map(label).join(', ')+' '+(left.length===1?'has':'have')+' not answered. Count '+(left.length===1?'it':'them')+' as no?'))return;
-      const js=[];for(let j=1;j<=g.nj;j++)if(PW.ans(g,'a'+j,gw)==='y'&&PW.ans(g,'b'+j,gw)==='y')js.push(j);
-      push('pw|mc|'+gw+'|'+js.join(','));push('pw|o|'+gw);
-    }));
-    app.appendChild(p);
-  });
+  }
+  if(st==='end')p.appendChild(el('div','pt','The phones show each team its six weeks. What happened at each junction is on the deck.'));
+  if(nx){
+    const allIn=!w||PW.allIn(g,w), untold=w?teams.filter(t=>!PW.isTold(g,t,w)):[];
+    const b=btn('go'+(st[0]==='m'||st==='stop'?' ink':''),nx[1],()=>{
+      if(untold.length&&!confirm(untold.map(label).join(', ')+' '+(untold.length===1?'has':'have')+' not been told week '+w+' yet. Move everyone on anyway?'))return;
+      if(st[0]==='m'){
+        const gw=+st[1], left=teams.filter(t=>!PW.settled(g,t,gw));
+        if(left.length&&!confirm(left.map(label).join(', ')+' '+(left.length===1?'has':'have')+' not answered. Count '+(left.length===1?'it':'them')+' as no?'))return;
+        const js=[];for(let j=1;j<=g.nj;j++)if(PW.ans(g,'a'+j,gw)==='y'&&PW.ans(g,'b'+j,gw)==='y')js.push(j);
+        push('pw|mc|'+gw+'|'+js.join(','));
+      }
+      push('pw|st|'+nx[0]);
+    });
+    b.disabled=!allIn;
+    p.appendChild(b);
+    if(!allIn)p.appendChild(el('div','pl','The button works once every price for week '+w+' is in.'));
+  }
+  app.appendChild(p);
   for(let j=1;j<=g.nj;j++)app.appendChild(sheet(g,j,false,null));
-  app.appendChild(el('div','key','Tap a team&rsquo;s name to go to it. <i></i>that team has not been told the other station&rsquo;s price that week.'));
+  app.appendChild(el('div','key','Tap a team&rsquo;s name to go to it. A red dot: that team is waiting for you. <i></i>that team has not been told the other station&rsquo;s price that week.'));
 }
 
 /* before weeks 3 and 5: does the team want to meet, and who would go? */
@@ -330,23 +336,22 @@ function visit(g,t){
   head.appendChild(el('div','who',PW.NAME[s]+' &middot; Junction '+j+(g.members[t]&&g.members[t].length?'<br>'+g.members[t].map(esc).join(', '):'')));
   app.appendChild(head);
   app.appendChild(sheet(g,j,true,t));
-  const u=PW.nextReveal(g,t);
+  const u=PW.nextReveal(g,t), st=g.stage;
   if(u){
     app.appendChild(btn('reveal','Told '+label(t)+' week '+u+'<small>'+label(r)+' posted '+PW.PRICE[PW.p(g,r,u)]+' &middot; puts it on their phone</small>',()=>{push('pw|t|'+t+'|'+u);}));
-  }else if(w<=6&&!PW.p(g,t,w)){
-    if(PW.isOpen(g,w)){
-      app.appendChild(el('div','lbl','Week '+w+(PW.tagOf(w)?' &middot; '+PW.tagOf(w).toLowerCase():'')+': '+label(t)+'&rsquo;s price'));
-      const row=el('div','row2');
-      ['h','c'].forEach(p=>row.appendChild(btn('price '+p,'<small>'+label(t)+'</small>'+PW.PRICE[p],()=>{justRevealed=null;push('pw|p|'+t+'|'+w+'|'+p);})));
-      app.appendChild(row);
-    }else if(PW.GATES.includes(w)&&PW.asking(g,w))meetRound(g,t,w);
-    else app.appendChild(el('div','lbl','Week '+w+' opens after '+(w===5&&!g.news?'the news and ':'')+'the meeting round.'));
-  }
+  }else if(w&&!PW.p(g,t,w)){
+    app.appendChild(el('div','lbl','Week '+w+(PW.tagOf(w)?' &middot; '+PW.tagOf(w).toLowerCase():'')+': '+label(t)+'&rsquo;s price'));
+    const row=el('div','row2');
+    ['h','c'].forEach(p=>row.appendChild(btn('price '+p,'<small>'+label(t)+'</small>'+PW.PRICE[p],()=>{push('pw|p|'+t+'|'+w+'|'+p);})));
+    app.appendChild(row);
+  }else if(w&&!PW.p(g,r,w))app.appendChild(el('div','lbl','Waiting for '+label(r)+'&rsquo;s price.'));
+  else if(w&&PW.isTold(g,t,w))app.appendChild(el('div','lbl',label(t)+' knows week '+w+'.'));
+  else if(st==='m3'||st==='m5')meetRound(g,t,+st[1]);
+  else if(st==='stop')app.appendChild(el('div','lbl','Everyone into the room for the news.'));
   /* this week's price, once given; it can change until the rival has heard it */
-  const cw=w<=6&&PW.p(g,t,w)?w:(w>1&&PW.p(g,t,w-1)&&!PW.isTold(g,r,w-1)?w-1:0);
-  if(cw&&PW.p(g,t,cw)){
-    const p=PW.p(g,t,cw), set=el('div','set','<span><span class="sw '+p+'"></span>Week '+cw+': '+PW.PRICE[p]+'</span>');
-    if(!PW.isTold(g,r,cw))set.appendChild(btn('link','Change to '+PW.PRICE[p==='h'?'c':'h'],()=>{justRevealed=null;push('pw|p|'+t+'|'+cw+'|'+(p==='h'?'c':'h'));}));
+  if(w&&PW.p(g,t,w)){
+    const p=PW.p(g,t,w), set=el('div','set','<span><span class="sw '+p+'"></span>Week '+w+': '+PW.PRICE[p]+'</span>');
+    if(!PW.isTold(g,r,w))set.appendChild(btn('link','Change to '+PW.PRICE[p==='h'?'c':'h'],()=>{push('pw|p|'+t+'|'+w+'|'+(p==='h'?'c':'h'));}));
     app.appendChild(set);
   }
   const nav=el('div','nav');
