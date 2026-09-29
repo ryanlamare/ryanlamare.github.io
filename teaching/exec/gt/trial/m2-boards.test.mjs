@@ -183,7 +183,7 @@ try {
   await deck.key('ArrowRight'); await sleep(300); await deck.key('ArrowRight'); await sleep(300);
   for (let i = 0; i < 3; i++) { await deck.key('ArrowRight'); await sleep(200); }
   await sleep(3000);
-  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('centipede game: theory')`), 'the deck is on the centipede results slide');
+  check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('centipede game: your results')`), 'the deck is on the centipede results slide');
   check(await deck.ev(`document.getElementById('centN').textContent`) === '10', 'the count reads 10 pairs');
   check(await deck.ev(`document.querySelectorAll('#centcols .ubhead').length===10 && !document.querySelector('#centcols .ubname') && !document.querySelector('.slide.active .qr')`), 'ten columns, no names and no QR before the keypress');
   await deck.key('ArrowRight'); await sleep(600);
@@ -196,14 +196,14 @@ try {
   check(await deck.ev(`document.querySelectorAll('#centcols .ubname').length`) === 10, 'a late pair does not move the board');
   await deck.key('ArrowRight'); await sleep(300);
   await deck.key('ArrowRight'); await sleep(400); await deck.shot('cent-deck-2.png');
-  /* ---------- the closer: four questions, nothing to scan (slide 19: the limits slide sits between since 23 Sep; the A380 slide went into the first-mover cards 24 Sep) ---------- */
-  await deck.ev(`location.hash='#19'`); await sleep(1200);
+  /* ---------- the closer: four questions, nothing to scan (slide 20: the limits slide sits between since 23 Sep; the A380 slide went into the first-mover cards 24 Sep; the centipede theory got its own slide 29 Sep) ---------- */
+  await deck.ev(`location.hash='#20'`); await sleep(1200);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('Charting')`) && await deck.ev(`document.querySelectorAll('.slide.active .ritem').length`) === 4 && await deck.ev(`!document.querySelector('.slide.active img') && [...document.querySelectorAll('.slide.active svg')].every(e=>e.closest('.talk')||e.closest('.ctree'))`) && await deck.ev(`!!document.querySelector('.slide.active svg.ctree')`), 'the closer is four questions and a picture of them as a tree, with no QR (the tree since 27 Sep, his idea)');
   await deck.key('ArrowRight'); await sleep(400);
   check(await deck.ev(`document.querySelector('.slide.active .talk').classList.contains('shown')`), 'one press brings up AT YOUR TABLES');
   await deck.key('ArrowRight'); await sleep(400);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.toLowerCase().includes('takeaways')`), 'the next slide is the takeaways');
-  await deck.ev(`location.hash='#18'`); await sleep(600);
+  await deck.ev(`location.hash='#19'`); await sleep(600);
   check(await deck.ev(`document.querySelector('.slide.active h2').textContent.includes('limits')`), 'The limits of sequential reasoning comes straight before the closer');
   for (const [n, p] of [['deck', deck], ['proposer', A], ['responder', T], ['second proposer', G], ['second responder', H]]) check(!p.errors.length, 'no script errors on the ' + n + (p.errors.length ? ': ' + p.errors.join(' / ') : ''));
 } catch (e) { console.log('FAIL  the test threw: ' + (e.stack || e)); fails++; }
