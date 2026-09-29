@@ -53,7 +53,12 @@ function applySteps(){slides[cur].querySelectorAll('[data-step]').forEach(e=>{
    (Ryan, 24 Sep 2026). The step stays out on purpose: replaying one could
    re-run a reveal. Written only once the deck has read its own address. */
 let armed=false;
-function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));
+/* a clip playing in its own frame on a slide stops when the deck leaves that
+   slide: an off-screen slide is only hidden, so the video played on, with
+   sound, under the slides after it (29 Sep 2026 audit). The frame reloads
+   without autoplay, so coming back finds it paused at the start. */
+function stopClips(){slides.forEach((s,i)=>{if(i!==cur)s.querySelectorAll('iframe[src*="autoplay=1"]').forEach(f=>{f.src=f.src.replace('autoplay=1','autoplay=0');});});}
+function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));stopClips();
   [...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));
   ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();
   if(armed&&location.hash!=='#'+cur){try{history.replaceState(null,'','#'+cur);}catch(_){}}
