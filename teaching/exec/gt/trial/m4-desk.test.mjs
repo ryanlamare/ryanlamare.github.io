@@ -90,7 +90,7 @@ try {
     await phone[k].ev(click('button.opt', t[0] === 'a' ? 'Aura' : 'Buco'));
     await phone[k].ev(click('button.num', t[1]));
     await phone[k].ev(click('button.go', 'Next')); await sleep(300);
-    if (k === 'a1') { check((await phone.a1.ev(`document.body.innerText`)).includes('Which one is you?'), 'after the junction, the phone asks which one is you'); await phone.a1.shot('phone-0-who.png'); }
+    if (k === 'a1') { check((await phone.a1.ev(`document.body.innerText`)).includes('Who are you?'), 'after the junction, the phone asks who are you'); await phone.a1.shot('phone-0-who.png'); }
     check(await phone[k].ev(click('button.nm', WHO[k])), `${t.toUpperCase()}'s phone: ${WHO[k]} taps their own name`);
     if (k === 'a1') { await phone.a1.ev(click('button.nm', 'Ben')); check(await phone.a1.ev(`[...document.querySelectorAll('button.nm.sel')].map(b=>b.textContent).join()`) === 'Ben', 'only one name can be picked'); await phone.a1.ev(click('button.nm', 'Ana')); }
     await phone[k].ev(click('button.go', 'Start'));
