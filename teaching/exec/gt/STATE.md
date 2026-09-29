@@ -63,6 +63,11 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m3's aircraft game is CUT (29 Sep, his call; tag `m3-before-window`).** After six rebuilds in two days, he said: "you are obsessed with them FEELING 'is it really zero sum'… they are going to do entire nonzero sum modules for several hours… ITS GAME THEORY." That keep-it reasoning was Claude's, not his, and it cost him a day.
+  - The four slides are in m3/outtakes.html, and learning objective 5 is gone. **m3 is 25 slides.**
+  - The briefs and the reveal page stay on the site, unlinked.
+  - No replacement: the library-window idea was dropped mid-build.
+  - **Don't propose negotiation exercises or "feel the lesson" activities for the suite.**
 - **m3's aircraft briefs, sixth pass (29 Sep; tag `m3-before-samesummer`). CURRENT; supersedes the fifth pass's endings.** His objection: "why would they ever come to an agreement that shuts down their own production?" He was right. In Ugli, pairs who miss the secret still AGREE, usually to split the oranges (1,500 each), which looks fair and fails both. Our equivalent is sharing the summer, and that trap only works if both need the plane for the SAME whole window.
   - **Now:** Larkfield needs it from 1 June to 30 September too, flying on every clear day at Manston, the same window as Harrow's Stage 4.
   - **The buy-off authority is gone** (it pointed at an agreement nobody would take). Goal 2 is just "spend as little as possible … never more than your ceiling".
