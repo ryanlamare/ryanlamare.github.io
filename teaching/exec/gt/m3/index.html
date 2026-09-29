@@ -64,7 +64,71 @@
 .pcjscore td{font-weight:600;text-align:right;padding:6px 0 6px 10px;border-top:2px solid var(--rule);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pcjscore th:first-child,.pcjscore td:first-child{text-align:left;padding-left:0}
 .pcjscore td:last-child{font-weight:800}
-.pcjscore tr.win td{color:var(--red)}
+.pcjscore:has(td[data-step="6"].shown) tr.win td{color:var(--red)}   /* the winner goes red only with the final scores, after the clip */
+/* The truel at the junction (29 Sep 2026, his idea): the Price Wars corner a century earlier, an Old West street with
+   a saloon where Aura will stand and a general store where Buco's will. Static shapes stepped by his presses, never
+   innerHTML on SVG (Safari). Every moving part is a <g> inside a translated parent, so a CSS rotate turns it about
+   that parent's origin: the feet, the shoulder, the muzzle. Angles and trace lengths come from the scene's geometry. */
+.tscene{position:absolute;right:96px;top:204px}
+.tsvg{display:block;width:640px;height:400px;border:2.5px solid var(--ink);overflow:hidden}
+.tsvg .gs,.tsvg .arm,.tsvg .flash,.tsvg .tw,.tsvg .twr,.tsvg .smk{transform-box:view-box;transform-origin:0 0}
+.tsvg .gs{transition:transform .55s cubic-bezier(.55,0,.8,.3),opacity .55s}
+.tsvg .arm{transform:rotate(70deg);transition:transform .45s ease}
+.tsvg .flash,.tsvg .trace,.tsvg .bang,.tsvg .smk{opacity:0}
+.tsvg .aim,.tsvg .reload,.tsvg .ttag{opacity:0;transition:opacity .35s}
+.tsvg .tw{transform:translate(-40px,0)}
+.slide.active .tsvg .tw{animation:ttw 5.5s linear .8s both}
+.slide.active .tsvg .twr{animation:ttwr 5.5s linear .8s both}
+@keyframes ttw{0%{transform:translate(-30px,0)}18%{transform:translate(100px,-10px)}30%{transform:translate(190px,0)}48%{transform:translate(310px,-12px)}62%{transform:translate(410px,0)}80%{transform:translate(540px,-8px)}100%{transform:translate(690px,0)}}
+@keyframes ttwr{to{transform:rotate(900deg)}}
+@keyframes tflash{0%{opacity:0;transform:scale(.3)}25%{opacity:1;transform:scale(1.3)}100%{opacity:0;transform:scale(1)}}
+@keyframes tbang{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes tsmoke{0%{opacity:0;transform:translate(0,0) scale(.6)}20%{opacity:1}100%{opacity:0;transform:translate(6px,-34px) scale(1.4)}}
+@keyframes ttrA{0%{opacity:1;stroke-dashoffset:269.2}60%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
+@keyframes ttrC{0%{opacity:1;stroke-dashoffset:146.7}60%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
+/* Survival of the weakest: the two best aim at each other; the ace fires and reloads; the average shooter shoots first */
+#ts1:has(.m1.shown) .armA,#ts1:has(.m1.shown) .armB{transform:rotate(3.2deg)}
+#ts1:has(.m1.shown) .aimAB,#ts1:has(.m1.shown) .aimBA{opacity:1;transition-delay:.35s}
+#ts1:has(.m2.shown) .flashA{animation:tflash .45s .05s both}
+#ts1:has(.m2.shown) .traceA{animation:ttrA .4s .05s both}
+#ts1:has(.m2.shown) .bangA{animation:tbang 1.3s .05s both}
+#ts1:has(.m2.shown) .aimAB,#ts1:has(.m2.shown) .aimBA{opacity:0;transition-delay:0s}
+#ts1:has(.m2.shown) .gsB{transform:rotate(84deg);opacity:.5;transition-delay:.3s}
+#ts1:has(.m2.shown) .armB{transform:rotate(-84deg);transition-delay:.3s}
+#ts1:has(.m2.shown) .armA{transform:rotate(70deg);transition-delay:1s}
+#ts1:has(.m2.shown) .reload{opacity:1;transition-delay:1.2s}
+#ts1:has(.m3.shown) .armC{transform:rotate(32.0deg)}
+#ts1:has(.m3.shown) .aimCA,#ts1:has(.m3.shown) .pctCA{opacity:1;transition-delay:.45s}
+/* What if he shoots first: he hits one and the ace turns on him; then the take he should play, a shot in the air */
+#ts2:has(.m1.shown) .tagHit{opacity:1}
+#ts2:has(.m1.shown) .armC{transform:rotate(32.0deg)}
+#ts2:has(.m1.shown) .flashC{animation:tflash .45s .5s both}
+#ts2:has(.m1.shown) .traceC{animation:ttrC .35s .5s both}
+#ts2:has(.m1.shown) .bangC{animation:tbang 1.3s .5s both}
+#ts2:has(.m1.shown) .gsB{transform:rotate(84deg);opacity:.5;transition-delay:.75s}
+#ts2:has(.m1.shown) .armB{transform:rotate(-84deg);transition-delay:.75s}
+#ts2:has(.m2.shown) .armA{transform:rotate(-22.0deg)}
+#ts2:has(.m2.shown) .aimAC,#ts2:has(.m2.shown) .pctAC{opacity:1;transition-delay:.4s}
+#ts2:has(.m3.shown) .tagHit{opacity:0}
+#ts2:has(.m3.shown) .tagMiss{opacity:1}
+#ts2:has(.m3.shown) .aimAC,#ts2:has(.m3.shown) .pctAC{opacity:0;transition-delay:0s}
+#ts2:has(.m3.shown) .gsB{transform:none;opacity:1;transition-delay:0s}
+#ts2:has(.m3.shown) .armC{transform:rotate(-80deg);transition-delay:.6s}
+#ts2:has(.m3.shown) .flashCup{animation:tflash .45s 1.05s both}
+#ts2:has(.m3.shown) .bangCup{animation:tbang 1.5s 1.05s both}
+#ts2:has(.m3.shown) .smk{animation:tsmoke 1.8s 1.1s both}
+#ts2:has(.m3.shown) .armA{transform:rotate(3.2deg);transition-delay:1.8s}
+#ts2:has(.m3.shown) .armB{animation:tarmB 2.3s both}
+@keyframes tarmB{0%{transform:rotate(-84deg)}22%{transform:rotate(70deg)}78%{transform:rotate(70deg)}98%,100%{transform:rotate(3.2deg)}}
+#ts2:has(.m3.shown) .aimAB,#ts2:has(.m3.shown) .aimBA{opacity:1;transition-delay:2.3s}
+@media (prefers-reduced-motion: reduce){.tsvg .tw{display:none}.tsvg .gs,.tsvg .arm,.tsvg .aim{transition-duration:.01s}}
+ul.bullets.tlist{position:absolute;left:96px;width:425px;top:444px;margin:0}
+ul.bullets.tlist li{font-size:18.5px;line-height:1.32;margin-top:10px}
+ul.bullets.tlist li:first-child{margin-top:0}
+.tq{position:absolute;left:96px;width:410px;top:212px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-size:19px;line-height:1.35;padding:14px 18px}
+ul.bullets.tlist2{position:absolute;left:96px;width:430px;top:330px;margin:0}
+ul.bullets.tlist2 li{font-size:21px;line-height:1.33;margin-top:16px}
+ul.bullets.tlist2 li:first-child{margin-top:0}
 .clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
 .clipframe iframe{width:640px;height:360px;border:0;display:block}
 /* click-to-load cover: keeps YouTube's title (which gives the ending away)
@@ -374,20 +438,31 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
   <h2>&ldquo;Survival of the weakest&rdquo;</h2>
   <div class="leadline" style="text-align:left;max-width:420px">What are the actual <b>win rates</b>?</div>
-  <div class="trows" style="right:auto;width:400px">
+  <div class="trows" style="right:auto;width:400px;top:236px;gap:14px">
     <div class="trow"><div class="tname">The ace sharpshooter</div><div class="tpct" style="color:var(--blue)">30%</div></div>
     <div class="trow"><div class="tname">The pretty decent shot</div><div class="tpct" style="color:var(--terracotta)">18%</div></div>
     <div class="trow"><div class="tname">just an average shooter</div><div class="tpct" style="color:var(--green)">52%</div></div>
   </div>
-  <div class="chip" data-step="1" style="position:absolute;left:96px;width:404px;top:518px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-size:18.5px;line-height:1.35;padding:13px 18px">What if the average shooter decides to (or is forced to) shoot first?</div>
-  <!-- 29 Sep 2026, his yes: the chip's question answered (checked against the win rates: 30/18/52 holds only when the two best shots aim at each other and the average shooter misses on purpose) -->
-  <div class="mxnote" data-step="2" style="position:absolute;left:96px;right:96px;top:610px;max-width:none;text-align:left;color:var(--ink);font-size:18px;line-height:1.35">The two best shots aim at each other, since each is the other&rsquo;s biggest threat, so nobody bothers with the average shooter. If he gets the first shot, his best move is to <b>miss on purpose</b>: hit either one, and the survivor turns on him.</div>
-  <div class="clipframe" id="standoffwrap" style="position:absolute;right:96px;top:212px">
-    <button class="clipcover" id="standoffload" type="button">
-      <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
-      <span class="ct">Mexican Standoff</span>
-    </button>
-  </div>
+  <!-- 29 Sep 2026, his idea: the truel played out at the junction, in place of the Key &amp; Peele standoff (now the module's
+       wrap, before the takeaways). His note, split across the presses. The order is random, so the scene shows the pattern
+       (whoever survives, the average shooter shoots first), not a claimed result; 30/18/52 holds with a random order when the
+       two best shots aim at each other and the average shooter misses on purpose -->
+  <ul class="bullets tlist">
+    <li data-step="1">The two best shots aim at each other, since each is the other&rsquo;s biggest threat, so nobody bothers with the average shooter</li>
+    <li data-step="3">Whoever survives, the average shooter gets the first shot at them</li>
+  </ul>
+  <div class="tscene" id="ts1"><svg class="tsvg" viewBox="0 0 640 400" role="img" aria-label="An Old West street at the junction, a saloon on the left and a general store on the right. The ace and the pretty decent shot aim at each other; the ace fires and the pretty decent shot falls; the ace reloads, and the average shooter takes the first shot at him, fifty-fifty."><rect width="640" height="400" fill="var(--paper-soft)"/><circle cx="320" cy="108" r="44" fill="var(--ochre)" opacity=".5"/><path d="M150 214 L178 186 L234 186 L254 204 L264 214 Z" fill="var(--tan)"/><path d="M388 214 L402 194 L452 194 L472 214 Z" fill="var(--tan)"/><rect y="214" width="640" height="186" fill="var(--tan-light)"/><path d="M309 214 L331 214 L470 258 L170 258 Z" fill="var(--tan)" opacity=".5"/><path d="M0 318 Q320 306 640 318 M0 342 Q320 330 640 342" fill="none" stroke="var(--tan)" stroke-width="2"/><path d="M-2 258 V140 H22 V120 H148 V140 H170 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="30" y="128" width="110" height="24" fill="var(--ink)"/><text x="85" y="145" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="3" fill="var(--paper)">SALOON</text><rect x="20" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="120" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="64" y="198" width="42" height="60" fill="var(--ink)" opacity=".85"/><path d="M67 210 H84 V240 H67 Z M86 210 H103 V240 H86 Z" fill="var(--tan)" stroke="var(--ink)" stroke-width="2"/><rect x="-2" y="172" width="172" height="8" fill="var(--sienna)"/><rect x="6" y="180" width="5" height="78" fill="var(--sienna)"/><rect x="159" y="180" width="5" height="78" fill="var(--sienna)"/><path d="M642 258 V148 H620 V128 H490 V148 H470 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="496" y="136" width="118" height="24" fill="var(--ink)"/><text x="555" y="152" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="11" letter-spacing="2" fill="var(--paper)">GENERAL STORE</text><rect x="484" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="588" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="538" y="200" width="36" height="58" fill="var(--ink)" opacity=".85"/><rect x="470" y="176" width="172" height="8" fill="var(--sienna)"/><rect x="476" y="184" width="5" height="74" fill="var(--sienna)"/><rect x="631" y="184" width="5" height="74" fill="var(--sienna)"/><line class="aim aimAB" x1="214.5" y1="277.8" x2="483.1" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimBA" x1="425.5" y1="277.8" x2="156.9" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimCA" x1="280.2" y1="216.3" x2="156.9" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="trace traceA" x1="214.5" y1="277.8" x2="483.1" y2="295.8" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="269.2 269.2" stroke-dashoffset="269.2"/><g transform="translate(320,264) scale(-0.8,0.8)"><g class="gs gsC"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--green)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--green)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--green)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--green)"/><g transform="translate(6,-84)"><g class="arm armC"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--green)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><g transform="translate(150,374) scale(1.1,1.1)"><g class="gs gsA"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--blue)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--blue)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--blue)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--blue)"/><g transform="translate(6,-84)"><g class="arm armA"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--blue)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/><g transform="translate(50,-2.5)"><g class="flash flashA"><polygon points="12,0 4.2,1.7 8.5,8.5 1.7,4.2 0,12 -1.7,4.2 -8.5,8.5 -4.2,1.7 -12,0 -4.2,-1.7 -8.5,-8.5 -1.7,-4.2 -0,-12 1.7,-4.2 8.5,-8.5 4.2,-1.7" fill="var(--ochre)"/><circle r="4" fill="var(--paper)"/></g></g></g></g></g></g><g transform="translate(490,374) scale(-1.1,1.1)"><g class="gs gsB"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--terracotta)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--terracotta)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--terracotta)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--terracotta)"/><g transform="translate(6,-84)"><g class="arm armB"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--terracotta)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><text class="aim pctCA" x="222.6" y="246.1" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="22" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">50%</text><text class="bang bangA" x="222.5" y="257.8" text-anchor="start" font-family="League Spartan,sans-serif" font-weight="900" font-size="21" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">BANG!</text><g class="reload"><rect x="98" y="196" width="104" height="22" rx="3" fill="var(--ink)"/><text x="150" y="211" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="11" letter-spacing="1.6" fill="var(--paper)">RELOADING&hellip;</text></g><text x="150" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--blue)" class="tlab">THE ACE &middot; 100%</text><text x="490" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--terracotta)" class="tlab">PRETTY DECENT &middot; 80%</text><text x="350" y="176" text-anchor="start" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--green)" class="tlab">AVERAGE &middot; 50%</text><g class="tw"><g transform="translate(0,352)"><g class="twr"><circle r="13" fill="none" stroke="var(--sienna)" stroke-width="2"/><path d="M-10 -6 Q0 -14 10 -4 Q4 8 -8 6 Q-12 0 -4 -6 M-6 10 Q6 2 2 -10 M-12 2 Q0 4 12 -2" fill="none" stroke="var(--sienna)" stroke-width="1.6"/></g></g></g></svg><span class="m1" data-step="1"></span><span class="m2" data-step="2"></span><span class="m3" data-step="3"></span></div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
+  <h2>&ldquo;Survival of the weakest&rdquo;</h2>
+  <div class="chip tq">What if the average shooter decides to (or is forced to) shoot first?</div>
+  <ul class="bullets tlist2">
+    <li data-step="2">Hit either one, and the survivor turns on him</li>
+    <li data-step="3">So if he gets the first shot, his best move is to <b>miss on purpose</b></li>
+  </ul>
+  <div class="tscene" id="ts2"><svg class="tsvg" viewBox="0 0 640 400" role="img" aria-label="The same street. If the average shooter shoots first and hits the pretty decent shot, the ace turns on him and never misses. So he fires into the air instead, and the two best shots go back to aiming at each other."><rect width="640" height="400" fill="var(--paper-soft)"/><circle cx="320" cy="108" r="44" fill="var(--ochre)" opacity=".5"/><path d="M150 214 L178 186 L234 186 L254 204 L264 214 Z" fill="var(--tan)"/><path d="M388 214 L402 194 L452 194 L472 214 Z" fill="var(--tan)"/><rect y="214" width="640" height="186" fill="var(--tan-light)"/><path d="M309 214 L331 214 L470 258 L170 258 Z" fill="var(--tan)" opacity=".5"/><path d="M0 318 Q320 306 640 318 M0 342 Q320 330 640 342" fill="none" stroke="var(--tan)" stroke-width="2"/><path d="M-2 258 V140 H22 V120 H148 V140 H170 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="30" y="128" width="110" height="24" fill="var(--ink)"/><text x="85" y="145" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="3" fill="var(--paper)">SALOON</text><rect x="20" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="120" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="64" y="198" width="42" height="60" fill="var(--ink)" opacity=".85"/><path d="M67 210 H84 V240 H67 Z M86 210 H103 V240 H86 Z" fill="var(--tan)" stroke="var(--ink)" stroke-width="2"/><rect x="-2" y="172" width="172" height="8" fill="var(--sienna)"/><rect x="6" y="180" width="5" height="78" fill="var(--sienna)"/><rect x="159" y="180" width="5" height="78" fill="var(--sienna)"/><path d="M642 258 V148 H620 V128 H490 V148 H470 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="496" y="136" width="118" height="24" fill="var(--ink)"/><text x="555" y="152" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="11" letter-spacing="2" fill="var(--paper)">GENERAL STORE</text><rect x="484" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="588" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="538" y="200" width="36" height="58" fill="var(--ink)" opacity=".85"/><rect x="470" y="176" width="172" height="8" fill="var(--sienna)"/><rect x="476" y="184" width="5" height="74" fill="var(--sienna)"/><rect x="631" y="184" width="5" height="74" fill="var(--sienna)"/><line class="aim aimAB" x1="214.5" y1="277.8" x2="483.1" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimBA" x1="425.5" y1="277.8" x2="156.9" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimAC" x1="209.1" y1="253.2" x2="324.8" y2="209.6" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><line class="trace traceC" x1="359.8" y1="216.3" x2="483.1" y2="295.8" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="146.7 146.7" stroke-dashoffset="146.7"/><g transform="translate(320,264) scale(0.8,0.8)"><g class="gs gsC"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--green)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--green)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--green)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--green)"/><g transform="translate(6,-84)"><g class="arm armC"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--green)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/><g transform="translate(50,-2.5)"><g class="flash flashC"><polygon points="12,0 4.2,1.7 8.5,8.5 1.7,4.2 0,12 -1.7,4.2 -8.5,8.5 -4.2,1.7 -12,0 -4.2,-1.7 -8.5,-8.5 -1.7,-4.2 -0,-12 1.7,-4.2 8.5,-8.5 4.2,-1.7" fill="var(--ochre)"/><circle r="4" fill="var(--paper)"/></g></g><g transform="translate(50,-2.5)"><g class="flash flashCup"><polygon points="12,0 4.2,1.7 8.5,8.5 1.7,4.2 0,12 -1.7,4.2 -8.5,8.5 -4.2,1.7 -12,0 -4.2,-1.7 -8.5,-8.5 -1.7,-4.2 -0,-12 1.7,-4.2 8.5,-8.5 4.2,-1.7" fill="var(--ochre)"/><circle r="4" fill="var(--paper)"/></g></g></g></g></g></g><g transform="translate(150,374) scale(1.1,1.1)"><g class="gs gsA"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--blue)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--blue)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--blue)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--blue)"/><g transform="translate(6,-84)"><g class="arm armA"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--blue)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><g transform="translate(490,374) scale(-1.1,1.1)"><g class="gs gsB"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--terracotta)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--terracotta)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--terracotta)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--terracotta)"/><g transform="translate(6,-84)"><g class="arm armB"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--terracotta)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><text class="aim pctAC" x="261" y="219.4" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="22" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">100%</text><text class="bang bangC" x="365.8" y="200.3" text-anchor="start" font-family="League Spartan,sans-serif" font-weight="900" font-size="21" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">BANG!</text><text class="bang bangCup" x="317.8" y="149.1" text-anchor="end" font-family="League Spartan,sans-serif" font-weight="900" font-size="21" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">BANG!</text><g class="smoke" transform="translate(329.8,151.1)"><g class="smk"><circle r="6" fill="var(--grey)" opacity=".55"/><circle cx="7" cy="-9" r="5" fill="var(--grey)" opacity=".45"/><circle cx="-3" cy="-17" r="4" fill="var(--grey)" opacity=".35"/></g></g><g class="ttag tagHit"><rect x="12" y="12" width="140" height="26" fill="var(--ink)"/><text x="82" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.6" fill="var(--paper)">IF HE HITS ONE</text></g><g class="ttag tagMiss"><rect x="12" y="12" width="214" height="26" fill="var(--ink)"/><text x="119" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.6" fill="var(--paper)">IF HE MISSES ON PURPOSE</text></g><text x="150" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--blue)" class="tlab">THE ACE &middot; 100%</text><text x="490" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--terracotta)" class="tlab">PRETTY DECENT &middot; 80%</text><text x="350" y="176" text-anchor="start" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--green)" class="tlab">AVERAGE &middot; 50%</text><g class="tw"><g transform="translate(0,352)"><g class="twr"><circle r="13" fill="none" stroke="var(--sienna)" stroke-width="2"/><path d="M-10 -6 Q0 -14 10 -4 Q4 8 -8 6 Q-12 0 -4 -6 M-6 10 Q6 2 2 -10 M-12 2 Q0 4 12 -2" fill="none" stroke="var(--sienna)" stroke-width="1.6"/></g></g></g></svg><span class="m1" data-step="1"></span><span class="m2" data-step="2"></span><span class="m3" data-step="3"></span></div>
 </section>
 
 <!-- 29 Sep 2026, his find: Pop Culture Jeopardy! season 2 (Netflix), Semifinal 2, 2 June 2026. After the truel on purpose,
@@ -396,15 +471,20 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
      Juice, No Pulp, on 3,600, bet 1,738 (a nod to Fetty Wap's "1738"), missed too, and went through on 1,862. They
      finished third in the final. Points, not dollars. The clip is the official Jeopardy! upload of that Final
      Jeopardy!; Netflix has the whole episode. -->
-<section class="slide content" data-i="7">
-  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
-  <h2>A truel on Pop Culture Jeopardy!</h2>
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 3 · FINAL JEOPARDY</div>
+  <h2>A Pop Culture Jeopardy! semifinal</h2>
+  <!-- 29 Sep 2026, his redesign: the room says what each team should bet before the clip, as with Barbados and Grenada;
+       nothing on the slide gives the ending away until the bets and the final scores, after the clip. The title names no
+       truel on purpose: the room works it out, and the last press names it -->
   <div class="rowfig pcjfig">
     <ul class="bullets">
-      <li>In a 2026 semifinal, only the winning team went through to the final</li>
-      <li data-step="1">Two strong teams went into Final Jeopardy tied on 22,000, so each had to bet everything to beat the other</li>
-      <li data-step="2">Snake Juice, No Pulp had just 3,600: they could only win if both leaders got it wrong, so they bet small</li>
-      <li data-step="3">All three got it wrong, and the weakest team went through to the final</li>
+      <li>Only the winning team goes through to the final</li>
+      <li data-step="1">Going into Final Jeopardy, two teams are tied, and the third is far behind</li>
+      <li data-step="2">Each team bets in secret, up to its whole score: a right answer adds the bet, and a wrong one takes it away</li>
+      <li data-step="3"><b>What should the two leaders bet?</b></li>
+      <li data-step="4"><b>What should Snake Juice, No Pulp bet?</b></li>
+      <li data-step="7">It&rsquo;s a truel! The two strongest teams aimed at each other, and the weakest went through to the final</li>
     </ul>
     <div class="pcjside">
       <div class="clipframe" id="pcjwrap">
@@ -413,17 +493,17 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
           <span class="ct">Final Jeopardy: Iconic Songs</span>
         </button>
       </div>
-      <table class="pcjscore" data-step="3">
+      <table class="pcjscore" data-step="1">
         <tr><th>Team</th><th>Going in</th><th>Bet</th><th>Final</th></tr>
-        <tr><td>Only Howards In The Building</td><td>22,000</td><td>22,000</td><td>0</td></tr>
-        <tr><td>Ert &amp; Bernie</td><td>22,000</td><td>22,000</td><td>0</td></tr>
-        <tr class="win"><td>Snake Juice, No Pulp</td><td>3,600</td><td>1,738</td><td>1,862</td></tr>
+        <tr><td>Only Howards In The Building</td><td>22,000</td><td data-step="5">22,000</td><td data-step="6">0</td></tr>
+        <tr><td>Ert &amp; Bernie</td><td>22,000</td><td data-step="5">22,000</td><td data-step="6">0</td></tr>
+        <tr class="win"><td>Snake Juice, No Pulp</td><td>3,600</td><td data-step="5">1,738</td><td data-step="6">1,862</td></tr>
       </table>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="8">
+<section class="slide content" data-i="9">
   <div class="kicker"><i></i>MODULE 3 · WAR GAME</div>
   <h2>Solving zero-sum games</h2>
   <div class="rowfig" style="top:200px;align-items:center">
@@ -458,7 +538,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="9">
+<section class="slide content" data-i="10">
   <div class="kicker"><i></i>MODULE 3 · WAR GAME</div>
   <h2>What should each side do?</h2>
   <div class="fig" style="top:176px;bottom:56px">
@@ -494,7 +574,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="10">
+<section class="slide content" data-i="11">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>The game expressed as a payoff matrix</h2>
   <div class="fig" style="top:180px">
@@ -525,7 +605,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="11">
+<section class="slide content" data-i="12">
   <div class="kicker"><i></i>MODULE 3 &middot; THE MATRIX</div>
   <h2>A workplace example</h2>
   <!-- 28 Sep 2026: the middle step between Kenney and the engine game, his LER 550 master slides 81-89 (565 slides 55-59). His union election is a company's negotiating team here; his words and numbers otherwise -->
@@ -546,7 +626,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="12">
+<section class="slide content" data-i="13">
   <div class="kicker"><i></i>MODULE 3 &middot; THE MATRIX</div>
   <h2>Seeking the dominant strategy</h2>
   <!-- 28 Sep 2026: his LER 550 slide 89, word for word, beside his slide 82 matrix (Casey's share, and Pat's as the rest). He demonstrates the phones' move on it: a click on a name dims its whole line (Kimberly's run: people tapped the numbers; dimmed, not crossed out, since 28 Sep, his call, like every m3 matrix). Dominance is what is left standing, no circle. His keypresses dim whatever he has not clicked. -->
@@ -587,7 +667,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="13">
+<section class="slide content" data-i="14">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>Guidelines for solving zero-sum games</h2>
   <div class="fig" style="top:220px;gap:30px">
@@ -603,7 +683,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="14">
+<section class="slide content" data-i="15">
   <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
   <h2>Bidding for the airline&rsquo;s engine business</h2>
   <div class="englead">
@@ -619,7 +699,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="15">
+<section class="slide content" data-i="16">
   <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
   <h2>The engine game expressed as a payoff matrix</h2>
   <div class="fig" style="top:170px;bottom:128px;flex-direction:row;gap:70px;align-items:center;justify-content:center">   <!-- bottom 56 until 28 Sep, when the tables band came in -->
@@ -669,7 +749,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="16">
+<section class="slide content" data-i="17">
   <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
   <h2>Solving the engine game</h2>
   <div class="fig" style="top:172px;bottom:60px;gap:0">
@@ -720,7 +800,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="17">
+<section class="slide content" data-i="18">
   <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>What if the choices are infinite?</h2>
   <ul class="bullets" style="margin-top:34px">
@@ -738,7 +818,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="18">
+<section class="slide content" data-i="19">
   <div class="kicker"><i></i>MODULE 3 · LIVE</div>
   <h2>The beach</h2>
   <div class="fig" style="top:180px">
@@ -769,7 +849,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
 <!-- Hotelling is everywhere: his 550 slide 49 examples (Applications of
      Hotelling's game to business strategies) as tiles, after the room's own
      wall, 23 Sep 2026. His NPR cupcake link is dead, so that tile has none. -->
-<section class="slide content" data-i="19">
+<section class="slide content" data-i="20">
   <div class="kicker"><i></i>MODULE 3 &middot; HOTELLING</div>
   <h2>Hotelling is everywhere</h2>
   <div class="htask">Where else do you see Hotelling?</div>
@@ -813,7 +893,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="20">
+<section class="slide content" data-i="21">
   <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
   <h2>Hotelling in real life</h2>
   <div class="fig" style="top:172px;bottom:60px;gap:14px">
@@ -827,7 +907,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="21">
+<section class="slide content" data-i="22">
   <div class="kicker"><i></i>MODULE 3 &middot; YOUR INDUSTRY</div>
   <h2>Zero-sum games in aviation</h2>
   <div class="avrow">
@@ -862,7 +942,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="22">
+<section class="slide content" data-i="23">
   <div class="kicker"><i></i>MODULE 3 · YOUR WORLD</div>
   <h2>A zero-sum game from your world</h2>
   <div class="leadline" style="margin-top:22px">Think of a situation where one of you and another party had to divide something and could not collaborate.</div>
@@ -879,7 +959,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="23">
+<section class="slide content" data-i="24">
   <div class="kicker"><i></i>MODULE 3 &middot; YOUR WORLD</div>
   <h2>Is it really a zero-sum game?</h2>
   <div style="position:absolute;left:96px;right:96px;top:200px;bottom:80px;display:flex;gap:48px;align-items:center">
@@ -907,7 +987,22 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content learn" data-i="24">
+<!-- 29 Sep 2026, his call: the Key &amp; Peele standoff moved here from Survival of the weakest to wrap the module, with his framing -->
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
+  <h2>One last truel</h2>
+  <div class="leadline">A Mexican standoff combines <b>sequential reasoning</b>, <b>common knowledge</b>, and <b>zero-sum thinking</b></div>
+  <div class="fig" style="top:236px;bottom:70px">
+    <div class="clipframe" id="standoffwrap">
+      <button class="clipcover" id="standoffload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Mexican Standoff</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content learn" data-i="26">
   <div class="kicker"><i></i>MODULE 3 · TAKEAWAYS</div>
   <h2>a few key takeaways...</h2>
   <div class="tiles">
@@ -939,7 +1034,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
   </div>
 </section>
 
-<section class="slide content" data-i="25">
+<section class="slide content" data-i="27">
   <div class="kicker"><i></i>MODULE 3 · RESOURCES</div>
   <h2>Extra resources</h2>
   <div class="resrc dense">
@@ -994,7 +1089,7 @@ a.htt:hover{box-shadow:0 4px 0 var(--red)}
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/gt/">ALL MODULES</a>
 
 <script>
