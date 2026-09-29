@@ -63,6 +63,11 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m7's round: BUILT and live 29 Sep** (tag `m7-before-costs`).
+  - **The grid is skipped:** he never got to it, so it was never cut on purpose, but he doesn't want it.
+  - **Instead, *What is a strategic move?* (slide 3)** gives each kind its catch at a fourth press: commitment, "you can't back out, even when you'd like to"; threat, "if it fails, you have to carry it out"; promise, "if it works, you have to pay up" (his 550 s303–304 "consequences" and "compliance").
+  - ***Strategic moves and chicken* (slide 13)** says why Ren's move was the wrong kind, at the third press after the road animation: "Chuck couldn't see that Ren's foot was stuck, so it wasn't observable. The wheel out of the window, as you just played it, is the right kind." That is his point, and one line to delete if he'd rather say it.
+  - m7-reset, m7-twothirds and m7-tea pass; m7 presses through clean.
 - **m6's round: BUILT and live 29 Sep** (tag `m6-before-answers`). Three passages from his LER 550, word for word:
   - **Slide 4:** s256's three lines on why no side is safe (the goalie wants to match, the kicker to avoid; "neither player is incentivized to coordinate strategies").
   - **Slide 9:** s260's "the worst option from playing a completely random strategy (50/50 split) is better than even the best pure strategy option", inside the widget under its live note.
