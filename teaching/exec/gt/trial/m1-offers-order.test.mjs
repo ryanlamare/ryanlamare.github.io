@@ -85,13 +85,13 @@ const offer = async (ph, v) => { await ph.ev(`[...document.querySelectorAll('.av
 
 try {
   /* ---- 1. the venue: both QRs shown before anyone offers, then back to the first ---- */
-  const deck = await page(DECK + '#23.6', 1280, 720);
+  const deck = await page(DECK + '#24.6', 1280, 720);
   await sleep(3200);
   check(JSON.stringify(markers()) === JSON.stringify(['=game|p|1']), 'the first QR opens game 1', markers());
-  await go(deck, '#24');
-  await go(deck, '#25.2');
+  await go(deck, '#25');
+  await go(deck, '#26.2');
   check(JSON.stringify(markers()) === JSON.stringify(['=game|p|1', '=game|p|2']), 'the second QR opens game 2', markers());
-  await go(deck, '#23.6');
+  await go(deck, '#24.6');
   check(JSON.stringify(markers()) === JSON.stringify(['=game|p|1', '=game|p|2', '=game|p|1']), 'back on the first QR, game 1 is open again', markers());
   const priya = await phoneAs('Priya', 'voter-priya-0001');
   check(await priya.ev(`document.body.classList.contains('av-y') && !document.querySelector('.avgrid button').disabled`), 'a phone scanning the first QR gets a fresh yellow card');
@@ -99,47 +99,47 @@ try {
   say('Tom|o|40');
   await sleep(3000);
   check(await deck.ev(`document.querySelector('.slide.active [data-avn]').textContent`) === '2', 'the count beside the first QR reads 2');
-  await go(deck, '#24');
+  await go(deck, '#25');
   check(await names(deck) === 'Priya,Tom', 'the offers are on the first board', await names(deck));
   check(markers().at(-1) === '=game|r|1', 'the first board closes game 1', markers());
-  await go(deck, '#26');
+  await go(deck, '#27');
   check(await names(deck) === '', 'and not on the second board', await names(deck));
 
   /* ---- 2. the second game, then back past the first QR: board 1 is left alone ---- */
-  await go(deck, '#25.2');
+  await go(deck, '#26.2');
   check(markers().at(-1) === '=game|p|2', 'the second QR opens game 2', markers());
   say('Sam|o|90');
   await sleep(3000);
   const n2 = markers().length;
-  await go(deck, '#23.6');
+  await go(deck, '#24.6');
   check(markers().length === n2, 'going back past the first QR after its board was revealed changes nothing', markers());
-  await go(deck, '#24');
+  await go(deck, '#25');
   check(await names(deck) === 'Priya,Tom', 'the first board still shows its offers', await names(deck));
   /* the same after a reload of the deck (the reveal is dated, and recent) */
-  await deck.nav('about:blank'); await deck.nav(DECK + '#23.6'); await sleep(3200);
+  await deck.nav('about:blank'); await deck.nav(DECK + '#24.6'); await sleep(3200);
   check(markers().length === n2, 'after a reload too', markers());
-  await go(deck, '#26');
+  await go(deck, '#27');
   check(await names(deck) === 'Sam', 'and the second board has game 2\'s offer', await names(deck));
 
   /* ---- 3. an old run left in the room (undated markers), opened afresh ---- */
   room = [];
   ['=game|p|1', 'Old|o|50', '=game|r|1', '=game|p|2', 'Old2|o|60', '=game|r|2'].forEach(t => say(t, 'deck-old'));
-  const fresh = await page(DECK + '#23.6', 1280, 720);
+  const fresh = await page(DECK + '#24.6', 1280, 720);
   await sleep(3500);
   check(markers().at(-1) === '=game|p|1' && markers().length === 5, 'a room left from an old run: the first QR opens game 1 afresh', markers());
   const ben = await phoneAs('Ben', 'voter-ben-00001');
   check(await ben.ev(`document.body.classList.contains('av-y') && !document.querySelector('.avgrid button').disabled`), 'and the phone gets a yellow card, not "closed"');
   await offer(ben, 30);
   await sleep(2600);
-  await go(fresh, '#24');
+  await go(fresh, '#25');
   check(await names(fresh) === 'Ben', 'the first board shows the new offer, not the old run\'s', await names(fresh));
-  await go(fresh, '#25.2');
+  await go(fresh, '#26.2');
   check(markers().at(-1) === '=game|p|2', 'the second QR opens game 2 afresh too', markers());
 
   /* ---- 4. an old open game, never revealed, as the latest marker ---- */
   room = [];
   ['=game|p|1', 'Old|o|50'].forEach(t => say(t, 'deck-old'));
-  const fresh2 = await page(DECK + '#23.6', 1280, 720);
+  const fresh2 = await page(DECK + '#24.6', 1280, 720);
   await sleep(3500);
   check(markers().length === 2, 'an old, unrevealed game 1 is opened afresh', markers());
   check(await fresh2.ev(`document.querySelector('.slide.active [data-avn]').textContent`) === '0', 'its old offer does not count', await fresh2.ev(`document.querySelector('.slide.active [data-avn]').textContent`));
