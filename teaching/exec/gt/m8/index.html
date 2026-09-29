@@ -205,11 +205,6 @@
 /* one table: the names and the suspicion figure take the room two tables used to share */
 .cstables.one{grid-template-columns:1fr}
 /* the scavenger hunt: the WHERE switch and the ten-minute clock */
-.huntwhere{position:absolute;right:96px;top:62px;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.12em;color:var(--muted);background:none;border:2px solid var(--rule);padding:6px 12px;cursor:pointer}
-.huntwhere b{color:var(--ink)}
-.slide.hunt .hw-web{display:none}
-.slide.hunt.hunt-web .hw-web{display:revert}
-.slide.hunt.hunt-web .hw-building{display:none}
 .huntclock{flex:none;width:250px;border:2.5px solid var(--ink);background:var(--card);padding:22px 10px;text-align:center;cursor:pointer;user-select:none}
 .huntclock .hct{font-family:var(--display);font-weight:900;font-size:76px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
 .huntclock .hcl{font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--muted);margin-top:10px}
@@ -695,17 +690,16 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 
 
 
-<!-- COMPANY SLOT (RRPF): the backup hunt explores the client's own website — swap the name and address to retarget the programme -->
+<!-- The hunt walks the building only (29 Sep 2026, his call): the website option, the client's own site, came out so the room is never
+     sorting its own firm's claims into signals and cheap talk in front of its leaders. -->
 <section class="slide content hunt" data-i="21">
   <div class="kicker"><i></i>MODULE 8 &middot; LET&rsquo;S PLAY</div>
   <h2>Signaling scavenger hunt!</h2>
-  <button class="huntwhere" type="button" data-huntwhere>WHERE: <b class="hw-building">THE BUILDING</b><b class="hw-web">RRPF&rsquo;S WEBSITE</b> &#8644;</button>
   <div class="rowfig" style="top:190px;align-items:center">
     <ul class="bullets" style="margin-top:0">
       <li>It&rsquo;s clear that signals &ndash; actions that <b>convey private information</b> to others &ndash; are all around us</li>
       <li data-step="1">Let&rsquo;s play &ldquo;signaling scavenger hunt!&rdquo;</li>
-      <li data-step="2" class="hw-building">In teams, you have <b>ten minutes to walk around the building</b> and find as many signals as possible</li>
-      <li data-step="2" class="hw-web">In teams, you have <b>ten minutes to explore RRPF&rsquo;s website</b>, <span style="white-space:nowrap">www.rrpf-leasing.com</span>, and find as many signals on it as possible</li>
+      <li data-step="2">In teams, you have <b>ten minutes to walk around the building</b> and find as many signals as possible</li>
       <li data-step="3">The team that uncovers the <b>most signals</b>, and can credibly defend them to the other teams, wins!</li>
       <li data-step="4">Keep in mind that signals are meant to convey private, or <b>underlying</b>, information</li>
       <li data-step="5">Find as many of these as you can, and send both the <b>signal</b> and <b>what it represents</b> from your team&rsquo;s phone!</li>
@@ -937,15 +931,12 @@ function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POS
   setInterval(fetchIt,2500);fetchIt();
 })();
 
-/* ---- the scavenger hunt (23 Sep 2026, his LER 550 game): WHERE switches the one line that differs
-   between walking the building and a website from their world, remembered on this laptop; the clock
-   is ten minutes, a click starts and pauses it ---- */
+/* ---- the scavenger hunt (23 Sep 2026, his LER 550 game): the building only since 29 Sep 2026 (the
+   WHERE switch and its website line came out; a laptop that remembered "website" forgets it here); the
+   clock is ten minutes, a click starts and pauses it ---- */
 (function(){
   const sl=document.querySelector('.slide.hunt');if(!sl)return;
-  const KEY='gt-m8-huntwhere';
-  let web=false;try{web=localStorage.getItem(KEY)==='web';}catch(_){}
-  const paint=()=>sl.classList.toggle('hunt-web',web);paint();
-  sl.querySelector('[data-huntwhere]').addEventListener('click',e=>{e.stopPropagation();web=!web;paint();try{localStorage.setItem(KEY,web?'web':'building');}catch(_){}e.currentTarget.blur();});
+  try{localStorage.removeItem('gt-m8-huntwhere');}catch(_){}
   const c=sl.querySelector('[data-huntclock]'), t=c.querySelector('.hct'), l=c.querySelector('.hcl');
   let left=600, run=false, timer=null;
   const draw=()=>{t.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');c.classList.toggle('low',left<=60&&left>0);c.classList.toggle('done',left<=0);
