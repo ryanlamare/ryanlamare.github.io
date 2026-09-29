@@ -63,6 +63,12 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m6's round: BUILT and live 29 Sep** (tag `m6-before-answers`). Three passages from his LER 550, word for word:
+  - **Slide 4:** s256's three lines on why no side is safe (the goalie wants to match, the kicker to avoid; "neither player is incentivized to coordinate strategies").
+  - **Slide 9:** s260's "the worst option from playing a completely random strategy (50/50 split) is better than even the best pure strategy option", inside the widget under its live note.
+  - **Slide 15:** s288's Art of Strategy answer to Carroll's question ("The time to justify the coach's strategy is before using it… publicize the fact that mixing is vital"), credited to Dixit and Nalebuff, 2008.
+  - m6-reset passes; m6 presses through clean.
+- **m3, 29 Sep:** Zero-sum game players throughout history is now *Zero-sum examples: Jeopardy champion Arthur Chu* (his 550 s68). RPS and penalties are out, since they're played in m6. No game is added to m3 (his call; never propose Colonel Blotto).
 - **m3's aircraft game is CUT (29 Sep, his call; tag `m3-before-window`).** After six rebuilds in two days, he said: "you are obsessed with them FEELING 'is it really zero sum'… they are going to do entire nonzero sum modules for several hours… ITS GAME THEORY." That keep-it reasoning was Claude's, not his, and it cost him a day.
   - The four slides are in m3/outtakes.html, and learning objective 5 is gone. **m3 is 25 slides.**
   - The briefs and the reveal page stay on the site, unlinked.
