@@ -20,7 +20,7 @@
      pw|mc|3|1,3      the meeting round before week 3 closes; junctions 1 and 3 met
      pw|o|3           week 3 opens (after its meetings)
      pw|n             the FuelWatch news is out
-     pw|j|a3          a phone joined as Aura, junction 3        (phones)
+     pw|j|a3|<phone>|Ana,Ben  a phone joined Aura, junction 3, and said who is on the team (phones)
    The results slide still reads its own "r|…" lines, which the desk writes
    once all six weeks are in, and an "rm|…" line naming each meeting's reps. Scoring is the deck's, in thousands of pounds. */
 (function(){
@@ -40,7 +40,8 @@ PW.matrix=w=>[['h','h'],['h','c'],['c','h'],['c','c']].map(([a,b])=>[PW.rev(w,a,
 PW.tagOf=w=>w===3?'Pays double':w>=5?'FuelWatch rules':'';
 
 PW.parse=function(lines){
-  const G={nj:0,price:{},told:{},ans:{},rep:{},mc:{},open:{},news:false,joins:{}};
+  const G={nj:0,price:{},told:{},ans:{},rep:{},mc:{},open:{},news:false,joins:{},members:{}};
+  const by={};   /* each phone's latest join: a phone that picks again moves */
   lines.forEach(line=>{
     const f=String(line).split('|');if(f[0]!=='pw')return;
     const team=/^[ab][1-6]$/.test(f[2]||'')?f[2]:null, w=+f[3];
@@ -52,8 +53,13 @@ PW.parse=function(lines){
       case 'mc':{const g=+f[2];if(g===3||g===5)G.mc[g]=(f[3]||'').split(',').filter(x=>/^[1-6]$/.test(x)).map(Number);break;}
       case 'o':if(+f[2]===3||+f[2]===5)G.open[+f[2]]=true;break;
       case 'n':G.news=true;break;
-      case 'j':if(team)G.joins[team]=(G.joins[team]||0)+1;break;
+      case 'j':if(team)by[f[3]||('old'+Math.random())]={team,names:(f[4]||'').split(',').map(n=>n.trim()).filter(Boolean)};break;
     }
+  });
+  Object.values(by).forEach(({team,names})=>{
+    G.joins[team]=(G.joins[team]||0)+1;
+    const m=G.members[team]=G.members[team]||[];
+    names.forEach(n=>{if(!m.some(x=>x.toLowerCase()===n.toLowerCase()))m.push(n);});
   });
   return G;
 };
@@ -72,7 +78,9 @@ PW.asking=(G,g)=>PW.allIn(G,g-1)&&(g===3||G.news)&&!G.mc[g];
 PW.meets=(G,g,j)=>!!(G.mc[g]||[]).includes(j);
 PW.ans=(G,t,g)=>(G.ans[t]||{})[g]||null;
 PW.rep=(G,t,g)=>(G.rep[t]||{})[g]||'';
-PW.clean=n=>String(n||'').replace(/[|\u0000-\u001f]/g,' ').replace(/\s+/g,' ').trim().slice(0,30);
+/* a team whose rival has said no is not asked: one no settles the junction */
+PW.settled=(G,t,g)=>!!PW.ans(G,t,g)||PW.ans(G,PW.rival(t),g)==='n';
+PW.clean=n=>String(n||'').replace(/[|,\u0000-\u001f]/g,' ').replace(/\s+/g,' ').trim().slice(0,30);
 /* what a team has earned: only the weeks it has been told */
 PW.earned=(G,t)=>{let s=0;for(let w=1;w<=6;w++)if(PW.isTold(G,t,w)&&PW.p(G,t,w)&&PW.p(G,PW.rival(t),w))s+=PW.rev(w,PW.p(G,t,w),PW.p(G,PW.rival(t),w));return s;};
 /* the first week this team has not yet been told, and whether Ryan can reveal it now */

@@ -132,7 +132,8 @@ function loadNames(){
   });
 }
 /* the meeting round a team is in, if Ryan still needs its answer */
-const meetDue=(g,t)=>PW.GATES.find(gw=>PW.asking(g,gw)&&PW.isTold(g,t,gw-1)&&!PW.ans(g,t,gw))||0;
+const meetDue=(g,t)=>PW.GATES.find(gw=>PW.asking(g,gw)&&PW.isTold(g,t,gw-1)&&!PW.settled(g,t,gw))||0;
+let showAll=false;   /* Someone else: the whole attendee list, for a rep not on the team's own */
 const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
 function push(line){D.pending.push(line);keep();render();flush();}
@@ -204,7 +205,7 @@ function setup(g){
   const n=junctions||picked||4;
   app.appendChild(el('h1','','Price Wars<small>Your desk for the game</small>'));
   app.appendChild(el('div','panel','<div class="pt">'+n+' junction'+(n>1?'s':'')+': '+(2*n)+' teams</div><div class="pl">Aura A1'+(n>1?'&ndash;A'+n:'')+' in the room, Buco&rsquo;s B1'+(n>1?'&ndash;B'+n:'')+' in the hall.</div>'));
-  const inn=[];['a','b'].forEach(s=>{for(let j=1;j<=n;j++)inn.push(label(s+j)+(g.joins[s+j]?' ✓':' –'));});
+  const inn=[];['a','b'].forEach(s=>{for(let j=1;j<=n;j++)inn.push(label(s+j)+(g.joins[s+j]?' ✓':' –'));});   /* ✓ = a phone has joined that team */
   app.appendChild(el('div','lbl','Phones in: '+inn.join(' &middot; ')));
   app.appendChild(btn('go','Start the game',()=>push('pw|g|'+n)));
   app.appendChild(el('div','lbl','A different number of junctions?'));
@@ -224,7 +225,7 @@ function sheet(g,j,big,focus){
   for(let u=1;u<=6;u++)sh.appendChild(el('div','wh'+(u===w?' cur':''),'W'+u+(u===3||(u===6&&!g.news)?'<em>&times;2</em>':'')));
   ['a','b'].forEach(s=>{
     const t=s+j, need=PW.nextReveal(g,t)||(w<=6&&PW.isOpen(g,w)&&!PW.p(g,t,w))||meetDue(g,t);
-    const lb=btn('tl '+s+(focus===t?' me':''),label(t),()=>{view=t;justRevealed=null;render();scrollTo(0,0);});
+    const lb=btn('tl '+s+(focus===t?' me':''),label(t),()=>{view=t;justRevealed=null;showAll=false;render();scrollTo(0,0);});
     if(need)lb.appendChild(el('span','dot'));
     sh.appendChild(lb);
     for(let u=1;u<=6;u++){
@@ -237,7 +238,7 @@ function sheet(g,j,big,focus){
   let ta=0,tb=0;for(let u=1;u<=6;u++){const a=PW.p(g,'a'+j,u),b=PW.p(g,'b'+j,u);if(a&&b){ta+=PW.rev(u,a,b);tb+=PW.rev(u,b,a);}}
   card.appendChild(el('div','jt','A'+j+' <b>'+k(ta)+'</b> &middot; B'+j+' <b>'+k(tb)+'</b>'));
   PW.GATES.forEach(gw=>{
-    const one=t=>{const a=PW.ans(g,t,gw);return label(t)+' '+(a==='y'?'<b>yes</b>'+(PW.rep(g,t,gw)?' ('+esc(PW.rep(g,t,gw))+')':''):a==='n'?'<b>no</b>':'&ndash;');};
+    const one=t=>{const a=PW.ans(g,t,gw);return label(t)+' '+(a==='y'?'<b>yes</b>'+(PW.rep(g,t,gw)?' ('+esc(PW.rep(g,t,gw))+')':''):a==='n'?'<b>no</b>':PW.settled(g,t,gw)?'not asked':'&ndash;');};
     if(g.mc[gw])card.appendChild(el('div','jm2',PW.meets(g,gw,j)?'Met before week '+gw+': <b>'+esc(PW.rep(g,'a'+j,gw)||'A'+j)+'</b> &amp; <b>'+esc(PW.rep(g,'b'+j,gw)||'B'+j)+'</b>':'No meeting before week '+gw));
     else if(PW.asking(g,gw))card.appendChild(el('div','jm2','Meet before week '+gw+'? '+one('a'+j)+' &middot; '+one('b'+j)));
   });
@@ -271,8 +272,8 @@ function board(g){
     p.appendChild(el('div','pt','Before week '+gw+': the meeting round'));
     p.appendChild(el('div','pl','At each team: do you want to meet, and who would go?'));
     const b=behind(gw-1);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week '+(gw-1)+' first.'));
-    const left=teams.filter(t=>!PW.ans(g,t,gw));
-    if(left.length)p.appendChild(el('div','pl',(teams.length-left.length)+' of '+teams.length+' teams have answered.'));
+    const left=teams.filter(t=>!PW.settled(g,t,gw));
+    if(left.length)p.appendChild(el('div','pl',(teams.length-left.length)+' of '+teams.length+' teams settled (one no settles a junction).'));
     else{
       const lines=[];
       for(let j=1;j<=g.nj;j++){
@@ -295,31 +296,38 @@ function board(g){
 
 /* before weeks 3 and 5: does the team want to meet, and who would go? */
 function meetRound(g,t,gw){
-  const a=PW.ans(g,t,gw), who=PW.rep(g,t,gw), r=PW.rival(t);
+  const a=PW.ans(g,t,gw), who=PW.rep(g,t,gw), r=PW.rival(t), ra=PW.ans(g,r,gw);
   app.appendChild(el('div','lbl','Before week '+gw+' &middot; the meeting round'));
+  /* one no settles it: the other side is not asked */
+  if(!a&&ra==='n'){
+    app.appendChild(el('div','set','<span>'+label(r)+' said no. Tell '+label(t)+': sorry, no meeting.</span>'));
+    return;
+  }
   app.appendChild(el('div','mh','Does '+label(t)+' want to meet?'));
   const row=el('div','row2');
-  [['y','Yes'],['n','No']].forEach(([x,l])=>row.appendChild(btn('yn '+x+(a?(a===x?' sel':' dim'):''),l,()=>push('pw|q|'+t+'|'+gw+'|'+x+(x==='y'?'|'+who:'')))));
+  [['y','Yes'],['n','No']].forEach(([x,l])=>row.appendChild(btn('yn '+x+(a?(a===x?' sel':' dim'):''),l,()=>{showAll=false;push('pw|q|'+t+'|'+gw+'|'+x+(x==='y'?'|'+who:''));})));
   app.appendChild(row);
   if(a==='y'){
     app.appendChild(el('div','mh','Who would go for '+label(t)+'?'));
+    const team=g.members[t]||[], list=showAll||!team.length?names:team;
     const grid=el('div','names');
-    names.forEach(n=>grid.appendChild(btn('nm'+(n===who?' sel':''),esc(n),()=>push('pw|q|'+t+'|'+gw+'|y|'+PW.clean(n)))));
-    grid.appendChild(btn('nm'+(who&&!names.includes(who)?' sel':''),who&&!names.includes(who)?esc(who):'Someone else',()=>{const n=PW.clean(prompt('Who would go for '+label(t)+'?',who)||'');if(n)push('pw|q|'+t+'|'+gw+'|y|'+n);}));
+    list.forEach(n=>grid.appendChild(btn('nm'+(n.toLowerCase()===who.toLowerCase()?' sel':''),esc(n),()=>{showAll=false;push('pw|q|'+t+'|'+gw+'|y|'+PW.clean(n));})));
+    if(who&&!list.some(n=>n.toLowerCase()===who.toLowerCase()))grid.appendChild(btn('nm sel',esc(who),()=>{}));
+    if(list===team)grid.appendChild(btn('nm','Someone else',()=>{showAll=true;render();}));
+    else grid.appendChild(btn('nm','Type a name',()=>{const n=PW.clean(prompt('Who would go for '+label(t)+'?',who)||'');if(n){showAll=false;push('pw|q|'+t+'|'+gw+'|y|'+n);}}));
     app.appendChild(grid);
   }
   /* once both stations have answered, what to tell this team */
-  const ra=PW.ans(g,r,gw);
   if(a&&ra){
     const on=a==='y'&&ra==='y';
-    app.appendChild(el('div','set','<span>'+(on?'Tell '+label(t)+': you&rsquo;re meeting <b>'+esc(PW.rep(g,r,gw)||label(r))+'</b> from '+label(r)+'.':'Tell '+label(t)+': no meeting.')+'</span>'));
+    app.appendChild(el('div','set','<span>'+(on?'Tell '+label(t)+': you&rsquo;re meeting <b>'+esc(PW.rep(g,r,gw)||label(r))+'</b> from '+label(r)+'.':a==='n'?'Tell '+label(t)+': no meeting.':'Tell '+label(t)+': '+label(r)+' said no, so no meeting.')+'</span>'));
   }
 }
 
 function visit(g,t){
   const r=PW.rival(t), s=t[0], j=+t.slice(1), w=PW.week(g);
   const head=el('div','team '+s);head.appendChild(el('div','big',label(t)));
-  head.appendChild(el('div','who',PW.NAME[s]+'<br>Junction '+j+' &middot; '+k(PW.earned(g,t))+' so far'));
+  head.appendChild(el('div','who',PW.NAME[s]+' &middot; Junction '+j+(g.members[t]&&g.members[t].length?'<br>'+g.members[t].map(esc).join(', '):'')));
   app.appendChild(head);
   app.appendChild(sheet(g,j,true,t));
   const u=PW.nextReveal(g,t);
@@ -344,7 +352,7 @@ function visit(g,t){
   const nav=el('div','nav');
   nav.appendChild(btn('','&lsaquo; All teams',()=>{view='board';justRevealed=null;render();scrollTo(0,0);}));
   const nx=j<g.nj?s+(j+1):null;
-  nav.appendChild(nx?btn('','Next: '+label(nx)+' &rsaquo;',()=>{view=nx;justRevealed=null;render();scrollTo(0,0);}):btn('','Board &rsaquo;',()=>{view='board';justRevealed=null;render();scrollTo(0,0);}));
+  nav.appendChild(nx?btn('','Next: '+label(nx)+' &rsaquo;',()=>{view=nx;justRevealed=null;showAll=false;render();scrollTo(0,0);}):btn('','Board &rsaquo;',()=>{view='board';justRevealed=null;render();scrollTo(0,0);}));
   app.appendChild(nav);
 }
 

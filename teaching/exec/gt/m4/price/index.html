@@ -45,14 +45,18 @@ button.meet.dim{opacity:.35} button.meet.sel{outline:5px solid var(--ink);outlin
 /* the week's matrix: rows Aura, columns Buco's, this team's numbers in bold */
 table.pm{border-collapse:collapse;margin:0 auto}
 table.pm th,table.pm td{padding:0;text-align:center}
-table.pm th{font-weight:700;font-size:13px;letter-spacing:.04em;padding:4px 6px}
+table.pm th{font-weight:700;font-size:15px;letter-spacing:.04em;padding:4px 6px}
 table.pm th.ax{text-transform:uppercase;letter-spacing:.14em;font-size:11px}
 table.pm th.ax.a{color:var(--teal)} table.pm th.ax.b{color:var(--terracotta)}
-table.pm td.c{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:18px;width:112px;height:54px;color:var(--muted)}
-table.pm td.c span.me{font-weight:800;font-size:22px}
+table.pm td.c{border:2.5px solid var(--ink);background:var(--card);font-weight:600;font-size:22px;width:120px;height:84px;color:var(--muted)}
+table.pm td.c span.me{font-weight:800;font-size:34px}
 table.pm td.c .a.me{color:var(--teal)} table.pm td.c .b.me{color:var(--terracotta)}
 table.pm td.c .s{margin:0 .25em}
 .cap{font-weight:500;font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+.mtag{display:inline-block;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);background:var(--red);padding:5px 10px}
+.names{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button.nm{font-weight:600;font-size:15px;padding:12px 4px;background:var(--card);border:2px solid var(--ink);color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.nm.sel{background:var(--ink);color:var(--paper)}
 .status{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chip{border:2.5px solid var(--ink);padding:10px 12px;text-align:center}
 .chip .ck{font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
@@ -78,27 +82,30 @@ table.pm td.c .s{margin:0 .25em}
 </style>
 </head><body>
 <div class="wrap" id="app"></div>
+<script src="/go/names.js"></script>
 <script src="../pw.js"></script>
 <script>
 const KEY='m4-team-v2-'+PW.ROOM;
-let S={team:null,joined:false};
+let S={team:null,joined:false,names:[]};
 try{if(new URLSearchParams(location.search).get('fresh')==='1')localStorage.removeItem(KEY);}catch(_){}
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.team)S=Object.assign(S,s);}catch(_){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(_){}};
-let lines=[], pickS=null, pickJ=null;
+let lines=[], pickS=null, pickJ=null, step=1, roster=[], picked=[];
+try{const mine=localStorage.getItem('gt-name');if(mine)picked=[mine];}catch(_){}
+GT_NAMES.roster().then(ns=>{roster=ns||[];if(!S.team)render();});
 const app=document.getElementById('app');
 const me=PW.voter();
 
 function join(){
   if(!S.team||S.joined)return;
   const t=S.team;
-  PW.say(me,'pw|j|'+t).then(()=>{if(S.team===t){S.joined=true;save();}}).catch(()=>{});
+  PW.say(me,'pw|j|'+t+'|'+me+'|'+(S.names||[]).map(PW.clean).join(',')).then(()=>{if(S.team===t){S.joined=true;save();}}).catch(()=>{});
 }
 function pull(){
   if(document.visibilityState==='hidden')return;
   PW.entries().then(es=>{
     /* a Poll Desk reset took this phone's line with it: back to the picker */
-    if(S.team&&S.joined&&!es.some(e=>e.v===me&&/^pw\|j\|/.test(e.t))){S={team:null,joined:false};save();}
+    if(S.team&&S.joined&&!es.some(e=>e.v===me&&/^pw\|j\|/.test(e.t))){S={team:null,joined:false,names:[]};step=1;save();}
     lines=es.map(e=>e.t);render();
   }).catch(()=>{});
   join();
@@ -139,7 +146,7 @@ function record(g,t,cur){
 }
 function footer(g,t){
   const f=el('div','foot');
-  if(!PW.p(g,t,1))f.appendChild(btn('','Wrong station or junction?',()=>{S={team:null,joined:false};save();render();}));
+  if(!PW.p(g,t,1))f.appendChild(btn('','Wrong station or junction?',()=>{picked=S.names||[];S={team:null,joined:false,names:[]};step=1;save();render();}));
   return f;
 }
 
@@ -164,9 +171,10 @@ function render(){
     app.appendChild(record(g,t,0));
     return;
   }
-  if(gate){   /* the meeting round: Ryan comes to ask; the phone only gives the time to decide */
+  if(gate){   /* the meeting round: Ryan comes to ask; the phone shows what they are deciding about */
     app.appendChild(el('h1','','Before week '+w));
     app.appendChild(el('div','lbl','Decide whether you want to meet the other station, and who would go.'));
+    app.appendChild(el('div','','<span class="mtag">'+(w===3?'Week 3 pays double':'Weeks 5 and 6: FuelWatch rules')+'</span>'));
     app.appendChild(matrix(w,t));
     app.appendChild(record(g,t,w));
     return;
@@ -185,16 +193,31 @@ function render(){
 
 function setup(){
   app.appendChild(el('h1','','Price Wars'));
-  app.appendChild(el('div','lbl','Which station are you?'));
-  const st=el('div','choices');
-  ['a','b'].forEach(x=>st.appendChild(btn('opt'+(pickS===x?' sel':''),PW.NAME[x],()=>{pickS=x;render();})));
-  app.appendChild(st);
-  app.appendChild(el('div','lbl','Which junction?'));
-  const gr=el('div','grid6');
-  for(let n=1;n<=6;n++)gr.appendChild(btn('opt num'+(pickJ===n?' sel':''),String(n),()=>{pickJ=n;render();}));
+  if(step===1){
+    app.appendChild(el('div','lbl','Which station are you?'));
+    const st=el('div','choices');
+    ['a','b'].forEach(x=>st.appendChild(btn('opt'+(pickS===x?' sel':''),PW.NAME[x],()=>{pickS=x;render();})));
+    app.appendChild(st);
+    app.appendChild(el('div','lbl','Which junction?'));
+    const gr=el('div','grid6');
+    for(let n=1;n<=6;n++)gr.appendChild(btn('opt num'+(pickJ===n?' sel':''),String(n),()=>{pickJ=n;render();}));
+    app.appendChild(gr);
+    const b=btn('go','Next',()=>{step=2;render();scrollTo(0,0);});b.disabled=!(pickS&&pickJ);
+    app.appendChild(b);
+    return;
+  }
+  /* who is on the team, so Ryan's desk can offer just these names for a meeting */
+  app.appendChild(el('div','who '+pickS,PW.NAME[pickS]+' &middot; Junction '+pickJ));
+  app.appendChild(el('div','lbl','Who&rsquo;s on your team? Tap each of you.'));
+  const all=roster.slice();picked.forEach(n=>{if(!all.some(x=>x.toLowerCase()===n.toLowerCase()))all.push(n);});
+  const gr=el('div','names');
+  all.forEach(n=>{const on=picked.some(x=>x.toLowerCase()===n.toLowerCase());
+    gr.appendChild(btn('nm'+(on?' sel':''),n.replace(/&/g,'&amp;').replace(/</g,'&lt;'),()=>{picked=on?picked.filter(x=>x.toLowerCase()!==n.toLowerCase()):picked.concat([n]);render();}));});
+  gr.appendChild(btn('nm','Not on the list',()=>{const n=PW.clean(prompt('Your name')||'');if(n&&!picked.some(x=>x.toLowerCase()===n.toLowerCase())){picked=picked.concat([n]);render();}}));
   app.appendChild(gr);
-  const b=btn('go','Start',()=>{S={team:pickS+pickJ,joined:false};save();render();join();});b.disabled=!(pickS&&pickJ);
+  const b=btn('go','Start',()=>{S={team:pickS+pickJ,joined:false,names:picked.map(PW.clean).filter(Boolean)};save();render();join();scrollTo(0,0);});b.disabled=!picked.length;
   app.appendChild(b);
+  app.appendChild(btn('go','Back',()=>{step=1;render();})).style.cssText='background:none;color:var(--muted);border-color:var(--rule)';
 }
 
 let wl=null;
