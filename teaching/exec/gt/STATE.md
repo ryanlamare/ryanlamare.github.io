@@ -63,6 +63,13 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m3's aircraft briefs, fifth pass (29 Sep; tag `m3-before-buyout`), his three points:**
+  - **The race to the screen is GONE** from both briefs. It gave a rational reason to refuse the win-win (help the rival and it takes your audience).
+  - **The zero-sum instrument is explicit.** Each side "is authorised to pay [the other] to drop out of the bidding, as long as what you pay them and what you pay for the plane together stay within your £800,000/£750,000". Goal 2 now reads "spend as little as possible … never more than £X in total, whether on the plane or on paying [them] to drop out". Two goals only.
+  - **Both endings are predictable, and the reveal page now shows both:**
+    - **Without the discovery:** only one production survives. Either they bid against each other (the higher ceiling wins, Harrow at about £750,000, and the seller takes the difference), or one pays the other to step aside and buys at the £450,000 guide (the most Harrow can pay is £350,000, and the most Larkfield can pay is £300,000).
+    - **With it:** one buys at the guide, the cabin goes to Stage 4 by 1 June, Larkfield flies the rest in July–August, they split the cost and the resale, and both productions survive.
+  - m3-lot passes.
 - **m3's aircraft briefs, fourth pass (29 Sep; tag `m3-before-goals`). Harrow is HIS text** (Debtflix, Kanley Stubrick, British United Airways; "All exterior shots are filmed using CGI"; the only plane "with an authentic interior pristine enough"), with one doubled "the" fixed. Larkfield mirrors it clause for clause: the interiors were shot on green screen this spring, and it's "the only surviving plane from the era that still holds a permit to fly".
   - **His calls:**
     - the goal is ACCESS to the plane, not the lowest price;
