@@ -63,6 +63,14 @@ to pick the work up on another computer.
   - "What decides where you land?" is four presses: the focal point; speaking first; commitment (Module 7); and **"The power to walk away"** (his wording; he covers BATNAs out loud as a form of added value, Module 1).
   - The closer's lead adds "a negotiation perhaps" (and /go/notes follows). The battle-of-the-sexes takeaway adds "as in most negotiations".
   - notes, m5-markers, m5-reset, pairs-quiz and go-now pass; m5 presses through clean.
+- **m3's aircraft briefs, sixth pass (29 Sep; tag `m3-before-samesummer`). CURRENT; supersedes the fifth pass's endings.** His objection: "why would they ever come to an agreement that shuts down their own production?" He was right. In Ugli, pairs who miss the secret still AGREE, usually to split the oranges (1,500 each), which looks fair and fails both. Our equivalent is sharing the summer, and that trap only works if both need the plane for the SAME whole window.
+  - **Now:** Larkfield needs it from 1 June to 30 September too, flying on every clear day at Manston, the same window as Harrow's Stage 4.
+  - **The buy-off authority is gone** (it pointed at an agreement nobody would take). Goal 2 is just "spend as little as possible … never more than your ceiling".
+  - **The three endings, predictable:**
+    - (1) Discover: both get the whole summer; one buys at the guide; they split the cost (and the resale).
+    - (2) Don't discover, but agree: share the summer, a couple of months each, which is half of what either needed (the orange split).
+    - (3) No deal: bid against each other; the higher ceiling (Harrow, £800k vs £750k) wins at about £750k, and the seller takes the difference.
+  - The reveal page says (2) and (3), then (1). m3-lot passes.
 - **m3's aircraft briefs, fifth pass (29 Sep; tag `m3-before-buyout`), his three points:**
   - **The race to the screen is GONE** from both briefs. It gave a rational reason to refuse the win-win (help the rival and it takes your audience).
   - **The zero-sum instrument is explicit.** Each side "is authorised to pay [the other] to drop out of the bidding, as long as what you pay them and what you pay for the plane together stay within your £800,000/£750,000". Goal 2 now reads "spend as little as possible … never more than £X in total, whether on the plane or on paying [them] to drop out". Two goals only.
