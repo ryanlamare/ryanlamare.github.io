@@ -1,4 +1,6 @@
-/* Headless test of the Price Wars phone and a Poll Desk reset (24 Sep 2026).
+/* Headless test of the plan B hold-up Price Wars phone (m4/hold/ since 29 Sep
+   2026; the game is now run from the desk, see m4-desk.test.mjs) and a Poll
+   Desk reset (24 Sep 2026).
    The REAL worker.js runs under `wrangler dev` with a throwaway secret, as in
    go-roster.test.mjs, and the page is served pointed at it.
 
@@ -79,7 +81,7 @@ const screen = `(document.querySelector('.full .lock,.full .fp')||document.query
 const KEY = 'm4-price-v1';
 try {
   await call('/p/m4-results/votes');
-  const URL0 = 'http://localhost:' + PORT + '/teaching/exec/gt/m4/price/';
+  const URL0 = 'http://localhost:' + PORT + '/teaching/exec/gt/m4/hold/';
   const ph = await page(URL0, 390, 844, true);
   /* a game stored before tonight's change: no start time */
   await ph.ev(`localStorage.setItem('${KEY}',JSON.stringify({phase:'price',station:'a',j:2,week:3,mine:['h','h'],theirs:['h','h']}));1`);
@@ -113,7 +115,7 @@ try {
   await sleep(1200); await ph.nav(URL0); await sleep(500);
   check(/Week 1: your price/.test(await ph.ev(screen)) && await ph.ev(`JSON.parse(localStorage.getItem('${KEY}')).station`) === 'b', 'a second game starts, registers and survives a reload', await ph.ev(screen));
   /* a phone that never reached the server keeps its game */
-  const URLD = 'http://localhost:' + DEAD + '/teaching/exec/gt/m4/price/';
+  const URLD = 'http://localhost:' + DEAD + '/teaching/exec/gt/m4/hold/';
   const off = await page(URLD, 390, 844, true);
   for (const t of ['Aura Fuels', '2', 'Start']) { await off.ev(tap(t)); await sleep(150); }
   await sleep(1500); await off.nav(URLD); await sleep(4500);

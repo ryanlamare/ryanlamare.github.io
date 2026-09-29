@@ -13,9 +13,14 @@ to pick the work up on another computer.
   - The client page's m8 game is the car market, and its resources lines match the decks.
   - The Poll Desk retires m3-lot, and REHEARSAL.md is brought up to date.
 - **His rulings:** m5 slide 3's "So far…" stays; m6's "And this room?" is deleted; no minimax (m6's widget carries the idea).
-- **Open, awaiting his word:**
-  - **The winner's curse:** Claude's call is one slide in m8 after *Adverse selection*, not on the m7 auction, which teaches escalation. He teaches it in his negotiations class; ask which deck, and use his wording.
-  - **Price Wars split across two rooms:** Aura inside, Buco's in the hall, and the phones carry the prices (tap a price, LOCK IT IN). His desk shows who has locked and reveals every phone at once. The hold-up version stays live as plan B.
+- **The winner's curse: dropped** (his call).
+- **Price Wars is now run by Ryan in person (29 Sep, his design; BUILT and live).**
+  - Aura is in the room and Buco's in the hall. He goes team to team with **m4/desk/** on his phone, taps each price, and taps **Reveal** in front of a team to tell it its rival's price.
+  - He wanted the tension of walking up to a team knowing something it doesn't: "it's not as climactic if I just press a button for everyone".
+  - The teams' phones (**m4/price/**) only display: the week's matrix (the hall can't see the screen), their own price at once, the rival's only after his reveal, and the revenue. Their one tap is Meet?, before weeks 3 and 5.
+  - Everything is an append-only log in m4-results (see m4/pw.js), so no Worker change and the Poll Desk reset already covers it. The desk writes the results slide's r lines when all six weeks are in.
+  - The hold-up phone is plan B at **m4/hold/**.
+  - `trial/m4-desk.test.mjs` plays all six weeks with four phones (alternating order, both meetings, the news, a changed price, the results slide, a reset). `m4-price-reset` now tests m4/hold/.
 - **m1 correction to the note below:** *So what is the answer?* is #21, after #20 *This is actually a game about common knowledge*, not before it. The deck is right and matches his 565 order; don't "fix" it.
 
 ## NEXT CHAT STARTS HERE (28 Sep 2026, evening): the m1–m8 run-through

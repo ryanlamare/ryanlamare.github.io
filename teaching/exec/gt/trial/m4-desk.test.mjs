@@ -1,0 +1,249 @@
+/* Headless test of Price Wars run from Ryan's desk (29 Sep 2026): the desk
+   (m4/desk/), four team phones (m4/price/, two junctions), the results slide
+   (m4/#6) and a Poll Desk reset, against the REAL worker.js under
+   `wrangler dev`, as in m4-price-reset.test.mjs.
+
+     node teaching/exec/gt/trial/m4-desk.test.mjs [folder for screenshots]
+
+   It plays all six weeks in his classroom order (the room first in odd
+   weeks, the hall first in even ones), both meeting rounds, the news and a
+   changed price, and checks at every step the rule that matters: a team's
+   phone shows its own price as soon as Ryan taps it, and its rival's only
+   once he has tapped Reveal in front of that team. */
+import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
+import { readFile, mkdtemp, writeFile, mkdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, extname, normalize, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+const WORKER_DIR = join(ROOT, 'teaching', 'exec', 'gt', 'poll-worker');
+const SHOTS = process.argv[2] || await mkdtemp(join(tmpdir(), 'm4-desk-shots-'));
+await mkdir(SHOTS, { recursive: true });
+const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png' };
+const WPORT = 8796, PORT = 8156, CDP = 9356, SECRET = 'desk-test-secret';
+const W = 'http://localhost:' + WPORT;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const persist = await mkdtemp(join(tmpdir(), 'm4-desk-do-'));
+const wr = spawn('npx', ['wrangler', 'dev', '--port', String(WPORT), '--var', 'ADMIN_SECRET:' + SECRET, '--persist-to', persist, '--log-level', 'error'], { cwd: WORKER_DIR, stdio: 'ignore' });
+let up = false;
+for (let i = 0; i < 150 && !up; i++) { try { up = (await fetch(W + '/p/gt-roster/roster')).ok; } catch (_) { await sleep(200); } }
+if (!up) { console.log('FAIL  wrangler dev did not start'); wr.kill(); process.exit(1); }
+
+const srv = createServer(async (req, res) => {
+  const url = new URL(req.url, 'http://x');
+  let p = normalize(decodeURIComponent(url.pathname)); if (p.endsWith('/')) p += 'index.html';
+  try {
+    let buf = await readFile(join(ROOT, p)); const ext = extname(p);
+    if (ext === '.html' || ext === '.js') buf = Buffer.from(String(buf).replaceAll('https://gt-poll.rlamare.workers.dev', W));
+    res.writeHead(200, { 'content-type': TYPES[ext] || 'application/octet-stream' }); res.end(buf);
+  } catch (_) { res.writeHead(404); res.end('no'); }
+}).listen(PORT);
+
+const dir = await mkdtemp(join(tmpdir(), 'm4desk-'));
+const chrome = spawn(CHROME, ['--headless=new', '--remote-debugging-port=' + CDP, '--user-data-dir=' + dir, '--no-first-run', '--hide-scrollbars', 'about:blank'], { stdio: 'ignore' });
+for (let i = 0; i < 50; i++) { try { await (await fetch('http://localhost:' + CDP + '/json/version')).json(); break; } catch (_) { await sleep(200); } }
+
+/* each phone gets its own browser context, so its localStorage (and its voter id) is its own */
+const bws = new WebSocket((await (await fetch('http://localhost:' + CDP + '/json/version')).json()).webSocketDebuggerUrl);
+await new Promise(r => bws.onopen = r);
+let bid = 0; const bwait = new Map();
+bws.onmessage = e => { const m = JSON.parse(e.data); if (m.id && bwait.has(m.id)) { bwait.get(m.id)(m); bwait.delete(m.id); } };
+const bsend = (method, params = {}) => new Promise(r => { const i = ++bid; bwait.set(i, r); bws.send(JSON.stringify({ id: i, method, params })); });
+
+async function page(url, w, h, mobile) {
+  const ctx = (await bsend('Target.createBrowserContext')).result.browserContextId;
+  const tid = (await bsend('Target.createTarget', { url: 'about:blank', browserContextId: ctx })).result.targetId;
+  const ws = new WebSocket('ws://localhost:' + CDP + '/devtools/page/' + tid); await new Promise(r => ws.onopen = r);
+  let id = 0; const wait = new Map(); const errors = [];
+  ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id && wait.has(m.id)) { wait.get(m.id)(m); wait.delete(m.id); }
+    if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text); };
+  const send = (method, params = {}) => new Promise(r => { const i = ++id; wait.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+  await send('Runtime.enable'); await send('Page.enable');
+  await send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: mobile ? 2 : 1, mobile: !!mobile });
+  if (mobile) await send('Emulation.setTouchEmulationEnabled', { enabled: true });
+  await send('Page.navigate', { url }); await sleep(1400);
+  const ev = async expr => { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval failed: ' + expr); return r.result.result.value; };
+  const shot = async name => { const r = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true }); await writeFile(join(SHOTS, name), Buffer.from(r.result.data, 'base64')); };
+  const nav = async u => { await send('Page.navigate', { url: u }); await sleep(1400); };
+  return { ev, shot, errors, nav };
+}
+
+let fails = 0;
+const check = (ok, what, got) => { console.log((ok ? 'ok    ' : 'FAIL  ') + what + (ok || got === undefined ? '' : '   got: ' + JSON.stringify(got))); if (!ok) fails++; };
+const click = (sel, text) => `(()=>{const b=[...document.querySelectorAll(${JSON.stringify(sel)})].find(b=>b.textContent.replace(/\\s+/g,' ').trim().includes(${JSON.stringify(text || '')}));if(!b)return false;b.click();return true})()`;
+
+try {
+  const B = 'http://localhost:' + PORT + '/teaching/exec/gt/m4/';
+  const desk = await page(B + 'desk/', 390, 844, true);
+  await desk.ev('window.confirm=()=>true');
+  const phone = {};
+  for (const t of ['a1', 'b1', 'a2', 'b2']) {
+    phone[t] = await page(B + 'price/', 390, 844, true);
+    await phone[t].ev(click('button.opt', t[0] === 'a' ? 'Aura' : 'Buco'));
+    await phone[t].ev(click('button.num', t[1]));
+    await phone[t].ev(click('button.go', 'Start'));
+  }
+  await sleep(800);
+  await phone.a1.shot('phone-picker-done.png');
+
+  /* the desk, and a settled view everywhere after each tap */
+  const settle = async () => {
+    for (let i = 0; i < 40; i++) { if (await desk.ev('D.pending.length') === 0) break; await sleep(150); }
+    await sleep(250);
+    for (const t in phone) await phone[t].ev('pull()');
+    await desk.ev('pull()'); await sleep(700);
+  };
+  const tile = async t => { await desk.ev(`view=${JSON.stringify(t)};justRevealed=null;render()`); };
+  const price = async (t, p) => { await tile(t); check(await desk.ev(click('button.price', p === 'h' ? '1.50' : '1.40')), `desk: ${t.toUpperCase()}'s price ${p === 'h' ? '£1.50' : '£1.40'} tapped`); await settle(); };
+  const reveal = async (t, w) => { await tile(t); const txt = await desk.ev(`(document.querySelector('button.reveal')||{}).textContent||''`);
+    check(txt.replace(/\s+/g, ' ').includes('Reveal to ' + t.toUpperCase()) && txt.includes('week ' + w), `desk: Reveal to ${t.toUpperCase()}, week ${w}, is the next thing`, txt);
+    await desk.ev(`document.querySelector('button.reveal').click()`); await settle(); };
+  const ownChip = t => phone[t].ev(`(document.querySelector('.status .chip .cv')||{}).textContent||''`);
+  const rivalRow = t => phone[t].ev(`[...document.querySelectorAll('.rec .wk')].map(w=>(w.querySelectorAll('.sq')[1].className.split(' ')[1]||'-')).join('')`);
+  const h1 = t => phone[t].ev(`(document.querySelector('h1')||{}).textContent||''`);
+
+  check(await desk.ev(`document.querySelector('h1').textContent.includes('Price Wars')`), 'the desk opens on its setup');
+  check((await desk.ev(`document.body.textContent`)).includes('How many junctions'), 'it asks how many junctions');
+  await desk.ev(click('button.opt', '2'));
+  check((await desk.ev(`document.body.textContent`)).includes('A1 ✓'), 'it shows which phones are in', await desk.ev(`[...document.querySelectorAll('.lbl')].map(x=>x.textContent).join(' | ')`));
+  await desk.shot('desk-0-setup.png');
+  await desk.ev(click('button.go', 'Start the game')); await settle();
+  await desk.shot('desk-1-board.png');
+  check((await h1('a1')).startsWith('Week 1'), 'phones show week 1', await h1('a1'));
+  check(await phone.b1.ev(`document.querySelectorAll('table.pm td.c').length`) === 4, 'every phone shows the payoff matrix');
+  await phone.b1.shot('phone-1-week1-hall.png');
+
+  /* week 1: the room first */
+  await price('a1', 'h');
+  check(await ownChip('a1') === '£1.50', 'A1\'s phone shows its own price as soon as Ryan taps it', await ownChip('a1'));
+  check(await ownChip('b1') === '–', 'B1\'s phone shows nothing of A1\'s price', await ownChip('b1'));
+  await desk.shot('desk-2-a1-price-set.png');
+  await price('a2', 'c');
+  /* then the hall: price, then reveal */
+  await tile('b1'); await desk.shot('desk-3-b1-visit.png');
+  await price('b1', 'c');
+  check(await desk.ev(`!!document.querySelector('button.reveal')`), 'after B1\'s price the desk offers Reveal to B1');
+  check((await rivalRow('b1'))[0] === '-', 'before the tap, B1\'s phone does not show A1\'s price', await rivalRow('b1'));
+  await desk.shot('desk-4-b1-reveal-button.png');
+  await reveal('b1', 1);
+  await desk.shot('desk-5-b1-revealed.png');
+  check((await rivalRow('b1'))[0] === 'h', 'after Reveal to B1, B1\'s phone shows A1 posted £1.50', await rivalRow('b1'));
+  check((await rivalRow('a1'))[0] === '-', 'A1\'s phone still shows nothing of B1\'s price (Ryan has not told A1)', await rivalRow('a1'));
+  check(await phone.a1.ev(`document.querySelector('.total b').textContent`) === '£0k', 'A1 has earned nothing it has not been told');
+  check(await phone.b1.ev(`document.querySelector('.total b').textContent`) === '£18k', 'B1 earned £18k (undercut a holder)', await phone.b1.ev(`document.querySelector('.total b').textContent`));
+  await phone.b1.shot('phone-2-b1-told-week1.png');
+  await price('b2', 'h'); await reveal('b2', 1);
+
+  /* week 2: the hall first, then the room folds last week's news into this week's ask */
+  await tile('b1');
+  check(await desk.ev(`document.querySelectorAll('button.price').length`) === 2 && !(await desk.ev(`!!document.querySelector('button.reveal')`)), 'week 2 at B1: straight to the price (it heard week 1 already)');
+  await price('b1', 'h'); await price('b2', 'h');
+  await tile('a1');
+  check(await desk.ev(`!document.querySelector('button.price')`), 'at A1 the desk withholds week 2\'s price until A1 has heard week 1');
+  await phone.a1.shot('phone-3-a1-waiting.png');
+  await reveal('a1', 1);
+  check((await rivalRow('a1'))[0] === 'c', 'A1\'s phone shows B1 posted £1.40 in week 1, only now', await rivalRow('a1'));
+  check(await desk.ev(`document.querySelectorAll('button.price').length`) === 2, 'then the week 2 price buttons appear under the reveal');
+  await desk.shot('desk-6-a1-reveal-then-price.png');
+  await price('a1', 'h'); await reveal('a1', 2);
+  check((await rivalRow('b1'))[1] === '-', 'B1 has not heard A1\'s week 2 (Ryan is in the room)', await rivalRow('b1'));
+  await reveal('a2', 1); await price('a2', 'h'); await reveal('a2', 2);
+
+  /* the meeting round before week 3 */
+  await desk.ev(`view='board';render()`);
+  check((await desk.ev(`document.querySelector('h1').textContent`)).includes('Before week 3'), 'the desk heads the board Before week 3');
+  check((await desk.ev(`document.body.textContent`)).includes('2 teams still to hear week 2'), 'it says two teams still need week 2');
+  check(!(await h1('b1')).includes('meet'), 'B1\'s phone does not ask to meet before it has heard week 2', await h1('b1'));
+  check((await h1('a1')).includes('meet'), 'A1\'s phone asks: before week 3, do you want to meet them?', await h1('a1'));
+  await desk.shot('desk-7-meeting-round.png');
+  await reveal('b1', 2); await reveal('b2', 2); await desk.ev(`view='board';render()`);
+  check((await h1('b1')).includes('meet'), 'once told, B1\'s phone asks too');
+  await phone.a1.ev(click('button.meet', 'Yes')); await phone.b1.ev(click('button.meet', 'Yes'));
+  await phone.a2.ev(click('button.meet', 'Yes')); await phone.b2.ev(click('button.meet', 'No'));
+  await sleep(600); await settle();
+  await phone.a1.shot('phone-4-meet-ask.png');
+  const mrow = await desk.ev(`document.querySelector('.mrow').textContent`);
+  check(/J1Aura YesBuco.s Yes/.test(mrow) && /J2Aura YesBuco.s No/.test(mrow), 'the desk shows each junction\'s answers', mrow);
+  await desk.ev(click('button.go', 'Close the asks')); await settle();
+  check((await desk.ev(`document.querySelector('.panel .pt').textContent`)).includes('junction 1'), 'junction 1 meets, junction 2 does not');
+  await desk.shot('desk-8-meetings.png');
+  check((await phone.a1.ev(`document.body.textContent`)).includes('Your meeting is on'), 'A1\'s phone: your meeting is on');
+  check((await phone.a2.ev(`document.body.textContent`)).includes('No meeting'), 'A2\'s phone: no meeting');
+  await tile('a1');
+  check(await desk.ev(`!document.querySelector('button.price')`), 'no week 3 prices before Ryan opens the week');
+  await desk.ev(`view='board';render()`); await desk.ev(click('button.go', 'Open week 3')); await settle();
+  check((await h1('a1')).includes('Week 3') && (await h1('a1')).includes('Pays double'), 'week 3 opens, and the phones say it pays double', await h1('a1'));
+  check(await phone.a1.ev(`[...document.querySelectorAll('table.pm td.c')].map(c=>c.textContent).join(' ')`) === '24,24 4,36 36,4 18,18', 'the week 3 matrix is doubled');
+
+  /* week 3 (room first), with a changed price */
+  await price('a1', 'h');
+  await desk.ev(click('button.link', 'Change to £1.40')); await settle();
+  check(await ownChip('a1') === '£1.40', 'a changed price shows on A1\'s phone', await ownChip('a1'));
+  await price('a2', 'c');
+  await price('b1', 'h'); await reveal('b1', 3); await price('b2', 'c'); await reveal('b2', 3);
+  await tile('a1');
+  check(!(await desk.ev(`!!document.querySelector('button.link')`)), 'once B1 has heard it, A1\'s week 3 price can no longer change');
+  /* week 4 (hall first) */
+  await price('b1', 'c'); await price('b2', 'c');
+  await reveal('a1', 3); await price('a1', 'c'); await reveal('a1', 4);
+  await reveal('a2', 3); await price('a2', 'h'); await reveal('a2', 4);
+  check((await h1('a1')).startsWith('Stop here'), 'after week 4 the phones stop for the news, saying nothing about week 5', await h1('a1'));
+  check(!(await phone.a1.ev(`document.body.textContent`)).includes('FuelWatch'), 'nothing on the phone mentions FuelWatch before the news');
+  await phone.a1.shot('phone-5-stop-for-news.png');
+  await reveal('b1', 4); await reveal('b2', 4); await desk.ev(`view='board';render()`);
+  await desk.shot('desk-9-news.png');
+  await desk.ev(click('button.go', 'The news is out')); await settle();
+  check((await h1('b1')).includes('meet'), 'after the news, the phones ask about meeting before week 5');
+  check(await phone.b1.ev(`[...document.querySelectorAll('table.pm td.c')].map(c=>c.textContent).join(' ')`) === '12,12 2,72 72,2 9,9', 'and show the FuelWatch matrix');
+  /* A2's phone never answers: Ryan answers for it at the desk */
+  await phone.a1.ev(click('button.meet', 'No')); await phone.b1.ev(click('button.meet', 'No')); await phone.b2.ev(click('button.meet', 'No'));
+  await tile('a2'); check(await desk.ev(click('.mq2 button', 'No')), 'the desk can answer Meet? for a team whose phone cannot'); await settle();
+  await desk.ev(`view='board';render()`); await desk.ev(click('button.go', 'Close the asks')); await settle();
+  await desk.ev(click('button.go', 'Open week 5')); await settle();
+  check((await h1('a1')).includes('Week 5') && (await h1('a1')).includes('FuelWatch'), 'week 5 opens under the FuelWatch rules', await h1('a1'));
+  await phone.b2.shot('phone-6-week5.png');
+  /* weeks 5 and 6: taking turns at junction 1, both cutting at junction 2 */
+  await price('a1', 'c'); await price('a2', 'c'); await price('b1', 'h'); await reveal('b1', 5); await price('b2', 'c'); await reveal('b2', 5);
+  await price('b1', 'c'); await price('b2', 'c'); await reveal('a1', 5); await price('a1', 'h'); await reveal('a1', 6); await reveal('a2', 5); await price('a2', 'c'); await reveal('a2', 6);
+  await desk.ev(`view='board';render()`);
+  check((await desk.ev(`document.querySelector('h1').textContent`)).includes('Tell the last teams'), 'with all prices in, the desk says who still needs telling');
+  await reveal('b1', 6); await reveal('b2', 6); await desk.ev(`view='board';render()`);
+  check((await desk.ev(`document.querySelector('h1').textContent`)).includes('Six weeks done'), 'then six weeks done');
+  /* the ledgers: A1 h,h,c,c,c,h against B1 c,h,h,c,h,c */
+  const exp = (m, t) => { const rev = (w, a, b) => w >= 5 ? (a === 'c' && b === 'h' ? 72 : a === 'h' && b === 'c' ? 2 : a === 'h' ? 12 : 9) : (a === b ? (a === 'h' ? 12 : 9) : (a === 'c' ? 18 : 2)) * (w === 3 ? 2 : 1); let s = 0; for (let w = 0; w < 6; w++) s += rev(w + 1, m[w], t[w]); return s; };
+  const A1 = 'hhcccc'.split(''), B1 = 'chhchc'.split(''); A1[5] = 'h';
+  const A2 = 'chchcc'.split(''), B2 = 'hhcccc'.split('');
+  for (const [t, m, o] of [['a1', A1, B1], ['b1', B1, A1], ['a2', A2, B2], ['b2', B2, A2]]) {
+    const got = await phone[t].ev(`document.querySelector('.card .big').textContent`);
+    check(got === '£' + exp(m, o) + 'k', `${t.toUpperCase()}'s phone ends on £${exp(m, o)}k`, got);
+  }
+  await phone.a1.shot('phone-7-done.png');
+  await sleep(1500);
+  /* the results slide reads the desk's lines */
+  const deck = await page(B + '#6', 1280, 720, false);
+  await sleep(3500);
+  const rows = await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')].map(r=>r.querySelector('.jn').textContent+' '+[...r.querySelectorAll('.tot')].map(x=>x.textContent).join(' '))`);
+  check(rows.length === 2 && rows[0] === `Junction 1 £${exp(A1, B1)}k £${exp(B1, A1)}k` && rows[1] === `Junction 2 £${exp(A2, B2)}k £${exp(B2, A2)}k`, 'What happened at each junction shows both junctions and their totals', rows);
+  check(await deck.ev(`[...document.querySelectorAll('#jres .jrow:not(.head)')][0].querySelectorAll('.mt')[0].textContent`) === 'Met', 'junction 1\'s meeting before week 3 shows as Met');
+  await deck.shot('deck-6-results.png');
+
+  /* a Poll Desk reset: phones back to the picker, the desk back to its setup */
+  await fetch(W + '/p/m4-results/reset', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ s: SECRET }) });
+  await sleep(300);
+  for (const t in phone) await phone[t].ev('pull()');
+  await desk.ev('pull()'); await sleep(900);
+  check((await h1('a1')) === 'Price Wars' && (await phone.a1.ev(`document.body.textContent`)).includes('Which station'), 'after a reset, the phones open on the station picker', await h1('a1'));
+  check((await desk.ev(`document.body.textContent`)).includes('How many junctions'), 'and the desk on its setup');
+
+  const errs = [desk, deck, ...Object.values(phone)].flatMap(p => p.errors);
+  check(errs.length === 0, 'no script errors on the desk, the phones or the deck', errs);
+} catch (e) { console.log('FAIL  the test threw: ' + (e && e.stack || e)); fails++; }
+
+console.log(fails ? fails + ' FAILED' : 'ALL OK');
+console.log('screenshots in ' + SHOTS);
+chrome.kill(); srv.close(); wr.kill();
+process.exit(fails ? 1 : 0);

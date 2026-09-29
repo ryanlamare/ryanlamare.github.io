@@ -4,32 +4,16 @@
 <title>Module 4 · Price Wars</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* Price Wars as it stands after the plain pass (Ryan, 19 to 20 Sep 2026): one
-   phone per team, and the phone is two things only, a card to hold up and a
-   ledger that adds up. The team picks a price and locks it; a locked phone
-   shows a plain dark screen, so nothing can be read across the room and the
-   price cannot be changed; on Ryan's call, junction by junction, the two
-   stations reveal and hold their phones up (the whole screen is the price's
-   colour, the price and the junction number large); then the team taps what
-   the other side posted and the phone adds the week to the running total.
-   Before weeks 3 and 5 the same lock, reveal and hold-up asks "Meet?".
-   A station that asked then taps whether the meeting happened.
-   The page needs nothing from a server while the game is played: no
-   names, no pairing. It says one thing at Start, a plain vote in m4-results
-   ("this phone has a game"), so that a Poll Desk reset of Price Wars
-   reaches the phone: a phone whose vote is gone forgets its game and opens
-   on the station picker again (Ryan, 24 Sep 2026: every QR scan showed him
-   his last test game). A phone that could not reach the server keeps its
-   game, and a server out of reach changes nothing. After week 6 one tap, Send to the screen, posts the six weeks
-   and the two meetings once to the gt-poll room m4-results for the results
-   slide (Ryan, 21 Sep 2026); ?room=x sends to m4-results-x. The ledger lives
-   in this phone's localStorage, so a refresh loses nothing; a dead phone is
-   replaced by another teammate re-entering the past weeks, two taps each.
-   Scoring is the deck's: an ordinary week 12/12, 18 against 2, 9/9 (in
-   thousands of pounds), week 3 double, and from week 5 the FuelWatch rules:
-   undercutting alone pays 72, and week 6 no longer doubles. The phone says
-   nothing about week 5 until the team confirms it has heard the news.
-   The networked game this replaces is left in place at m4/game/. */
+/* A team's phone for Price Wars (29 Sep 2026, Ryan's design; the log it
+   reads is described in ../pw.js). Ryan runs the game in person from his
+   desk (m4/desk/): he asks each team for its price and taps it, and he tells
+   each team its rival's price by tapping Reveal in front of it. This page
+   only shows what he has already said: the week's payoff matrix (the hall
+   cannot see the screen), the team's own price once he has tapped it, the
+   rival's only once he has revealed it, and the revenue. The one thing a
+   team taps is Meet?, before weeks 3 and 5. Any number of phones can follow
+   one team. The plan B hold-up version is at m4/hold/. A Poll Desk reset of
+   Price Wars sends the phone back to the station picker. */
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 16px 40px}
@@ -41,6 +25,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height
 .who.a{color:var(--teal)} .who.b{color:var(--terracotta)}
 .total{font-weight:700;font-size:15px;color:var(--muted)} .total b{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);margin-left:6px}
 h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+h1 .wt{display:inline-block;margin-left:10px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);background:var(--red);padding:3px 8px;vertical-align:4px}
 .lbl{font-weight:600;font-size:15px;line-height:1.4;color:var(--muted)}
 .choices{display:flex;flex-direction:column;gap:12px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -50,17 +35,29 @@ button.opt{display:block;width:100%;text-align:left;font-weight:600;font-size:17
 button.opt.sel{background:var(--ink);color:var(--paper)}
 button.num{font-family:var(--display);font-weight:900;font-size:26px;text-align:center;padding:14px 0}
 .grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-button.price{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:150px;
-  border:4px solid var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:50px;line-height:1}
-button.price small{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
-/* green and red, solid, for the prices and for Meet? alike (Ryan, 21 Sep 2026, after gold and blue, wine and tan): the quickest way to show a prisoner's dilemma is the bad outcome, and red against red IS the bad outcome; the same two colours carry the results slide, where red = bad needs no key. No stripes. The digits and the words carry it for anyone who cannot tell the two apart. */
-button.price.hold{background:var(--green)}
-button.price.cut{background:var(--red)}
-button.price.dim{opacity:.35}
-button.price.sel{outline:5px solid var(--ink);outline-offset:3px}
 button.go{width:100%;font-weight:700;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);
   background:var(--red);border:2.5px solid var(--red);padding:16px}
 button.go:disabled{opacity:.3;cursor:default}
+button.meet{height:88px;font-weight:700;font-size:22px;color:var(--paper);border:4px solid var(--ink)}
+button.meet.y{background:var(--green)} button.meet.n{background:var(--red)}
+button.meet.dim{opacity:.35} button.meet.sel{outline:5px solid var(--ink);outline-offset:3px}
+/* the week's matrix: rows Aura, columns Buco's, this team's numbers in bold */
+table.pm{border-collapse:collapse;margin:0 auto}
+table.pm th,table.pm td{padding:0;text-align:center}
+table.pm th{font-weight:700;font-size:13px;letter-spacing:.04em;padding:4px 6px}
+table.pm th.ax{text-transform:uppercase;letter-spacing:.14em;font-size:11px}
+table.pm th.ax.a{color:var(--teal)} table.pm th.ax.b{color:var(--terracotta)}
+table.pm td.c{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:18px;width:112px;height:54px;color:var(--muted)}
+table.pm td.c span.me{font-weight:800;font-size:22px}
+table.pm td.c .a.me{color:var(--teal)} table.pm td.c .b.me{color:var(--terracotta)}
+table.pm td.c .s{margin:0 .25em}
+.cap{font-weight:500;font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
+.status{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{border:2.5px solid var(--ink);padding:10px 12px;text-align:center}
+.chip .ck{font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.chip .cv{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.1;color:var(--ink)}
+.chip.h{background:var(--green);border-color:var(--green)} .chip.c{background:var(--red);border-color:var(--red)}
+.chip.h .ck,.chip.c .ck,.chip.h .cv,.chip.c .cv{color:var(--paper)}
 .card{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center}
 .card .big{font-family:var(--display);font-weight:900;font-size:46px;line-height:1.05;color:var(--ink)}
 .card .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:6px}
@@ -77,258 +74,144 @@ button.go:disabled{opacity:.3;cursor:default}
 .reckey{font-weight:600;font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
 .foot{display:flex;gap:18px;margin-top:6px}
 .foot button{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);text-decoration:underline}
-/* full-screen states: the locked cover and the card held up */
-.full{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;
-  padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);text-align:center;color:var(--paper)}
-.full.locked{background:var(--ink)}
-.full.hold{background:var(--green)}
-.full.cut{background:var(--red)}
-.full.meety{background:var(--green)}
-.full.meetn{background:var(--red)}
-.full .fk{font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:14px;opacity:.85}
-.full .fp{font-family:var(--display);font-weight:900;font-size:34vw;line-height:.95}
-.full .fw{font-family:var(--display);font-weight:900;font-size:17vw;line-height:1}
-.full .fj{font-family:var(--display);font-weight:900;font-size:13vw;line-height:1}
-.full .lock{font-family:var(--display);font-weight:900;font-size:11vw;line-height:1.05}
-.full button{margin-top:3vh;font-weight:700;font-size:16px;letter-spacing:.12em;text-transform:uppercase;padding:16px 26px;
-  background:var(--paper);color:var(--ink);border:none}
-@media (min-width:700px){.full .fp{font-size:240px}.full .fw{font-size:120px}.full .fj{font-size:90px}.full .lock{font-size:76px}}
 </style>
 </head><body>
 <div class="wrap" id="app"></div>
+<script src="../pw.js"></script>
 <script>
-const KEY='m4-price-v1';
-const POLL_API='https://gt-poll.rlamare.workers.dev';
-const ROOM='m4-results'+(()=>{const r=(new URLSearchParams(location.search).get('room')||'').replace(/[^a-z0-9-]/g,'');return r?'-'+r:'';})();
-function voter(){let v=null;try{v=localStorage.getItem('gt-voter');if(!v){v=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));localStorage.setItem('gt-voter',v);}}catch(_){v='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}return v;}
-const FRESH=()=>({phase:'setup',station:null,j:null,week:1,pick:null,mine:[],theirs:[],news:false,meetPick:null,met:{},sent:false,at:0,reg:false});
-let S=FRESH();
+const KEY='m4-team-v2-'+PW.ROOM;
+let S={team:null,joined:false};
 try{if(new URLSearchParams(location.search).get('fresh')==='1')localStorage.removeItem(KEY);}catch(_){}
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.phase)S=Object.assign(FRESH(),s);}catch(_){}
-/* a game begun before phones told the server (24 Sep 2026) has no start time: nothing can say whether it was reset, and every one of them is a test */
-if(S.phase!=='setup'&&!S.at)S=FRESH();
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.team)S=Object.assign(S,s);}catch(_){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(_){}};
-save();
-/* Start tells the server this phone has a game; tried again on every screen until it lands */
-function register(){
-  if(S.reg||!S.at)return;
-  const at=S.at;
-  fetch(POLL_API+'/p/'+ROOM+'/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({o:0,v:voter()})})
-    .then(r=>{if(r.ok&&S.at===at){S.reg=true;save();}}).catch(()=>{});
-}
-/* a Poll Desk reset of the room took this phone's vote with it: the game is over, start from the station picker */
-function wasReset(){
-  if(!S.reg)return Promise.resolve(false);
-  const ask=fetch(POLL_API+'/p/'+ROOM+'/votes',{cache:'no-store'}).then(r=>r.json()).then(d=>{
-    if(!d||typeof d.votes!=='object'||d.votes[voter()]!==undefined)return false;
-    S=FRESH();save();return true;
-  }).catch(()=>false);
-  return Promise.race([ask,new Promise(r=>setTimeout(()=>r(false),4000))]);
-}
+let lines=[], pickS=null, pickJ=null, myAns={};
 const app=document.getElementById('app');
-const NAME={a:'Aura Fuels',b:'Buco’s Petrol'};
+const me=PW.voter();
 
-/* the deck's scoring, in thousands of pounds */
-function revenue(w,mine,theirs){
-  let r;
-  if(w>=5){r=mine==='c'&&theirs==='h'?72:mine==='h'&&theirs==='c'?2:mine==='h'?12:9;}
-  else{r=mine===theirs?(mine==='h'?12:9):(mine==='c'?18:2);if(w===3)r*=2;}
-  return r;
+function join(){
+  if(!S.team||S.joined)return;
+  const t=S.team;
+  PW.say(me,'pw|j|'+t).then(()=>{if(S.team===t){S.joined=true;save();}}).catch(()=>{});
 }
-const total=arr=>arr.reduce((t,_,i)=>t+revenue(i+1,S.mine[i],S.theirs[i]),0);
-const money=k=>'£'+k+'k';
-
-/* keep the screen awake while a phone waits to be held up */
-let wl=null;
-function awake(){try{if('wakeLock' in navigator&&!wl)navigator.wakeLock.request('screen').then(l=>{wl=l;l.addEventListener('release',()=>{wl=null;});}).catch(()=>{});}catch(_){}}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S.phase!=='setup')awake();});
+function pull(){
+  if(document.visibilityState==='hidden')return;
+  PW.entries().then(es=>{
+    /* a Poll Desk reset took this phone's line with it: back to the picker */
+    if(S.team&&S.joined&&!es.some(e=>e.v===me&&/^pw\|j\|/.test(e.t))){S={team:null,joined:false};save();}
+    lines=es.map(e=>e.t);render();
+  }).catch(()=>{});
+  join();
+}
 
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 function btn(cls,html,fn){const b=el('button',cls,html);b.type='button';b.addEventListener('click',fn);return b;}
-function go(phase){S.phase=phase;save();render();}
+const k=n=>'£'+n+'k';
 
-function header(){
+function header(g,t){
   const top=el('div','top');
-  top.appendChild(el('div','who '+S.station,NAME[S.station]+' &middot; Junction '+S.j));
-  top.appendChild(el('div','total','Revenue<b>'+money(total(S.theirs))+'</b>'));
+  top.appendChild(el('div','who '+t[0],PW.NAME[t[0]]+' &middot; Junction '+t.slice(1)));
+  top.appendChild(el('div','total','Revenue<b>'+k(PW.earned(g,t))+'</b>'));
   return top;
 }
-function record(cur){
+function matrix(w,t){
   const box=el('div');
+  box.appendChild(el('div','',PW.matrixHTML(w,t[0])));
+  box.appendChild(el('div','cap','In thousands of pounds. Aura&rsquo;s revenue first, Buco&rsquo;s second.'));
+  return box;
+}
+function record(g,t,cur){
+  const r=PW.rival(t), box=el('div');box.style.cssText='display:flex;flex-direction:column;gap:8px';
   const rec=el('div','rec');
   for(let w=1;w<=6;w++){
-    const played=w<=S.theirs.length;
-    const mark=S.news?(w>=5?'<em>!</em>':(w===3?'<em>&times;2</em>':'')):((w===3||w===6)?'<em>&times;2</em>':'');
+    const mine=PW.p(g,t,w), told=PW.isTold(g,t,w), theirs=told?PW.p(g,r,w):null;
+    const mark=g.news?(w>=5?'<em>!</em>':(w===3?'<em>&times;2</em>':'')):((w===3||w===6)?'<em>&times;2</em>':'');
     const wk=el('div','wk'+(w===cur?' cur':''));
     wk.appendChild(el('div','wl','W'+w+mark));
-    wk.appendChild(el('div','sq'+(played?' '+S.mine[w-1]:'')));
-    wk.appendChild(el('div','sq'+(played?' '+S.theirs[w-1]:'')));
-    wk.appendChild(el('div','rv',played?revenue(w,S.mine[w-1],S.theirs[w-1]):''));
+    wk.appendChild(el('div','sq'+(mine?' '+mine:'')));
+    wk.appendChild(el('div','sq'+(theirs?' '+theirs:'')));
+    wk.appendChild(el('div','rv',theirs?PW.rev(w,mine,theirs):''));
     rec.appendChild(wk);
   }
   box.appendChild(rec);
-  box.appendChild(el('div','reckey','<span>Top row: your sign</span><span>Bottom row: theirs</span><span>Green &pound;1.50 &middot; red &pound;1.40</span>'));
-  box.style.cssText='display:flex;flex-direction:column;gap:8px';
+  box.appendChild(el('div','reckey','<span>Top row: your price</span><span>Bottom row: theirs</span><span>Green &pound;1.50 &middot; red &pound;1.40</span>'));
   return box;
 }
-/* No undo (Ryan, 21 Sep 2026): a locked price is locked, and a button that says otherwise confuses the room. The old Undo last week let a team pick its own price again for a week already played. What survives is the one honest mistake, a mistap on what the OTHER station posted, fixed on the week's result screen (it never touches this team's own price), and Start again, only before week 1 is played (wrong station or junction), never after: a finished game stays finished on the phone. ?fresh=1 on the URL clears a phone at any time, which is how a rehearsal phone is reused. */
-function footer(){
+function footer(g,t){
   const f=el('div','foot');
-  if(!S.theirs.length)
-    f.appendChild(btn('','Start again',()=>{
-      if(confirm('Start again? This clears your station, your junction and every week so far.')){S=FRESH();save();render();}
-    }));
-  return f;
-}
-function full(cls,parts,label,fn){
-  const f=el('div','full '+cls);
-  parts.forEach(p=>f.appendChild(p));
-  if(label)f.appendChild(btn('',label,fn));
+  if(!PW.p(g,t,1))f.appendChild(btn('','Wrong station or junction?',()=>{S={team:null,joined:false};save();render();}));
   return f;
 }
 
 function render(){
   app.innerHTML='';
-  document.querySelectorAll('.full').forEach(n=>n.remove());
   app.appendChild(el('div','tag','<i></i>APPLIED GAME THEORY &middot; MODULE 4'));
-  if(S.phase!=='setup'){awake();register();}
-  ({setup,meetask,meetlocked,meetshow,metask,price,locked,show,theirs,result,news,done})[S.phase]();
+  if(!S.team)return setup();
+  const g=PW.parse(lines), t=S.team, r=PW.rival(t);
+  app.appendChild(header(g,t));
+  let w=1;while(w<=6&&PW.isTold(g,t,w))w++;
+  if(w===7){
+    app.appendChild(el('h1','','Six weeks at the junction'));
+    let theirs=0;for(let u=1;u<=6;u++)theirs+=PW.rev(u,PW.p(g,r,u),PW.p(g,t,u));
+    app.appendChild(el('div','card','<div class="big">'+k(PW.earned(g,t))+'</div><div class="sub">your station&rsquo;s revenue</div>'));
+    app.appendChild(el('div','card','<div class="big">'+k(theirs)+'</div><div class="sub">their station&rsquo;s revenue</div>'));
+    app.appendChild(record(g,t,0));
+    return;
+  }
+  const gate=PW.GATES.includes(w)&&!g.open[w]&&PW.allIn(g,w-1);
+  if(w>=5&&!g.news){   /* nothing about weeks 5 and 6 until the news is out */
+    app.appendChild(el('h1','','Stop here. There is news from the junction.'));
+    app.appendChild(record(g,t,0));
+    return;
+  }
+  if(gate&&!g.mc[w]){
+    app.appendChild(el('h1','','Before week '+w+': do you want to meet them?'));
+    const a=(g.ans[t]||{})[w]||myAns[w];
+    const row=el('div','row2');
+    [['y','Yes'],['n','No']].forEach(([x,l])=>row.appendChild(btn('meet '+x+(a?(a===x?' sel':' dim'):''),l,()=>{
+      myAns[w]=x;render();PW.say(me,'pw|q|'+t+'|'+w+'|'+x).then(pull).catch(()=>{});
+    })));
+    app.appendChild(row);
+    app.appendChild(el('div','lbl','Two minutes, one person from each station, and only if both of you ask. Nothing said in it binds anyone.'));
+    app.appendChild(matrix(w,t));
+    app.appendChild(record(g,t,w));
+    return;
+  }
+  if(gate){
+    app.appendChild(el('h1','','Before week '+w));
+    app.appendChild(el('div','lbl',PW.meets(g,w,+t.slice(1))?'Your meeting is on: one person to the door.':'No meeting.'));
+    app.appendChild(matrix(w,t));
+    app.appendChild(record(g,t,w));
+    return;
+  }
+  const tag=PW.tagOf(w);
+  app.appendChild(el('h1','','Week '+w+(tag?'<span class="wt">'+tag+'</span>':'')));
+  app.appendChild(matrix(w,t));
+  const mine=PW.p(g,t,w), st=el('div','status');
+  st.appendChild(el('div','chip'+(mine?' '+mine:''),'<div class="ck">Your price</div><div class="cv">'+(mine?PW.PRICE[mine]:'&ndash;')+'</div>'));
+  const last=w>1?PW.p(g,r,w-1):null;   /* the latest price Ryan has told them, week w-1 */
+  st.appendChild(el('div','chip'+(last?' '+last:''),'<div class="ck">'+(w>1?'Theirs, week '+(w-1):'Theirs')+'</div><div class="cv">'+(last?PW.PRICE[last]:'&ndash;')+'</div>'));
+  app.appendChild(st);
+  app.appendChild(record(g,t,w));
+  app.appendChild(footer(g,t));
 }
 
 function setup(){
   app.appendChild(el('h1','','Price Wars'));
-  app.appendChild(el('div','lbl','One phone for your team. Which station are you?'));
+  app.appendChild(el('div','lbl','Which station are you?'));
   const st=el('div','choices');
-  ['a','b'].forEach(k=>st.appendChild(btn('opt'+(S.station===k?' sel':''),NAME[k],()=>{S.station=k;save();render();})));
+  ['a','b'].forEach(x=>st.appendChild(btn('opt'+(pickS===x?' sel':''),PW.NAME[x],()=>{pickS=x;render();})));
   app.appendChild(st);
   app.appendChild(el('div','lbl','Which junction?'));
-  const g=el('div','grid6');
-  for(let n=1;n<=6;n++)g.appendChild(btn('opt num'+(S.j===n?' sel':''),String(n),()=>{S.j=n;save();render();}));
-  app.appendChild(g);
-  const b=btn('go','Start',()=>{S.at=Date.now();S.reg=false;go('price');});b.disabled=!(S.station&&S.j);
+  const gr=el('div','grid6');
+  for(let n=1;n<=6;n++)gr.appendChild(btn('opt num'+(pickJ===n?' sel':''),String(n),()=>{pickJ=n;render();}));
+  app.appendChild(gr);
+  const b=btn('go','Start',()=>{S={team:pickS+pickJ,joined:false};save();render();join();});b.disabled=!(pickS&&pickJ);
   app.appendChild(b);
 }
 
-function price(){
-  app.appendChild(header());
-  app.appendChild(el('h1','','Week '+S.week+': your price'));
-  const row=el('div','row2');
-  [['h','1.50'],['c','1.40']].forEach(([k,p])=>{
-    row.appendChild(btn('price '+(k==='h'?'hold':'cut')+(S.pick?(S.pick===k?' sel':' dim'):''),'<small>Unleaded</small>&pound;'+p,()=>{S.pick=k;save();render();}));
-  });
-  app.appendChild(row);
-  const b=btn('go','Lock it in',()=>go('locked'));b.disabled=!S.pick;
-  app.appendChild(b);
-  app.appendChild(el('div','lbl','Once it is locked it cannot be changed.'));
-  app.appendChild(record(S.week));
-  app.appendChild(footer());
-}
-function locked(){
-  document.body.appendChild(full('locked',[
-    el('div','fk',NAME[S.station]+' &middot; Junction '+S.j+' &middot; Week '+S.week),
-    el('div','lock','Price set'),
-    el('div','fk','Wait for your junction to be called')
-  ],'Reveal our price',()=>go('show')));
-}
-function show(){
-  document.body.appendChild(full(S.pick==='h'?'hold':'cut',[
-    el('div','fk',NAME[S.station]),
-    el('div','fp','&pound;'+(S.pick==='h'?'1.50':'1.40')),
-    el('div','fj','Junction '+S.j)
-  ],'Done',()=>go('theirs')));
-}
-function theirs(){
-  app.appendChild(header());
-  app.appendChild(el('h1','','Week '+S.week+': what did they post?'));
-  const row=el('div','row2');
-  [['h','1.50'],['c','1.40']].forEach(([k,p])=>{
-    row.appendChild(btn('price '+(k==='h'?'hold':'cut'),'<small>Their sign</small>&pound;'+p,()=>{
-      S.mine[S.week-1]=S.pick;S.theirs[S.week-1]=k;S.mine.length=S.theirs.length=S.week;
-      go('result');
-    }));
-  });
-  app.appendChild(row);
-  app.appendChild(el('div','lbl','You posted &pound;'+(S.pick==='h'?'1.50':'1.40')+'.'));
-  app.appendChild(record(S.week));
-}
-function result(){
-  const w=S.week, r=revenue(w,S.mine[w-1],S.theirs[w-1]);
-  app.appendChild(header());
-  app.appendChild(el('h1','','Week '+w));
-  app.appendChild(el('div','card','<div class="big">'+money(r)+'</div><div class="sub">this week'+(w===3?', doubled':'')+'</div>'));
-  app.appendChild(record(w));
-  app.appendChild(el('div','lbl','They posted &pound;'+(S.theirs[w-1]==='h'?'1.50':'1.40')+'.'));
-  app.appendChild(btn('go',w===6?'Finish':'Next week',()=>{
-    S.week=w+1;S.pick=null;S.meetPick=null;
-    go(w===6?'done':w===4?'news':w===2?'meetask':'price');
-  }));
-  const fx=el('div','foot');
-  fx.appendChild(btn('','Wrong? They posted &pound;'+(S.theirs[w-1]==='h'?'1.40':'1.50'),()=>{S.theirs[w-1]=S.theirs[w-1]==='h'?'c':'h';S.sent=false;save();render();}));
-  app.appendChild(fx);
-  app.appendChild(footer());
-}
-function news(){
-  app.appendChild(header());
-  app.appendChild(el('h1','','Stop here. There is news from the junction.'));
-  app.appendChild(record(0));
-  app.appendChild(btn('go','We have heard the news',()=>{S.news=true;go('meetask');}));
-  app.appendChild(footer());
-}
-function meetask(){
-  app.appendChild(header());
-  app.appendChild(el('h1','','Before week '+S.week+': do you want to meet them?'));
-  const st=el('div','choices');
-  [['y','Yes, ask for a meeting'],['n','No meeting']].forEach(([k,t])=>st.appendChild(btn('opt'+(S.meetPick===k?' sel':''),t,()=>{S.meetPick=k;save();render();})));
-  app.appendChild(st);
-  const b=btn('go','Lock it in',()=>go('meetlocked'));b.disabled=!S.meetPick;
-  app.appendChild(b);
-  app.appendChild(el('div','lbl','Two minutes, one person from each station, and only if both of you ask. Nothing said in it binds anyone.'));
-  app.appendChild(record(S.week));
-  app.appendChild(footer());
-}
-function meetlocked(){
-  document.body.appendChild(full('locked',[
-    el('div','fk',NAME[S.station]+' &middot; Junction '+S.j+' &middot; Before week '+S.week),
-    el('div','lock','Answer set'),
-    el('div','fk','Wait for your junction to be called')
-  ],'Reveal our answer',()=>go('meetshow')));
-}
-function meetshow(){
-  document.body.appendChild(full(S.meetPick==='y'?'meety':'meetn',[
-    el('div','fk',NAME[S.station]),
-    el('div','fw',S.meetPick==='y'?'Meet':'No meeting'),
-    el('div','fj','Junction '+S.j)
-  ],'Done',()=>{if(S.meetPick==='y')go('metask');else{S.met[S.week]=false;go('price');}}));
-}
-/* only a station that asked can have met; its one tap is what the results slide shows */
-function metask(){
-  app.appendChild(header());
-  app.appendChild(el('h1','','Before week '+S.week+': did the two stations meet?'));
-  const st=el('div','choices');
-  [[true,'We met'],[false,'We did not meet']].forEach(([k,t])=>st.appendChild(btn('opt',t,()=>{S.met[S.week]=k;go('price');})));
-  app.appendChild(st);
-  app.appendChild(record(S.week));
-  app.appendChild(footer());
-}
-function done(){
-  const mineT=total(S.theirs), themT=S.theirs.reduce((t,_,i)=>t+revenue(i+1,S.theirs[i],S.mine[i]),0);
-  app.appendChild(header());
-  app.appendChild(el('h1','','Six weeks at the junction'));
-  /* what each side earned, and nothing else (Ryan, 21 Sep 2026): the "of a possible £268k" line measured a junction against one side undercutting alone, so it told a junction that held its price all six weeks it had left £100k behind */
-  app.appendChild(el('div','card','<div class="big">'+money(mineT)+'</div><div class="sub">your station&rsquo;s revenue</div>'));
-  app.appendChild(el('div','card','<div class="big">'+money(themT)+'</div><div class="sub">their station&rsquo;s revenue</div>'));
-  app.appendChild(record(0));
-  /* the only thing this page ever sends, and only on this tap: the station, the junction, the six weeks and the two meetings, for the results slide (m4/#6). No names. If it fails the game has lost nothing. */
-  const b=btn('go',S.sent?'Sent. Send again':'Send to the screen',()=>{
-    b.disabled=true;b.textContent='Sending';
-    const t=['r',S.station,S.j,S.mine.join(''),S.theirs.join(''),(S.met[3]?'y':'n')+(S.met[5]?'y':'n')].join('|');
-    fetch(POLL_API+'/p/'+ROOM+'/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:voter(),t})})
-      .then(r=>{if(!r.ok)throw 0;S.sent=true;save();render();})
-      .catch(()=>{b.disabled=false;b.textContent='Not sent. Try again';});
-  });
-  app.appendChild(b);
-  app.appendChild(footer());
-}
-wasReset().then(render);
+let wl=null;
+function awake(){try{if('wakeLock' in navigator&&!wl)navigator.wakeLock.request('screen').then(l=>{wl=l;l.addEventListener('release',()=>{wl=null;});}).catch(()=>{});}catch(_){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){awake();pull();}});
+awake();render();pull();setInterval(pull,3000);
 </script>
 </body></html>

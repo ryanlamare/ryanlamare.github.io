@@ -1,0 +1,270 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 4 · Price Wars desk</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Ryan's desk for Price Wars (29 Sep 2026, his design; the rules of the log
+   are in ../pw.js). He carries the game: at each team he taps its price,
+   and a team learns its rival's price only when he taps Reveal in front of
+   it, so no phone can get ahead of him. The desk never enforces an order of
+   visits; it only makes sure a team gives its price before it hears the
+   rival's for that week, and hears last week's before it gives this week's.
+   Every tap is kept on this phone until the poll server has it, so a
+   dropped connection loses nothing; ?room=x runs a rehearsal in
+   m4-results-x. Not linked from anywhere. */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:18px 14px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+.tag .sv{color:var(--red);font-weight:700;letter-spacing:.12em}
+h1{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.05;color:var(--red);text-transform:uppercase}
+h1 small{display:block;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.16em;color:var(--muted);margin-top:4px}
+.lbl{font-weight:600;font-size:15px;line-height:1.4;color:var(--muted)}
+button{font-family:var(--sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+button.opt{display:block;width:100%;font-weight:700;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 0;font-family:var(--display);font-size:24px}
+button.opt.sel{background:var(--ink);color:var(--paper)}
+button.go{width:100%;font-weight:700;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:16px}
+button.go.ink{background:var(--ink);border-color:var(--ink)}
+button.go:disabled{opacity:.3;cursor:default}
+.panel{border:2.5px solid var(--ink);background:var(--card);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.panel .pt{font-weight:700;font-size:16px;line-height:1.35}
+.panel .pl{font-weight:600;font-size:14px;color:var(--muted);line-height:1.4}
+.mrow{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 10px;font-weight:600;font-size:14px;align-items:center}
+.mrow .jn{font-weight:700}
+.mrow .y,.tile .mq.y{color:var(--green);font-weight:700} .mrow .n,.tile .mq.n{color:var(--red);font-weight:700} .mrow .u{color:var(--muted)}
+/* the board: one tile a team */
+.side{display:flex;flex-direction:column;gap:8px}
+.side .sn{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
+.side.a .sn{color:var(--teal)} .side.b .sn{color:var(--terracotta)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0 10px;background:var(--card);border:2.5px solid var(--rule);color:var(--ink)}
+.tile.need{border-color:var(--ink)}
+.tile .tn{font-family:var(--display);font-weight:900;font-size:var(--tn,30px);line-height:1}
+.side.a .tile .tn{color:var(--teal)} .side.b .tile .tn{color:var(--terracotta)}
+.tile .sq{width:34px;height:14px;border:1.5px solid var(--rule)}
+.tile .sq.h{background:var(--green);border-color:var(--green)} .tile .sq.c{background:var(--red);border-color:var(--red)}
+.tile .dot{position:absolute;top:6px;right:6px;width:12px;height:12px;border-radius:50%;background:var(--red)}
+.tile .mq{position:absolute;top:5px;left:7px;font-weight:700;font-size:11px}
+/* a visit */
+.team{display:flex;align-items:baseline;gap:14px}
+.team .big{font-family:var(--display);font-weight:900;font-size:72px;line-height:.9}
+.team.a .big{color:var(--teal)} .team.b .big{color:var(--terracotta)}
+.team .who{font-weight:700;font-size:15px;line-height:1.35;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button.price{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;height:150px;border:4px solid var(--ink);color:var(--paper);font-family:var(--display);font-weight:900;font-size:48px;line-height:1}
+button.price small{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+button.price.h{background:var(--green)} button.price.c{background:var(--red)}
+button.reveal{width:100%;min-height:120px;font-weight:700;font-size:20px;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--paper);background:var(--ink);border:none;padding:18px}
+.card{padding:18px;text-align:center;color:var(--paper)}
+.card.h{background:var(--green)} .card.c{background:var(--red)}
+.card .ck{font-weight:700;font-size:13px;letter-spacing:.18em;text-transform:uppercase;opacity:.9}
+.card .cp{font-family:var(--display);font-weight:900;font-size:88px;line-height:1;margin:6px 0}
+.card .cs{font-weight:600;font-size:15px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;border:2.5px solid var(--ink);padding:12px 14px;font-weight:700;font-size:17px}
+.set .sw{display:inline-block;width:18px;height:18px;margin-right:10px;vertical-align:-3px}
+.set .sw.h{background:var(--green)} .set .sw.c{background:var(--red)}
+.link{background:none;border:none;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:underline;padding:6px 0}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.nav button{font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;padding:15px 8px;background:var(--paper);border:2.5px solid var(--ink);color:var(--ink)}
+.mq2{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;color:var(--muted)}
+.mq2 button{font-weight:700;font-size:13px;padding:8px 14px;border:2px solid var(--ink);background:var(--paper)}
+.mq2 button.sel{background:var(--ink);color:var(--paper)}
+</style>
+</head><body>
+<div class="wrap" id="app"></div>
+<script src="../pw.js"></script>
+<script>
+const LK='m4-desk-'+PW.ROOM;          /* this phone's copy: the last lines seen, and the taps not yet sent */
+const SESSION=Math.random().toString(36).slice(2,10);
+let sent=0;
+let D={seen:[],pending:[]};
+try{const s=JSON.parse(localStorage.getItem(LK)||'null');if(s&&Array.isArray(s.seen))D=Object.assign(D,s);}catch(_){}
+const keep=()=>{try{localStorage.setItem(LK,JSON.stringify(D));}catch(_){}};
+let view='board', justRevealed=null, junctions=0, flushing=false, lastOk=0, flushedAt=0;
+const app=document.getElementById('app');
+const G=()=>PW.parse(D.seen.concat(D.pending));
+
+function push(line){D.pending.push(line);keep();render();flush();}
+function flush(){
+  if(flushing||!D.pending.length)return;
+  flushing=true;
+  const line=D.pending[0], v='pwd-'+SESSION+'-'+Math.floor(sent/15);
+  PW.say(v,line).then(()=>{sent++;flushedAt=Date.now();D.pending.shift();D.seen.push(line);keep();flushing=false;render();flush();})
+    .catch(()=>{flushing=false;render();setTimeout(flush,2000);});
+}
+function pull(){
+  if(document.visibilityState==='hidden')return;
+  const asked=Date.now();
+  PW.entries().then(es=>{
+    lastOk=Date.now();
+    if(asked<=flushedAt)return;   /* asked before the last tap landed: it would not have it yet */
+    const lines=es.map(e=>e.t);
+    /* a Poll Desk reset empties the room: taps from the game before it go too */
+    if(!lines.some(l=>/^pw\|g\|/.test(l))&&!D.pending.some(l=>/^pw\|g\|/.test(l)))D.pending=[];
+    D.seen=lines;keep();render();postResults();
+  }).catch(()=>{});
+}
+
+/* once all six weeks are in, the results slide gets its usual line per station */
+function postResults(){
+  const g=G();if(!PW.allIn(g,6))return;
+  const said=JSON.parse(localStorage.getItem(LK+'-r')||'{}');
+  for(let j=1;j<=g.nj;j++){
+    const A=[1,2,3,4,5,6].map(w=>PW.p(g,'a'+j,w)).join(''), B=[1,2,3,4,5,6].map(w=>PW.p(g,'b'+j,w)).join('');
+    const met=(PW.meets(g,3,j)?'y':'n')+(PW.meets(g,5,j)?'y':'n');
+    [['a',A,B],['b',B,A]].forEach(([s,m,t])=>{
+      const line=['r',s,j,m,t,met].join('|'), v='pwresult-'+s+j;   /* voter ids are 8 to 64 characters */
+      if(said[v]===line)return;
+      PW.say(v,line).then(()=>{said[v]=line;try{localStorage.setItem(LK+'-r',JSON.stringify(said));}catch(_){}}).catch(()=>{});
+    });
+  }
+}
+
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function btn(cls,html,fn){const b=el('button',cls,html);b.type='button';b.addEventListener('click',fn);return b;}
+const label=t=>t[0].toUpperCase()+t.slice(1);
+const k=n=>'£'+n+'k';
+
+function topBar(){
+  const t=el('div','tag','<span><i></i>PRICE WARS &middot; DESK'+(PW.ROOM!=='m4-results'?' &middot; '+PW.ROOM.slice(11).toUpperCase():'')+'</span>');
+  if(D.pending.length)t.appendChild(el('span','sv','Saving '+D.pending.length));
+  else if(lastOk&&Date.now()-lastOk>12000)t.appendChild(el('span','sv','Offline'));
+  return t;
+}
+function render(){
+  app.innerHTML='';app.appendChild(topBar());
+  const g=G();
+  if(!g.nj)return setup(g);
+  if(view!=='board'&&PW.teams(g).includes(view))return visit(g,view);
+  view='board';board(g);
+}
+
+function setup(g){
+  app.appendChild(el('h1','','Price Wars<small>Your desk for the game</small>'));
+  app.appendChild(el('div','lbl','How many junctions?'));
+  const grid=el('div','grid6');
+  for(let n=1;n<=6;n++)grid.appendChild(btn('opt'+(junctions===n?' sel':''),String(n),()=>{junctions=n;render();}));
+  app.appendChild(grid);
+  if(junctions){
+    const inn=[];['a','b'].forEach(s=>{for(let j=1;j<=junctions;j++)inn.push(label(s+j)+(g.joins[s+j]?' ✓':' –'));});
+    app.appendChild(el('div','lbl','Phones in: '+inn.join(' &middot; ')));
+  }
+  app.appendChild(btn('go','Start the game',()=>{if(junctions)push('pw|g|'+junctions);})).disabled=!junctions;
+}
+
+function board(g){
+  const w=PW.week(g);
+  let head, sub='';
+  if(PW.over(g)){head='Six weeks done';sub='The results slide has them';}
+  else if(w<=6&&!PW.isOpen(g,w)){head=w===5&&!g.news?'After week 4':'Before week '+w;}
+  else if(w<=6){head='Week '+w;sub=PW.tagOf(w);}
+  else {head='Week 6';sub='Tell the last teams';}
+  app.appendChild(el('h1','',head+(sub?'<small>'+sub+'</small>':'')));
+  const teams=PW.teams(g), behind=wk=>teams.filter(t=>!PW.isTold(g,t,wk)).length;
+  /* what the game needs from Ryan now */
+  if(w<=6&&PW.isOpen(g,w)){
+    const n=teams.filter(t=>PW.p(g,t,w)).length;
+    app.appendChild(el('div','lbl',n+' of '+teams.length+' prices in for week '+w+'.'));
+  }
+  if(w===5&&PW.allIn(g,4)&&!g.news){
+    const p=el('div','panel');
+    p.appendChild(el('div','pt','Tell every team its week 4, then everyone into the room for the Gazette.'));
+    const b=behind(4);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week 4.'));
+    p.appendChild(btn('go','The news is out',()=>{if(confirm('The news is out? Every phone switches to the FuelWatch rules.'))push('pw|n');}));
+    app.appendChild(p);
+  }
+  PW.GATES.forEach(gw=>{
+    if(!PW.allIn(g,gw-1)||(gw===5&&!g.news)||g.open[gw])return;
+    const p=el('div','panel');
+    if(!g.mc[gw]){
+      p.appendChild(el('div','pt','Before week '+gw+': the phones ask each team whether it wants to meet.'));
+      const b=behind(gw-1);if(b)p.appendChild(el('div','pl',b+' team'+(b===1?'':'s')+' still to hear week '+(gw-1)+'. Their phones ask once you have told them.'));
+      const m=el('div','mrow');
+      for(let j=1;j<=g.nj;j++){
+        const a=(g.ans['a'+j]||{})[gw], bb=(g.ans['b'+j]||{})[gw], s=x=>x==='y'?'<span class="y">Yes</span>':x==='n'?'<span class="n">No</span>':'<span class="u">–</span>';
+        m.appendChild(el('span','jn','J'+j));m.appendChild(el('span','','Aura '+s(a)));m.appendChild(el('span','','Buco&rsquo;s '+s(bb)));
+      }
+      p.appendChild(m);
+      p.appendChild(btn('go','Close the asks',()=>{
+        const js=[];for(let j=1;j<=g.nj;j++)if((g.ans['a'+j]||{})[gw]==='y'&&(g.ans['b'+j]||{})[gw]==='y')js.push(j);
+        push('pw|mc|'+gw+'|'+js.join(','));
+      }));
+    }else{
+      const js=g.mc[gw];
+      p.appendChild(el('div','pt',js.length?'Meeting before week '+gw+': junction'+(js.length>1?'s ':' ')+js.join(', ')+'. One person from each station, two minutes.':'No meetings before week '+gw+'.'));
+      p.appendChild(btn('go ink','Open week '+gw,()=>push('pw|o|'+gw)));
+    }
+    app.appendChild(p);
+  });
+  ['a','b'].forEach(s=>{
+    const side=el('div','side '+s);side.appendChild(el('div','sn',PW.NAME[s]));
+    const tiles=el('div','tiles');tiles.style.gridTemplateColumns='repeat('+g.nj+',1fr)';   /* one row a side, never a lone tile */
+    if(g.nj>4)tiles.style.setProperty('--tn','24px');
+    for(let j=1;j<=g.nj;j++){
+      const t=s+j, pr=w<=6?PW.p(g,t,w):null, rv=PW.nextReveal(g,t);
+      const need=rv||(w<=6&&PW.isOpen(g,w)&&!pr);
+      const tile=btn('tile'+(need?' need':''),'<span class="tn">'+label(t)+'</span><span class="sq'+(pr?' '+pr:'')+'"></span>',()=>{view=t;justRevealed=null;render();scrollTo(0,0);});
+      if(rv)tile.appendChild(el('span','dot'));
+      PW.GATES.forEach(gw=>{if(PW.asking(g,gw)){const a=(g.ans[t]||{})[gw];if(a)tile.appendChild(el('span','mq '+(a==='y'?'y':'n'),a==='y'?'MEET':'NO'));}});
+      tiles.appendChild(tile);
+    }
+    side.appendChild(tiles);app.appendChild(side);
+  });
+}
+
+function visit(g,t){
+  const r=PW.rival(t), s=t[0], j=+t.slice(1), w=PW.week(g);
+  const head=el('div','team '+s);head.appendChild(el('div','big',label(t)));
+  head.appendChild(el('div','who',PW.NAME[s]+'<br>Junction '+j+' &middot; '+k(PW.earned(g,t))+' so far'));
+  app.appendChild(head);
+  /* the reveal just tapped stays up, to read out or to turn round */
+  if(justRevealed&&justRevealed.t===t){
+    const u=justRevealed.w, rp=PW.p(g,r,u), mine=PW.p(g,t,u);
+    const c=el('div','card '+rp);
+    c.appendChild(el('div','ck','Week '+u+' &middot; '+PW.SHORT[r[0]]+' posted'));
+    c.appendChild(el('div','cp',PW.PRICE[rp]));
+    c.appendChild(el('div','cs','You posted '+PW.PRICE[mine]+' and earned '+k(PW.rev(u,mine,rp))));
+    app.appendChild(c);
+  }
+  const u=PW.nextReveal(g,t);
+  if(u){
+    app.appendChild(btn('reveal','Reveal to '+label(t)+'<br>week '+u,()=>{justRevealed={t,w:u};push('pw|t|'+t+'|'+u);}));
+  }else if(w<=6&&!PW.p(g,t,w)){
+    if(PW.isOpen(g,w)){
+      app.appendChild(el('div','lbl','Week '+w+(PW.tagOf(w)?' &middot; '+PW.tagOf(w).toLowerCase():'')+': '+label(t)+'&rsquo;s price'));
+      const row=el('div','row2');
+      ['h','c'].forEach(p=>row.appendChild(btn('price '+p,'<small>'+label(t)+'</small>'+PW.PRICE[p],()=>{justRevealed=null;push('pw|p|'+t+'|'+w+'|'+p);})));
+      app.appendChild(row);
+    }else app.appendChild(el('div','lbl','Week '+w+' opens after '+(w===5&&!g.news?'the news and ':'')+'the meetings.'));
+  }
+  /* this week's price, once given; it can change until the rival has heard it */
+  const cw=w<=6&&PW.p(g,t,w)?w:(w>1&&PW.p(g,t,w-1)&&!PW.isTold(g,r,w-1)?w-1:0);
+  if(cw&&PW.p(g,t,cw)){
+    const p=PW.p(g,t,cw), set=el('div','set','<span><span class="sw '+p+'"></span>Week '+cw+': '+PW.PRICE[p]+'</span>');
+    if(!PW.isTold(g,r,cw))set.appendChild(btn('link','Change to '+PW.PRICE[p==='h'?'c':'h'],()=>{justRevealed=null;push('pw|p|'+t+'|'+cw+'|'+(p==='h'?'c':'h'));}));
+    app.appendChild(set);
+  }
+  /* the meeting ask, for a team whose phone can't */
+  PW.GATES.forEach(gw=>{
+    if(!PW.asking(g,gw))return;
+    const a=(g.ans[t]||{})[gw], m=el('div','mq2','<span>Meet before week '+gw+'?</span>');
+    [['y','Yes'],['n','No']].forEach(([x,l])=>m.appendChild(btn(a===x?'sel':'',l,()=>push('pw|q|'+t+'|'+gw+'|'+x))));
+    app.appendChild(m);
+  });
+  const nav=el('div','nav');
+  nav.appendChild(btn('','&lsaquo; All teams',()=>{view='board';justRevealed=null;render();scrollTo(0,0);}));
+  const nx=j<g.nj?s+(j+1):null;
+  nav.appendChild(nx?btn('','Next: '+label(nx)+' &rsaquo;',()=>{view=nx;justRevealed=null;render();scrollTo(0,0);}):btn('','Board &rsaquo;',()=>{view='board';justRevealed=null;render();scrollTo(0,0);}));
+  app.appendChild(nav);
+}
+
+let wl=null;
+function awake(){try{if('wakeLock' in navigator&&!wl)navigator.wakeLock.request('screen').then(l=>{wl=l;l.addEventListener('release',()=>{wl=null;});}).catch(()=>{});}catch(_){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){awake();pull();}});
+awake();render();pull();flush();setInterval(pull,2500);
+</script>
+</body></html>
