@@ -53,6 +53,7 @@ table.pm th.ax.a{color:var(--teal)} table.pm th.ax.b{color:var(--terracotta)}
    to cooperate) */
 table.pm td.c{border:2.5px solid var(--ink);background:var(--card);font-weight:700;font-size:28px;width:120px;height:84px}
 table.pm td.c .a{color:var(--teal)} table.pm td.c .b{color:var(--terracotta)}
+table.pm td.c.hit{outline:5px solid var(--red);outline-offset:-5px}   /* where they landed this week (his ask) */
 table.pm td.c .s{margin:0 .25em}
 .cap{font-weight:500;font-size:13px;color:var(--muted);text-align:center;margin-top:6px}
 .mtag{display:inline-block;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);background:var(--red);padding:5px 10px}
@@ -85,7 +86,7 @@ button.nm.sel{background:var(--ink);color:var(--paper)}
 </head><body>
 <div class="wrap" id="app"></div>
 <script src="/go/names.js"></script>
-<script src="../pw.js?v=2926"></script>   <!-- bump v with every change to pw.js: Pages lets a browser keep a file 10 minutes -->
+<script src="../pw.js?v=2927"></script>   <!-- bump v with every change to pw.js: Pages lets a browser keep a file 10 minutes -->
 <script>
 const KEY='m4-team-v2-'+PW.ROOM;
 let S={team:null,joined:false,names:[]};
@@ -116,6 +117,7 @@ function pull(){
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 function btn(cls,html,fn){const b=el('button',cls,html);b.type='button';b.addEventListener('click',fn);return b;}
 const k=n=>'£'+n+'k';
+const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
 function header(g,t){
   const top=el('div','top');
@@ -123,9 +125,9 @@ function header(g,t){
   top.appendChild(el('div','total','Revenue<b>'+k(PW.earned(g,t))+'</b>'));
   return top;
 }
-function matrix(w,t){
+function matrix(w,t,hit){
   const box=el('div');
-  box.appendChild(el('div','',PW.matrixHTML(w,t[0])));
+  box.appendChild(el('div','',PW.matrixHTML(w,t[0],hit)));
   box.appendChild(el('div','cap','In thousands of pounds. Aura&rsquo;s revenue first, Buco&rsquo;s second.'));
   return box;
 }
@@ -173,10 +175,11 @@ function render(){
     app.appendChild(record(g,t,0));
     return;
   }
-  if(st==='m3'||st==='m5'){   /* the meeting round: Ryan comes to ask; the phone shows what they are deciding about */
-    const w=+st[1];
+  if(st==='m3'||st==='m5'||st==='mm3'||st==='mm5'){   /* the meeting round, then the meeting itself; the phone shows what they are deciding about */
+    const w=+st.slice(-1), j=+t.slice(1);
     app.appendChild(el('h1','','Before week '+w));
-    app.appendChild(el('div','lbl','Decide whether you want to meet the other station, and who would go.'));
+    if(st[1]!=='m')app.appendChild(el('div','lbl','Decide whether you want to meet the other station, and who would go.'));
+    else app.appendChild(el('div','lbl',PW.meets(g,w,j)?'Your meeting is on: <b>'+esc(PW.rep(g,t,w)||'your rep')+'</b> is meeting <b>'+esc(PW.rep(g,r,w)||'their rep')+'</b> from '+PW.SHORT[r[0]]+'.':'No meeting this time.'));
     app.appendChild(el('div','','<span class="mtag">'+(w===3?'Week 3 pays double':'Weeks 5 and 6: FuelWatch rules')+'</span>'));
     app.appendChild(matrix(w,t));
     app.appendChild(record(g,t,w));
@@ -186,7 +189,7 @@ function render(){
   app.appendChild(el('h1','','Week '+w+(tag?'<span class="wt">'+tag+'</span>':'')));
   const mine=PW.p(g,t,w), theirs=PW.isTold(g,t,w)?PW.p(g,r,w):null;
   if(!mine)app.appendChild(el('div','lbl','Decide your price and tell Ryan when he comes to your table.'));
-  app.appendChild(matrix(w,t));
+  app.appendChild(matrix(w,t,theirs?(t[0]==='a'?PW.cell(mine,theirs):PW.cell(theirs,mine)):-1));
   /* this week only: their price once Ryan has told them */
   const sb=el('div','status');
   sb.appendChild(el('div','chip'+(mine?' '+mine:''),'<div class="ck">Your price</div><div class="cv">'+(mine?PW.PRICE[mine]:'&ndash;')+'</div>'));

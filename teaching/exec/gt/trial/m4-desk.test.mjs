@@ -152,6 +152,8 @@ try {
   check((await h1('b1')).startsWith('Week 1'), 'after Told B1, B1\'s phone STAYS on week 1', await h1('b1'));
   check(await theirChip('b1') === '£1.50', 'and shows Theirs £1.50 for week 1', await theirChip('b1'));
   check((await phone.b1.ev(`document.body.innerText`)).includes('You earned £18k this week.'), 'and what B1 earned this week');
+  check((await phone.b1.ev(`(document.querySelector('table.pm td.c.hit')||{}).textContent`)) === '2,18', 'and a red box on the cell they landed in (Aura £1.50, Buco\'s £1.40)', await phone.b1.ev(`(document.querySelector('table.pm td.c.hit')||{}).textContent`));
+  check(await phone.a1.ev(`!document.querySelector('table.pm td.c.hit')`), 'A1, not yet told, has no box');
   check(await theirChip('a1') === '–', 'A1\'s phone still shows nothing of B1\'s price (Ryan has not told A1)', await theirChip('a1'));
   await phone.b1.shot('phone-2-b1-told-week1.png');
   await price('b2', 'h'); await told('b2', 1);
@@ -196,7 +198,7 @@ try {
   check(await desk.ev(`[...document.querySelectorAll('button.nm')].map(b=>b.textContent).join(',')`) === 'Ana,Dev,Someone else', 'Who would go for A1? offers only A1\'s own names', await desk.ev(`[...document.querySelectorAll('button.nm')].map(b=>b.textContent).join(',')`));
   await meet('a1', 'Yes', 'Ana');
   await desk.shot('desk-7b-a1-rep.png');
-  check(await desk.ev(`[...document.querySelectorAll('button.go')].some(b=>b.textContent.includes('Move A1 to week 3'))`), 'once A1 has answered, the desk offers Move A1 to week 3');
+  check(!(await desk.ev(`[...document.querySelectorAll('button.go')].some(b=>b.textContent.includes('Move A1 to week 3'))`)), 'answering does not move A1 on: the reps meet first');
   await meet('b1', 'Yes', 'Ben'); await meet('a2', 'Yes', 'Zoe'); await meet('b2', 'No');
   await tile('a1');
   check((await desk.ev(`document.querySelector('.set').textContent`)) === 'Tell A1: you’re meeting Ben from B1.', 'at A1 the desk says what to tell them', await desk.ev(`document.querySelector('.set').textContent`));
@@ -208,7 +210,15 @@ try {
   await desk.shot('desk-8-meetings.png');
   await tile('a1');
   check(await desk.ev(`!document.querySelector('button.price')`), 'no week 3 prices before Ryan opens the week');
-  await move('Move everyone to week 3');
+  await move('Send the reps to meet');
+  check((await phone.a1.ev(`document.body.innerText`)).includes('Your meeting is on: Ana is meeting Ben from Buco’s.'), 'A1\'s phone: your meeting is on, Ana is meeting Ben', await phone.a1.ev(`document.querySelector('.lbl').textContent`));
+  check((await phone.a2.ev(`document.body.innerText`)).includes('No meeting this time.'), 'A2\'s phone: no meeting this time');
+  await board();
+  check((await desk.ev(`document.querySelector('h1').textContent`)).includes('The reps are meeting'), 'the board: the reps are meeting');
+  await desk.shot('desk-8b-reps-meeting.png'); await phone.a1.shot('phone-4b-meeting-on.png');
+  await tile('a1');
+  check(await desk.ev(`[...document.querySelectorAll('button.go')].some(b=>b.textContent.includes('Move A1 to week 3'))`), 'during the meeting, A1 can be moved on at its table once its rep is back');
+  await move('The reps are back: move everyone to week 3');
   check((await h1('a1')).includes('Week 3') && (await h1('a1')).includes('Pays double'), 'week 3 opens, and the phones say it pays double', await h1('a1'));
   check(await phone.a1.ev(`[...document.querySelectorAll('table.pm td.c')].map(c=>c.textContent).join(' ')`) === '24,24 4,36 36,4 18,18', 'the week 3 matrix is doubled');
 
@@ -240,7 +250,8 @@ try {
   await meet('a1', 'Yes', 'Dev'); await meet('b1', 'Yes', 'Ben');
   await board();
   check((await desk.ev(`document.querySelectorAll('.panel .pt')[1].textContent`)) === 'Junction 1: meeting, Dev (A1) and Ben (B1)Junction 2: no meeting', 'the round is settled without asking B2', await desk.ev(`document.querySelectorAll('.panel .pt')[1]?.textContent`));
-  await move('Move everyone to week 5');
+  await move('Send the reps to meet');
+  await move('The reps are back: move everyone to week 5');
   check((await h1('a1')).includes('Week 5') && (await h1('a1')).includes('FuelWatch'), 'week 5 opens under the FuelWatch rules', await h1('a1'));
   await phone.b2.shot('phone-6-week5.png');
   /* weeks 5 and 6: taking turns at junction 1, both cutting at junction 2 */

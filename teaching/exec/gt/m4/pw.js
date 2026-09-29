@@ -23,7 +23,8 @@
    and every phone rebuild the same game from the same lines:
      pw|g|N           the game starts, with N junctions, in week 1 (desk)
      pw|st|w2         Ryan moves everyone on: w1–w6, m3 and m5 (the meeting
-                      rounds), stop (after week 4, for the news), end
+                      rounds: who wants to meet, and who would go), mm3 and mm5
+                      (the reps are meeting), stop (after week 4, for the news), end
      pw|ts|a3|w2      Ryan moves one team on
      pw|p|a3|2|h      Aura at junction 3 posted £1.50 in week 2 (c = £1.40)
      pw|t|a3|2        Aura at junction 3 has been told its rival's week 2
@@ -40,12 +41,15 @@ PW.NAME={a:'Aura Fuels',b:'Buco’s Petrol'};
 PW.SHORT={a:'Aura',b:'Buco’s'};
 PW.PRICE={h:'£1.50',c:'£1.40'};
 PW.GATES=[3,5];   /* a meeting round comes before each of these weeks */
-PW.STAGES=['w1','w2','m3','w3','w4','stop','m5','w5','w6','end'];
+/* the meeting takes its own time (his ask, 29 Sep): the round (answers and reps),
+   then the reps meet, then the week */
+PW.STAGES=['w1','w2','m3','mm3','w3','w4','stop','m5','mm5','w5','w6','end'];
 PW.idx=s=>PW.STAGES.indexOf(s);
-/* what Ryan's buttons do from each stage (the board's moves everyone) */
-PW.NEXT={w1:['w2','Move everyone to week 2'],w2:['m3','Move everyone to the meeting round'],m3:['w3','Open week 3'],
-  w3:['w4','Move everyone to week 4'],w4:['stop','Stop everyone for the news'],stop:['m5','The news is out'],
-  m5:['w5','Open week 5'],w5:['w6','Move everyone to week 6'],w6:['end','End the game']};
+/* what the board's button does from each stage: it moves everyone */
+PW.NEXT={w1:['w2','Move everyone to week 2'],w2:['m3','Move everyone to the meeting round'],m3:['mm3','Send the reps to meet'],
+  mm3:['w3','The reps are back: move everyone to week 3'],w3:['w4','Move everyone to week 4'],w4:['stop','Stop everyone for the news'],
+  stop:['m5','The news is out'],m5:['mm5','Send the reps to meet'],mm5:['w5','The reps are back: move everyone to week 5'],
+  w5:['w6','Move everyone to week 6'],w6:['end','End the game']};
 
 /* the deck's scoring: an ordinary week 12/12, 18 against 2, 9/9; week 3 doubles;
    from week 5 the FuelWatch rules (undercutting alone pays 72, week 6 no longer doubles) */
@@ -90,6 +94,7 @@ PW.weekOf=(G,t)=>{const s=PW.stageOf(G,t);return /^w[1-6]$/.test(s)?+s[1]:0;};
 PW.minStage=G=>PW.teams(G).reduce((m,t)=>{const s=PW.stageOf(G,t);return m===null||PW.idx(s)<PW.idx(m)?s:m;},null)||G.stage||'w1';
 PW.week=G=>{const s=PW.minStage(G);return /^w[1-6]$/.test(s)?+s[1]:0;};
 PW.inRound=(G,t,g)=>PW.stageOf(G,t)==='m'+g;
+PW.meeting=(G,t,g)=>PW.stageOf(G,t)==='mm'+g;
 PW.meets=(G,g,j)=>(G.ans['a'+j]||{})[g]==='y'&&(G.ans['b'+j]||{})[g]==='y';
 PW.ans=(G,t,g)=>(G.ans[t]||{})[g]||null;
 PW.rep=(G,t,g)=>(G.rep[t]||{})[g]||'';
@@ -107,12 +112,14 @@ PW.entries=()=>fetch(PW.API+'/p/'+PW.ROOM+'/entries',{cache:'no-store'}).then(r=
 PW.say=(v,t)=>fetch(PW.API+'/p/'+PW.ROOM+'/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v,t})}).then(r=>{if(!r.ok)throw r.status;return true;});
 
 /* the matrix as HTML, this team's numbers in its own colour */
-PW.matrixHTML=function(w,mine){
-  const M=PW.matrix(w), c=(i)=>'<td class="c"><span class="a'+(mine==='a'?' me':'')+'">'+M[i][0]+'</span><span class="s">,</span><span class="b'+(mine==='b'?' me':'')+'">'+M[i][1]+'</span></td>';
+/* hit: the cell this team landed in this week (0 to 3), boxed in red */
+PW.matrixHTML=function(w,mine,hit){
+  const M=PW.matrix(w), c=(i)=>'<td class="c'+(i===hit?' hit':'')+'"><span class="a'+(mine==='a'?' me':'')+'">'+M[i][0]+'</span><span class="s">,</span><span class="b'+(mine==='b'?' me':'')+'">'+M[i][1]+'</span></td>';
   return '<table class="pm"><tr><th></th><th></th><th class="ax b" colspan="2">Buco&rsquo;s</th></tr>'+
     '<tr><th></th><th></th><th>&pound;1.50</th><th>&pound;1.40</th></tr>'+
     '<tr><th class="ax a" rowspan="2">Aura</th><th>&pound;1.50</th>'+c(0)+c(1)+'</tr>'+
     '<tr><th>&pound;1.40</th>'+c(2)+c(3)+'</tr></table>';
 };
+PW.cell=(a,b)=>(a==='c'?2:0)+(b==='c'?1:0);   /* Aura's price picks the row, Buco's the column */
 window.PW=PW;
 })();
