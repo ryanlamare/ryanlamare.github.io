@@ -81,7 +81,7 @@ try {
   /* six phones join, the deck deals and opens round 1 */
   for (const n of BOTS) await say(n + '|j', 'bot-' + n.toLowerCase() + '-0000');
   await deck.nav(SITE + '#6'); await sleep(2800);
-  for (let i = 0; i < 6; i++) await deck.key('ArrowRight');
+  for (let i = 0; i < 4; i++) await deck.key('ArrowRight');   /* four since 30 Sep 2026: the rules are five lines */
   await sleep(2500);
   let L = await lines();
   check(L.some(l => /^=deal\|/.test(l)) && L.includes('=open|1'), 'the last step of the rules slide deals and opens round 1', L.filter(l => l[0] === '='));

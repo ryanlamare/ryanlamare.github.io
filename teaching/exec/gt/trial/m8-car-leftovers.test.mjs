@@ -72,7 +72,7 @@ try {
   /* a click-through again, still nobody in the market: the last step of slide 6 posts nothing */
   const deck = await page(B + '#6', 1280, 720);
   await sleep(3000);
-  for (let i = 0; i < 6; i++) await deck.key('ArrowRight');
+  for (let i = 0; i < 4; i++) await deck.key('ArrowRight');   /* four since 30 Sep 2026: the rules are five lines */
   await sleep(3500);
   check((await lines()).length === 7, 'with nobody in the market, the last step of slide 6 deals and opens nothing', await lines());
   const P = await deck.ev(`(()=>{const r=CAR.parse(${JSON.stringify(await lines())});return {deal:r.deal,open:r.open,round:r.round}})()`);
