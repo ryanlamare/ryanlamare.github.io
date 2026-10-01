@@ -73,6 +73,7 @@ let nowSent='';
 function tellNow(){
   const q=slides[cur].querySelector('img[src*="qr-"]');
   if(!q||typeof POLL_API==='undefined'||/[?&]edit\b/.test(location.search))return;
+  if(document.documentElement.classList.contains('shortrun')&&q.closest('[data-short-hide]'))return;   /* a QR the short run hides is not on the screen */
   const path=new URL(q.getAttribute('src'),location.href).pathname;
   if(path===nowSent)return;nowSent=path;
   const d=new Date(),day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -89,6 +90,7 @@ function tellNow(){
    file, and the full deck never shows it: m4's plan for day two sits at the end
    of m4, so no m4 slide changes number (tests, the Gazette's back link). */
 const shortRun=new URLSearchParams(location.search).has('short');
+document.documentElement.classList.toggle('shortrun',shortRun);   /* [data-short-hide] parts of a slide hide in the short run (deck.css) */
 const mark=i=>slides[i].dataset.short||'';
 const all=[...slides.keys()];
 const order=shortRun?all.filter(i=>mark(i)==='lead').concat(all.filter(i=>mark(i)!=='lead'&&mark(i)!=='out'))
