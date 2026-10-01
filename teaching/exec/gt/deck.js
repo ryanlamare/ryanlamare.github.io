@@ -31,6 +31,7 @@ window.fitLanes=function(lanes){
 (function(){
 const slides=[...document.querySelectorAll('.slide')];
 const ticksEl=document.querySelector('.ticks');
+const ticks=[...ticksEl.children];   /* by slide number, so the short run can reorder them on the bar */
 const built=slides.length;
 let cur=0, step=0;
 /* flex mode is gone (25 Sep 2026): F used to skip the slides marked "flex", and
@@ -59,7 +60,7 @@ let armed=false;
    without autoplay, so coming back finds it paused at the start. */
 function stopClips(){slides.forEach((s,i)=>{if(i!==cur)s.querySelectorAll('iframe[src*="autoplay=1"]').forEach(f=>{f.src=f.src.replace('autoplay=1','autoplay=0');});});}
 function render(){slides.forEach((s,i)=>s.classList.toggle('active',i===cur));stopClips();
-  [...ticksEl.children].forEach((t,i)=>t.classList.toggle('on',i===cur));
+  ticks.forEach((t,i)=>t.classList.toggle('on',i===cur));
   ticksEl.classList.toggle('lightticks',slides[cur].classList.contains('cover'));applySteps();
   if(armed&&location.hash!=='#'+cur){try{history.replaceState(null,'','#'+cur);}catch(_){}}
   tellNow();}
@@ -84,15 +85,24 @@ function tellNow(){
    It is a link he opens on purpose, never a key and never remembered: the same
    deck opened without ?short shows every slide, which is what the flex-mode
    trap above was missing. A #N jump still lands on any slide, marked or not. */
+/* A slide marked data-short="lead" opens the short run wherever it sits in the
+   file, and the full deck never shows it: m4's plan for day two sits at the end
+   of m4, so no m4 slide changes number (tests, the Gazette's back link). */
 const shortRun=new URLSearchParams(location.search).has('short');
-const out=i=>shortRun&&slides[i].dataset.short==='out';
-function kept(i,d){for(let j=i+d;j>=0&&j<built;j+=d){if(!out(j))return j;}return -1;}
-if(shortRun){[...ticksEl.children].forEach((t,i)=>{if(out(i))t.style.display='none';});
-  if(out(0)){const j=kept(0,1);if(j>0){slides[0].classList.remove('active');cur=j;}}}
+const mark=i=>slides[i].dataset.short||'';
+const all=[...slides.keys()];
+const order=shortRun?all.filter(i=>mark(i)==='lead').concat(all.filter(i=>mark(i)!=='lead'&&mark(i)!=='out'))
+                    :all.filter(i=>mark(i)!=='lead');
+if(order.length!==built){ticks.forEach(t=>t.style.display='none');
+  order.forEach(i=>{if(ticks[i]){ticks[i].style.display='';ticksEl.appendChild(ticks[i]);}});}
+if(order[0]!==0){slides[0].classList.remove('active');cur=order[0];}
+/* the next slide of the run; after a #N jump to a slide outside it, the nearest one in that direction */
+function along(d){const p=order.indexOf(cur);if(p>=0)return order[p+d];
+  return d>0?order.find(i=>i>cur):[...order].reverse().find(i=>i<cur);}
 function next(){if(step<maxStep(cur)){step++;applySteps();return;}
-  const j=kept(cur,1);if(j>=0){cur=j;step=0;render();}}
+  const j=along(1);if(j!==undefined){cur=j;step=0;render();}}
 function prev(){if(step>0){step--;applySteps();return;}
-  const j=kept(cur,-1);if(j>=0){cur=j;step=maxStep(cur);render();}}
+  const j=along(-1);if(j!==undefined){cur=j;step=maxStep(cur);render();}}
 addEventListener('keydown',e=>{
   const t=document.activeElement;
   const inControl=t&&(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='BUTTON'||t.tagName==='A'||t.isContentEditable);
