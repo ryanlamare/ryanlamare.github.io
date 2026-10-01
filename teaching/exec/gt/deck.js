@@ -87,14 +87,19 @@ function tellNow(){
    deck opened without ?short shows every slide, which is what the flex-mode
    trap above was missing. A #N jump still lands on any slide, marked or not. */
 /* A slide marked data-short="lead" opens the short run wherever it sits in the
-   file, and the full deck never shows it: m4's plan for day two sits at the end
-   of m4, so no m4 slide changes number (tests, the Gazette's back link). */
+   file, and one marked data-short-after="N" runs straight after slide N; the
+   full deck never shows either. So a slide added for day two sits at the end
+   of its deck's file and no slide changes number (tests, the Gazette's back
+   link): m4's plan for the day, m8's last question and its close. */
 const shortRun=new URLSearchParams(location.search).has('short');
 document.documentElement.classList.toggle('shortrun',shortRun);   /* [data-short-hide] parts of a slide hide in the short run (deck.css) */
 const mark=i=>slides[i].dataset.short||'';
 const all=[...slides.keys()];
-const order=shortRun?all.filter(i=>mark(i)==='lead').concat(all.filter(i=>mark(i)!=='lead'&&mark(i)!=='out'))
-                    :all.filter(i=>mark(i)!=='lead');
+const after=i=>slides[i].dataset.shortAfter;
+const extra=i=>mark(i)==='lead'||after(i)!==undefined;
+const order=shortRun?all.filter(i=>mark(i)==='lead').concat(all.filter(i=>!extra(i)&&mark(i)!=='out'))
+                    :all.filter(i=>!extra(i));
+if(shortRun)all.filter(i=>after(i)!==undefined).forEach(i=>{const p=order.indexOf(+after(i));order.splice(p<0?order.length:p+1,0,i);});
 if(order.length!==built){ticks.forEach(t=>t.style.display='none');
   order.forEach(i=>{if(ticks[i]){ticks[i].style.display='';ticksEl.appendChild(ticks[i]);}});}
 if(order[0]!==0){slides[0].classList.remove('active');cur=order[0];}
