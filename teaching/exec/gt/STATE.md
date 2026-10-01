@@ -4,6 +4,15 @@ Written 8 Sep 2026 as a handover between machines. The decks are the source of
 truth; this page is the short version of what is built, what is open, and how
 to pick the work up on another computer.
 
+## 1 Oct 2026, evening of day one: day two rerun (BUILT for his look, live)
+
+- **Why (his read of day one):** no your-world closer happened at all, and Price Wars left fifteen minutes for PDs.
+- **Day two now:** the rest of m4 (overcoming PDs, quickly), m5, m6, lunch, then **In your world** (`world/`, a new six-slide deck) as an interlude: part one (find a game, *Which game are you playing?* checklist, report back), m7 stripped back, part two (change your game with a strategic move, another table plays the other side). m8 is in reserve, stripped back, and the close (m8 slides 24–27) ends the day either way.
+- **The running order is on the ALL MODULES page** (`index.html`), one link per block.
+- **Short runs:** `?short` on a deck presses past slides marked `data-short="out"` and hides their ticks (deck.js). A link, never a key, nothing remembered; the same deck without `?short` shows every slide. Marked out: m4 1–14, 22, 27 (the short run starts at 15); m5 28; m6 20 (the closers, which the afternoon replaces); m7 3–5, 10–12, 14–15, 18–20, 29–30 (split or steal is the one game kept); m8 1, 4, 6–12, 14, 17–18, 21–23 (no car game, no hunt).
+- **m5 slide 1** is the new plan: 4 lit first; one press hands the light to 5–6 (the ALL MODULES link opens it at #1.1).
+- In-your-world wording: slide 1 is m1's closer with his chat line ("can't get what you want without someone else"), slide 4 is m7's closer, slide 2 takes one line from each of m2–m6. Bands say brainstorm together (his: these are type-A people who won't sit quietly).
+
 ## 29 Sep 2026: the final audit, and what is still open
 
 - **Ten read-only auditors** (one per module, one for the shared pages, one for the two days as a course) found nothing broken. Every slide presses through clean, every QR and poll matches, every test passes, and Price Wars and chicken were played in full against a local Worker. No standard topic a first-timer needs is missing.

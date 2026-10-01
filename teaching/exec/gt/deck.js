@@ -78,10 +78,21 @@ function tellNow(){
   fetch(POLL_API+'/p/gt-now/say',{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({t:day+'|'+path,v:'deck-'+Math.random().toString(36).slice(2,12)})}).catch(()=>{});
 }
+/* the short run (1 Oct 2026, the evening of day one): opened with ?short in the
+   address, a deck presses past every slide marked data-short="out" and hides
+   their ticks, so day two's trimmed modules run without a page of key presses.
+   It is a link he opens on purpose, never a key and never remembered: the same
+   deck opened without ?short shows every slide, which is what the flex-mode
+   trap above was missing. A #N jump still lands on any slide, marked or not. */
+const shortRun=new URLSearchParams(location.search).has('short');
+const out=i=>shortRun&&slides[i].dataset.short==='out';
+function kept(i,d){for(let j=i+d;j>=0&&j<built;j+=d){if(!out(j))return j;}return -1;}
+if(shortRun){[...ticksEl.children].forEach((t,i)=>{if(out(i))t.style.display='none';});
+  if(out(0)){const j=kept(0,1);if(j>0){slides[0].classList.remove('active');cur=j;}}}
 function next(){if(step<maxStep(cur)){step++;applySteps();return;}
-  if(cur+1<built){cur++;step=0;render();}}
+  const j=kept(cur,1);if(j>=0){cur=j;step=0;render();}}
 function prev(){if(step>0){step--;applySteps();return;}
-  if(cur>0){cur--;step=maxStep(cur);render();}}
+  const j=kept(cur,-1);if(j>=0){cur=j;step=maxStep(cur);render();}}
 addEventListener('keydown',e=>{
   const t=document.activeElement;
   const inControl=t&&(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='BUTTON'||t.tagName==='A'||t.isContentEditable);
