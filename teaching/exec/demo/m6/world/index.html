@@ -1,0 +1,188 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/demo.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Unpredictability in your world</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 6's closing exercise: one phone each, one real situation from
+   their world. Ryan's four questions (17 Sep): where can it strategically
+   benefit you to be inconsistent; who is the other player in this game;
+   what happens if they can always predict your moves; is there any way
+   mixing might backfire here. One send, ADD YOUR RESPONSE TO THE MIX (his
+   words). The deck drops one ball per phone into a bingo cage and draws
+   them at random; the ball's call and colour come from calls.js, which the
+   deck runs too, so this page can show its owner which ball is theirs. The
+   room is never told: the deck opens a drawn ball's answers without a name.
+   Once the deck's first draw has dealt, the locked screen also holds this
+   phone's bingo card, stamped as balls are drawn (unscored, for fun).
+
+   Wire: two lines into room m6-world, "k‖…" (the Worker caps a line at
+   200 characters and a phone at 15 lines a room, so two lines a send
+   leaves room for a start-over):
+     a‖name‖where‖the other player
+     b‖if they predict you‖the backfire
+   The deck groups the room's lines by phone; the latest a and b per
+   phone win, so a re-send corrects rather than duplicates. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:22px;line-height:1.25;color:var(--red)}
+.hint{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:15px}
+.me .who b{color:var(--red)}
+.me button,.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0}
+.choices{display:flex;flex-direction:column;gap:11px}
+button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;cursor:pointer}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1 1 0;width:0;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);padding:12px 14px;outline:none;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:0 18px;cursor:pointer}
+/* the cards */
+.card{border:3px solid var(--side,var(--ink));border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.card.where{--side:var(--red)} .card.who{--side:var(--terracotta)} .card.then{--side:var(--maroon)} .card.risk{--side:var(--ink)}
+.card .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--side);padding-bottom:7px;border-bottom:2px solid var(--side)}
+.card .pq{font-weight:600;font-size:16px;line-height:1.35}
+.card input[type=text]{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;width:100%;outline:none}
+.card input[type=text]:focus{border-bottom-color:var(--side)}
+.card input:disabled{opacity:.45}
+.card ::placeholder{color:var(--muted);font-weight:400;opacity:.8}
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+/* locked: the ball */
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.bigcard #myball svg{width:104px;height:104px;display:block}
+.bigcard .head{font-weight:700;font-size:22px}
+.bigcard .head.won{font-family:var(--display);font-weight:900;font-size:44px;color:var(--red);line-height:1}
+.bcard{display:grid;gap:8px;width:100%;max-width:300px}
+.bcard:empty{display:none}
+.bcard .cell{background:var(--paper-soft);border:2px solid var(--ink);padding:6px}
+.bcard .cell svg{width:100%;height:auto}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>MODULE 6 · YOUR WORLD</div>
+  <h1 id="q">Unpredictability in your world</h1>
+  <div class="hint" id="hint"></div>
+  <div id="app"></div>
+  <div class="status" id="status" aria-live="polite"></div>
+</div>
+<script src="/teaching/exec/demo/go/names.js"></script>
+<script src="/teaching/exec/demo/m6/world/calls.js"></script>
+<script>
+/* ?room=<x> plays into a rehearsal room (m6-world-<x>) */
+const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
+const API='https://gt-poll.rlamare.workers.dev', ROOM='m6-world'+SUF, LOCKKEY='gt-m6world-locked'+SUF;
+const WHEREMAX=80, WHOMAX=50, THENMAX=90, BACKMAX=90;
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), hint=document.getElementById('hint'), st=document.getElementById('status');
+const clean=n=>String(n||'').trim().replace(/[|‖]/g,'/').replace(/\s+/g,' ');
+const cleanName=n=>clean(n).slice(0,30);
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/teaching/exec/demo/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+function say(line){
+  return fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+let locked=null;
+try{locked=JSON.parse(localStorage.getItem(LOCKKEY));}catch(_){}
+function render(){
+  st.textContent='';app.innerHTML='';hint.textContent='';
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean:cleanName}));return;}
+  q.textContent='Unpredictability in your world';
+  if(locked){renderLocked();return;}
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const c1=card('where','THE SITUATION','Where can it strategically benefit you to be inconsistent?');const where=input(WHEREMAX,'e.g. which maintenance shops we audit each quarter…');c1.appendChild(where);
+  const c2=card('who','THE OTHER PLAYER','Who is the other player in this game?');const who=input(WHOMAX,'e.g. the shops…');c2.appendChild(who);
+  const c3=card('then','IF THEY PREDICT YOU','What happens if they can always predict your moves?');const then=input(THENMAX,'e.g. the paperwork is perfect the week we arrive…');c3.appendChild(then);
+  const c4=card('risk','THE BACKFIRE','Is there any way mixing might backfire here?');const back=input(BACKMAX,'e.g. we skip a shop two years running and miss a real problem…');c4.appendChild(back);
+  const lk=btn('ADD YOUR RESPONSE TO THE MIX','lock');lk.disabled=true;
+  const all=[where,who,then,back];
+  function sync(){lk.disabled=!all.every(i=>clean(i.value));}
+  all.forEach(i=>i.addEventListener('input',sync));
+  lk.addEventListener('click',()=>{
+    const W=clean(where.value),P=clean(who.value),T=clean(then.value),B=clean(back.value);
+    if(!W||!P||!T||!B)return;
+    lk.disabled=true;all.forEach(i=>i.disabled=true);st.textContent='Sending…';
+    say('a‖'+name+'‖'+W+'‖'+P).then(()=>say('b‖'+T+'‖'+B))
+      .then(()=>{locked={name,where:W,who:P,then:T,back:B,at:Date.now()};try{localStorage.setItem(LOCKKEY,JSON.stringify(locked));}catch(_){}render();})
+      .catch(cd=>{st.textContent=failMsg(cd);lk.disabled=false;all.forEach(i=>i.disabled=false);});
+  });
+  [c1,c2,c3,c4].forEach(c=>app.appendChild(c));app.appendChild(lk);
+  where.focus();
+}
+/* locked: my ball, and once the deck has dealt, my bingo card. The card is
+   state only: coloured balls, a red stamp on each one drawn, BINGO! on a
+   line. Nothing to tap. Deck and phone read the same lines (calls.js). */
+function ballSvg(call,opts){
+  const l=call[0], n=call.slice(1), col=M6_CALL_COLOUR[l]||'var(--ink)', o=opts||{};
+  return '<svg viewBox="-24 -24 48 48" aria-label="'+l+' '+n+(o.hit?', drawn':'')+'"><circle r="20" fill="'+col+'" stroke="var(--ink)" stroke-width="'+(o.own?4:2.6)+'"/><circle r="12.5" fill="var(--paper)"/><text y="-3.2" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="7.5" fill="var(--ink)">'+l+'</text><text y="8" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="12" fill="var(--ink)">'+n+'</text><ellipse cx="-9" cy="-11" rx="4.5" ry="2.6" transform="rotate(-40 -9 -11)" fill="#fff" opacity=".55"/>'+(o.hit?'<circle r="21" fill="var(--red)" opacity=".82"/><path d="M-9 1 L-3 8 L10 -8" fill="none" stroke="var(--paper)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>':'')+'</svg>';
+}
+function renderLocked(){
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div id="myball"></div><div class="head" id="myhead">Your ball is in the mix</div><div class="bcard" id="mycard"></div>';
+  app.appendChild(big);
+  const again=document.createElement('button');again.className='back';again.type='button';again.id='again';again.textContent='← start over (this replaces your answers)';
+  again.style.marginTop='14px';
+  again.addEventListener('click',()=>{locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();});
+  app.appendChild(again);
+  myBall();
+}
+let ballTimer=0;
+function myBall(){
+  clearTimeout(ballTimer);
+  const slot=document.getElementById('myball');if(!slot||!locked)return;
+  fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
+    const R=M6_ROOM(d.entries||[]), c=R.calls.get(voter);
+    /* a Poll Desk reset emptied the room: forget the lock, so a rehearsal phone is not stuck (a send from the last few seconds is left alone) */
+    if(!c&&Date.now()-(locked.at||0)>15000){locked=null;try{localStorage.removeItem(LOCKKEY);}catch(_){}render();return;}
+    if(c)slot.innerHTML=ballSvg(c.l+c.n,{});
+    const cardEl=document.getElementById('mycard'), head=document.getElementById('myhead');
+    if(c&&R.isDealt){
+      const card=M6_CARD(voter,R.dealt);
+      if(card.size){cardEl.style.gridTemplateColumns='repeat('+card.size+',1fr)';
+        cardEl.innerHTML=card.cells.map(x=>'<div class="cell">'+ballSvg(x,{hit:R.draws.indexOf(x)>=0,own:x===card.own})+'</div>').join('');
+        const won=M6_BINGO(card,R.draws);head.textContent=won?'BINGO!':'Your bingo card';head.classList.toggle('won',won);
+        const again=document.getElementById('again');if(again)again.style.display='none';} /* a start-over after the deal would orphan the card */
+    }else{cardEl.innerHTML='';head.textContent='Your ball is in the mix';head.classList.remove('won');}
+  }).catch(()=>{}).then(()=>{ballTimer=setTimeout(myBall,2500);});
+}
+function renderName(title,done){
+  q.textContent=title;app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{const b=document.createElement('button');b.className='pick';b.type='button';b.textContent=n;b.addEventListener('click',()=>done(cleanName(n)));list.appendChild(b);});
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';inp.autocomplete='off';
+  const b=document.createElement('button');b.type='button';b.textContent='OK';
+  const go=()=>{const v=cleanName(inp.value);if(v)done(v);};
+  b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+}
+function card(side,suit,question){const c=document.createElement('div');c.className='card '+side;c.innerHTML='<div class="suit"></div><div class="pq"></div>';c.querySelector('.suit').textContent=suit;c.querySelector('.pq').textContent=question;return c;}
+function input(max,ph){const i=document.createElement('input');i.type='text';i.maxLength=max;i.placeholder=ph;i.autocomplete='off';return i;}
+function btn(label,cls){const b=document.createElement('button');b.className=cls;b.type='button';b.textContent=label;return b;}
+</script>
+</body></html>

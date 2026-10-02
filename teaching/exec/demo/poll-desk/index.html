@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><script src="/teaching/exec/demo/demo.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Poll Desk</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Instructor-only housekeeping for the gt-poll rooms: live counts per
+   room and a reset button for each, so no session ever starts on stale
+   test data. The admin secret is pasted once and kept in this browser's
+   localStorage — it lives on the instructor's device only and is never
+   in the repo. Bookmark alongside the deck; linked from nowhere. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--paper);font-family:var(--sans);padding:26px 16px 50px}
+.wrap{max-width:640px;margin:0 auto}
+.hkick{font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:11px;opacity:.7}
+h1{font-family:var(--display);font-weight:900;font-size:32px;margin:8px 0 4px}
+h1 .r{color:var(--red)}
+.sub{font-size:13.5px;opacity:.65;margin-bottom:20px;line-height:1.5}
+.secretrow{display:flex;gap:10px;margin-bottom:24px}
+.secretrow input{flex:1;font-family:var(--sans);font-weight:600;font-size:15px;padding:11px 14px;
+  background:color-mix(in srgb, var(--paper) 8%, transparent);color:var(--paper);
+  border:2px solid color-mix(in srgb, var(--paper) 30%, transparent);min-width:0}
+.secretrow button{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.08em;
+  background:var(--red);color:var(--paper);border:0;padding:11px 18px;cursor:pointer}
+.room{display:flex;align-items:center;gap:14px;border:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);
+  padding:13px 16px;margin-bottom:10px}
+.room .rn{flex:1;min-width:0}
+.room .rid{font-weight:700;font-size:15px}
+.room .rq{font-size:12.5px;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.room .ct{font-family:var(--display);font-weight:900;font-size:26px;width:56px;text-align:right;flex:none}
+.room .ct.hot{color:var(--red)}
+.room button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;flex:none;
+  background:transparent;color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);
+  padding:9px 14px;cursor:pointer}
+.room button:hover{background:var(--red);border-color:var(--red)}
+.room button:disabled{opacity:.35;cursor:default}
+.bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
+.bulk .or{font-weight:600;font-size:13px;color:var(--muted)}
+.bulk input{font-family:var(--sans);font-weight:600;font-size:14px;padding:9px 12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);min-width:220px}
+.bulk button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:var(--paper);border:none;padding:11px 14px;cursor:pointer}
+.msg{font-size:13px;min-height:1.4em;margin-top:12px;opacity:.8}
+.msg.bad{color:var(--red);opacity:1}
+.sctag{font-weight:700;font-size:9.5px;letter-spacing:.12em;color:var(--red);
+  border:1px solid var(--red);padding:1px 6px;vertical-align:2px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="hkick">Applied Game Theory · Facilitator only</div>
+  <h1>POLL <span class="r">DESK</span></h1>
+  <p class="sub">Live answer counts for every room, and a reset for each. Reset every room you plan to
+  use before a session starts. The secret is remembered on this device only.</p>
+  <div class="secretrow">
+    <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
+    <button id="saveSecret" type="button">SAVE</button>
+  </div>
+  <div class="bulk" id="bulk">
+    <button id="resetAll" type="button">RESET EVERY ROOM</button>
+    <span class="or">or a rehearsal:</span><input type="text" id="suffix" placeholder="room suffix, e.g. trial11" autocomplete="off"><button id="resetTrial" type="button">RESET THAT REHEARSAL</button>
+  </div>
+  <div id="rooms"></div>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+(function(){
+const API='https://gt-poll.rlamare.workers.dev';
+const EXTRA=[
+  {id:'m1-dog',q:'Median dog drawings (Module 1 game)',draws:true},
+  {id:'m1-number',q:'Number game guesses + the secret number (Module 1)',guesses:true},
+  {id:'m1-av',q:'Added value offers and decisions (Module 1)',text:true},
+  {id:'m2-cards-live',q:'Last-card moves in flight (Module 2 live game)',text:true},
+  {id:'m2-lastcard',q:'Last-card finished games (Module 2 live game)',text:true},
+  {id:'m2-ult-live',q:'Ultimatum offers in flight (Module 2 live game)',text:true},
+  {id:'m2-ultimatum',q:'Ultimatum finished deals (Module 2 live game)',text:true},
+  {id:'m2-cent-live',q:'Centipede moves in flight (Module 2 live game)',text:true},
+  {id:'m2-centipede',q:'Centipede finished games (Module 2 live game)',text:true},
+  {id:'m2-quit',q:'The second smoking poll (Module 2; cut to the outtakes 14 Sep 2026)'},
+  {id:'m2-flops',q:'First movers who lost, the write-in wall (Module 2; cut to the outtakes 14 Sep 2026)',text:true},
+  {id:'m2-decade',q:'Long-term-deal votes (Module 2 live game)',text:true},
+  {id:'m2-tapasguess',q:'How-many-ways guesses (Module 2 live game)',text:true},
+  {id:'m2-branch',q:'Branches of the room’s tree, one group per phone (Module 2 closing exercise)',text:true},
+  {id:'m2-tree',q:'The room’s tree, first wire format (14 Sep, superseded the same day; reset and forget)',text:true},
+  {id:'m3-engine',q:'Engine game joins, pitches and round markers (Module 3 game)',text:true},
+  {id:'m3-matrix',q:'Build your matrix, one pair per two phones (Module 3; cut to the outtakes 15 Sep 2026)',text:true},
+  {id:'m3-beach',q:'Two rivals on the beach, in pairs (Module 3; cut to the outtakes 15 Sep 2026)',text:true},
+  {id:'m3-engines',q:'The room’s engines, one phone each, the name on line 1 (Module 3 closing exercise; solo since 18 Sep 2026)',text:true},
+  {id:'m4-prices',q:'Price Wars — the teams’ signs and the deck’s markers: pairing, paper, meetings, open, reveal, shock (Module 4 game)',text:true},
+  {id:'m4-teams',q:'Price Wars team claims — who is on which station (Module 4)',text:true},
+  {id:'m4-huddle',q:'Price Wars — each team’s leanings and locks, seen only by the team (Module 4)',text:true},
+  {id:'m4-meet',q:'Price Wars — meeting asks and the reps’ notes of what was agreed (Module 4)',text:true},
+  {id:'m4-pds',q:'The room’s dilemmas as a prison, one phone each, the name on line 1, and each person’s way out (Module 4 closing exercise; solo since 18 Sep 2026)',text:true},
+  {id:'m4-tapas',q:'Tapas growth game joins, moves and round markers (Module 4; cut to the outtakes 16 Sep 2026)',text:true},
+  {id:'m5-invest',q:'Investment game rounds (Module 5 game)',text:true},
+  {id:'m5-bos',q:'The shape of the deal votes + round marker (Module 5 Tapas)',text:true},
+  {id:'m5-chicken',q:'The final meeting votes + round marker (Module 5 Tapas)',text:true},
+  {id:'m5-games',q:'Your coordination game, one phone each: the players, the situation, the options, the game, the focal point (Module 5 closing exercise)',text:true},
+  {id:'m5-twothirds',q:'Guess two-thirds (Module 5; cut to the outtakes 17 Sep 2026)',text:true},
+  {id:'m6-pk',q:'Penalty shootout joins and kicks (Module 6 game)',text:true},
+  {id:'m6-rps',q:'Rock, paper, scissors joins and throws (Module 6 game)',text:true},
+  {id:'m6-solo',q:'Beat the keeper \u2014 solo kicks (Module 6 game)',text:true},
+  {id:'m6-vs',q:'Boss battle \u2014 the top scorers\u2019 kicks and the keeper\u2019s moves (Module 6 game)',text:true},
+  {id:'m6-inspect',q:'The inspection game \u2014 regulator and maintenance shop rounds (Module 6 game)',text:true},
+  {id:'m6-world',q:'Unpredictability in your world, one phone each: who is trying to predict you, what, what happens if they can, pays or costs (Module 6 closing exercise)',text:true},
+  {id:'m6-yourworld',q:'Unpredictability in your world, the write-in wall (Module 6; cut to the outtakes 17 Sep 2026)',text:true},
+  {id:'m7-chicken',q:'Chicken \u2014 joins, wheel decisions and moves (Module 7 game)',text:true},
+  {id:'m7-gb',q:'Split or steal \u2014 joins, moves, and hand-over decisions (Module 7 game)',text:true},
+  {id:'m7-auction',q:'The auction \u2014 live bids and the sold marker (Module 7 game)',text:true},
+  {id:'m7-world',q:'Strategic moves in your world, one phone each: the game, the move (commitment, threat or promise), what makes it credible, the downside (Module 7 closing exercise)',text:true},
+  {id:'m8-market',q:'The car market \u2014 joins, cards, deals and the round markers (Module 8 game)',text:true},
+  {id:'m8-cs-tapas',q:'Hidden Agenda, the Tapas table \u2014 seats, roles, nights, votes (Module 8 game)',text:true},
+  {id:'m8-cs-granito',q:'Hidden Agenda, the Granito table \u2014 seats, roles, nights, votes (Module 8 game)',text:true},
+  {id:'gt-names',q:'Class name claims — the points system’s join table',text:true},
+  {id:'gt-avatars',q:'The avatars built on the phones, one line per finish (no points ride on it; a line only counts while its phone still holds the same name in gt-names)',text:true},
+];
+/* rooms the class points system scores from: resetting one mid-cohort
+   erases earned points, so they carry a tag and a sterner confirm */
+const SCORING=/^(gt-names|m1-dog|m1-number|m2-centipede|m2-lastcard|m3-engine|m4-prices|m4-teams|m5-k\d+|m6-pk|m6-vs|m7-chicken|m7-gb|m7-auction|m8-cs-tapas|m8-cs-granito)$/;
+const secretEl=document.getElementById('secret'), msg=document.getElementById('msg');
+try{secretEl.value=localStorage.getItem('gt-admin')||'';}catch(_){}
+document.getElementById('saveSecret').addEventListener('click',()=>{
+  try{localStorage.setItem('gt-admin',secretEl.value.trim());}catch(_){}
+  say('Secret saved on this device.');
+});
+function say(t,bad){msg.textContent=t;msg.className='msg'+(bad?' bad':'');}
+const roomsEl=document.getElementById('rooms');
+/* bulk resets: every listed room (the scoring rooms included: between cohorts only), or one rehearsal's rooms by suffix */
+let ALL_IDS=[];
+async function resetIds(ids,label){
+  const s=secretEl.value.trim();
+  if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
+  if(prompt('Type RESET to clear '+label+' ('+ids.length+' rooms). This cannot be undone.')!=='RESET'){say('Nothing reset.');return;}
+  /* one try, and one retry a moment later: a dropped request or a throttled
+     one used to read as "refused (is the secret right?)" with no room named
+     (Ryan's rehearsal, 17 Sep). A wrong secret is a 403 on every room. */
+  const once=async id=>{try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});
+    if(r.status===403)return 'secret';const d=await r.json();return d.ok?'ok':'failed';}catch(_){return 'failed';}};
+  let ok=0;const failed=[];let wrong=0;
+  for(const id of ids){
+    let res=await once(id);
+    if(res==='failed'){await new Promise(z=>setTimeout(z,900));res=await once(id);}
+    if(res==='ok')ok++;else if(res==='secret')wrong++;else failed.push(id);
+    say('Resetting '+label+': '+ok+' done'+(failed.length+wrong?', '+(failed.length+wrong)+' not yet':'')+'…');
+  }
+  if(wrong)say(label+': '+ok+' rooms cleared, '+wrong+' refused: the secret is wrong.',true);
+  else if(failed.length)say(label+': '+ok+' rooms cleared. Did not clear after a retry: '+failed.join(', ')+'. Press reset on '+(failed.length>1?'those rooms':'that room')+' below.',true);
+  else say(label+': '+ok+' rooms cleared.');
+  document.querySelectorAll('#rooms .ct').forEach(c=>{c.textContent='–';c.className='ct';});
+}
+document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room, scoring rooms included'));
+document.getElementById('resetTrial').addEventListener('click',()=>{
+  const suf=document.getElementById('suffix').value.trim().replace(/[^a-z0-9-]/g,'');
+  if(!suf){say('Type the rehearsal room suffix first (the part after ?room=).',true);return;}
+  resetIds(['m3-engines','m4-teams','m4-prices','m4-huddle','m4-meet','m4-pds','m5-invest','m5-bos','m5-chicken','m5-games','m6-world','m7-world'].map(r=>r+'-'+suf),'rehearsal '+suf);
+});
+fetch('/teaching/exec/demo/go/polls.json').then(r=>r.json()).then(cfg=>{
+  const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:p.type==='text'||p.type==='form'})).concat(EXTRA);
+  ALL_IDS=rooms.map(r=>r.id);
+  rooms.forEach(room=>{
+    const div=document.createElement('div');div.className='room';
+    div.innerHTML='<div class="rn"><div class="rid"></div><div class="rq"></div></div>'+
+      '<div class="ct">–</div><button type="button">RESET</button>';
+    div.querySelector('.rid').textContent=room.id;
+    if(SCORING.test(room.id))div.querySelector('.rid').insertAdjacentHTML('beforeend',' <span class="sctag">SCORING</span>');
+    div.querySelector('.rq').textContent=room.q;
+    const ct=div.querySelector('.ct'), btn=div.querySelector('button');
+    function refresh(){
+      const url=API+'/p/'+room.id+(room.draws?'/draws':(room.guesses?'/guesses':(room.text?'/answers':'')));
+      fetch(url).then(r=>r.json()).then(d=>{
+        const n=d.total||0;
+        ct.textContent=n;
+        ct.className='ct'+(n>0?' hot':'');
+      }).catch(()=>{ct.textContent='?';});
+    }
+    btn.addEventListener('click',()=>{
+      const s=secretEl.value.trim();
+      if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
+      const warn=SCORING.test(room.id)
+        ?'Reset '+room.id+'? This is a SCORING room — clearing it erases points the class has already earned. Only do this between cohorts.'
+        :'Reset '+room.id+'? This clears every answer in the room.';
+      if(!confirm(warn))return;
+      btn.disabled=true;say('Resetting '+room.id+'…');
+      fetch(API+'/p/'+room.id+'/reset',{method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({s:s})})
+      .then(r=>r.json()).then(d=>{
+        if(d.ok){say(room.id+' is clear.');refresh();}
+        else{say('The worker said no – is the secret right?',true);}
+      }).catch(()=>{say('No connection to the poll server.',true);})
+      .finally(()=>{btn.disabled=false;});
+    });
+    roomsEl.appendChild(div);
+    refresh();setInterval(refresh,4000);
+  });
+}).catch(()=>{say('Could not load polls.json.',true);});
+})();
+</script>
+</body></html>

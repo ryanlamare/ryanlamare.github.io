@@ -1,0 +1,1458 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/demo.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 1 — Introduction to Game Theory and Strategic Thinking</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/demo/deck.css">
+<style>
+/* Module-1-specific widgets (shared components live in deck.css) */
+/* the hands: the module's closing exercise. Each pair deals itself four
+   cards, one per question (four suits, the poll colours), typed on one
+   phone. The room view is a train (journey.js): a hand is a carriage, its
+   four blinds the backs of its cards; a click flies the cards out of the
+   windows to the front, face up and big enough to read from the back. */
+.hcard{position:relative;width:250px;height:360px;box-sizing:border-box;border:3px solid var(--ink);border-radius:14px;background:var(--paper);
+  padding:18px 18px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 5px 0 rgba(0,0,0,.07);--suit:var(--red)}
+.hcard.s0{--suit:var(--red)} .hcard.s1{--suit:var(--teal)} .hcard.s2{--suit:var(--ochre)} .hcard.s3{--suit:var(--terracotta)}
+.hcard{border-color:var(--suit)}
+.hcard .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12.5px;color:var(--suit);padding-bottom:8px;border-bottom:2px solid var(--suit)}
+.hcard.s2 .suit{color:var(--ink)}
+.hcard .txt{font-weight:600;font-size:19px;line-height:1.32;color:var(--ink);flex:1;overflow:hidden;overflow-wrap:anywhere}
+.hcard .pip{position:absolute;right:14px;bottom:12px;width:36px;height:36px;color:var(--suit)}
+.hcard.s2 .pip{color:var(--ink)}
+/* the back */
+.hcard.down{background:var(--suit);border-color:var(--ink)}
+.hcard.down .suit,.hcard.down .txt{visibility:hidden}
+.hcard.down::before{content:"";position:absolute;inset:11px;border:2.5px solid rgba(255,255,255,.6);border-radius:8px;
+  background:repeating-linear-gradient(45deg,transparent 0 9px,rgba(255,255,255,.14) 9px 11px)}
+.hcard.down .pip{right:auto;bottom:auto;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%);color:var(--paper)}
+.hcard.down.s2 .pip{color:var(--ink)}
+/* the setup slide: the four questions as a hand, face up */
+.setuphand{position:absolute;left:96px;top:270px;display:flex;gap:16px}
+.setuphand .hcard{width:176px;height:262px;padding:14px 14px 16px;border-radius:11px}
+.setuphand .hcard .suit{font-size:10.5px;letter-spacing:.12em}
+.setuphand .hcard .txt{font-size:16px;line-height:1.3}
+.setuphand .hcard .pip{width:26px;height:26px;right:11px;bottom:9px}
+/* the train (journey.js): one full-canvas scene; a dimmer behind the opened hand */
+.railstage{position:absolute;inset:0;width:1280px;height:720px;display:block}
+.jdim{position:absolute;inset:0;background:rgba(27,28,25,.42);opacity:0;pointer-events:none;transition:opacity .35s;z-index:5;cursor:pointer}
+.jdim.on{opacity:1;pointer-events:auto}
+/* the hand at the front */
+/* two front layers, so a hand can fly back to the table while the next one
+   flies up; each card sits in a .fly wrapper that carries the flight
+   (translate + scale from its slot, then the fan), and the card itself
+   carries the flip */
+.front{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;pointer-events:none;visibility:hidden}
+.front.on{visibility:visible}
+.front .fcards{display:flex;gap:22px;align-items:center}
+.fly{transform-origin:50% 50%;transition:transform .75s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.fly .hcard{transition:transform .22s ease-in;transform-origin:50% 50%}
+.fly .hcard.edge{transform:rotateY(90deg)}
+@media (prefers-reduced-motion: reduce){.fly,.fly .hcard{transition:none}}
+.hcount{position:absolute;right:40px;bottom:46px;display:flex;align-items:baseline;gap:10px;background:var(--paper-soft);border:2px solid var(--ink);padding:5px 12px;z-index:4}
+.hcount .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
+.hcount .l{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted)}
+/* What did we learn? five lesson tiles */
+.learn .tiles{top:256px;gap:22px;left:64px;right:64px}
+.learn .tile{width:206px;gap:14px}
+.learn .tile .pgwrap{height:96px}
+.learn .tile .pgwrap .pg{height:92px}
+.learn .tile .lbl{white-space:normal;font-size:15.5px}
+.learn .tile .sent{font-size:15.5px;max-width:none}
+/* the programme opener: the eight modules in two days */
+.days{position:absolute;left:64px;right:64px;top:196px;display:flex;justify-content:center;gap:44px}
+.day{width:554px}
+.day .dh{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:16px;color:var(--red);margin-bottom:16px;padding-bottom:8px;border-bottom:2.5px solid var(--ink)}
+.day .dm{display:flex;align-items:baseline;gap:16px;margin-bottom:14px}
+.day .dn{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--ink);width:36px;flex:none;text-align:right}
+.day .dt{font-weight:600;font-size:19px;line-height:1.3;color:var(--ink);white-space:nowrap}
+.day .dm.now .dn,.day .dm.now .dt{color:var(--red)}
+/* clip beside bullets, click-to-load (keeps YouTube's title off screen) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+.clipframe.sm iframe,.clipframe.sm .clipcover{width:560px;height:315px}
+/* side figures (the number line, the cards) */
+.sidefig{flex:none;height:420px;width:auto;overflow:visible}
+.sidefig .qmark{font-family:var(--display);font-weight:900;font-size:150px;fill:var(--red)}
+.sidefig .biglab{font-family:var(--sans);font-weight:600;font-size:17px;fill:var(--muted)}
+.sidefig .card{stroke:var(--ink);stroke-width:3.5;rx:10}
+.sidefig .card.white{fill:#fff}
+.sidefig .card.yellow{fill:var(--ochre)}
+.sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
+.sidefig .money{font-family:var(--display);font-weight:900;font-size:60px;fill:var(--red)}
+.sidefig .cross{stroke:var(--red);stroke-width:7;stroke-linecap:round}
+/* matrix marking, the m4 scheme: dominant-strategy payoffs circled in the
+   player's colour, red box on the equilibrium */
+.mx .cell .pa,.mx .cell .pb{position:relative;display:inline-block}
+.mx .cell .circ::after{content:"";position:absolute;inset:-5px -10px;border:3.5px solid currentColor;border-radius:50%;pointer-events:none}
+.mkey{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.mkey .k{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--muted)}
+.mkey .sw{width:22px;height:22px;background:var(--card);flex:none}
+.mkey .sw.circA{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--teal)}
+.mkey .sw.circB{border-radius:50%;box-shadow:inset 0 0 0 3.5px var(--terracotta)}
+.mkey .sw.eq{box-shadow:inset 0 0 0 4px var(--red)}
+.mkey .k b{color:var(--ink);font-weight:700}
+/* number-line (divide and conquer) */
+.nlwidget{margin:26px auto 0;max-width:1080px}
+.nline{touch-action:none;cursor:crosshair;display:block;width:100%;height:auto}
+.nline .axis{stroke:var(--ink);stroke-width:3}
+.nline .dead{fill:var(--maroon);opacity:.22}
+.nline .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
+.nline .gdot{fill:var(--red)}
+.nline .gnum{font-family:var(--display);font-weight:900;font-size:20px;fill:var(--ink)}
+.nlog{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;min-height:38px}
+.nlog .g{border:2px solid var(--ink);background:var(--card);font-weight:700;font-size:15px;padding:6px 12px}
+.nlog .g b{color:var(--red)}
+.nlog .g.win{background:var(--red);border-color:var(--red);color:var(--paper)}
+.nlog .g.win b{color:var(--paper)}
+/* live dot plots (first-guess and deals): answers stack as dots on an axis */
+.dstrip{display:block;width:100%;height:auto}
+.dstrip .axis{stroke:var(--ink);stroke-width:3}
+.dstrip .lab{font-family:var(--sans);font-weight:600;font-size:15px;fill:var(--muted)}
+.dstrip .dot{fill:var(--ink);opacity:.85}
+.dstrip .dot.hot{fill:var(--red)}
+.dstrip .meanline{stroke:var(--teal);stroke-width:4;stroke-dasharray:8 6}
+.dstrip .meanlab{font-family:var(--display);font-weight:900;font-size:22px;fill:var(--teal)}
+.dplotlbl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)}
+/* the number game, round by round: one strip per round, revealed as each
+   round is closed from the front */
+.rounds{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
+.rrow{display:flex;align-items:center;gap:14px}
+.rrow .rlab{width:98px;flex:none;text-align:right;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:14px;color:var(--ink)}
+.rrow.open .rlab{color:var(--red)}
+.rrow.future{opacity:.35}
+.rrow svg{flex:1;min-width:0;height:auto;display:block}
+.ngbar{position:absolute;left:96px;right:96px;bottom:52px;width:auto;max-width:none;display:flex;align-items:center;gap:12px;padding:12px 18px}
+.ngbar input{width:90px;font-family:var(--sans);font-weight:700;font-size:16px;background:var(--paper);border:2px solid var(--ink);padding:8px 10px}
+.ngbar .ngverdict{flex:1;text-align:right;font-weight:600;font-size:19px;color:var(--ink)}
+.ngbar .ngverdict b{color:var(--red)}
+.dkey{display:flex;gap:26px;justify-content:center;padding-top:2px}
+.dkey .k{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px;color:var(--muted)}
+.dkey .k i{width:16px;height:16px;border-radius:50%;flex:none}
+.pollnote{position:absolute;left:96px;right:96px;bottom:58px;text-align:center;
+  font-weight:600;font-size:21px;line-height:1.35;color:var(--ink)}
+.pollnote b{color:var(--red)}
+/* the knowledge tower (lessons slide): his ladder of knowing, stacked */
+.ktfig{position:absolute;right:116px;top:200px;width:400px;height:auto;overflow:visible}
+.ktfig .kfl{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.12em;fill:var(--muted)}
+.ktower{position:absolute;right:96px;top:398px;width:440px;display:flex;flex-direction:column;gap:10px}
+.ktower .kt{border:2.5px solid var(--ink);background:var(--card);font-weight:600;font-size:16.5px;
+  line-height:1.3;padding:11px 16px;opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s ease}
+.ktower.shown .kt{opacity:1;transform:none}
+.ktower.shown .kt:nth-child(2){transition-delay:.5s}
+.ktower.shown .kt:nth-child(3){transition-delay:1s}
+.ktower.shown .kt:nth-child(4){transition-delay:1.5s}
+.ktower .kt:nth-child(2){margin-left:24px}
+.ktower .kt:nth-child(3){margin-left:48px}
+.ktower .kt:nth-child(4){margin-left:72px;border-color:var(--red);color:var(--red);font-weight:700}
+/* live poll join chrome */
+.qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px}
+/* the kennel: a little dog sanctuary, and the ONLY thing on its slide —
+   every submitted dog at true relative size, sorted small to big, each
+   drawing housed in its own cartoon doghouse (overhanging gable roof
+   with a bone on the front, picket fence). A full room of 21 lands as
+   three rows of seven at the biggest house size the canvas allows. The
+   podium: gold, silver and bronze medals pin onto the three dogs
+   nearest the median (ties share a medal), and the gold house turns
+   red — that IS the announcement. */
+.kennel{display:flex;flex-wrap:wrap;gap:12px 26px;align-content:center;justify-content:center;
+  max-width:990px;opacity:0;visibility:hidden;transition:opacity .5s;width:100%}
+.kennel.on{opacity:1;visibility:visible}
+.dogrun{position:relative;display:flex;flex-direction:column;align-items:center;width:118px;
+  opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .45s ease}
+.kennel.on .dogrun{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){.dogrun{transition:none}}
+/* an overfull room (22+, shouldn't happen with a 21-seat cohort):
+   smaller houses so a fourth row still fits */
+.kennel.dense .dogrun{width:96px}
+.kennel.dense .dn{font-size:11px}
+.dogrun .roof{width:128%;height:auto;display:block;margin-bottom:-3px}
+.dogrun .roof .rf{fill:var(--maroon);stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.dogrun.median .roof .rf{fill:var(--red)}
+.dogrun .roof .bone{fill:var(--paper)}
+.dogrun .pen{width:100%;height:auto;background:#fff;border:2.5px solid var(--ink);display:block}
+.dogrun .pen path{stroke:var(--ink);stroke-width:7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dogrun.median .pen{border-color:var(--red);border-width:3.5px}
+.dogrun.median .pen path{stroke:var(--red)}
+.dogrun .fence{width:118%;height:auto;display:block;margin-top:-2px}
+.dogrun .fence polygon{fill:var(--tan);stroke:var(--ink);stroke-width:1.5}
+.dogrun .dn{font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:118%;margin-top:2px}
+.dogrun.median .dn{color:var(--red);font-weight:700}
+/* podium medals, pinned to the drawing's top-right corner */
+.medal{position:absolute;width:36px;height:auto;top:36px;right:-9px;z-index:2}
+.medal .rib{fill:var(--red);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.medal .disc{stroke:var(--ink);stroke-width:3}
+.medal.m1 .disc{fill:var(--ochre)}
+.medal.m2 .disc{fill:color-mix(in srgb, var(--ink) 22%, var(--paper))}
+.medal.m3 .disc{fill:var(--sienna)}
+.medal .mnum{font-family:var(--display);font-weight:900;font-size:19px;fill:var(--ink)}
+.medal.m3 .mnum{fill:var(--paper)}
+/* the offers board: pending offers queue up as cards, the instructor taps
+   accept or reject, deals land on the game strips. One board slide per
+   game version; the active slide decides which strip new decisions hit. */
+.gamechip{width:100%;background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;
+  letter-spacing:.08em;text-align:center;padding:10px 0}
+.offq{display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;min-height:76px}
+.offcard{display:flex;align-items:center;gap:10px;border:2.5px solid var(--ink);background:var(--card);padding:8px 8px 8px 14px}
+.offcard .on2{font-weight:700;font-size:16px;max-width:12ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.offcard .oa{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink)}
+.offcard button{font-family:var(--sans);font-weight:900;font-size:16px;width:38px;height:38px;border:2.5px solid var(--ink);
+  background:var(--paper);cursor:pointer}
+.offcard button.acc{color:var(--teal)}
+.offcard button.rej{color:var(--red)}
+.offcard button:hover{background:var(--ink);color:var(--paper)}
+.dstrip .dot2{fill:var(--teal);opacity:.9}
+
+/* the familiarity poll: isotype crowd rows, the m2 pattern with sentence labels */
+.pollrows{display:flex;flex-direction:column;gap:22px;margin-top:26px}
+/* one line per option: the question stays put, the count has a fixed column beside it, the figures run to the right */
+.urow{display:flex;align-items:center;gap:14px;min-height:50px}
+.urow .uhead{width:330px;flex:none;text-align:right}
+.urow .ulbl{font-weight:600;font-size:16px;color:var(--ink);line-height:1.3}
+.urow .uval{width:60px;flex:none;text-align:right;font-family:var(--display);font-weight:900;font-size:44px;line-height:1;opacity:0;transition:opacity .5s .2s}
+.urow.revealed .uval{opacity:1}
+.urow .ulane{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 4px;min-height:50px;border-left:2px solid var(--rule);padding-left:12px}
+.urow .u{width:26px;display:flex;align-items:flex-end;justify-content:center}
+.urow .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.urow.revealed .u svg{opacity:1;transform:scale(1)}
+
+/* top of the table: the break scoreboard, m5's board with two event columns */
+.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 160px 160px 120px;align-items:center;gap:14px;
+  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+
+/* the Tapas questions wall: phones write in, the screen fills when time is called */
+.faded{opacity:.06 !important;pointer-events:none}
+#twbul,#twqr{transition:opacity .5s}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:10px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .6s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+</style>
+</head><body>
+
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>Applied Game Theory, Module 1 — Introduction to Game Theory and Strategic Thinking</h1>
+<p>Accessible text version. Each heading below is one slide, in order.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 30: Title slide</h2><p>Game Theory. Introduction to game theory and strategic thinking. Module 1 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 30: How the next two days will run</h2><p>The programme opener. Two columns headed Day one and Day two, four numbered modules in each, with this module in red: one, introduction to game theory and strategic thinking; two, sequential strategies; three, simultaneous zero-sum games; four, prisoner's dilemmas and how to overcome them; five, coordination games; six, mixed strategies; seven, credibility, commitment, and strategic moves; eight, information asymmetries. Three lines revealed one at a time underneath: every module has games, and you play them on your phones; some games score points, and after each module we'll see the top of the table; awards at the end of day two (and not just for highest points!).</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 30: Learning objectives</h2><p>Four numbered objectives: one, understand core game theory and strategy concepts. Two, explain common knowledge and equilibrium. Three, recognize when a choice is a decision and when it's a game. Four, play three games of strategic thinking.</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 30: How familiar are you with game theory as a strategic concept?</h2><p>A live poll answered on phones at ryanlamare.com/go (QR code shown). Before answering, each phone picks its owner's name once — the class points system runs on these names for the rest of the programme. Four options: I have no idea what game theory is and I am a little terrified right now. I've dabbled in game theory but I don't think about it very much. You know, I'm something of a game theorist myself. Call me John Nash, I spend my life working to reach equilibrium. A response counter rises while the distribution stays hidden; a keypress reveals the count beside each option and a row of small human figures to its right, one per answer; the options themselves stay where they were. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 30: A few basic ideas</h2><p>Some core beliefs I will bring into these sessions. Three pictogram tiles: Strategy is everywhere — strategic thinking can be found everywhere, and we all do it, all the time. You must consider others — strategic thinking requires a consideration of others' behaviors as well as our own. Self-interest is rational — we are at least reasonably rational actors (or are aware of the limits of our rationality).</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 30: Different ways to think about strategy</h2><p>A two-circle Venn diagram — business schools and economics — with this programme at the red centre. Business schools teach courses on strategic management (differentiation; competitive advantage; added value; etc.). Economics departments teach courses dedicated entirely to mathematical applications of strategic thinking (Nash equilibrium; zero-sum and non-zero-sum games; payoff matrices; etc.). This programme can be thought of as a hybrid of these different approaches.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 30: Defining game theory</h2><p>Three quoted definitions revealed one at a time, operative phrases in red: a model of optimality taking into consideration not only benefits less costs, but also the interaction between participants; a set of concepts aimed at strategic decision making in situations of competition and conflict (as well as of cooperation and interdependence) under specified rules; a mathematical theory that deals with strategies for maximizing gains and minimizing losses within prescribed constraints, as in the rules of a card game, widely applied in the solution of various decision-making problems, as those of military strategy and business policy.</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 30: Is an act a singular decision or a broader game?</h2><p>Two columns: a decision involves a unilateral choice made without regard to others' behaviors; a game involves considerations of how the other side will react to the choices made. Below: we care about broader games, and assume — everyone has strategies, everyone has payoffs, everyone is behaving in their own self-interest.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 30: Types of games we'll cover</h2><p>Four opposed pairs: sequential versus simultaneous; zero-sum versus non-zero sum; single play / single opponent versus repeat play / repeat opponent; fixed rules / complete info versus dynamic rules / incomplete info.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 30: A game of drawing</h2><p>Everyone draws, on your phones — a QR code opens the drawing page and a counter shows dogs arriving. Your task is to draw the median dog (based on size). The winning drawing will be that which best represents the median dog. Dog sizes will be measured from snout to tail to determine the winner. You have 100 seconds to draw the median dog, on an on-screen countdown timer.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 30: The median dog</h2><p>A full-screen dog sanctuary with no title or other text: every submitted drawing at true relative size, sorted small to big, each housed in its own cartoon doghouse — an overhanging gable roof with a small bone on the front, a picket fence, and a nameplate reading the artist's name and snout-to-tail span. A full room of 21 makes three rows of seven. The houses appear one after another on a keypress; a second keypress computes the median span and pins medals on the three dogs nearest it — gold, silver and bronze discs on ribbons, ties sharing a medal — and the gold dog's house turns red. The medals are the announcement. If the poll server is unreachable the sanctuary shows marked demo stick-dogs.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 30: NOT the median dogs</h2><p>A photograph of two real dogs in bandanas looking up expectantly. The title says: NOT the median dogs. A caption then appears under the photo, the game's one-line debrief: to draw the median dog, you had to draw what you thought everyone else would draw.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 30: The first rule of game theory: it's not (just) about you!</h2><p>Bullets on the left: whatever action one entity does must affect the other side, and vice versa — you cannot think one-dimensionally. Everything you do has consequences for both you and your opponent. Equally, everything your opponent does has consequences for both you and your opponent. AND, you both know this to be true! This can be thought of as the requirement for common knowledge. On the right, the Common Knowledge video is embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 30: Common knowledge and equilibrium</h2><p>Bullets on the left: the ultimate goal in GT is usually to identify an equilibrium point — where each player's strategy is their best response to the strategies of the other players. There doesn't have to be only one! And an equilibrium point won't always be the most optimal solution! But at its core, game theory explores and finds strategies that generate equilibria. On the right, a first look at a payoff matrix, titled two cars reach a junction: you on the rows, the other driver on the columns, each choosing go or stop. Both go: minus 5 each, the crash. You go, they stop: 1 for you, 0 for them. You stop, they go: 0 for you, 1 for them. Both stop: minus 1 each, the standstill. With the second bullet, red boxes mark the two cells where one goes and the other stops, and a key reads: an equilibrium, and there are two. The next slide says what picks between them.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 30: A typical example of using common knowledge to find equilibrium</h2><p>A news photograph of traffic lights. I know to stop on red and go on green. You know that I know to stop on red and go on green. So when the light turns green for you, you proceed safely by using common knowledge. And, therefore, we get a nice equilibrium of stop/go traffic.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 30: Except sometimes GT sucks</h2><p>The same photograph zoomed close: each light shows red and green lit at the same time. Look a little closer at the traffic lights. You can actually file lawsuits over this equilibrium failure.</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 30: I'm thinking of a number</h2><p>I'm thinking of a number between 1 and 100. Everyone plays, on your phones — the game runs in five rounds, one guess per round. After each guess, your phone tells you if you need to go higher or lower. Between rounds, the board shows the whole room's guesses — and how they move. On the right, a drawn number line from 1 to 100 with a large red question mark over the middle.</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 30: Lock in your guesses</h2><p>The whole room plays by phone — a QR code opens the guessing page, and the server answers each guess too high, too low, or correct; the secret number never leaves the server. The board shows five strips, one per round, each a 1-to-100 line: a counter rises as guesses arrive in the open round, and a facilitator button, close round and show, reveals that round's guesses as neutral ink dots (verdict colours mid-game would give the number away) and opens the next round on everyone's phones, so the room watches the distribution tighten round by round. When the game ends the dots recolour — too low in teal, too high in terracotta, correct in red — and a keypress counts the solvers and names the first. The secret number is preset on the server — nothing to set on the day. If the poll server is unreachable the slide runs on marked demo data.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 30: How to guess the correct number</h2><p>Let's work through one series of efficient guesses. An interactive number line from 1 to 100: tapping anywhere makes that guess, the excluded range shades out, and each guess logs as too high or too low. A button plays the efficient sequence — 50 too high, 25 too low, 37 too low, 43 too low — narrowing the range. A step then shows: you've narrowed your last guess down to 44, 45, 46, 47, 48, or 49. So what is the answer?</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 30: How to guess the correct number</h2><p>This is actually a game about common knowledge, not about guessing the right number. Remember — I am strategic too! The game actually started when you were sent the pre-course reading (if you read it, that is!). If I know that you've done the reading, how should I play this game? If you know that I know that you've done the reading, how should you play this game? On the right, a drawn figure: me on the left and you on the right, either side of the pre-course reading, each with a thought bubble holding the other's head. Under it, a tower of four cards builds one by one, each indented deeper: you might know something; but I know that you know it; and you should know that I know that you know it; and I should know that you know that I know that you kn…!</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 30: Lessons from the "I'm thinking of a number" game</h2><p>Bullets on the left: of course, you already know to always put yourself in the other person's shoes! But also know that, people are not random in their strategies! A good strategist must always be thinking multidimensionally! On the right, The Princess Bride battle of wits is embedded behind a click-to-play cover.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 30: Added value game</h2><p>Bullets on the left: game theory can result in paradoxical or unusual strategic choices that benefit players' self-interest. Let's consider the idea of added value. I have one white card for every person in this session, and each of you has one yellow card. Senior management has agreed to pay anyone who turns in a pair of white and yellow cards £100. You can negotiate with me individually, but you cannot band together (this is key!). Make me one offer for my card. On the right, a drawn figure: a fan of three white cards labeled mine, one per person, a plus sign, one yellow card labeled yours, and underneath, equals £100 a pair.</p></section>
+<section aria-label="Slide 23"><h2>Slide 23 of 30: Make me an offer</h2><p>The live offers board, first game: equal cards. Phones send offers in pounds for their share of the £100 (QR code shown, with a rising offers counter); each pending offer appears as a card with the sender's name and amount, and the deck decides it automatically against this game's rule — a share between £40 and £60 is accepted, anything else rejected. The phone shows a big ACCEPTED or REJECTED — one offer per player per game, no second tries — and every decided offer lands as a dot on a zero-to-one-hundred-pound strip — accepted teal, rejected red — with the mean accepted deal and a count of deals and rejections. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 24"><h2>Slide 24 of 30: What happens if I "lose" three cards?</h2><p>The rule change only — no analysis yet, so the game isn't given away. Say I "lose" three cards: now we have fewer white cards, but each of you still has 1 yellow card. Let's play again. On the right, a drawn figure: the fan of three white cards each crossed out in red, labeled three of mine, gone, and the yellow card untouched, labeled still one each.</p></section>
+<section aria-label="Slide 25"><h2>Slide 25 of 30: Make me another offer</h2><p>The live offers board again, second game: after I lose three. New offers are decided the same way, now against a harder rule — only a share of £10 or less is accepted — and land on a second strip labeled after I lose three, shown under the equal-cards strip so the room can compare the two distributions. If the poll server is unreachable the board shows marked demo data.</p></section>
+<section aria-label="Slide 26"><h2>Slide 26 of 30: Added value matters</h2><p>The debrief, after the second game has been played. Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction whenever I want — so you're lucky if I give you even £10! The key stipulation was that you could not band together — what would the difference have been if you could have collectively interacted with me? The crossed-out-cards figure sits on the right.</p></section>
+<section aria-label="Slide 27"><h2>Slide 27 of 30: Build your hand</h2><p>The module's closing exercise, in pairs. In pairs: pick one real situation from one of your worlds, then deal yourselves four cards; one phone per pair. The four questions are shown as four playing cards face up, each in its own suit colour with a small pictogram: the situation (red), what is a situation where you cannot act unilaterally to get what you want? The players (teal), who are the other players in the game? Need to know (ochre), what do you need to know about them to achieve your objective? What they know (terracotta), what do you think they know about you that matters in this game? A QR code links to the phone page at ryanlamare.com/go and a counter shows how many hands are in.</p></section>
+<section aria-label="Slide 28"><h2>Slide 28 of 30: The train</h2><p>A full-screen scene with no title. A Victorian express stands at a London terminus: a green locomotive with a tall chimney and brass dome, steaming gently, under a platform canopy, with the station's two great arched windows and its clock tower behind, and travellers in top hats and bonnets on the platform. Each pair's hand arrives as a carriage that rolls in from the left and couples onto the back of the train; a carriage has four windows with blinds in the four suit colours, the backs of its four cards, and a counter shows how many hands are in. A click on a carriage flies its four cards out of the windows to the front, turning face up, big enough to read: the situation, the players, need to know, what they know; the instructor puts a question to that pair. Closing the hand sends the cards back, the blinds go up on a lit compartment, the guard waves his flag and the train rolls on to the next place, so each hand is discussed in front of a different backdrop. The places are wordless pictures of the programme's other modules, a tree in an autumn field with a church, an airfield, a cell block with a bus, a jet passing overhead, a seaside hall with a bingo cage on its roof, ships at sea off a rocky island, and a car lot with bunting, with stretches of plain countryside between them when the room has more hands: a windmill, a canal boat, sheep, a castle, hot-air balloons, oast houses and a ring of standing stones. The places pass with depth, the far side of each moving more slowly than the near side: the sea is first seen far ahead and its shore sweeps in from a headland on the horizon to run beside the line, the river winds in from a thread in the distance, and the runway, the road by the car lot and the canal run off to a point. When the last carriage has been opened the train pulls away, and is last seen small on the far hills as the sky turns to evening. A click on the locomotive rolls the train on without opening a hand. Pressing the E key plays that ending at once from wherever the train is: an open hand closes first, carriages that were never opened keep their blinds down, and the train leaves without visiting the stops in between. A click on the sun puts the train back at the terminus. If the poll server is unreachable the train shows eight marked demo hands.</p></section>
+<section aria-label="Slide 29"><h2>Slide 29 of 30: What did we learn?</h2><p>The module's debrief as five pictogram tiles, revealed one at a time. Decision or game? Does the other side react to what you choose? It's not (just) about you: everything you do has consequences for both of you, and you both know it. Common knowledge: you might know something, but I know that you know it. Equilibrium: usually the goal, and not always the most optimal solution. Added value: when the other side can walk away, you're lucky to get even £10. </p></section>
+<section aria-label="Slide 30"><h2>Slide 30 of 30: Top of the table</h2><p>The break scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time, then left on screen through the break. Columns show each player's points from the median dog game and the number game, plus the total. Top five only, never a full ranking; each participant can check their own running total privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
+</section>
+
+<svg style="display:none" aria-hidden="true"><symbol id="pip0" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="13" cy="9" r="5"/><path d="M5 18 Q13 14 21 18 L18 33 L8 33 Z"/><circle cx="29" cy="9" r="5"/><path d="M21 18 Q29 14 37 18 L34 33 L24 33 Z" opacity=".55"/></g></symbol>
+<symbol id="pip1" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="8" cy="8" r="4"/><path d="M2 15 Q8 12 14 15 L12 26 L4 26 Z"/><circle cx="20" cy="8" r="4"/><path d="M14 15 Q20 12 26 15 L24 26 L16 26 Z"/><circle cx="32" cy="8" r="4"/><path d="M26 15 Q32 12 38 15 L36 26 L28 26 Z"/><circle cx="14" cy="26" r="4"/><path d="M8 33 Q14 30 20 33 L18 40 L10 40 Z"/><circle cx="26" cy="26" r="4"/><path d="M20 33 Q26 30 32 33 L30 40 L22 40 Z"/></g></symbol>
+<symbol id="pip2" viewBox="0 0 40 40"><text x="20" y="34" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="38" fill="currentColor">?</text></symbol>
+<symbol id="pip3" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="22" cy="14" rx="15" ry="11"/><circle cx="9" cy="28" r="3"/><circle cx="4" cy="35" r="1.8"/></g><g fill="currentColor"><circle cx="22" cy="10" r="3.6"/><path d="M16 20 Q22 17 28 20 L27 23 L17 23 Z"/></g></symbol>
+</svg>
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">1</div>
+  <div class="tag"><i></i>MODULE 1 · APPLIED GAME THEORY · <span class="swapchip">RRPF</span></div>
+  <h1>GAME<br><span class="r">THEORY</span></h1>
+  <div class="sub">Introduction to game theory and strategic thinking</div>
+  <div class="strip">
+    <div class="cchip"><svg class="pg" viewBox="0 0 116 132"><circle class="ink" cx="12" cy="12" r="5"/><path class="ink" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle class="ink" cx="52" cy="12" r="5"/><path class="ink" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle class="ink" cx="92" cy="12" r="5"/><path class="ink" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle class="ink" cx="12" cy="52" r="5"/><path class="ink" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle class="red" cx="52" cy="52" r="5"/><path class="red" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle class="ink" cx="92" cy="52" r="5"/><path class="ink" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle class="ink" cx="12" cy="92" r="5"/><path class="ink" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle class="ink" cx="52" cy="92" r="5"/><path class="ink" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle class="ink" cx="92" cy="92" r="5"/><path class="ink" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg></div>
+    <div class="cchip"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></div>
+    <div class="cchip"><svg class="pg" viewBox="0 0 72 66"><line x1="14" y1="8" x2="14" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="14" y1="54" x2="58" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="50" x2="54" y2="16" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="16" x2="54" y2="50" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle class="ink" cx="36" cy="33" r="4"/></svg></div>
+  </div>
+  <div class="byline">J. RYAN LAMARE</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>MODULE 1 · THE TWO DAYS</div>
+  <h2>How the next two days will run</h2>
+  <div class="days">
+    <div class="day">
+      <div class="dh">Day one</div>
+      <div class="dm now"><div class="dn">1</div><div class="dt">Introduction to game theory and strategic thinking</div></div>
+      <div class="dm"><div class="dn">2</div><div class="dt">Sequential strategies</div></div>
+      <div class="dm"><div class="dn">3</div><div class="dt">Simultaneous zero-sum games</div></div>
+      <div class="dm"><div class="dn">4</div><div class="dt">Prisoner&rsquo;s dilemmas and how to overcome them</div></div>
+    </div>
+    <div class="day">
+      <div class="dh">Day two</div>
+      <div class="dm"><div class="dn">5</div><div class="dt">Coordination games</div></div>
+      <div class="dm"><div class="dn">6</div><div class="dt">Mixed strategies</div></div>
+      <div class="dm"><div class="dn">7</div><div class="dt">Credibility, commitment, and strategic moves</div></div>
+      <div class="dm"><div class="dn">8</div><div class="dt">Information asymmetries</div></div>
+    </div>
+  </div>
+  <div class="chiprow" style="bottom:64px">
+    <div class="chips" style="flex-direction:column;align-items:center;gap:10px">
+      <div class="chip" data-step="1">Every module has games, and you play them on your phones</div>
+      <div class="chip" data-step="2">Some games score points, and after each module we&rsquo;ll see the top of the table</div>
+      <div class="chip" data-step="3">Awards at the end of day two (and not just for highest points!)</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:980px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Understand core game theory and strategy concepts</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Explain common knowledge and equilibrium</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Recognize when a choice is a decision and when it&rsquo;s a game</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Play three games of strategic thinking</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2 style="max-width:40ch">How familiar are you with game theory as a strategic concept?</h2>
+  <div class="pollwrap">
+    <div class="polltop" style="justify-content:center">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-familiarity.svg" alt="QR code for ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="pollN">0</span><span class="l">RESPONSES</span></div>
+    </div>
+    <div class="pollrows" style="position:relative"><div class="demotag" id="demotag" style="top:-30px">DEMO DATA</div>
+      <div class="urow" id="po1">
+        <div class="uhead"><div class="ulbl">I have no idea what game theory is and I am a little terrified right now</div></div><div class="uval" style="color:var(--red)"></div>
+        <div class="ulane" style="color:var(--red)"></div></div>
+      <div class="urow" id="po2">
+        <div class="uhead"><div class="ulbl">I&rsquo;ve dabbled in game theory but I don&rsquo;t think about it very much</div></div><div class="uval" style="color:var(--teal)"></div>
+        <div class="ulane" style="color:var(--teal)"></div></div>
+      <div class="urow" id="po3">
+        <div class="uhead"><div class="ulbl">You know, I&rsquo;m something of a game theorist myself</div></div><div class="uval" style="color:var(--ochre)"></div>
+        <div class="ulane" style="color:var(--ochre)"></div></div>
+      <div class="urow" id="po4">
+        <div class="uhead"><div class="ulbl">Call me John Nash. I spend my life working to reach equilibrium</div></div><div class="uval" style="color:var(--terracotta)"></div>
+        <div class="ulane" style="color:var(--terracotta)"></div></div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="pollReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>A few basic ideas</h2>
+  <div class="leadline">Some core beliefs I will bring into these sessions:</div>
+  <div class="tiles">
+    <div class="tile" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 116 132"><circle class="ink" cx="12" cy="12" r="5"/><path class="ink" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle class="ink" cx="52" cy="12" r="5"/><path class="ink" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle class="ink" cx="92" cy="12" r="5"/><path class="ink" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle class="ink" cx="12" cy="52" r="5"/><path class="ink" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle class="red" cx="52" cy="52" r="5"/><path class="red" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle class="ink" cx="92" cy="52" r="5"/><path class="ink" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle class="ink" cx="12" cy="92" r="5"/><path class="ink" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle class="ink" cx="52" cy="92" r="5"/><path class="ink" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle class="ink" cx="92" cy="92" r="5"/><path class="ink" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg></div>
+      <div class="lbl">Strategy is everywhere</div>
+      <div class="sent">Strategic thinking can be found everywhere, and we all do it, all the time</div>
+    </div>
+    <div class="tile" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></div>
+      <div class="lbl">You must consider others</div>
+      <div class="sent">Strategic thinking requires a consideration of others&rsquo; behaviors as well as our own</div>
+    </div>
+    <div class="tile" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 96 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><path d="M64,22 l7,8 l16,-19" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="lbl">Self-interest is rational</div>
+      <div class="sent">We are at least reasonably rational actors (or are aware of the limits of our rationality)</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 1 · A HYBRID</div>
+  <h2>Different ways to think about strategy</h2>
+  <div class="vennrow">
+    <svg class="venn pg" viewBox="0 0 640 440">
+      <circle cx="225" cy="200" r="150" class="ring"/>
+      <circle cx="415" cy="200" r="150" class="ring"/>
+      <g transform="translate(120,130) scale(1.7)"><path class="ink" d="M16,10 Q16,3 25,3 Q34,3 34,10 Z"/><rect class="ink" x="13" y="9" width="24" height="3.5" rx="1.5"/><circle class="ink" cx="25" cy="17" r="5.5"/><path class="ink" d="M15,25 L35,25 L32,52 L18,52 Z"/><rect class="ink" x="18" y="52" width="6" height="9"/><rect class="ink" x="26" y="52" width="6" height="9"/><path class="knock" d="M25,25 L19,25 L25,36 Z"/><path class="knock" d="M25,25 L31,25 L25,36 Z"/><path class="ink" d="M25,26 l-2,4 l2,9 l2,-9 z"/></g>
+      <g transform="translate(430,145) scale(1.6)"><line x1="14" y1="8" x2="14" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="14" y1="54" x2="58" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="50" x2="54" y2="16" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="16" x2="54" y2="50" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle class="ink" cx="36" cy="33" r="4"/></g>
+      <circle cx="320" cy="200" r="47" class="red" data-step="3"/>
+      <text class="vcore" x="320" y="196" text-anchor="middle" data-step="3">This</text>
+      <text class="vcore" x="320" y="215" text-anchor="middle" data-step="3">programme</text>
+      <text class="vlabel" x="185" y="428" text-anchor="middle">Business schools</text>
+      <text class="vlabel" x="465" y="428" text-anchor="middle">Economics</text>
+    </svg>
+    <div class="vlegend">
+      <div class="ventry" data-step="1">
+        <div class="vh">Business schools teach courses on strategic management</div>
+        <div class="vd">Differentiation; competitive advantage; added value; etc.</div>
+      </div>
+      <div class="ventry" data-step="2">
+        <div class="vh">Economics departments teach courses dedicated entirely to mathematical applications of strategic thinking</div>
+        <div class="vd">Nash equilibrium; zero-sum and non-zero-sum games; payoff matrices; etc.</div>
+      </div>
+      <div class="vfinal" data-step="3">This programme can be thought of as a hybrid of these different approaches</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>Defining game theory</h2>
+  <div class="quotes">
+    <div class="quote" data-step="1">&ldquo;A model of optimality taking into consideration not only benefits less costs, but also <span class="op">the interaction between participants</span>&rdquo;</div>
+    <div class="quote" data-step="2">&ldquo;A set of concepts aimed at strategic decision making in situations of <span class="op">competition and conflict (as well as of cooperation and interdependence)</span> under specified rules&rdquo;</div>
+    <div class="quote" data-step="3">&ldquo;A mathematical theory that deals with strategies for <span class="op">maximizing gains and minimizing losses</span> within prescribed constraints, as in the rules of a card game: widely applied in the solution of various decision-making problems, as those of military strategy and business policy&rdquo;</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>Is an act a singular decision or a broader game?</h2>
+  <div class="dvg">
+    <div class="dvgcol" data-step="1">
+      <svg class="pg" viewBox="0 0 96 132"><g class="ink"><circle cx="48" cy="20" r="14"/><path d="M25 46 Q48 36 71 46 L63 92 L33 92 Z"/><rect x="34" y="92" width="12" height="36"/><rect x="50" y="92" width="12" height="36"/></g></svg>
+      <div class="dt">A decision</div>
+      <div class="dd">A unilateral choice made without regard to others&rsquo; behaviors</div>
+    </div>
+    <div class="dvgcol accent" data-step="2">
+      <svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg>
+      <div class="dt">A game</div>
+      <div class="dd">Considerations of how the other side will react to the choices made</div>
+    </div>
+  </div>
+  <div class="chiprow" data-step="3">
+    <div class="chead2">We care about broader games, and assume:</div>
+    <div class="chips">
+      <div class="chip">Everyone has strategies</div>
+      <div class="chip">Everyone has payoffs</div>
+      <div class="chip">Everyone is behaving in their own self-interest</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>Types of games we&rsquo;ll cover</h2>
+  <div class="fig">
+    <div class="pairs">
+      <div class="pair" data-step="1"><div class="term">Sequential</div><div class="vs">VS</div><div class="term">Simultaneous</div></div>
+      <div class="pair" data-step="2"><div class="term">Zero-sum</div><div class="vs">VS</div><div class="term">Non-zero sum</div></div>
+      <div class="pair" data-step="3"><div class="term">Single play / single opponent</div><div class="vs">VS</div><div class="term">Repeat play / repeat opponent</div></div>
+      <div class="pair" data-step="4"><div class="term">Fixed rules / complete info</div><div class="vs">VS</div><div class="term">Dynamic rules / incomplete info</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 1 · A GAME OF DRAWING</div>
+  <h2>A game of drawing</h2>
+  <ul class="bullets" style="max-width:560px">
+    <li>Everyone draws, on your phones</li>
+    <li data-step="1">Your task is to draw <b>the median dog</b> (based on size)</li>
+    <li data-step="2">The winning drawing will be that which best represents the median dog</li>
+    <li data-step="3">Dog sizes will be measured from snout to tail to determine the winner</li>
+    <li data-step="4">You have <b>100 seconds</b> to draw the median dog</li>
+  </ul>
+  <div class="qrpanel" style="top:196px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-dog.svg" alt="QR code for the drawing page"></div>
+      <div class="ju">ryanlamare.com/go &middot; draw, then submit &ndash; redraw any time</div>
+    </div>
+    <div class="livecount"><span class="n" id="dogN">0</span><span class="l">RESPONSES</span></div>
+  </div>
+  <div class="timerbox" data-step="4" style="right:auto;left:96px;top:auto;bottom:64px;width:460px;flex-direction:row;justify-content:space-between;gap:24px;padding:14px 26px">
+    <div class="t" id="timerT" style="font-size:64px">100</div>
+    <button id="timerBtn">START 100 SECONDS</button>
+  </div>
+</section>
+
+<section class="slide content" data-i="10">
+  <div class="fig" style="top:28px;bottom:52px;left:40px;right:40px;justify-content:center;gap:0">
+    <div class="kennel" id="kennel"></div>
+  </div>
+  <span data-step="1" data-stepcall="dogReveal" style="position:absolute;width:0;height:0"></span>
+  <span data-step="2" data-stepcall="dogVerdict" style="position:absolute;width:0;height:0"></span>
+  <div class="demotag" id="dogD" style="position:absolute;top:20px;right:40px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 1 · A GAME OF DRAWING</div>
+  <h2>*NOT* the median dogs</h2>
+  <div class="fig" style="top:170px">
+    <img class="figimg" src="median-dogs.jpg" alt="Two real dogs in bandanas looking up expectantly — not the median dogs" style="max-height:400px">
+    <div class="cap" data-step="1" style="font-size:20px"><b>To draw the median dog, you had to draw what you thought everyone else would draw</b></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2 style="max-width:42ch">The first rule of game theory: it&rsquo;s not (just) about you!</h2>
+  <div class="rowfig">
+    <ul class="bullets">
+      <li>Whatever action one entity does must affect the other side, and vice versa &ndash; you cannot think one-dimensionally</li>
+      <li data-step="1">Everything you do has consequences for both you and your opponent</li>
+      <li data-step="2">Equally, everything your opponent does has consequences for both you and your opponent</li>
+      <li data-step="3">AND&hellip;you both know this to be true!</li>
+      <li data-step="4">This can be thought of as the requirement for <b>common knowledge</b></li>
+    </ul>
+    <div class="clipframe sm" id="ckwrap">
+      <button class="clipcover" id="ckload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Common Knowledge</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>Common knowledge and equilibrium</h2>
+  <div class="rowfig" style="align-items:center;top:200px;bottom:70px">
+    <ul class="bullets" style="margin-top:0">
+      <li>The ultimate goal in GT is usually to identify an <b>equilibrium point</b> &ndash; where each player&rsquo;s strategy is their best response to the strategies of the other players</li>
+      <li data-step="1">There doesn&rsquo;t have to be only one!</li>
+      <li data-step="2">And an equilibrium point won&rsquo;t always be the most optimal solution!</li>
+      <li data-step="3">But at its core, game theory explores and finds strategies that generate equilibria</li>
+    </ul>
+    <div class="mxwrap" style="flex:none;gap:18px">
+      <div class="mxtitle">Two cars reach a junction</div>
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:80px">
+        <div class="chead">THE OTHER DRIVER</div>
+        <div class="rhead">YOU</div>
+        <div class="cl" style="grid-column:3">Go</div>
+        <div class="cl" style="grid-column:4">Stop</div>
+        <div class="rl" style="grid-row:3">Go</div>
+        <div class="rl" style="grid-row:4">Stop</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">&minus;5</span><span class="pc">,</span><span class="pb">&minus;5</span></div>
+        <div class="cell" id="tlGS" style="grid-row:3;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" id="tlSG" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">1</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">&minus;1</span><span class="pc">,</span><span class="pb">&minus;1</span></div>
+      </div>
+      <div class="mkey" data-step="1">
+        <div class="k"><span class="sw eq"></span><span>An <b>equilibrium</b> &ndash; and there are two</span></div>
+      </div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="tlGS,tlSG" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2 style="max-width:36ch">A typical example of using common knowledge to find equilibrium</h2>
+  <div style="display:flex;gap:44px;margin-top:28px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:460px">
+      <li data-step="1">I know to stop on red and go on green</li>
+      <li data-step="2">You know that I know to stop on red and go on green</li>
+      <li data-step="3">So when the light turns green for you, you proceed safely by using common knowledge</li>
+      <li data-step="4">And, therefore, we get a nice equilibrium of stop/go traffic&hellip;</li>
+    </ul>
+    <img class="figimg" src="traffic.jpg" alt="News still of traffic lights over an intersection" style="max-width:560px">
+  </div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 1</div>
+  <h2>&hellip;except sometimes GT sucks</h2>
+  <div class="fig" style="top:170px">
+    <div class="zoomframe" id="zoom1"><img src="traffic.jpg" alt="The same traffic lights, zoomed: red and green are lit at the same time"></div>
+    <div class="cap"><span>Look a little closer at the traffic lights</span>
+      <span data-step="2" style="display:block;margin-top:6px">You can actually file lawsuits over this equilibrium failure</span></div>
+    <span data-step="1" data-stepcall="zoomTraffic" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 1 · I&rsquo;M THINKING OF A NUMBER</div>
+  <h2>I&rsquo;m thinking of a number</h2>
+  <div class="rowfig" style="align-items:center;top:220px;bottom:80px">
+    <ul class="bullets" style="margin-top:0">
+      <li>I&rsquo;m thinking of a number between <b>1 and 100</b>&hellip;</li>
+      <li data-step="1">Everyone plays, on your phones &ndash; the game runs in <b>five rounds</b>, one guess per round</li>
+      <li data-step="2">After each guess, your phone tells you if you need to go <b>higher</b> or <b>lower</b></li>
+      <li data-step="3">Between rounds, the board shows the whole room&rsquo;s guesses &ndash; and how they move</li>
+    </ul>
+    <svg class="sidefig" style="height:300px" viewBox="0 0 520 310" role="img" aria-label="A number line from 1 to 100 with a large hidden question mark in the middle">
+      <text class="qmark" x="260" y="170" text-anchor="middle">?</text>
+      <line x1="40" y1="240" x2="480" y2="240" stroke="var(--ink)" stroke-width="3.5"/>
+      <line x1="40" y1="228" x2="40" y2="252" stroke="var(--ink)" stroke-width="3"/>
+      <line x1="150" y1="232" x2="150" y2="248" stroke="var(--ink)" stroke-width="2.5" opacity=".45"/>
+      <line x1="260" y1="232" x2="260" y2="248" stroke="var(--ink)" stroke-width="2.5" opacity=".45"/>
+      <line x1="370" y1="232" x2="370" y2="248" stroke="var(--ink)" stroke-width="2.5" opacity=".45"/>
+      <line x1="480" y1="228" x2="480" y2="252" stroke="var(--ink)" stroke-width="3"/>
+      <text class="biglab" x="40" y="282" text-anchor="middle" style="font-weight:700;fill:var(--ink)">1</text>
+      <text class="biglab" x="480" y="282" text-anchor="middle" style="font-weight:700;fill:var(--ink)">100</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 1 · I&rsquo;M THINKING OF A NUMBER</div>
+  <h2>Lock in your guesses</h2>
+  <div class="pollwrap" style="top:186px;bottom:122px">
+    <div class="polltop" style="justify-content:center">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-number.svg" alt="QR code for the number game page"></div>
+        <div class="ju">ryanlamare.com/go &middot; one guess per round &ndash; your phone answers</div>
+      </div>
+      <div class="livecount"><span class="n" id="ngN">0</span><span class="l" id="ngNL">RESPONSES<br>THIS ROUND</span></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0">
+      <div class="rounds" id="ngRounds">
+        <div class="rrow"><div class="rlab">ROUND 1</div><svg class="dstrip" viewBox="0 0 1000 72"><line class="axis" x1="30" y1="60" x2="970" y2="60"/><g class="ngt"></g><g class="ngd"></g></svg></div>
+        <div class="rrow"><div class="rlab">ROUND 2</div><svg class="dstrip" viewBox="0 0 1000 72"><line class="axis" x1="30" y1="60" x2="970" y2="60"/><g class="ngt"></g><g class="ngd"></g></svg></div>
+        <div class="rrow"><div class="rlab">ROUND 3</div><svg class="dstrip" viewBox="0 0 1000 72"><line class="axis" x1="30" y1="60" x2="970" y2="60"/><g class="ngt"></g><g class="ngd"></g></svg></div>
+        <div class="rrow"><div class="rlab">ROUND 4</div><svg class="dstrip" viewBox="0 0 1000 72"><line class="axis" x1="30" y1="60" x2="970" y2="60"/><g class="ngt"></g><g class="ngd"></g></svg></div>
+        <div class="rrow"><div class="rlab">ROUND 5</div><svg class="dstrip" viewBox="0 0 1000 96"><line class="axis" x1="30" y1="60" x2="970" y2="60"/><g class="ngt"></g><g class="ngd"></g></svg></div>
+      </div>
+      <div class="dkey">
+        <div class="k">Colours arrive when the game ends:</div>
+        <div class="k"><i style="background:var(--teal)"></i>Too low</div>
+        <div class="k"><i style="background:var(--terracotta)"></i>Too high</div>
+        <div class="k"><i style="background:var(--red)"></i>Correct</div>
+      </div>
+    </div>
+  </div>
+  <div class="widget ngbar">
+    <span class="wlabel" id="ngRound">ROUND 1 OPEN</span>
+    <button id="ngNext" class="primary">CLOSE ROUND &amp; SHOW</button>
+    <span class="ngverdict" data-step="1" data-stepcall="ngVerdict"></span>
+  </div>
+  <div class="demotag" id="ngD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 1 · I&rsquo;M THINKING OF A NUMBER</div>
+  <h2>How to guess the correct number</h2>
+  <ul class="bullets" style="margin-top:22px">
+    <li>Let&rsquo;s work through one series of efficient guesses:</li>
+  </ul>
+  <div class="widget nlwidget">
+    <div class="whead">
+      <span class="wlabel">TAP THE LINE TO GUESS</span>
+      <span><button id="nlSeq" class="primary">EFFICIENT SEQUENCE</button><button id="nlReset">RESET</button></span>
+    </div>
+    <svg class="nline" id="nline" viewBox="0 0 1000 96">
+      <rect class="dead" id="deadL" x="30" y="30" width="0" height="26"/>
+      <rect class="dead" id="deadR" x="970" y="30" width="0" height="26"/>
+      <line class="axis" x1="30" y1="43" x2="970" y2="43"/>
+      <g id="nlticks"></g>
+      <g id="nlguesses"></g>
+    </svg>
+    <div class="nlog" id="nlog"></div>
+  </div>
+  <div class="cap" style="text-align:center;max-width:none">
+    <span data-step="1">You&rsquo;ve narrowed your last guess down to 44, 45, 46, 47, 48, or 49&hellip;</span>
+    <b data-step="2" style="display:block;margin-top:4px">So what is the answer?</b>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 1 · I&rsquo;M THINKING OF A NUMBER</div>
+  <h2>How to guess the correct number</h2>
+  <ul class="bullets" style="max-width:600px">
+    <li>This is actually a game about <b>common knowledge</b>, not about guessing the right number</li>
+    <li data-step="1"><b>Remember &ndash; I am strategic too!</b></li>
+    <li data-step="2">The game actually started when you were sent the pre-course reading (if you read it, that is!)</li>
+    <li data-step="3">If I know that you&rsquo;ve done the reading, how should I play this game?</li>
+    <li data-step="4">If you know that I know that you&rsquo;ve done the reading, how should you play this game?</li>
+  </ul>
+  <svg class="ktfig" viewBox="0 0 440 200" role="img" aria-label="Two figures either side of the pre-course reading, each with a thought bubble holding the other's head">
+    <g transform="translate(70 52)"><circle cx="0" cy="0" r="14" fill="var(--ink)"/><path d="M-23 26 Q0 16 23 26 L15 72 L-15 72 Z" fill="var(--ink)"/><rect x="-14" y="72" width="12" height="36" fill="var(--ink)"/><rect x="2" y="72" width="12" height="36" fill="var(--ink)"/></g>
+    <g transform="translate(370 52)"><circle cx="0" cy="0" r="14" fill="var(--red)"/><path d="M-23 26 Q0 16 23 26 L15 72 L-15 72 Z" fill="var(--red)"/><rect x="-14" y="72" width="12" height="36" fill="var(--red)"/><rect x="2" y="72" width="12" height="36" fill="var(--red)"/></g>
+    <text x="70" y="192" text-anchor="middle" class="kfl">ME</text>
+    <text x="370" y="192" text-anchor="middle" class="kfl">YOU</text>
+    <rect x="186" y="66" width="68" height="88" rx="4" fill="#fff" stroke="var(--ink)" stroke-width="3.5"/>
+    <g stroke="var(--ink)" stroke-width="3" stroke-linecap="round"><path d="M198 84h44M198 98h44M198 112h44M198 126h28"/></g>
+    <text x="220" y="192" text-anchor="middle" class="kfl">THE READING</text>
+    <g fill="var(--paper-soft)" stroke="var(--ink)" stroke-width="3">
+      <ellipse cx="128" cy="30" rx="30" ry="22"/><circle cx="102" cy="52" r="5"/><circle cx="92" cy="62" r="3"/>
+      <ellipse cx="312" cy="30" rx="30" ry="22"/><circle cx="338" cy="52" r="5"/><circle cx="348" cy="62" r="3"/>
+    </g>
+    <g transform="translate(128 30) scale(.55)"><circle cx="0" cy="-8" r="14" fill="var(--red)"/><path d="M-20 16 Q0 8 20 16 L16 34 L-16 34 Z" fill="var(--red)"/></g>
+    <g transform="translate(312 30) scale(.55)"><circle cx="0" cy="-8" r="14" fill="var(--ink)"/><path d="M-20 16 Q0 8 20 16 L16 34 L-16 34 Z" fill="var(--ink)"/></g>
+  </svg>
+  <div class="ktower" data-step="5" aria-hidden="true">
+    <div class="kt">You might know something&hellip;</div>
+    <div class="kt">&hellip;but I know that you know it!</div>
+    <div class="kt">And you should know that I know that you know it!</div>
+    <div class="kt">And I should know that you know that I know that you kn&hellip;!</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 1 · I&rsquo;M THINKING OF A NUMBER</div>
+  <h2 style="max-width:36ch">Lessons from the &ldquo;I&rsquo;m thinking of a number&rdquo; game</h2>
+  <div class="rowfig">
+    <ul class="bullets">
+      <li>Of course, you already know to always put yourself in the other person&rsquo;s shoes!</li>
+      <li data-step="1">But also know that, people are not random in their strategies!</li>
+      <li data-step="2"><b>A good strategist must always be thinking multidimensionally!</b></li>
+    </ul>
+    <div class="clipframe sm" id="pbwrap">
+      <button class="clipcover" id="pbload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">The Princess Bride &mdash; the battle of wits</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="21">
+  <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
+  <h2>Added value game</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Game theory can result in <b>paradoxical or unusual strategic choices</b> that benefit players&rsquo; self-interest</li>
+      <li data-step="1">Let&rsquo;s consider the idea of <b>added value</b></li>
+      <li data-step="2">I have one <b>white card</b> for every person in this session &ndash; and each of you has one <b>yellow card</b></li>
+      <li data-step="3">Senior management has agreed to pay anyone who turns in a pair of white and yellow cards <b>&pound;100</b></li>
+      <li data-step="4">You can negotiate with me individually, but you <b>cannot band together</b> (this is key!)</li>
+      <li data-step="5"><b>Make me one offer for my card</b></li>
+    </ul>
+    <svg class="sidefig" style="height:380px" viewBox="0 0 480 400" role="img" aria-label="A fan of white cards and one yellow card: a white and yellow pair is worth a hundred pounds">
+      <g transform="rotate(-10 110 170)"><rect class="card white" x="40" y="80" width="130" height="180" rx="10"/></g>
+      <g transform="rotate(-3 130 170)"><rect class="card white" x="62" y="74" width="130" height="180" rx="10"/></g>
+      <g transform="rotate(5 155 170)"><rect class="card white" x="86" y="70" width="130" height="180" rx="10"/></g>
+      <text class="cardlab" x="140" y="306" text-anchor="middle">MINE &middot; ONE PER PERSON</text>
+      <text x="252" y="185" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:56px;fill:var(--ink)">+</text>
+      <g transform="rotate(7 375 165)"><rect class="card yellow" x="310" y="75" width="130" height="180" rx="10"/></g>
+      <text class="cardlab" x="378" y="306" text-anchor="middle">YOURS</text>
+      <text class="money" x="240" y="382" text-anchor="middle">= &pound;100 A PAIR</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="22" data-avphase="1">
+  <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
+  <h2>Make me an offer</h2>
+  <div class="pollwrap" style="top:176px;bottom:56px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-offers.svg" alt="QR code for the offers page"></div>
+        <div class="ju">ryanlamare.com/go &middot; offer your share of the &pound;100</div>
+      </div>
+      <div class="livecount"><span class="n" data-avn>0</span><span class="l">RESPONSES</span></div>
+      <div class="gamechip">EQUAL CARDS</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="offq" data-avq></div>
+      <div style="margin-top:auto">
+        <div class="dplotlbl" style="color:var(--ink)">The offers &middot; equal cards <span data-avr="1" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
+        <svg class="dstrip" viewBox="0 0 1000 130">
+          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
+          <g class="avticks"></g><g data-avdots="1"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="demotag" data-avdemo style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
+  <h2>What happens if I &ldquo;lose&rdquo; three cards?</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Say I <b>&ldquo;lose&rdquo; three cards</b> &ndash; now we have fewer white cards, but each of you still has 1 yellow card</li>
+      <li data-step="1"><b>Let&rsquo;s play again</b></li>
+    </ul>
+    <svg class="sidefig" style="height:340px" viewBox="0 0 420 360" role="img" aria-label="Three of the white cards crossed out in red; the yellow cards are unchanged">
+      <g transform="rotate(-10 110 170)"><rect class="card white" x="40" y="80" width="130" height="180" rx="10"/><line class="cross" x1="62" y1="108" x2="148" y2="232"/><line class="cross" x1="148" y1="108" x2="62" y2="232"/></g>
+      <g transform="rotate(-3 130 170)"><rect class="card white" x="62" y="74" width="130" height="180" rx="10"/><line class="cross" x1="84" y1="102" x2="170" y2="226"/><line class="cross" x1="170" y1="102" x2="84" y2="226"/></g>
+      <g transform="rotate(5 155 170)"><rect class="card white" x="86" y="70" width="130" height="180" rx="10"/><line class="cross" x1="108" y1="98" x2="194" y2="222"/><line class="cross" x1="194" y1="98" x2="108" y2="222"/></g>
+      <text class="cardlab" x="140" y="306" text-anchor="middle">THREE OF MINE, GONE</text>
+      <g transform="rotate(7 345 165)"><rect class="card yellow" x="280" y="75" width="130" height="180" rx="10"/></g>
+      <text class="cardlab" x="348" y="306" text-anchor="middle">STILL ONE EACH</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="24" data-avphase="2">
+  <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
+  <h2>Make me another offer</h2>
+  <div class="pollwrap" style="top:176px;bottom:56px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-offers.svg" alt="QR code for the offers page"></div>
+        <div class="ju">ryanlamare.com/go &middot; offer your share of the &pound;100</div>
+      </div>
+      <div class="livecount"><span class="n" data-avn>0</span><span class="l">RESPONSES</span></div>
+      <div class="gamechip">AFTER I LOSE THREE</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="offq" data-avq></div>
+      <div style="margin-top:auto">
+        <div class="dplotlbl">The offers &middot; equal cards <span data-avr="1" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
+        <svg class="dstrip" viewBox="0 0 1000 130">
+          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
+          <g class="avticks"></g><g data-avdots="1"></g>
+        </svg>
+      </div>
+      <div>
+        <div class="dplotlbl" style="color:var(--ink)">The offers &middot; after I lose three <span data-avr="2" style="font-weight:500;text-transform:none;letter-spacing:0"></span></div>
+        <svg class="dstrip" viewBox="0 0 1000 130">
+          <line class="axis" x1="30" y1="96" x2="970" y2="96"/>
+          <g class="avticks"></g><g data-avdots="2"></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="demotag" data-avdemo style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>MODULE 1 · ADDED VALUE</div>
+  <h2>Added value matters</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Because three of you are guaranteed to end up with nothing, I can walk away from any individual interaction whenever I want &ndash; so you&rsquo;re lucky if I give you even &pound;10!</li>
+      <li data-step="1"><b>The key stipulation was that you could not band together &ndash; what would the difference have been if you could have collectively interacted with me?</b></li>
+    </ul>
+    <svg class="sidefig" style="height:340px" viewBox="0 0 420 360" role="img" aria-label="Three of the white cards crossed out in red; the yellow cards are unchanged">
+      <g transform="rotate(-10 110 170)"><rect class="card white" x="40" y="80" width="130" height="180" rx="10"/><line class="cross" x1="62" y1="108" x2="148" y2="232"/><line class="cross" x1="148" y1="108" x2="62" y2="232"/></g>
+      <g transform="rotate(-3 130 170)"><rect class="card white" x="62" y="74" width="130" height="180" rx="10"/><line class="cross" x1="84" y1="102" x2="170" y2="226"/><line class="cross" x1="170" y1="102" x2="84" y2="226"/></g>
+      <g transform="rotate(5 155 170)"><rect class="card white" x="86" y="70" width="130" height="180" rx="10"/><line class="cross" x1="108" y1="98" x2="194" y2="222"/><line class="cross" x1="194" y1="98" x2="108" y2="222"/></g>
+      <text class="cardlab" x="140" y="306" text-anchor="middle">THREE OF MINE, GONE</text>
+      <g transform="rotate(7 345 165)"><rect class="card yellow" x="280" y="75" width="130" height="180" rx="10"/></g>
+      <text class="cardlab" x="348" y="306" text-anchor="middle">STILL ONE EACH</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="26">
+  <div class="kicker"><i></i>MODULE 1 · YOUR HAND</div>
+  <h2>Build your hand</h2>
+  <div class="leadline" style="text-align:left;max-width:720px;margin-top:18px">In pairs: pick one real situation from one of your worlds, then deal yourselves four cards. One phone per pair.</div>
+  <div class="setuphand">
+    <div class="hcard s0 "><div class="suit">THE SITUATION</div><div class="txt">What is a situation where you cannot act unilaterally to get what you want?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip0"/></svg></div>
+    <div class="hcard s1 "><div class="suit">THE PLAYERS</div><div class="txt">Who are the other players in the game?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip1"/></svg></div>
+    <div class="hcard s2 "><div class="suit">NEED TO KNOW</div><div class="txt">What do you need to know about them to achieve your objective?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip2"/></svg></div>
+    <div class="hcard s3 "><div class="suit">WHAT THEY KNOW</div><div class="txt">What do you think they know about you that matters in this game?</div><svg class="pip" viewBox="0 0 40 40"><use href="#pip3"/></svg></div>
+  </div>
+  <div class="qrpanel" style="top:236px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-hands.svg" alt="QR code for the hand page at ryanlamare.com/go"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+    <div class="livecount"><span class="n" data-handn>0</span><span class="l">HANDS IN</span></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="27">
+  <svg class="railstage" id="railSvg" viewBox="0 0 1280 720" aria-hidden="true"></svg>
+  <div class="jdim" id="jdim"></div>
+  <div class="front" id="hfrontA"><div class="fcards"></div></div>
+  <div class="hcount"><span class="n" data-handn>0</span><span class="l">HANDS IN</span></div>
+  <div class="demotag" id="handD" style="position:absolute;top:20px;left:40px;right:auto">DEMO DATA</div>
+</section>
+
+<section class="slide content learn" data-i="28">
+  <div class="kicker"><i></i>MODULE 1 · WHAT DID WE LEARN</div>
+  <h2>What did we learn?</h2>
+  <div class="tiles">
+    <div class="tile">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></svg></div>
+      <div class="lbl">Decision or game?</div>
+      <div class="sent">Does the other side react to what you choose?</div>
+    </div>
+    <div class="tile" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 116 132"><circle class="ink" cx="12" cy="12" r="5"/><path class="ink" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle class="ink" cx="52" cy="12" r="5"/><path class="ink" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle class="ink" cx="92" cy="12" r="5"/><path class="ink" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle class="ink" cx="12" cy="52" r="5"/><path class="ink" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle class="red" cx="52" cy="52" r="5"/><path class="red" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle class="ink" cx="92" cy="52" r="5"/><path class="ink" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle class="ink" cx="12" cy="92" r="5"/><path class="ink" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle class="ink" cx="52" cy="92" r="5"/><path class="ink" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle class="ink" cx="92" cy="92" r="5"/><path class="ink" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg></div>
+      <div class="lbl">It&rsquo;s not (just) about you</div>
+      <div class="sent">Everything you do has consequences for both of you, and you both know it</div>
+    </div>
+    <div class="tile" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g class="red"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g><path d="M72 64 L98 64" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/><path d="M80 56 L72 64 L80 72 M90 56 L98 64 L90 72" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="lbl">Common knowledge</div>
+      <div class="sent">You might know something, but I know that you know it</div>
+    </div>
+    <div class="tile" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 72 66"><line x1="14" y1="8" x2="14" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="14" y1="54" x2="58" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="50" x2="54" y2="16" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="16" x2="54" y2="50" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle class="red" cx="36" cy="33" r="5"/></svg></div>
+      <div class="lbl">Equilibrium</div>
+      <div class="sent">Usually the goal, and not always the most optimal solution</div>
+    </div>
+    <div class="tile" data-step="4">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 180 132"><g transform="rotate(-8 60 66)"><rect x="20" y="16" width="80" height="108" rx="8" fill="#fff" stroke="var(--ink)" stroke-width="4"/></g><g transform="rotate(8 120 66)"><rect x="80" y="16" width="80" height="108" rx="8" fill="var(--ochre)" stroke="var(--ink)" stroke-width="4"/></g></svg></div>
+      <div class="lbl">Added value</div>
+      <div class="sent">When the other side can walk away, you&rsquo;re lucky to get even &pound;10</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="29">
+  <div class="kicker"><i></i>MODULE 1 · TOP OF THE TABLE</div>
+  <h2>Top of the table</h2>
+  <div class="fig" style="top:200px;gap:30px">
+    <div class="scb">
+      <div class="scbrow head"><span class="rk"></span><span class="nm"></span><span class="pv">Median dog</span><span class="pv">Number game</span><span class="tt">Total</span></div>
+      <div class="scbrow" data-step="5" id="scbr0"><div class="demotag" id="scbD">DEMO DATA</div><span class="rk">1</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="4" id="scbr1"><span class="rk">2</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="3" id="scbr2"><span class="rk">3</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="2" id="scbr3"><span class="rk">4</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+      <div class="scbrow" data-step="1" id="scbr4"><span class="rk">5</span><span class="nm"></span><span class="pv"></span><span class="pv"></span><span class="tt"></span></div>
+    </div>
+    <div class="cap">Points from the median dog and the number game. Top five only &ndash; check your own running total any time at <b>ryanlamare.com/go/points</b>.</div>
+  </div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<a class="homelink" href="/teaching/exec/demo/">ALL MODULES</a>
+
+<script src="/teaching/exec/demo/go/scores.js"></script>
+<script>
+/* ---- live poll: isotype crowds (the m2 pattern) — one figure per answer,
+   revealed row by row on the keypress; marked demo data if the Worker is
+   unreachable ---- */
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
+(function(){
+  const DEMO=[8,9,3,1];
+  const st={live:false,counts:DEMO.slice(),total:0,shown:0,revealed:false};
+  const nEl=document.getElementById('pollN');
+  const opts=['po1','po2','po3','po4'];
+  function laneHTML(n){
+    let h='';
+    for(let i=0;i<Math.min(n,40);i++)h+='<span class="u">'+PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"')+'</span>';
+    return h;
+  }
+  function render(){
+    const counts=st.live?st.counts:DEMO;
+    opts.forEach((id,i)=>{
+      const o=document.getElementById(id), lane=o.querySelector('.ulane');
+      if(st.revealed){
+        const want=Math.min(counts[i]||0,40);
+        if(lane.children.length!==want){lane.innerHTML=laneHTML(counts[i]||0);void lane.offsetWidth;}
+      }else lane.innerHTML='';
+      o.classList.toggle('revealed',st.revealed);
+      o.querySelector('.uval').textContent=st.revealed?(counts[i]||0):'';
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m1-familiarity').then(r=>r.json()).then(d=>{
+      if(st.revealed)return; /* the reveal is a snapshot: a phone cannot move the bars afterwards */
+      st.live=true;
+      document.getElementById('demotag').style.display='none';
+      st.counts=[0,1,2,3].map(i=>d.counts[i]||0);
+      st.total=d.total;
+      nEl.textContent=st.total;
+      if(st.revealed)render();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{const t=DEMO.reduce((a,b)=>a+b,0);if(!st.live&&st.shown<t){st.shown++;nEl.textContent=st.shown;}},420);
+  window.pollReveal=function(el,on){st.revealed=on;render();};
+})();
+
+/* ---- drawing game timer ---- */
+(function(){
+  const disp=document.getElementById('timerT'), btn=document.getElementById('timerBtn');
+  let t=100,iv=null;
+  btn.addEventListener('click',()=>{
+    if(iv){clearInterval(iv);iv=null;t=100;disp.textContent='100';disp.style.fontSize='';disp.classList.remove('low');btn.textContent='START 100 SECONDS';return;}
+    btn.textContent='RESET';
+    iv=setInterval(()=>{
+      t--;disp.textContent=t>0?t:'TIME!';
+      disp.style.fontSize=t>0?'':'56px';
+      if(t<=10)disp.classList.add('low');
+      if(t<=0){clearInterval(iv);iv=null;}
+    },1000);
+  });
+})();
+
+/* ---- traffic zoom ---- */
+function zoomTraffic(el,on){document.getElementById('zoom1').classList.toggle('zoomed',on);}
+
+/* ---- number line: divide and conquer (demo target 46, presenter-side only) ---- */
+(function(){
+  const TARGET=46, X0=30, X1=970;
+  const svg=document.getElementById('nline');
+  const ticks=document.getElementById('nlticks'), gs=document.getElementById('nlguesses'), log=document.getElementById('nlog');
+  const deadL=document.getElementById('deadL'), deadR=document.getElementById('deadR');
+  let lo=1, hi=100, done=false, seqTimer=null;
+  function X(v){return X0+(v-1)/99*(X1-X0);}
+  [1,25,50,75,100].forEach(v=>{
+    ticks.insertAdjacentHTML('beforeend',
+      `<line x1="${X(v)}" y1="38" x2="${X(v)}" y2="48" stroke="var(--ink)" stroke-width="2.5"/>
+       <text class="lab" x="${X(v)}" y="70" text-anchor="middle">${v}</text>`);
+  });
+  function shade(){
+    deadL.setAttribute('x',X0);deadL.setAttribute('width',Math.max(0,X(lo)-X0));
+    deadR.setAttribute('x',X(hi));deadR.setAttribute('width',Math.max(0,X1-X(hi)));
+  }
+  function guess(v){
+    if(done||v<1||v>100)return;
+    let verdict;
+    if(v>TARGET){verdict='TOO HIGH';hi=Math.min(hi,v-1);}
+    else if(v<TARGET){verdict='TOO LOW';lo=Math.max(lo,v+1);}
+    else{verdict='CORRECT!';done=true;}
+    gs.insertAdjacentHTML('beforeend',
+      `<circle class="gdot" cx="${X(v)}" cy="43" r="9"/><text class="gnum" x="${X(v)}" y="22" text-anchor="middle">${v}</text>`);
+    log.insertAdjacentHTML('beforeend',
+      `<span class="g${done?' win':''}">${v} <b>${verdict}</b></span>`);
+    shade();
+  }
+  svg.addEventListener('pointerdown',e=>{
+    const r=svg.getBoundingClientRect();
+    const v=Math.round(1+((e.clientX-r.left)/r.width*1000-X0)/(X1-X0)*99);
+    guess(Math.max(1,Math.min(100,v)));
+  });
+  function reset(){lo=1;hi=100;done=false;gs.innerHTML='';log.innerHTML='';shade();
+    if(seqTimer){clearInterval(seqTimer);seqTimer=null;}}
+  document.getElementById('nlReset').addEventListener('click',reset);
+  document.getElementById('nlSeq').addEventListener('click',()=>{
+    reset();
+    const seq=[50,25,37,43];let i=0;
+    seqTimer=setInterval(()=>{guess(seq[i++]);if(i>=seq.length){clearInterval(seqTimer);seqTimer=null;}},850);
+  });
+  shade();
+})();
+
+/* ---- embedded clips: load YouTube only on click (keeps the titles and
+   related-video chrome off screen until the clip is deliberately started) ---- */
+function clipOnClick(btnId,wrapId,videoId,title){
+  document.getElementById(btnId).addEventListener('click',()=>{
+    const wrap=document.getElementById(wrapId);
+    const f=document.createElement('iframe');
+    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
+    f.title=title;
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    f.allowFullscreen=true;
+    wrap.replaceChildren(f);
+  });
+}
+clipOnClick('ckload','ckwrap','MknV3t5QbUc','Common Knowledge');
+clipOnClick('pbload','pbwrap','rMz7JBRbmNo','The Princess Bride — the battle of wits');
+
+/* ---- the number game: phones guess at m1/game/?g=number; the Worker
+   holds the secret number (a standing Wrangler secret — nothing to set
+   on the day, and the number never reaches a phone or this repo) and the
+   current round, and answers every guess itself. Five rounds, one guess
+   per phone per round: a round's strip stays empty while the round is
+   open, and CLOSE ROUND & SHOW (admin secret, remembered on the device)
+   reveals it and opens the next round on everyone's phones. ---- */
+(function(){
+  const DEMO={round:4,guesses:[
+    {g:50,r:'high',n:'Sam',rd:1},{g:80,r:'high',n:'Priya',rd:1},{g:25,r:'low',n:'Tom',rd:1},{g:10,r:'low',n:'Elena',rd:1},{g:60,r:'high',n:'Marcus',rd:1},
+    {g:35,r:'low',n:'Sam',rd:2},{g:44,r:'high',n:'Priya',rd:2},{g:30,r:'low',n:'Tom',rd:2},{g:40,r:'high',n:'Elena',rd:2},{g:33,r:'low',n:'Marcus',rd:2},
+    {g:37,r:'correct',n:'Sam',rd:3},{g:38,r:'high',n:'Priya',rd:3},{g:36,r:'low',n:'Tom',rd:3},{g:37,r:'correct',n:'Elena',rd:3},{g:39,r:'high',n:'Marcus',rd:3}]};
+  const st={live:false,round:1,guesses:[],shown:0};
+  const nEl=document.getElementById('ngN'), nLbl=document.getElementById('ngNL');
+  const roundEl=document.getElementById('ngRound');
+  const nextBtn=document.getElementById('ngNext');
+  const rows=[...document.querySelectorAll('#ngRounds .rrow')];
+  const X=v=>30+(v-1)/99*940;
+  rows.forEach((row,i)=>{
+    const t=row.querySelector('.ngt');
+    [1,25,50,75,100].forEach(v=>{
+      t.insertAdjacentHTML('beforeend',
+        '<line x1="'+X(v)+'" y1="54" x2="'+X(v)+'" y2="66" stroke="var(--ink)" stroke-width="2.5"/>'+
+        (i===4?'<text class="lab" x="'+X(v)+'" y="88" text-anchor="middle">'+v+'</text>':''));
+    });
+  });
+  function data(){return st.live?st:{round:DEMO.round,guesses:DEMO.guesses};}
+  function draw(){
+    const d=data();
+    rows.forEach((row,i)=>{
+      const rd=i+1, g=row.querySelector('.ngd');
+      row.classList.toggle('open',rd===d.round);
+      row.classList.toggle('future',rd>d.round);
+      if(rd>=d.round){g.innerHTML='';return;}
+      const list=d.guesses.filter(x=>(x.rd||1)===rd);
+      /* mid-game the dots stay NEUTRAL — high/low/correct colouring would
+         hand the room the number; verdict colours arrive only at GAME OVER */
+      const over=d.round>5;
+      const stack={};let h='';
+      list.forEach(x=>{
+        stack[x.g]=(stack[x.g]||0)+1;
+        const cy=48-(stack[x.g]-1)*15;
+        const col=!over?'var(--ink)':(x.r==='correct'?'var(--red)':(x.r==='high'?'var(--terracotta)':'var(--teal)'));
+        h+='<circle cx="'+X(x.g)+'" cy="'+Math.max(cy,9)+'" r="7" fill="'+col+'" opacity="'+(over?'.9':'.55')+'"/>';
+      });
+      g.innerHTML=h;
+    });
+    if(d.round>5){nEl.textContent=d.guesses.length;nLbl.innerHTML='RESPONSES<br>IN ALL';}
+    else{
+      const inRound=d.guesses.filter(x=>(x.rd||1)===d.round).length;
+      nEl.textContent=st.live?inRound:Math.min(st.shown,5);
+      nLbl.innerHTML='RESPONSES<br>THIS ROUND';
+    }
+    roundEl.textContent=d.round>5?'GAME OVER':'ROUND '+d.round+' OPEN';
+    roundEl.style.color='';
+    nextBtn.textContent=d.round>5?'ALL ROUNDS SHOWN':'CLOSE ROUND '+d.round+' & SHOW';
+    nextBtn.disabled=d.round>5;
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m1-number/guesses').then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById('ngD').style.display='none';
+      st.guesses=d.guesses||[];
+      draw();
+      const el=document.querySelector('[data-stepcall="ngVerdict"]');
+      if(el&&el.dataset.stepon==='1')window.ngVerdict(el,true);
+    }).catch(()=>{});
+    fetch(POLL_API+'/p/m1-number/target').then(r=>r.json()).then(d=>{
+      st.round=d.round||1;
+      if(st.live)draw();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{if(!st.live&&st.shown<5){st.shown++;draw();}},420);
+  draw();
+  function secret(){
+    let s=null;
+    try{s=localStorage.getItem('gt-admin');}catch(_){}
+    if(!s){s=prompt('Admin secret (remembered on this device):','');if(!s)return null;
+      s=s.trim();try{localStorage.setItem('gt-admin',s);}catch(_){}}
+    return s;
+  }
+  nextBtn.addEventListener('click',()=>{
+    const s=secret();if(!s)return;
+    const r=Math.min(6,(st.live?st.round:1)+1);
+    fetch(POLL_API+'/p/m1-number/round',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({s:s,r:r})})
+    .then(x=>{if(!x.ok)throw 0;st.round=r;if(st.live)draw();fetchIt();})
+    .catch(()=>{roundEl.textContent='REFUSED — SECRET?';roundEl.style.color='var(--red)';
+      try{localStorage.removeItem('gt-admin');}catch(_){}});
+  });
+  window.ngVerdict=function(el,on){
+    if(!on){el.innerHTML='';return;}
+    const g=data().guesses;
+    if(!g.length){el.innerHTML='';return;}
+    const solvers=[], seen=new Set();
+    g.forEach(x=>{
+      const id=x.n||x.v||String(x.g);
+      if(x.r==='correct'&&!seen.has(id)){seen.add(id);solvers.push(x.n||'?');}
+    });
+    el.innerHTML=solvers.length
+      ?'<b>Solved by '+solvers.length+'</b> &ndash; first: <b>'+solvers[0]+'</b>'
+      :'<b>Nobody has it yet</b>';
+  };
+})();
+
+/* ---- the offers board (added value): phones send "name|o|amt" into
+   m1-av; pending offers appear as cards, and the deck DECIDES EACH ONE
+   ITSELF against the active game's rule — game 1 accepts a 40-60 share,
+   game 2 accepts $10 or less (game 3, the one-person-leaves version,
+   moved to Module 7 with its rule kept here for it) — posting the
+   "name|d|amt|a-or-r|phase" decision line the phones watch for. Every
+   decided offer lands on that game's strip: accepted teal, rejected red,
+   with the mean of the accepted deals. The active slide's data-avphase
+   picks the rule, so nothing is decided until a board slide is up. ---- */
+(function(){
+  const DEMO=[['Priya','50','a','1'],['Tom','55','a','1'],['Sam','40','a','1'],['Elena','65','r','1'],
+              ['Marcus','10','a','2'],['Nadia','5','a','2'],['Chris','20','r','2'],['Elena','8','a','2'],
+              ['Priya','50','a','3'],['Tom','40','r','3'],['Sam','50','a','3']];
+  const st={live:false,lines:[]};
+  const X=v=>30+(v/100)*940;
+  document.querySelectorAll('.avticks').forEach(g=>{
+    [0,25,50,75,100].forEach(v=>{
+      g.insertAdjacentHTML('beforeend',
+        '<line x1="'+X(v)+'" y1="90" x2="'+X(v)+'" y2="102" stroke="var(--ink)" stroke-width="2.5"/>'+
+        '<text class="lab" x="'+X(v)+'" y="122" text-anchor="middle">£'+v+'</text>');
+    });
+  });
+  let postN=0, deckBase=null;
+  try{
+    deckBase=localStorage.getItem('gt-deck-voter');
+    if(!deckBase){deckBase='deck-'+Math.random().toString(36).slice(2,14);localStorage.setItem('gt-deck-voter',deckBase);}
+    postN=+(localStorage.getItem('m1-av-postn')||0);
+  }catch(_){deckBase='deck-fallback-000';}
+  function deckVoter(){return deckBase+'-'+Math.floor(postN/12);}
+  function phase(){
+    const a=document.querySelector('.slide.active');
+    return a&&a.dataset.avphase?+a.dataset.avphase:1;
+  }
+  function parsed(){
+    if(st.live)return st.lines.map(t=>String(t).split('|').map(s=>s.trim()));
+    return DEMO.map(([n,a,r,p])=>[n,'d',a,r,p]).concat([['Dana','o','3'],['Omar','o','6.5']]);
+  }
+  function render(){
+    const lines=parsed();
+    /* pending: latest offer per name with no later decision */
+    const state={};
+    lines.forEach((p,i)=>{
+      const k=(p[0]||'').toLowerCase();
+      if(!k)return;
+      if(!state[k])state[k]={name:p[0]};
+      if(p[1]==='o'){state[k].offer=+p[2];state[k].oIdx=i;}
+      if(p[1]==='d'){state[k].dIdx=i;}
+    });
+    const pending=Object.values(state).filter(s=>s.offer!==undefined&&(s.dIdx===undefined||s.dIdx<s.oIdx));
+    document.querySelectorAll('[data-avq]').forEach(q=>{
+      q.innerHTML='';
+      pending.forEach(s=>{
+        const card=document.createElement('div');card.className='offcard';
+        card.innerHTML='<span class="on2"></span><span class="oa">£'+s.offer+'</span>';
+        card.querySelector('.on2').textContent=s.name;
+        q.appendChild(card);
+      });
+    });
+    ensureMarker(lines);
+    autoDecide(pending);
+    const offers=lines.filter(p=>p[1]==='o').length||(st.live?0:DEMO.length);
+    document.querySelectorAll('[data-avn]').forEach(n=>n.textContent=offers);
+    /* strips: EVERY decided offer per game version — accepted teal,
+       rejected red — plus the mean of the accepted deals */
+    [1,2,3].forEach(ph=>{
+      const dec=lines.filter(p=>p[1]==='d'&&+p[4]===ph&&Number.isFinite(+p[2]));
+      const acc=dec.filter(p=>p[3]==='a').map(p=>+p[2]);
+      const rej=dec.length-acc.length;
+      const stack={};let h='';
+      dec.forEach(p=>{
+        const v=+p[2];
+        const key=Math.round(v/5)*5;
+        stack[key]=(stack[key]||0)+1;
+        const cy=84-(stack[key]-1)*15;
+        h+='<circle cx="'+X(Math.min(100,Math.max(0,v)))+'" cy="'+Math.max(cy,8)+'" r="6.5" fill="'+(p[3]==='a'?'var(--teal)':'var(--red)')+'" opacity=".9"/>';
+      });
+      if(acc.length){
+        const mean=acc.reduce((a,b)=>a+b,0)/acc.length;
+        h+='<line class="meanline" x1="'+X(mean)+'" y1="18" x2="'+X(mean)+'" y2="92"/>'+
+           '<text class="meanlab" x="'+X(mean)+'" y="14" text-anchor="middle" style="font-size:18px">£'+Math.round(mean)+'</text>';
+      }
+      document.querySelectorAll('[data-avdots="'+ph+'"]').forEach(dots=>{dots.innerHTML=h;});
+      const note=acc.length||rej?('· '+acc.length+' deals, '+rej+' rejected'):'';
+      document.querySelectorAll('[data-avr="'+ph+'"]').forEach(el=>{el.textContent=note;});
+    });
+    document.querySelectorAll('[data-avdemo]').forEach(d=>{d.style.display=st.live?'none':'';});
+  }
+  /* the deck's own acceptance rules, one per game version. Classroom-grade:
+     they live in this public source, like every game brief — the game is
+     played in minutes, live */
+  const RULE={1:a=>a>=40&&a<=60, 2:a=>a<=10, 3:a=>a===50};
+  /* one offer per game: when a board slide is up, make sure the room holds
+     a "=game|p|N" marker line for it — phones read the latest marker to
+     know which game is on and lock anyone who has already played it */
+  const markerPosted={};
+  function ensureMarker(lines){
+    const act=document.querySelector('.slide.active');
+    if(!st.live||!act||!act.dataset.avphase)return;
+    const ph=+act.dataset.avphase;
+    const seen=lines.some(p=>p[0]==='=game'&&p[1]==='p'&&+p[2]===ph);
+    if(seen||markerPosted[ph])return;
+    markerPosted[ph]=1;
+    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
+    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:'=game|p|'+ph,v:deckVoter()})})
+    .then(()=>fetchIt()).catch(()=>{});
+  }
+  const sched=new Set();
+  function autoDecide(pending){
+    const act=document.querySelector('.slide.active');
+    if(!st.live||!act||!act.dataset.avphase)return;
+    pending.forEach(s=>{
+      const key=(s.name||'').toLowerCase()+'|'+s.offer+'|'+s.oIdx;
+      if(sched.has(key))return;
+      sched.add(key);
+      setTimeout(()=>{
+        const ph=phase();
+        decide(s,(RULE[ph]||RULE[1])(s.offer)?'a':'r');
+      },900);
+    });
+  }
+  function decide(s,code){
+    postN++;try{localStorage.setItem('m1-av-postn',String(postN));}catch(_){}
+    fetch(POLL_API+'/p/m1-av/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:s.name+'|d|'+s.offer+'|'+code+'|'+phase(),v:deckVoter()})})
+    .then(()=>fetchIt()).catch(()=>{});
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m1-av/answers').then(r=>r.json()).then(d=>{
+      st.live=true;st.lines=d.answers||[];render();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  render();
+})();
+
+/* ---- the median dog: phones draw at m1/game/ into the m1-dog drawing
+   lane; the kennel is a little dog sanctuary — every dog housed in its
+   own doghouse at true relative size, sorted small to big — and the
+   reveal finds the median snout-to-tail span and its winner (red house).
+   Marked demo data when the Worker is unreachable. ---- */
+(function(){
+  function demoDog(w,name){
+    const x0=Math.round((300-w)/2), x1=x0+w;
+    const bx=x0+Math.round(w*0.14), bw=Math.round(w*0.62);
+    const y=175;
+    const d=[
+      bx+','+y+' '+(bx+bw)+','+y,
+      (bx+4)+','+y+' '+(bx+4)+','+(y+34),
+      (bx+bw-4)+','+y+' '+(bx+bw-4)+','+(y+34),
+      (bx+bw)+','+y+' '+x1+','+(y-38),
+      bx+','+y+' '+(x0+8)+','+(y-30),
+      (x0+8)+','+(y-30)+' '+x0+','+(y-40)+' '+(x0+12)+','+(y-48)+' '+(x0+20)+','+(y-38)+' '+(x0+8)+','+(y-30)
+    ].join(';');
+    return {n:name,d:d};
+  }
+  const DEMO=[demoDog(90,'Tom'),demoDog(120,'Elena'),demoDog(140,'Sam'),demoDog(155,'Priya'),
+              demoDog(175,'Nadia'),demoDog(200,'Marcus'),demoDog(235,'Alex'),demoDog(265,'Chris')];
+  const st={live:false,dogs:[],shown:0,revealed:false,marked:false};
+  const nEl=document.getElementById('dogN'), kennel=document.getElementById('kennel');
+  const demoTag=document.getElementById('dogD');
+  function span(d){
+    let mn=300,mx=0;
+    String(d).split(';').forEach(s=>s.split(' ').forEach(pt=>{
+      const x=parseInt(pt.split(',')[0],10);
+      if(Number.isFinite(x)){mn=Math.min(mn,x);mx=Math.max(mx,x);}
+    }));
+    return Math.max(0,mx-mn);
+  }
+  function dogs(){return (st.live?st.dogs:DEMO).map(g=>({...g,s:span(g.d)})).sort((a,b)=>a.s-b.s);}
+  function path(d){
+    return String(d).split(';').map(s=>{
+      const pts=s.trim().split(' ');
+      return 'M'+pts.join('L');
+    }).join('');
+  }
+  function medianTarget(list){
+    const n=list.length;
+    if(!n)return 0;
+    return n%2?list[(n-1)/2].s:(list[n/2-1].s+list[n/2].s)/2;
+  }
+  const ROOF='<svg class="roof" viewBox="0 0 140 42" aria-hidden="true">'+
+    '<polygon class="rf" points="3,39 70,3 137,39"/>'+
+    '<g class="bone"><rect x="59" y="27" width="22" height="6" rx="3"/>'+
+    '<circle cx="59" cy="27.5" r="3.4"/><circle cx="59" cy="32.5" r="3.4"/>'+
+    '<circle cx="81" cy="27.5" r="3.4"/><circle cx="81" cy="32.5" r="3.4"/></g></svg>';
+  let FENCE='<svg class="fence" viewBox="0 0 120 13" aria-hidden="true">';
+  for(let x=1;x<115;x+=12){FENCE+='<polygon points="'+x+',13 '+x+',5 '+(x+4)+',1 '+(x+8)+',5 '+(x+8)+',13"/>';}
+  FENCE+='</svg>';
+  function medalSVG(rank){
+    return '<svg class="medal m'+rank+'" viewBox="0 0 40 50" aria-hidden="true">'+
+      '<polygon class="rib" points="10,0 30,0 20,22"/>'+
+      '<circle class="disc" cx="20" cy="33" r="14.5"/>'+
+      '<text class="mnum" x="20" y="40" text-anchor="middle">'+rank+'</text></svg>';
+  }
+  function buildRun(g,i){
+    const div=document.createElement('div');
+    div.className='dogrun';
+    div.style.transitionDelay=(i*60)+'ms';
+    div.innerHTML=ROOF+'<svg class="pen" viewBox="0 0 300 300"><path d="'+path(g.d)+'"/></svg>'+
+      FENCE+'<span class="dn"></span>';
+    div.querySelector('.dn').textContent=(g.n||'?')+' · '+g.s;
+    return div;
+  }
+  let sig1='';
+  function render(){
+    const list=dogs();
+    nEl.textContent=st.live?st.dogs.length:st.shown;
+    demoTag.style.display=(st.live||!st.revealed)?'none':'';
+    const target=medianTarget(list);
+    /* the podium: the three distinct distances nearest the median take
+       gold, silver, bronze — ties share the medal */
+    const dists=[...new Set(list.map(g=>Math.abs(g.s-target)))].sort((a,b)=>a-b).slice(0,3);
+    /* the houses build ONCE (the signature ignores the medal step); medals
+       and the red house decorate the standing houses in place */
+    const s=JSON.stringify([st.revealed,list.map(g=>[g.v,g.s,g.n])]);
+    if(s!==sig1){
+      sig1=s;
+      kennel.classList.remove('on');
+      kennel.classList.toggle('dense',list.length>21);
+      kennel.innerHTML='';
+      if(st.revealed){
+        list.forEach((g,i)=>kennel.appendChild(buildRun(g,i)));
+        requestAnimationFrame(()=>requestAnimationFrame(()=>kennel.classList.add('on')));
+      }
+    }
+    [...kennel.children].forEach((div,i)=>{
+      const g=list[i];if(!g)return;
+      const ti=st.marked?dists.indexOf(Math.abs(g.s-target)):-1;
+      div.classList.toggle('median',ti===0);
+      const old=div.querySelector('.medal');
+      if(ti<0){if(old)old.remove();return;}
+      if(!old||!old.classList.contains('m'+(ti+1))){
+        if(old)old.remove();
+        div.insertAdjacentHTML('beforeend',medalSVG(ti+1));
+      }
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m1-dog/draws').then(r=>r.json()).then(d=>{
+      st.live=true;
+      st.dogs=d.draws||[];
+      render();
+      const el=document.querySelector('[data-stepcall="dogVerdict"]');
+      if(el&&el.dataset.stepon==='1')window.dogVerdict(el,true);
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{if(!st.live&&st.shown<DEMO.length){st.shown++;nEl.textContent=st.shown;}},420);
+  render();
+  window.dogReveal=function(el,on){st.revealed=on;render();};
+  window.dogVerdict=function(el,on){st.marked=on;render();};
+})();
+
+/* the hands, module 1's closing exercise, are journey.js (the train), loaded below with rail.js */
+/* ---- top of the table: recomputed from the poll rooms via /go/scores.js;
+   rows reveal fifth place first, one keypress each — then the board sits
+   on screen through the break ---- */
+(function(){
+  const DEMO=[
+    {name:'Priya',byEvent:{dog:5,number:5},total:10},
+    {name:'Marcus',byEvent:{dog:3,number:4},total:7},
+    {name:'Elena',byEvent:{dog:1,number:4},total:5},
+    {name:'Sam',byEvent:{dog:0,number:4},total:4},
+    {name:'Tom',byEvent:{dog:3,number:0},total:3}
+  ];
+  const EVS=['dog','number'];
+  function fill(players,demo){
+    for(let i=0;i<5;i++){
+      const row=document.getElementById('scbr'+i), p=players[i];
+      row.querySelector('.nm').textContent=p?p.name:'—';
+      const pvs=row.querySelectorAll('.pv');
+      EVS.forEach((k,j)=>{pvs[j].textContent=p?(p.byEvent[k]||0):'';});
+      row.querySelector('.tt').textContent=p?p.total:'';
+    }
+    document.getElementById('scbD').style.display=demo?'':'none';
+  }
+  function refresh(){
+    GT_SCORES.load().then(d=>{
+      if(d.players.length)fill(d.players,false);
+      else fill(DEMO,true);
+    }).catch(()=>fill(DEMO,true));
+  }
+  setInterval(refresh,10000);refresh();
+})();
+</script>
+<script src="/teaching/exec/demo/rail.js"></script>
+<script src="/teaching/exec/demo/m1/journey.js"></script>
+<script src="/teaching/exec/demo/deck.js"></script>
+</body></html>

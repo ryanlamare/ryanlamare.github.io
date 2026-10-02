@@ -1,0 +1,1045 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/demo.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 8 — Information Asymmetries</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/demo/deck.css">
+<style>
+.lemons text{font-family:var(--sans)}
+.lemons .axis{stroke:var(--ink);stroke-width:2.5}
+.lemons .band{stroke:var(--ink);stroke-width:2}
+.lemons .bandlbl{font-weight:700;font-size:17px;letter-spacing:.05em;fill:var(--ink)}
+.lemons .tick{font-weight:500;font-size:14px;fill:var(--muted)}
+.lemons .buyline{stroke:var(--red);stroke-width:4;stroke-dasharray:10 7}
+.lemons .buylbl{font-weight:700;font-size:17px;fill:var(--red);letter-spacing:.04em}
+
+/* ---- Hidden Agenda block ---- */
+.rowfig{position:absolute;left:96px;right:96px;top:196px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none;min-width:0}
+/* a phone, as the room will see it */
+.phone{flex:none;width:300px;border:3px solid var(--ink);border-radius:26px;background:var(--paper-soft);padding:22px 20px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:8px 8px 0 var(--card)}
+.phone .ptop{font-weight:600;text-transform:uppercase;letter-spacing:.2em;font-size:12px;color:var(--muted)}
+.phone .prole{font-family:var(--display);font-weight:900;font-size:26px;line-height:1;color:var(--ink);letter-spacing:.01em}
+.phone .prole.red{color:var(--red)}
+.phone .pq{font-weight:600;font-size:15.5px;line-height:1.35;color:var(--ink)}
+.phone .pq b{color:var(--red)}
+.phone .pbtn{border:2.5px solid var(--red);background:var(--red);color:var(--paper);font-family:var(--display);font-weight:900;font-size:20px;text-align:center;padding:12px 8px;letter-spacing:.04em}
+.phone .pbtn.ghost{background:var(--card);border-color:var(--ink);color:var(--ink)}
+.phone .plist{display:flex;flex-wrap:wrap;gap:7px}
+.phone .plist span{border:2px solid var(--ink);background:var(--card);padding:6px 12px;font-weight:600;font-size:14px}
+.phone .plist span.on{background:var(--red);border-color:var(--red);color:var(--paper)}
+.phone .plist span.dim{opacity:.4;text-decoration:line-through}
+.phone .presult{border-left:6px solid var(--red);padding:8px 12px;font-weight:600;font-size:16px;background:var(--card)}
+.phone .presult b{color:var(--red)}
+.phone .pfoot{font-weight:500;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
+.phone .pfoot b{color:var(--ink)}
+/* the live board: the clock over two tables */
+.cs{position:absolute;left:96px;right:96px;top:176px;bottom:50px;display:flex;flex-direction:column;gap:18px}
+.csclock{display:flex;align-items:baseline;justify-content:center;gap:30px;border:2.5px solid var(--ink);background:var(--paper-soft);padding:8px 26px}
+.csphase{font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:22px;color:var(--red)}
+.cstime{font-family:var(--display);font-weight:900;font-size:78px;line-height:1;color:var(--ink);min-width:200px;text-align:center}
+.cstime.low{color:var(--red)}
+.cskeys{font-weight:500;font-size:13px;color:var(--muted);letter-spacing:.04em}
+.cstables{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:22px;min-height:0}
+.cstable{border:2.5px solid var(--ink);background:var(--paper-soft);padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.cshead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.cshead .demotag{position:static;margin-left:auto;margin-right:10px;white-space:nowrap}
+.cshead .csn{white-space:nowrap}
+.cshead .csn{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px;color:var(--red)}
+.cshead .csc{font-weight:600;font-size:14px;color:var(--muted)}
+.csseats{display:flex;flex-wrap:wrap;gap:7px}
+.csseats span{border:2px solid var(--ink);background:var(--card);padding:5px 11px;font-weight:600;font-size:15px;line-height:1.2;display:flex;flex-direction:column;align-items:center}
+.csseats span.out{opacity:.5;text-decoration:line-through}
+.csseats span i{font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;margin-top:1px}
+.cslog{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.cslog li{font-weight:500;font-size:15.5px;line-height:1.3;color:var(--ink);padding-left:14px;border-left:4px solid var(--rule)}
+.cslog li b{color:var(--red);font-weight:700;margin-right:6px}
+/* the suspicion spectrum */
+.spec{margin-top:6px}
+.specaxis{display:flex;justify-content:space-between;font-weight:700;letter-spacing:.12em;font-size:11px;color:var(--muted)}
+.specrow{position:relative;height:118px;margin-top:6px;border-top:3px solid var(--ink)}
+.specrow::before{content:"";position:absolute;left:0;right:0;top:-3px;height:3px;background:linear-gradient(90deg,var(--teal),var(--red))}
+.sp{position:absolute;top:10px;transform:translateX(-50%);border:2px solid var(--ink);background:var(--card);padding:4px 9px;font-weight:600;font-size:13.5px;white-space:nowrap;line-height:1.15;display:flex;flex-direction:column;align-items:center;transition:background .5s,color .5s,border-color .5s}
+.sp:nth-child(3n+2){top:46px}
+.sp:nth-child(3n){top:82px}
+.cs.revealed .sp[data-role="b"]{background:var(--red);border-color:var(--red);color:var(--paper)}
+.cs.revealed .sp[data-role="b"]::after{content:"MANIPULATOR"}
+.cs.revealed .sp[data-role="a"]::after{content:"AUDITOR"}
+.cs.revealed .sp[data-role="c"]::after{content:"COUNSEL"}
+.cs.revealed .sp::after{font-size:8.5px;letter-spacing:.12em;font-weight:700;margin-top:2px;color:inherit;opacity:.85}
+.honours{display:flex;flex-direction:column;gap:7px;margin-top:auto}
+.hon{display:flex;gap:12px;align-items:baseline;border-left:6px solid var(--red);padding:5px 12px;background:var(--card)}
+.hon .hl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--red);flex:none;width:150px}
+.hon .hv{font-weight:500;font-size:14.5px;line-height:1.3;color:var(--ink)}
+.csreveal{display:none}
+
+/* ---- module 8 widgets ---- */
+.faded{opacity:.18;transition:opacity .5s}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;gap:10px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .6s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)} .wall .ex.c1{background:var(--terracotta)} .wall .ex.c2{background:var(--blue)} .wall .ex.c3{background:var(--green)} .wall .ex.c4{background:var(--maroon)} .wall .ex.c5{background:var(--sienna)} .wall .ex.c6{background:var(--ochre);color:var(--ink)}
+.chips{justify-content:center;flex-wrap:wrap}
+.chip b{color:inherit}
+/* the car market board */
+.mk{position:absolute;left:96px;right:96px;top:176px;bottom:44px;display:flex;flex-direction:column;gap:14px}
+.mkrule{font-weight:500;font-size:19px;line-height:1.35;color:var(--ink);text-align:center;min-height:52px}
+.mkrule b{color:var(--red)}
+.mkcols{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;min-height:0}
+.mkcol{position:relative;border:2.5px solid var(--ink);background:var(--paper-soft);padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.mkcol.closed{opacity:.35}
+.mkh{display:flex;justify-content:space-between;align-items:baseline}
+.mkh .mkn{font-weight:700;letter-spacing:.14em;font-size:15px;color:var(--red)}
+.mkh .mks{font-weight:600;font-size:13px;color:var(--muted)}
+.mkstrip svg{width:100%;height:90px;display:block}
+.mkstrip{margin-top:auto}
+.mktiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+.mkt{border:2px solid var(--ink);background:var(--card);padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.mkt .l{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--red)}
+.mkt .v{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--ink)}
+.mkt .v small{font-size:14px;color:var(--muted);margin-left:4px;font-family:var(--sans);font-weight:600}
+.mkkeys{font-weight:500;font-size:13px;color:var(--muted);text-align:center;letter-spacing:.03em}
+/* the shortlist cards */
+.bidgrid{position:absolute;left:96px;right:96px;top:186px;display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+.bid{border:2px solid var(--ink);border-top:8px solid var(--cat);background:var(--paper-soft);padding:12px 18px 14px;display:flex;flex-direction:column;gap:6px}
+.bid .arch{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--cat)}
+.bid .nm{font-family:var(--display);font-weight:900;font-size:24px;line-height:1;color:var(--ink)}
+.bid .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+.bid ul{list-style:none}
+.bid li{position:relative;padding-left:16px;font-size:14px;line-height:1.3;color:var(--ink);margin-top:4px}
+.bid .s li::before{content:"";position:absolute;left:0;top:6px;width:7px;height:7px;background:var(--green)}
+.bid .w li::before{content:"";position:absolute;left:1px;top:6px;width:6px;height:6px;border:2px solid var(--muted)}
+.bid .w li{color:var(--muted)}
+/* the live vote line on the board */
+.csvote{font-weight:600;font-size:14.5px;line-height:1.35;color:var(--ink);border-left:6px solid var(--red);padding:6px 12px;background:var(--card);display:none}
+.csvote.on{display:block}
+.csvote b{color:var(--red)}
+.csseats span.bk{background:var(--red);border-color:var(--red);color:var(--paper)}
+.csseats span.bk i{color:var(--paper);opacity:.85}
+/* the recommendation bars */
+.recobars{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.rb{display:grid;grid-template-columns:270px 1fr 44px;align-items:center;gap:12px}
+.rb .rn{font-weight:600;font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb .rn small{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--muted);white-space:normal;line-height:1.2}
+.rb .rbar{height:26px;background:var(--card);border:2px solid var(--ink);position:relative}
+.rb .rbar i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);transition:width .8s}
+.rb .rc{font-family:var(--display);font-weight:900;font-size:26px;color:var(--ink);text-align:right}
+.cs.revealed .rb.backed .rn{color:var(--red)}
+.cs.revealed .rb.backed .rbar i{background:var(--red)}
+.cs.revealed .rb.backed .rn small{color:var(--red)}
+.cs.revealed .rb.backed .rn small::after{content:" · THE MANIPULATORS\' BIDDER"}
+.recoline{margin-top:auto;font-weight:600;font-size:15px;line-height:1.4;color:var(--ink)}
+.recoline b{color:var(--red)}
+/* scoreboard, two columns */
+.scb{width:100%;max-width:900px;display:flex;flex-direction:column;gap:12px}
+.scbrow{display:grid;grid-template-columns:64px 1fr 190px 120px;align-items:center;gap:14px;border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
+.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
+.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
+.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
+.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
+.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
+.scbrow:nth-child(2) .tt{color:var(--red)}
+.onreveal{opacity:0;transition:opacity .6s}
+.cs.revealed .onreveal{opacity:1}
+
+/* ---- 565 figure treatments, lifted from the week 5 lecture ---- */
+.fig.f565{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.leadline{position:absolute;left:96px;right:96px;top:196px;margin:0;font-size:22px;line-height:1.4;text-align:center}
+.leadline b{color:var(--red)}
+.ba{display:flex;align-items:center;justify-content:center;gap:64px}
+.ba .station{display:flex;flex-direction:column;align-items:center;gap:22px;width:300px;text-align:center}
+.ba .station .pg{height:152px;width:auto}
+.ba .station.then{opacity:.4}
+.ba .station .slbl{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:20px;color:var(--ink)}
+.ba .station.now .slbl{color:var(--red)}
+.ba .arrow{font-size:80px;color:var(--red);line-height:1}
+.s4note{font-weight:500;font-size:21px;line-height:1.4;color:var(--muted);text-align:center;max-width:56ch}
+.s4note b{color:var(--red)}
+.cols{display:flex;align-items:flex-start;justify-content:center;gap:96px}
+.col{display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;width:360px}
+.col .pg{height:140px;width:auto}
+.col .ctitle{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:22px;color:var(--ink)}
+.col.accent .ctitle{color:var(--red)}
+.col .csub{font-weight:500;font-size:18px;color:var(--muted);max-width:26ch;line-height:1.35}
+.fig .cap{font-weight:500;font-size:21px;line-height:1.4;color:var(--muted);text-align:center;max-width:48ch}
+.conv{display:flex;flex-direction:column;align-items:center;gap:20px}
+.conv .pg{height:196px;width:auto}
+.chips .chip{font-size:18px;padding:9px 18px;line-height:1.3}
+.exrow{display:flex;justify-content:center;gap:34px;width:100%}
+.extile{flex:1;max-width:320px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.extile .ic{height:124px;display:flex;align-items:flex-end;justify-content:center}
+.extile .ic .pg{height:118px;width:auto}
+.extile .xl{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:18px;color:var(--ink);line-height:1.2}
+.extile .xs{font-weight:500;font-size:16px;color:var(--muted);line-height:1.35;max-width:26ch}
+.pg .figout{fill:var(--paper);stroke:var(--ink);stroke-width:3}
+
+/* the lot: a full-canvas scene (game/forecourt.js) with Ryan's wording on paper cards over the bottom */
+.lotstage{position:absolute;inset:0;width:1280px;height:720px;display:block}
+.lottitle{position:absolute;left:40px;top:62px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:6px 12px}
+.lotcount{position:absolute;right:40px;top:62px;display:flex;align-items:baseline;gap:6px;font-weight:700;letter-spacing:.1em;font-size:12px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:5px 12px}
+.lotcount b{font-family:var(--display);font-weight:900;font-size:20px;color:var(--red)}
+.lotjoin{position:absolute;left:40px;bottom:44px;background:var(--paper-soft);border:2px solid var(--ink);padding:9px 10px 7px}
+.lotjoin .joinchip{gap:5px}
+.lotjoin .joinchip .qr{width:130px;height:130px;border-width:2px;padding:6px}
+.lotjoin .joinchip .ju{font-size:12px;color:var(--ink)}
+.lotcard{position:absolute;left:204px;right:40px;bottom:44px;background:var(--paper-soft);border:2px solid var(--ink);padding:11px 16px}
+.lotrules{display:flex;flex-direction:column;gap:7px}
+.lotrules .lr{font-weight:500;font-size:17px;line-height:1.32;color:var(--ink);border-left:5px solid var(--red);padding:1px 12px}
+.lotrules .lr b{color:var(--red)}
+.lotstats{display:none;grid-template-columns:1fr auto;grid-template-areas:"round keys" "line line";align-items:baseline;gap:5px 20px}
+.lotstats.on{display:grid}
+.lotstats .ls1{grid-area:round}
+.lotstats .ls2{grid-area:line}
+.lotstats .ls3{grid-area:keys}
+.lotrules.off{display:none}
+.lotstats .ls1{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:14px;color:var(--red)}
+.lotstats .ls2{font-weight:500;font-size:18px;line-height:1.32;color:var(--ink)}
+.lotstats .ls2 b{color:var(--red)}
+.lotstats .ls3{font-weight:500;font-size:13px;color:var(--muted);letter-spacing:.03em}
+
+/* the name board */
+.cstable.big{position:relative;overflow:hidden}
+.names{display:flex;flex-wrap:wrap;gap:10px 14px;align-content:flex-start;margin-top:4px}
+.names span{position:relative;font-weight:700;font-size:27px;line-height:1.1;color:var(--ink);padding:6px 10px;border:2.5px solid var(--ink);background:var(--card)}
+.names span.out{color:var(--muted);border-color:var(--rule);background:transparent}
+.names span::after{content:"";position:absolute;left:6px;right:6px;top:50%;height:5px;background:var(--red);transform:scaleX(0);transform-origin:left center;transition:transform .9s ease}
+.names span.out::after{transform:scaleX(1)}
+.names span.fresh{animation:shake .6s ease}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.cs.revealed .names span.bk{color:var(--red);border-color:var(--red)}
+.csvote{margin-top:auto;font-size:18px}
+.csvote b{font-family:var(--display);font-weight:900;font-size:26px}
+.banner{position:absolute;left:0;right:0;bottom:0;padding:16px 20px;background:var(--red);color:var(--paper);font-family:var(--display);font-weight:900;font-size:30px;line-height:1.05;letter-spacing:.01em;transform:translateY(110%);transition:transform .5s ease}
+.banner.on{transform:none}
+.banner.stay{background:var(--teal)}
+.banner small{display:block;font-family:var(--sans);font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;opacity:.9;margin-bottom:4px}
+/* stacked reveal slides */
+.cs.stack{flex-direction:column}
+.cs.stack .cstable{flex:1;min-height:0}
+.cs.stack .specrow{height:112px}
+.cs.stack .honours{margin-top:6px}
+.cs.stack .hon .hv{font-size:19px}
+.cs.stack .hon .hl{font-size:14px;width:220px}
+/* shortlist ticks and crosses */
+.bid ul li{padding-left:24px;color:var(--ink)}
+.bid .s li::before{content:"\2713";position:absolute;left:0;top:-1px;width:auto;height:auto;background:none;font-weight:900;font-size:16px;color:var(--green)}
+.bid .w li::before{content:"\2717";position:absolute;left:0;top:-1px;width:auto;height:auto;border:0;font-weight:900;font-size:16px;color:var(--red)}
+.bid .w li{color:var(--ink)}
+
+/* role pictograms */
+.rolefig{flex:none;width:340px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.rolepg{height:230px;width:auto}
+.rolebub{font-weight:600;font-size:20px;line-height:1.3;text-align:center;max-width:22ch}
+/* night on the board: the slide inverts */
+.slide.night{background:var(--ink)}
+.slide.night .content .kicker,.slide.night .kicker{color:var(--paper);opacity:.8}
+.slide.night h2{color:var(--paper)}
+.slide.night .csclock,.slide.night .cstable{background:#26271f;border-color:var(--paper)}
+.slide.night .csphase{color:var(--ochre)}
+.slide.night .cstime{color:var(--paper)}
+.slide.night .cskeys,.slide.night .cshead .csc{color:var(--tan)}
+.slide.night .names span{color:var(--paper);border-color:var(--paper);background:transparent}
+.slide.night .names span.out{color:var(--grey);border-color:var(--grey)}
+.slide.night .csvote{color:var(--paper);background:transparent}
+/* your world */
+.qrpanel{position:absolute;right:96px;top:236px;display:flex;flex-direction:column;align-items:center;gap:22px}
+
+/* the awards */
+/* the terminus (terminus.js): the awards are a departures board that comes down from the station roof once the train is in;
+   terminus.js holds it up out of sight and lets it down by its transform, so the hangers run on well past the top of the slide */
+.termstage{position:absolute;inset:0;width:1280px;height:720px;display:block}
+.fieldtitle{position:absolute;left:40px;top:62px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:6px 12px;z-index:3}
+.board{position:absolute;left:96px;top:100px;width:880px;background:#1B1C19;border:3px solid #1B1C19;box-shadow:8px 8px 0 rgba(27,28,25,.3);padding:10px 12px 12px;z-index:2}
+.board .rod{position:absolute;top:-703px;height:700px;width:6px;background:#1B1C19}
+.board .rod.l{left:90px} .board .rod.r{right:90px}
+.awards{display:flex;flex-direction:column;gap:4px}
+.aw{background:#2A2B27;height:40px;padding:0 16px;display:flex;align-items:center}
+.awin{display:grid;grid-template-columns:262px 250px 1fr;column-gap:16px;align-items:baseline;width:100%;white-space:nowrap}
+.aw .at{font-family:var(--display);font-weight:900;font-size:21px;line-height:1;color:#F7F2E6;overflow:hidden}
+.aw .an{font-weight:700;font-size:21px;color:#F2C14E;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.aw .aw2{font-weight:500;font-size:12.5px;color:#B9AE97;overflow:hidden;text-overflow:ellipsis}
+/* the podium */
+.podium{position:absolute;left:0;right:0;bottom:134px;display:flex;align-items:flex-end;justify-content:center;gap:26px;height:360px;z-index:2}
+.podcap{position:absolute;right:40px;top:62px;max-width:430px;font-weight:600;font-size:14px;line-height:1.35;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:6px 12px;z-index:3}
+.podcap b{color:var(--red)}
+.pcol .pname,.pcol .ppts{background:var(--paper-soft);border:2px solid var(--ink);padding:2px 12px}
+.pcol .pname:empty,.pcol .ppts:empty{display:none}
+.pcol .pav{width:120px;height:120px;margin-bottom:-11px;overflow:visible}   /* the avatar built on the phone (avatar.js), a bust standing on the block */
+.pcol .pav:empty{display:none}
+.pcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;width:260px}
+.pcol .pname{font-weight:700;font-size:30px;line-height:1.1;color:var(--ink);text-align:center}
+.pcol .ppts{font-family:var(--display);font-weight:900;font-size:26px;color:var(--muted)}
+.pcol .pblock{width:100%;display:flex;align-items:flex-start;justify-content:center;border:3px solid var(--ink);font-family:var(--display);font-weight:900;font-size:64px;color:var(--paper);padding-top:8px}
+.pcol.gold .pblock{height:210px;background:var(--ochre)}
+.pcol.silver .pblock{height:150px;background:var(--grey)}
+.pcol.bronze .pblock{height:100px;background:var(--terracotta)}
+.pcol.gold .pname{font-size:36px;color:var(--red)}
+</style>
+</head><body>
+
+<section class="sr-only" aria-label="Full text of all slides">
+<h1>Applied Game Theory, Module 8 — Information Asymmetries</h1>
+<p>Accessible text version. Each heading below is one slide, in order.</p>
+<section aria-label="Slide 1"><h2>Slide 1 of 32: Title slide</h2><p>Uncertainty and information. Module 8 of the Applied Game Theory executive programme.</p></section>
+<section aria-label="Slide 2"><h2>Slide 2 of 32: Learning objectives</h2><p>Four objectives revealed in turn: drop the assumption of complete information and play a market where it fails; the three devices, signaling, signal jamming and screening; lemons and peaches, pooling and separating; and Hidden Agenda, a hidden loyalty at the table.</p></section>
+<section aria-label="Slide 3"><h2>Slide 3 of 32: Why talk is cheap</h2><p>Why do people lie? Because sometimes telling the truth is against their own strategic interests. Two figures: a self-interested claim, with the Archbishop of Canterbury saying he believes, which is all in the way of business; and a costly admission, if he says he does not, one can take it he means what he says. Then the question: how do we deal with information asymmetries?</p></section>
+<section aria-label="Slide 4"><h2>Slide 4 of 32: Manipulating information (flex)</h2><p>Two figures. A person with a locked box: you know something the other side does not, so you can conceal it or reveal misleading information, or reveal selected information truthfully. A person with a magnifying glass: you want to find out what the other side knows, so you elicit information and filter truth from falsehood, or deliberately remain ignorant. Then the question: but how can you do any of these if you and the other side both know that talk is cheap? A pre-agreed cut if the session runs long.</p></section>
+<section aria-label="Slide 5"><h2>Slide 5 of 32: Signaling, signal jamming, and screening</h2><p>Three devices can be used to manipulate information, shown as three tiles with the instructor's definitions: signaling, favorable leakage or actions taken to have the other side believe your information is good; signal jamming, acting to reduce or eliminate the leakage of unfavorable information; screening, forcing the other side to reveal its true information.</p></section>
+<section aria-label="Slide 6"><h2>Slide 6 of 32: The car market</h2><p>The whole slide is a drawn scene: a used-car lot in 1970, the year of Akerlof's paper, under a small title chip that reads Module 8, the car market. Behind the lot stand a sales office with a butterfly roof, a stone pylon and plate glass, a tall roadside sign with a starburst, a blank panel showing a car and a red arrow with bulbs chasing along it, strings of pennants fluttering between poles, saucer lamps at the kerb, palms, a low skyline and hills, and clouds drifting over. A road runs along the front, and now and then a beetle, a pickup, a station wagon with a surfboard or a small bus goes by. A salesman in a plaid jacket paces the kerb. There is no lettering anywhere in the scenery. On the lot is one identical sedan per buyer in the room (never fewer than twenty-four before the game starts), parked in rows either side of a driveway, every one the same shape and the same tan, so nothing shows which are lemons and which are peaches. Heat shimmers off the bonnets and a glint of light crosses the windscreens from time to time. When a round closes the sold cars pull out of their bays one after another, drive down the driveway, turn onto the road and leave to the right, turning their true colour as they go, lemon yellow or peach terracotta, with the salesman turning to watch them; new arrivals drive in from the left and park in the free bays. After round two the unsold peaches drive off to the left in terracotta and lemon owners take their bays. In the rule change the peaches drive back in, each with a green warranty shield and a tick on its roof. The light follows the game: morning before round one, midday, afternoon, and golden hour with the sign's bulbs, the lamps and the office lit for the warranty round. Over the bottom of the scene sit two paper cards. One holds a small QR code that joins the market, with ryanlamare.com/go under it, and a count at the top right shows how many are in the market. The other holds two lines of rules before round one: half the cars are lemons and half peaches and you cannot tell from the outside; a lemon is worth 1500 to you and a peach 4000, each round bid what you would pay for a car off the lot, and the owner sells at or above their own price, and not a dollar under. Once round one opens the rules give way to a live line: bids in, then average bid, cars sold by type, buyers' gain or loss, peach owners withdrawing and new cars arriving. The keys 1, 2 and 3 open a round, C closes it and W is the rule change.</p></section>
+<section aria-label="Slide 7"><h2>Slide 7 of 32: Lemons versus peaches, drawn</h2><p>A price line from 0 to 4000 with the lemon band at 1000 to 1500 and the peach band at 3000 to 4000; a dashed line marks the buyer's maximum of 2750 under uncertainty; the peach band is struck as peach owners leave the market; a final red chip: so what can buyers do? Ask the sellers to produce signals of quality!</p></section>
+<section aria-label="Slide 8"><h2>Slide 8 of 32: Adverse selection</h2><p>People know their own propensity for risk far better than insurance companies do. A before-and-after figure: the pool priced at the average, then only the bad risks stay. Then: people select themselves into groups based on private information and by doing so reveal it, so companies offer several choices as a screening mechanism; the risky driver picks the high-coverage option.</p></section>
+<section aria-label="Slide 9"><h2>Slide 9 of 32: Credible signals</h2><p>Three tiles from the instructor's own examples: the warranty, which the seller only offers if the car is good enough not to lose money on; the expensive, useless, uninformative product launch, which has value; the bank's marble countertops and Nespresso machines. Then: a signal works only if it is too costly for the wrong type to fake.</p></section>
+<section aria-label="Slide 10"><h2>Slide 10 of 32: When the signal breaks</h2><p>A costly signal separates one figure from three; when it is cheap to fake, all nine look alike. Generative AI made the polished résumé nearly free; the signal drowns in noise, firms retreat to referrals, and well-qualified outsiders get screened out.</p></section>
+<section aria-label="Slide 11"><h2>Slide 11 of 32: The dog that didn\'t bark (flex)</h2><p>Signaling can get messy: sometimes one side expects a signal and the other does not provide it. A cartoon dog face on, brown with a white muzzle and a red collar, mouth shut, with a struck-out speech bubble, the curious incident of the dog in the night-time, signaling by not signaling. Three chips in turn: the danger of a pass/fail grade, what does a student signal by not signaling; I am not political, I do not vote, you are political because you do not vote; and keep this in mind when hiring job candidates. A pre-agreed cut if the session runs long.</p></section>
+<section aria-label="Slide 12"><h2>Slide 12 of 32: So, should you always signal?</h2><p>A bar figure: signalling is low at the bottom, who cannot, peaks in the middle, who signal hardest, and is low at the top, who need not. Not necessarily! Be aware of countersignals: conspicuous consumption, political grandstanding, and gunners in law schools.</p></section>
+<section aria-label="Slide 13"><h2>Slide 13 of 32: Pooling and separating equilibria</h2><p>Cleanliness signals a house's quality, but every seller cleans, so even houses with terrible problems are clean. Two figures: pooling, where all types take the same action and it tells you nothing; separating, where the good types signal their goodness. Then: how might I find a separating equilibrium when I am in the market for a house?</p></section>
+<section aria-label="Slide 14"><h2>Slide 14 of 32: The Tapas committee</h2><p>The setup of Hidden Agenda at the Tapas table: the airline is choosing who finances its spare engine and the players are the committee recommending a bidder to the board. Everyone at the table plays, ten to fifteen people. Roles are Committee Member, Manipulator (two, or three at a table of twelve or more), Auditor and General Counsel. Two phases each round, day and night; the moderator runs the table and the clock on the big screen runs the room. Phones deal the roles. A QR code joins, with live seated counts for both tables.</p></section>
+<section aria-label="Slide 15"><h2>Slide 15 of 32: The Tapas shortlist</h2><p>Four bidder cards, each with an archetype, a name, two strengths marked with green ticks and two watch-outs marked with red crosses: the bank, the lessor, the manufacturer, the fund. The shortlist is also on every phone. No obviously correct choice, on purpose.</p></section>
+<section aria-label="Slide 16"><h2>Slide 16 of 32: Committee Member</h2><p>An honest member here in good faith to recommend the best offer. The job is to spot committee members with a hidden agenda and get them removed before they take the committee over. No special power, just the discussion and a read of people. The default role. A drawn detective with a magnifying glass and a thought bubble, who are the Manipulators?</p></section>
+<section aria-label="Slide 17"><h2>Slide 17 of 32: Manipulator</h2><p>By day an ordinary member, but secretly backing one bidder whatever the offers say. The phone shows which bidder and the fellow Manipulators. Each night the Manipulators together make an anonymous allegation against one honest member, who is pulled off the committee while it is investigated; if they cannot agree, nobody is removed. Manipulators win by becoming half the committee and lose if caught. The same detective with two small red horns and the bubble, but I'm a committee member!</p></section>
+<section aria-label="Slide 18"><h2>Slide 18 of 32: Auditor</h2><p>An honest member who can check one committee member each night for a hidden agenda: the phone says whether they are a Manipulator. The read is accurate but cannot be proved, and a Manipulator can claim to be the Auditor. A magnifying glass revealing a small red horned figure inside: one check a night, and it never lies.</p></section>
+<section aria-label="Slide 19"><h2>Slide 19 of 32: General Counsel</h2><p>The one member who can shield a committee member so that any allegation against them that night is dismissed. Not the same person two nights running, but General Counsel may shield themself. Keeping the Auditor in the room is often the most important job. A person behind a green shield with a tick: one shield a night.</p></section>
+<section aria-label="Slide 20"><h2>Slide 20 of 32: The day</h2><p>Introductions before the first night. Each day after that the committee debates which offer is best and who is not acting in good faith. An accusation must be seconded, the accused gets thirty seconds, then everyone votes on their phone to remove or keep, the count lands on the big screen, majority wins. Anyone voted off leaves but keeps their phone. Five minutes a day on the clock. The drawn phone shows a remove-or-keep vote.</p></section>
+<section aria-label="Slide 21"><h2>Slide 21 of 32: The night</h2><p>Phones only, no talking. The Manipulators agree on one name for the allegation, the Auditor checks, General Counsel shields. Everyone else answers one question, who do you suspect, up to three names, which comes back to them in the morning. A shielded person is not removed; otherwise the moderator announces the removal in the morning. The drawn phone shows the suspects page.</p></section>
+<section aria-label="Slide 22"><h2>Slide 22 of 32: Endgame</h2><p>Rounds continue until one side wins. Two figures: the committee wins, nine people with the Manipulators outlined as removed, every Manipulator removed and a clean recommendation on the merits; the Manipulators win, nine people of whom half are red, and they steer the airline to their bidder. Then everyone reveals who they were and the phones' record is shown. Ten points to everyone on the winning side.</p></section>
+<section aria-label="Slide 23"><h2>Slide 23 of 32: The Granito management team</h2><p>The second table: Granito Air is choosing who buys its five stored engines and the players are the management team recommending a buyer. Same game, roles and clock; the Manipulators back one of the four traders. Beside the bullets, the module one drawing of a Granito Air jet above five engines on stands.</p></section>
+<section aria-label="Slide 24"><h2>Slide 24 of 32: The Granito shortlist</h2><p>Four trader cards with green ticks and red crosses: the cash buyer, the partner, the fast mover, the guarantor.</p></section>
+<section aria-label="Slide 25"><h2>Slide 25 of 32: The two committees</h2><p>The live board that stays on screen during the game. A clock across the top reads the phase and the time left; D starts a day, N a night, P pauses. Below, both tables show every name in large type. When someone is removed overnight or voted off, their name is struck through with a red line that draws across it, and a banner on that table announces it: pulled off the committee overnight, voted off, or stays. During an open vote the table shows the count to remove and to keep. Demo data until the tables start.</p></section>
+<section aria-label="Slide 26"><h2>Slide 26 of 32: The recommendation</h2><p>For each table, bars for the four bidders showing how many recommended each once the game was over, and a line naming the table's choice. One press reveals which bidder the Manipulators were backing and whether they got their way.</p></section>
+<section aria-label="Slide 27"><h2>Slide 27 of 32: What the phones recorded</h2><p>Two full-width spectra, one per table, from never suspected to suspected every night, every player placed by how often colleagues named them in the nightly suspects question. One press reveals the roles: Manipulators turn red, the Auditor and General Counsel are labelled.</p></section>
+<section aria-label="Slide 28"><h2>Slide 28 of 32: The honours</h2><p>Three honours per table, revealed one at a time: Nose for it, for the honest player who named a Manipulator most often; Hidden in plain sight, for the least-suspected Manipulator; Saint, for the least-suspected honest member.</p></section>
+<section aria-label="Slide 29"><h2>Slide 29 of 32: What was hidden?</h2><p>The lesson as four tiles: a speech bubble, you saw words, never loyalty; a padlock, the loyalty was hidden, not just the choice; nine identical people, honest members and Manipulators sounded alike, a pooling equilibrium; a struck megaphone, a perfect read is useless if it cannot be credibly shared, talk is cheap.</p></section>
+<section aria-label="Slide 30"><h2>Slide 30 of 32: Information asymmetries in your world</h2><p>A write-in wall. The question on the phones: where in your own deals does the other side know something you don't, and what do you do about it? A QR code and a live response count; on a keypress the answers fill the screen as coloured chips and the instructor sorts them aloud into signaling, jamming and screening.</p></section>
+<section aria-label="Slide 31"><h2>Slide 31 of 32: The awards</h2><p>The end of the line, under a small title chip that reads Applied game theory, the awards. The slide opens out in the country late in the afternoon of day two, drawn as the journey in module one was drawn: a low sun, hills, fields and hedges, telegraph poles and the grass by the line, each sliding past at its own pace. The module one train draws into the picture from the left, its green locomotive and one carriage for every hand the room sent in, every blind up and every compartment lit, and then holds its place while the world runs past it. The country gives way to the edge of town: roofs, a spire, mill chimneys and a gasholder in the haze, then brick terraces with lit windows along the top of a retaining wall. Then the approach: a second line running in beside ours, sidings with a few wagons, two colour-light signals that turn back to red once the locomotive has passed them, and a signal box. The end of the platform slides in under its lamps, then the end of the old yellow-brick range, and the roof closes over. It is a London station, the same one the train left in module one, a century and a half on: the brick range with its tall arched windows, and over it a white lattice roof that rises from a single trunk and fans out across the concourse; a hanging clock shows the real time, travellers wait with cases and backpacks, a luggage trolley is half way into the wall, and pigeons peck along the near platform. The train brakes all the way in and creeps the last few yards up to the buffers while the pigeons scatter, and it stops in a last cloud of steam, with the whole station and its roof in view. Only then does a black departures board come down from the roof on two hangers and settle, with eight blank rows; that is about twenty seconds after the slide opened, and the pigeons come back as it settles. Each press flaps one row round to the award, the winner's name computed from the games, and what it was for; a press made before the board is down brings it down at once. The arrival plays the first time the slide is reached, a click on the station clock plays it again, and coming back to the slide finds the train standing and the board down. The eight awards: Best in show for the median dog in module one; The mind reader for the number game cracked in the fewest guesses; The partnership for the Price Wars pair that made the most together; The mixed blessing for winning the bingo in module six, all outcome and no decision; Trusted and trusting for sharing the pot in split or steal; Sharpest buyer for the best return in the car market; Quick draw for the fastest to pick, on average, in every game played on a clock; Careful marksman for the most deliberate.</p></section>
+<section aria-label="Slide 32"><h2>Slide 32 of 32: Gold, silver and bronze</h2><p>The same station, the train standing at the buffers with its steam up, and a podium on the far platform with the crowd to either side: bronze revealed first, then silver, then gold, each with the name and the programme total, and each standing on their block as the face they built on their phone on the first morning. On gold the locomotive whistles, confetti falls from the roof and the pigeons take off. Everyone can see their own record at ryanlamare.com/go/points.</p></section>
+</section>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">8</div>
+  <div class="tag"><i></i>MODULE 8 · APPLIED GAME THEORY · <span class="swapchip">RRPF</span></div>
+  <h1>INFORMATION<br><span class="r">ASYMMETRIES</span></h1>
+  <div class="sub">Uncertainty and information</div>
+  <div class="byline">J. RYAN LAMARE</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:1000px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Drop the assumption of complete information, and play a market where it fails</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Signaling, signal jamming, and screening: the three devices for handling what the other side knows</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Lemons and peaches, pooling and separating: when a signal works and when it doesn&rsquo;t</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Hidden Agenda: a hidden loyalty at the table, and the room&rsquo;s read of it</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Why talk is cheap</h2>
+  <div class="leadline"><b>Why do people lie?</b> Because sometimes telling the truth is against their own strategic interests</div>
+  <div class="fig f565" style="top:280px;bottom:110px">
+    <div class="cols">
+      <div class="col"><div class="ctitle">A self-interested claim</div><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--red)" x="30.5" y="2" width="3" height="13"/><rect fill="var(--red)" x="26" y="5.5" width="12" height="3"/><path fill="var(--ink)" d="M13 33 L32 15 L51 33 Z"/><rect fill="var(--ink)" x="18" y="33" width="28" height="25"/><rect fill="var(--paper)" x="28" y="44" width="8" height="14"/><rect fill="var(--paper)" x="22" y="38" width="5" height="5"/><rect fill="var(--paper)" x="37" y="38" width="5" height="5"/></svg><div class="csub">&ldquo;If the Archbishop of Canterbury says he believes in God, that&rsquo;s all in the way of business&rdquo;</div></div>
+      <div class="col accent" data-step="1"><div class="ctitle">A costly admission</div><svg class="pg" viewBox="0 0 64 64"><circle fill="var(--ink)" cx="32" cy="32" r="24"/><circle fill="var(--paper)" cx="32" cy="32" r="19"/><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink)">$</text></svg><div class="csub">&ldquo;but if he says he doesn&rsquo;t, one can take it he means what he says&rdquo;</div></div>
+    </div>
+    <div class="cap" data-step="2"><b>How do we deal with information asymmetries?</b></div>
+  </div>
+</section>
+
+<section class="slide content flex" data-i="3">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Manipulating information</h2>
+  <div class="fig f565" style="top:196px;bottom:60px;gap:24px">
+    <div class="cols" style="gap:70px">
+      <div class="col" style="width:420px"><div class="ctitle">You know something the other side does not</div><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="34" cy="20" r="12"/><path fill="var(--ink)" d="M12 44 Q34 34 56 44 L50 86 L18 86 Z"/><rect fill="var(--ink)" x="21" y="86" width="10" height="30"/><rect fill="var(--ink)" x="37" y="86" width="10" height="30"/><rect fill="var(--red)" x="60" y="60" width="34" height="28" rx="3"/><path fill="none" stroke="var(--red)" stroke-width="6" d="M67 60 v-8 a10 10 0 0 1 20 0 v8"/><circle fill="var(--paper)" cx="77" cy="72" r="4"/></svg><div class="chips" style="flex-direction:column;gap:8px" data-step="1"><div class="chip">Conceal information, or reveal misleading information</div><div class="chip">Reveal selected information truthfully</div></div></div>
+      <div class="col accent" style="width:420px" data-step="2"><div class="ctitle">You want to find out what the other side knows</div><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="34" cy="20" r="12"/><path fill="var(--ink)" d="M12 44 Q34 34 56 44 L50 86 L18 86 Z"/><rect fill="var(--ink)" x="21" y="86" width="10" height="30"/><rect fill="var(--ink)" x="37" y="86" width="10" height="30"/><circle fill="none" stroke="var(--red)" stroke-width="7" cx="74" cy="58" r="15"/><path stroke="var(--red)" stroke-width="8" stroke-linecap="round" d="M85 70 L98 84"/></svg><div class="chips" style="flex-direction:column;gap:8px" data-step="3"><div class="chip">Elicit information, or filter truth from falsehood</div><div class="chip">Deliberately remain ignorant</div></div></div>
+    </div>
+    <div class="cap" data-step="4"><b>But how can you do any of these if you and the other side both know that talk is cheap?</b></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Signaling, signal jamming, and screening</h2>
+  <div class="leadline">Three devices can be used to manipulate information:</div>
+  <div class="fig f565" style="top:280px;bottom:80px">
+    <div class="exrow">
+      <div class="extile" data-step="1"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink)" x="11" y="40" width="10" height="16"/><rect fill="var(--ink)" x="27" y="29" width="10" height="27"/><rect fill="var(--red)" x="43" y="16" width="10" height="40"/></svg></div><div class="xl">Signaling</div><div class="xs">Favorable leakage of information, or actions taken to have the other side believe your information is good</div></div>
+      <div class="extile" data-step="2"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink)" x="11" y="40" width="10" height="16"/><rect fill="var(--ink)" x="27" y="29" width="10" height="27"/><rect fill="var(--ink)" x="43" y="16" width="10" height="40"/><path fill="none" stroke="var(--red)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" d="M6 21 L19 31 L31 15 L43 29 L58 13"/></svg></div><div class="xl">Signal jamming</div><div class="xs">Acting to reduce or eliminate the leakage of unfavorable information</div></div>
+      <div class="extile" data-step="3"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><circle fill="var(--ink)" cx="20" cy="10" r="3.2"/><circle fill="var(--ink)" cx="32" cy="10" r="3.2"/><circle fill="var(--ink)" cx="44" cy="10" r="3.2"/><path fill="var(--ink)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"/><circle fill="var(--red)" cx="32" cy="59" r="4.2"/></svg></div><div class="xl">Screening</div><div class="xs">Forcing the other side to reveal that side&rsquo;s true information</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="5" style="padding:0">
+  <svg class="lotstage" id="lotSvg" viewBox="0 0 1280 720" aria-hidden="true"></svg>
+  <div class="lottitle">MODULE 8 &middot; THE CAR MARKET</div>
+  <div class="lotcount"><b id="mkBuyers">0</b><span>IN THE MARKET</span></div>
+  <div class="demotag" id="lotDemo" style="position:absolute;top:20px;left:40px;right:auto;display:none">DEMO DATA</div>
+  <div class="lotjoin"><div class="joinchip"><div class="qr"><img src="qr-market.svg" alt="QR code for the car market at ryanlamare.com/teaching/exec/demo/m8/game/?g=market"></div><div class="ju">ryanlamare.com/go</div></div></div>
+  <div class="lotcard">
+    <div class="lotrules" id="lotRules">
+      <div class="lr">Half these cars are <b>lemons</b> and half are <b>peaches</b>. From the outside, you can&rsquo;t tell which</div>
+      <div class="lr">A lemon is worth <b>$1500</b> to you, a peach <b>$4000</b>. Each round, bid what you&rsquo;d pay for a car off the lot. The owner sells at or above their own price, and not a dollar under</div>
+    </div>
+    <div class="lotstats" id="lotStats"><div class="ls1" id="lotRound"></div><div class="ls2" id="lotLine"></div><div class="ls3">1, 2, 3 open a round &middot; C closes it &middot; W is the rule change</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Lemons versus peaches</h2>
+  <div class="fig" style="top:190px">
+    <svg class="lemons" viewBox="0 0 1000 340" style="width:1000px;height:340px" role="img" aria-label="Price line showing lemon and peach bands and the buyer's maximum">
+      <line class="axis" x1="60" y1="270" x2="960" y2="270"/>
+      <g class="tick">
+        <text x="60" y="298" text-anchor="middle">$0</text>
+        <text x="285" y="298" text-anchor="middle">$1000</text>
+        <text x="397" y="298" text-anchor="middle">$1500</text>
+        <text x="735" y="298" text-anchor="middle">$3000</text>
+        <text x="960" y="298" text-anchor="middle">$4000</text>
+      </g>
+      <g>
+        <rect class="band" x="285" y="180" width="112" height="90" fill="var(--ochre)"/>
+        <text class="bandlbl" x="341" y="160" text-anchor="middle">LEMONS</text>
+        <text class="tick" x="341" y="252" text-anchor="middle">$1000&ndash;$1500</text>
+      </g>
+      <g id="peachband">
+        <rect class="band" x="735" y="180" width="225" height="90" fill="var(--terracotta)"/>
+        <text class="bandlbl" x="847" y="160" text-anchor="middle">PEACHES</text>
+        <text class="tick" x="847" y="252" text-anchor="middle">$3000&ndash;$4000</text>
+      </g>
+      <g data-step="1">
+        <line class="buyline" x1="678" y1="60" x2="678" y2="270"/>
+        <text class="buylbl" x="678" y="42" text-anchor="middle">BUYER&rsquo;S MAX UNDER UNCERTAINTY: $2750</text>
+      </g>
+      <g data-step="2">
+        <line x1="725" y1="170" x2="970" y2="280" stroke="var(--maroon)" stroke-width="6" stroke-linecap="round"/>
+        <text class="bandlbl" x="800" y="325" text-anchor="middle" fill="var(--maroon)">PEACH OWNERS LEAVE THE MARKET</text>
+      </g>
+    </svg>
+    <div class="chips" data-step="3"><div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>So, what can buyers do to resolve this game under incomplete information? Ask the sellers to produce signals of quality!</b></div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Adverse selection</h2>
+  <div class="leadline">People know their own propensity for risk far better than insurance companies do</div>
+  <div class="fig f565" style="top:270px;bottom:70px;gap:30px">
+    <div class="ba">
+      <div class="station then"><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="12" cy="12" r="5"/><path fill="var(--ink)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--ink)" cx="92" cy="12" r="5"/><path fill="var(--ink)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--ink)" cx="12" cy="52" r="5"/><path fill="var(--ink)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--ink)" cx="92" cy="52" r="5"/><path fill="var(--ink)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--ink)" cx="12" cy="92" r="5"/><path fill="var(--ink)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--ink)" cx="52" cy="92" r="5"/><path fill="var(--ink)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="slbl">The pool, priced at the average</div></div>
+      <div class="arrow" data-step="1">&rarr;</div>
+      <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 104 122"><g class="figout"><circle cx="12" cy="12" r="5"/><path d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/></g><circle fill="var(--terracotta)" cx="52" cy="12" r="5"/><path fill="var(--terracotta)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><g class="figout"><circle cx="92" cy="12" r="5"/><path d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/></g><circle fill="var(--terracotta)" cx="12" cy="52" r="5"/><path fill="var(--terracotta)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><g class="figout"><circle cx="52" cy="52" r="5"/><path d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/></g><circle fill="var(--terracotta)" cx="92" cy="52" r="5"/><path fill="var(--terracotta)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><g class="figout"><circle cx="12" cy="92" r="5"/><path d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/></g><g class="figout"><circle cx="52" cy="92" r="5"/><path d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/></g><circle fill="var(--terracotta)" cx="92" cy="92" r="5"/><path fill="var(--terracotta)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="slbl">Only the bad risks stay</div></div>
+    </div>
+    <div class="s4note" data-step="2">People select themselves into groups based on their private information, and by doing so reveal it. So companies offer several choices as a <b>screening mechanism</b>: a risky driver, offered low premiums for low coverage or high premiums for high coverage, selects into the second</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Credible signals</h2>
+  <div class="fig f565" style="top:206px;bottom:70px;gap:34px">
+    <div class="exrow">
+      <div class="extile" data-step="1"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink)" d="M32 4 L54 12 V30 C54 44 44 54 32 60 C20 54 10 44 10 30 V12 Z"/><path fill="none" stroke="var(--paper)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="M21 31 L29 39 L44 22"/></svg></div><div class="xl">The warranty</div><div class="xs">The seller must believe the car is of sufficient quality to not lose money by offering it</div></div>
+      <div class="extile" data-step="2"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink)" d="M32 3 C42 12 46 26 42 40 H22 C18 26 22 12 32 3 Z"/><circle fill="var(--paper)" cx="32" cy="24" r="5"/><path fill="var(--ink)" d="M22 40 L12 50 H24 Z"/><path fill="var(--ink)" d="M42 40 L52 50 H40 Z"/><path fill="var(--red)" d="M26 44 H38 L32 60 Z"/></svg></div><div class="xl">The expensive launch</div><div class="xs">Is there value in an expensive, useless, and uninformative product launch? You bet!</div></div>
+      <div class="extile" data-step="3"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink)" d="M6 24 L32 8 L58 24 Z"/><rect fill="var(--ink)" x="10" y="27" width="6" height="24"/><rect fill="var(--ink)" x="22" y="27" width="6" height="24"/><rect fill="var(--ink)" x="36" y="27" width="6" height="24"/><rect fill="var(--ink)" x="48" y="27" width="6" height="24"/><rect fill="var(--ink)" x="6" y="52" width="52" height="6"/><rect fill="var(--red)" x="6" y="24" width="52" height="3"/></svg></div><div class="xl">The marble countertop</div><div class="xs">Do we want our banks to have marble countertops and Nespresso machines? Of course!</div></div>
+    </div>
+    <div class="s4note" data-step="4">A signal works only if it is <b>too costly for the wrong type to fake</b></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>When the signal breaks</h2>
+  <div class="fig f565" style="top:206px;bottom:70px;gap:34px">
+    <div class="ba">
+      <div class="station then"><svg class="pg" viewBox="0 0 150 122"><g transform="translate(6,30)"><circle fill="var(--ink)" cx="22" cy="14" r="12"/><path fill="var(--ink)" d="M2 38 Q22 29 42 38 L35 78 L9 78 Z"/><rect fill="var(--ink)" x="11" y="78" width="9" height="28"/><rect fill="var(--ink)" x="25" y="78" width="9" height="28"/></g><g transform="translate(58,30)"><circle fill="var(--red)" cx="22" cy="14" r="12"/><path fill="var(--red)" d="M2 38 Q22 29 42 38 L35 78 L9 78 Z"/><rect fill="var(--red)" x="11" y="78" width="9" height="28"/><rect fill="var(--red)" x="25" y="78" width="9" height="28"/></g><g transform="translate(110,30)"><circle fill="var(--ink)" cx="22" cy="14" r="12"/><path fill="var(--ink)" d="M2 38 Q22 29 42 38 L35 78 L9 78 Z"/><rect fill="var(--ink)" x="11" y="78" width="9" height="28"/><rect fill="var(--ink)" x="25" y="78" width="9" height="28"/></g></svg><div class="slbl">A costly signal separates</div></div>
+      <div class="arrow" data-step="1">&rarr;</div>
+      <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="12" cy="12" r="5"/><path fill="var(--ink)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--ink)" cx="92" cy="12" r="5"/><path fill="var(--ink)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--ink)" cx="12" cy="52" r="5"/><path fill="var(--ink)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--ink)" cx="92" cy="52" r="5"/><path fill="var(--ink)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--ink)" cx="12" cy="92" r="5"/><path fill="var(--ink)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--ink)" cx="52" cy="92" r="5"/><path fill="var(--ink)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="slbl">Cheap to fake, so all alike</div></div>
+    </div>
+    <div class="s4note" data-step="2">Generative AI made the polished r&eacute;sum&eacute; nearly free. The signal drowns in noise, firms retreat to referrals, and <b>well-qualified outsiders get screened out</b></div>
+  </div>
+</section>
+
+<section class="slide content flex" data-i="10">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>The dog that didn&rsquo;t bark</h2>
+  <div class="leadline">Signaling can get messy. Sometimes one side will expect a signal, and the other will not provide it</div>
+  <div class="fig f565" style="top:256px;bottom:78px;gap:12px">
+    <div class="conv" style="gap:8px"><svg class="pg" viewBox="0 0 240 210" style="height:190px" role="img" aria-label="A cartoon dog, face on, brown with a white muzzle and a red collar, mouth firmly shut, a struck-out speech bubble beside it">
+  <ellipse fill="var(--sienna)" cx="42" cy="108" rx="24" ry="46" transform="rotate(12 42 108)"/>
+  <ellipse fill="var(--sienna)" cx="198" cy="108" rx="24" ry="46" transform="rotate(-12 198 108)"/>
+  <path fill="var(--terracotta)" d="M60 160 Q120 140 180 160 L184 210 L56 210 Z"/>
+  <ellipse fill="var(--paper)" cx="120" cy="190" rx="26" ry="24"/>
+  <rect fill="var(--red)" x="70" y="156" width="100" height="13" rx="6"/>
+  <circle fill="var(--ochre)" cx="120" cy="170" r="7"/>
+  <circle fill="var(--terracotta)" cx="120" cy="96" r="64"/>
+  <ellipse fill="var(--paper)" cx="120" cy="120" rx="38" ry="28"/>
+  <ellipse fill="var(--ink)" cx="120" cy="110" rx="13" ry="9"/>
+  <ellipse fill="var(--paper)" cx="115" cy="107" rx="3.5" ry="2.2"/>
+  <path fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" d="M104 132 L136 132"/>
+  <circle fill="var(--ink)" cx="96" cy="84" r="8"/>
+  <circle fill="var(--ink)" cx="144" cy="84" r="8"/>
+  <circle fill="var(--paper)" cx="99" cy="81" r="2.6"/>
+  <circle fill="var(--paper)" cx="147" cy="81" r="2.6"/>
+  <path fill="none" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round" d="M84 68 Q96 62 106 68"/>
+  <path fill="none" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round" d="M134 68 Q144 62 156 68"/>
+  <ellipse fill="var(--paper-soft)" stroke="var(--red)" stroke-width="4" cx="210" cy="30" rx="22" ry="15"/>
+  <path stroke="var(--red)" stroke-width="4" stroke-linecap="round" d="M194 45 L226 15"/>
+</svg><div class="cap" style="max-width:60ch">&ldquo;The curious incident of the dog in the night-time&rdquo;: <b>signaling by not signaling</b></div></div>
+    <div class="chips" data-step="1" style="max-width:1080px"><div class="chip">The &ldquo;danger&rdquo; of a pass/fail grade: what does a student signal by <em>not</em> signaling?</div></div>
+    <div class="chips" data-step="2" style="max-width:1080px"><div class="chip">&ldquo;I&rsquo;m not political. I don&rsquo;t vote.&rdquo; &nbsp;&ldquo;You are political, <em>because</em> you don&rsquo;t vote.&rdquo;</div></div>
+    <div class="chips" data-step="3" style="max-width:1080px"><div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)">Keep this in mind when you&rsquo;re hiring job candidates, too!</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>So, should you always signal?</h2>
+  <div class="fig f565" style="top:196px;bottom:60px;gap:18px">
+    <div class="conv"><svg class="pg" viewBox="0 0 520 290" style="width:560px;height:auto"><line x1="50" y1="230" x2="470" y2="230" stroke="var(--ink)" stroke-width="2.5"/><text x="40" y="120" text-anchor="middle" font-family="Jost,sans-serif" font-weight="500" font-size="13" fill="var(--muted)" transform="rotate(-90 40 120)">SIGNALLING</text><rect x="105" y="184" width="70" height="46" fill="var(--ink)"/><text x="140" y="252" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="15" letter-spacing="1" fill="var(--ink)">LOW</text><text x="140" y="272" text-anchor="middle" font-family="Jost,sans-serif" font-weight="500" font-size="13" fill="var(--muted)">can&rsquo;t</text><g data-step="1"><rect x="230" y="80" width="70" height="150" fill="var(--ink)"/></g><text x="265" y="252" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="15" letter-spacing="1" fill="var(--ink)">MIDDLE</text><text x="265" y="272" text-anchor="middle" font-family="Jost,sans-serif" font-weight="500" font-size="13" fill="var(--muted)">signals hardest</text><g data-step="2"><rect x="355" y="184" width="70" height="46" fill="var(--red)"/></g><text x="390" y="252" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="15" letter-spacing="1" fill="var(--ink)">TOP</text><text x="390" y="272" text-anchor="middle" font-family="Jost,sans-serif" font-weight="500" font-size="13" fill="var(--muted)">need not</text></svg></div>
+    <div class="cap" data-step="2">Not necessarily! It&rsquo;s important to be aware of <b>countersignals</b></div>
+    <div class="chips" data-step="3"><div class="chip">Conspicuous consumption</div><div class="chip">Political grandstanding</div><div class="chip">&ldquo;Gunners&rdquo; in law schools</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 8</div>
+  <h2>Pooling and separating equilibria</h2>
+  <div class="leadline">Cleanliness is a potentially useful signal of the quality of a house. But all sellers know they need to clean their houses, so even those with terrible underlying problems are clean</div>
+  <div class="fig f565" style="top:300px;bottom:60px;gap:26px">
+    <div class="cols">
+      <div class="col" data-step="1"><div class="ctitle">Pooling</div><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="12" cy="12" r="5"/><path fill="var(--ink)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--ink)" cx="92" cy="12" r="5"/><path fill="var(--ink)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--ink)" cx="12" cy="52" r="5"/><path fill="var(--ink)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--ink)" cx="92" cy="52" r="5"/><path fill="var(--ink)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--ink)" cx="12" cy="92" r="5"/><path fill="var(--ink)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--ink)" cx="52" cy="92" r="5"/><path fill="var(--ink)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="csub">All different types, good and bad, end up taking the same action, rendering it useless</div></div>
+      <div class="col accent" data-step="2"><div class="ctitle">Separating</div><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--red)" cx="12" cy="12" r="5"/><path fill="var(--red)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--ink)" cx="92" cy="12" r="5"/><path fill="var(--ink)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--ink)" cx="12" cy="52" r="5"/><path fill="var(--ink)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--red)" cx="92" cy="52" r="5"/><path fill="var(--red)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--ink)" cx="12" cy="92" r="5"/><path fill="var(--ink)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--red)" cx="52" cy="92" r="5"/><path fill="var(--red)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="csub">The good types signal their goodness to me</div></div>
+    </div>
+    <div class="cap" data-step="3"><b>How might I find a separating equilibrium when I&rsquo;m in the market for a house?</b></div>
+  </div>
+</section>
+
+
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The Tapas committee</h2>
+  <div class="rowfig">
+    <ul class="bullets">
+      <li>Tapas Airways is choosing who will finance its spare engine, and <b>you</b> are the committee that recommends a bidder to the board</li>
+      <li data-step="1"><b>Everyone at this table plays</b>, ten to fifteen of you, and you run the whole committee</li>
+      <li data-step="2">Roles: Committee Member, <b>Manipulator</b> (two of you, or three at a table of twelve or more), Auditor, and General Counsel</li>
+      <li data-step="3">Two phases each round, <b>day</b> and <b>night</b>. The moderator runs your table, and the clock on the big screen runs the room</li>
+      <li data-step="4">Your phone deals you your role. Keep it to yourself</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:16px">
+      <div class="joinchip"><div class="qr"><img src="qr-cs.svg" alt="QR code for Hidden Agenda at ryanlamare.com/teaching/exec/demo/m8/game/?g=cs"></div><div class="ju">ryanlamare.com/go</div></div>
+      <div class="livecount"><span class="n" id="csSeatT">0</span><span class="l">SEATED<br>TAPAS</span></div>
+      <div class="livecount"><span class="n" id="csSeatG">0</span><span class="l">SEATED<br>GRANITO</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The Tapas shortlist</h2>
+  <div class="bidgrid" id="bid-tapas"></div>
+  <div class="chiprow" style="bottom:44px"><div class="chips"><div class="chip">The shortlist is on your phone, above your role. No obviously correct choice, on purpose</div></div></div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 8 &middot; ROLE</div>
+  <h2>Committee Member</h2>
+  <div class="rowfig">
+    <ul class="bullets"><li>You&rsquo;re an honest member of the committee, here in good faith to recommend the best offer for the airline</li><li data-step="1">Your main job: spot the committee members with a <b>hidden agenda</b> and get them <b>removed</b> before they take the committee over</li><li data-step="2">You have no special power, just the discussion and your read of people. Who is steering the committee toward a bidder they have already chosen?</li><li data-step="3">If your phone doesn&rsquo;t give you a special role, you&rsquo;re a Committee Member</li></ul>
+    <div class="rolefig"><svg class="pg rolepg" viewBox="0 0 220 240" aria-hidden="true">
+  <path fill="var(--ink)" d="M40 96 Q110 30 180 96 L196 96 Q200 108 186 110 L34 110 Q20 108 24 96 Z"/>
+  <path fill="var(--ink)" d="M74 62 Q110 44 146 62 L150 96 L70 96 Z"/>
+  <circle fill="var(--tan)" cx="110" cy="132" r="42"/>
+  <circle fill="var(--ink)" cx="96" cy="126" r="5"/><circle fill="var(--ink)" cx="124" cy="126" r="5"/>
+  <path fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" d="M98 150 Q110 158 122 150"/>
+  <path fill="var(--ink)" d="M50 176 Q110 160 170 176 L178 240 L42 240 Z"/>
+  <circle fill="none" stroke="var(--red)" stroke-width="8" cx="176" cy="188" r="22"/>
+  <path stroke="var(--red)" stroke-width="10" stroke-linecap="round" d="M192 204 L212 226"/>
+  
+</svg><div class="bubble rolebub">Who are the Manipulators?</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 8 &middot; ROLE</div>
+  <h2>Manipulator</h2>
+  <div class="rowfig">
+    <ul class="bullets"><li>By day you look like any other member, but you <b>secretly back one bidder</b>, whatever the offers say</li><li data-step="1">Your phone shows you which bidder, and who your fellow Manipulators are</li><li data-step="2">Each night, together, you make an <b>anonymous allegation</b> against one honest member, and the airline pulls them off the committee while it&rsquo;s investigated. If you can&rsquo;t agree on a name, nobody is removed that night</li><li data-step="3">You win if Manipulators are <b>half the committee</b>, but you lose if you get caught, so never reveal your agenda!</li></ul>
+    <div class="rolefig"><svg class="pg rolepg" viewBox="0 0 220 240" aria-hidden="true">
+  <path fill="var(--ink)" d="M40 96 Q110 30 180 96 L196 96 Q200 108 186 110 L34 110 Q20 108 24 96 Z"/>
+  <path fill="var(--ink)" d="M74 62 Q110 44 146 62 L150 96 L70 96 Z"/>
+  <circle fill="var(--tan)" cx="110" cy="132" r="42"/>
+  <circle fill="var(--ink)" cx="96" cy="126" r="5"/><circle fill="var(--ink)" cx="124" cy="126" r="5"/>
+  <path fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" d="M98 150 Q110 158 122 150"/>
+  <path fill="var(--ink)" d="M50 176 Q110 160 170 176 L178 240 L42 240 Z"/>
+  <circle fill="none" stroke="var(--red)" stroke-width="8" cx="176" cy="188" r="22"/>
+  <path stroke="var(--red)" stroke-width="10" stroke-linecap="round" d="M192 204 L212 226"/>
+  <path fill="var(--red)" d="M62 72 L54 40 L78 60 Z"/><path fill="var(--red)" d="M158 72 L166 40 L142 60 Z"/>
+</svg><div class="bubble rolebub">But I&rsquo;m a committee member!</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 8 &middot; ROLE</div>
+  <h2>Auditor</h2>
+  <div class="rowfig">
+    <ul class="bullets"><li>You are an honest committee member who can <b>check one committee member</b> each night for a hidden agenda</li><li data-step="1">Name one person on your phone, and it tells you whether they are a Manipulator</li><li data-step="2">Your read is always accurate, but you <b>can&rsquo;t prove it</b>, and a Manipulator can claim to be you</li><li data-step="3">Say who you are, and you risk being the next name in an anonymous allegation</li></ul>
+    <div class="rolefig"><svg class="pg rolepg" viewBox="0 0 220 240" aria-hidden="true">
+  <circle fill="none" stroke="var(--ink)" stroke-width="14" cx="100" cy="100" r="68"/>
+  <path stroke="var(--ink)" stroke-width="20" stroke-linecap="round" d="M150 150 L204 204"/>
+  <circle fill="var(--paper)" cx="100" cy="100" r="60"/>
+  <circle fill="var(--red)" cx="100" cy="76" r="14"/><path fill="var(--red)" d="M74 100 Q100 88 126 100 L118 150 L82 150 Z"/>
+  <path fill="var(--red)" d="M88 118 L80 92 L98 106 Z"/><path fill="var(--red)" d="M112 118 L120 92 L102 106 Z"/>
+</svg><div class="bubble rolebub">One check a night, and it never lies</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 8 &middot; ROLE</div>
+  <h2>General Counsel</h2>
+  <div class="rowfig">
+    <ul class="bullets"><li>The one member who can <b>shield</b> a committee member, so that any allegation against them that night is dismissed</li><li data-step="1">Each night, name one person on your phone. Your shield dismisses any allegation made against them</li><li data-step="2">You can&rsquo;t shield the same person two nights in a row, but you may shield yourself</li><li data-step="3">Keeping the Auditor in the room is often your most important job, if you can spot who they are!</li></ul>
+    <div class="rolefig"><svg class="pg rolepg" viewBox="0 0 220 240" aria-hidden="true">
+  <circle fill="var(--ink)" cx="110" cy="52" r="26"/><path fill="var(--ink)" d="M62 100 Q110 80 158 100 L150 190 L70 190 Z"/>
+  <rect fill="var(--ink)" x="82" y="190" width="20" height="46"/><rect fill="var(--ink)" x="118" y="190" width="20" height="46"/>
+  <path fill="var(--green)" d="M110 96 L176 118 V160 C176 196 150 222 110 236 C70 222 44 196 44 160 V118 Z" opacity=".92"/>
+  <path fill="none" stroke="var(--paper)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" d="M80 164 L102 186 L144 138"/>
+</svg><div class="bubble rolebub">One shield a night</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The day</h2>
+  <div class="rowfig">
+    <ul class="bullets">
+      <li>Everyone introduces themselves before the first night</li>
+      <li data-step="1">Each day after that, the committee debates: which offer is best for the airline? And most importantly, who <b>isn&rsquo;t</b> acting in good faith?</li>
+      <li data-step="2">If you accuse someone, it must be seconded. The accused gets thirty seconds to defend themselves</li>
+      <li data-step="3">Then everyone <b>votes on their phone to remove them</b>, and the count lands on the big screen. Majority wins</li>
+      <li data-step="4">Anyone voted off leaves the committee, but keeps their phone</li>
+      <li data-step="5">Five minutes a day, on the clock at the front</li>
+    </ul>
+    <div class="phone"><div class="ptop">DAY 2</div><div class="pq">The committee has moved to remove <b>Marcus</b>. Your vote:</div><div class="pbtn">REMOVE</div><div class="pbtn ghost">KEEP</div><div class="pfoot">Last night you suspected Marcus, Dana, Sam</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The night</h2>
+  <div class="rowfig">
+    <ul class="bullets">
+      <li>Phones only, and <b>no talking</b></li>
+      <li data-step="1">The Manipulators agree on one honest member for tonight&rsquo;s allegation</li>
+      <li data-step="2">The Auditor runs a check, and General Counsel shields one member</li>
+      <li data-step="3">Everyone else answers one question: <b>who do you suspect?</b> Your answer comes back to you in the morning</li>
+      <li data-step="4">If General Counsel shielded the person named, nobody is removed. Otherwise the moderator announces the removal in the morning</li>
+    </ul>
+    <div class="phone"><div class="ptop">NIGHT 2</div><div class="pq">Who do you suspect? Up to three.</div><div class="plist"><span class="on">Marcus</span><span class="on">Dana</span><span>Sam</span><span>Tom</span><span>Elena</span><span>Alex</span></div><div class="pbtn">SAVE</div><div class="pfoot">It comes back to you in the morning</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="21">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>Endgame</h2>
+  <div class="leadline">Rounds continue until one side wins</div>
+  <div class="fig f565" style="top:256px;bottom:84px;gap:16px">
+    <div class="cols">
+      <div class="col" data-step="1"><div class="ctitle">The committee wins</div><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="12" cy="12" r="5"/><path fill="var(--ink)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><g class="figout"><circle cx="92" cy="12" r="5"/><path d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/></g><circle fill="var(--ink)" cx="12" cy="52" r="5"/><path fill="var(--ink)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--ink)" cx="92" cy="52" r="5"/><path fill="var(--ink)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><g class="figout"><circle cx="12" cy="92" r="5"/><path d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/></g><circle fill="var(--ink)" cx="52" cy="92" r="5"/><path fill="var(--ink)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="csub">Every Manipulator has been removed, and the committee makes a clean recommendation on the merits</div></div>
+      <div class="col accent" data-step="2"><div class="ctitle">The Manipulators win</div><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--red)" cx="12" cy="12" r="5"/><path fill="var(--red)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--red)" cx="92" cy="12" r="5"/><path fill="var(--red)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--red)" cx="12" cy="52" r="5"/><path fill="var(--red)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--red)" cx="92" cy="52" r="5"/><path fill="var(--red)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--red)" cx="12" cy="92" r="5"/><path fill="var(--red)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--ink)" cx="52" cy="92" r="5"/><path fill="var(--ink)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg><div class="csub">Manipulators are half the committee, and they can steer the airline to their bidder</div></div>
+    </div>
+    <div class="cap" data-step="3">Then everyone reveals who they were, and we look at what the phones recorded</div>
+    <div class="chips" data-step="4"><div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Ten points to everyone on the winning side</b></div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="22">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The Granito management team</h2>
+  <div class="rowfig">
+    <ul class="bullets">
+      <li>Granito Air is choosing who buys its <b>five stored engines</b>, and you are the management team that recommends a buyer to the board</li>
+      <li data-step="1">Same game, same roles, same clock. The Manipulators at this table secretly back one of the four traders on the Granito shortlist</li>
+      <li data-step="2">Everyone at this table plays, and the moderator runs your table</li>
+    </ul>
+    <div style="flex:none;width:420px"><svg class="sidefig" style="height:300px;width:100%" viewBox="50 14 505 328" role="img" aria-label="A drawn top view of a Granito Air twin-engine jet, one engine under each wing, above a row of five spare engines on stands">
+      <!-- the two engines, noses forward, one under each wing -->
+      <rect x="235" y="48" width="54" height="24" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="240" cy="60" rx="6" ry="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="3"/>
+      <rect x="235" y="148" width="54" height="24" rx="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/>
+      <ellipse cx="240" cy="160" rx="6" ry="12" fill="var(--teal)" stroke="var(--ink)" stroke-width="3"/>
+      <!-- both wings, swept back over the engines' tails -->
+      <polygon points="210,95 322,22 344,30 268,95" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="210,125 322,198 344,190 268,125" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- tailplanes -->
+      <polygon points="432,95 474,62 488,68 456,95" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <polygon points="432,125 474,158 488,152 456,125" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- fuselage, nose to the left -->
+      <path d="M96 93 L440 93 C462 96 476 103 482 110 C476 117 462 124 440 127 L96 127 C74 124 60 117 60 110 C60 103 74 96 96 93 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <!-- cockpit windshield band -->
+      <rect x="74" y="97" width="12" height="26" rx="5" fill="var(--ink)"/>
+      <text x="162" y="116" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.06em;fill:var(--blue)">GRANITO AIR</text>
+      <!-- tail fin with the GA monogram -->
+      <polygon points="436,93 462,40 482,40 462,93" fill="var(--blue)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+      <text x="458" y="73" text-anchor="middle" style="font-family:var(--display);font-weight:900;font-size:13px;fill:var(--paper)">GA</text>
+      <!-- five engines in storage, on their stands -->
+      <line x1="68" y1="310" x2="515" y2="310" stroke="var(--ink)" stroke-width="3.5"/>
+      <defs><g id="ga-eng">
+        <rect x="0" y="0" width="128" height="60" rx="26" fill="var(--paper)" stroke="var(--ink)" stroke-width="7"/>
+        <ellipse cx="8" cy="30" rx="10" ry="29" fill="var(--teal)" stroke="var(--ink)" stroke-width="6"/>
+        <path d="M128 14 L150 24 L150 36 L128 46 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/>
+        <path d="M26 60 L16 76 M26 60 L38 76 M102 60 L92 76 M102 60 L114 76" stroke="var(--ink)" stroke-width="7" fill="none"/>
+      </g></defs>
+      <use href="#ga-eng" transform="translate(75 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(162 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(249 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(336 272) scale(.5)"/>
+      <use href="#ga-eng" transform="translate(423 272) scale(.5)"/>
+      <text class="cardlab" x="292" y="332" text-anchor="middle">FIVE ENGINES IN STORAGE</text>
+    </svg></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The Granito shortlist</h2>
+  <div class="bidgrid" id="bid-granito"></div>
+  <div class="chiprow" style="bottom:44px"><div class="chips"><div class="chip">The shortlist is on your phone, above your role. No obviously correct choice, on purpose</div></div></div>
+</section>
+
+<section class="slide content" data-i="24">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The two committees</h2>
+  <div class="cs">
+    <div class="csclock">
+      <div class="csphase" id="csPhase">DAY 1</div>
+      <div class="cstime" id="csTime">5:00</div>
+      <div class="cskeys">D starts a day &middot; N starts a night &middot; P pauses</div>
+    </div>
+    <div class="cstables">
+      <div class="cstable big" id="csT-tapas"><div class="cshead"><span class="csn">TAPAS COMMITTEE</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc"></span></div><div class="names"></div><div class="csvote"></div><div class="banner"></div></div>
+      <div class="cstable big" id="csT-granito"><div class="cshead"><span class="csn">GRANITO MANAGEMENT</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc"></span></div><div class="names"></div><div class="csvote"></div><div class="banner"></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The recommendation</h2>
+  <div class="cs" id="csReco">
+    <div class="cstables">
+      <div class="cstable" id="csC-tapas"><div class="cshead"><span class="csn">TAPAS COMMITTEE</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc">who should finance the engine?</span></div><div class="recobars"></div><div class="recoline"></div></div>
+      <div class="cstable" id="csC-granito"><div class="cshead"><span class="csn">GRANITO MANAGEMENT</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc">who should buy the engines?</span></div><div class="recobars"></div><div class="recoline"></div></div>
+    </div>
+    <div class="csreveal" data-step="1" data-stepcall="csReveal"></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="26">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>What the phones recorded</h2>
+  <div class="cs stack" id="csRec">
+    <div class="cstable" id="csR-tapas"><div class="cshead"><span class="csn">TAPAS COMMITTEE</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc">who the room suspected, night by night</span></div>
+      <div class="spec"><div class="specaxis"><span>NEVER SUSPECTED</span><span>SUSPECTED EVERY NIGHT</span></div><div class="specrow"></div></div></div>
+    <div class="cstable" id="csR-granito"><div class="cshead"><span class="csn">GRANITO MANAGEMENT</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc">who the room suspected, night by night</span></div>
+      <div class="spec"><div class="specaxis"><span>NEVER SUSPECTED</span><span>SUSPECTED EVERY NIGHT</span></div><div class="specrow"></div></div></div>
+    <div class="csreveal" data-step="1" data-stepcall="csReveal"></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="27">
+  <div class="kicker"><i></i>MODULE 8 &middot; HIDDEN AGENDA</div>
+  <h2>The honours</h2>
+  <div class="cs stack" id="csHon">
+    <div class="cstable" id="csH-tapas"><div class="cshead"><span class="csn">TAPAS COMMITTEE</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc"></span></div>
+      <div class="honours"><div class="hon" data-step="1"><span class="hl">Nose for it</span><span class="hv"></span></div><div class="hon" data-step="2"><span class="hl">Hidden in plain sight</span><span class="hv"></span></div><div class="hon" data-step="3"><span class="hl">Saint</span><span class="hv"></span></div></div></div>
+    <div class="cstable" id="csH-granito"><div class="cshead"><span class="csn">GRANITO MANAGEMENT</span><span class="demotag" style="display:none">DEMO DATA</span><span class="csc"></span></div>
+      <div class="honours"><div class="hon" data-step="4"><span class="hl">Nose for it</span><span class="hv"></span></div><div class="hon" data-step="5"><span class="hl">Hidden in plain sight</span><span class="hv"></span></div><div class="hon" data-step="6"><span class="hl">Saint</span><span class="hv"></span></div></div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="28">
+  <div class="kicker"><i></i>MODULE 8 &middot; THE LESSON</div>
+  <h2>What was hidden?</h2>
+  <div class="fig f565" style="top:206px;bottom:60px;gap:30px">
+    <div class="exrow" style="gap:26px">
+      <div class="extile" data-step="1"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink)" d="M8 10 H56 V42 H30 L16 54 V42 H8 Z"/><rect fill="var(--paper)" x="16" y="19" width="32" height="4"/><rect fill="var(--paper)" x="16" y="28" width="22" height="4"/></svg></div><div class="xl">Words, not loyalty</div><div class="xs">You saw your colleagues&rsquo; words, never their true loyalty, and anyone can say the words</div></div>
+      <div class="extile" data-step="2"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><rect fill="var(--ink)" x="14" y="28" width="36" height="30" rx="4"/><path fill="none" stroke="var(--ink)" stroke-width="6" d="M22 28 v-8 a10 10 0 0 1 20 0 v8"/><circle fill="var(--red)" cx="32" cy="41" r="4.5"/><path fill="var(--red)" d="M30.3 42 h3.4 l-1 10 h-1.4 z"/></svg></div><div class="xl">The loyalty was hidden</div><div class="xs">Unlike a prisoner&rsquo;s dilemma, the loyalty was hidden, not just the choice</div></div>
+      <div class="extile" data-step="3"><div class="ic"><svg class="pg" viewBox="0 0 104 122"><circle fill="var(--ink)" cx="12" cy="12" r="5"/><path fill="var(--ink)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"/><circle fill="var(--ink)" cx="52" cy="12" r="5"/><path fill="var(--ink)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"/><circle fill="var(--ink)" cx="92" cy="12" r="5"/><path fill="var(--ink)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"/><circle fill="var(--ink)" cx="12" cy="52" r="5"/><path fill="var(--ink)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"/><circle fill="var(--ink)" cx="52" cy="52" r="5"/><path fill="var(--ink)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"/><circle fill="var(--ink)" cx="92" cy="52" r="5"/><path fill="var(--ink)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"/><circle fill="var(--ink)" cx="12" cy="92" r="5"/><path fill="var(--ink)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"/><circle fill="var(--ink)" cx="52" cy="92" r="5"/><path fill="var(--ink)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"/><circle fill="var(--ink)" cx="92" cy="92" r="5"/><path fill="var(--ink)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"/></svg></div><div class="xl">A pooling equilibrium</div><div class="xs">Honest members and Manipulators sounded alike, and you couldn&rsquo;t separate them</div></div>
+      <div class="extile" data-step="4"><div class="ic"><svg class="pg" viewBox="0 0 64 64"><path fill="var(--ink)" d="M10 26 L34 14 V50 L10 38 Z"/><rect fill="var(--ink)" x="6" y="26" width="6" height="12"/><path fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" d="M40 22 Q50 32 40 42"/><path fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" d="M14 56 L54 8"/></svg></div><div class="xl">Talk is cheap</div><div class="xs">A perfect read is useless if it can&rsquo;t be credibly shared</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="29">
+  <div class="kicker"><i></i>MODULE 8 &middot; YOUR WORLD</div>
+  <h2 style="max-width:40ch">Information asymmetries in your world</h2>
+  <ul class="bullets" id="ywbul" style="max-width:620px">
+    <li>Where in your own deals does the other side know something you don&rsquo;t, and what do you do about it? Send as many examples as you can from your phone</li>
+    <li data-step="0" class="sub">Then we sort them: which are you <b>signaling</b>, which are they <b>jamming</b>, and which do you <b>screen</b> for?</li>
+  </ul>
+  <div class="qrpanel" id="ywqr">
+    <div class="joinchip"><div class="qr"><img src="qr-yourworld.svg" alt="QR code for the write-in wall at ryanlamare.com/go"></div><div class="ju">ryanlamare.com/go</div></div>
+    <div class="livecount"><span class="n" id="ywN">0</span><span class="l">RESPONSES</span></div>
+  </div>
+  <div class="wall" id="ywwall"></div>
+  <div class="demotag" id="ywdemo" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
+  <span data-step="1" data-stepcall="ywReveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="30">
+  <svg class="termstage" id="termA" viewBox="0 0 1280 720" aria-hidden="true"></svg>
+  <div class="fieldtitle">APPLIED GAME THEORY &middot; THE AWARDS</div>
+  <div class="board">
+    <div class="rod l"></div><div class="rod r"></div>
+    <div class="awards" id="awards">
+      <div class="aw" data-k="dog"><div class="awin" data-step="1" data-stepcall="awFlip"><div class="at">Best in show</div><div class="an"></div><div class="aw2">The median dog, drawn in module one</div></div></div>
+      <div class="aw" data-k="number"><div class="awin" data-step="2" data-stepcall="awFlip"><div class="at">The mind reader</div><div class="an"></div><div class="aw2">The number game, cracked in the fewest guesses</div></div></div>
+      <div class="aw" data-k="pricewars"><div class="awin" data-step="3" data-stepcall="awFlip"><div class="at">The partnership</div><div class="an"></div><div class="aw2">Price Wars, the pair that made the most together</div></div></div>
+      <div class="aw" data-k="bingo"><div class="awin" data-step="4" data-stepcall="awFlip"><div class="at">The mixed blessing</div><div class="an"></div><div class="aw2">Bingo in module six: all outcome, no decision</div></div></div>
+      <div class="aw" data-k="gb"><div class="awin" data-step="5" data-stepcall="awFlip"><div class="at">Trusted and trusting</div><div class="an"></div><div class="aw2">Split or steal, the pot shared when it counted</div></div></div>
+      <div class="aw" data-k="market"><div class="awin" data-step="6" data-stepcall="awFlip"><div class="at">Sharpest buyer</div><div class="an"></div><div class="aw2">The car market, the best return on the lot</div></div></div>
+      <div class="aw" data-k="quick"><div class="awin" data-step="7" data-stepcall="awFlip"><div class="at">Quick draw</div><div class="an"></div><div class="aw2">The fastest to pick, on average, in every game on a clock</div></div></div>
+      <div class="aw" data-k="careful"><div class="awin" data-step="8" data-stepcall="awFlip"><div class="at">Careful marksman</div><div class="an"></div><div class="aw2">The most deliberate, on average, in every game on a clock</div></div></div>
+    </div>
+  </div>
+  <div class="demotag" id="awD" style="position:absolute;top:20px;left:40px;right:auto">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="31">
+  <svg class="termstage" id="termB" viewBox="0 0 1280 720" aria-hidden="true"></svg>
+  <div class="fieldtitle">APPLIED GAME THEORY &middot; TOP OF THE TABLE</div>
+  <div class="podcap">Points from eight modules of games. Everyone can see their own record at <b>ryanlamare.com/go/points</b>.</div>
+  <div class="podium" id="podium">
+    <div class="pcol silver" data-step="2"><div class="pname"></div><div class="ppts"></div><svg class="pav" viewBox="0 0 120 120" aria-hidden="true"></svg><div class="pblock"><span>2</span></div></div>
+    <div class="pcol gold" data-step="3" data-stepcall="podiumGold"><div class="pname"></div><div class="ppts"></div><svg class="pav" viewBox="0 0 120 120" aria-hidden="true"></svg><div class="pblock"><span>1</span></div></div>
+    <div class="pcol bronze" data-step="1"><div class="pname"></div><div class="ppts"></div><svg class="pav" viewBox="0 0 120 120" aria-hidden="true"></svg><div class="pblock"><span>3</span></div></div>
+  </div>
+  <div class="demotag" id="pdD" style="position:absolute;top:20px;left:40px;right:auto">DEMO DATA</div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<a class="homelink" href="/teaching/exec/demo/">ALL MODULES</a>
+
+<script src="/teaching/exec/demo/go/scores.js"></script>
+<script src="/teaching/exec/demo/avatar.js"></script>
+<script src="/teaching/exec/demo/m8/game/cs.js"></script>
+<script src="/teaching/exec/demo/m8/game/lot.js"></script>
+<script>
+const QS=new URLSearchParams(location.search);
+const POLL_API=QS.get('api')||'https://gt-poll.rlamare.workers.dev';
+const DECK_VOTER='gt-deck-voter-m8-'+Math.random().toString(36).slice(2,10);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const norm=s=>String(s||'').trim().toLowerCase();
+const activeHas=id=>!!document.querySelector('.slide.active #'+id);
+function deckSay(room,line){return fetch(POLL_API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:DECK_VOTER})});}
+
+/* ---- the car market (slide 6) is a scene of its own: game/forecourt.js, loaded after this script ---- */
+
+/* ---- the shortlists, from cs.js ---- */
+(function(){
+  const COL=['var(--red)','var(--teal)','var(--terracotta)','var(--blue)'];
+  Object.values(CS_TABLES).forEach(T=>{const g=document.getElementById('bid-'+T.id);if(!g)return;
+    g.innerHTML=T.bidders.map((b,i)=>'<div class="bid" style="--cat:'+COL[i]+'"><div class="arch">'+esc(b.arch)+'</div><div class="nm">'+esc(b.name)+'</div><div class="cols"><ul class="s">'+b.strong.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><ul class="w">'+b.weak.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div></div>').join('');});
+})();
+
+/* ---- Hidden Agenda: the clock, the name boards, the recommendation, the records, the honours ---- */
+(function(){
+  const ROOMS={tapas:QS.get('tapas')||CS_TABLES.tapas.room,granito:QS.get('granito')||CS_TABLES.granito.room};
+  const ph=document.getElementById('csPhase'),tm=document.getElementById('csTime');
+  let left=300,run=false,phase='DAY',n=1;
+  function drawClock(){tm.textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');tm.classList.toggle('low',left<=30);ph.textContent=phase+' '+n;}
+  addEventListener('keydown',e=>{if(!activeHas('csPhase'))return;
+    const sl=ph.closest('.slide');
+    if(e.key==='d'||e.key==='D'){if(phase==='NIGHT')n++;phase='DAY';left=300;run=true;sl.classList.remove('night');drawClock();e.preventDefault();}
+    else if(e.key==='n'||e.key==='N'){phase='NIGHT';left=90;run=true;sl.classList.add('night');drawClock();e.preventDefault();}
+    else if(e.key==='p'||e.key==='P'){run=!run;e.preventDefault();}});
+  setInterval(()=>{if(run&&left>0){left--;drawClock();}},1000);drawClock();
+  if(QS.get('night'))ph.closest('.slide').classList.add('night'); /* rehearsal: ?night=1 previews the inverted board */
+  const mkSeats=list=>list.map(([n,role,alive,how,r])=>({n,role,alive:!!alive,out:how?{how,r}:null}));
+  const DEMO={
+    tapas:{phase:'over',round:3,winner:'committee',bidder:'B',seated:12,alive:8,
+      seats:mkSeats([['Priya','m',1],['Dana','b',0,'recused',3],['Sam','m',0,'complaint',1],['Tom','m',1],['Elena','a',1],['Marcus','b',0,'recused',2],['Alex','m',1],['Bea','m',1],['Chris','m',0,'complaint',3],['Fay','m',1],['Gus','m',0,'complaint',2],['Hana','c',1]]),
+      vote:{accused:'Dana',yes:['Priya','Tom','Elena','Alex','Bea','Fay'],no:['Hana'],open:false,result:{yes:6,no:1,recused:true}},
+      notes:{1:[{by:'Priya',s:['Marcus','Dana','Sam']},{by:'Tom',s:['Fay','Gus']},{by:'Elena',s:['Marcus','Alex']},{by:'Alex',s:['Marcus','Sam','Bea']},{by:'Bea',s:['Gus','Fay']},{by:'Fay',s:['Marcus']},{by:'Hana',s:['Sam','Gus','Marcus']}],2:[{by:'Priya',s:['Marcus','Dana']},{by:'Tom',s:['Marcus','Fay']},{by:'Elena',s:['Marcus','Dana','Alex']},{by:'Alex',s:['Marcus','Bea']},{by:'Bea',s:['Marcus','Fay']},{by:'Fay',s:['Marcus','Gus']},{by:'Hana',s:['Marcus']}],3:[{by:'Priya',s:['Dana']},{by:'Tom',s:['Dana','Fay']},{by:'Elena',s:['Dana']},{by:'Alex',s:['Dana','Bea']},{by:'Bea',s:['Fay']},{by:'Fay',s:['Dana']},{by:'Hana',s:['Dana','Alex']}]},
+      recos:{A:2,B:3,C:5,D:1}},
+    granito:{phase:'vote',round:2,winner:null,bidder:'C',seated:12,alive:9,
+      seats:mkSeats([['Ivo','m',1],['Jo','m',0,'complaint',2],['Kim','c',1],['Lou','m',0,'complaint',1],['Max','m',1],['Nia','a',1],['Oli','b',1],['Pat','m',0,'recused',1],['Quin','m',1],['Rae','b',1],['Sol','b',1],['Tam','m',1]]),
+      vote:{accused:'Tam',yes:['Ivo','Kim','Max'],no:['Oli','Rae'],open:true,result:null},
+      notes:{1:[{by:'Ivo',s:['Pat','Tam','Oli']},{by:'Kim',s:['Pat']},{by:'Max',s:['Oli','Rae']},{by:'Nia',s:['Pat','Quin']},{by:'Quin',s:['Pat','Tam']},{by:'Tam',s:['Ivo']}],2:[{by:'Ivo',s:['Tam','Oli']},{by:'Kim',s:['Tam','Quin']},{by:'Max',s:['Oli','Rae','Sol']},{by:'Nia',s:['Tam','Oli']},{by:'Quin',s:['Tam']}]},
+      recos:{A:1,B:1,C:4,D:0}}
+  };
+  const prev={tapas:null,granito:null}, timers={};
+  function banner(id,html,stay){
+    const el=document.querySelector('#csT-'+id+' .banner');if(!el)return;
+    el.innerHTML=html;el.classList.toggle('stay',!!stay);el.classList.add('on');
+    clearTimeout(timers[id]);timers[id]=setTimeout(()=>el.classList.remove('on'),7000);
+  }
+  function drawBoard(id,b,demo){
+    const el=document.getElementById('csT-'+id);if(!el)return;
+    el.querySelector('.demotag').style.display=demo?'':'none';
+    const seatEl=document.getElementById('csSeat'+(id==='tapas'?'T':'G'));if(seatEl)seatEl.textContent=demo?0:b.seated;
+    el.querySelector('.csc').textContent=b.phase==='lobby'?(b.seated+' seated, waiting to start'):(b.phase==='over'?(b.winner==='committee'?'the committee won':'the Manipulators won'):(b.alive+' of '+b.seated+' still at the table'));
+    const box=el.querySelector('.names');
+    const p=prev[id];
+    b.seats.forEach(s=>{
+      let sp=box.querySelector('[data-n="'+CSS.escape(s.n)+'"]');
+      if(!sp){sp=document.createElement('span');sp.dataset.n=s.n;sp.textContent=s.n;box.appendChild(sp);}
+      const wasAlive=p?(p.alive[s.n]!==false):true;
+      sp.classList.toggle('bk',s.role==='b');
+      if(!s.alive&&wasAlive&&p&&!demo){sp.classList.add('fresh');setTimeout(()=>sp.classList.remove('fresh'),700);
+        banner(id,(s.out&&s.out.how==='recused')?'<small>The committee has voted</small>'+esc(s.n)+' is removed':'<small>Overnight</small>'+esc(s.n)+' was pulled off the committee');}
+      sp.classList.toggle('out',!s.alive);
+    });
+    /* a night that ended with nobody removed, or a vote that kept someone */
+    if(p&&!demo){
+      if(p.phase==='night'&&b.phase!=='night'&&!b.seats.some(s=>!s.alive&&p.alive[s.n]!==false))banner(id,'<small>Overnight</small>Nobody was removed',true);
+      if(b.vote&&b.vote.result&&!b.vote.result.recused&&p.voteKey!==JSON.stringify(b.vote.result)+b.vote.accused)banner(id,'<small>The committee has voted, '+b.vote.result.yes+' to '+b.vote.result.no+'</small>'+esc(b.vote.accused)+' stays',true);
+    }
+    const v=el.querySelector('.csvote');
+    if(b.vote&&b.vote.open){v.classList.add('on');const hd=b.vote.hand||{yes:0,no:0};v.innerHTML='Remove <b>'+esc(b.vote.accused)+'</b>? &nbsp; Remove <b>'+(b.vote.yes.length+hd.yes)+'</b> &middot; Keep <b>'+(b.vote.no.length+hd.no)+'</b>';}
+    else v.classList.remove('on');
+    prev[id]={phase:b.phase,alive:Object.fromEntries(b.seats.map(s=>[s.n,s.alive])),voteKey:b.vote&&b.vote.result?JSON.stringify(b.vote.result)+b.vote.accused:null};
+  }
+  function readRoom(b){
+    const nights=Object.values(b.notes||{}).filter(n=>n.length), N=nights.length;
+    const mentions={};b.seats.forEach(s=>mentions[s.n]=0);
+    nights.forEach(n=>n.forEach(x=>x.s.forEach(nm=>{if(mentions[nm]!==undefined)mentions[nm]++;})));
+    return {nights,N,mentions};
+  }
+  function drawRecorded(id,b,demo){
+    const el=document.getElementById('csR-'+id);if(!el)return;
+    el.querySelector('.demotag').style.display=demo?'':'none';
+    const row=el.querySelector('.specrow');
+    if(b.phase!=='over'||!b.notes){row.innerHTML='<span class="sp" style="left:50%">the table is still playing</span>';return;}
+    const {mentions}=readRoom(b);
+    const max=Math.max(1,...Object.values(mentions));
+    const items=b.seats.map(s=>({n:s.n,role:s.role,m:mentions[s.n],x:2+96*mentions[s.n]/max})).sort((a,c)=>a.x-c.x);
+    for(let i=3;i<items.length;i++)if(items[i].x<items[i-3].x+8)items[i].x=items[i-3].x+8;
+    row.innerHTML=items.map(it=>'<span class="sp" style="left:'+Math.min(97,it.x)+'%" data-role='+it.role+'>'+esc(it.n)+'</span>').join('');
+  }
+  function drawHonours(id,b,demo){
+    const el=document.getElementById('csH-'+id);if(!el)return;
+    el.querySelector('.demotag').style.display=demo?'':'none';
+    const hv=el.querySelectorAll('.hon .hv');
+    if(b.phase!=='over'||!b.notes){hv.forEach(e=>e.textContent='');el.querySelector('.csc').textContent='the table is still playing';return;}
+    el.querySelector('.csc').textContent=b.winner==='committee'?'the committee won':'the Manipulators won';
+    const {nights,N,mentions}=readRoom(b);
+    const backers=new Set(b.seats.filter(s=>s.role==='b').map(s=>s.n));
+    const nose={},picks={};
+    nights.forEach(n=>n.forEach(x=>{if(backers.has(x.by))return;nose[x.by]=(nose[x.by]||0)+x.s.filter(nm=>backers.has(nm)).length;picks[x.by]=(picks[x.by]||0)+x.s.length;}));
+    const best=Object.entries(nose).sort((a,c)=>c[1]-a[1]||a[0].localeCompare(c[0]))[0];
+    hv[0].textContent=best&&best[1]>0?best[0]+', '+best[1]+' of '+picks[best[0]]+' nightly suspects were Manipulators':'nobody had a Manipulator among their suspects';
+    const items=b.seats.map(s=>({n:s.n,role:s.role,m:mentions[s.n]}));
+    const hidden=items.filter(it=>it.role==='b').sort((a,c)=>a.m-c.m)[0];
+    hv[1].textContent=hidden?hidden.n+', a Manipulator '+(hidden.m?'named '+hidden.m+' time'+(hidden.m===1?'':'s')+' in '+N+' night'+(N===1?'':'s'):'never named once'):'';
+    const saint=items.filter(it=>it.role!=='b').sort((a,c)=>a.m-c.m)[0];
+    hv[2].textContent=saint?saint.n+', honest and '+(saint.m?'named '+saint.m+' time'+(saint.m===1?'':'s'):'never suspected'):'';
+  }
+  function drawReco(id,b,demo){
+    const el=document.getElementById('csC-'+id);if(!el)return;
+    el.querySelector('.demotag').style.display=demo?'':'none';
+    const T=CS_TABLES[id], bars=el.querySelector('.recobars'), line=el.querySelector('.recoline');
+    if(b.phase!=='over'){bars.innerHTML='';line.textContent='The table is still playing.';return;}
+    const rec=b.recos||{}, tot=Object.values(rec).reduce((a,x)=>a+x,0), max=Math.max(1,...Object.values(rec));
+    bars.innerHTML=T.bidders.map(bd=>'<div class="rb'+(b.bidder===bd.k?' backed':'')+'"><div class="rn"><small>'+esc(bd.arch)+'</small>'+esc(bd.name)+'</div><div class="rbar"><i style="width:'+(100*(rec[bd.k]||0)/max)+'%"></i></div><div class="rc">'+(rec[bd.k]||0)+'</div></div>').join('');
+    const top=T.bidders.slice().sort((a,c)=>(rec[c.k]||0)-(rec[a.k]||0))[0];
+    const backed=T.bidders.find(x=>x.k===b.bidder);
+    line.innerHTML=tot?('The table recommends <b>'+esc(top.name)+'</b>'+(b.winner==='backers'?', with the Manipulators still at the table':', with every Manipulator removed')+'.'+(backed?' <span class="onreveal">The Manipulators were backing <b>'+esc(backed.name)+'</b>'+(top.k===b.bidder?', and got their way.':', and did not get it.')+'</span>':'')):'No recommendations in yet.';
+  }
+  function tick(){
+    ['tapas','granito'].forEach(id=>{
+      fetch(POLL_API+'/p/'+ROOMS[id]+'/cs/board').then(r=>r.json()).then(b=>{
+        const demo=!b||b.phase==='lobby'&&!b.seated;
+        const use=demo?DEMO[id]:b;
+        drawBoard(id,use,demo);drawRecorded(id,use,demo);drawHonours(id,use,demo);drawReco(id,use,demo);
+      }).catch(()=>{drawBoard(id,DEMO[id],true);drawRecorded(id,DEMO[id],true);drawHonours(id,DEMO[id],true);drawReco(id,DEMO[id],true);});
+    });
+  }
+  setInterval(tick,2500);tick();
+  window.csReveal=function(el,on){const cs=el.closest('.cs');if(cs)cs.classList.toggle('revealed',on);};
+})();
+
+
+/* ---- your world: phones write in via /go?p=m8-yourworld, the wall fills when the instructor calls time ---- */
+(function(){
+  const DEMO=['A supplier who knows exactly how much slack is in their delivery date','The customer who says they have another quote','A candidate\u2019s references, chosen by the candidate','What the other bidder actually offered','Whether the engine has been looked after','How badly they need the deal to close this quarter'];
+  const nEl=document.getElementById('ywN'),wall=document.getElementById('ywwall'),tag=document.getElementById('ywdemo');
+  const st={live:false,answers:[],revealed:false};
+  function render(){
+    const useDemo=!(st.live&&st.answers.length);
+    const answers=useDemo?DEMO:st.answers;
+    nEl.textContent=st.live?st.answers.length:0;
+    tag.style.display=(!useDemo||!st.revealed)?'none':'';
+    if(!st.revealed)return;
+    const groups=new Map();answers.forEach(t=>{const k=t.toLowerCase();if(!groups.has(k))groups.set(k,{t,n:0});groups.get(k).n++;});
+    wall.classList.toggle('dense',groups.size>26);
+    let h='',i=0;groups.forEach(g=>{h+='<span class="ex c'+(i++%7)+'">'+esc(g.t)+(g.n>1?'<span class="xn">&times;'+g.n+'</span>':'')+'</span>';});
+    wall.innerHTML=h;
+  }
+  function fetchIt(){fetch(POLL_API+'/p/m8-yourworld/answers').then(r=>r.json()).then(d=>{st.live=true;st.answers=d.answers||[];render();}).catch(()=>{});}
+  setInterval(fetchIt,2500);fetchIt();render();
+  window.ywReveal=function(el,on){st.revealed=on;document.getElementById('ywbul').classList.toggle('faded',on);document.getElementById('ywqr').classList.toggle('faded',on);wall.classList.toggle('on',on);if(on)render();};
+})();
+
+/* ---- the awards and the podium: recomputed from the poll rooms via /go/scores.js;
+   the car market award comes straight from the market room through lot.js ---- */
+(function(){
+  const DEMO_P=[{name:'Priya',total:64},{name:'Marcus',total:58},{name:'Elena',total:57}];
+  const DEMO_A={dog:['Sam'],number:['Tom'],pricewars:['Priya','Marcus'],bingo:['Hannah'],gb:['Elena','Fay'],market:['Dana'],quick:['Kai'],careful:['Nadia']};
+  const names=list=>{if(!list||!list.length)return '—';const l=list.slice(0,3);return l.join(', ')+(list.length>3?' and '+(list.length-3)+' more':'');};
+  function best(players,key){let max=0;players.forEach(p=>{const v=p.byEvent[key]||0;if(v>max)max=v;});return max>0?players.filter(p=>(p.byEvent[key]||0)===max).map(p=>p.name):[];}
+  function fillAwards(a,demo){
+    document.querySelectorAll('#awards .aw').forEach(el=>{const an=el.querySelector('.an'),t=names(a[el.dataset.k]);an.dataset.final=t;if(!an.dataset.flapping)an.textContent=t;});   /* a row mid-flap takes the new name when it lands */
+    document.getElementById('awD').style.display=demo?'':'none';
+  }
+  /* each of the three stands on the block as the face they built on their phone (avatar.js; a name with none gets the face drawn from the name,
+     demo names draw on every option); redrawn only when the name or the face changes, so the ten-second refresh never flickers */
+  let roster=new Map(), lastP=null;
+  function readRoster(){if(window.GT_AVATAR)GT_AVATAR.roster(POLL_API).then(m=>{roster=m;if(lastP)fillPodium(lastP[0],lastP[1]);}).catch(()=>{});}   /* on its own clock: the podium never waits for the faces */
+  function face(el,x,demo){const sv=el.querySelector('.pav'), A=window.GT_AVATAR;if(!sv||!A)return;
+    const parts=x?(demo?A.fromName(x.name,{full:true}):A.of(roster,x.name)):null, key=x?x.name+'|'+A.code(parts):'';
+    if(sv.dataset.k===key)return;sv.dataset.k=key;while(sv.firstChild)sv.firstChild.remove();
+    if(parts)A.draw(sv,parts,{x:60,y:120,size:120});}
+  function fillPodium(p,demo){lastP=[p,demo];
+    [['gold',0],['silver',1],['bronze',2]].forEach(([c,i])=>{const el=document.querySelector('.pcol.'+c);const x=p[i];el.querySelector('.pname').textContent=x?x.name:'—';el.querySelector('.ppts').textContent=x?x.total+' points':'';face(el,x,demo);});
+    document.getElementById('pdD').style.display=demo?'':'none';
+  }
+  function marketBest(){
+    return fetch(POLL_API+'/p/'+(QS.get('market')||'m8-market')+'/answers').then(r=>r.json()).then(d=>{
+      const S=LOT.parse(d.answers||[]),sim=LOT.simulate(S);const tot={};
+      S.joins.forEach(n=>{tot[n]=LOT.mine(sim,n).reduce((a,x)=>a+(x.outcome==='sold'?x.profit:0),0);});
+      const max=Math.max(...Object.values(tot));
+      return isFinite(max)&&max>0?Object.keys(tot).filter(n=>tot[n]===max):[];
+    }).catch(()=>[]);
+  }
+  /* module six's bingo: unscored; the deck posted one "::bingo|name‖name" line when the first card completed */
+  function bingoWinner(){
+    return fetch(POLL_API+'/p/m6-world/answers').then(r=>r.json()).then(d=>{const l=(d.answers||[]).map(String).find(t=>t.slice(0,8)==='::bingo|');return l?l.slice(8).split('‖').filter(Boolean):[];}).catch(()=>[]);
+  }
+  function refresh(){
+    Promise.all([GT_SCORES.load().catch(()=>({players:[]})),marketBest(),GT_SCORES.decisionTimes().catch(()=>({fastest:[],slowest:[]})),bingoWinner()]).then(([d,mk,dt,bg])=>{
+      const live=d.players.length>0;
+      if(live){fillAwards({dog:best(d.players,'dog'),number:best(d.players,'number'),pricewars:best(d.players,'pricewars'),bingo:bg,gb:best(d.players,'gb'),market:mk,quick:dt.fastest,careful:dt.slowest},false);fillPodium(d.players,false);}
+      else{fillAwards(DEMO_A,true);fillPodium(DEMO_P,true);}
+    });
+  }
+  setInterval(refresh,10000);refresh();setInterval(readRoster,20000);readRoster();
+})();
+</script>
+<script src="/teaching/exec/demo/m8/game/forecourt.js"></script>
+<script src="/teaching/exec/demo/rail.js"></script>
+<script src="/teaching/exec/demo/m8/terminus.js"></script>
+<script src="/teaching/exec/demo/deck.js"></script>
+</body></html>

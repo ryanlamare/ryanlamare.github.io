@@ -163,6 +163,16 @@ every poll-server call from `rooms.json` (every room as it stood at the end of
 day two) and drops every write, so a Poll Desk reset changes nothing here.
 Don't edit the copies or sync them with `gt/`; there is no `?edit` on them.
 
+**`teaching/exec/demo/` is a sandbox for family and friends** (2 Oct 2026): the
+whole programme as built on 19 Sep (tag `gt-full-production-2026-09-19`, every
+scene, avatar and game) behind a hand-written landing page, with the outtakes
+and a link to Pavilion. Each page loads `demo.js` first, which sends every
+poll-server call to the same room with `-demo` on the end, so play there never
+touches a real session's rooms; its own `poll-desk/` resets them. The QR codes
+were regenerated to point inside `demo/`, and the name picker reads
+`demo/go/roster.json`. Like `exec/rrpf/`, it is a snapshot: don't sync it with
+`gt/`.
+
 Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
 including the decks. `robots.txt` does **not** disallow the path, and that is on
 purpose — a crawler has to fetch a page to see its noindex, so blocking would
