@@ -1,0 +1,1310 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/rrpf/frozen.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 2 — Sequential Strategies</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/rrpf/deck.css">
+<script>/* a deck opened at #N (a reload, or back from the m3 calendar or the Gazette) shows slide N from the first paint instead of the cover fading out first (25 Sep 2026); deck.js removes this once it has read the address */(function(){var m=/^#(\d+)/.exec(location.hash);if(!m||m[1]==="0")return;var s=document.createElement("style");s.id="deckjump";s.textContent=".slide.active{opacity:0!important;visibility:hidden!important}.slide[data-i=\""+m[1]+"\"]{opacity:1!important;visibility:visible!important;transition:none!important}";document.head.appendChild(s);})();</script>
+<style>
+/* Module-2 widgets (shared components live in deck.css; figure treatments
+   lifted from the LER 565 week 2 decks) */
+/* interactive game trees + the Frost tree: word states are class toggles over
+   static SVG text — no runtime text injection (Safari-safe) */
+.tree .rev{opacity:0;transition:opacity .35s}
+.tree .rev.on{opacity:1}
+.tree .dim{opacity:.25;transition:opacity .35s}
+.tree .hit{stroke:transparent;stroke-width:36;cursor:pointer}
+.tree .pay{fill:var(--teal)}
+.tree .pay.best{fill:var(--red)}
+.tree .paynote{font-weight:600;font-size:15px;fill:var(--muted)}
+.tree .owner{font-weight:700;font-size:16px;letter-spacing:.06em}
+.tree .st1, .frosttree .st1{opacity:0;transition:opacity .4s}
+.tree.two .st1, .frosttree.terms .st1{opacity:1}
+.tree.two .st0, .frosttree.terms .st0{opacity:0}
+.tree .st0, .frosttree .st0{transition:opacity .4s}
+@keyframes tshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.tree.shake{animation:tshake .3s}
+/* the anatomy tree on Characteristics of game trees: .rN shows at point N, .pr greys at pruning, .up greys when rollback picks the lower branch */
+.anat .q{font-size:22px;font-weight:700}
+.anat .pay{font-size:28px}
+.anat .term{font-weight:700;font-size:16px;fill:var(--red);text-transform:uppercase;letter-spacing:.05em}
+.anat .r1,.anat .r2,.anat .r3,.anat .r4,.anat .r5{opacity:0;transition:opacity .35s}
+.anat.s1 .r1,.anat.s2 .r2,.anat.s3 .r3,.anat.s4 .r4,.anat.s5 .r5{opacity:1}
+.anat .pr,.anat .up{transition:opacity .35s}
+.anat.s3 .pr{opacity:.25}
+.anat.s5 .up{opacity:.3}
+.frosttree{cursor:pointer}
+.frosttree .fword{font-weight:600;font-size:17px;fill:var(--ink);font-style:italic}
+.frosttree .fterm{font-weight:700;font-size:17px;fill:var(--red);text-transform:uppercase;letter-spacing:.04em}
+/* game-tree anatomy row */
+.anatrow{position:absolute;left:96px;right:96px;top:200px;bottom:96px;display:flex;gap:48px;align-items:center}
+.anatrow .ptiles{display:flex;flex-direction:column;gap:20px;flex:1}
+.anatrow .ptile .pt{font-size:20px}
+/* the limits slide uses the row for its layout, not its small type */
+.anatrow .ptiles.limits .ptile .pt{font-size:25px;white-space:normal;font-weight:600}
+.anatrow .ptiles.limits .ptile .pn{font-size:44px;width:52px}
+.anatrow .ptiles.limits .ptile svg{width:64px!important;height:64px!important}
+/* ultimatum split slider — drag the divider from 99/1 to 1/99, starts 50/50 */
+.deal2{width:740px}
+.deal2 .dtrack{height:78px;border:3px solid var(--ink);position:relative;touch-action:none;cursor:ew-resize;background:var(--paper)}
+.deal2 .dA{position:absolute;left:0;top:0;bottom:0;background:var(--teal)}
+.deal2 .dB{position:absolute;right:0;top:0;bottom:0;background:var(--terracotta)}
+.deal2 .dhandle{position:absolute;top:-10px;bottom:-10px;width:14px;margin-left:-7px;background:var(--ink);cursor:grab}
+.deal2 .dvals{display:flex;justify-content:space-between;margin-top:14px;font-family:var(--display);font-weight:900;font-size:40px}
+.deal2 .dvA{color:var(--teal)}
+.deal2 .dvB{color:var(--terracotta)}
+/* three-games tiles (565 live) */
+.gtiles{position:absolute;left:96px;right:96px;top:250px;bottom:120px;display:flex;justify-content:center;gap:44px;align-items:flex-start}
+.gtile{flex:1;max-width:300px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px}
+.gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.gtile .pg{height:92px;width:auto}
+.gtile .gl{font-weight:700;font-size:22px;color:var(--ink);line-height:1.18}
+.gtile .gs{font-weight:500;font-size:17px;color:var(--muted);line-height:1.32;max-width:24ch}
+/* plain card pile + beat-me widget */
+.resgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:9px;width:100%;max-width:620px;margin:8px auto 0}
+.res{aspect-ratio:3/4;background:var(--card);border:2px solid var(--ink)}
+.res.goneA{opacity:.5;background:
+  linear-gradient(45deg,transparent 44%,var(--ink) 44% 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--ink) 44% 56%,transparent 56%),var(--card)}
+.res.goneB{opacity:.5;background:
+  linear-gradient(45deg,transparent 44%,var(--red) 44% 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,var(--red) 44% 56%,transparent 56%),var(--card)}
+.res.last{outline:3px solid var(--red);outline-offset:2px}
+/* solving numline (565 live) */
+.numstack{display:flex;flex-direction:column;align-items:center;gap:30px;width:100%}
+.numline{width:100%;max-width:1000px;height:210px;overflow:visible}
+.numline .axis{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.numline .tick{stroke:var(--ink);stroke-width:3}
+.numline .endlbl{font-weight:700;font-size:22px;fill:var(--muted)}
+.numline .band{fill:var(--red);opacity:.16}
+/* first-mover example cards (565 lecture) */
+/* Boeing versus Airbus: his LER 565 entry tree, drawn wide across the top, three bullets under it (24 Sep 2026) */
+.bvwrap{position:absolute;left:96px;right:96px;top:164px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.bvtree{flex:none;width:710px;height:auto;overflow:visible}   /* 730 for a 900-wide tree until 28 Sep, when the payoffs came in beside the leaves and the rollback line became a fifth bullet */   /* 830 until 27 Sep, when the 1997 line became a fourth bullet */
+.bvtree .leaf{font-weight:700;font-size:18px;fill:var(--ink)}
+.bvtree .leaf.red{fill:var(--red);font-size:16px}
+.bvtree .owner{font-weight:700;font-size:15px;letter-spacing:.06em}
+/* 28 Sep 2026: rollback on the tree, his 565 slides 40-41: blocking greys, accommodating goes red */
+.bvtree .blk,.bvtree #bvBlockPath{transition:opacity .35s,stroke .35s}
+.bvtree:has(.bvsolve.shown) .blk{opacity:.3}
+.bvtree:has(.bvsolve.shown) #bvBlockPath{stroke:var(--grey)}
+/* 29 Sep 2026: then the history, what Boeing actually did: the struck branch lights up again, the NOT CREDIBLE strike stays */
+.bvtree:has(.bvreal.shown) .blk{opacity:1}
+.bvtree:has(.bvreal.shown) #bvBlockPath{stroke:var(--red)}
+.bvlist{margin:0;max-width:1010px}
+.bvlist li{font-size:20px;line-height:1.3;margin-bottom:6px}
+ul.bullets.bvlist li{line-height:1.28;margin-top:10px}   /* 28 Sep 2026: the deck's 16px gaps, tightened so the fifth bullet (rollback) clears the tick bar; the text size is unchanged */
+/* the first-mover cards, four across */
+.exgrid.four{gap:22px;margin-top:90px}
+.exgrid.four .excard{width:252px}
+.exgrid{display:flex;justify-content:center;gap:36px;margin-top:110px}
+.excard{width:320px;background:var(--card);border:2px solid var(--ink);padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.exhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.expolicy{font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:14px;color:var(--ink)}
+.extag{font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:11px;padding:3px 8px;flex:none}
+.extag.first{background:var(--red);color:var(--paper)}
+.extag.second{background:var(--paper);border:2px solid var(--ink);color:var(--ink)}
+.exbody{font-weight:500;font-size:17px;color:var(--ink);line-height:1.4}
+/* each card plays its clip over the slide on a click (deck.js .ytplay), as m4's big-cars tile */
+.excard.ytplay{cursor:pointer;border-color:var(--red)} .excard.ytplay:hover{box-shadow:0 4px 0 var(--red)}
+.exclip{margin-top:auto;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+/* ultimatum split bar (565 live) */
+.splitwrap{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%}
+.splitbar{display:flex;width:740px;height:78px;border:3px solid var(--ink)}
+.splitbar .seg{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:var(--paper)}
+.splitbar .segA{background:var(--teal);flex:0 0 58%;border-right:3px solid var(--paper)}
+.splitbar .segB{background:var(--terracotta);flex:0 0 42%}
+.splitlbl{display:flex;justify-content:space-between;width:740px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--muted)}
+/* centipede strip (565 live, simple form) */
+.centi{width:100%;max-width:940px;height:210px;overflow:visible}
+.centi .nA{fill:var(--teal);stroke:var(--ink);stroke-width:3}
+.centi .nB{fill:var(--terracotta);stroke:var(--ink);stroke-width:3}
+.centi .pass{stroke:var(--ink);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.centi .take{stroke:var(--red);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.centi .pa{fill:var(--teal);font-weight:700;font-size:18px;text-anchor:middle}
+.centi .pb{fill:var(--terracotta);font-weight:700;font-size:18px;text-anchor:middle}
+.centi .lbl{fill:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:13px;text-anchor:middle}
+/* theory-vs-results compare (565 live) */
+.compare{display:flex;flex-direction:column;align-items:center;gap:36px}
+.cols2{display:flex;align-items:flex-start;justify-content:center;gap:96px}
+.col2{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;width:330px}
+.col2 .pg{height:96px;width:auto}
+.col2 .ct{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:19px;color:var(--ink)}
+.col2.theory{opacity:.55}
+.col2.real .ct{color:var(--red)}
+.col2 .cs{font-weight:500;font-size:18px;color:var(--muted);max-width:26ch;line-height:1.34}
+.lesson{font-weight:500;font-size:22px;color:var(--ink);text-align:center;max-width:56ch;line-height:1.35}
+.lesson b{color:var(--red);font-weight:700}
+/* poll results as classic Isotype rows — one row per option, one figure per
+   answer, in the option colour. The row anatomy (labelled gutter, big number,
+   fixed-width glyph slots on a shared baseline) is the 565 week 6 unit-row
+   treatment; lanes wrap if a room outgrows one line. */
+.units{flex:1;display:flex;flex-direction:column;justify-content:center;gap:30px;position:relative}
+.urow{display:flex;align-items:flex-end;gap:18px}
+.urow .uhead{width:200px;flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:1px;padding-bottom:2px}
+.urow .ulbl{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:15px;color:var(--ink);line-height:1.25}
+.urow .uval{font-family:var(--display);font-weight:900;font-size:56px;line-height:.82;opacity:0;transition:opacity .5s .2s}
+.urow.revealed .uval{opacity:1}
+.urow .ulane{flex:1;display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 4px;min-height:58px;border-left:2px solid var(--rule);padding-left:12px}
+.urow .u{width:30px;display:flex;align-items:flex-end;justify-content:center}
+.urow .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.urow.revealed .u svg{opacity:1;transform:scale(1)}
+.uunit{font-weight:500;font-size:14px;color:var(--muted);margin-left:230px}
+/* the last card: a strip of plain cards, face down in one colour; the positions to leave are face up in red */
+.mcard{display:inline-block;width:34px;height:48px;border-radius:5px;border:2px solid var(--ink);background:var(--ink);position:relative;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.mcard::before{content:"";position:absolute;inset:4px;border:1.5px solid rgba(255,255,255,.35);border-radius:3px}
+.mcard.up{background:var(--paper)} .mcard.up::before{border-color:var(--ink);opacity:.35}
+.mcard.up .n{position:absolute;font-family:var(--display);font-weight:900;color:var(--ink)}
+.mcard.up.leave::before{border-color:var(--red);opacity:1} .mcard.up.leave .n{color:var(--red)}
+.cardstrip{display:flex;gap:6px;justify-content:center;align-items:flex-end;margin-bottom:6px}
+.cardstrip .mcard{width:30px;height:42px}
+.cardstrip .mcard.leave{outline:3px solid var(--red);outline-offset:2px}
+.cardstrip .mcard.up .n{left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:17px}
+/* the smoking poll: each option keeps its place, the count sits beside it and the figures run to the right, so the reveal moves nothing (as m1's familiarity poll) */
+.units.fixed{gap:26px}
+.units.fixed .urow{align-items:center;gap:14px;min-height:50px}
+.units.fixed .urow .uhead{width:220px;display:block;text-align:right;padding:0}
+.units.fixed .urow .uval{width:70px;flex:none;text-align:right;font-size:44px;line-height:1}
+.units.fixed .urow .ulane{align-items:center;min-height:50px}
+.units.fixed .uunit{margin-left:330px}
+/* first movers who lost: phones write in, the wall fills when time is called */
+.faded{opacity:.06 !important;pointer-events:none}
+#fmLead,#fmGrid,.flopbar{transition:opacity .5s}
+.flopbar{position:absolute;left:0;right:0;bottom:56px;display:flex;align-items:center;justify-content:center;gap:26px}
+.flopbar .qrs{width:150px;height:150px;border:2.5px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;padding:6px}
+.flopbar .qrs img{width:100%;height:100%;display:block}
+.flopbar .fq{font-weight:700;font-size:22px;color:var(--red);max-width:24ch;line-height:1.3}
+.flopbar .fu{font-weight:600;font-size:14px;color:var(--muted);margin-top:6px}
+.wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
+  gap:12px 14px;align-content:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .5s}
+.wall.on{opacity:1;visibility:visible}
+.wall .ex{border:0;color:var(--paper);padding:9px 18px;font-weight:600;font-size:20px;line-height:1.25}
+.wall .ex .xn{color:inherit;opacity:.8;font-weight:900;margin-left:8px;font-size:.85em}
+.wall.dense .ex{font-size:16px;padding:6px 13px}
+.wall .ex.c0{background:var(--teal)}
+.wall .ex.c1{background:var(--terracotta)}
+.wall .ex.c2{background:var(--blue)}
+.wall .ex.c3{background:var(--green)}
+.wall .ex.c4{background:var(--maroon)}
+.wall .ex.c5{background:var(--sienna)}
+.wall .ex.c6{background:var(--ochre);color:var(--ink)}
+/* charting complete courses: by hand, by computer, beyond computers */
+.ccwrap{position:absolute;left:64px;right:64px;top:214px;bottom:40px;display:flex;gap:30px;align-items:center}
+.cclist{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ccrow{display:flex;align-items:center;gap:16px;border:2px solid var(--ink);background:var(--card);padding:12px 18px}
+.ccrow .pg{height:52px;width:58px;flex:none}
+.ccrow .ccid{width:160px;flex:none}
+.ccrow .ccname{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--muted)}
+.ccrow .ccnum{font-family:var(--display);font-weight:900;font-size:30px;color:var(--red);line-height:1.1;white-space:nowrap}
+.ccrow .ccnum sup{font-size:.55em}
+.ccrow .ccunit{font-weight:600;font-size:14px;color:var(--ink)}
+.ccrow .ccs{font-weight:500;font-size:15.5px;color:var(--ink);line-height:1.35;flex:1}
+.ccclip{flex:0 0 580px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.ccquote{font-weight:500;font-style:italic;font-size:19px;line-height:1.38;color:var(--ink);text-align:left;width:580px}   /* 16.5px beside a 600px frame until 30 Sep 2026: the clip plays over the whole slide now, so the frame shrank and the quote grew */
+#lfwrap .clipcover,#lfwrap iframe{width:448px;height:252px}
+.ccquote .op{color:var(--red);font-weight:700;font-style:italic}
+/* clip beside the rows, click-to-load (keeps YouTube's title off screen), as the m1 clips */
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+.clipframe.sm iframe,.clipframe.sm .clipcover{width:560px;height:315px}
+.clipframe.md iframe,.clipframe.md .clipcover{width:600px;height:338px}
+.ccclip .medialink{flex-direction:column;text-align:center;gap:12px;padding:22px 20px;margin:0}
+.ccclip .mlt{text-align:center}
+/* live results: each pair's recorded game stacks as dots on an axis */
+/* the ultimatum board (Ryan, 20 Sep 2026), in the style of m1's offers board:
+   eleven columns, 99/1 through 50/50 to 1/99 (every split the phone offers,
+   27 Sep 2026; six to 50/50 before), each pair under the split proposed, the
+   proposer's name over the responder's (27 Sep: both players, not just one),
+   outcomes hidden. A click on a name shows whether it was accepted
+   (green) or rejected (red), a click on a column's head shows the column, and
+   REVEAL ALL shows the lot. */
+.ubboard{position:absolute;left:72px;right:72px;top:192px;bottom:156px;display:flex;flex-direction:column;gap:8px}
+.ubtop{flex:none;display:flex;align-items:flex-end;justify-content:space-between}
+.ubcols{flex:1;display:grid;grid-template-columns:repeat(var(--ncol,6),1fr);gap:8px;min-height:0}
+.ubcol{display:flex;flex-direction:column;min-width:0}
+.ubhead,.ubname{cursor:pointer;user-select:none;-webkit-user-select:none;overflow:hidden}
+.ubhead{font-family:var(--display);font-weight:900;font-size:24px;line-height:1;text-align:center;
+  padding:8px 0 7px;border-bottom:3px solid var(--ink);margin-bottom:7px}
+.ubname{display:flex;align-items:center;justify-content:center;border:2.5px solid var(--ink);background:var(--card);
+  font-weight:700;padding:0 5px;flex:none;transition:background .2s,border-color .2s,color .2s}
+.ubname span,.ubname b{min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ubname.two{flex-direction:column;line-height:1.12}   /* a pair: who chose on top, their partner under */
+.ubname.two b{font-weight:800}
+.ubname.two span{font-weight:500;font-size:.86em}
+.ubname.a{background:var(--green);border-color:var(--green);color:var(--paper)}
+.ubname.r{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* the centipede board: one colour, deepening turn by turn (24 Sep 2026), set per name in the script */
+#centcols .ubname{color:var(--ink)}
+.cgrad{width:240px;height:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--ochre) 18%,var(--paper-soft)),var(--ochre))}
+.ubrest{flex:none;display:flex;justify-content:flex-end}
+.ubrest button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:7px 14px;cursor:pointer}
+.ubrest button:hover{background:var(--ink);color:var(--paper)}
+.resnotes{position:absolute;left:96px;right:96px;bottom:44px;display:flex;flex-direction:column;gap:7px;text-align:center}
+.resnotes div{font-weight:500;font-size:19.5px;line-height:1.3;color:var(--ink)}
+.resnotes b{color:var(--red);font-weight:700}
+/* WATCH chip (28 Sep 2026, m7's Friends chip, renamed: m2's .fchip is the first-mover cards): opens deck.js's in-place player over the slide; Esc or CLOSE comes back */
+.dkey{display:flex;gap:26px;justify-content:center}
+.dkey .k{display:flex;align-items:center;gap:9px;font-weight:500;font-size:15px;color:var(--muted)}
+.dkey .sw{width:16px;height:16px;border-radius:50%;flex:none}
+.ordstat{font-weight:500;font-size:21.5px;color:var(--ink);text-align:center;min-height:1.35em;line-height:1.35}
+.ordstat b{color:var(--red)}
+/* the long-term Tapas deal: one move per slide, a strike meter on each;
+   struck branches stay dead all session */
+.dkqr{position:absolute;left:96px;top:166px;display:flex;gap:14px;align-items:center}
+.dkqr .qrb{width:96px;height:96px;border:2.5px solid var(--ink);background:#fff;padding:5px;flex:none}
+.dkqr .qrb img{width:100%;height:100%;display:block}
+.meter{position:absolute;right:96px;top:176px;display:flex;gap:8px;align-items:center}
+.meter .mlbl{font-weight:700;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-right:5px}
+.meter .mc{width:30px;height:30px;border:2.5px solid var(--ink);background:var(--card);display:block}
+.meter .mc.on{border-color:var(--red);background:
+  linear-gradient(45deg,transparent 42%,var(--paper) 42% 58%,transparent 58%),
+  linear-gradient(-45deg,transparent 42%,var(--paper) 42% 58%,transparent 58%),var(--red)}
+.nwrap{position:absolute;left:96px;right:96px;top:280px;bottom:150px;display:flex;flex-direction:column;gap:0}
+.nopts{display:flex;gap:60px;justify-content:center}
+.nopt{position:relative;width:470px;border:2.5px solid var(--ink);background:var(--card);padding:22px 52px 20px 22px;text-align:left}
+.nopt .tagl{position:absolute;top:-13px;left:12px;background:var(--ink);color:var(--paper);font-weight:700;font-size:13px;padding:2px 10px;letter-spacing:.06em}
+.nopt .ol{font-weight:700;font-size:20px;line-height:1.35;color:var(--ink)}
+.nopt .vn{position:absolute;top:10px;right:12px;font-family:var(--display);font-weight:900;font-size:34px;color:var(--ink);opacity:0;transition:opacity .3s}
+.nopt.counted .vn{opacity:1}
+.nopt.take{border-color:var(--teal);box-shadow:inset 0 0 0 2.5px var(--teal)}
+.nopt.dead{border-color:var(--red)}
+.nopt.dead .tagl{background:var(--red)}
+.nopt.dead::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top right,transparent 47.5%,var(--red) 47.5% 52.5%,transparent 52.5%)}
+.nopt.pick{cursor:pointer;outline:3px dashed var(--red);outline-offset:3px}
+.nbr{width:100%;height:58px;flex:none}
+.nbr path{fill:none;stroke:var(--ink);stroke-width:3.5;stroke-dasharray:420;stroke-dashoffset:420;transition:stroke-dashoffset .7s ease}
+.nbr path.on{stroke-dashoffset:0}
+.nbr path.bad{stroke:var(--red)}
+.resp{border:2.5px solid var(--ink);background:var(--card);max-width:780px;margin:0 auto;padding:15px 24px;
+  opacity:0;transform:translateY(10px);transition:opacity .5s .45s,transform .5s .45s}
+.resp.on{opacity:1;transform:none}
+.resp .rl{font-weight:700;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-bottom:5px}
+.resp .rt{font-weight:500;font-size:19px;line-height:1.4;color:var(--ink)}
+.resp.crack{border-color:var(--red)}
+.resp.crack .rl{color:var(--red)}
+/* the finale: the game in reduced form */
+.ftrail{position:absolute;left:80px;right:80px;top:270px;bottom:170px;display:flex;gap:14px;align-items:center;justify-content:center}
+.fcol{flex:1;max-width:230px;display:flex;flex-direction:column;gap:12px}
+.fcol .fq{font-weight:700;letter-spacing:.1em;font-size:12px;color:var(--muted);text-align:center;min-height:1em}
+.fchip{position:relative;border:2.5px solid var(--ink);background:var(--card);padding:11px 13px;font-weight:700;font-size:14.5px;line-height:1.3;color:var(--ink);opacity:.4}
+.fchip.take{opacity:1;border-color:var(--teal);box-shadow:inset 0 0 0 2px var(--teal)}
+.fchip.dead{opacity:1;border-color:var(--red)}
+.fchip.dead::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top right,transparent 46%,var(--red) 46% 54%,transparent 54%)}
+.ftrail .farr{flex:none;font-weight:900;font-size:22px;color:var(--muted)}
+.fend{flex:0 0 190px;border:3px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center;
+  font-weight:700;font-size:16px;line-height:1.35;color:var(--ink)}
+.fend.won{border-color:var(--teal)}
+.fend.lost{border-color:var(--red);color:var(--red)}
+.dkctl{position:absolute;left:96px;bottom:42px;display:flex;gap:10px}
+.dkctl button,.dkend button{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.08em;padding:10px 16px;cursor:pointer;
+  border:2.5px solid var(--ink);background:var(--card);color:var(--ink)}
+.dkctl button.primary,.dkend button{background:var(--red);border-color:var(--red);color:var(--paper)}
+.dkctl button:disabled{opacity:.35;cursor:default}
+.dkreset{position:absolute;right:96px;bottom:46px;background:none;border:none;color:var(--muted);
+  font-family:var(--sans);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;text-decoration:underline}
+.dkend{position:absolute;left:230px;right:230px;top:250px;bottom:200px;background:var(--paper);border:3px solid var(--ink);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:28px;z-index:6}
+.dkend.on{display:flex}
+.dkend .et{font-weight:700;font-size:24px;line-height:1.4;color:var(--ink);max-width:42ch}
+.dkend .et b{color:var(--red)}
+.dkend .es{font-weight:500;font-size:15.5px;color:var(--muted)}
+/* bullets-left figure-right row + the Tapas plane (the m1 treatment) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.centfig{top:196px;gap:40px}   /* the centipede theory beside the pay-it-forward clip (29 Sep 2026) */
+.centfig ul.bullets li{font-size:21px;line-height:1.35}
+.sidefig{flex:none;height:420px;width:auto;overflow:visible}
+.sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
+/* what did we learn: five tiles, as module 1 */
+.learn .tiles{top:256px;gap:22px;left:64px;right:64px}
+.learn .tile{width:206px;gap:14px}
+.learn .tile .pgwrap{height:96px}
+.learn .tile .pgwrap .pg{height:92px}
+.learn .tile .lbl{white-space:normal;font-size:15.5px}
+.learn .tile .sent{font-size:15.5px;max-width:none}
+</style>
+</head><body>
+
+<svg style="display:none" aria-hidden="true"><symbol id="im-game-tree" viewBox="0 0 110 95"><g fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3"><line x1="55" y1="12" x2="32" y2="46"></line><line x1="55" y1="12" x2="78" y2="46"></line><line x1="32" y1="46" x2="16" y2="82"></line><line x1="32" y1="46" x2="46" y2="82"></line><line x1="78" y1="46" x2="64" y2="82"></line><line x1="78" y1="46" x2="94" y2="82"></line></g><circle fill="var(--ink,#1B1C19)" cx="32" cy="46" r="6"></circle><circle fill="var(--ink,#1B1C19)" cx="78" cy="46" r="6"></circle><circle fill="var(--ink,#1B1C19)" cx="16" cy="82" r="5"></circle><circle fill="var(--ink,#1B1C19)" cx="46" cy="82" r="5"></circle><circle fill="var(--ink,#1B1C19)" cx="64" cy="82" r="5"></circle><circle fill="var(--ink,#1B1C19)" cx="94" cy="82" r="5"></circle><circle fill="var(--red,#CE1E32)" cx="55" cy="12" r="7"></circle></symbol><symbol id="im-reverse-arrows" viewBox="0 0 64 64"><line x1="10" y1="42" x2="50" y2="42" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/><path d="M50,42 l-9,-6 m9,6 l-9,6" stroke="var(--ink)" stroke-width="3.5" fill="none" stroke-linecap="round"/><line x1="54" y1="24" x2="14" y2="24" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/><path d="M14,24 l9,-6 m-9,6 l9,6" stroke="var(--red)" stroke-width="3.5" fill="none" stroke-linecap="round"/></symbol><symbol id="im-tree" viewBox="0 0 132 100"><g fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"><line x1="16" y1="50" x2="68" y2="22"/><line x1="16" y1="50" x2="68" y2="78"/><line x1="68" y1="22" x2="118" y2="8"/><line x1="68" y1="22" x2="118" y2="36"/><line x1="68" y1="78" x2="118" y2="64"/><line x1="68" y1="78" x2="118" y2="92"/></g><circle cx="16" cy="50" r="10" fill="var(--ink)"/><circle cx="68" cy="22" r="8" fill="var(--ink)"/><circle cx="68" cy="78" r="8" fill="var(--ink)"/><rect x="112" y="2" width="12" height="12" fill="var(--red)"/><rect x="112" y="30" width="12" height="12" fill="var(--ink)"/><rect x="112" y="58" width="12" height="12" fill="var(--ink)"/><rect x="112" y="86" width="12" height="12" fill="var(--ink)"/></symbol>
+
+<symbol id="im-screen" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="20" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="32" cy="10" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="44" cy="10" r="3.2"></circle><path fill="var(--ink,#1B1C19)" d="M10 18 L54 18 L38 39 L38 50 L26 50 L26 39 Z"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="59" r="4.2"></circle></symbol>
+<symbol id="im-coin" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="24"></circle><circle fill="var(--paper,#E9E2D2)" cx="32" cy="32" r="19"></circle><text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="var(--ink,#1B1C19)">£</text></symbol>
+<symbol id="im-non-zero-sum" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="30" cy="34" r="15"></circle><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" d="M30 13 A21 21 0 0 1 51 34"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M30 13 l8 1.5 m-8 -1.5 l1.5 8"></path></symbol>
+<symbol id="im-scales" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="30" y="17" width="4" height="33"></rect><rect fill="var(--ink,#1B1C19)" x="8" y="16" width="48" height="4.4" rx="1"></rect><path fill="var(--ink,#1B1C19)" d="M21,50 L43,50 L48,59 L16,59 Z"></path><rect fill="var(--ink,#1B1C19)" x="12.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M5,29 Q13.5,41 22,29 Z"></path><rect fill="var(--ink,#1B1C19)" x="49.2" y="20" width="2.6" height="9"></rect><path fill="var(--ink,#1B1C19)" d="M42,29 Q50.5,41 59,29 Z"></path></symbol>
+<symbol id="im-no-play" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><line x1="17" y1="17" x2="47" y2="47" stroke="var(--red,#CE1E32)" stroke-width="4" stroke-linecap="round"></line></symbol>
+<symbol id="im-repeat" viewBox="0 0 64 64"><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" stroke-linecap="round" d="M32 12 A20 20 0 0 1 52 32"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M52 32 l-9 -1 m9 1 l-2 9"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="6" stroke-linecap="round" d="M32 52 A20 20 0 0 1 12 32"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="M12 32 l9 1 m-9 -1 l2 -9"></path></symbol>
+</svg>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">2</div>
+  <div class="tag"><i></i>MODULE 2 · APPLIED GAME THEORY · <span class="swapchip">RRPF</span></div>
+  <h1>SEQUENTIAL<br><span class="r">STRATEGIES</span></h1>
+  <div class="sub">Thinking forward and reasoning backward</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 110 95"><use href="#im-game-tree"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-reverse-arrows"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-no-play"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-coin"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 132 100"><use href="#im-tree"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-scales"/></svg></span>
+  </div>
+  <div class="byline">RYAN LAMARE</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>MODULE 2</div>
+  <h2>Learning objectives</h2>
+  <svg viewBox="0 0 240 340" style="position:absolute;right:44px;top:210px;width:210px" aria-hidden="true">
+    <g data-step="1">
+      <circle cx="120" cy="30" r="13" fill="var(--ink)"/>
+      <line x1="112" y1="41" x2="60" y2="128" stroke="var(--ink)" stroke-width="4"/>
+      <line x1="128" y1="41" x2="180" y2="128" stroke="var(--ink)" stroke-width="4"/>
+    </g>
+    <g data-step="2">
+      <circle cx="60" cy="140" r="11" fill="var(--ink)"/>
+      <circle cx="180" cy="140" r="11" fill="var(--ink)"/>
+      <line x1="54" y1="150" x2="30" y2="228" stroke="var(--ink)" stroke-width="4"/>
+      <line x1="66" y1="150" x2="90" y2="228" stroke="var(--ink)" stroke-width="4"/>
+      <line x1="174" y1="150" x2="150" y2="228" stroke="var(--ink)" stroke-width="4"/>
+      <line x1="186" y1="150" x2="210" y2="228" stroke="var(--ink)" stroke-width="4"/>
+    </g>
+    <g data-step="3">
+      <rect x="18" y="240" width="24" height="24" fill="none" stroke="var(--ink)" stroke-width="3.5"/>
+      <rect x="78" y="240" width="24" height="24" fill="none" stroke="var(--ink)" stroke-width="3.5"/>
+      <rect x="138" y="240" width="24" height="24" fill="none" stroke="var(--ink)" stroke-width="3.5"/>
+      <rect x="198" y="240" width="24" height="24" fill="none" stroke="var(--ink)" stroke-width="3.5"/>
+    </g>
+    <g data-step="4">
+      <line x1="128" y1="41" x2="180" y2="128" stroke="var(--red)" stroke-width="6"/>
+      <line x1="186" y1="150" x2="210" y2="228" stroke="var(--red)" stroke-width="6"/>
+      <circle cx="120" cy="30" r="13" fill="var(--red)"/>
+      <circle cx="180" cy="140" r="11" fill="var(--red)"/>
+      <rect x="198" y="240" width="24" height="24" fill="var(--red)"/>
+    </g>
+  </svg>
+  <div class="rail" style="left:43%">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Reason sequentially about strategic decisions</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Chart a complete course of action with a decision tree</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Weigh the value of the first-mover advantage</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Recognize the limits of sequential reasoning</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 2 · TWO MODES</div>
+  <h2>Two kinds of strategic interaction</h2>
+  <div class="dvg" style="top:190px">
+    <div class="dvgcol">
+      <svg class="pg" viewBox="0 0 200 132"><g class="ink"><circle cx="34" cy="20" r="14"/><path d="M11 46 Q34 36 57 46 L49 92 L19 92 Z"/><rect x="20" y="92" width="12" height="36"/><rect x="36" y="92" width="12" height="36"/></g><path d="M72 62 h44 m-12 -10 l14 10 l-14 10" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g class="ink"><circle cx="160" cy="20" r="14"/><path d="M137 46 Q160 36 183 46 L175 92 L145 92 Z"/><rect x="146" y="92" width="12" height="36"/><rect x="162" y="92" width="12" height="36"/></g></svg>
+      <div class="dt">Sequential</div>
+      <div class="dd">One side moves, then the other responds</div>
+    </div>
+    <div class="dvgcol accent">
+      <svg class="pg" viewBox="0 0 200 132"><g class="ink"><circle cx="34" cy="20" r="14"/><path d="M11 46 Q34 36 57 46 L49 92 L19 92 Z"/><rect x="20" y="92" width="12" height="36"/><rect x="36" y="92" width="12" height="36"/></g><path d="M66 62 h24 m-10 -9 l12 9 l-12 9" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M134 62 h-24 m10 -9 l-12 9 l12 9" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g class="ink"><circle cx="160" cy="20" r="14"/><path d="M137 46 Q160 36 183 46 L175 92 L145 92 Z"/><rect x="146" y="92" width="12" height="36"/><rect x="162" y="92" width="12" height="36"/></g></svg>
+      <div class="dt">Simultaneous</div>
+      <div class="dd">Both sides choose at the same time</div>
+    </div>
+  </div>
+  <div class="chiprow">
+    <div class="chips" data-step="1">
+      <div class="chead2">Recall the first rule of game theory from our first session:</div>
+      <div class="chip">It&rsquo;s not (just) about you!</div>
+    </div>
+    <div class="chips" data-step="2">
+      <div class="chead2">Let&rsquo;s add another key requirement:   </div>
+      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Always be thinking about the future!</b></div>
+    </div>
+    <div class="chead2" data-step="3">This module focuses on sequential thinking, and the next several will introduce simultaneous thinking</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>MODULE 2</div>
+  <h2>Robert Frost, game theorist</h2>
+  <div class="fig">
+    <div class="quote" style="max-width:760px;font-size:26px">&ldquo;Two roads diverged in a wood, and I&mdash;<br>
+      I took the one less traveled by,<br>
+      And that has made all the difference.&rdquo;</div>
+    <div class="cap" data-step="1">We can think of the roads diverged in a wood as branches on a game tree</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>MODULE 2 · ROLLBACK</div>
+  <h2>Characteristics of game trees</h2>
+  <div class="anatrow">
+    <svg class="tree anat" id="anat" viewBox="0 0 580 410" style="width:490px;flex:none">
+      <defs><marker id="anarr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--red)"/></marker></defs>
+      <g transform="translate(40 0)">
+      <g class="up">
+        <line class="edge" x1="124" y1="194" x2="214" y2="106"/>
+        <line class="edge pr" x1="330" y1="92" x2="430" y2="40"/>
+        <line class="edge" x1="330" y1="106" x2="430" y2="150"/>
+        <rect class="node" x="214" y="74" width="116" height="50" rx="6"/>
+        <text class="q" x="272" y="107" text-anchor="middle" style="fill:var(--terracotta)">Them</text>
+        <g class="r2"><text class="pay pr" x="442" y="50"><tspan>3</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:25px">1</tspan></text><text class="pay" x="442" y="160"><tspan>0</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:25px">2</tspan></text></g>
+      </g>
+      <line class="edge" x1="124" y1="210" x2="214" y2="298"/>
+      <line class="edge" x1="330" y1="298" x2="430" y2="250"/>
+      <line class="edge pr" x1="330" y1="312" x2="430" y2="360"/>
+      <g class="r5"><line class="path" x1="124" y1="210" x2="214" y2="298"/><line class="path" x1="330" y1="298" x2="430" y2="250"/><rect x="434" y="228" width="92" height="44" rx="6" fill="none" stroke="var(--red)" stroke-width="3"/></g>
+      <rect class="node" x="4" y="176" width="120" height="52" rx="6"/>
+      <text class="q" x="64" y="210" text-anchor="middle" style="fill:var(--teal)">You</text>
+      <rect class="node" x="214" y="280" width="116" height="50" rx="6"/>
+      <text class="q" x="272" y="313" text-anchor="middle" style="fill:var(--terracotta)">Them</text>
+      <g class="r2"><text class="pay" x="442" y="260"><tspan>2</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:25px">3</tspan></text><text class="pay pr" x="442" y="370"><tspan>1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:25px">0</tspan></text></g>
+      <g class="r1">
+        <text class="term" x="60" y="162" text-anchor="middle">A decision node</text>
+        <text class="term" x="156" y="128" text-anchor="end">A branch</text>
+      </g>
+      <g class="r3" stroke="var(--red)" stroke-width="5" stroke-linecap="round">
+        <line x1="367" y1="54" x2="381" y2="82"/><line x1="381" y1="47" x2="395" y2="75"/>
+        <line x1="367" y1="347" x2="381" y2="319"/><line x1="381" y1="354" x2="395" y2="326"/>
+      </g>
+      <g class="r4">
+        <path d="M 512 392 C 380 418 140 412 70 244" fill="none" stroke="var(--red)" stroke-width="3.5" stroke-dasharray="9 7" marker-end="url(#anarr)"/>
+        <rect x="228" y="22" width="88" height="40" rx="6" fill="var(--paper)" stroke="var(--red)" stroke-width="2.5"/><text class="pay" x="244" y="52" style="font-size:26px"><tspan>0</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:22px">2</tspan></text>
+        <rect x="228" y="340" width="88" height="40" rx="6" fill="var(--paper)" stroke="var(--red)" stroke-width="2.5"/><text class="pay" x="244" y="370" style="font-size:26px"><tspan>2</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:22px">3</tspan></text>
+      </g>
+      <g class="r5" stroke="var(--red)" stroke-width="5" stroke-linecap="round">
+        <line x1="152" y1="147" x2="172" y2="167"/><line x1="166" y1="133" x2="186" y2="153"/>
+      </g>
+      </g>
+    </svg>
+    <div class="ptiles">
+      <div class="ptile" data-step="1"><div class="pn">1</div><div class="pt">Game trees consist of <b>nodes</b>, <b>branches</b>, and <b>paths of play</b></div></div>
+      <div class="ptile" data-step="2"><div class="pn">2</div><div class="pt">Payoffs sit at the terminal nodes</div></div>
+      <div class="ptile" data-step="3"><div class="pn">3</div><div class="pt">Trees can be <b>&ldquo;pruned&rdquo;</b> as decisions are made</div></div>
+      <div class="ptile" data-step="4"><div class="pn">4</div><div class="pt"><b>&ldquo;Rollback&rdquo;</b>: start at the end (what is my goal?) and reason backward</div></div>
+      <div class="ptile" data-step="5"><div class="pn">5</div><div class="pt"><b>Rollback equilibrium</b>: every player choosing their optimal strategy</div></div>
+    </div>
+  </div>
+  <!-- 29 Sep 2026 audit: the payoff key, in the m3/m5 key style, under the tree with the payoffs -->
+  <div class="mxnote" data-step="2" style="position:absolute;left:96px;width:490px;top:598px;max-width:none;color:var(--ink);font-size:17px">Payoffs: (<b style="color:var(--teal)">You</b>, <b style="color:var(--terracotta)">Them</b>)</div>
+  <span data-step="1" data-stepcall="anatStep" data-n="1" style="position:absolute;width:0;height:0"></span>
+  <span data-step="2" data-stepcall="anatStep" data-n="2" style="position:absolute;width:0;height:0"></span>
+  <span data-step="3" data-stepcall="anatStep" data-n="3" style="position:absolute;width:0;height:0"></span>
+  <span data-step="4" data-stepcall="anatStep" data-n="4" style="position:absolute;width:0;height:0"></span>
+  <span data-step="5" data-stepcall="anatStep" data-n="5" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 2</div>
+  <h2>Should you smoke?</h2>
+  <div class="leadline">Smoking now would make you happy, and you can always quit tomorrow. Do you choose to smoke or not?</div>
+  <div class="pollwrap" style="top:250px;bottom:110px">
+    <div class="polltop">
+      <div class="joinchip">
+        <div class="qr"><img src="qr-smoke.svg" alt="QR code for ryanlamare.com/go"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
+      <div class="livecount"><span class="n" id="p1N">0</span><span class="l">RESPONSES</span></div>
+    </div>
+    <div class="units fixed"><div class="demotag" id="p1demo">DEMO DATA</div>
+      <div class="urow" id="p1o1">
+        <div class="uhead"><div class="ulbl">Smoke</div></div><div class="uval" style="color:var(--red)"></div>
+        <div class="ulane" style="color:var(--red)"></div>
+      </div>
+      <div class="urow" id="p1o2">
+        <div class="uhead"><div class="ulbl">Don&rsquo;t smoke</div></div><div class="uval" style="color:var(--teal)"></div>
+        <div class="ulane" style="color:var(--teal)"></div>
+      </div>
+      <div class="uunit">Each figure is one answer from the room</div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="p1Reveal" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 2 · THE TREE</div>
+  <h2>Should you smoke?</h2>
+  <div class="fig" style="top:150px;bottom:80px">
+    <svg class="tree" id="tr1" viewBox="0 0 1080 430" style="width:934px;height:372px;flex:none">
+      <line class="edge" x1="216" y1="196" x2="430" y2="110"/>
+      <line class="edge" x1="216" y1="224" x2="860" y2="360"/>
+      <line class="edge" id="t1eKeep" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="edge" x1="640" y1="122" x2="860" y2="190"/>
+      <g id="t1path" class="rev"><line class="path" x1="216" y1="196" x2="430" y2="110"/><line class="path" x1="640" y1="122" x2="860" y2="190"/></g>
+      <text class="elabel" x="300" y="130">YES</text>
+      <text class="elabel" x="490" y="330">NO</text>
+      <text class="elabel" id="t1lKeep" x="736" y="58">YES</text>
+      <text class="elabel" x="732" y="180">NO</text>
+      <rect class="node" x="56" y="176" width="300" height="58" rx="6"/>
+      <text class="q" x="206" y="212" text-anchor="middle">Should you smoke?</text>
+      <rect class="node" x="410" y="80" width="310" height="58" rx="6"/>
+      <text class="q" x="565" y="116" text-anchor="middle">Do you keep smoking?</text>
+      <g id="t1strike" class="rev"><line x1="736" y1="60" x2="766" y2="98" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><line x1="756" y1="57" x2="786" y2="95" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/></g>
+      <text class="pay" id="t1payK" x="890" y="66">-1</text>
+      <text class="pay" id="t1payQ" x="890" y="200">1</text>
+      <text class="pay" x="890" y="372">0</text>
+      <text class="paynote" id="t1noteK" x="940" y="63">hooked for life</text>
+      <text class="paynote" x="940" y="197">you quit in time</text>
+      <text class="paynote" x="940" y="369">you never start</text>
+      <line class="hit" id="t1hitKeep" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="hit" id="t1hitQuit" x1="640" y1="122" x2="860" y2="190"/>
+    </svg>
+    <div class="cap" style="min-height:84px"><span data-step="2">So the best move is to <b>smoke for now, and quit tomorrow</b>?</span></div>
+    <span data-step="1" data-stepcall="t1Prune" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 2 · TWO PLAYERS</div>
+  <h2>Should you smoke?</h2>
+  <div class="fig" style="top:150px;bottom:80px">
+    <svg class="tree" id="tr2" viewBox="0 0 1080 430" style="width:934px;height:372px;flex:none">
+      <line class="edge" x1="216" y1="196" x2="430" y2="110"/>
+      <line class="edge" x1="216" y1="224" x2="860" y2="360"/>
+      <g id="t2path" class="rev"><line class="path" x1="216" y1="224" x2="860" y2="360"/></g>
+      <line class="edge" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="edge" id="t2eQuit" x1="640" y1="122" x2="860" y2="190"/>
+      <g id="t2keep" class="rev"><line class="path" x1="640" y1="98" x2="860" y2="55"/></g>
+      <text class="elabel" x="300" y="130">YES</text>
+      <text class="elabel" x="490" y="330">NO</text>
+      <text class="elabel" x="736" y="58">YES</text>
+      <text class="elabel" id="t2lQuit" x="732" y="180">NO</text>
+      <rect class="node" x="56" y="176" width="300" height="58" rx="6"/>
+      <text class="q" x="206" y="212" text-anchor="middle">Should you smoke?</text>
+      <rect class="node" x="410" y="80" width="310" height="58" rx="6"/>
+      <text class="q" x="565" y="116" text-anchor="middle">Do you keep smoking?</text>
+      <g class="st1">
+        <text class="owner" x="206" y="162" text-anchor="middle" fill="var(--teal)">TODAY&rsquo;S YOU</text>
+        <text class="owner" x="565" y="66" text-anchor="middle" fill="var(--terracotta)">FUTURE YOU</text>
+      </g>
+      <g id="t2strike" class="rev"><line x1="736" y1="136" x2="764" y2="176" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><line x1="756" y1="133" x2="784" y2="173" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/></g>
+      <text class="pay st0" x="890" y="66">-1</text>
+      <text class="pay st0" id="t2payQ0" x="890" y="200">1</text>
+      <g class="st0">
+        <text class="paynote" x="940" y="63">hooked for life</text>
+        <text class="paynote" x="940" y="197">you quit in time</text>
+        <text class="paynote" x="940" y="369">you never start</text>
+      </g>
+      <g class="st1">
+        <text class="pay" x="890" y="66"><tspan>-1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:23px">1</tspan></text>
+        <text class="pay" id="t2payQ1" x="890" y="200"><tspan>1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)" style="font-family:var(--sans);font-weight:700;font-size:23px">-1</tspan></text>
+      </g>
+      <text class="pay" id="t2payN" x="890" y="372">0</text>
+      <line class="hit" id="t2hitKeep" x1="640" y1="98" x2="860" y2="55"/>
+      <line class="hit" id="t2hitQuit" x1="640" y1="122" x2="860" y2="190"/>
+    </svg>
+    <div class="cap" style="min-height:84px"><span data-step="1">The problem: who makes the second move? <b>Future you &ndash; and future you is addicted</b></span></div>
+    <span data-step="2" data-stepcall="t2Morph" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="t2Prune" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="t2Path" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 2 &middot; TWO FIRMS</div>
+  <h2>Boeing versus Airbus</h2>
+  <div class="bvwrap">
+    <a class="exlink" href="https://www.csmonitor.com/2000/0112/p1s3.html" target="_blank" rel="noopener"><svg class="tree bvtree" viewBox="0 0 1010 250" role="img" aria-label="Airbus chooses to enter the market or stay out; if it enters, Boeing chooses to accommodate it or block entry with a price war. Payoffs (Airbus, Boeing): price war -1, -1; share the market 2, 1; stay out 0, 2. Rollback strikes blocking: Airbus enters and Boeing accommodates">
+      <line class="edge" x1="210" y1="126" x2="420" y2="72"/>
+      <line class="edge" x1="210" y1="150" x2="700" y2="222"/>
+      <line class="edge" x1="610" y1="58" x2="700" y2="22"/>
+      <line class="edge" x1="610" y1="80" x2="700" y2="118"/>
+      <g data-step="3"><line class="path" x1="210" y1="126" x2="420" y2="72"/></g>
+      <g data-step="4" class="bvreal"><line class="path" id="bvBlockPath" x1="610" y1="58" x2="700" y2="22"/></g>   <!-- 29 Sep 2026: what Boeing actually did, lit after the rollback -->
+      <text class="elabel" x="300" y="88" text-anchor="middle">ENTER</text>
+      <text class="elabel" x="455" y="212" text-anchor="middle">STAY OUT</text>
+      <text class="elabel" x="640" y="24" text-anchor="end">BLOCK</text>
+      <text class="elabel" x="648" y="122" text-anchor="end">ACCOMMODATE</text>
+      <rect class="node" x="10" y="110" width="200" height="56" rx="6"/>
+      <text class="q" x="110" y="144" text-anchor="middle">Enter the market?</text>
+      <text class="owner" x="110" y="98" text-anchor="middle" fill="var(--teal)">AIRBUS</text>
+      <rect class="node" x="420" y="40" width="190" height="56" rx="6"/>
+      <text class="q" x="515" y="74" text-anchor="middle">Block or not?</text>
+      <text class="owner" x="515" y="28" text-anchor="middle" fill="var(--terracotta)">BOEING</text>
+      <text class="leaf blk" x="712" y="28">A price war</text>
+      <text class="leaf" x="712" y="124">Share the market</text>
+      <text class="leaf" x="712" y="228">Boeing keeps it</text>
+      <g data-step="5"><text class="leaf red blk" x="712" y="50">Orders delayed</text></g>
+      <!-- 28 Sep 2026: his 565 slide 41 payoffs (Airbus, Boeing), then rollback; 29 Sep, his ask: before the history, as in his 565 deck -->
+      <g data-step="2">
+        <text class="pay blk" x="895" y="32"><tspan>&minus;1</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)">&minus;1</tspan></text>
+        <text class="pay" x="895" y="128"><tspan>2</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)">1</tspan></text>
+        <text class="pay" x="895" y="232"><tspan>0</tspan><tspan fill="var(--muted)">, </tspan><tspan fill="var(--terracotta)">2</tspan></text>
+      </g>
+      <g data-step="3" class="bvsolve">
+        <line class="path" x1="610" y1="80" x2="700" y2="118"/>
+        <line x1="640" y1="30" x2="664" y2="58" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/><line x1="656" y1="24" x2="680" y2="52" stroke="var(--red)" stroke-width="6" stroke-linecap="round"/>
+        <text class="elabel" x="660" y="84" style="fill:var(--red)">NOT CREDIBLE</text>   <!-- 29 Sep 2026 audit: the threat to block, named -->
+      </g>
+    </svg></a>
+    <ul class="bullets bvlist">
+      <li data-step="1">Airbus enters into the market for planes, and Boeing has a <b>sequential choice</b>: accommodate or block entry</li>
+      <li data-step="3">Under perfect information, Airbus will enter the market and Boeing will <b>accommodate</b> it</li>
+      <li data-step="4">In reality, Boeing <b>blocks entry</b> with a price war, and the lower prices win <b>large orders</b> from Singapore Airlines, Delta, etc.</li>
+      <li data-step="5">But the cost cuts came through <b>workforce reductions</b>, orders were delayed, and <b>Airbus sold more planes than Boeing</b></li>
+      <li data-step="6">In 1997 the production crisis cost Boeing <b>$2.6 billion</b></li>
+    </ul>
+  </div>
+  <!-- 29 Sep 2026 audit: the payoff key, in the m3/m5 key style, in the gap under the tree, beneath the payoffs -->
+  <div class="mxnote" data-step="2" style="position:absolute;right:324px;top:344px;max-width:none;color:var(--ink);font-size:17px">Payoffs: (<b style="color:var(--teal)">Airbus</b>, <b style="color:var(--terracotta)">Boeing</b>)</div>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 2 · WHO MOVES FIRST</div>
+  <h2>The first-mover advantage</h2>
+  <div class="leadline" id="fmLead">The benefits an entity receives from being the <b>first to enter a space</b>: market share; goodwill; a rare resource</div>
+  <div class="exgrid four" id="fmGrid">
+    <div class="excard ytplay" data-step="1" data-yt="91vAT2QtaTw" data-title="Pricing Moments: Radiohead and In Rainbows" role="button" tabindex="0">
+      <div class="exhead"><span class="expolicy">Radiohead</span><span class="extag first">First mover</span></div>
+      <div class="exbody"><b>In Rainbows</b> was offered under a pay-what-you-want scheme. Nine Inch Nails then tried to do it too</div>
+      <div class="exclip">Pricing Moments &#9654;</div>
+    </div>
+    <div class="excard ytplay" data-step="2" data-yt="brhbsE1XpA4" data-title="ABC News: CVS to phase out cigarettes" role="button" tabindex="0">
+      <div class="exhead"><span class="expolicy">CVS</span><span class="extag first">First mover?</span></div>
+      <div class="exbody"><b>Dropped cigarettes</b> from shelves in 2014. Walgreens and Rite Aid did not follow</div>
+      <div class="exclip">ABC News &#9654;</div>
+    </div>
+    <div class="excard ytplay" data-step="3" data-yt="Ihncz239dvc" data-title="CNET: Siri&rsquo;s rise and fall" role="button" tabindex="0">
+      <div class="exhead"><span class="expolicy">&ldquo;Hey Siri&rdquo; vs &ldquo;OK Google&rdquo;</span><span class="extag second">Second mover</span></div>
+      <div class="exbody">Is the first-mover <b>always</b> at an advantage? We know it isn&rsquo;t!</div>
+      <div class="exclip">CNET &#9654;</div>
+    </div>
+    <div class="excard ytplay" data-step="4" data-yt="eham-LbLjp8" data-title="Financial Times: the end of the A380 superjumbo" role="button" tabindex="0">
+      <div class="exhead"><span class="expolicy">Airbus A380</span><span class="extag second">Not always</span></div>
+      <div class="exbody"><b>Moved first</b> on the superjumbo in 2000. Only 251 were built, and production ended in 2021 as airlines turned to smaller twin-engine jets like Boeing&rsquo;s 787</div>
+      <div class="exclip">Financial Times &#9654;</div>
+    </div>
+  </div>
+  <div class="talk" data-step="5">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> Think of one example where moving first might be beneficial, and one example where it might be harmful</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="10">
+  <div class="kicker"><i></i>MODULE 2 · COMPLETE COURSES</div>
+  <h2 style="max-width:none">Charting a complete course of action</h2>
+  <div class="leadline">To form a sequential strategy, all players must devise a <b>complete course of action</b> for all possible interactions</div>
+  <div class="ccwrap">
+    <div class="cclist">
+      <div class="ccrow" data-step="1">
+        <svg class="pg" viewBox="0 0 72 66"><line x1="14" y1="8" x2="14" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="14" y1="54" x2="58" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="50" x2="54" y2="16" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="16" x2="54" y2="50" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle cx="36" cy="33" r="4" fill="var(--ink)"/></svg>
+        <div class="ccid"><div class="ccname">Tic-Tac-Toe</div><div class="ccnum">255,168</div><div class="ccunit">possible outcomes</div></div>
+        <div class="ccs">Nine first moves, then eight, then seven. Played perfectly, it is always a draw.</div>
+      </div>
+      <a class="exlink" href="https://www.sciencedaily.com/releases/2007/07/070719143517.htm" target="_blank" rel="noopener"><div class="ccrow" data-step="2">
+        <svg class="pg" viewBox="0 0 72 66"><ellipse cx="36" cy="48" rx="22" ry="9" fill="var(--ink)"/><ellipse cx="36" cy="38" rx="22" ry="9" fill="var(--red)"/><ellipse cx="36" cy="28" rx="22" ry="9" fill="var(--ink)"/></svg>
+        <div class="ccid"><div class="ccname">Checkers</div><div class="ccnum">5 &times; 10<sup>20</sup></div><div class="ccunit">possible outcomes</div></div>
+        <div class="ccs">A computer finally solved it in 2007, after 18 years of computing. Played perfectly, it is also a draw.</div>
+      </div></a>
+      <div class="ccrow" data-step="3">
+        <svg class="pg" viewBox="0 0 72 66"><circle cx="36" cy="16" r="9" fill="var(--ink)"/><path d="M28 26 Q36 22 44 26 L42 44 L30 44 Z" fill="var(--ink)"/><path d="M24 50 L48 50 L52 60 L20 60 Z" fill="var(--ink)"/></svg>
+        <div class="ccid"><div class="ccname">Chess</div><div class="ccnum">10<sup>120</sup></div><div class="ccunit">possible outcomes</div></div>
+        <div class="ccs">More games than there are atoms in the observable universe. No computer has solved it, and none is close.</div>
+      </div>
+    </div>
+    <div class="ccclip" data-step="3">
+      <div class="clipframe md" id="lfwrap">
+        <button class="clipcover" id="lfload" type="button">
+          <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+          <span class="ct">Littlefinger counsels Sansa</span>
+        </button>
+      </div>
+      <div class="ccquote" data-step="4">&ldquo;Don&rsquo;t fight in the North or the South. Fight every battle, everywhere, always, in your mind. Everyone is your enemy, everyone is your friend. <span class="op">Every possible series of events is happening all at once.</span> Live that way and nothing will surprise you. Everything that happens will be something that you&rsquo;ve seen before.&rdquo;</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 2 · GAMES</div>
+  <h2>Three games</h2>
+  <div class="gtiles">
+    <div class="gtile" data-step="1"><svg class="pg" viewBox="0 0 64 64"><use href="#im-screen"></use></svg><div class="gl">A backward reasoning game</div><div class="gs">Take the last card</div></div>
+    <div class="gtile" data-step="2"><svg class="pg" viewBox="0 0 64 64"><use href="#im-coin"></use></svg><div class="gl">The ultimatum game</div><div class="gs">One offer, split &pound;1,000</div></div>
+    <div class="gtile" data-step="3"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><!-- the centipede: a spine of turns, each with a leg to take the pot; the last leg in red --><line x1="6" y1="22" x2="58" y2="22" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><g stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"><line x1="8" y1="22" x2="8" y2="44"/><line x1="21" y1="22" x2="21" y2="44"/><line x1="34" y1="22" x2="34" y2="44"/><line x1="47" y1="22" x2="47" y2="44"/></g><g fill="var(--ink)"><circle cx="8" cy="22" r="4.5"/><circle cx="21" cy="22" r="4.5"/><circle cx="34" cy="22" r="4.5"/><circle cx="47" cy="22" r="4.5"/><circle cx="8" cy="47" r="3.5"/><circle cx="21" cy="47" r="3.5"/><circle cx="34" cy="47" r="3.5"/><circle cx="47" cy="47" r="3.5"/></g><line x1="58" y1="22" x2="58" y2="52" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="22" r="4.5" fill="var(--ink)"/><circle cx="58" cy="55" r="5.5" fill="var(--red)"/></svg><div class="gl">The centipede game</div><div class="gs">Take the pot, or let it grow</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 2 · TAKE THE LAST CARD</div>
+  <h2>A game of backward reasoning</h2>
+  <div class="rowfig" style="top:190px;align-items:flex-start">
+    <ul class="bullets tightlist" style="max-width:640px">
+      <li><b>Twenty-three cards</b> are on your phone, and will be selected by you and your neighbor sequentially</li>
+      <li data-step="1">You take turns removing <b>1, 2, or 3</b> cards</li>
+      <li data-step="2">Whoever <b>takes the last card</b> wins</li>
+      <li data-step="3"><b>Play it on your phones</b>: whoever&rsquo;s first name is nearest to A makes the first move</li>
+    </ul>
+    <div class="joinchip">
+      <div class="qr"><img src="qr-cards.svg" alt="QR code for take the last card"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+  </div>
+  <div style="position:absolute;left:96px;right:96px;top:508px;bottom:64px;display:flex;gap:30px;align-items:center">
+    <div class="livecount" style="position:relative"><span class="n" id="lcN">0</span><span class="l">GAMES<br>DONE</span><div class="demotag" id="lcD" style="left:100%;right:auto;top:0;margin-left:18px;white-space:nowrap">DEMO DATA</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 2 · TAKE THE LAST CARD</div>
+  <h2>Solving the game</h2>
+  <div class="fig" style="top:176px"><div class="numstack">
+  <div class="cardstrip" aria-hidden="true"><span class="mcard"></span><span class="mcard"></span><span class="mcard"></span><span class="mcard up leave"><span class="n">?</span></span><span class="mcard"></span><span class="mcard"></span><span class="mcard"></span><span class="mcard up leave"><span class="n">?</span></span><span class="mcard"></span><span class="mcard"></span><span class="mcard"></span><span class="mcard up leave"><span class="n">?</span></span><span class="mcard"></span><span class="mcard"></span><span class="mcard"></span><span class="mcard up leave"><span class="n">?</span></span><span class="mcard"></span><span class="mcard"></span><span class="mcard"></span><span class="mcard up leave"><span class="n">?</span></span><span class="mcard"></span><span class="mcard"></span><span class="mcard up"><span class="n">23</span></span></div>
+    <svg class="numline" viewBox="0 0 1000 200">
+      <line class="axis" x1="60" y1="120" x2="940" y2="120"/>
+      <line class="tick" x1="60" y1="110" x2="60" y2="130"/><text class="endlbl" x="60" y="158" text-anchor="middle">0</text>
+      <line class="tick" x1="213" y1="110" x2="213" y2="130"/><text class="endlbl" x="213" y="158" text-anchor="middle">4</text>
+      <line class="tick" x1="366" y1="110" x2="366" y2="130"/><text class="endlbl" x="366" y="158" text-anchor="middle">8</text>
+      <line class="tick" x1="519" y1="110" x2="519" y2="130"/><text class="endlbl" x="519" y="158" text-anchor="middle">12</text>
+      <line class="tick" x1="672" y1="110" x2="672" y2="130"/><text class="endlbl" x="672" y="158" text-anchor="middle">16</text>
+      <line class="tick" x1="825" y1="110" x2="825" y2="130"/><text class="endlbl" x="825" y="158" text-anchor="middle">20</text>
+      <line class="tick" x1="940" y1="110" x2="940" y2="130"/><text class="endlbl" x="940" y="158" text-anchor="middle">23</text>
+      <g data-step="1"><path d="M940 104 Q882 72 825 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M825 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="825" cy="120" r="8" fill="var(--red)"/><text x="825" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">20</text></g>
+      <g data-step="2"><path d="M825 104 Q748 72 672 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M672 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="672" cy="120" r="8" fill="var(--red)"/><text x="672" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">16</text></g>
+      <g data-step="3"><path d="M672 104 Q596 72 519 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M519 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="519" cy="120" r="8" fill="var(--red)"/><text x="519" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">12</text></g>
+      <g data-step="4"><path d="M519 104 Q443 72 366 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M366 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="366" cy="120" r="8" fill="var(--red)"/><text x="366" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">8</text></g>
+      <g data-step="5"><path d="M366 104 Q290 72 213 104" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round"/><path d="M213 104 l10 -7 m-10 7 l10 7" fill="none" stroke="var(--red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="213" cy="120" r="8" fill="var(--red)"/><text x="213" y="92" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="20" fill="var(--red)">4</text></g>
+      <g data-step="5"><rect class="band" x="92" y="100" width="90" height="40"/><rect x="92" y="100" width="90" height="40" fill="none" stroke="var(--red)" stroke-width="2"/><text x="137" y="172" text-anchor="middle" font-family="var(--sans)" font-weight="600" font-size="15" fill="var(--red)">you face 1&ndash;3</text></g>
+    </svg>
+    <div class="cap" data-step="5" style="max-width:none"><b>Think forward and reason backward</b>: whoever faces four cards loses. Leave 20 after your first move, then answer every removal back to 16, 12, 8, and 4, and the last card will always be yours!</div>
+  </div></div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>MODULE 2 · THE ULTIMATUM GAME</div>
+  <h2>The ultimatum game</h2>
+  <div class="fig" style="top:190px"><div style="display:flex;align-items:flex-start;justify-content:center;gap:54px;width:100%">
+    <div class="splitwrap" style="width:auto">
+      <div class="splitlbl" style="width:640px"><span>Proposer&rsquo;s share</span><span>Responder&rsquo;s share</span></div>
+      <div class="deal2" id="deal" style="width:640px">
+        <div class="dtrack"><div class="dA"></div><div class="dB"></div><div class="dhandle"></div></div>
+        <div class="dvals"><span class="dvA">&pound;500</span><span class="dvB">&pound;500</span></div>
+      </div>
+      <ul class="bullets" style="margin-top:10px;max-width:640px">
+        <li><b>&pound;1,000</b> is available to be split between you and the person next to you.</li>
+        <li data-step="1">After any discussion you want, the person whose first name is <b>nearest to A</b> proposes a split from their phone</li>
+        <li data-step="2">Once the proposal is locked in, the responder can only <b>accept or reject</b></li>
+        <li data-step="3">If the responder rejects the proposal, <b>nobody gets anything</b></li>
+      </ul>
+    </div>
+    <div class="joinchip">
+      <div class="qr"><img src="qr-ult.svg" alt="QR code for the ultimatum game"></div>
+      <div class="ju">ryanlamare.com/go &middot; proposers pick their partner</div>
+    </div>
+  </div></div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 2 · THE ULTIMATUM GAME</div>
+  <h2>The ultimatum game: theory vs your results</h2>
+  <div class="ubboard">
+    <div class="ubtop">
+      <div class="dplotlbl" style="font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)">What proposers offered</div>
+      <div class="livecount"><span class="n" id="ultN">0</span><span class="l">PAIRS<br>IN</span></div>
+    </div>
+    <div class="ubcols" id="ultcols"></div>
+    <div class="ubrest"><button type="button" id="ultAll">REVEAL ALL</button></div>
+  </div>
+  <div class="resnotes">
+    <div data-step="2"><b>Rollback theory:</b> the proposer should offer a token amount &ndash; and it should be accepted</div>
+    <div data-step="3"><b>The lesson:</b> a &ldquo;rational&rdquo; lowball offer is likely to be rejected!</div>
+  </div>
+  <span data-step="1" data-stepcall="ultReveal" style="position:absolute;width:0;height:0"></span>
+  <div class="demotag" id="ultD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 2 · THE CENTIPEDE GAME</div>
+  <h2>The centipede game</h2>
+  <div class="fig" style="top:180px"><div class="numstack" style="gap:22px">
+    <svg class="centi" viewBox="0 0 940 210">
+      <line class="pass" x1="70" y1="80" x2="855" y2="80"/><path class="pass" d="M855 80 l-14 -7 m14 7 l-14 7"/>
+      <text class="lbl" x="70" y="34">P1</text><circle class="nA" cx="70" cy="80" r="15"/><line class="take" x1="70" y1="95" x2="70" y2="115"/><path class="take" d="M70 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="70" y="140">&pound;100</text>
+      <text class="lbl" x="160" y="34">P2</text><circle class="nB" cx="160" cy="80" r="15"/><line class="take" x1="160" y1="95" x2="160" y2="115"/><path class="take" d="M160 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="160" y="140">&pound;200</text>
+      <text class="lbl" x="250" y="34">P1</text><circle class="nA" cx="250" cy="80" r="15"/><line class="take" x1="250" y1="95" x2="250" y2="115"/><path class="take" d="M250 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="250" y="140">&pound;300</text>
+      <text class="lbl" x="340" y="34">P2</text><circle class="nB" cx="340" cy="80" r="15"/><line class="take" x1="340" y1="95" x2="340" y2="115"/><path class="take" d="M340 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="340" y="140">&pound;400</text>
+      <text class="lbl" x="430" y="34">P1</text><circle class="nA" cx="430" cy="80" r="15"/><line class="take" x1="430" y1="95" x2="430" y2="115"/><path class="take" d="M430 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="430" y="140">&pound;500</text>
+      <text class="lbl" x="520" y="34">P2</text><circle class="nB" cx="520" cy="80" r="15"/><line class="take" x1="520" y1="95" x2="520" y2="115"/><path class="take" d="M520 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="520" y="140">&pound;600</text>
+      <text class="lbl" x="610" y="34">P1</text><circle class="nA" cx="610" cy="80" r="15"/><line class="take" x1="610" y1="95" x2="610" y2="115"/><path class="take" d="M610 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="610" y="140">&pound;700</text>
+      <text class="lbl" x="700" y="34">P2</text><circle class="nB" cx="700" cy="80" r="15"/><line class="take" x1="700" y1="95" x2="700" y2="115"/><path class="take" d="M700 115 l-6 -9 m6 9 l6 -9"/><text class="pb" x="700" y="140">&pound;800</text>
+      <text class="lbl" x="790" y="34">P1</text><circle class="nA" cx="790" cy="80" r="15"/><line class="take" x1="790" y1="95" x2="790" y2="115"/><path class="take" d="M790 115 l-6 -9 m6 9 l6 -9"/><text class="pa" x="790" y="140">&pound;900</text>
+      <text class="lbl" x="880" y="34" style="fill:var(--red)">cap</text><circle cx="880" cy="80" r="20" fill="none" stroke="var(--red)" stroke-width="4"/><text x="880" y="140" text-anchor="middle" font-weight="700" font-size="18" fill="var(--red)">&pound;1,000</text>
+    </svg>
+    <div style="display:flex;align-items:center;justify-content:center;gap:54px;width:100%">
+    <ul class="bullets" style="margin-top:0;max-width:700px">
+      <li><b>&pound;100</b> is on the table. <b>Player 1 can take it, or pass</b></li>
+      <li data-step="1">Each pass <b>adds another &pound;100</b>, and the choice switches sides</li>
+      <li data-step="2">At <b>&pound;1,000</b> the game ends, and whoever&rsquo;s turn it is <b>takes it all</b></li>
+      <li data-step="3"><b>Play it in pairs, on your phones</b>; this time whoever&rsquo;s first name is nearest to Z is Player 1</li>
+    </ul>
+    <div class="joinchip">
+      <div class="qr" style="width:200px;height:200px"><img src="qr-cent.svg" alt="QR code for the centipede game"></div>
+      <div class="ju">ryanlamare.com/go</div>
+    </div>
+    </div>
+  </div></div>
+</section>
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 2 · THE CENTIPEDE GAME</div>
+  <h2>The centipede game: your results</h2>
+  <div class="ubboard" style="bottom:84px">   <!-- 156 until 28 Sep, 200 when the notes below grew to four lines; 29 Sep, his ask: the theory went to its own slide, so the board has the room -->
+    <div class="ubtop">
+      <div class="dplotlbl" style="font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--muted)">The turn somebody took the pot</div>
+      <div class="livecount"><span class="n" id="centN">0</span><span class="l">PAIRS<br>IN</span></div>
+    </div>
+    <div class="ubcols" id="centcols" style="grid-template-columns:repeat(10,1fr)"></div>
+    <div class="dkey" style="flex:none">
+      <div class="k">Taken early</div><span class="cgrad"></span><div class="k">Ran to &pound;1,000</div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="centReveal" style="position:absolute;width:0;height:0"></span>
+  <div class="demotag" id="centD" style="position:absolute;top:168px;right:76px">DEMO DATA</div>
+</section>
+
+<!-- 29 Sep 2026, his ask: the theory, the problem and the pay-it-forward line on their own slide, with the clip on the right -->
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 2 · THE CENTIPEDE GAME</div>
+  <h2>The centipede game: the theory</h2>
+  <div class="rowfig centfig">
+    <ul class="bullets">
+      <li><b>Rollback theory:</b> Player 2 will surely take the pot at &pound;1,000, so Player 1 should take it at &pound;900. But Player 2 should know this and take it at &pound;800, and so on, so Player 1 should take the first &pound;100 and end the game</li>
+      <li data-step="1"><b>The problem:</b> you&rsquo;re incentivized to wait, because you do better as a group if you wait!</li>
+      <li data-step="2">A pay-it-forward line is a centipede game: it keeps going only as long as nobody grabs</li>
+    </ul>
+    <!-- 28 Sep 2026, his find: I Think You Should Leave, "Pay It Forward" (S3E3), a fan upload; a second fan upload is BP1zOxcg57E if this one goes -->
+    <div class="clipframe sm" id="pifwrap" data-step="2">
+      <button class="clipcover" id="pifload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">I Think You Should Leave: Pay It Forward</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 2</div>
+  <h2>The limits of sequential reasoning</h2>
+  <div class="anatrow" style="top:220px">
+    <div class="ptiles limits" style="max-width:980px;margin:0 auto;gap:38px">
+      <div class="ptile" data-step="1" style="align-items:center">
+        <svg style="width:54px;height:54px;flex:none" viewBox="0 0 64 64" aria-hidden="true"><circle cx="10" cy="32" r="5" fill="var(--ink)"/><g stroke="var(--ink)" stroke-width="3.5"><line x1="14" y1="30" x2="50" y2="8"/><line x1="14" y1="31" x2="54" y2="20"/><line x1="15" y1="32" x2="56" y2="32"/><line x1="14" y1="33" x2="54" y2="44"/><line x1="14" y1="34" x2="50" y2="56"/></g><g fill="var(--red)"><circle cx="50" cy="8" r="4"/><circle cx="54" cy="20" r="4"/><circle cx="56" cy="32" r="4"/><circle cx="54" cy="44" r="4"/><circle cx="50" cy="56" r="4"/></g></svg>
+        <div class="pn">1</div><div class="pt">Complexity of drawing game trees to completion (even tic-tac-toe is hard!)</div></div>
+      <div class="ptile" data-step="2" style="align-items:center">
+        <svg style="width:54px;height:54px;flex:none" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="14" width="20" height="30" fill="var(--ink)" transform="rotate(-6 18 29)"/><rect x="34" y="14" width="20" height="30" fill="none" stroke="var(--ink)" stroke-width="3" transform="rotate(6 44 29)"/><text x="44" y="36" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="22" fill="var(--red)" transform="rotate(6 44 29)">?</text></svg>
+        <div class="pn">2</div><div class="pt">Requirement of perfect information (in reality, uncertainty plagues us all)</div></div>
+      <div class="ptile" data-step="3" style="align-items:center">
+        <svg style="width:54px;height:54px;flex:none" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="26" r="17" fill="none" stroke="var(--ink)" stroke-width="3.5"/><path d="M22 27 l6 -7 l6 11 l8 -9" stroke="var(--red)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 58 Q32 46 52 58" stroke="var(--ink)" stroke-width="3.5" fill="none"/></svg>
+        <div class="pn">3</div><div class="pt">Limits of rationality in sequential decision-making (think of the games we just played)</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 2 · YOUR WORLD</div>
+  <h2>Charting a complete course of action in your world</h2>
+  <div class="leadline" style="max-width:1000px;margin:18px auto 0">Try your best to chart a complete course of action on one thing you&rsquo;d like to get in the future.</div>
+  <div class="rail" style="top:282px;gap:20px;left:96px;transform:none;min-width:0;width:560px">
+    <div class="ritem"><div class="rn">1</div><div class="rt">What outcome would you like to achieve?</div></div>
+    <div class="ritem"><div class="rn">2</div><div class="rt">Who else is in this game?</div></div>
+    <div class="ritem"><div class="rn">3</div><div class="rt">Your two opening moves, and how they react to each</div></div>
+    <div class="ritem"><div class="rn">4</div><div class="rt">Get as far as you can to finding equilibrium</div></div>
+  </div>
+  <!-- a picture of the four questions, not something to draw (27 Sep 2026, his idea from his wife): the numbers match -->
+  <svg class="tree ctree" viewBox="0 0 560 330" role="img" aria-label="A game tree: you choose between two opening moves, the other side reacts to each, the paths keep going, and they all lead to your outcome" style="position:absolute;right:96px;top:258px;width:470px;height:auto;overflow:visible"><line class="edge" x1="108" y1="153" x2="196" y2="64"/><line class="edge" x1="108" y1="177" x2="196" y2="266"/><line class="edge" x1="304" y1="52" x2="368" y2="18"/><line class="edge" x1="304" y1="74" x2="368" y2="106"/><line class="edge" x1="304" y1="256" x2="368" y2="224"/><line class="edge" x1="304" y1="278" x2="368" y2="312"/><g fill="none" stroke="var(--red)" stroke-width="3" stroke-dasharray="8 7" stroke-linecap="round"><path d="M368 18 H418 M368 106 H418 M368 224 H418 M368 312 H418 M418 18 V312 M418 165 H446"/></g><rect class="node" x="0" y="140" width="108" height="50" rx="6"/><text class="q" x="54" y="173" text-anchor="middle" style="fill:var(--teal);font-weight:700;font-size:22px">You</text><rect class="node" x="196" y="40" width="108" height="48" rx="6"/><text class="q" x="250" y="72" text-anchor="middle" style="fill:var(--terracotta);font-weight:700;font-size:22px">Them</text><rect class="node" x="196" y="242" width="108" height="48" rx="6"/><text class="q" x="250" y="274" text-anchor="middle" style="fill:var(--terracotta);font-weight:700;font-size:22px">Them</text><rect x="446" y="140" width="108" height="50" rx="6" fill="var(--card)" stroke="var(--red)" stroke-width="3"/><text x="500" y="172" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:20px;fill:var(--red)">Outcome</text><g><circle cx="554" cy="140" r="15" fill="var(--red)"/><text x="554" y="146" text-anchor="middle" style="font-family:var(--sans);font-weight:800;font-size:17px;fill:var(--paper)">1</text></g><g><circle cx="304" cy="40" r="15" fill="var(--red)"/><text x="304" y="46" text-anchor="middle" style="font-family:var(--sans);font-weight:800;font-size:17px;fill:var(--paper)">2</text></g><g><circle cx="152" cy="108" r="15" fill="var(--red)"/><text x="152" y="114" text-anchor="middle" style="font-family:var(--sans);font-weight:800;font-size:17px;fill:var(--paper)">3</text></g><g><circle cx="418" cy="62" r="15" fill="var(--red)"/><text x="418" y="68" text-anchor="middle" style="font-family:var(--sans);font-weight:800;font-size:17px;fill:var(--paper)">4</text></g></svg>
+  <div style="position:absolute;right:96px;width:470px;top:540px;text-align:center;font-weight:500;font-style:italic;font-size:17px;color:var(--muted)">If it helps, sketch your own on the pad</div>   <!-- optional, his line of thought 27 Sep: the one place paper beats a keyboard -->
+  <div class="talk" data-step="1">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> (a)&nbsp;Think of a situation on your own; (b)&nbsp;talk it out at your table; (c)&nbsp;one person shares with the whole group.</div>
+    <div class="tnote"><b>YOUR NOTES, OPTIONAL</b><span>ryanlamare.com/go/notes</span></div>
+  </div>
+</section>
+
+<section class="slide content learn" data-i="21">
+  <div class="kicker"><i></i>MODULE 2 · TAKEAWAYS</div>
+  <h2>a few key takeaways...</h2>
+  <div class="tiles">
+    <div class="tile">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><use href="#im-reverse-arrows"></use></svg></div>
+      <div class="lbl">Think forward, reason backward</div>
+      <div class="sent">Start at the end (what is my goal?) and reason backward</div>
+    </div>
+    <div class="tile" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 200 132"><g class="ink"><circle cx="34" cy="20" r="14"/><path d="M11 46 Q34 36 57 46 L49 92 L19 92 Z"/><rect x="20" y="92" width="12" height="36"/><rect x="36" y="92" width="12" height="36"/></g><path d="M72 62 h44 m-12 -10 l14 10 l-14 10" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g class="ink"><circle cx="160" cy="20" r="14"/><path d="M137 46 Q160 36 183 46 L175 92 L145 92 Z"/><rect x="146" y="92" width="12" height="36"/><rect x="162" y="92" width="12" height="36"/></g></svg></div>
+      <div class="lbl">Who makes the second move?</div>
+      <div class="sent">Always put yourself in the other person&rsquo;s shoes, and always be thinking about the future</div>
+    </div>
+    <div class="tile" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><line x1="14" y1="6" x2="14" y2="60" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><path d="M16 8 L50 8 L42 20 L50 32 L16 32 Z" fill="var(--red)"/><path d="M44 42 l12 12 m0 -12 l-12 12" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="lbl">First mover isn&rsquo;t always ahead</div>
+      <div class="sent">Moving first can bring market share, goodwill, or a rare resource, but not always</div>
+    </div>
+    <div class="tile" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 72 66"><line x1="14" y1="8" x2="14" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="14" y1="54" x2="58" y2="54" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="50" x2="54" y2="16" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><line x1="18" y1="16" x2="54" y2="50" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/><circle cx="36" cy="33" r="4" fill="var(--ink)"/></svg></div>
+      <div class="lbl">Chart a complete course of action</div>
+      <div class="sent">To form a sequential strategy, plan for all possible interactions</div>
+    </div>
+    <div class="tile" data-step="4">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><circle cx="10" cy="32" r="5" fill="var(--ink)"/><g stroke="var(--ink)" stroke-width="3.5"><line x1="14" y1="30" x2="50" y2="8"/><line x1="14" y1="31" x2="54" y2="20"/><line x1="15" y1="32" x2="56" y2="32"/><line x1="14" y1="33" x2="54" y2="44"/><line x1="14" y1="34" x2="50" y2="56"/></g><g fill="var(--red)"><circle cx="50" cy="8" r="4"/><circle cx="54" cy="20" r="4"/><circle cx="56" cy="32" r="4"/><circle cx="54" cy="44" r="4"/><circle cx="50" cy="56" r="4"/></g></svg></div>
+      <div class="lbl">Sequential reasoning has limits</div>
+      <div class="sent">Trees get complex, information is imperfect, and people are not always rational</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="22">
+  <div class="kicker"><i></i>MODULE 2 · RESOURCES</div>
+  <h2>Extra resources</h2>
+  <div class="resrc dense">
+    <div class="rcol">
+      <div class="rhead">Watch and listen</div>
+      <a class="rcard" href="https://www.youtube.com/watch?v=A_q2fNc-7-0" target="_blank" rel="noopener" data-yt="A_q2fNc-7-0">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">The man vs the machine</div><div class="rmeta">Documentary &middot; 17 minutes</div><div class="rwhy">Kasparov against Deep Blue: the limits of looking ahead</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=-lueG-ZACyA" target="_blank" rel="noopener" data-yt="-lueG-ZACyA" data-start="121">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Arcade Fire, game theorists</div><div class="rmeta">Deep Blue &middot; 4 minutes</div><div class="rwhy">A song about Kasparov, Deep Blue and 1996</div></span>
+      </a>
+      <a class="rcard" href="https://hbr.org/podcast/2024/09/to-set-a-great-strategy-start-by-imagining-the-future-you-want" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Start by imagining the future you want</div><div class="rmeta">HBR IdeaCast &middot; podcast</div><div class="rwhy">Look forward and reason back, as a way to set strategy</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=mskP3qbmhR4" target="_blank" rel="noopener" data-yt="mskP3qbmhR4">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Yahoo says no to Microsoft</div><div class="rmeta">Associated Press &middot; 1 minute</div><div class="rwhy">Turned down $44.6bn in 2008, sold for $4.48bn in 2017</div></span>
+      </a>
+    </div>
+    <div class="rcol">
+      <div class="rhead">Read</div>
+      <a class="rcard" href="https://wwnorton.com/books/9780393337174" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Art of Strategy, chapter 2</div><div class="rmeta">Dixit and Nalebuff</div><div class="rwhy">Games solvable by backward reasoning</div></span>
+      </a>
+      <a class="rcard" href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=302452" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Airbus vs. Boeing in Superjumbos</div><div class="rmeta">Esty and Ghemawat &middot; Harvard Business School</div><div class="rwhy">Why Boeing could not credibly block the A380</div></span>
+      </a>
+      <a class="rcard" href="https://hbr.org/2004/12/building-deep-supplier-relationships" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Building Deep Supplier Relationships</div><div class="rmeta">Liker and Choi &middot; Harvard Business Review</div><div class="rwhy">Toyota and Honda&rsquo;s long-term ties with their suppliers</div></span>
+      </a>
+      <a class="rcard" href="https://workingbackwards.com/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Working Backwards</div><div class="rmeta">Bryar and Carr &middot; book</div><div class="rwhy">Amazon starts from the finished product and reasons back</div></span>
+      </a>
+      <a class="rcard" href="https://doi.org/10.1016/0167-2681(82)90011-7" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">An Experimental Analysis of Ultimatum Bargaining</div><div class="rmeta">G&uuml;th, Schmittberger and Schwarze &middot; 1982</div><div class="rwhy">People turn down money rather than accept an unfair split</div></span>
+      </a>
+      <a class="rcard" href="https://doi.org/10.2307/2951567" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">An Experimental Study of the Centipede Game</div><div class="rmeta">McKelvey and Palfrey &middot; Econometrica, 1992</div><div class="rwhy">Theory says take the money at once, but players rarely do</div></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<a class="homelink" href="/teaching/exec/rrpf/programme/?hub">ALL MODULES</a>
+
+<script>
+/* ---- live decisions: try the gt-poll worker, fall back to marked demo data ---- */
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
+function mkPoll(pollId, nId, optIds, demoId, demoDist){
+  const st={live:false,counts:demoDist.slice(),total:0,demoShown:0,revealed:false};
+  const nEl=document.getElementById(nId);
+  function renderCount(){nEl.textContent=st.live?st.total:st.demoShown;}
+  function laneHTML(n){
+    let h='';
+    for(let i=0;i<Math.min(n,60);i++)h+='<span class="u">'+PERSON.replace('<svg','<svg style="transition-delay:'+(i*35)+'ms"')+'</span>';
+    return h;
+  }
+  function renderCrowds(){
+    const counts=st.live?st.counts:demoDist;
+    optIds.forEach((id,i)=>{
+      const o=document.getElementById(id);
+      const lane=o.querySelector('.ulane');
+      if(st.revealed){
+        const want=Math.min(counts[i]||0,60);
+        if(lane.children.length!==want){lane.innerHTML=laneHTML(counts[i]||0);void lane.offsetWidth;}
+      }else lane.innerHTML='';
+      o.classList.toggle('revealed',st.revealed);
+      o.querySelector('.uval').textContent=st.revealed?(counts[i]||0):'';
+    });
+    if(window.fitLanes)fitLanes(optIds.map(id=>document.getElementById(id).querySelector('.ulane')));
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+pollId).then(r=>r.json()).then(d=>{
+      if(st.revealed)return; /* the reveal is a snapshot: a phone cannot move the bars afterwards */
+      st.live=true;
+      document.getElementById(demoId).style.display='none';
+      st.counts=optIds.map((_,i)=>d.counts[i]||0);
+      st.total=d.total;
+      renderCount();
+      if(st.revealed)renderCrowds();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{const demoTotal=demoDist.reduce((a,b)=>a+b,0);
+    if(!st.live&&st.demoShown<demoTotal){st.demoShown++;renderCount();}},420);
+  return {reveal(on){st.revealed=on;renderCrowds();},counts:()=>st.live?st.counts.slice():demoDist.slice()};
+}
+const poll1=mkPoll('m2-smoke','p1N',['p1o1','p1o2'],'p1demo',[14,7]);
+function p1Reveal(el,on){poll1.reveal(on);}
+
+/* ---- clips load on click, so YouTube's title stays off screen until it plays ---- */
+function clipOnClick(btnId,wrapId,videoId,title,start,end){
+  /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
+     whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
+  const btn=document.getElementById(btnId);
+  btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
+  if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
+}
+clipOnClick('lfload','lfwrap','X1QKUWqNFgo','Littlefinger counsels Sansa');
+clipOnClick('pifload','pifwrap','52LJaWDdG9c','I Think You Should Leave: Pay It Forward');
+/* ---- Characteristics of game trees: the two-level tree grows with the five points
+   (25 Sep 2026 redraw of the one-node Frost tree): parts, payoffs, pruning,
+   rollback, the equilibrium path. Class toggles over static SVG, Safari-safe. ---- */
+function anatStep(el,on){document.getElementById('anat').classList.toggle('s'+el.dataset.n,on);}
+
+/* ---- price-cut tree 1: tap the dominated branch to prune it ---- */
+const T=(id)=>document.getElementById(id);
+function shake(svg){svg.classList.remove('shake');void svg.offsetWidth;svg.classList.add('shake');}
+function t1Prune(el,on){
+  T('t1strike').classList.toggle('on',on);
+  T('t1path').classList.toggle('on',on);
+  ['t1eKeep','t1lKeep','t1payK','t1noteK'].forEach(id=>T(id).classList.toggle('dim',on));
+  T('t1payQ').classList.toggle('best',on);
+}
+T('t1hitKeep').addEventListener('pointerdown',()=>t1Prune(null,true));
+T('t1hitQuit').addEventListener('pointerdown',()=>shake(T('tr1')));
+
+/* ---- price-cut tree 2: class-toggle morph to two players, then tap to prune ---- */
+let t2m=false;
+function t2Morph(el,on){
+  t2m=on;
+  T('tr2').classList.toggle('two',on);
+  if(!on){t2Prune(null,false);t2Path(null,false);}
+}
+function t2Prune(el,on){
+  if(on&&!t2m)return;
+  T('t2strike').classList.toggle('on',on);
+  T('t2keep').classList.toggle('on',on);
+  ['t2eQuit','t2lQuit','t2payQ1'].forEach(id=>T(id).classList.toggle('dim',on));
+}
+function t2Path(el,on){
+  if(on&&!t2m)return;
+  T('t2path').classList.toggle('on',on);
+  T('t2payN').classList.toggle('best',on);
+}
+T('t2hitQuit').addEventListener('pointerdown',()=>{t2m?t2Prune(null,true):shake(T('tr2'));});
+T('t2hitKeep').addEventListener('pointerdown',()=>shake(T('tr2')));
+
+/* ---- ultimatum split slider: drag from 99/1 to 1/99, starts 50/50 ---- */
+(function(){
+  const root=T('deal');
+  const track=root.querySelector('.dtrack'), A=root.querySelector('.dA'), B=root.querySelector('.dB');
+  const handle=root.querySelector('.dhandle'), vA=root.querySelector('.dvA'), vB=root.querySelector('.dvB');
+  let pos=50, dragging=false;
+  function render(){
+    A.style.width=pos+'%'; B.style.width=(100-pos)+'%'; handle.style.left=pos+'%';
+    vA.textContent='£'+(pos*10); vB.textContent='£'+((100-pos)*10);
+  }
+  function drag(e){
+    if(!dragging)return;
+    const r=track.getBoundingClientRect();
+    pos=Math.max(1,Math.min(99,Math.round((e.clientX-r.left)/r.width*100)));
+    render();
+  }
+  track.addEventListener('pointerdown',e=>{dragging=true;track.setPointerCapture(e.pointerId);drag(e);});
+  track.addEventListener('pointermove',drag);
+  track.addEventListener('pointerup',()=>dragging=false);
+  render();
+})();
+
+/* ---- live results from the pair recorder (m2/game/): ultimatum offers
+   as "prop|resp|offer|a-or-r" lines, centipede endings as "a|b|turn".
+   Both are boards of names in columns, shown and frozen on a keypress, with
+   marked demo data when the Worker is unreachable. ---- */
+function pairKey(a,b){return [String(a).toLowerCase(),String(b).toLowerCase()].sort().join('~');}
+(function(){
+  /* proposer, what they offered the responder, accepted or rejected */
+  const DEMO=[['Aisha','Ben',500,'a'],['Cara','Dev',400,'a'],['Elena','Farid',100,'r'],['Gus','Hana',500,'a'],['Ivan','Jo',300,'a'],['Kemi','Leo',10,'r'],['Mei','Nia',500,'a'],['Owen','Pat',400,'a'],['Quin','Rae',200,'r'],['Sol','Tam',400,'r'],['Uma','Vik',600,'a'],['Wes','Yara',300,'a']];
+  const COLS=[10,100,200,300,400,500,600,700,800,900,990], ROOM=222;
+  const snap=v=>COLS.reduce((b,c)=>Math.abs(c-v)<Math.abs(b-v)?c:b);
+  const wrap=document.getElementById('ultcols'), nEl=document.getElementById('ultN');
+  /* rows: what the room holds now; board: the snapshot taken at the reveal
+     keypress, which nothing moves afterwards; seen: the outcomes he has shown */
+  const st={live:false,rows:[],board:null,seen:{}};
+  const rows=()=>st.board||(st.live?st.rows:DEMO.map(([name,resp,offer,res])=>({key:name.toLowerCase(),name,resp,offer,res})));
+  function paint(){
+    wrap.querySelectorAll('.ubname').forEach(el=>{
+      const on=!!st.seen[el.dataset.k];
+      el.classList.toggle('a',on&&el.dataset.res==='a');el.classList.toggle('r',on&&el.dataset.res==='r');
+    });
+  }
+  /* show the ones still hidden; if none are hidden, hide them again */
+  function flip(list){
+    const hid=list.filter(o=>!st.seen[o.key]);
+    (hid.length?hid:list).forEach(o=>{st.seen[o.key]=!!hid.length;});
+    paint();
+  }
+  function build(){
+    wrap.innerHTML='';wrap.style.setProperty('--ncol',COLS.length);
+    const R=st.board||[];
+    const most=Math.max(1,...COLS.map(c=>R.filter(o=>snap(o.offer)===c).length));
+    const gap=most>9?3:5, h=Math.max(22,Math.min(44,Math.floor((ROOM-(most-1)*gap)/most)));
+    const f=h>=40?15:h>=33?13.5:h>=28?12.5:11.5;
+    COLS.forEach(c=>{
+      const col=document.createElement('div');col.className='ubcol';col.style.gap=gap+'px';
+      const head=document.createElement('div');head.className='ubhead';
+      head.textContent=(100-c/10)+'/'+(c/10);
+      col.appendChild(head);
+      const mine=R.filter(o=>snap(o.offer)===c);
+      mine.forEach(o=>{
+        const el=document.createElement('div');el.className='ubname';el.dataset.k=o.key;el.dataset.res=o.res;
+        el.style.height=h+'px';el.style.fontSize=f+'px';el.classList.add('two');
+        const b=document.createElement('b');b.textContent=o.name;el.appendChild(b);
+        const sp=document.createElement('span');sp.textContent=o.resp||'';el.appendChild(sp);
+        el.addEventListener('click',()=>flip([o]));
+        col.appendChild(el);
+      });
+      head.addEventListener('click',()=>flip(mine));
+      wrap.appendChild(col);
+    });
+    paint();
+  }
+  document.getElementById('ultAll').addEventListener('click',e=>{flip(st.board||[]);e.currentTarget.blur();});
+  function fetchIt(){
+    fetch(POLL_API+'/p/m2-ultimatum/answers').then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById('ultD').style.display='none';
+      const byPair=new Map();
+      (d.answers||[]).forEach(t=>{
+        const m=String(t).match(/^(.{1,30}?)\s*\|\s*(.{1,30}?)\s*\|\s*(\d{1,4})\s*\|\s*([ar])$/i);
+        if(!m)return;
+        const offer=+m[3];
+        if(offer>1000)return;
+        const k=pairKey(m[1],m[2]);
+        byPair.set(k,{key:k,name:m[1],resp:m[2],offer,res:m[4].toLowerCase()});
+      });
+      st.rows=[...byPair.values()];
+      /* a board drawn from the demo before the room answered (a reload on this slide) is redrawn from the room */
+      if(st.board&&st.fromDemo){st.fromDemo=false;st.seen={};st.board=st.rows.slice();build();}
+      nEl.textContent=(st.board||st.rows).length;
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  let shown=0;
+  setInterval(()=>{if(!st.live&&!st.board&&shown<DEMO.length){shown++;nEl.textContent=shown;}},420);
+  /* the reveal keypress: names under their splits, outcomes still hidden.
+     Stepping back lets the room back in, and the next reveal is a new snapshot */
+  window.ultReveal=function(el,on){
+    st.seen={};
+    st.board=on?rows().slice():null;st.fromDemo=on&&!st.live;
+    if(on)nEl.textContent=st.board.length;
+    build();
+  };
+  build();
+})();
+/* the centipede board, the same board as the ultimatum's: ten columns, the
+   pot at each turn, and each pair under the pot that was taken: the taker's
+   name over the partner's (27 Sep 2026: both players, not just one).
+   Nothing is hidden here, since the column is the outcome: early takes come up
+   in one colour that deepens turn by turn (24 Sep 2026), at the reveal keypress, which freezes the board. */
+(function(){
+  const DEMO=[['Aisha','Ben',6],['Cara','Dev',4],['Elena','Farid',8],['Gus','Hana',10],['Ivan','Jo',5],['Kemi','Leo',7],['Mei','Nia',3],['Owen','Pat',10],['Quin','Rae',6],['Sol','Tam',9],['Uma','Vik',1],['Wes','Yara',7]];
+  const COLS=[1,2,3,4,5,6,7,8,9,10], ROOM=178;   /* 222 until 28 Sep, when the board rose 44px for the four lines of notes */
+  const wrap=document.getElementById('centcols'), nEl=document.getElementById('centN');
+  const st={live:false,rows:[],board:null};
+  const rows=()=>st.board||(st.live?st.rows:DEMO.map(([name,other,turn])=>({name,other,turn})));
+  function build(){
+    wrap.innerHTML='';
+    const R=st.board||[];
+    const most=Math.max(1,...COLS.map(c=>R.filter(o=>o.turn===c).length));
+    const gap=most>9?3:5, h=Math.max(22,Math.min(44,Math.floor((ROOM-(most-1)*gap)/most)));
+    const f=h>=40?15:h>=33?13.5:h>=28?12.5:11.5;
+    COLS.forEach(c=>{
+      const col=document.createElement('div');col.className='ubcol';col.style.gap=gap+'px';
+      const head=document.createElement('div');head.className='ubhead';head.style.cursor='default';
+      head.textContent='£'+(c===10?'1,000':c*100);
+      col.appendChild(head);
+      R.filter(o=>o.turn===c).forEach(o=>{
+        const el=document.createElement('div');el.className='ubname';el.dataset.turn=c;el.style.cursor='default';
+        el.style.background=el.style.borderColor='color-mix(in srgb,var(--ochre) '+(18+Math.round((c-1)*82/9))+'%,var(--paper-soft))';
+        el.style.height=h+'px';el.style.fontSize=f+'px';el.classList.add('two');
+        const b=document.createElement('b');b.textContent=o.name;el.appendChild(b);
+        const sp=document.createElement('span');sp.textContent=o.other||'';el.appendChild(sp);
+        col.appendChild(el);
+      });
+      wrap.appendChild(col);
+    });
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m2-centipede/answers').then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById('centD').style.display='none';
+      const byPair=new Map();
+      (d.answers||[]).forEach(t=>{
+        const m=String(t).match(/^(.{1,30}?)\s*\|\s*(.{1,30}?)\s*\|\s*(10|[1-9])$/);
+        if(!m)return;
+        const k=pairKey(m[1],m[2]);if(!byPair.has(k))byPair.set(k,{name:m[1],other:m[2],turn:+m[3]});
+      });
+      st.rows=[...byPair.values()];
+      if(st.board&&st.fromDemo){st.fromDemo=false;st.board=st.rows.slice();build();}
+      nEl.textContent=(st.board||st.rows).length;
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  let shown=0;
+  setInterval(()=>{if(!st.live&&!st.board&&shown<DEMO.length){shown++;nEl.textContent=shown;}},420);
+  window.centReveal=function(el,on){
+    st.board=on?rows().slice():null;st.fromDemo=on&&!st.live;
+    if(on)nEl.textContent=st.board.length;
+    build();
+  };
+  build();
+})();
+
+
+/* ---- last-card pairs play: the count of finished games from m2-lastcard ---- */
+(function(){
+  const DEMOF=[['A','B','12-8-4-0'],['C','D','9-6-2-0'],['E','F','16-12-8-4'],['G','H','11-7-4-0'],['I','J','8-4-0'],['K','L','10-5-1-0'],['M','N','13-8-4-0']];
+  const nEl=document.getElementById('lcN');
+  const st={live:false,n:0,demoShown:0};
+  function render(){
+    const n=st.live?st.n:st.demoShown;
+    nEl.textContent=n;
+  }
+  function fetchIt(){
+    fetch(POLL_API+'/p/m2-lastcard/answers').then(r=>r.json()).then(d=>{
+      st.live=true;
+      document.getElementById('lcD').style.display='none';
+      const byPair=new Map();
+      (d.answers||[]).forEach(t=>{
+        const p=String(t).split('|').map(x=>x.trim());
+        if(p.length===3&&p[0]&&p[1]){const k=pairKey(p[0],p[1]);if(!byPair.has(k))byPair.set(k,p);}
+      });
+      st.n=byPair.size;
+      render();
+    }).catch(()=>{});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  setInterval(()=>{if(!st.live&&st.demoShown<DEMOF.length){st.demoShown++;render();}},700);
+})();
+
+
+
+</script>
+<script src="/teaching/exec/rrpf/deck.js"></script>
+</body></html>

@@ -1,0 +1,220 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/rrpf/frozen.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 8 · A Car Market Game</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 8 car market (rebuilt 23 Sep 2026 at
+   Ryan's word: his LER 550 three-round card game, merged with the m2
+   boards). The phone is the card. Everyone joins by name; when he says
+   "Try to make a deal!" the deck deals half the room sellers and half
+   buyers, and the roles hold for all three rounds. Each round opens only
+   when his slide opens it, and deals the cars afresh, half peaches and half
+   lemons. A seller who sells enters the price agreed and locks it in; a
+   seller who reports nothing did not sell. Round 1 the card is shown, so
+   the whole screen takes the car's colour; rounds 2 and 3 it must not be,
+   so the car shows only while a finger is held down. Rules in car.js.
+   ?room= plays into a scratch room, ?n= and ?v= are rehearsal overrides. */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 16px 40px;transition:background .4s,color .4s;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.peach{background:var(--terracotta);color:var(--paper)}
+body.lemon{background:var(--ochre);color:var(--ink)}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px;min-height:calc(100vh - 62px)}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+body.peach .tag,body.lemon .tag{color:inherit;opacity:.8}
+h1{font-weight:700;font-size:22px;line-height:1.3;color:var(--red)}
+body.peach h1,body.lemon h1{color:inherit}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+body.peach .lbl,body.lemon .lbl{color:inherit;opacity:.85}
+.card{touch-action:none;flex:none;border:3px solid currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px 18px;min-height:210px;background:transparent}
+.card .kind{font-family:var(--display);font-weight:900;font-size:64px;line-height:1;letter-spacing:.02em}
+.card .what{font-weight:600;font-size:19px;line-height:1.35}
+.card .min{font-weight:700;font-size:22px;line-height:1.3}
+.card .hold{font-family:var(--display);font-weight:900;font-size:24px;letter-spacing:.04em;color:var(--muted)}
+.card.buyer{gap:22px;flex:none;min-height:0}
+.card.buyer .row{font-weight:600;font-size:21px;line-height:1.35}
+.card.buyer .row b{font-family:var(--display);font-weight:900;font-size:34px;display:block}
+.note{font-weight:500;font-size:15px;line-height:1.4;color:var(--muted)}
+body.peach .note,body.lemon .note{color:inherit;opacity:.85}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
+body.peach .waitcard,body.lemon .waitcard{color:inherit;border-color:currentColor}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.choices{display:flex;flex-direction:column;gap:10px}
+.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;cursor:pointer}
+.namerow{display:flex;gap:10px}
+.namerow input,.price input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0;-webkit-user-select:text;user-select:text}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.report{border:2.5px solid var(--ink);background:var(--card);color:var(--ink);padding:16px;display:flex;flex-direction:column;gap:12px}
+.report .lbl{color:var(--muted);opacity:1}
+.price{display:flex;align-items:center;gap:8px}
+.price span{font-family:var(--display);font-weight:900;font-size:30px}
+.price input{font-family:var(--display);font-weight:900;font-size:30px;text-align:center;padding:10px 12px}
+button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 20px;cursor:pointer;width:100%}
+button.send:disabled{opacity:.4;cursor:default}
+.sold{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.1}
+.status{font-weight:600;font-size:14px;min-height:1.3em;opacity:.8}
+</style>
+</head><body>
+<div class="wrap" id="app"></div>
+<script src="/teaching/exec/rrpf/go/names.js"></script>
+<script src="/teaching/exec/rrpf/m8/car/car.js"></script>
+<script>
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
+const ROOM=qs.get('room')||'m8-car';
+let voter=qs.get('v')||null;
+try{
+  if(!voter)voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+let name=qs.get('n')||null, roster=[];
+try{if(!name)name=localStorage.getItem('gt-name');}catch(_){}
+const app=document.getElementById('app');
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const money=v=>'£'+Number(v).toLocaleString('en-GB');
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function head(title){
+  app.innerHTML='';
+  app.appendChild(el('div','tag','<i></i>APPLIED GAME THEORY · MODULE 8'));
+  app.appendChild(el('h1',null,esc(title)));
+}
+const wait=t=>el('div','waitcard','<span class="pulse"></span>'+esc(t));
+function claimOnce(){
+  let done=false;try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+    .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+const say=t=>fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+GT_NAMES.roster().then(n=>{roster=n;if(shown==='name')shown='';render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk; a name screen drawn before it arrived is redrawn with it */
+if(name){if(qs.get('n'))claimOnce(); /* the rehearsal override keeps its name */
+  else GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();});} /* a Poll Desk reset of the name room: ask again */
+
+function renderName(){
+  head('A car market game');
+  app.appendChild(el('div','lbl','Who are you?'));
+  const list=el('div','choices');
+  roster.forEach(n=>{const b=el('button','pick',esc(n));b.addEventListener('click',()=>GT_NAMES.confirm(app,clean(n),'Is that you?',()=>pickName(clean(n)),()=>{shown='';render();}));list.appendChild(b);});   /* a tapped name asks once (27 Sep 2026) */
+  app.appendChild(list);
+  const row=el('div','namerow');
+  const inp=document.createElement('input');inp.maxLength=30;inp.placeholder=roster.length?'Not on the list?':'Type your first name';inp.autocomplete='off';
+  const b=el('button',null,'OK');
+  const go=()=>{const v=clean(inp.value);if(v)pickName(v);};
+  b.addEventListener('click',go);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+}
+function pickName(n){GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();shown='';render();tick();},app,{clean});}
+
+let S=null, shown='', joining=false, hidePeek=null, local={};
+['pointerup','pointercancel','blur'].forEach(t=>window.addEventListener(t,()=>{if(hidePeek)hidePeek();}));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&hidePeek)hidePeek();});
+
+function tick(){
+  fetch(API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{
+    S=CAR.parse(d.answers||[]);
+    if(name&&!S.names[CAR.norm(name)]&&!joining){
+      joining=true;say(name+'|j').then(()=>{joining=false;tick();}).catch(()=>{joining=false;});
+    }
+    render();
+  }).catch(()=>{});
+}
+function render(){
+  if(!name){if(shown!=='name'){shown='name';hidePeek=null;document.body.className='';renderName();}return;}
+  if(!S){if(shown!=='loading'){shown='loading';head('A car market game');app.appendChild(wait('Joining the market…'));}return;}
+  const k=CAR.norm(name), role=S.roleOf(k), n=S.round;
+  const car=role==='seller'&&n?S.cars[n][k]:null;
+  const sale=role==='seller'&&n?(S.sales[n][k]||local[n]||null):null;
+  /* the count only matters before the deal: after it, a late join must not redraw a seller mid-price */
+  const key=[!!S.names[k],!!S.deal,role,n,S.isOpen,car,sale&&sale.price,S.deal?'':S.joins.length].join('#');
+  if(key===shown)return;
+  shown=key;hidePeek=null;document.body.className='';
+  if(!S.deal){
+    head('A car market game');
+    const me=el('div','me','<span class="who">Playing as <b></b></span><button type="button">change</button>');
+    me.querySelector('b').textContent=name;
+    me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}shown='';render();});
+    app.appendChild(me);
+    app.appendChild(el('div','lbl',S.names[k]?'You’re in · '+S.joins.length+' in the market':'Joining…'));
+    app.appendChild(wait('Your role arrives when the game starts.'));
+    return;
+  }
+  if(!role){head('A car market game');app.appendChild(wait('Joining…'));return;}
+  if(role==='buyer')return renderBuyer(n);
+  renderSeller(n,car,sale);
+}
+function roundLine(n){
+  if(!n)return wait('Round 1 opens in a moment.');
+  if(S.isOpen)return null;
+  return wait(n<CAR.N?'Round '+n+' is closed. Look at the big screen.':'That’s the game. Look at the big screen.');
+}
+function renderBuyer(n){
+  head('You are a car buyer');
+  if(n&&S.isOpen)app.appendChild(el('div','lbl','Round '+n+' · find a seller and make a deal'));
+  const c=el('div','card buyer');
+  c.appendChild(el('div','row','For a lemon you will pay up to<b>'+money(CAR.BUYER.L)+'</b>'));
+  c.appendChild(el('div','row','For a peach you will pay up to<b>'+money(CAR.BUYER.P)+'</b>'));
+  app.appendChild(c);
+  const w=roundLine(n);if(w)app.appendChild(w);
+}
+function renderSeller(n,carK,sale){
+  head('You are a car seller');
+  if(!n){app.appendChild(wait('Round 1 opens in a moment.'));return;}
+  const car=CAR.CARS[carK], shownCar=n===1;
+  app.appendChild(el('div','lbl','Round '+n+(S.isOpen?'':' · closed')));
+  const c=el('div','card');
+  function face(on){
+    /* the colour wash is only for a card that is meant to be seen: a held peek stays plain, or the room could read it */
+    document.body.className=on&&shownCar?car.cls:'';
+    c.innerHTML=on?'<div class="kind">'+car.kind+'</div><div class="what">'+car.what+'</div><div class="min">You would sell it for a minimum of '+money(car.min)+'</div>'
+                  :'<div class="hold">HOLD TO SEE YOUR CAR</div>';
+  }
+  face(shownCar);
+  if(!shownCar){
+    /* the card captures the pointer, and the window hides the car on any lift, cancel, blur or tab switch */
+    const down=e=>{e.preventDefault();try{c.setPointerCapture(e.pointerId);}catch(_){}face(true);}, up=()=>face(false);
+    hidePeek=up;
+    c.addEventListener('pointerdown',down);
+    ['pointerup','pointercancel','lostpointercapture'].forEach(t=>c.addEventListener(t,up));
+    c.addEventListener('contextmenu',e=>e.preventDefault());
+  }
+  app.appendChild(c);
+  if(S.isOpen)app.appendChild(el('div','note',n===1?'Show this screen to buyers when they approach you.':'Do not show this screen to buyers, no matter how persistent they are.'));
+  if(sale){
+    const r=el('div','report');
+    r.appendChild(el('div','lbl','Your sale this round'));
+    r.appendChild(el('div','sold','Sold for '+money(sale.price)));
+    r.appendChild(el('div','note','Locked in.'));
+    app.appendChild(r);
+  }else if(S.isOpen){
+    const r=el('div','report');
+    r.appendChild(el('div','lbl','Sold your car? Enter the price you agreed'));
+    const p=el('div','price','<span>£</span>');
+    const inp=document.createElement('input');inp.type='text';inp.inputMode='numeric';inp.pattern='[0-9]*';inp.placeholder='0';inp.autocomplete='off';
+    p.appendChild(inp);r.appendChild(p);
+    const go=el('button','send','LOCK IT IN');go.type='button';go.disabled=true;
+    const st=el('div','status');
+    const val=()=>{const v=Math.round(+String(inp.value).replace(/[^0-9]/g,''));return v>0&&v<100000?v:0;};
+    inp.addEventListener('input',()=>{go.disabled=!val();});
+    go.addEventListener('click',()=>{const v=val();if(!v)return;go.disabled=true;inp.disabled=true;
+      say(name+'|s|'+n+'|'+v).then(()=>{local[n]={price:v};shown='';render();tick();})
+        .catch(()=>{go.disabled=false;inp.disabled=false;st.textContent='That didn’t send. Try again.';});});
+    r.appendChild(go);r.appendChild(st);
+    app.appendChild(r);
+    app.appendChild(el('div','note','Didn’t sell? Leave this empty.'));
+  }
+  const w=roundLine(n);if(w)app.appendChild(w);
+}
+render();
+setInterval(tick,2000);tick();
+</script>
+</body></html>

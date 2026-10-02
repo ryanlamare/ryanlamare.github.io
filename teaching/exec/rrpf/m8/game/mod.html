@@ -1,0 +1,237 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/rrpf/frozen.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Hidden Agenda · Moderator</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* The moderator's phone for Hidden Agenda (the simple table, 23 Sep 2026).
+   Everything here needs the admin secret (shared with Poll Desk, kept in
+   localStorage gt-admin). One big button at a time: DEAL ROLES, START
+   NIGHT, MORNING (with the sentence to read out), then by day the name
+   voted off by a show of hands, if anyone, and the next NIGHT. The game
+   ends itself when a side wins; END THE GAME ends it early. The deal has
+   two Manipulators and an Auditor, no General Counsel. A dead phone: open
+   "If a phone dies" and release the seat; the same name from a new phone
+   takes it over. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.phase{display:flex;justify-content:space-between;align-items:baseline;border:2.5px solid var(--ink);background:var(--card);padding:14px 16px}
+.phase .p{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--ink)}
+.phase .p.night{color:var(--blue)} .phase .p.vote{color:var(--red)} .phase .p.over{color:var(--teal)}
+.phase .n{font-weight:600;font-size:13px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+button.act{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:13px 16px;cursor:pointer;flex:1;min-width:140px}
+button.act.quiet{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+button.act:disabled{opacity:.35;cursor:default}
+.check{display:flex;flex-direction:column;gap:6px}
+.check .c{display:flex;justify-content:space-between;align-items:center;border:2px solid var(--ink);background:var(--card);padding:10px 14px;font-weight:600;font-size:15px}
+.check .c.done{border-color:var(--teal);background:color-mix(in srgb, var(--teal) 18%, var(--card))}
+.check .c small{font-weight:600;font-size:12px;color:var(--muted)}
+.seats{display:flex;flex-direction:column;gap:6px}
+.seat{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:2px solid var(--ink);background:var(--card);padding:8px 12px;font-weight:600;font-size:15px}
+.seat.out{opacity:.5;text-decoration:line-through}
+.seat .role{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.seat .role.b{color:var(--red)}
+.seat .mini{display:flex;gap:6px}
+.seat .mini button,.seat select{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--paper);border:2px solid var(--ink);color:var(--ink);padding:5px 8px;cursor:pointer}
+.res{border-left:6px solid var(--red);padding:10px 14px;font-weight:600;font-size:16px;background:var(--card);line-height:1.4}
+.res b{color:var(--red)}
+.log{font-weight:500;font-size:14px;line-height:1.5;color:var(--ink)}
+.log b{color:var(--red)}
+.status{font-weight:600;font-size:14px;color:var(--muted);min-height:1.4em}
+.secret{display:flex;gap:8px}
+.secret input{flex:1;font-family:var(--sans);font-weight:600;font-size:15px;background:var(--card);border:2.5px solid var(--ink);padding:10px 12px;min-width:0}
+.secret button{font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.08em;background:var(--ink);color:var(--paper);border:none;padding:10px 14px;cursor:pointer}
+details{border:2px dashed var(--muted);padding:10px 14px}
+summary{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);cursor:pointer}
+.votes{display:flex;gap:14px;font-weight:600;font-size:14px}
+.votes b{font-family:var(--display);font-weight:900;font-size:24px}
+.hand{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;border:2px dashed var(--muted);padding:10px 14px;font-weight:600;font-size:14px}
+.hand .lbl{flex-basis:100%}
+.hand span.st{display:inline-flex;align-items:center;gap:8px}
+.hand button{font-family:var(--sans);font-weight:900;font-size:18px;line-height:1;width:34px;height:34px;background:var(--paper);border:2px solid var(--ink);color:var(--ink);cursor:pointer}
+.hand b{font-family:var(--display);font-weight:900;font-size:22px;min-width:1.2em;text-align:center}
+.big{font-family:var(--sans);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:20px 16px;cursor:pointer;width:100%}
+.big.ready{background:var(--teal);border-color:var(--teal)}
+.big:disabled{opacity:.35;cursor:default}
+.readout{border:2.5px solid var(--ink);background:var(--card);padding:14px 16px;font-weight:600;font-size:17px;line-height:1.45}
+.readout .lbl{display:block;margin-bottom:6px}
+.readout b{color:var(--red)}
+.names{display:flex;flex-wrap:wrap;gap:8px}
+.names button{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2px solid var(--ink);padding:9px 14px;cursor:pointer}
+.endbtn{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start;padding:0}
+.seat .mini .wait{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--red);align-self:center}
+a.pick{display:block;text-align:center;font-weight:700;font-size:16px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px;text-decoration:none}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>HIDDEN AGENDA · MODERATOR</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/rrpf/m8/game/cs.js"></script>
+<script>
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const table=qs.get('t')||'tapas'; /* one table since the plain pass; ?t=granito still opens the other */
+if(!table||!CS_TABLES[table]){
+  q.textContent='Which table are you running?';
+  app.innerHTML='<a class="pick" href="?t=tapas">The Tapas committee</a><br><a class="pick" href="?t=granito">The Granito management team</a>';
+}else{
+  const T=CS_TABLES[table], ROOM=qs.get('room')||T.room;
+  q.textContent=T.title;
+  let secret=qs.get('s')||''; /* ?s= is a rehearsal override */
+  try{if(!secret)secret=localStorage.getItem('gt-admin')||'';}catch(_){}
+  const post=(sub,body)=>fetch(API+'/p/'+ROOM+'/cs/'+sub,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:secret,...body})}).then(r=>r.json().then(d=>({ok:r.ok,status:r.status,d})));
+  const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
+  const RN={m:'Member',b:'Manipulator',a:'Auditor',c:'Counsel'};
+  let S=null, shown='', lastResult=null;
+  function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+  function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;}
+  function act(sub,body,after){
+    return post(sub,body||{}).then(r=>{
+      if(r.status===403){secret='';try{localStorage.removeItem('gt-admin');}catch(_){}st.textContent='Secret refused. Paste it again.';shown='';render();return null;}
+      if(!r.ok){st.textContent='Refused: '+(r.d.error||r.status);return null;}
+      st.textContent='';if(after)after(r.d);shown='';tick();return r.d;
+    }).catch(()=>{st.textContent='Didn’t reach the Worker. Try again.';return null;});
+  }
+  function askSecret(){
+    app.innerHTML='';
+    app.appendChild(el('div','lbl','Paste the admin secret (the same one as Poll Desk)'));
+    const row=el('div','secret');const inp=document.createElement('input');inp.type='password';inp.autocomplete='off';
+    const b=el('button','','SAVE');b.addEventListener('click',()=>{secret=inp.value.trim();try{localStorage.setItem('gt-admin',secret);}catch(_){}shown='';tick();});
+    row.appendChild(inp);row.appendChild(b);app.appendChild(row);
+  }
+  function tick(){
+    if(!secret){if(shown!=='secret'){shown='secret';askSecret();}return;}
+    fetch(API+'/p/'+ROOM+'/cs/mod?s='+encodeURIComponent(secret)).then(r=>{if(r.status===403){secret='';try{localStorage.removeItem('gt-admin');}catch(_){}shown='';return null;}return r.json();}).then(d=>{if(!d){tick();return;}S=d;render();}).catch(()=>{});
+  }
+  const NIGHT_MIN=30;
+  const nk=r=>'gt-cs-night-'+ROOM+'-'+r;
+  function nightStart(r){let t=null;try{t=+localStorage.getItem(nk(r))||null;}catch(_){}if(!t){t=Date.now();try{localStorage.setItem(nk(r),String(t));}catch(_){}}return t;}
+  const nightLeft=r=>Math.max(0,NIGHT_MIN-Math.floor((Date.now()-nightStart(r))/1000));
+  function paintMorning(){
+    const b=document.getElementById('morningBtn');if(!b||!S||S.phase!=='night')return;
+    const left=nightLeft(S.round);
+    b.disabled=left>0;b.textContent=left>0?'MORNING IN '+left:'MORNING';
+    b.classList.toggle('ready',left<=0&&b.dataset.ready==='1');
+  }
+  setInterval(paintMorning,500);
+  function render(){
+    if(!S)return;
+    const key=JSON.stringify([S.phase,S.round,Object.values(S.seats).map(s=>[s.n,s.role,s.alive,!!s.open,s.out]),S.nights[S.round],S.log.length,lastResult,S.winner]);
+    if(key===shown)return;shown=key;
+    app.innerHTML='';
+    const seats=Object.entries(S.seats).map(([v,s])=>({v,...s}));
+    const alive=seats.filter(s=>s.alive), backers=alive.filter(s=>s.role==='b');
+    const dealt=seats.some(s=>s.role);
+    const ph=el('div','phase');
+    const P={lobby:'LOBBY',night:'NIGHT '+S.round,day:'DAY '+S.round,vote:'DAY '+S.round,over:'GAME OVER'};
+    ph.innerHTML='<span class="p '+S.phase+'">'+P[S.phase]+'</span><span class="n">'+alive.length+' of '+seats.length+' still in'+(dealt?' · '+backers.length+' Manipulator'+(backers.length===1?'':'s')+' left':'')+'</span>';
+    app.appendChild(ph);
+    const big=(t,fn,cls)=>{const b=el('button','big'+(cls?' '+cls:''),t);b.addEventListener('click',fn);app.appendChild(b);return b;};
+    const readout=html=>{const r=el('div','readout','<span class="lbl">Read this out</span>'+html);app.appendChild(r);};
+    /* the morning's sentence, rebuilt from the Worker's record of the night, so a reload keeps it */
+    const morning=r=>{const n=S.nights[r], x=n&&n.result, nm=v=>S.seats[v]?S.seats[v].n:'';
+      return (x&&x.removed?'Overnight, an anonymous allegation was made against <b>'+esc(nm(x.removed))+'</b>. The airline has pulled them off the committee while it is investigated.':'No allegation was agreed overnight. <b>Nobody leaves.</b>');};
+    const winLine=w=>w?' <b>'+(w==='committee'?'Every Manipulator is out. The committee wins.':'The Manipulators are half the committee. They win.')+'</b>':'';
+    if(S.phase==='lobby'){
+      if(!dealt){
+        app.appendChild(el('div','lbl',seats.length+' at the table'));
+        app.appendChild(el('div','log',seats.map(s=>esc(s.n)).join(', ')||'Nobody yet.'));
+        const b=big('DEAL ROLES',()=>{if(seats.length<5){st.textContent='Five at the table at least.';return;}if(seats.length>11&&!confirm(seats.length+' are seated and the slide says eleven. Two Manipulators will be dealt. Deal anyway?'))return;
+          act('deal',Object.assign({backers:2,counsel:false},T.backed?{bidder:T.backed}:{}),d=>{lastResult=null;});});
+        b.disabled=seats.length<5;
+      }else{
+        const man=seats.filter(s=>s.role==='b').map(s=>esc(s.n)), aud=seats.filter(s=>s.role==='a').map(s=>esc(s.n));
+        app.appendChild(el('div','res','Dealt. <b>'+man.join('</b> and <b>')+'</b> are the Manipulators, backing '+esc(bidderName(S.bidder))+'. <b>'+aud.join(', ')+'</b> is the Auditor. Only you can see this.'));
+        /* someone who sat down after the deal has no role, and a night will not start with an undealt seat: drop them */
+        const late=seats.filter(s=>!s.role);
+        big('START NIGHT 1',async()=>{
+          if(late.length){if(!confirm(late.map(s=>s.n).join(', ')+' sat down after the roles were dealt. Drop them from the table and start?'))return;
+            for(const s of late){if(!await act('unseat',{v:s.v}))return;}}
+          act('phase',{to:'night'},()=>{lastResult=null;});
+        });
+        const again=el('button','endbtn','deal again');again.addEventListener('click',()=>{if(confirm('Deal the roles again? Everyone gets a new role.'))act('deal',Object.assign({backers:2,counsel:false},T.backed?{bidder:T.backed}:{}),()=>{lastResult=null;});});app.appendChild(again);
+      }
+    }else if(S.phase==='night'){
+      const n=S.nights[S.round]||{picks:{},notes:{}};
+      const nm=v=>S.seats[v]?S.seats[v].n:'—';
+      const picks=backers.map(b=>n.picks[b.v]).filter(Boolean);
+      const agreed=backers.length>0&&picks.length===backers.length&&picks.every(p=>p===picks[0]);
+      const auditor=alive.find(s=>s.role==='a');
+      const tappers=alive.filter(s=>s.role!=='b'&&s.role!=='a'), tapped=tappers.filter(s=>n.notes[s.v]).length;
+      const ck=el('div','check');
+      ck.appendChild(el('div','c'+(agreed?' done':''),'<span>Manipulators '+(agreed?'agreed on <b>'+esc(nm(picks[0]))+'</b>':(picks.length?'split: '+[...new Set(picks)].map(nm).map(esc).join(' / '):'still deciding'))+'</span><small>'+picks.length+' of '+backers.length+'</small>'));
+      if(auditor)ck.appendChild(el('div','c'+(n.check?' done':''),'<span>Auditor '+(n.check?'has checked':'still to check')+'</span>'));
+      ck.appendChild(el('div','c'+(tapped===tappers.length?' done':''),'<span>Everyone else</span><small>'+tapped+' of '+tappers.length+' tapped</small>'));
+      app.appendChild(ck);
+      const allIn=agreed&&(!auditor||!!n.check)&&tapped===tappers.length;
+      /* a minimum night (Ryan, 23 Sep): MORNING waits NIGHT_MIN seconds from the start of the night, so the
+         clock sets the pace and a slow tap (the Manipulators have more to agree) tells the room nothing */
+      nightStart(S.round);
+      const mb=big('MORNING',()=>{
+        if(nightLeft(S.round)>0)return;
+        if(!allIn&&!confirm('Not every phone has tapped yet. Morning anyway?'))return;
+        act('phase',{to:'day'},d=>{const r=d.result||{};
+          lastResult=(r.removed?'Overnight, an anonymous allegation was made against <b>'+esc(r.removed)+'</b>. The airline has pulled them off the committee while it is investigated.':'No allegation was agreed overnight. <b>Nobody leaves.</b>')+winLine(d.winner);});
+      },allIn?'ready':'');
+      mb.id='morningBtn';mb.dataset.ready=allIn?'1':'';paintMorning();
+    }else if(S.phase==='day'||S.phase==='vote'){
+      readout(morning(S.round));
+      const today=seats.find(s=>s.out&&s.out.how==='recused'&&s.out.r===S.round);
+      if(today)app.appendChild(el('div','res','<b>'+esc(today.n)+'</b> was voted off today.'));
+      else{
+        app.appendChild(el('div','lbl','Voted off by a show of hands? Tap the name'));
+        const pl=el('div','names');
+        alive.forEach(s=>{const b=el('button','',esc(s.n));b.addEventListener('click',()=>{if(confirm(s.n+' is voted off?'))act('remove',{v:s.v,how:'recused'},d=>{lastResult='<b>'+esc(s.n)+'</b> is off the committee.'+winLine(d.winner);});});pl.appendChild(b);});
+        app.appendChild(pl);
+      }
+      big('START NIGHT '+(S.round+1),()=>act('phase',{to:'night'},()=>{lastResult=null;}));
+    }else{
+      readout('<b>'+(S.winner==='committee'?'The committee wins.':'The Manipulators win.')+'</b>');
+      app.appendChild(el('div','res','Go to The committee on the big screen and press the arrow for the reveal.'));
+    }
+    if(dealt&&S.phase!=='lobby'&&S.phase!=='over'){
+      const e=el('button','endbtn','end the game now');
+      e.addEventListener('click',()=>{const left=backers.map(b=>b.n);
+        if(confirm(left.length?'End now? '+left.join(' and ')+' '+(left.length>1?'are':'is')+' still at the table, so the Manipulators win.':'End now? The committee wins.'))
+          act('phase',{to:'over',winner:left.length?'backers':'committee'},d=>{lastResult=null;});});
+      app.appendChild(e);
+    }
+    /* the table, for the moderator's eyes */
+    if(dealt){
+      app.appendChild(el('div','lbl','The table'));
+      const RN2={m:'Member',b:'Manipulator',a:'Auditor',c:'Counsel'};
+      const sl=el('div','seats');
+      seats.slice().sort((a,b)=>a.n.localeCompare(b.n)).forEach(s=>{
+        const row=el('div','seat'+(s.alive?'':' out'));
+        row.innerHTML='<span>'+esc(s.n)+' <span class="role '+(s.role||'')+'">'+(s.role?RN2[s.role]:'no role')+(s.out?' · '+(s.out.how==='recused'?'voted off day ':'removed night ')+s.out.r:'')+'</span></span>';
+        row.appendChild(el('div','mini'));sl.appendChild(row);
+      });
+      app.appendChild(sl);
+    }
+    /* a dead phone: release the seat, and the same name picked on a new phone takes it over, role and history included */
+    if(S.phase!=='lobby'&&S.phase!=='over'){
+      const dp=document.createElement('details');dp.innerHTML='<summary>If a phone dies</summary>';
+      const box=el('div','seats');box.style.marginTop='10px';
+      alive.forEach(s=>{const row=el('div','seat');row.innerHTML='<span>'+esc(s.n)+'</span>';const mini=el('div','mini');
+        if(s.open){mini.appendChild(el('span','wait','waiting for the new phone'));const c=el('button','','cancel');c.addEventListener('click',()=>act('release',{v:s.v,off:true}));mini.appendChild(c);}
+        else{const np=el('button','','new phone');np.addEventListener('click',()=>{if(confirm('Move '+s.n+' to a new phone? On the new phone they open the game and pick the same name.'))act('release',{v:s.v});});mini.appendChild(np);}
+        row.appendChild(mini);box.appendChild(row);});
+      dp.appendChild(box);app.appendChild(dp);
+    }
+    const dt=document.createElement('details');dt.innerHTML='<summary>Log</summary>';
+    dt.appendChild(el('div','log',S.log.slice().reverse().map(l=>'<b>'+(l.when==='night'?'Night ':'Day ')+l.r+'</b> '+esc(l.text)).join('<br>')||'Nothing yet.'));app.appendChild(dt);
+  }
+  setInterval(tick,2000);tick();
+}
+</script>
+</body></html>

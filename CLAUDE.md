@@ -154,6 +154,15 @@ edits it live with `/edit.js`, which commits straight to GitHub even from
 localhost: pull before touching it. The agenda's fixed points are the start,
 lunch and the finish; slot lengths inside them are his to bend on the day.
 
+**RRPF's decks are frozen under `exec/rrpf/`** (2 Oct 2026, after day two):
+`m1/`–`m8/` and `world/` are a copy of `exec/gt/` as the training ran, with the
+room's answers and first names left in (his call), so `exec/gt/` can keep
+growing for other clients without changing what RRPF were given. The programme
+page's hub links these copies. Each page loads `frozen.js` first, which answers
+every poll-server call from `rooms.json` (every room as it stood at the end of
+day two) and drops every write, so a Poll Desk reset changes nothing here.
+Don't edit the copies or sync them with `gt/`; there is no `?edit` on them.
+
 Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
 including the decks. `robots.txt` does **not** disallow the path, and that is on
 purpose — a crawler has to fetch a page to see its noindex, so blocking would

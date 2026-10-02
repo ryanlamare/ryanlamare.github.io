@@ -1,0 +1,777 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/rrpf/frozen.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 2 Games</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 2 paired games — all three are played
+   live between two phones, polling the gt-poll Worker (no sockets, so a
+   move can take a couple of seconds to land; every game here is
+   turn-based, which is why that works).
+
+   Wire format, shared by the turn games: moves travel through a live
+   room the deck never reads, one line per action —
+     take the last card:  "A|B|g|k|n"  in m2-cards-live  (n = cards taken)
+     centipede:           "A|B|g|k|a"  in m2-cent-live   (a = t take / p pass)
+   where A = the starter, B = the partner, g = the pair's game number
+   (finished games for the pair + 1 — no clocks needed), k = the turn.
+   The starter acts on odd turns. When a game ends, the STARTER's phone
+   posts one line to the finals room the deck plots:
+     m2-lastcard:  "winner|loser|leaves"  (winner first; leaves = the
+                    pile sizes the winner left, last few, dash-joined —
+                    the deck counts who was leaving multiples of four)
+     m2-centipede: "taker|other|turn"     (taker first; turn 10 = it ran)
+   Ultimatum (rebuilt 20 Sep 2026, Ryan's design): the proposer taps one of
+   six splits, 99/1 to 50/50, and locks it in; the responder sees it and
+   accepts or rejects; both phones then go green or red, and that is all.
+   The offers are discrete so the deck's board has a column for each. It
+   is a two-move handshake: the proposer's offer goes through
+   m2-ult-live as "prop|resp|offer", and the responder posts the final
+   "prop|resp|offer|a-or-r" line into m2-ultimatum — exactly the line
+   the deck's theory-vs-results slide already plots. Latest line per
+   pair wins everywhere, so replays and mis-taps are recoverable.
+
+   The long-term Tapas deal is the whole-room game: the deck shows each
+   choice (A or B), the room debates, and every phone votes here. The
+   deck posts a "::open|<token>" marker line into m2-decade when a vote
+   opens and counts only "name|a-or-b" lines that arrive after the
+   latest marker (latest vote per name wins), so revisits and retries
+   never double-count. Phones rotate a voter-id suffix per post to stay
+   under the Worker's per-voter line cap. The game's content lives in
+   the deck, not here — this page is just the anonymous ballot.
+   How many ways is solo: "name|12345" in m2-tapasguess, latest guess
+   per name wins.
+   ?g=decade / ?g=guess deep-link straight to them (?g=cards/ult/cent
+   work too), which is what the deck's QR codes encode.
+   Names come from the shared gt-name (roster picker or typed once) and
+   are claimed into gt-names for the points system. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.choices{display:flex;flex-direction:column;gap:11px}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px}
+.send{font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:15px 0;width:100%;cursor:pointer}
+.send:disabled{opacity:.4;cursor:default}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+/* the eleven offers: one tap picks a split, LOCK IT IN sends it */
+.bandhead{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);padding:0 4px}
+.bands{display:flex;flex-direction:column;gap:8px}
+.bands button{display:flex;justify-content:space-between;align-items:baseline;width:100%;font-family:var(--sans);font-weight:700;
+  font-size:18px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:11px 16px;cursor:pointer}
+.bands button .t{color:var(--red)}
+.bands button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.bands button.mine .t{color:var(--paper)}
+/* the ending, on both phones: green if it was accepted, red if it was rejected */
+body.ult-a{background:var(--green)}
+body.ult-r{background:var(--red)}
+body.ult-a,body.ult-r,body.ult-a .tag,body.ult-r .tag,body.ult-a h1,body.ult-r h1{color:var(--paper)}
+body.ult-a .tag i,body.ult-r .tag i{background:var(--paper)}
+.ultend{text-align:center;padding:34px 0 10px}
+.ultend .w{font-family:var(--display);font-weight:900;font-size:50px;line-height:1;letter-spacing:.03em}
+.ultend .s{font-weight:600;font-size:17px;line-height:1.4;margin-top:16px}
+body.ult-a .send,body.ult-r .send{background:none;border-color:var(--paper);color:var(--paper)}
+/* the landed offer */
+/* the turn games' ending: the pot, or the last card, goes to the taker */
+.ustage{border:2.5px solid var(--ink);background:var(--card);padding:18px 12px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.ustage .nm{flex:none;width:96px;text-align:center;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.ustage .nm.me{color:var(--teal)} .ustage .nm.them{color:var(--terracotta)}
+.ustage .mid{flex:1;position:relative;height:56px}
+.ustage .chip{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:700;font-size:22px;background:var(--red);color:var(--paper);border:2.5px solid var(--ink);padding:8px 14px;border-radius:30px;white-space:nowrap;transition:transform 1.2s cubic-bezier(.4,0,.2,1),opacity .8s,background .4s}
+.ustage .chip.card{border-radius:4px;padding:14px 12px;font-size:14px;background:var(--ink)}
+.ustage .chip.nothing{background:var(--ink);opacity:.35}
+.offercard{border:2.5px solid var(--ink);background:var(--card);padding:18px}
+.offercard .from{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.offercard .amt{font-weight:700;font-size:40px;color:var(--red);margin:6px 0 2px}
+.offercard .rest{font-weight:600;font-size:15px;color:var(--muted)}
+/* the turn games */
+.pot{border:2.5px solid var(--ink);background:var(--card);padding:20px;text-align:center}
+.pot .big{font-weight:700;font-size:44px;color:var(--red);line-height:1.05}
+.pot .sub{font-weight:600;font-size:13px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.08em}
+.actions{display:flex;gap:11px;margin-top:14px}
+.actions button{flex:1;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.04em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 6px;cursor:pointer}
+.actions button.alt{background:var(--card);color:var(--ink);border-color:var(--ink)}
+.actions button:disabled{opacity:.4;cursor:default}
+.actions.stack{flex-direction:column}   /* the card game's three removes, one above the other (27 Sep 2026) */
+.askline{font-weight:700;font-size:17px;margin-top:16px}
+/* the pile: plain cards in one colour */
+.cardpile{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:12px}
+.cardpile i{display:block;aspect-ratio:2/3;position:relative;border-radius:4px;border:2px solid var(--ink);background:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.cardpile i::before{content:"";position:absolute;inset:3px;border:1.5px solid rgba(255,255,255,.35);border-radius:2px}
+.cardpile i.gone{background:none;border:1.5px dashed var(--muted);opacity:.45;box-shadow:none}
+.cardpile i.gone::before{display:none}
+/* outcome */
+.bigcard{border:2.5px solid var(--ink);background:var(--card);padding:20px;text-align:center}
+.bigcard .head{font-weight:700;font-size:22px}
+.bigcard .head.good{color:var(--teal,#2a7)}
+.bigcard .head.bad{color:var(--red)}
+.bigcard .sub{font-weight:600;font-size:15px;color:var(--muted);margin-top:8px}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.solohead{font-weight:600;font-size:15px;color:var(--muted);line-height:1.4}
+/* the long-term deal vote: two big anonymous ballot buttons */
+.abrow{display:flex;gap:12px;margin-top:14px}
+.abrow button{flex:1;font-family:var(--display);font-weight:900;font-size:64px;line-height:1;
+  color:var(--ink);background:var(--card);border:3px solid var(--ink);padding:34px 0 30px;cursor:pointer}
+.abrow button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.abrow.locked button{pointer-events:none}
+.abrow.locked button:not(.mine){opacity:.4}
+/* pick, then lock: one vote, no changes after */
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer;margin-top:12px}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 2</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/rrpf/go/names.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+let name=null, roster=[];
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
+GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+/* one poller at a time — leaving a screen must stop its interval */
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+function say(room,line){
+  return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=room=>fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+
+const GAMES={
+  cards:{label:'Take the last card', live:'m2-cards-live', finals:'m2-lastcard',
+         roles:['I go first','My partner goes first']},
+  ult:  {label:'The ultimatum game',
+         roles:['I’m the proposer','I’m waiting for an offer']},
+  cent: {label:'The centipede game', live:'m2-cent-live', finals:'m2-centipede',
+         roles:['I’m Player 1, I start','My partner starts']},
+};
+/* the deck's QR codes deep-link one game each */
+let jump=null;
+try{jump=new URLSearchParams(location.search).get('g');}catch(_){}
+
+function render(){
+  stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
+  st.textContent='';
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
+    name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();render();
+  },app,{clean}));return;}
+  if(jump){
+    const g=jump; /* a phone that came in by a game's QR stays in that game: start over comes back here */
+    if(g==='guess')return renderGuess();
+    if(g==='decade')return renderDecade();
+    if(GAMES[g])return renderRole(g);
+  }
+  q.textContent='Pick your game';
+  app.innerHTML='';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='10px';
+  ['cards','ult','cent'].forEach(id=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=GAMES[id].label;
+    b.addEventListener('click',()=>renderRole(id));
+    ch.appendChild(b);
+  });
+  /* the long-term Tapas deal (?g=decade) and how many ways (?g=guess) came off this menu on 14 Sep
+     2026 when their slides went to m2/outtakes.html; both screens still answer a deep link so the
+     outtakes deck can run them */
+  app.appendChild(ch);
+}
+/* one game each (Ryan, 20 Sep 2026): a phone whose name is already in a game's
+   finished games gets that game's ending, and no way back in. A Poll Desk
+   reset of the finals room lets everyone play again. If the room cannot be
+   read, the game opens. */
+const FINALS={cards:'m2-lastcard',ult:'m2-ultimatum',cent:'m2-centipede'};
+function renderRole(id){
+  stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
+  q.textContent=GAMES[id].label;
+  app.innerHTML='';st.textContent='';
+  answers(FINALS[id]).catch(()=>[]).then(lines=>{
+    const mine=lines.map(t=>String(t).split('|').map(x=>x.trim()))
+      .filter(p=>p.length>=3&&(norm(p[0])===norm(name)||norm(p[1])===norm(name))).pop();
+    if(!mine)return renderRoleOpen(id);
+    if(id==='ult'){
+      const iProp=norm(mine[0])===norm(name), other=iProp?mine[1]:mine[0], offer=+mine[2], ok=String(mine[3]).toLowerCase()==='a';
+      renderUltDone(ok,ok?(iProp?'You keep &pound;'+(1000-offer)+' and '+esc(other)+' takes &pound;'+offer+'.':'You take &pound;'+offer+' and '+esc(other)+' keeps &pound;'+(1000-offer)+'.')
+                         :(iProp?esc(other)+' rejected the &pound;'+offer+', so nobody gets anything.':'You rejected the &pound;'+offer+', so nobody gets anything.'));
+    }else if(id==='cent'){
+      const turn=+mine[2];
+      centEnd({taker:mine[0],other:mine[1],ran:turn===10,pot:turn===10?1000:turn*100});
+    }else{
+      const won=norm(mine[0])===norm(name);
+      const big=document.createElement('div');big.className='bigcard';
+      big.innerHTML='<div class="head '+(won?'good':'bad')+'">'+(won?'You took the last card':esc(mine[0])+' took the last card')+'</div>'+
+        '<div class="sub">'+(won?'That wins it.':'That wins it for them.')+'</div>';
+      app.appendChild(big);
+    }
+  });
+}
+/* the centipede's ending, the ultimatum's way: a colour, the pot and one line.
+   Green on the phone that took it, red on the other */
+function centEnd(s){
+  stopPolling();
+  const mine=norm(s.taker)===norm(name);
+  document.body.classList.add(mine?'ult-a':'ult-r');
+  q.textContent='';st.textContent='';app.innerHTML='';
+  const end=document.createElement('div');end.className='ultend';
+  end.innerHTML='<div class="w">&pound;'+(s.ran?'1,000':s.pot)+'</div><div class="s">'+
+    (s.ran?'It ran all the way. '+(mine?'You were':esc(s.taker)+' was')+' up next and take'+(mine?'':'s')+' it all.'
+          :(mine?'You took it. '+esc(s.other)+' walks away with nothing.':esc(s.taker)+' took it. You walk away with nothing.'))+'</div>';
+  app.appendChild(end);
+}
+function renderRoleOpen(id){
+  stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
+  q.textContent=GAMES[id].label;
+  app.innerHTML='';
+  const ch=document.createElement('div');ch.className='choices';
+  GAMES[id].roles.forEach((label,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.addEventListener('click',()=>{
+      if(id==='ult')i===0?renderPartner('ult'):renderUltWaitOffer();
+      else i===0?renderPartner(id):renderWaitGame(id);
+    });
+    ch.appendChild(b);
+  });
+  app.appendChild(ch);
+  app.appendChild(backBtn());
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  const me=title==='Who are you?'?'':String(name||'').toLowerCase();   /* your own name is not on your partner list */
+  roster.filter(n=>n.toLowerCase()!==me).forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    /* a tapped name asks once (27 Sep 2026: a stray tap had made Kimberly "Laura") */
+    b.addEventListener('click',()=>GT_NAMES.confirm(app,clean(n),title==='Who are you?'?'Is that you?':'Is that your partner?',()=>done(clean(n)),()=>renderName(title,done)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list?':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function renderPartner(id){
+  renderName('Who are you playing with?',partner=>{
+    if(partner.toLowerCase()===name.toLowerCase()){st.textContent='That’s you — pick the person you’re playing with.';return;}
+    if(id==='ult')renderUltPropose(partner);
+    else startTurnGame(id,partner);
+  });
+}
+function backBtn(){
+  const b=document.createElement('button');b.className='back';b.type='button';b.textContent='← start over';
+  b.addEventListener('click',render);
+  return b;
+}
+
+/* ================= the Tapas solo + duel games ================= */
+function soloDone(head,sub,againLabel,again){
+  stopPolling();
+  st.textContent='';
+  app.innerHTML='';
+  const big=document.createElement('div');big.className='bigcard';
+  big.innerHTML='<div class="head good">'+head+'</div><div class="sub">'+sub+'</div>';
+  app.appendChild(big);
+  const b=document.createElement('button');b.className='send';b.style.marginTop='14px';
+  b.textContent=againLabel;
+  b.addEventListener('click',again);
+  app.appendChild(b);
+  app.appendChild(backBtn());
+}
+/* the long-term deal ballot. The question lives on the big
+   screen; this page is two buttons and LOCK IT IN. Votes post as
+   "name|a" with a rotating voter-id suffix; the deck counts only votes
+   after its latest ::open marker, latest per name. The lock holds for
+   one vote: the deck posts a fresh ::open marker for each move of the
+   game, and a newer marker than the one this phone locked under opens
+   the buttons again. */
+let decadeN=0, decadeMine=null, decadeLockedAt=null, decadeMarker=null;
+function renderDecade(){
+  stopPolling();
+  const markerOf=lines=>{for(let i=lines.length-1;i>=0;i--){if(String(lines[i]).startsWith('::open|'))return String(lines[i]);}return null;};
+  const watch=()=>answers('m2-decade').then(lines=>{
+    decadeMarker=markerOf(lines);
+    if(decadeMine===null)return;
+    if(decadeLockedAt==='?'){decadeLockedAt=decadeMarker;return;} /* locked before the first fetch: adopt the vote that was open */
+    if(decadeMarker!==decadeLockedAt){decadeMine=null;decadeLockedAt=null;renderDecade();} /* a new vote has opened */
+  }).catch(()=>{});
+  poller=setInterval(watch,2000);watch();
+  q.textContent='The long-term Tapas deal';
+  st.textContent='';
+  app.innerHTML='';
+  const lead=document.createElement('div');lead.className='solohead';
+  lead.textContent='Debate with the room first. Then pick the option on the big screen and lock it in.';
+  app.appendChild(lead);
+  const row=document.createElement('div');row.className='abrow'+(decadeMine?' locked':'');
+  const btns={};
+  let picked=null;
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
+  ['a','b'].forEach(x=>{
+    const b=document.createElement('button');b.textContent=x.toUpperCase();
+    b.addEventListener('click',()=>{
+      picked=x;
+      Object.entries(btns).forEach(([k,el])=>el.classList.toggle('mine',k===x));
+      lock.disabled=false;
+    });
+    btns[x]=b;row.appendChild(b);
+  });
+  if(decadeMine)btns[decadeMine].classList.add('mine');
+  app.appendChild(row);
+  if(decadeMine)st.innerHTML='<b>Response locked in.</b> Results on the screen soon.';
+  else{
+    app.appendChild(lock);
+    lock.addEventListener('click',()=>{
+      if(!picked)return;
+      lock.disabled=true;st.textContent='Sending…';
+      say2('m2-decade',name+'|'+picked)
+        .then(()=>{
+          decadeMine=picked;decadeLockedAt=decadeMarker||'?';
+          row.classList.add('locked');lock.remove();
+          st.innerHTML='<b>Response locked in.</b> Results on the screen soon.';
+        })
+        .catch(code=>{lock.disabled=false;st.textContent=failMsg(code);});
+    });
+  }
+  app.appendChild(backBtn());
+}
+/* rotate the voter-id suffix so a whole game of votes never trips the
+   Worker's per-voter cap */
+function say2(room,line){
+  decadeN++;
+  return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v:voter+'-'+(decadeN%9)})}).then(r=>{if(!r.ok)throw r.status;});
+}
+
+/* ================= the turn games (last card + centipede) ================= */
+/* move lines "A|B|g|k|x"; finals count per pair gives the game number */
+function parseMoves(lines){
+  return lines.map(t=>String(t).split('|').map(s=>s.trim()))
+    .filter(p=>p.length===5&&p[0]&&p[1]&&/^\d{1,3}$/.test(p[2])&&/^\d{1,2}$/.test(p[3])&&/^[tp123]$/.test(p[4]))
+    .map(p=>({A:p[0],B:p[1],g:+p[2],k:+p[3],x:p[4]}));
+}
+function finalsFor(lines,key){
+  return lines.map(t=>String(t).split('|').map(s=>s.trim()))
+    .filter(p=>p.length===3&&p[0]&&p[1]&&pairKey(p[0],p[1])===key);
+}
+/* the starter acts on odd turns */
+const actorOf=(k,A,B)=>k%2===1?A:B;
+
+/* game state from this pair+game's moves. Returns:
+   cards: {over,winner,loser,pile,turn,taken[],leaves}  cent: {over,taker,other,turn,pot} */
+function cardState(moves,A,B){
+  const ms=[...moves].sort((a,b)=>a.k-b.k);
+  let pile=23;
+  const leavesByActor={};
+  ms.forEach(m=>{
+    pile-=Math.min(+m.x,pile);
+    (leavesByActor[actorOf(m.k,A,B)]=leavesByActor[actorOf(m.k,A,B)]||[]).push(pile);
+  });
+  const turn=(ms.length?ms[ms.length-1].k:0)+1;
+  if(pile<=0){
+    const winner=actorOf(ms[ms.length-1].k,A,B);
+    return {over:true,winner,loser:winner===A?B:A,pile:0,
+      leaves:(leavesByActor[winner]||[]).slice(-4).join('-')};
+  }
+  return {over:false,pile,turn,actor:actorOf(turn,A,B)};
+}
+function centState(moves,A,B){
+  const ms=[...moves].sort((a,b)=>a.k-b.k);
+  const last=ms[ms.length-1];
+  if(last&&last.x==='t'){
+    const taker=actorOf(last.k,A,B);
+    return {over:true,taker,other:taker===A?B:A,turn:last.k,pot:last.k*100};
+  }
+  if(last&&last.k>=9){ /* turn 9 passed: the pot caps and the other side takes it all */
+    return {over:true,taker:B,other:A,turn:10,pot:1000,ran:true};
+  }
+  const turn=(last?last.k:0)+1;
+  return {over:false,turn,pot:turn*100,actor:actorOf(turn,A,B)};
+}
+
+function startTurnGame(id,partner){
+  stopPolling();
+  st.textContent='Setting up…';
+  answers(GAMES[id].finals).catch(()=>[]).then(lines=>{
+    const g=finalsFor(lines,pairKey(name,partner)).length+1;
+    st.textContent='';
+    gameScreen(id,name,partner,g,true);
+  });
+}
+function renderWaitGame(id){
+  stopPolling();
+  q.textContent='Waiting for your partner';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>Keep this page open. The game starts when your partner makes their first move.';
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
+  hint.textContent='Your partner needs to pick exactly “'+name+'”';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    Promise.all([answers(GAMES[id].live),answers(GAMES[id].finals).catch(()=>[])]).then(([liveL,doneL])=>{
+      const mine=parseMoves(liveL).filter(m=>norm(m.B)===norm(name));
+      /* an open game: moves numbered past the pair's finished games */
+      let found=null;
+      mine.forEach(m=>{
+        const done=finalsFor(doneL,pairKey(m.A,m.B)).length;
+        if(m.g===done+1)found=m;
+      });
+      if(found)gameScreen(id,found.A,found.B,found.g,false);
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2000);check();
+}
+function gameScreen(id,A,B,g,meIsA){
+  stopPolling();
+  const key=pairKey(A,B), opp=meIsA?B:A;
+  let posting=false, finalPosted=false;
+  q.textContent=GAMES[id].label;
+  app.innerHTML='';
+  const stage=document.createElement('div');
+  app.appendChild(stage);
+  app.appendChild(backBtn());
+  function act(x){
+    if(posting)return;
+    posting=true;
+    say(GAMES[id].live,A+'|'+B+'|'+g+'|'+stage.dataset.turn+'|'+x)
+      .then(()=>{posting=false;st.textContent='';tick();})
+      .catch(code=>{posting=false;st.textContent=failMsg(code);});
+  }
+  function show(html){stage.innerHTML=html;}
+  function endGame(id2,s){
+    /* the starter's phone records the result; the deck picks it up in a
+       tick. Retried a couple of times — a transient Worker error must
+       not eat a finished game */
+    if(meIsA&&!finalPosted){
+      finalPosted=true;
+      const line=id==='cards'?s.winner+'|'+s.loser+'|'+s.leaves
+                             :s.taker+'|'+s.other+'|'+s.turn;
+      const post=tries=>{
+        answers(GAMES[id].finals).catch(()=>[]).then(lines=>{
+          if(finalsFor(lines,key).length>=g)return;
+          say(GAMES[id].finals,line).catch(()=>{if(tries>0)setTimeout(()=>post(tries-1),2500);});
+        });
+      };
+      post(3);
+    }
+    stopPolling();
+    let head,cls,sub;
+    if(id==='cards'){
+      const won=norm(s.winner)===norm(name);
+      head=won?'You took the last card':esc(s.winner)+' took the last card';
+      cls=won?'good':'bad';
+      sub=won?'That wins it.':'That wins it for them.';
+    }else{
+      const mine=norm(s.taker)===norm(name);
+      head=s.ran?'It ran to £1,000':(mine?'You took £'+s.pot:esc(s.taker)+' took £'+s.pot);
+      cls=mine?'good':'bad';
+      sub=s.ran?esc(s.taker)+' was up next and takes it all.':(mine?esc(s.other)+' walks away with nothing.':'You walk away with nothing.');
+    }
+    if(id==='cent'){centEnd(s);return;}
+    /* the card game's playback: the last card slides to whoever took it */
+    const meLeft=true, takerIsMe=id==='cards'?norm(s.winner)===norm(name):norm(s.taker)===norm(name);
+    const chipText=id==='cards'?'THE LAST CARD':'&pound;'+(s.ran?1000:s.pot);
+    show('<div class="ustage"><div class="nm me">you</div><div class="mid"><div class="chip'+(id==='cards'?' card':'')+'">'+chipText+'</div></div><div class="nm them">'+esc(opp)+'</div></div>'+
+      '<div class="bigcard" hidden style="margin-top:12px"><div class="head '+cls+'">'+head+'</div><div class="sub">'+sub+'</div></div>');
+    const chip=stage.querySelector('.chip'), mid=stage.querySelector('.mid');
+    setTimeout(()=>{const d=Math.max(20,mid.getBoundingClientRect().width/2-chip.offsetWidth/2-4);chip.style.transform='translate(calc(-50% + '+((takerIsMe?-1:1)*d)+'px),-50%)';},400);
+    setTimeout(()=>{stage.querySelector('.bigcard').hidden=false;},2000);
+    const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
+    note.textContent='Response recorded. Results on the screen soon.';
+    stage.appendChild(note);
+  }
+  function renderState(moves){
+    const s=id==='cards'?cardState(moves,A,B):centState(moves,A,B);
+    if(s.over){endGame(id,s);return;}
+    stage.dataset.turn=s.turn;
+    const myTurn=norm(s.actor)===norm(name);
+    if(id==='cards'){
+      let pile='<div class="cardpile">';
+      for(let i=0;i<23;i++)pile+='<i'+(i>=s.pile?' class="gone"':'')+'></i>';
+      pile+='</div>';
+      show('<div class="pot"><div class="big">'+s.pile+' card'+(s.pile===1?'':'s')+'</div>'+
+        '<div class="sub">'+(myTurn?'your turn: taking the last card wins':esc(opp)+' is choosing…')+'</div>'+pile+'</div>'+
+        (myTurn?'<div class="askline">How many cards do you want to remove?</div><div class="actions stack" style="margin-top:10px">'+
+          [1,2,3].map(n=>'<button data-n="'+n+'"'+(n>s.pile?' disabled':'')+'>REMOVE '+n+' CARD'+(n===1?'':'S')+'</button>').join('')+'</div>'
+        :'<div class="waitcard" style="margin-top:14px"><span class="pulse"></span>Waiting on '+esc(opp)+'…</div>'));
+      if(myTurn)stage.querySelectorAll('.actions button').forEach(b=>
+        b.addEventListener('click',()=>act(b.dataset.n)));
+    }else{
+      show('<div class="pot"><div class="big">&pound;'+s.pot+'</div>'+
+        '<div class="sub">on the table — turn '+s.turn+' of 9'+(myTurn?', your call':', '+esc(opp)+'’s call')+'</div></div>'+
+        (myTurn?'<div class="actions"><button data-x="t">TAKE &pound;'+s.pot+'</button>'+
+          '<button data-x="p" class="alt">'+(s.turn===9?'PASS: it caps at £1,000 and '+esc(opp)+' takes it':'PASS: it grows to £'+((s.turn+1)*100))+'</button></div>'
+        :'<div class="waitcard" style="margin-top:14px"><span class="pulse"></span>'+esc(opp)+' is deciding whether to take it…</div>'));
+      if(myTurn)stage.querySelectorAll('.actions button').forEach(b=>
+        b.addEventListener('click',()=>act(b.dataset.x)));
+    }
+  }
+  function tick(){
+    answers(GAMES[id].live).then(lines=>{
+      const moves=parseMoves(lines).filter(m=>pairKey(m.A,m.B)===key&&m.g===g);
+      renderState(moves);
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2000);tick();
+}
+
+/* ================= how many ways (solo) ================= */
+/* one guess, locked in: "name|N" to m2-tapasguess. The deck's slide plots
+   every guess on a log axis and names the closest. */
+function renderGuess(){
+  stopPolling();
+  q.textContent='How many ways?';
+  st.textContent='';
+  app.innerHTML='';
+  let locked=null;
+  try{locked=localStorage.getItem('m2-guess-'+norm(name));}catch(_){}
+  const lead=document.createElement('div');lead.className='solohead';
+  lead.textContent='You have just played it. How many different ways could one full game have run, start to finish?';
+  app.appendChild(lead);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop='14px';
+  const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.min=1;inp.max=999999999;inp.placeholder='Your guess';inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='LOCK IT IN';
+  row.appendChild(inp);row.appendChild(btn);app.appendChild(row);
+  const doneUI=v=>{row.remove();const big=document.createElement('div');big.className='bigcard';
+    big.innerHTML='<div class="head">'+(+v).toLocaleString('en-GB')+'</div><div class="sub">Response locked in. Results on the screen soon.</div>';
+    app.appendChild(big);};
+  if(locked){doneUI(locked);app.appendChild(backBtn());return;}
+  const go=()=>{
+    const v=Math.round(+inp.value);
+    if(!(v>=1&&v<=999999999)){st.textContent='A whole number, up to nine digits.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    say('m2-tapasguess',name+'|'+v)
+      .then(()=>{st.textContent='';try{localStorage.setItem('m2-guess-'+norm(name),String(v));}catch(_){}doneUI(v);})
+      .catch(code=>{btn.disabled=false;st.textContent=failMsg(code);});
+  };
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  app.appendChild(backBtn());
+  inp.focus();
+}
+
+/* ================= ultimatum ================= */
+function parseOffers(lines){
+  return lines.map(t=>String(t).split('|').map(s=>s.trim()))
+    .filter(p=>p.length===3&&p[0]&&p[1]&&/^\d{1,4}$/.test(p[2])&&+p[2]<=1000)
+    .map(p=>({prop:p[0],resp:p[1],offer:+p[2]}));
+}
+function parseFinals(lines){
+  return lines.map(t=>String(t).split('|').map(s=>s.trim()))
+    .filter(p=>p.length===4&&p[0]&&p[1]&&/^\d{1,4}$/.test(p[2])&&/^[ar]$/i.test(p[3]))
+    .map(p=>({prop:p[0],resp:p[1],offer:+p[2],res:p[3].toLowerCase()}));
+}
+function renderUltPropose(partner){
+  stopPolling();
+  q.textContent='Your offer to '+partner;
+  app.innerHTML='';
+  /* every split, 99/1 through 50/50 to 1/99 (Ryan, 27 Sep 2026: six splits that stopped at half
+     looked odd; it was six from 20 Sep): the deck's board has one column for each */
+  const head=document.createElement('div');head.className='bandhead';
+  head.innerHTML='<span>You keep</span><span>'+esc(partner)+' gets</span>';
+  app.appendChild(head);
+  const card=document.createElement('div');card.className='bands';
+  let offer=null;
+  [10,100,200,300,400,500,600,700,800,900,990].forEach(v=>{
+    const b=document.createElement('button');b.type='button';
+    b.innerHTML='<span>&pound;'+(1000-v)+'</span><span class="t">&pound;'+v+'</span>';
+    b.addEventListener('click',()=>{offer=v;
+      card.querySelectorAll('button').forEach(x=>x.classList.remove('mine'));
+      b.classList.add('mine');send.disabled=false;
+      send.scrollIntoView({block:'nearest',behavior:'smooth'});});   /* 29 Sep 2026: eleven splits push LOCK IT IN below a phone's fold */
+    card.appendChild(b);
+  });
+  app.appendChild(card);
+  const send=document.createElement('button');send.className='send';send.textContent='LOCK IT IN';send.disabled=true;
+  send.style.marginTop='14px';
+  send.addEventListener('click',()=>{
+    send.disabled=true;
+    card.querySelectorAll('button').forEach(x=>x.disabled=true);
+    st.textContent='Sending…';
+    /* count the pair's answered games first, so we know which reply is ours */
+    answers('m2-ultimatum').catch(()=>[]).then(lines=>{
+      const before=parseFinals(lines).filter(f=>pairKey(f.prop,f.resp)===pairKey(name,partner)).length;
+      say('m2-ult-live',name+'|'+partner+'|'+offer)
+        .then(()=>renderUltAwaitReply(partner,offer,before))
+        .catch(code=>{send.disabled=false;card.querySelectorAll('button').forEach(x=>x.disabled=false);st.textContent=failMsg(code);});
+    });
+  });
+  app.appendChild(send);
+  app.appendChild(backBtn());
+}
+function renderUltAwaitReply(partner,offer,finalsBefore){
+  stopPolling();
+  q.textContent='Offer sent';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>You offered <b>&pound;'+offer+'</b> of the &pound;1,000 to '+esc(partner)+
+    '. Waiting for them to decide…';
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
+  hint.textContent='They need this page open, playing as “'+partner+'”';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    answers('m2-ultimatum').then(lines=>{
+      const mine=parseFinals(lines).filter(f=>pairKey(f.prop,f.resp)===pairKey(name,partner));
+      if(mine.length<=finalsBefore)return;
+      const f=mine[mine.length-1];
+      renderUltDone(f.res==='a',
+        f.res==='a'?'You keep &pound;'+(1000-f.offer)+' and '+esc(partner)+' takes &pound;'+f.offer+'.'
+                   :esc(partner)+' rejected the &pound;'+f.offer+', so nobody gets anything.',
+        {offer:f.offer,iPropose:true,other:partner});
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2500);check();
+}
+function renderUltWaitOffer(){
+  stopPolling();
+  q.textContent='Waiting for an offer';
+  st.textContent='';
+  app.innerHTML='';
+  const w=document.createElement('div');w.className='waitcard';
+  w.innerHTML='<span class="pulse"></span>Keep this page open. Your proposer’s offer lands here.';
+  app.appendChild(w);
+  const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
+  hint.textContent='Your proposer needs to pick exactly “'+name+'” as their partner';
+  app.appendChild(hint);
+  app.appendChild(backBtn());
+  const check=()=>{
+    Promise.all([answers('m2-ult-live'),answers('m2-ultimatum').catch(()=>[])]).then(([liveL,doneL])=>{
+      const offers=parseOffers(liveL).filter(o=>norm(o.resp)===norm(name));
+      if(!offers.length)return;
+      const finals=parseFinals(doneL);
+      /* a pair's game is pending when it has more offers than answers */
+      const byPair=new Map();
+      offers.forEach(o=>{
+        const k=pairKey(o.prop,o.resp);
+        if(!byPair.has(k))byPair.set(k,{offers:[],finals:0});
+        byPair.get(k).offers.push(o);
+      });
+      finals.forEach(f=>{
+        const k=pairKey(f.prop,f.resp);
+        if(byPair.has(k))byPair.get(k).finals++;
+      });
+      let pending=null;
+      byPair.forEach(g=>{if(g.offers.length>g.finals)pending=g.offers[g.offers.length-1];});
+      if(pending)renderUltRespond(pending);
+    }).catch(()=>{});
+  };
+  poller=setInterval(check,2500);check();
+}
+function renderUltRespond(o){
+  stopPolling();
+  q.textContent='An offer from '+o.prop;
+  st.textContent='';
+  app.innerHTML='';
+  const card=document.createElement('div');card.className='offercard';
+  card.innerHTML='<div class="from">'+esc(o.prop)+' offers you</div>'+
+    '<div class="amt">&pound;'+o.offer+'</div>'+
+    '<div class="rest">of the &pound;1,000; they keep &pound;'+(1000-o.offer)+'</div>';
+  app.appendChild(card);
+  const ch=document.createElement('div');ch.className='choices';ch.style.marginTop='14px';
+  let res=null;
+  const send=document.createElement('button');send.className='send';send.textContent='LOCK IT IN';send.disabled=true;
+  [['a','Accept: you take £'+o.offer],['r','Reject: nobody gets anything']].forEach(([code,label])=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=label;
+    b.addEventListener('click',()=>{res=code;
+      ch.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));
+      b.classList.add('mine');send.disabled=false;});
+    ch.appendChild(b);
+  });
+  app.appendChild(ch);
+  send.style.marginTop='14px';
+  send.addEventListener('click',()=>{
+    send.disabled=true;
+    st.textContent='Sending…';
+    say('m2-ultimatum',o.prop+'|'+name+'|'+o.offer+'|'+res)
+      .then(()=>renderUltDone(res==='a',
+        res==='a'?'You take &pound;'+o.offer+' and '+esc(o.prop)+' keeps &pound;'+(1000-o.offer)+'.'
+                 :'You rejected the &pound;'+o.offer+', so nobody gets anything.',
+        {offer:o.offer,iPropose:false,other:o.prop}))
+      .catch(code=>{send.disabled=false;st.textContent=failMsg(code);});
+  });
+  app.appendChild(send);
+  app.appendChild(backBtn());
+}
+function renderUltDone(accepted,detail,x){
+  stopPolling();
+  document.body.classList.add(accepted?'ult-a':'ult-r');
+  q.textContent='';
+  st.textContent='';
+  app.innerHTML='';
+  const end=document.createElement('div');end.className='ultend';
+  end.innerHTML='<div class="w">'+(accepted?'ACCEPTED':'REJECTED')+'</div><div class="s">'+detail+'</div>';
+  app.appendChild(end);
+}
+</script>
+</body></html>

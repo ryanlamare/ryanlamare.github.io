@@ -1,0 +1,1026 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/rrpf/frozen.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Applied Game Theory · Module 6 — Mixed Strategies</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/rrpf/deck.css">
+<script>/* a deck opened at #N (a reload, or back from the m3 calendar or the Gazette) shows slide N from the first paint instead of the cover fading out first (25 Sep 2026); deck.js removes this once it has read the address */(function(){var m=/^#(\d+)/.exec(location.hash);if(!m||m[1]==="0")return;var s=document.createElement("style");s.id="deckjump";s.textContent=".slide.active{opacity:0!important;visibility:hidden!important}.slide[data-i=\""+m[1]+"\"]{opacity:1!important;visibility:visible!important;transition:none!important}";document.head.appendChild(s);})();</script>
+<style>
+/* Module-6-specific widgets (shared components live in deck.css). The plain
+   pass, 20 Sep 2026: the boss battle, the bingo cage with the room's bingo,
+   Top of the table and the /go/scores.js league are gone (outtakes.html and
+   the tag m6-before-plain); the closer is one plain question slide, talked
+   through in twos or threes, no phones. The rebalance, 22 Sep 2026: the
+   shootout, the inspection game and Boeing go to outtakes.html (tag
+   m6-before-rebalance); rock, paper, scissors is off flex and follows the
+   penalty debrief; the enforcement half is Volkswagen and Michelin on film,
+   six further examples, and policing as the turn to bias. */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.sidefig{flex:none;height:400px;width:auto;overflow:visible}
+.sidefig .cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)}
+/* clips beside bullets, click-to-load (keeps YouTube's title off screen) */
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:560px;height:315px;border:0;display:block}
+.clipcover{width:560px;height:315px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+#lehwrap .clipcover{width:470px;height:264px}   /* 30 Sep 2026: the clip plays over the whole slide now, so its cover can make room for the bullets */
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover .todo{font-weight:600;font-size:12px;letter-spacing:.1em;color:color-mix(in srgb, var(--paper) 55%, transparent)}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+/* three small clip chips stacked beside the psychology bullets */
+.clipstack{flex:none;display:flex;flex-direction:column;gap:12px;width:400px}
+.clipstack .clipframe iframe,.clipstack .clipcover{width:400px;height:112px;gap:12px;flex-direction:row}
+.clipstack .clipcover .bigplay{width:44px;height:44px}
+.clipstack .clipcover .bigplay svg{width:16px;height:16px}
+/* the penalty-kick mixed strategy widget */
+.pkgrid{display:flex;gap:40px;align-items:center}
+.pkleft{flex:1;display:flex;flex-direction:column;gap:16px}
+.pkstat{display:flex;justify-content:space-between;align-items:baseline;border:2px solid var(--ink);background:var(--paper);padding:10px 18px}
+.pkstat .lbl{font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:15px}
+.pkstat.gl .lbl{color:var(--teal)}
+.pkstat.gr .lbl{color:var(--terracotta)}
+.pkstat .val{font-family:var(--display);font-weight:900;font-size:38px}
+.pkslider{display:flex;flex-direction:column;gap:6px}
+.pkslider .plab{display:flex;justify-content:space-between;font-weight:600;font-size:16px;color:var(--muted)}
+.pkchart{background:var(--paper);border:2px solid var(--ink)}
+.pknote{font-weight:600;font-size:17px;line-height:1.3;color:var(--ink);min-height:2.6em}
+.pknote b{color:var(--red)}
+/* the two live boards: a bar of counters and buttons, then big stat tiles */
+.board{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:18px}
+.bbar{display:flex;align-items:center;gap:30px;justify-content:center}
+.stats{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:18px}
+.stat{border:2.5px solid var(--ink);background:var(--paper-soft);padding:26px 22px 16px;display:flex;flex-direction:column;justify-content:flex-start;gap:6px;position:relative}
+.stat .sl{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
+.stat .sv{font-family:var(--display);font-weight:900;font-size:76px;line-height:.9;color:var(--ink)}
+.stat .sv small{font-size:34px;color:var(--muted);margin-left:6px}
+.stat .sb{font-weight:600;font-size:17px;line-height:1.3;color:var(--ink)}
+.stat .sb b{color:var(--red)}
+.stat .rule{position:absolute;right:22px;top:16px;bottom:16px;width:8px;background:var(--rule)}
+.stat .rule i{position:absolute;left:0;width:8px;background:var(--red)}
+/* rock, paper, scissors: three bars against the one-third line */
+.rmix{flex:none;display:flex;flex-direction:column;gap:12px;border:2.5px solid var(--ink);background:var(--paper-soft);padding:18px 22px}
+.rmix .rl{display:grid;grid-template-columns:130px 1fr 80px;align-items:center;gap:14px}
+.rmix .rn{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:15px}
+.rmix .rb{position:relative;height:30px;background:var(--card);border:1.5px solid var(--ink)}
+.rmix .rb i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);width:0;transition:width .6s}
+.rmix .rb .third{position:absolute;top:-6px;bottom:-6px;left:33.3%;width:3px;background:var(--red)}
+.rmix .rp{font-family:var(--display);font-weight:900;font-size:28px;text-align:right}
+.rmix .rk{font-weight:600;font-size:14px;color:var(--muted);text-align:right}
+.rstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;flex:1}
+/* Where else mixing pays: six tiles in two rows of three (22 Sep 2026) */
+.tiles.six{top:232px;left:110px;right:110px;flex-wrap:wrap;column-gap:60px;row-gap:32px}
+.tiles.six .tile{width:300px;gap:12px}
+.tiles.six .tile .pgwrap{height:64px}
+.tiles.six .tile .pgwrap .pg{height:62px}
+.tiles.six .tile .sent{font-size:16px;max-width:34ch}
+/* each case links to its source, as the "are everywhere" tiles do in m3, m4, m5 and m7 (Ryan, 25 Sep 2026) */
+.tiles.six a.tile{text-decoration:none;color:inherit}
+.tiles.six a.tile:hover .lbl{color:var(--red)}
+.tiles.six .tile .tsrc{font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.figlink{flex:none;display:block;line-height:0}
+/* discussion prompts */
+.prompts{position:absolute;left:96px;right:96px;top:300px;display:flex;justify-content:center;gap:40px}
+.prompt2{flex:1;max-width:460px;border:2.5px solid var(--ink);background:var(--card);padding:26px 30px;font-weight:600;font-size:22px;line-height:1.35;color:var(--ink)}
+.prompt2 .pk{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--red);margin-bottom:10px}
+
+/* beat the keeper and the shootout previews: the shared pitch from game/pk.js */
+.scenebox{border:2.5px solid var(--ink);background:var(--paper-soft);padding:8px 8px 0}
+.stat .toplist{list-style:none;display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.stat .toplist li{font-weight:600;font-size:17px;line-height:1.15;color:var(--ink);display:flex;justify-content:space-between;gap:12px}
+.stat .toplist li b{font-family:var(--display);font-weight:900;font-size:19px;color:var(--red)}
+/* mixing strategies: three quotes on a timeline, the newest revealed first */
+.qrow{position:absolute;left:96px;right:96px;top:290px;display:flex;gap:30px;align-items:stretch;padding-top:28px;border-top:3px solid var(--ink)}
+.qcard{flex:1;background:var(--card);border:2.5px solid var(--ink);padding:16px 24px 18px;position:relative;display:flex;flex-direction:column;min-height:236px}
+.qcard .qyear{position:absolute;top:-66px;left:50%;transform:translateX(-50%);font-family:var(--display);font-weight:900;font-size:22px;line-height:1.2;color:var(--red);background:var(--paper);padding:0 10px;white-space:nowrap}
+.qcard .qyear::after{content:"";position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);width:16px;height:16px;background:var(--red);border-radius:50%;border:3px solid var(--paper)}
+.qcard .qmark{font-family:var(--display);font-weight:900;font-size:84px;line-height:.55;height:36px;color:var(--red)}
+.qcard .qtext{flex:1;font-weight:500;font-style:italic;font-size:21px;line-height:1.35;color:var(--ink)}
+.qcard .qwho{font-weight:700;font-size:19px;color:var(--ink);margin-top:14px;text-transform:uppercase;letter-spacing:.06em}
+.qcard .qctx{font-weight:500;font-size:15px;color:var(--muted);margin-top:2px}
+
+/* What did we learn?: five tiles in a row, as m1 to m5 close */
+.stopnote{font-weight:500;font-size:22px;color:var(--muted);display:flex;align-items:center;gap:14px}
+.stopnote i{width:13px;height:13px;background:var(--red);display:inline-block;flex:none}
+.stopnote b{color:var(--red);font-weight:700}
+.learn .tiles{top:246px;gap:22px;left:64px;right:64px}
+.learn .tile{width:206px;gap:14px}
+.learn .tile .pgwrap{height:96px}
+.learn .tile .pgwrap .pg{height:92px}
+.learn .tile .lbl{white-space:normal;font-size:15.5px}
+.learn .tile .sent{font-size:15.5px;max-width:none}
+
+/* real-life penalties as an isotype: ten figures a row */
+.iso{position:absolute;left:96px;right:96px;top:196px;display:flex;flex-direction:column;gap:22px}
+.isorow{display:flex;align-items:center;gap:28px}
+.isolab{flex:none;width:400px;font-weight:600;font-size:21px;line-height:1.3;color:var(--ink)}
+.isolab b{color:var(--red)}
+.isofigs{flex:1;display:flex;justify-content:space-between;align-items:flex-end;height:96px}
+.isofigs.balls{height:60px;align-items:center}
+.isof{height:96px;width:62px;color:var(--ink);opacity:.45;display:block}
+.isof.on{color:var(--red);opacity:1;--fillc:var(--red);--pentc:var(--paper)} /* a scored ball keeps its pentagon, so all ten read as one ball symbol */
+.isofigs.balls .isof{height:44px;width:44px}
+#negNote{margin-top:10px;min-height:1.4em;text-align:center}
+/* the Art of Strategy answer on the Pete Carroll slide (29 Sep 2026) */
+ul.bullets li.aosq{font-style:italic;font-weight:500;font-size:19.5px;color:var(--ink)}
+ul.bullets li.aosq span{display:block;font-style:normal;font-weight:600;font-size:14px;color:var(--muted);margin-top:4px}
+.pkwhy{font-weight:500;font-size:16.5px;line-height:1.4;color:var(--ink);margin-top:10px;border-top:2px solid var(--rule);padding-top:10px}
+.pkwhy b{color:var(--red)}
+</style>
+</head><body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="im-target" viewBox="0 0 64 64"><circle cx="32" cy="32" r="23" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><circle cx="32" cy="32" r="13" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="32" r="5"></circle></symbol><symbol id="im-die" viewBox="0 0 64 64"><rect x="14" y="14" width="36" height="36" rx="7" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3"></rect><circle fill="var(--ink,#1B1C19)" cx="24" cy="24" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="40" cy="24" r="3.2"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="32" r="3.6"></circle><circle fill="var(--ink,#1B1C19)" cx="24" cy="40" r="3.2"></circle><circle fill="var(--ink,#1B1C19)" cx="40" cy="40" r="3.2"></circle></symbol><symbol id="im-fist" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"></rect><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"></rect><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"></rect><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"></line></symbol><symbol id="im-data-columns" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="10" y="50" width="12" height="6"></rect><rect fill="var(--ink,#1B1C19)" x="10" y="42" width="12" height="6"></rect><rect fill="var(--red,#CE1E32)" x="26" y="50" width="12" height="6"></rect><rect fill="var(--red,#CE1E32)" x="26" y="42" width="12" height="6"></rect><rect fill="var(--red,#CE1E32)" x="26" y="34" width="12" height="6"></rect><rect fill="var(--red,#CE1E32)" x="26" y="26" width="12" height="6"></rect><rect fill="var(--ink,#1B1C19)" x="42" y="50" width="12" height="6"></rect><rect fill="var(--ink,#1B1C19)" x="42" y="42" width="12" height="6"></rect><rect fill="var(--ink,#1B1C19)" x="42" y="34" width="12" height="6"></rect><rect fill="var(--ink,#1B1C19)" x="6" y="57" width="52" height="2"></rect></symbol><symbol id="im-eye" viewBox="0 0 64 44"><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round" d="M6 22 Q32 2 58 22"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="4" stroke-linecap="round" d="M6 22 Q32 42 58 22"></path><circle fill="var(--ink,#1B1C19)" cx="32" cy="22" r="9"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="22" r="4.5"></circle></symbol><symbol id="im-mask" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M8 22 Q32 15 56 22 Q58 41 43 45 Q35 47 32 40 Q29 47 21 45 Q6 41 8 22 Z"></path><circle fill="var(--paper,#E9E2D2)" cx="21" cy="29" r="5.4"></circle><circle fill="var(--paper,#E9E2D2)" cx="43" cy="29" r="5.4"></circle><circle fill="var(--red,#CE1E32)" cx="21" cy="29" r="2.4"></circle><circle fill="var(--red,#CE1E32)" cx="43" cy="29" r="2.4"></circle></symbol></svg>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">6</div>
+  <div class="tag"><i></i>MODULE 6 · APPLIED GAME THEORY · <span class="swapchip">RRPF</span></div>
+  <h1>MIXED<br><span class="r">STRATEGIES</span></h1>
+  <div class="sub">Sometimes it pays to be inconsistent or unpredictable</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-target"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-die"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-fist"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-data-columns"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 44"><use href="#im-eye"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-mask"/></svg></span>
+  </div>
+  <div class="byline">RYAN LAMARE</div>
+</section>
+
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>MODULE 6</div>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:1000px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Recognize games with no stable move, where the right strategy is to be unpredictable</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Play penalties and rock, paper, scissors, and find out how good at mixing the room is</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Find the mix that leaves your rival nothing to exploit</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Spot where mixing pays in business, and why a good mixed strategy can look like a bad decision</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>MODULE 6</div>
+  <h2>Mixing strategies</h2>
+  <div class="leadline">Sometimes it pays to be <b>inconsistent or unpredictable</b></div>
+  <div class="qrow">
+    <div class="qcard" data-step="3">
+      <div class="qyear">c. 1517</div>
+      <div class="qmark">&ldquo;</div>
+      <div class="qtext">A very wise thing to simulate madness</div>
+      <div class="qwho">Machiavelli</div>
+      <div class="qctx">Discourses on Livy</div>
+    </div>
+    <div class="qcard" data-step="2">
+      <div class="qyear">1960s</div>
+      <div class="qmark">&ldquo;</div>
+      <div class="qtext">I want [them] to believe I&rsquo;ve reached the point where I might do anything&hellip;</div>
+      <div class="qwho">Richard Nixon</div>
+      <div class="qctx">The madman theory</div>
+    </div>
+    <div class="qcard" data-step="1">
+      <div class="qyear">1990s</div>
+      <div class="qmark">&ldquo;</div>
+      <div class="qtext">The fact that some elements may appear to be potentially &lsquo;out of control&rsquo; can be beneficial&hellip;</div>
+      <div class="qwho">US Strategic Command</div>
+      <div class="qctx">Nuclear strategy under Bill Clinton, 1995</div>
+    </div>
+  </div>
+  <div class="chiprow" style="bottom:52px;gap:12px">
+    </div>
+  <div class="talk" data-step="4">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> Why might unpredictability be, in some cases, a preferable strategy?</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>The penalty kick in soccer</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>Penalty kicks involve two players &ndash; a kicker and a goalie</li>
+      <li data-step="1">They face a simultaneous choice (in this case let&rsquo;s limit the choice to left or right)</li>
+      <li data-step="2">If the kicker shoots left, the goalie would always be best off by diving left</li>   <!-- 29 Sep 2026: his LER 550 slide 256, the three lines the deck had skipped -->
+      <li data-step="3">Conversely, if the kicker shoots left the kicker would always be best off by having the goalie dive right</li>
+      <li data-step="4">Therefore, neither player is incentivized to coordinate strategies</li>
+      <li data-step="5"><b>How should a penalty kicker behave?</b></li>
+    </ul>
+    <svg class="sidefig" style="height:330px" viewBox="0 0 460 340" role="img" aria-label="A goal with a goalkeeper in the middle, a kicker at the spot, and dashed arrows to each corner">
+      <!-- goal frame and net -->
+      <path d="M40 40 L40 200 M420 40 L420 200 M40 40 L420 40" fill="none" stroke="var(--ink)" stroke-width="8" stroke-linecap="round"/>
+      <g stroke="var(--ink)" stroke-width="1.4" opacity=".28">
+        <path d="M60 40V200M80 40V200M100 40V200M120 40V200M140 40V200M160 40V200M180 40V200M200 40V200M220 40V200M240 40V200M260 40V200M280 40V200M300 40V200M320 40V200M340 40V200M360 40V200M380 40V200M400 40V200"/>
+        <path d="M40 60H420M40 80H420M40 100H420M40 120H420M40 140H420M40 160H420M40 180H420"/>
+      </g>
+      <line x1="20" y1="200" x2="440" y2="200" stroke="var(--ink)" stroke-width="4"/>
+      <!-- goalkeeper -->
+      <g fill="var(--terracotta)" transform="translate(206,86)">
+        <circle cx="24" cy="14" r="13"/>
+        <path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/>
+        <path d="M4 40 L-24 20 M44 40 L72 20" stroke="var(--terracotta)" stroke-width="10" stroke-linecap="round" fill="none"/>
+        <rect x="9" y="84" width="11" height="30"/><rect x="28" y="84" width="11" height="30"/>
+      </g>
+      <!-- kicker and ball -->
+      <g fill="var(--teal)" transform="translate(196,214)">
+        <circle cx="24" cy="14" r="13"/>
+        <path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/>
+        <rect x="9" y="84" width="11" height="30"/><path d="M28 84 L52 110" stroke="var(--teal)" stroke-width="11" stroke-linecap="round"/>
+      </g>
+      <circle cx="262" cy="326" r="11" fill="var(--paper)" stroke="var(--ink)" stroke-width="3.5"/>
+      <!-- the two options -->
+      <path d="M250 318 Q120 240 70 150" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="12 9" stroke-linecap="round"/>
+      <path d="M70 150 l2 22 m-2 -22 l20 8" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M274 318 Q360 240 392 150" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="12 9" stroke-linecap="round"/>
+      <path d="M392 150 l-2 22 m2 -22 l-20 8" fill="none" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/>
+      <text class="cardlab" x="70" y="26" text-anchor="middle" style="fill:var(--red)">LEFT</text>
+      <text class="cardlab" x="392" y="26" text-anchor="middle" style="fill:var(--red)">RIGHT</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>The psychology of penalties</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Penalties are often thought of as a psychological game</li>
+      <li data-step="1">Neither side wants to reveal to the other which way he or she will go</li>
+      <li data-step="2">In 2006, Germany&rsquo;s keeper Jens Lehmann read from a note before each Argentine penalty, as if he knew where each of them was going</li>
+      <li data-step="3">So what is a penalty? A lottery?</li>
+      <li data-step="4">A psychological game?</li>
+      <li data-step="5">Or something that can be <b>conquered using game theory</b>?</li>
+    </ul>
+    <!-- 30 Sep 2026, his swap: Jens Lehmann's note in place of Tim Krul (7:35, now in Extra resources). Checked: Germany v Argentina,
+         30 June 2006, 4-2 on penalties; Andreas Koepke's pencil note named eight Argentines; Lehmann saved Ayala (on it) and Cambiasso
+         (not on it: "He was the only one who wasn't on the list"); he called it "pretty illegible". The clip is a fan upload of a TV
+         countdown, 1:59, and embeds here -->
+    <div class="clipframe" id="lehwrap" style="align-self:center">
+      <button class="clipcover" id="lehload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">Jens Lehmann&rsquo;s note, 2006</span></button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>MODULE 6 · BEAT THE KEEPER</div>
+  <h2>Let&rsquo;s play: beat the keeper</h2>
+  <div class="rowfig" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li><b>On your own, on your phone</b></li>
+      <li data-step="1">Fifteen kicks against the keeper. On every kick you choose <b>left or right</b></li>
+      <li data-step="2">If the keeper dives the way you shoot, it&rsquo;s saved. If not, it&rsquo;s a goal</li>
+      <li data-step="3"><b>Score as many as you can</b></li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="joinchip"><div class="qr"><img src="qr-solo.svg" alt="QR code for beat the keeper at ryanlamare.com/teaching/exec/rrpf/m6/game/?g=solo"></div><div class="ju">ryanlamare.com/go</div></div>
+        <div class="livecount"><span class="n" id="soloPlayers0">0</span><span class="l">RESPONSES</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 6 · BEAT THE KEEPER</div>
+  <h2>Who beat the keeper?</h2>
+  <div class="board">
+    <div class="bbar">
+      <div class="livecount"><span class="n" id="soloPlayers">0</span><span class="l">RESPONSES</span></div>
+      <div class="demotag" id="soloDemo" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="stats">
+      <div class="stat" data-step="1" data-stepcall="soloTile" data-t="goals"><div class="sl">Goals</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the room&rsquo;s kicks went in. The keeper learned from your own kicks: a random kicker scores <b>half the time</b></div></div>
+      <div class="stat" data-step="2" data-stepcall="soloTile" data-t="sw"><div class="sl">Switched sides</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of kicks went the other way from the kick before. A random kicker switches <b>half the time</b></div></div>
+      <div class="stat" data-step="3" data-stepcall="soloTile" data-t="kl"><div class="sl">Kickers went left</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the time</div></div>
+      <div class="stat" data-step="4" data-stepcall="soloTile" data-t="top"><div class="sl">Top scorers</div><ol class="toplist"><li>&ndash;</li><li>&ndash;</li><li>&ndash;</li><li>&ndash;</li><li>&ndash;</li></ol></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>So how should a penalty kicker behave?</h2>
+  <div class="rowfig" style="align-items:center;gap:32px">   <!-- 29 Sep 2026: 12px more line so the first bullet keeps "equilibrium" on its line and the fifth press clears the tick bar -->
+    <ul class="bullets" style="margin-top:0">
+      <li>In this case, there is no (pure strategy) Nash equilibrium</li>
+      <li class="sub" data-step="1">If the kicker always chooses left, the goalie can choose left and drop the kicker&rsquo;s percentage to 58</li>
+      <li class="sub" data-step="2">If the kicker always chooses right, the goalie can choose right and drop the kicker&rsquo;s percentage to 70</li>
+      <li data-step="3">Of the two, the kicker would prefer right-right to left-left, but can the kicker do better?</li>
+      <li data-step="4"><b>Yes &ndash; by employing a mixed strategy and making it so that it doesn&rsquo;t matter which direction the goalie guesses!</b></li>
+      <li data-step="5">What if the kicker alternated left/right strategies at a 50/50 rate (say the kicker decides to flip a coin just before the run-up to decide where to shoot)?</li>   <!-- 29 Sep 2026: his LER 550 slide 260, the set-up for slide 8's line -->
+    </ul>
+    <div class="mxwrap" style="flex:none;gap:8px">
+      <div class="mxtitle">REAL PENALTIES: THE KICKER&rsquo;S SUCCESS RATE (%)</div>
+      <div class="mx" style="--cols:2;--rows:2;--cw:130px;--rh:64px">
+        <div class="chead">GOALIE</div>
+        <div class="rhead">KICKER</div>
+        <div class="cl" style="grid-column:3">Left</div>
+        <div class="cl" style="grid-column:4">Right</div>
+        <div class="rl" style="grid-row:3">Left</div>
+        <div class="rl" style="grid-row:4">Right</div>
+        <div class="cell" id="pkc-ll" style="grid-row:3;grid-column:3">58</div>
+        <div class="cell" style="grid-row:3;grid-column:4">95</div>
+        <div class="cell" style="grid-row:4;grid-column:3">93</div>
+        <div class="cell" id="pkc-rr" style="grid-row:4;grid-column:4">70</div>
+      </div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="pkc-ll" data-cls="hot" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="pkc-rr" data-cls="hot" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>Mix the kicker&rsquo;s strategy</h2>
+  <div class="fig" style="top:166px">
+    <div class="widget">
+      <div class="whead">
+        <span class="wlabel">p = SHARE OF KICKS GOING LEFT OR RIGHT</span>
+        <button id="pkOpt" class="primary" type="button">SET p = 38%</button>
+      </div>
+      <div class="pkgrid">
+        <div class="pkleft">
+          <div class="pkslider">
+            <input type="range" id="pkP" min="0" max="100" step="1" value="50" aria-label="Share of kicks going left, percent">
+            <div class="plab"><span>p = <b id="pkPv">50%</b> left</span><span><b id="pkQv">50%</b> right</span></div>
+          </div>
+          <div class="pkstat gl"><span class="lbl">If the goalie dives LEFT</span><span class="val" id="pkEL">76</span></div>
+          <div class="pkstat gr"><span class="lbl">If the goalie dives RIGHT</span><span class="val" id="pkER">83</span></div>
+          <div class="pknote" id="pkNote"></div>
+          <div class="pkwhy" data-step="1">So the worst option from playing a completely random strategy (50/50 split) is <b>better than even the best pure strategy option</b> (70 percent if you choose to purely kick right)</div>   <!-- 29 Sep 2026: his LER 550 slide 260 -->
+        </div>
+        <svg class="pkchart" id="pkChart" viewBox="0 0 380 300" width="380" height="300" role="img" aria-label="Expected success versus p, two crossing lines"></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>MODULE 6 · THE PENALTY KICK</div>
+  <h2>Real-life penalty kick strategies</h2>
+  <svg style="display:none" aria-hidden="true">
+    <symbol id="iso-ball" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" stroke="currentColor" stroke-width="3.5" fill="var(--fillc,none)"/><polygon points="20,11 28,17 25,26 15,26 12,17" fill="var(--pentc,currentColor)"/></symbol>
+    <symbol id="iso-kicker" viewBox="-4 0 72 128"><g fill="currentColor"><circle cx="24" cy="14" r="13"/><path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/><rect x="9" y="84" width="11" height="30"/><path d="M28 84 L52 110" stroke="currentColor" stroke-width="11" stroke-linecap="round" fill="none"/></g><circle cx="58" cy="118" r="7" fill="none" stroke="currentColor" stroke-width="3"/></symbol>
+    <symbol id="iso-keeper" viewBox="-28 0 104 120"><g fill="currentColor"><path d="M4 40 L-24 20 M44 40 L72 20" stroke="currentColor" stroke-width="10" stroke-linecap="round" fill="none"/><circle cx="24" cy="14" r="13"/><path d="M2 40 Q24 30 46 40 L40 84 L8 84 Z"/><rect x="9" y="84" width="11" height="30"/><rect x="28" y="84" width="11" height="30"/></g></symbol>
+  </svg>
+  <div class="iso">
+    <div class="isorow">
+      <div class="isolab">Of every ten penalties, <b>about eight</b> go in</div>
+      <div class="isofigs balls"><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof on" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof" viewBox="0 0 40 40"><use href="#iso-ball"/></svg><svg class="isof" viewBox="0 0 40 40"><use href="#iso-ball"/></svg></div>
+    </div>
+    <div class="isorow" data-step="1">
+      <div class="isolab">Kickers go left <b>four times in ten</b>. The best mix said 38%</div>
+      <div class="isofigs"><svg class="isof on" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof on" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof on" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof on" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg><svg class="isof" viewBox="0 0 72 128"><use href="#iso-kicker"/></svg></div>
+    </div>
+    <div class="isorow" data-step="2">
+      <div class="isolab">Goalies dive left <b>four times in ten</b>. The best mix said 42%</div>
+      <div class="isofigs"><svg class="isof on" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof on" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof on" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof on" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg><svg class="isof" viewBox="0 0 104 120"><use href="#iso-keeper"/></svg></div>
+    </div>
+  </div>
+  <div class="chiprow" style="bottom:52px;gap:14px">
+    <div class="chead2" data-step="3" style="font-size:21px;text-align:center;max-width:960px">At a kicker mixture of 38% left and a goalie mixture of 42% left, neither side can be made better off by changing its strategy &ndash; we have found our Nash equilibrium!</div>   <!-- 29 Sep 2026: his LER 550 slide 280, in the slide's rounded numbers; "And this room?" is gone (his call) -->
+    <div class="chips" data-step="4"><div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>So, footballers are game theorists even though they may not realize it!</b></div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="10">
+  <div class="kicker"><i></i>MODULE 6 · ROCK, PAPER, SCISSORS</div>
+  <h2>Let&rsquo;s play rock, paper, scissors</h2>
+  <div class="rowfig" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li>Can strategic thinking be applied to a game like rock-paper-scissors? <b>Let&rsquo;s find out</b></li>
+      <li data-step="1"><b>Pair up with the person next to you</b>, on your phones &ndash; ten throws</li>
+      <li data-step="2">Both of you throw at the same time: rock beats scissors, scissors beat paper, paper beats rock</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="joinchip"><div class="qr"><img src="qr-rps.svg" alt="QR code for rock, paper, scissors at ryanlamare.com/teaching/exec/rrpf/m6/game/?g=rps"></div><div class="ju">ryanlamare.com/go</div></div>
+        <div class="livecount"><span class="n" id="rpsPairs0">0</span><span class="l">PAIRS<br>IN</span></div>
+      </div>
+      <svg class="pg" viewBox="0 0 300 100" style="height:90px" aria-hidden="true">
+        <g fill="var(--ink)"><circle cx="50" cy="50" r="30"/></g>
+        <g fill="none" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"><rect x="118" y="20" width="64" height="60" rx="4"/></g>
+        <g stroke="var(--red)" stroke-width="7" stroke-linecap="round" fill="none"><line x1="222" y1="26" x2="272" y2="76"/><line x1="272" y1="26" x2="222" y2="76"/><circle cx="218" cy="84" r="9"/><circle cx="276" cy="84" r="9"/></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>MODULE 6 · ROCK, PAPER, SCISSORS</div>
+  <h2>Nobody is really random</h2>
+  <div class="board">
+    <div class="bbar">
+      <div class="livecount"><span class="n" id="rpsPairs">0</span><span class="l">PAIRS<br>IN</span></div>
+      <div class="demotag" id="rpsDemo" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="rmix">
+      <div class="rl"><span class="rn">Rock</span><div class="rb"><i id="rb-r"></i><span class="third"></span></div><span class="rp" id="rp-r">&ndash;</span></div>
+      <div class="rl"><span class="rn">Paper</span><div class="rb"><i id="rb-p"></i><span class="third"></span></div><span class="rp" id="rp-p">&ndash;</span></div>
+      <div class="rl"><span class="rn">Scissors</span><div class="rb"><i id="rb-s"></i><span class="third"></span></div><span class="rp" id="rp-s">&ndash;</span></div>
+      <div class="rl"><span></span><span class="rk">the red line is one in three &ndash; a perfectly random player</span><span></span></div>
+    </div>
+    <div class="rstats">
+      <div class="stat" data-step="1" data-stepcall="rpsTile" data-t="open"><div class="sl">The opening throw</div><div class="sv" style="font-size:54px"><span class="v">&ndash;</span></div><div class="sb"><span class="x">&ndash;</span> of players opened with it</div></div>
+      <div class="stat" data-step="2" data-stepcall="rpsTile" data-t="loss"><div class="sl">After losing a throw</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">switched to something else. A random player switches <b>two times in three</b></div></div>
+      <div class="stat" data-step="3" data-stepcall="rpsTile" data-t="win"><div class="sl">After winning a throw</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">threw the same thing again. Random would be <b>one in three</b></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 6 · ROCK, PAPER, SCISSORS</div>
+  <h2>Rock, paper, scissors and strategy</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>The best strategy is to mix with 1/3 probability of each option, for an average payoff of 0</li>
+      <li data-step="1">Since the game is symmetrical, both sides have identical strategies (1/3, 1/3, 1/3) which is the Nash equilibrium</li>
+      <li data-step="2"><b>And yet &ndash; nobody is really random!</b></li>
+      <li data-step="3">We fall into subconscious patterns even if we don&rsquo;t realize it, which makes the (1/3, 1/3, 1/3) strategy impossible</li>
+    </ul>
+    <div class="mx" style="flex:none;--cols:3;--rows:3;--cw:104px;--rh:54px">
+      <div class="chead" style="grid-column:3 / span 3">PLAYER 2</div>
+      <div class="rhead" style="grid-row:3 / span 3">PLAYER 1</div>
+      <div class="cl" style="grid-column:3">Rock</div>
+      <div class="cl" style="grid-column:4">Paper</div>
+      <div class="cl" style="grid-column:5">Scissors</div>
+      <div class="rl" style="grid-row:3">Rock</div>
+      <div class="rl" style="grid-row:4">Paper</div>
+      <div class="rl" style="grid-row:5">Scissors</div>
+      <div class="cell" style="grid-row:3;grid-column:3;font-size:19px"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+      <div class="cell" style="grid-row:3;grid-column:4;font-size:19px"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
+      <div class="cell" style="grid-row:3;grid-column:5;font-size:19px"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
+      <div class="cell" style="grid-row:4;grid-column:3;font-size:19px"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
+      <div class="cell" style="grid-row:4;grid-column:4;font-size:19px"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+      <div class="cell" style="grid-row:4;grid-column:5;font-size:19px"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
+      <div class="cell" style="grid-row:5;grid-column:3;font-size:19px"><span class="pa">-1</span><span class="pc">,</span><span class="pb">1</span></div>
+      <div class="cell" style="grid-row:5;grid-column:4;font-size:19px"><span class="pa">1</span><span class="pc">,</span><span class="pb">-1</span></div>
+      <div class="cell" style="grid-row:5;grid-column:5;font-size:19px"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 6 · PETE CARROLL</div>
+  <h2>Pete Carroll, game theorist?</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Super Bowl XLIX, February 2015. Seattle trail by four with 26 seconds left, second down on New England&rsquo;s <b>one-yard line</b></li>
+      <li data-step="1">Marshawn Lynch, the best short-yardage runner in American football, is standing in the backfield. Everyone expects a run</li>
+      <li data-step="2">Seattle threw a quick slant. Malcolm Butler intercepted it, and the game was over</li>
+      <li data-step="3">It was called <b>the worst play call in Super Bowl history</b>. Was it?</li>
+    </ul>
+    <div class="clipframe" id="carrollwrap" style="align-self:center">
+      <button class="clipcover" id="carrollload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">The pass at the one</span></button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>MODULE 6 · PETE CARROLL</div>
+  <h2>The worst call, or the worst luck?</h2>
+  <div class="rowfig" style="align-items:center;gap:44px">
+    <ul class="bullets" style="margin-top:0">
+      <li>If Seattle run every time from the one, the defense only has to stop the run</li>
+      <li data-step="1">A team that sometimes passes is harder to defend <b>on every play</b> &ndash; including the runs</li>
+      <li data-step="2">The call was part of a mix. According to game theory, the interception was <b>the worst luck</b></li>
+      <li data-step="3"><b>So: do you judge your people on their decisions, or on their outcomes?</b></li>
+      <li data-step="4" class="aosq">&ldquo;The time to justify the coach&rsquo;s strategy is before using it on any particular occasion. The coach should publicize the fact that mixing is vital&rdquo; <span>Dixit and Nalebuff, <i>The Art of Strategy</i>, 2008</span></li>   <!-- 29 Sep 2026: his LER 550 slide 288 -->
+    </ul>
+    <a class="figlink" href="https://www.nytimes.com/2015/02/03/upshot/game-theory-says-pete-carrolls-call-at-goal-line-is-defensible.html" target="_blank" rel="noopener">
+    <svg class="sidefig" style="height:320px" viewBox="0 0 420 300" role="img" aria-label="The goal line, flat: New England's defense in terracotta stacked against the run, Seattle's offense in teal; the run goes straight into the stack, the pass is a red dashed slant, and a red X on the goal line marks the interception">
+      <!-- 25 Sep 2026 redraw: the suite's palette (offense teal, defense terracotta), the slant and the interception drawn -->
+      <rect x="20" y="30" width="380" height="240" fill="var(--paper-soft)" stroke="var(--ink)" stroke-width="3"/>
+      <g stroke="var(--ink)" stroke-width="2" opacity=".25"><line x1="20" y1="140" x2="400" y2="140"/><line x1="20" y1="205" x2="400" y2="205"/></g>
+      <rect x="20" y="30" width="380" height="42" fill="var(--ink)"/>
+      <text x="210" y="57" text-anchor="middle" font-family="var(--sans)" font-weight="700" font-size="15" letter-spacing="2" fill="var(--paper)">END ZONE</text>
+      <g fill="var(--terracotta)"><circle cx="100" cy="94" r="11"/><circle cx="148" cy="94" r="11"/><circle cx="196" cy="94" r="11"/><circle cx="244" cy="94" r="11"/><circle cx="280" cy="94" r="11"/><circle cx="172" cy="122" r="11"/><circle cx="220" cy="122" r="11"/><circle cx="352" cy="104" r="11"/></g>
+      <g fill="var(--teal)"><circle cx="172" cy="196" r="12"/><circle cx="220" cy="228" r="12"/><circle cx="360" cy="176" r="12"/></g>
+      <path d="M220 214 L220 150" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M220 148 l-9 12 m9 -12 l9 12" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M352 164 L318 100" stroke="var(--red)" stroke-width="6" stroke-dasharray="11 8" stroke-linecap="round" fill="none"/>
+      <g data-step="2" stroke="var(--red)" stroke-width="7" stroke-linecap="round"><line x1="302" y1="80" x2="324" y2="102"/><line x1="324" y1="80" x2="302" y2="102"/></g>
+      <text class="cardlab" x="220" y="256" text-anchor="middle">THE RUN</text>
+      <text class="cardlab" x="352" y="256" text-anchor="middle" style="fill:var(--red)">THE PASS</text>
+    </svg>
+    </a>
+  </div>
+</section>
+
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>MODULE 6 · IN BUSINESS</div>
+  <h2>Mixed strategies in business</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>An application of mixed strategies to the business world comes from organizational efforts to motivate compliance</li>
+      <li data-step="1">Organizations and institutions want people to behave, but can&rsquo;t always monitor them</li>
+      <li data-step="2">So, they introduce <b>selective enforcement</b>, a mixed strategy of enforcement somewhere between 0% and 100%</li>
+      <li data-step="3">Think about parking meters, speed limits and stop lights: the police combine &ldquo;random&rdquo; enforcement with excessive penalties to deter people without actually monitoring them</li>
+    </ul>
+    <svg class="sidefig" style="height:250px" viewBox="0 0 380 250" role="img" aria-label="Ten cars in two rows, two of them picked out in red: random checks">
+      <g id="cars"></g>
+      <text class="cardlab" x="190" y="238" text-anchor="middle" style="fill:var(--red)">RANDOM CHECKS</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>MODULE 6 · VOLKSWAGEN</div>
+  <h2>How Volkswagen got caught cheating</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>September 2015: Volkswagen admits that 11 million diesel cars were rigged to cheat emissions tests</li>
+      <li data-step="1">The cars ran clean when they were being tested, and dirty on the road</li>
+      <li data-step="2"><b>How did the car know it was being tested?</b></li>
+      <li data-step="3"><b>The problem was the consistency of the inspections</b></li>
+    </ul>
+    <div class="clipframe" id="vwwrap" style="align-self:center">
+      <button class="clipcover" id="vwload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">The engineer who helped catch them</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- COMPANY SLOT (RRPF): a discussion, no phones — swap the prompts to retarget the programme -->
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 6 · IN BUSINESS</div>
+  <h2>Where else mixing pays</h2>
+  <div class="leadline">Anywhere someone would <b>exploit you if they could predict you</b></div>
+  <div class="tiles six">
+    <a class="tile" href="https://www.gov.uk/hmrc-internal-manuals/self-assessment-legal-framework/salf404" target="_blank" rel="noopener" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 120 120" aria-hidden="true"><g class="ink"><rect x="14" y="8" width="66" height="88" rx="4"/></g><g class="knock"><rect x="26" y="24" width="42" height="6"/><rect x="26" y="38" width="42" height="6"/><rect x="26" y="52" width="30" height="6"/></g><g class="red"><circle cx="84" cy="78" r="20"/></g><g class="knock"><circle cx="84" cy="78" r="12"/></g><g class="red"><rect x="96" y="92" width="12" height="26" rx="3" transform="rotate(-45 102 105)"/></g></svg></div>
+      <div class="lbl">TAX AUDITS</div>
+      <div class="sent" style="max-width:33ch">A few returns, picked at random. The penalties are public, the picking is not</div>
+      <div class="tsrc">HMRC &#8599;</div>
+    </a>
+    <a class="tile" href="https://www.itl.nist.gov/div898/handbook/pmc/section2/pmc21.htm" target="_blank" rel="noopener" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 160 120" aria-hidden="true"><g class="ink"><rect x="4" y="40" width="26" height="40" rx="3"/><rect x="36" y="40" width="26" height="40" rx="3"/><rect x="100" y="40" width="26" height="40" rx="3"/><rect x="132" y="40" width="26" height="40" rx="3"/></g><g class="red"><rect x="68" y="30" width="26" height="50" rx="3"/></g><g class="ink"><rect x="0" y="86" width="160" height="8"/></g></svg></div>
+      <div class="lbl">QUALITY CONTROL</div>
+      <div class="sent">Test a random sample, not every unit. Any unit could be the one checked</div>
+      <div class="tsrc">NIST &#8599;</div>
+    </a>
+    <a class="tile" href="https://www.restud.com/a-dynamic-theory-of-random-price-discounts/" target="_blank" rel="noopener" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 120 120" aria-hidden="true"><g class="red"><path d="M52 6 L110 6 L110 64 L58 116 L4 62 Z"/></g><g class="knock"><circle cx="90" cy="26" r="8"/></g><g class="knock"><rect x="30" y="56" width="44" height="9" transform="rotate(-45 52 60)"/><rect x="42" y="68" width="44" height="9" transform="rotate(-45 64 72)"/></g></svg></div>
+      <div class="lbl">SALES AND PROMOTIONS</div>
+      <div class="sent">Run them when nobody can predict you, or everyone waits for them</div>
+      <div class="tsrc">Review of Economic Studies &#8599;</div>
+    </a>
+    <a class="tile" href="https://www.newsweek.com/random-security-laxs-armor-system-103885" target="_blank" rel="noopener" data-step="4">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 160 120" aria-hidden="true"><g class="ink"><path d="M18 44 Q12 44 12 38 Q12 30 22 30 L122 30 Q140 30 150 40 L142 46 L26 46 Q18 46 18 44 Z"/><path d="M22 30 L12 8 L28 8 L42 30 Z"/><path d="M66 42 L98 64 L112 64 L92 42 Z"/><rect x="24" y="84" width="10" height="32"/><rect x="126" y="84" width="10" height="32"/></g><g class="red"><rect x="24" y="84" width="112" height="12"/></g><g class="knock"><rect x="44" y="84" width="14" height="12"/><rect x="72" y="84" width="14" height="12"/><rect x="100" y="84" width="14" height="12"/></g></svg></div>
+      <div class="lbl">AIRPORT SECURITY</div>
+      <div class="sent">At LAX, game theory software picked where checkpoints and patrols went</div>
+      <div class="tsrc">Newsweek &#8599;</div>
+    </a>
+    <a class="tile" href="https://www.usada.org/testing/" target="_blank" rel="noopener" data-step="5">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 120 120" aria-hidden="true"><g class="ink"><rect x="10" y="16" width="100" height="94" rx="6"/><rect x="30" y="6" width="9" height="20" rx="3"/><rect x="81" y="6" width="9" height="20" rx="3"/></g><g class="knock"><rect x="20" y="42" width="16" height="14"/><rect x="42" y="42" width="16" height="14"/><rect x="64" y="42" width="16" height="14"/><rect x="86" y="42" width="16" height="14"/><rect x="20" y="62" width="16" height="14"/><rect x="42" y="62" width="16" height="14"/><rect x="86" y="62" width="16" height="14"/><rect x="20" y="82" width="16" height="14"/><rect x="42" y="82" width="16" height="14"/><rect x="64" y="82" width="16" height="14"/><rect x="86" y="82" width="16" height="14"/></g><g class="red"><rect x="64" y="62" width="16" height="14"/></g></svg></div>
+      <div class="lbl">DRUG TESTING</div>
+      <div class="sent">Testers turn up unannounced, on any day. Nobody can plan for them</div>
+      <div class="tsrc">USADA &#8599;</div>
+    </a>
+    <a class="tile" href="https://netflix.github.io/chaosmonkey/" target="_blank" rel="noopener" data-step="6">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 120 120" aria-hidden="true"><g class="ink"><rect x="14" y="8" width="92" height="18" rx="2"/><rect x="14" y="30" width="92" height="18" rx="2"/><rect x="14" y="74" width="92" height="18" rx="2"/><rect x="14" y="96" width="92" height="18" rx="2"/></g><g class="red"><rect x="14" y="52" width="92" height="18" rx="2"/></g><g class="knock"><circle cx="26" cy="17" r="3.5"/><circle cx="26" cy="39" r="3.5"/><circle cx="26" cy="83" r="3.5"/><circle cx="26" cy="105" r="3.5"/><rect x="40" y="59" width="40" height="4"/></g></svg></div>
+      <div class="lbl">CHAOS ENGINEERING</div>
+      <div class="sent">Netflix switches off its servers at random, so every team builds for failure</div>
+      <div class="tsrc">Netflix &#8599;</div>
+    </a>
+  </div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 6 · MICHELIN</div>
+  <h2>How Michelin inspectors stay secret</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Michelin&rsquo;s inspectors book under false names and pay like any other diner. Nobody knows who they are, or when they will come</li>
+      <li data-step="1">A steady restaurant sees one about every 12 to 18 months. One about to gain or lose a star gets visits from two more inspectors</li>
+      <li data-step="2"><b>A restaurant can&rsquo;t know who the inspector is, so it has to cook assuming everyone is a potential inspector</b></li>
+    </ul>
+    <div class="clipframe" id="miwrap" style="align-self:center">
+      <button class="clipcover" id="miload" type="button"><span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span><span class="ct">Inside the Michelin Guide</span></button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 6 · POLICING</div>
+  <h2>The problem of bias in mixed strategies</h2>
+  <div class="rowfig" style="align-items:center">
+    <ul class="bullets" style="margin-top:0">
+      <li>The police can&rsquo;t be everywhere, so they mix their enforcement, targeting high-crime areas more often</li>
+      <li data-step="1">But there is strong evidence that the police over-enforce certain areas, which is not random</li>
+      <li data-step="2">And they are far more responsive to calls from other areas, such as wealthy suburbs</li>
+      <li data-step="3">Predictive policing can make it worse: patrols go where the arrests were, and arrests are made where the patrols go</li>
+    </ul>
+    <svg class="sidefig" style="height:250px" viewBox="0 0 390 250" role="img" aria-label="Two neighbourhoods of houses either side of a road; almost every house picked out in red, the ones that get checked, is on the left">
+      <rect x="180" y="18" width="30" height="170" fill="var(--rule)"/>
+      <path d="M195 26 V182" stroke="var(--paper)" stroke-width="3" stroke-dasharray="10 9"/>
+      <g transform="translate(14 34)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--red)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(66 34)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--red)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(118 34)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--ink)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(14 120)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--red)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(66 120)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--red)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(118 120)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--red)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(222 34)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--ink)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(274 34)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--ink)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(326 34)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--ink)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(222 120)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--ink)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(274 120)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--red)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g><g transform="translate(326 120)"><path d="M0 22 L22 2 L44 22 L44 56 L0 56 Z" fill="var(--ink)"/><rect x="16" y="36" width="12" height="20" fill="var(--paper)"/></g>
+      <text class="cardlab" x="195" y="238" text-anchor="middle" style="fill:var(--red)">WHO GETS CHECKED</text>
+    </svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="20" data-short="out">
+  <div class="kicker"><i></i>MODULE 6 · YOUR WORLD</div>
+  <h2>Unpredictability in your world</h2>
+  <div class="leadline" style="margin-top:22px">Pick one real situation from one of your worlds, then answer the four questions together.</div>
+  <div class="rail" style="min-width:980px;top:290px">
+    <div class="ritem"><div class="rn">1</div><div class="rt">Where can it strategically benefit you to be inconsistent?</div></div>
+    <div class="ritem"><div class="rn">2</div><div class="rt">Who is the other player in this game?</div></div>
+    <div class="ritem"><div class="rn">3</div><div class="rt">What happens if they can always predict your moves?</div></div>
+    <div class="ritem"><div class="rn">4</div><div class="rt">Is there any way mixing might backfire here?</div></div>
+  </div>
+  <div class="talk" data-step="1">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> (a)&nbsp;Think of a situation on your own; (b)&nbsp;talk it out at your table; (c)&nbsp;one person shares with the whole group.</div>
+    <div class="tnote"><b>YOUR NOTES, OPTIONAL</b><span>ryanlamare.com/go/notes</span></div>
+  </div>
+</section>
+
+<section class="slide content learn" data-i="21">
+  <div class="kicker"><i></i>MODULE 6 · TAKEAWAYS</div>
+  <h2>a few key takeaways...</h2>
+  <div class="tiles">
+    <div class="tile">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100" aria-hidden="true"><path d="M10 84 L10 22 L90 22 L90 84" fill="none" stroke="var(--ink)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 90 Q26 66 24 40 M50 90 Q74 66 76 40" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="9 7" stroke-linecap="round"/><circle cx="50" cy="90" r="8" fill="var(--paper)" stroke="var(--ink)" stroke-width="4"/></svg></div>
+      <div class="lbl">Mixing strategies</div>
+      <div class="sent">Sometimes it pays to be inconsistent or unpredictable</div>
+    </div>
+    <div class="tile" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100" aria-hidden="true"><path d="M12 8 V88 H94" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><line x1="14" y1="24" x2="92" y2="70" stroke="var(--teal)" stroke-width="6" stroke-linecap="round"/><line x1="14" y1="76" x2="92" y2="30" stroke="var(--terracotta)" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="52" r="9" fill="var(--red)"/></svg></div>
+      <div class="lbl">The best mix</div>
+      <div class="sent">The best mix makes you indifferent to the other side</div>
+    </div>
+    <div class="tile" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 126 60" aria-hidden="true"><g fill="var(--red)"><circle cx="13" cy="30" r="11"/><circle cx="38" cy="30" r="11"/><circle cx="63" cy="30" r="11"/><circle cx="88" cy="30" r="11"/></g><circle cx="113" cy="30" r="9" fill="none" stroke="var(--ink)" stroke-width="4"/></svg></div>
+      <div class="lbl">Nobody's random</div>
+      <div class="sent">We fall into subconscious patterns accidentally</div>
+    </div>
+    <div class="tile" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="6" width="88" height="20" fill="var(--ink)"/><g fill="var(--paper)" stroke="var(--ink)" stroke-width="4"><circle cx="30" cy="42" r="7"/><circle cx="50" cy="42" r="7"/><circle cx="70" cy="42" r="7"/></g><circle cx="50" cy="82" r="8" fill="var(--ink)"/><path d="M50 72 L50 56" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><path d="M60 78 Q88 60 84 20" fill="none" stroke="var(--red)" stroke-width="5" stroke-dasharray="9 7" stroke-linecap="round"/></svg></div>
+      <div class="lbl">GOOD GAME THEORY = BAD OUTCOME</div>
+      <div class="sent">A good mixed strategy can look like a bad decision</div>
+    </div>
+    <div class="tile" data-step="4">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 120 120" aria-hidden="true"><g class="ink"><rect x="14" y="8" width="66" height="88" rx="4"/></g><g class="knock"><rect x="26" y="24" width="42" height="6"/><rect x="26" y="38" width="42" height="6"/><rect x="26" y="52" width="30" height="6"/></g><g class="red"><circle cx="84" cy="78" r="20"/></g><g class="knock"><circle cx="84" cy="78" r="12"/></g><g class="red"><rect x="96" y="92" width="12" height="26" rx="3" transform="rotate(-45 102 105)"/></g></svg></div>
+      <div class="lbl">ENFORCING SELECTIVELY</div>
+      <div class="sent">A regulator&rsquo;s job is not to be everywhere, but to be unpredictable</div>
+    </div>
+  </div>
+  <div class="stopnote" data-step="5" style="position:absolute;left:0;right:0;bottom:84px;justify-content:center"><i></i><span>Mixing pays anywhere someone would <b>exploit you if they could predict you</b></span></div>
+</section>
+
+<section class="slide content" data-i="22">
+  <div class="kicker"><i></i>MODULE 6 · RESOURCES</div>
+  <h2>Extra resources</h2>
+  <div class="resrc dense">
+    <div class="rcol">
+      <div class="rhead">Watch and listen</div>
+      <a class="rcard" href="https://www.youtube.com/watch?v=jZco399ybaE" target="_blank" rel="noopener" data-yt="jZco399ybaE" data-start="23" data-end="1235">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">How to win a penalty shootout with game theory</div><div class="rmeta">Planet Money &middot; NPR &middot; 20 minutes</div><div class="rwhy">Do the pros really kick the way the theory says?</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=XMF6uu_HpZk" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Tim Krul and the psychology of penalties</div><div class="rmeta">FIFA &middot; 8 minutes</div><div class="rwhy">The keeper sent on for a shootout, who told each taker he knew where they would shoot</div></span>
+      </a>
+      <a class="rcard" href="https://radiolab.org/podcast/91684-stochasticity" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Stochasticity</div><div class="rmeta">Radiolab &middot; podcast</div><div class="rwhy">Can a statistician tell who faked a hundred coin tosses?</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=OTs5JX6Tut4" target="_blank" rel="noopener" data-yt="OTs5JX6Tut4">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Game Theory 101: Soccer Penalty Kicks</div><div class="rmeta">William Spaniel &middot; 6 minutes</div><div class="rwhy">Can you solve his matrix before he does?</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=aRdllf3XDgA" target="_blank" rel="noopener" data-yt="aRdllf3XDgA">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">A duel featuring mixed strategies</div><div class="rmeta">Pop Culture Economics &middot; video</div><div class="rwhy">Westley and Vizzini&rsquo;s battle of wits, read as mixed strategies</div></span>
+      </a>
+    </div>
+    <div class="rcol">
+      <div class="rhead">Read</div>
+      <a class="rcard" href="https://www.nytimes.com/2015/02/03/upshot/game-theory-says-pete-carrolls-call-at-goal-line-is-defensible.html" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Pete Carroll, game theorist</div><div class="rmeta">Justin Wolfers &middot; The New York Times</div><div class="rwhy">Why game theorists defended the pass at the one</div></span>
+      </a>
+      <a class="rcard" href="https://wwnorton.com/books/9780393337174" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Art of Strategy, chapter 5</div><div class="rmeta">Dixit and Nalebuff &middot; Choice and Chance</div><div class="rwhy">Why and when to mix your moves, in our book</div></span>
+      </a>
+      <a class="rcard" href="https://doi.org/10.1111/j.1740-9713.2016.00960.x" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">To Predict and Serve?</div><div class="rmeta">Kristian Lum and William Isaac &middot; Significance</div><div class="rwhy">How a predictive policing tool repeats old patterns</div></span>
+      </a>
+      <a class="rcard" href="https://www.theguardian.com/food/2026/aug/31/chefs-say-michelin-guide-at-risk-of-losing-credibility-over-suspected-lack-of-inspectors" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Michelin Guide at risk of losing credibility</div><div class="rmeta">George Francis Lee &middot; The Guardian</div><div class="rwhy">What happens when inspections get too rare</div></span>
+      </a>
+      <a class="rcard" href="https://doi.org/10.1111/1467-937X.00249" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Professionals Play Minimax</div><div class="rmeta">Ignacio Palacios-Huerta &middot; Review of Economic Studies, 2003</div><div class="rwhy">Penalty takers and keepers mix just as the theory predicts</div></span>
+      </a>
+      <a class="rcard" href="https://doi.org/10.1257/aer.91.5.1521" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Minimax Play at Wimbledon</div><div class="rmeta">Walker and Wooders &middot; American Economic Review, 2001</div><div class="rwhy">Wimbledon&rsquo;s best servers mix left and right as theory says</div></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</div></div>
+
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<a class="homelink" href="/teaching/exec/rrpf/programme/?hub">ALL MODULES</a>
+
+<script src="/teaching/exec/rrpf/m6/game/pk.js"></script>
+<script>
+const QS=new URLSearchParams(location.search);
+/* ?api= points the boards at another Worker (a mock, in the headless test) */
+const POLL_API=QS.get('api')||'https://gt-poll.rlamare.workers.dev';
+/* a tile that is already on screen recomputes as answers arrive */
+function refreshShownCalls(){
+  document.querySelectorAll('[data-stepcall]').forEach(el=>{
+    const n=el.dataset.stepcall;
+    if(el.dataset.stepon==='1'&&(n==='rpsTile'||n==='soloTile')){try{window[n](el,true);}catch(_){}}
+  });
+}
+/* the hash draw that decides a kick lives in game/pk.js (a copy also sits
+   in go/scores.js — MUST stay identical) */
+const h01=PK.h01, pkGoal=PK.goal;
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
+function parsePairLines(lines,codes){
+  const joins=new Set(), latest=new Map();
+  lines.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());
+    if(p.length!==5||!p[0]||!p[1]||!/^\d{1,2}$/.test(p[2])||!/^[ab]$/.test(p[3]))return;
+    const key=pairKey(p[0],p[1]);
+    if(p[4]==='j'){joins.add(key);return;}
+    if(!codes.test(p[4]))return;
+    joins.add(key);
+    latest.set(key+'|'+p[2]+'|'+p[3],{key,n:+p[2],seat:p[3],x:p[4]});
+  });
+  const pairs=new Map();
+  latest.forEach(m=>{if(!pairs.has(m.key))pairs.set(m.key,{});const pr=pairs.get(m.key);pr[m.n]=pr[m.n]||{};pr[m.n][m.seat]=m.x;});
+  return {joins,pairs};
+}
+
+/* ---- beat the keeper: room m6-solo (?soloroom= for rehearsals) ----
+   Lines are "name|n|l-or-r" (and "name|0|k-<kit>"); the keeper's dives and
+   every result are replayed here from the kicks alone, exactly as the
+   phone drew them (PK.soloReplay). */
+(function(){
+  const ROOM=QS.get('soloroom')||'m6-solo';
+  const st={live:false,lines:[]};
+  /* a plausible demo room: a dozen kickers of every habit */
+  function demoLines(){
+    const names=['Demo Alex','Demo Bea','Demo Chris','Demo Dana','Demo Eli','Demo Fay','Demo Gus','Demo Hana','Demo Ivo','Demo Jo','Demo Kim','Demo Lou'];
+    const out=[];
+    names.forEach((nm,p)=>{
+      const style=p%4; let last='l';
+      for(let n=1;n<=15;n++){
+        const r=h01('ds'+p+'-'+n+'-'+nm);
+        let kick;
+        if(style===0)kick=r<0.4?'l':'r';
+        else if(style===1)kick=r<0.8?'l':'r';
+        else if(style===2)kick=last==='l'?'r':'l';
+        else kick=r<0.25?'l':'r';
+        out.push(nm+'|'+n+'|'+kick); last=kick;
+      }
+    });
+    return out;
+  }
+  function players(){
+    const lines=st.live?st.lines:demoLines();
+    const per=new Map();
+    lines.forEach(t=>{
+      const p=String(t).split('|').map(s=>s.trim());
+      if(p.length!==3||!p[0]||p[0][0]===':')return;
+      const k=norm(p[0]);
+      if(!per.has(k))per.set(k,{name:p[0],kicks:{}});
+      if(/^[1-9]\d?$/.test(p[1])&&/^[lr]$/.test(p[2]))per.get(k).kicks[+p[1]]=p[2];
+    });
+    const out=[];
+    per.forEach(pl=>{
+      const seq=[];for(let n=1;n<=15&&pl.kicks[n];n++)seq.push(pl.kicks[n]);
+      const hist=PK.soloReplay(pl.name,seq);
+      out.push({name:pl.name,n:seq.length,goals:hist.filter(x=>x.goal).length,read:hist.filter(x=>x.dive===x.kick).length,left:seq.filter(k=>k==='l').length,sw:seq.filter((k,i)=>i&&k!==seq[i-1]).length});
+    });
+    return out;
+  }
+  function stats(){
+    const ps=players();
+    /* "Read by the keeper" was always 100 minus Goals under the guess rule, so the
+       tile repeated a number (25 Sep audit); switching is one of the patterns the keeper reads */
+    let kicks=0,goals=0,left=0,sw=0,pairs=0;
+    ps.forEach(p=>{kicks+=p.n;goals+=p.goals;left+=p.left;sw+=p.sw;pairs+=Math.max(p.n-1,0);});
+    const pct=(a,b)=>b?Math.round(a/b*100):null;
+    /* shown as a percentage (Ryan, 25 Sep 2026); anyone who took all fifteen ranks ahead of anyone still kicking, so one lucky kick cannot top the list */
+    const top=ps.filter(p=>p.n>0).sort((a,b)=>(b.n>=15)-(a.n>=15)||b.goals/b.n-a.goals/a.n||b.goals-a.goals||a.read-b.read||a.name.localeCompare(b.name)).slice(0,5);
+    return {players:ps.length,kicks,goals:pct(goals,kicks),sw:pct(sw,pairs),kl:pct(left,kicks),top};
+  }
+  function render(){
+    const s=stats();
+    ['soloPlayers0','soloPlayers'].forEach(id=>{document.getElementById(id).textContent=st.live?s.players:0;});
+    document.getElementById('soloDemo').style.display=st.live?'none':'';
+    refreshShownCalls();
+  }
+  window.soloTop=function(){return st.live?stats().top:[];};
+  /* "And this room?" on Real-life penalty kick strategies (pkRoomLine) is gone, his call (29 Sep 2026) */
+  window.soloTile=function(el,on){
+    const s=stats(), t=el.dataset.t;
+    if(t==='top'){
+      const ol=el.querySelector('.toplist');
+      ol.innerHTML='';
+      for(let i=0;i<5;i++){
+        const p=on?s.top[i]:null, li=document.createElement('li');
+        li.innerHTML=p?'<span></span><b></b>':'&ndash;';
+        if(p){li.querySelector('span').textContent=p.name;li.querySelector('b').textContent=Math.round(p.goals/p.n*100)+'%';}
+        ol.appendChild(li);
+      }
+      return;
+    }
+    const v=el.querySelector('.v');
+    if(!on){v.textContent='–';return;}
+    v.textContent=s[t]===null?'–':s[t];
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+
+/* ---- rock, paper, scissors board: room m6-rps (?rpsroom= for rehearsals) ---- */
+(function(){
+  const ROOM=QS.get('rpsroom')||'m6-rps';
+  const st={live:false,lines:[]};
+  const beats=(a,b)=>(a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r');
+  function demoLines(){
+    const names=['Demo Alex','Demo Bea','Demo Chris','Demo Dana','Demo Eli','Demo Fay','Demo Gus','Demo Hana','Demo Ivo','Demo Jo','Demo Kim','Demo Lou','Demo Max','Demo Nia','Demo Oli','Demo Pat','Demo Quin','Demo Rae','Demo Sol','Demo Tam'];
+    const out=[], T=['r','p','s'];
+    for(let p=0;p<10;p++){
+      const A=names[2*p],B=names[2*p+1]; out.push(A+'|'+B+'|0|a|j');
+      let last={a:null,b:null}, prevRes={a:0,b:0};
+      for(let n=1;n<=10;n++){
+        const pick={};
+        ['a','b'].forEach(s=>{
+          const r=h01('dr'+p+'-'+n+s);
+          if(n===1)pick[s]=r<0.45?'r':(r<0.75?'p':'s');
+          else if(prevRes[s]<0)pick[s]=r<0.8?T[(T.indexOf(last[s])+1+(r<0.4?0:1))%3]:last[s];
+          else if(prevRes[s]>0)pick[s]=r<0.55?last[s]:T[(T.indexOf(last[s])+1)%3];
+          else pick[s]=T[Math.floor(r*3)];
+        });
+        out.push(A+'|'+B+'|'+n+'|a|'+pick.a); out.push(A+'|'+B+'|'+n+'|b|'+pick.b);
+        prevRes.a=pick.a===pick.b?0:(beats(pick.a,pick.b)?1:-1); prevRes.b=-prevRes.a;
+        last=pick;
+      }
+    }
+    return out;
+  }
+  function stats(){
+    const lines=st.live?st.lines:demoLines();
+    const {joins,pairs}=parsePairLines(lines,/^[rps]$/);
+    const mix={r:0,p:0,s:0}, open={r:0,p:0,s:0}; let throws=0, lossN=0,lossSw=0, winN=0,winRep=0;
+    pairs.forEach(pr=>{
+      const seq={a:[],b:[]};
+      for(let n=1;n<=10;n++){const k=pr[n];if(!k||!k.a||!k.b)continue;
+        throws++; mix[k.a]++; mix[k.b]++;
+        if(n===1){open[k.a]++;open[k.b]++;}
+        const res=k.a===k.b?0:(beats(k.a,k.b)?1:-1);
+        seq.a.push({x:k.a,res}); seq.b.push({x:k.b,res:-res});
+      }
+      ['a','b'].forEach(s=>{for(let i=1;i<seq[s].length;i++){const prev=seq[s][i-1],cur=seq[s][i];
+        if(prev.res<0){lossN++;if(cur.x!==prev.x)lossSw++;}
+        if(prev.res>0){winN++;if(cur.x===prev.x)winRep++;}}});
+    });
+    const tot=mix.r+mix.p+mix.s, pct=(a,b)=>b?Math.round(a/b*100):null;
+    let topOpen='r';['p','s'].forEach(t=>{if(open[t]>open[topOpen])topOpen=t;});
+    const openTot=open.r+open.p+open.s;
+    return {pairs:joins.size,throws,mix:{r:pct(mix.r,tot),p:pct(mix.p,tot),s:pct(mix.s,tot)},
+      open:{name:{r:'Rock',p:'Paper',s:'Scissors'}[topOpen],share:pct(open[topOpen],openTot)},loss:pct(lossSw,lossN),win:pct(winRep,winN)};
+  }
+  function render(){
+    const s=stats();
+    ['rpsPairs0','rpsPairs'].forEach(id=>{document.getElementById(id).textContent=st.live?s.pairs:0;});
+    document.getElementById('rpsDemo').style.display=st.live?'none':'';
+    ['r','p','s'].forEach(t=>{const v=s.mix[t];document.getElementById('rb-'+t).style.width=(v||0)+'%';document.getElementById('rp-'+t).textContent=v===null?'–':v+'%';});
+    refreshShownCalls();
+  }
+  window.rpsTile=function(el,on){
+    const v=el.querySelector('.v');
+    if(!on){v.textContent='–';return;}
+    const s=stats(), t=el.dataset.t;
+    if(t==='open'){v.textContent=s.open.share===null?'–':s.open.name;el.querySelector('.x').textContent=s.open.share===null?'–':s.open.share+'%';}
+    else v.textContent=s[t]===null?'–':s[t];
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+
+/* ---- the penalty-kick mixed strategy widget ---- */
+(function(){
+const slider=document.getElementById('pkP');
+const EL=document.getElementById('pkEL'), ER=document.getElementById('pkER');
+const Pv=document.getElementById('pkPv'), Qv=document.getElementById('pkQv');
+const note=document.getElementById('pkNote');
+const chart=document.getElementById('pkChart');
+const W=380,H=300,PADL=58,PADB=54,PADT=16,PADR=24; /* room for the axis titles (25 Sep 2026) and the "100%" under the right end */
+const y0=55,y1=100;
+function X(p){return PADL+p*(W-PADL-PADR);}
+function Y(v){return H-PADB-(v-y0)/(y1-y0)*(H-PADB-PADT);}
+function el(p){return 58*p+93*(1-p);}
+function er(p){return 95*p+70*(1-p);}
+/* built with createElementNS, never innerHTML on SVG (Safari) */
+function mk(tag,at,txt){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in at)n.setAttribute(k,at[k]);if(txt!=null)n.textContent=txt;chart.appendChild(n);return n;}
+function baseChart(){
+  const T={'font-size':13,fill:'var(--muted)','font-family':'var(--sans)'};
+  mk('line',{x1:PADL,y1:H-PADB,x2:W-PADR,y2:H-PADB,stroke:'var(--ink)','stroke-width':2});
+  mk('line',{x1:PADL,y1:PADT,x2:PADL,y2:H-PADB,stroke:'var(--ink)','stroke-width':2});
+  [60,70,80,90,100].forEach(v=>mk('text',Object.assign({x:PADL-8,y:Y(v)+5,'text-anchor':'end'},T),v));
+  [0,0.5,1].forEach(p=>mk('text',Object.assign({x:X(p),y:H-PADB+22,'text-anchor':'middle'},T),Math.round(p*100)+'%'));
+  /* axis titles */
+  mk('text',{x:(PADL+W-PADR)/2,y:H-8,'text-anchor':'middle','font-size':12,'font-weight':700,'letter-spacing':'.1em',fill:'var(--muted)','font-family':'var(--sans)'},'KICKS GOING LEFT');
+  mk('text',{x:16,y:(PADT+H-PADB)/2,'text-anchor':'middle','font-size':12,'font-weight':700,'letter-spacing':'.1em',fill:'var(--muted)','font-family':'var(--sans)',transform:'rotate(-90 16 '+((PADT+H-PADB)/2)+')'},'KICKER SCORES %');
+  mk('line',{x1:X(0),y1:Y(el(0)),x2:X(1),y2:Y(el(1)),stroke:'var(--teal)','stroke-width':4});
+  mk('line',{x1:X(0),y1:Y(er(0)),x2:X(1),y2:Y(er(1)),stroke:'var(--terracotta)','stroke-width':4});
+  /* where the lines cross: the best mix, p = 23/60, about 38% */
+  const px=23/60;
+  mk('line',{x1:X(px),y1:Y(el(px)),x2:X(px),y2:H-PADB,stroke:'var(--red)','stroke-width':1.5,'stroke-dasharray':'4 4'});
+  mk('circle',{cx:X(px),cy:Y(el(px)),r:9,fill:'none',stroke:'var(--red)','stroke-width':3});
+  mk('text',{x:X(px),y:H-PADB+22,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'var(--red)','font-family':'var(--sans)'},'38%');
+  mk('line',{id:'pkCursor',x1:X(.5),y1:PADT,x2:X(.5),y2:H-PADB,stroke:'var(--red)','stroke-width':3});
+  mk('circle',{id:'pkDotL',cx:X(.5),cy:Y(el(.5)),r:7,fill:'var(--teal)'});
+  mk('circle',{id:'pkDotR',cx:X(.5),cy:Y(er(.5)),r:7,fill:'var(--terracotta)'});
+}
+function update(){
+  const p=slider.value/100;
+  const l=el(p), r=er(p);
+  const L=Math.round(l), R=Math.round(r);
+  EL.textContent=L; ER.textContent=R;
+  Pv.textContent=Math.round(p*100)+'%'; Qv.textContent=Math.round((1-p)*100)+'%';
+  document.getElementById('pkCursor').setAttribute('x1',X(p));
+  document.getElementById('pkCursor').setAttribute('x2',X(p));
+  document.getElementById('pkDotL').setAttribute('cx',X(p));
+  document.getElementById('pkDotL').setAttribute('cy',Y(l));
+  document.getElementById('pkDotR').setAttribute('cx',X(p));
+  document.getElementById('pkDotR').setAttribute('cy',Y(r));
+  const worst=Math.min(L,R);
+  if(L===R){note.innerHTML='<b>The goalie&rsquo;s guess no longer matters</b> &ndash; expected success '+worst+'% either way';}
+  else{note.textContent='A smart goalie dives '+(L<R?'left':'right')+', holding the kicker to '+worst+'%';}
+}
+baseChart();
+slider.addEventListener('input',update);
+document.getElementById('pkOpt').addEventListener('click',()=>{slider.value=38;update();});
+update();
+})();
+
+/* ---- the random-checks figure: ten cars, two red ---- */
+(function(){
+  const g=document.getElementById('cars'); let h='';
+  const red=new Set([3,7]);
+  for(let i=0;i<10;i++){
+    const x=20+(i%5)*70, y=40+Math.floor(i/5)*90, c=red.has(i)?'var(--red)':'var(--ink)';
+    h+='<g transform="translate('+x+' '+y+')"><path d="M4 34 L10 16 Q14 8 24 8 L40 8 Q50 8 54 16 L60 34 Z" fill="'+c+'"/><rect x="0" y="32" width="64" height="22" rx="5" fill="'+c+'"/>'+
+       '<circle cx="16" cy="56" r="8" fill="'+c+'" stroke="var(--paper)" stroke-width="3"/><circle cx="48" cy="56" r="8" fill="'+c+'" stroke="var(--paper)" stroke-width="3"/></g>';
+  }
+  g.innerHTML=h;
+})();
+
+/* ---- embedded clips: load YouTube only on click (the title spoils the punchline).
+   CLIP IDS TO ADD — paste the YouTube video ids here: */
+const CLIPS={lehmann:'ZisCOUzpL_Y',carroll:'6d90ijd2Cx0',vw:'2mp6tM4vUsk',michelin:'FojXOowiCA4'};
+/* Clips listed in NEWTAB open on YouTube itself in a new window instead of over the slide, for an upload
+   that only embeds on sites its owner allows (FIFA's Tim Krul clip was one; since 30 Sep 2026 it is a link in
+   Extra resources, so nothing is listed). */
+const NEWTAB={};
+function clipOnClick(btnId,wrapId,videoId,title,start,end){
+  /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
+     whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
+  const btn=document.getElementById(btnId);
+  if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
+  const key=Object.keys(CLIPS).find(k=>CLIPS[k]===videoId);
+  if(NEWTAB[key]){btn.addEventListener('click',()=>{window.open('https://www.youtube.com/watch?v='+videoId,'_blank','noopener');});return;}
+  btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
+  if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
+}
+clipOnClick('lehload','lehwrap',CLIPS.lehmann,'Jens Lehmann’s note, 2006');
+clipOnClick('carrollload','carrollwrap',CLIPS.carroll,'Super Bowl XLIX: the pass at the one');
+/* PBS NewsHour, 29 Sep 2015 (4:31, whole): John German of the ICCT, one of the
+   engineers who caught VW, on how the car knew it was on a test (strapped to
+   rollers, the same temperature, a cold start, the same drive cycle), and the
+   deterrent as the size of the penalty plus "some chance that they could get
+   caught". It does not tell the West Virginia road-test story. */
+clipOnClick('vwload','vwwrap',CLIPS.vw,'How Volkswagen got caught cheating (PBS NewsHour, 2015)');
+/* Half as Interesting, How Michelin Inspectors Stay Secret (2021, 6:24): from
+   the top, Ryan's call (22 Sep 2026: the room may not know what the guide is),
+   to 5:16; a cookware advert starts at 5:16.4 */
+clipOnClick('miload','miwrap',CLIPS.michelin,'How Michelin inspectors stay secret (Half as Interesting)',0,316);
+
+</script>
+<script src="/teaching/exec/rrpf/deck.js"></script>
+</body></html>
