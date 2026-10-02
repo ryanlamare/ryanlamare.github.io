@@ -1,0 +1,633 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/reel/reel.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 4 · Price Wars</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* KEPT, NOT LIVE (16 Sep 2026): the fuller phone with the three-week tutorial
+   and the three-dot team agreement, superseded the same evening by the
+   stripped page at index.html (one hold per team posts the sign). It still
+   runs on the same rooms if ever wanted again.
+
+   Participant page for the Module 4 price war, rebuilt 16 Sep 2026 to
+   Ryan's rule for the phones: minimal, no explaining, the state shown with
+   colour and dots. Each week the phone carries three things: this week's
+   choice (two prices, hold one to commit, three dots under it that go
+   green when the team agrees and red when it is split; three greens and the
+   sign goes up), the record of both sides' behaviour so far as coloured
+   squares, and the team's money so far. Nothing is revealed on the phone;
+   the board is the reveal, and the phone waits behind a station-coloured
+   PRICE LOCKED IN until the board has shown its junction. Meetings are one
+   question (meet? yes/no, and who goes) and one tap afterwards (what did
+   you agree: £1.50, £1.40, nothing). Weeks 5 and 6 under the Gazette rules
+   carry one red band. A three-week TUTORIAL runs once, before the game.
+   All wording is Claude's, for veto.
+
+   Wire (four gt-poll rooms; ?room=<x> suffixes all of them for a
+   rehearsal, ?demo=1 runs the whole thing locally with no network):
+     m4-teams   "a1|Name"                        one line per phone, who is on which station
+     m4-prices  "a1|w|1.40"                      the TEAM's sign for week w (posted by a phone once all agree)
+                "::pair|a1=b3,a2=b5"             the deck's random pairing (the game has started)
+                "::open|w"  "::shown|w|aX"  "::reveal|w"   the deck opens a week, shows a junction, closes the week
+                "::meet|w"  "::reps|w"           the deck offers a meeting before week w, then closes the asking
+                "::shock|on"                     the Gazette rules for weeks 5 and 6
+     m4-huddle  "a1|w|lock|Name|price"           a teammate's commit (latest per name wins until the sign is up)
+                "a1|0|drop|Name"                 the facilitator drops a name from a team (a dead phone)
+     m4-meet    "a1|w|ask|y|Rep"  "a1|w|ask|n"   the team asked (or not) for the meeting, and who goes
+                "a1|w|agreed|Name|1.50"          what the rep says was agreed: 1.50, 1.40 or none
+   A week is revealed on this phone only once the deck says so. */
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:18px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tag>span{white-space:nowrap}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h2{font-weight:700;font-size:22px;line-height:1.25}
+p{font-size:16px;line-height:1.5}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.tbtn{font-family:var(--sans);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:none;border:1.5px solid var(--muted);color:var(--muted);padding:5px 9px;cursor:pointer}
+.tbtn.playing{border-color:var(--red);color:var(--red)}
+button.big{display:block;width:100%;font-family:var(--sans);font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:16px 18px;cursor:pointer}
+button.big:disabled{opacity:.4;cursor:default}
+button.big.quiet{background:var(--card);color:var(--ink);border-color:var(--ink)}
+button.big.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.three button.big{padding:16px 6px;font-size:16px}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:0 20px;cursor:pointer}
+.small{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start;font-family:var(--sans)}
+/* the top line: week, station, junction on the left; the team's money on the right */
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.top .wk{font-weight:700;letter-spacing:.1em;font-size:11.5px;color:var(--muted);line-height:1.5}
+.top .wk b.a{color:var(--teal)} .top .wk b.b{color:var(--terracotta)} .top .wk .jx{color:var(--maroon)}
+.top .wk em{font-style:normal;color:var(--ochre)}
+.top.hot .wk,.top.hot .wk em{color:var(--red)}
+.top .tot{font-family:var(--display);font-weight:900;font-size:21px;line-height:1;white-space:nowrap;flex:none}
+.top .tot small{font-family:var(--sans);font-weight:700;font-size:10px;letter-spacing:.14em;color:var(--muted);margin-right:6px;vertical-align:middle}
+.tut{background:var(--maroon);color:var(--paper);font-family:var(--display);font-weight:900;font-size:24px;letter-spacing:.08em;text-align:center;padding:10px}
+.line{font-weight:600;font-size:18px;line-height:1.35}
+.line b{color:var(--red)}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--muted)}
+/* the junction */
+.junction{border:2.5px solid var(--ink);background:var(--tan-light);overflow:hidden}
+.junction svg{display:block;width:100%;height:auto}
+.signg{transform-box:fill-box;transform-origin:center}
+.signg.flip{animation:flip .5s ease-in-out}
+@keyframes flip{0%{transform:scaleY(1)}50%{transform:scaleY(.04)}100%{transform:scaleY(1)}}
+/* the two prices: hold one to commit, the dots under it */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{position:relative;background:var(--paper-soft);border:2.5px solid var(--ink);padding:0;cursor:pointer;overflow:hidden;font-family:var(--sans);color:var(--ink);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tile .fill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--teal);transition:height .25s ease-out}
+.tile.b .fill{background:var(--terracotta)}
+.tile.holding .fill{height:100%;transition:height var(--hold,650ms) linear}
+.tile.mine .fill{height:100%;transition:height .2s}
+.tile .pr{position:relative;z-index:1;font-family:var(--display);font-weight:900;font-size:52px;line-height:1;padding:22px 10px 18px;text-align:center;transition:color .3s}
+.tile .pr small{font-size:24px;vertical-align:top;margin-right:1px}
+.tile.mine .pr{color:var(--paper)}
+.tile:disabled{cursor:default}
+.dots{display:flex;justify-content:center;gap:12px;min-height:26px}
+.dot{width:20px;height:20px;border-radius:50%;border:2.5px solid var(--ink);transform:scale(.001);transition:transform .3s,background .3s,border-color .3s}
+.dot.on{transform:scale(1);background:var(--green);border-color:var(--green)}
+.dots.split .dot.on{background:var(--red);border-color:var(--red)}
+.dot.me.on{background:transparent;border-width:3.5px}
+.dot.me.on::after{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--green);margin:3px auto}
+.dots.split .dot.me.on::after{background:var(--red)}
+/* the record: your sign over theirs, one column a week */
+.rec{display:grid;grid-template-columns:44px repeat(6,1fr);gap:6px 7px;align-items:end}
+.rec .rk{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+.rec .rk .a{color:var(--teal);height:16px;line-height:16px} .rec .rk .b{color:var(--terracotta);height:16px;line-height:16px}
+.rec .wkc{display:flex;flex-direction:column;gap:4px;align-items:center}
+.rec .wl{font-weight:700;font-size:10.5px;letter-spacing:.08em;color:var(--muted);margin-bottom:2px}
+.rec .wl em{font-style:normal;color:var(--ochre)} .rec .wl em.s{color:var(--red)}
+.rec .sq{width:100%;height:16px;border:1.5px solid var(--rule);background:transparent;transition:background .4s,border-color .4s}
+.rec .sq.p150{background:var(--green);border-color:var(--green)} .rec .sq.p140{background:var(--red);border-color:var(--red)}
+.rec .wkc.cur .sq{border-color:var(--ink);border-style:dashed}
+.twist{background:var(--red);color:var(--paper);padding:12px 14px;font-weight:700;font-size:16.5px;line-height:1.3;text-align:center}
+/* the splash: the sign is up; the phone waits behind it until the board has shown this junction */
+.splash{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);animation:cin .35s ease-out;padding:24px;text-align:center}
+.splash.a{background:var(--teal)} .splash.b{background:var(--terracotta)}
+.splash.off{opacity:0;transition:opacity .4s;pointer-events:none}
+.splash .cl{font-family:var(--display);font-weight:900;font-size:28px;letter-spacing:.02em;text-transform:uppercase}
+.splash .ck{font-weight:700;font-size:16px;letter-spacing:.3em;text-transform:uppercase}
+.splash .cp{font-family:var(--display);font-weight:900;font-size:96px;line-height:1}
+.splash .cp small{font-size:44px;vertical-align:top}
+.splash .cs{font-weight:600;font-size:17px;line-height:1.4;max-width:26ch;color:color-mix(in srgb,var(--paper) 82%,transparent);margin-top:8px;transition:color .4s}
+.splash .cs.both{color:var(--paper);font-weight:700}
+@keyframes cin{from{transform:scale(1.12);opacity:0}to{transform:scale(1);opacity:1}}
+.wait{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;animation:pu 1.2s ease-in-out infinite;flex:none}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+.bigj{text-align:center;padding:26px 0 10px}
+.bigj small{display:block;font-weight:700;font-size:13px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.bigj b{font-family:var(--display);font-weight:900;font-size:62px;line-height:1;color:var(--maroon)}
+.bigj .st{display:block;font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;margin-top:12px}
+.bigj .st.a{color:var(--teal)} .bigj .st.b{color:var(--terracotta)}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.names button.big{font-size:15px;padding:14px 8px;text-transform:none;letter-spacing:.02em}
+/* the tutorial's result, the only place a result appears on the phone */
+.take{font-family:var(--display);font-weight:900;font-size:56px;line-height:1;text-align:center;color:var(--ink)}
+.take small{font-size:26px;vertical-align:top}
+.take.good{color:var(--green)} .take.bad{color:var(--red)}
+/* the station picker */
+.stgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stgrid .col{display:flex;flex-direction:column;gap:8px}
+.stgrid .colh{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px;padding-bottom:2px;min-height:38px;display:flex;align-items:flex-end}
+.stgrid .col.a .colh{color:var(--teal)} .stgrid .col.b .colh{color:var(--terracotta)}
+.stgrid button{font-family:var(--sans);font-weight:700;font-size:16px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:13px 10px;cursor:pointer}
+.stgrid .col.a button{border-color:var(--teal)} .stgrid .col.b button{border-color:var(--terracotta)}
+/* demo driver */
+.demo{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);display:flex;gap:10px;align-items:center;padding:12px 16px;font-size:12px;z-index:30}
+.demo button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);border:none;color:var(--paper);padding:10px 12px;cursor:pointer;margin-left:auto}
+.demo .dl{color:color-mix(in srgb,var(--paper) 70%,transparent)}
+body.demo-on{padding-bottom:90px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><span><i></i>PRICE WARS · MODULE 4</span><button class="tbtn" id="theme" type="button" aria-label="Play the theme">Theme</button></div>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<audio id="themeAudio" src="showdown.mp3" preload="none"></audio>
+<script src="/teaching/exec/demo/reel/go/names.js"></script>
+<script>
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
+const DEMO=qs.get('demo')==='1';
+const SUF=qs.get('room')?('-'+qs.get('room').replace(/[^a-z0-9-]/g,'')):'';
+if(SUF){const tg=document.querySelector('.tag>span');const b=document.createElement('b');b.style.cssText='margin-left:10px;color:var(--paper);background:var(--maroon);padding:2px 8px;letter-spacing:.12em';b.textContent='ROOM '+SUF.slice(1).toUpperCase();tg.appendChild(b);}
+const ROOM={teams:'m4-teams'+SUF,prices:'m4-prices'+SUF,huddle:'m4-huddle'+SUF,meet:'m4-meet'+SUF};
+const WEEKS=6, N=5, HOLD_MS=650;
+const LBL={a:'Aura',b:'Buco’s'};
+const FULL={a:'Aura Fuels',b:'Buco’s Service Station'};
+const SK='pw'+SUF+'-';
+const CARCOL=['var(--maroon)','var(--blue)','var(--green)','var(--ochre)','var(--sienna)','var(--grey)','var(--ink)','var(--red)'];
+
+/* ---------- identity ---------- */
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+let name=null, station='';
+try{name=localStorage.getItem('gt-name');station=localStorage.getItem(SK+'station')||'';}catch(_){}
+if(DEMO&&!name)name='You';
+const app=document.getElementById('app'), st=document.getElementById('status');
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function claimOnce(){
+  if(DEMO)return;
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}}).catch(()=>{});
+}
+if(name)claimOnce();
+
+/* ---------- the wire ---------- */
+const sayN={};
+function say(room,line,tag){
+  if(DEMO){demoSay(room,line);return Promise.resolve();}
+  const k=room+(tag||'');sayN[k]=(sayN[k]||0)+1;
+  const v=voter+(tag?'-'+tag:'')+'-'+(sayN[k]%9);
+  return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:line,v})}).then(r=>{if(!r.ok)throw r.status;});
+}
+const answers=room=>DEMO?Promise.resolve(demoAnswers(room)):fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+const failMsg=code=>code===429?'That’s plenty from one phone. Flag the instructor.':'That didn’t send. Try again.';
+
+/* the game as the wire describes it */
+const G={pair:{},opened:0,revealed:0,myRev:0,shown:{},shock:false,meetOpen:0,repsSent:0,sign:{},lock:{},members:{},claim:{},ask:{},rep:{},agreed:{}};
+function parse(teams,prices,huddle,meet){
+  G.pair={};G.opened=0;G.revealed=0;G.shown={};G.shock=false;G.meetOpen=0;G.repsSent=0;G.sign={};G.lock={};G.members={};G.ask={};G.rep={};G.agreed={};
+  const claim={}, drop={};
+  teams.forEach(t=>{const m=String(t).match(/^([ab][1-5])\s*\|\s*(.{1,40}?)$/i);if(m)claim[norm(m[2])]={name:m[2].trim(),st:m[1].toLowerCase()};});
+  prices.forEach(t=>{
+    const p=String(t).trim().toLowerCase().split('|').map(s=>s.trim());
+    if(p[0]==='::pair'&&p[1]){p[1].split(',').forEach(x=>{const m=x.match(/^(a[1-5])=(b[1-5])$/);if(m){G.pair[m[1]]=m[2];G.pair[m[2]]=m[1];}});}
+    else if(p[0]==='::open'&&/^[1-6]$/.test(p[1]))G.opened=Math.max(G.opened,+p[1]);
+    else if(p[0]==='::reveal'&&/^[1-6]$/.test(p[1]))G.revealed=Math.max(G.revealed,+p[1]);
+    else if(p[0]==='::shock')G.shock=p[1]==='on';
+    else if(p[0]==='::meet'&&/^[1-6]$/.test(p[1]))G.meetOpen=Math.max(G.meetOpen,+p[1]);
+    else if(p[0]==='::reps'&&/^[1-6]$/.test(p[1]))G.repsSent=Math.max(G.repsSent,+p[1]);
+    else if(p[0]==='::shown'&&/^[1-6]$/.test(p[1])&&/^a[1-5]$/.test(p[2]))G.shown[p[1]+'|'+p[2]]=true;
+    else if(/^[ab][1-5]$/.test(p[0])&&/^[1-6]$/.test(p[1])&&/^1\.[45]0$/.test(p[2]))G.sign[p[0]+'|'+p[1]]=p[2];
+  });
+  huddle.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());const s=p[0].toLowerCase();
+    if(!/^[ab][1-5]$/.test(s)||!/^[0-6]$/.test(p[1]))return;const k=s+'|'+p[1];
+    if(p[2]==='drop'&&p[3])drop[s+'|'+norm(p[3])]=true;
+    else if(p[2]==='lock'&&p[3]&&/^1\.[45]0$/.test(p[4])){G.lock[k]=G.lock[k]||{};G.lock[k][norm(p[3])]={name:p[3],price:p[4]};}
+    else if(p[2]==='undo'&&p[3]&&G.lock[k])delete G.lock[k][norm(p[3])];
+  });
+  G.claim={};Object.entries(claim).forEach(([n,c])=>{G.claim[n]=c.st;if(drop[c.st+'|'+n])return;(G.members[c.st]=G.members[c.st]||[]).push(c.name);});
+  meet.forEach(t=>{
+    const p=String(t).split('|').map(s=>s.trim());const s=p[0].toLowerCase();
+    if(!/^[ab][1-5]$/.test(s)||!/^[1-6]$/.test(p[1]))return;
+    if(p[2]==='ask'){G.ask[s+'|'+p[1]]=p[3]==='y';if(p[4])G.rep[s+'|'+p[1]]=p[4];}
+    else if(p[2]==='agreed'&&p[3])G.agreed[s+'|'+p[1]]={name:p[3],text:p.slice(4).join(' | ')};
+  });
+  const mine=station?(station[0]==='a'?station:G.pair[station]):'';
+  G.myRev=G.revealed;
+  for(let w=G.revealed+1;w<=WEEKS;w++){if(mine&&G.shown[w+'|'+mine])G.myRev=w;else break;}
+}
+function profit(mine,theirs,week){
+  if(G.shock&&week>=5){if(mine==='1.40'&&theirs==='1.50')return 72;if(mine==='1.50'&&theirs==='1.40')return 2;return mine==='1.50'?12:9;}
+  const dbl=(week===3||week===6)?2:1;
+  if(mine==='1.50')return (theirs==='1.50'?12:2)*dbl;
+  return (theirs==='1.50'?18:9)*dbl;
+}
+function carSplit(pa,pb,week){const shock=G.shock&&week>=5;if(pa===pb)return pa==='1.50'?[40,40]:[45,45];const cut=shock?93:90;return pa==='1.40'?[cut,7]:[7,cut];}
+const rival=()=>G.pair[station]||'';
+const junction=()=>{const a=station[0]==='a'?station:G.pair[station];const P=Object.keys(G.pair).filter(k=>k[0]==='a').sort();const i=P.indexOf(a);return i<0?0:i+1;};
+const isDouble=w=>!G.shock||w<5?(w===3||w===6):false;
+function myMembers(){const m=(G.members[station]||[]).slice();if(name&&!m.some(x=>norm(x)===norm(name)))m.push(name);return m;}
+function agreed(stn,w){
+  const locks=G.lock[stn+'|'+w]||{};const mem=stn===station?myMembers():(G.members[stn]||[]);
+  if(!mem.length)return '';let p='';
+  for(const n of mem){const l=locks[norm(n)];if(!l)return '';if(p&&l.price!==p)return '';p=l.price;}
+  return p;
+}
+function signUp(stn,w){const s=G.sign[stn+'|'+w];if(s)return s;if(w<=G.myRev)return '1.50';return '';}
+function record(){
+  const r=rival();let total=0;const rows=[];
+  for(let w=1;w<=WEEKS;w++){
+    const mine=w<=G.myRev?signUp(station,w):'', theirs=(w<=G.myRev&&r)?signUp(r,w):'';
+    const p=(mine&&theirs)?profit(mine,theirs,w):null;if(p!==null)total+=p;
+    rows.push({w,mine,theirs,p});
+  }
+  return {rows,total};
+}
+
+/* ---------- pieces ---------- */
+function topHTML(wkText,total,hot){
+  return '<div class="top'+(hot?' hot':'')+'"><span class="wk">'+wkText+'</span><span class="tot"><small>SO FAR</small>£'+total+'k</span></div>';
+}
+const stTag=()=>'<b class="'+station[0]+'">'+LBL[station[0]].toUpperCase()+' '+station[1]+'</b>';
+const jxTag=()=>junction()?' · <span class="jx">JUNCTION '+junction()+'</span>':'';
+function weekTag(w){return 'WEEK '+w+(isDouble(w)?' <em>· PAYS DOUBLE</em>':'')+' · '+stTag()+jxTag();}
+function junctionSVG(me){
+  const sign=(s,x,col)=>'<g id="sign'+s.toUpperCase()+'g" class="signg"><rect x="'+x+'" y="14" width="104" height="58" fill="'+col+'"/><rect x="'+(x+48)+'" y="72" width="8" height="14" fill="'+col+'"/>'+
+    '<text x="'+(x+52)+'" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="var(--paper)">'+(s==='a'?'AURA':'BUCO’S')+(s===me?' · YOU':'')+'</text>'+
+    '<text id="sign'+s.toUpperCase()+'" x="'+(x+52)+'" y="62" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="30" fill="var(--paper)">?</text></g>';
+  const fc=(s,x,col)=>'<g class="fc '+s+'"><rect x="'+x+'" y="86" width="104" height="78" fill="var(--paper)" stroke="'+col+'" stroke-width="3"/>'+
+    '<rect x="'+(x+16)+'" y="104" width="12" height="30" fill="'+col+'"/><rect x="'+(x+40)+'" y="104" width="12" height="30" fill="'+col+'"/><rect x="'+(x+64)+'" y="104" width="12" height="30" fill="'+col+'"/>'+
+    '<rect x="'+x+'" y="86" width="104" height="10" fill="'+col+'"/>'+
+    '<text id="cnt'+s.toUpperCase()+'" x="'+(x+52)+'" y="154" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="19" fill="'+col+'"></text></g>';
+  return '<div class="junction"><svg viewBox="0 0 360 172" role="img" aria-label="The junction, with Aura on the left of the road and Buco’s on the right">'+
+    '<rect x="0" y="0" width="360" height="172" fill="var(--tan-light)"/><rect x="150" y="0" width="60" height="172" fill="var(--grey)"/>'+
+    '<g fill="var(--paper)"><rect x="178" y="8" width="4" height="18"/><rect x="178" y="42" width="4" height="18"/><rect x="178" y="76" width="4" height="18"/><rect x="178" y="110" width="4" height="18"/><rect x="178" y="144" width="4" height="18"/></g>'+
+    '<rect x="118" y="90" width="32" height="70" fill="var(--grey)"/><rect x="210" y="90" width="32" height="70" fill="var(--grey)"/>'+
+    fc('a',18,'var(--teal)')+fc('b',238,'var(--terracotta)')+sign('a',18,'var(--teal)')+sign('b',238,'var(--terracotta)')+'</svg></div>';
+}
+function setSigns(a,b){const sa=document.getElementById('signA'),sb=document.getElementById('signB');if(sa)sa.textContent=a?'£'+a:'?';if(sb)sb.textContent=b?'£'+b:'?';}
+function flipSign(side,price){const g=document.getElementById('sign'+side.toUpperCase()+'g');if(!g)return;g.classList.remove('flip');void g.getBBox();g.classList.add('flip');setTimeout(()=>{const t=document.getElementById('sign'+side.toUpperCase());if(t)t.textContent='£'+price;},250);}
+function setCounts(a,b){const ca=document.getElementById('cntA'),cb=document.getElementById('cntB');if(ca)ca.textContent=a===null?'':a+' CARS';if(cb)cb.textContent=b===null?'':b+' CARS';}
+function tilesHTML(me){
+  const t=p=>'<button type="button" class="tile '+me+'" data-p="'+p+'"><div class="fill"></div><div class="pr"><small>£</small>'+p+'</div></button>';
+  return '<div class="lbl">Select your weekly price</div><div class="tiles">'+t('1.50')+t('1.40')+'<div class="dots" data-p="1.50"></div><div class="dots" data-p="1.40"></div></div>';
+}
+/* dots: one per member, mine ringed; green when everyone placed agrees, all red when the team is split */
+function paintTiles(root,members,locks,me,up){
+  const placed=members.map(n=>locks[norm(n)]).filter(Boolean), split=new Set(placed).size>1;
+  const mine=locks[norm(me)]||'';
+  root.querySelectorAll('.dots').forEach(d=>{const p=d.dataset.p;d.classList.toggle('split',split);
+    if(d.children.length!==members.length)d.innerHTML=members.map(n=>'<span class="dot'+(norm(n)===norm(me)?' me':'')+'"></span>').join('');
+    [...d.children].forEach((el,i)=>el.classList.toggle('on',locks[norm(members[i])]===p));});
+  root.querySelectorAll('.tile').forEach(t=>{const p=t.dataset.p;t.classList.toggle('mine',(up||mine)===p);t.disabled=!!up;if(up)t.classList.remove('holding');});
+}
+/* press and hold a tile to commit; holding the other one moves the commit */
+function wireHold(root,onCommit){
+  root.querySelectorAll('.tile').forEach(t=>{
+    let timer=null;
+    const start=e=>{if(t.disabled||t.classList.contains('mine'))return;e.preventDefault();t.classList.add('holding');
+      timer=setTimeout(()=>{timer=null;t.classList.remove('holding');onCommit(t.dataset.p);},HOLD_MS);};
+    const stop=()=>{if(timer){clearTimeout(timer);timer=null;}t.classList.remove('holding');};
+    t.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(ev=>t.addEventListener(ev,stop));
+    t.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+}
+function recordHTML(rows,cur){
+  let h='<div class="rec"><div class="rk"><span></span><span class="a">You</span><span class="b">Them</span></div>';
+  rows.forEach(r=>{h+='<div class="wkc'+(r.w===cur?' cur':'')+'"><div class="wl">W'+r.w+(G.shock&&r.w>=5?'<em class="s">!</em>':(isDouble(r.w)?'<em>×2</em>':''))+'</div>'+
+    '<div class="sq'+(r.mine?' p'+r.mine.replace('.',''):'')+'"></div><div class="sq'+(r.theirs?' p'+r.theirs.replace('.',''):'')+'"></div></div>';});
+  return h+'</div>';
+}
+const twistHTML=w=>(G.shock&&w>=5)?'<div class="twist">FuelWatch is watching. Undercut alone and the app sends the whole district to you: £72k. Match, and nothing changes. No double in week 6.</div>':'';
+let splashEl=null;
+function splash(me,price,label,both){
+  if(!splashEl){splashEl=document.createElement('div');splashEl.className='splash '+me;
+    splashEl.innerHTML='<div class="cl"></div><div class="ck">Price locked in</div><div class="cp"><small>£</small><span></span></div><div class="cs"></div>';
+    document.body.appendChild(splashEl);}
+  splashEl.querySelector('.cl').innerHTML=label;splashEl.querySelector('.cp span').textContent=price;
+  const cs=splashEl.querySelector('.cs');cs.textContent=both?'Both signs are up. Look at the board.':'Waiting for the other station.';cs.classList.toggle('both',!!both);
+}
+function unsplash(){if(splashEl){const e=splashEl;splashEl=null;e.classList.add('off');setTimeout(()=>e.remove(),450);}}
+
+/* ---------- phases ---------- */
+function tutDone(){try{return localStorage.getItem(SK+'tut')==='1';}catch(_){return false;}}
+function phase(){
+  if(!name)return 'name';
+  if(!station)return 'station';
+  if(!tutDone())return 'tut';
+  if(!G.pair[station])return 'lobby';
+  if(G.myRev>=WEEKS)return 'over';
+  const next=G.myRev+1;
+  if(G.opened<next){
+    if(G.meetOpen===next)return G.repsSent===next?'meeting':'asking';
+    return G.myRev===0?'junction':'between';
+  }
+  return G.myRev<G.opened?'week':'between';
+}
+let lastKey='';
+function render(force){
+  const ph=phase();
+  const key=ph+'|'+G.opened+'|'+G.myRev+'|'+G.shock+'|'+G.meetOpen+'|'+G.repsSent+'|'+(G.pair[station]||'')+'|'+station;
+  const same=key===lastKey&&!force;
+  lastKey=key;
+  if(!same){app.replaceChildren();if(ph!=='week')unsplash();}
+  ({name:renderName,station:renderStation,tut:renderTut,lobby:renderLobby,junction:renderJunction,week:renderWeek,between:renderBetween,asking:renderAsking,meeting:renderMeeting,over:renderOver})[ph](same);
+}
+
+function renderName(same){
+  if(same)return;
+  app.innerHTML='<h2>Who are you?</h2><div class="namerow"><input id="nm" maxlength="30" autocomplete="off" placeholder="First name and initial"><button id="nmgo" type="button">GO</button></div>';
+  const inp=document.getElementById('nm');
+  const go=()=>{const n=clean(inp.value);if(!n)return;
+    GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render(true);},app,{clean});};
+  document.getElementById('nmgo').addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  inp.focus();
+}
+function renderStation(same){
+  if(same)return;
+  let h='<h2>Which station are you?</h2><div class="stgrid">';
+  ['a','b'].forEach(s=>{h+='<div class="col '+s+'"><div class="colh">'+FULL[s]+'</div>';for(let i=1;i<=N;i++)h+='<button type="button" data-st="'+s+i+'">'+LBL[s]+' '+i+'</button>';h+='</div>';});
+  h+='</div><button type="button" class="small" id="notme">Not '+esc(name)+'? Change name</button>';
+  app.innerHTML=h;
+  document.getElementById('notme').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');localStorage.removeItem('gt-claimed');}catch(_){}render(true);});
+  app.querySelectorAll('[data-st]').forEach(b=>b.addEventListener('click',()=>{
+    station=b.dataset.st;pickedAt=Date.now();try{localStorage.setItem(SK+'station',station);}catch(_){}
+    say(ROOM.teams,station+'|'+name).catch(c=>{st.textContent=failMsg(c);});
+    render(true);
+  }));
+}
+function renderLobby(same){
+  if(same)return;
+  app.innerHTML='<div class="bigj"><small>You are on</small><b class="st '+station[0]+'" style="color:var(--'+(station[0]==='a'?'teal':'terracotta')+');font-size:48px">'+LBL[station[0]]+' '+station[1]+'</b></div>'+
+    '<div class="wait"><span class="pulse"></span>Waiting for the game to start</div>'+
+    '<div style="display:flex;gap:22px"><button type="button" class="small" id="chst">Change station</button><button type="button" class="small" id="again">Run the tutorial again</button></div>';
+  document.getElementById('chst').addEventListener('click',()=>{station='';try{localStorage.removeItem(SK+'station');}catch(_){}render(true);});
+  document.getElementById('again').addEventListener('click',()=>{try{localStorage.removeItem(SK+'tut');}catch(_){}render(true);});
+}
+function renderJunction(same){
+  if(same)return;
+  app.innerHTML='<div class="bigj"><small>This is your junction</small><b>JUNCTION '+junction()+'</b><span class="st '+station[0]+'">'+LBL[station[0]]+' '+station[1]+'</span></div>'+
+    '<div class="wait"><span class="pulse"></span>Waiting for week 1</div>';
+}
+
+/* ---------- a week in play ---------- */
+let postedSign={};
+function renderWeek(same){
+  const w=G.opened;
+  if(!same){
+    app.innerHTML=topHTML(weekTag(w),record().total,G.shock&&w>=5)+junctionSVG(station[0])+twistHTML(w)+tilesHTML(station[0])+recordHTML(record().rows,w);
+    wireHold(app,p=>{
+      const k=station+'|'+w;if(G.sign[k])return;
+      G.lock[k]=G.lock[k]||{};G.lock[k][norm(name)]={name,price:p};
+      say(ROOM.huddle,station+'|'+w+'|lock|'+name+'|'+p,'k'+w).catch(c=>{st.textContent=failMsg(c);});
+      paintWeek();
+    });
+  }
+  paintWeek();
+}
+function paintWeek(){
+  const w=G.opened, k=station+'|'+w, up=G.sign[k]||'', ag=agreed(station,w);
+  if(ag&&!up&&!postedSign[k+ag]){postedSign[k+ag]=true;say(ROOM.prices,station+'|'+w+'|'+ag,'w'+w).then(()=>{G.sign[k]=ag;paintWeek();}).catch(()=>{postedSign[k+ag]=false;});}
+  const locks={};const L=G.lock[k]||{};Object.keys(L).forEach(n=>locks[n]=L[n].price);
+  paintTiles(app,myMembers(),locks,name,up);
+  const mine=up||locks[norm(name)]||'';
+  setSigns(station[0]==='a'?mine:'',station[0]==='b'?mine:'');
+  if(up){const r=rival();splash(station[0],up,LBL[station[0]]+' '+station[1]+' · Junction '+junction(),!!(r&&G.sign[r+'|'+w]));}
+  else unsplash();
+}
+function renderBetween(same){
+  if(same)return;
+  const w=G.myRev, r=rival(), R=record();
+  const mine=signUp(station,w), theirs=r?signUp(r,w):'';
+  app.innerHTML=topHTML(weekTag(w),R.total,G.shock&&w>=5)+junctionSVG(station[0])+recordHTML(R.rows,0)+
+    '<div class="wait"><span class="pulse"></span>'+(w<WEEKS?'Waiting for week '+(w+1):'That was the last week')+'</div>';
+  setSigns(station[0]==='a'?mine:theirs,station[0]==='b'?mine:theirs);
+  if(mine&&theirs){const pa=station[0]==='a'?mine:theirs,pb=station[0]==='a'?theirs:mine;const c=carSplit(pa,pb,w);setCounts(c[0],c[1]);}
+}
+
+/* ---------- the meetings: one question, then one tap ---------- */
+function renderAsking(same){
+  const w=G.meetOpen;
+  if(!same){
+    app.innerHTML=topHTML('WEEK '+w+' AHEAD · '+stTag()+jxTag(),record().total)+
+      '<div class="line">Do you want to meet the other station?</div>'+
+      '<div class="two"><button type="button" class="big" id="askY">Yes</button><button type="button" class="big quiet" id="askN">No</button></div>'+
+      '<div id="who"></div>';
+    document.getElementById('askY').addEventListener('click',()=>{G.ask[station+'|'+w]=true;paintAsk();
+      say(ROOM.meet,station+'|'+w+'|ask|y','m'+w).catch(c=>{st.textContent=failMsg(c);});});
+    document.getElementById('askN').addEventListener('click',()=>{const b=document.getElementById('askN');b.disabled=true;
+      say(ROOM.meet,station+'|'+w+'|ask|n','m'+w).then(()=>{G.ask[station+'|'+w]=false;delete G.rep[station+'|'+w];paintAsk();}).catch(c=>{b.disabled=false;st.textContent=failMsg(c);});});
+  }
+  paintAsk();
+  function paintAsk(){
+    const m=G.ask[station+'|'+w], rep=G.rep[station+'|'+w]||'';
+    const y=document.getElementById('askY'),n=document.getElementById('askN'),who=document.getElementById('who');
+    y.classList.toggle('on',m===true);y.classList.toggle('quiet',m===false);n.classList.toggle('on',m===false);n.classList.toggle('quiet',m!==false);n.disabled=false;
+    if(m!==true){who.innerHTML='';return;}
+    if(!who.children.length){
+      who.innerHTML='<div class="line" style="margin-bottom:10px">Who goes?</div><div class="names">'+myMembers().map(x=>'<button type="button" class="big quiet" data-n="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>';
+      who.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{const nm=b.dataset.n;
+        say(ROOM.meet,station+'|'+w+'|ask|y|'+nm,'m'+w).then(()=>{G.rep[station+'|'+w]=nm;paintAsk();}).catch(c=>{st.textContent=failMsg(c);});}));
+    }
+    who.querySelectorAll('[data-n]').forEach(b=>{b.classList.toggle('on',norm(b.dataset.n)===norm(rep));b.classList.toggle('quiet',norm(b.dataset.n)!==norm(rep));});
+  }
+}
+function renderMeeting(same){
+  const w=G.meetOpen, r=rival();
+  const on=!!(G.ask[station+'|'+w]&&r&&G.ask[r+'|'+w]);
+  const rep=G.rep[station+'|'+w]||'';
+  if(!same){
+    app.innerHTML=topHTML('WEEK '+w+' AHEAD · '+stTag()+jxTag(),record().total)+
+      (on?'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION '+junction()+'</b><span class="st" style="color:var(--ink)">'+(rep?(norm(rep)===norm(name)?'You go':esc(rep)+' goes'):'One of you goes')+'</span></div>'+
+          '<div class="line">What did you agree?</div><div class="three"><button type="button" class="big quiet" data-ag="1.50">£1.50</button><button type="button" class="big quiet" data-ag="1.40">£1.40</button><button type="button" class="big quiet" data-ag="none">Nothing</button></div>'
+        :'<div class="bigj" style="padding-top:10px"><small>Before week '+w+'</small><b style="font-size:40px;color:var(--ink)">NO MEETING</b></div>')+
+      '<div class="wait"><span class="pulse"></span>Waiting for week '+w+'</div>';
+    app.querySelectorAll('[data-ag]').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.ag;
+      say(ROOM.meet,station+'|'+w+'|agreed|'+name+'|'+v,'g'+w).then(()=>{G.agreed[station+'|'+w]={name,text:v};paintAg();}).catch(c=>{st.textContent=failMsg(c);});}));
+  }
+  paintAg();
+  function paintAg(){const a=G.agreed[station+'|'+w];app.querySelectorAll('[data-ag]').forEach(b=>{const onb=a&&a.text===b.dataset.ag;b.classList.toggle('on',!!onb);b.classList.toggle('quiet',!onb);});}
+}
+function renderOver(same){
+  if(same)return;
+  const R=record();
+  app.innerHTML=topHTML('SIX WEEKS · '+stTag()+jxTag(),R.total)+'<div class="bigj"><small>Your six weeks</small><b style="color:var(--ink)">£'+R.total+'k</b></div>'+recordHTML(R.rows,0)+
+    '<div class="wait"><span class="pulse"></span>The board takes it from here</div>';
+}
+
+/* ---------- the tutorial: three scripted weeks, run once ----------
+   Week 1: hold a price, the team agrees, the sign goes up, the other
+   station's price, the result. Week 2: the record and money are on the
+   screen, a teammate disagrees, the reds, the switch, the result. Week 3:
+   the meeting question, who goes, what was agreed, then the double week.
+   Results appear here only because there is no board yet. ---- */
+const MATES=['Priya K','Tom W'];
+const T={week:1,mine:'',mates:['',''],locked:'',theirs:'',rows:[],total:0,timers:[],ask:null,rep:'',ag:''};
+const tLater=(ms,f)=>T.timers.push(setTimeout(f,ms));
+function tReset(){T.timers.forEach(clearTimeout);T.timers=[];T.mine='';T.mates=['',''];T.locked='';T.theirs='';}
+function renderTut(same){if(same)return;T.week=1;T.rows=[];T.total=0;T.ask=null;T.rep='';T.ag='';tutWeek();}
+function tutWeek(){
+  tReset();
+  const me=station[0], w=T.week, dbl=w===3;
+  const rows=[1,2,3,4,5,6].map(x=>T.rows[x-1]||{w:x,mine:'',theirs:'',p:null});
+  const top=()=>'<div class="tut">TUTORIAL</div>'+topHTML('WEEK '+w+(dbl?' <em>· PAYS DOUBLE</em>':'')+' · '+stTag(),T.total);
+  const members=[name].concat(MATES);
+  const paint=()=>{
+    const locks={};members.forEach((n,i)=>{const p=i===0?T.mine:T.mates[i-1];if(p)locks[norm(n)]=p;});
+    paintTiles(app,members,locks,name,T.locked);
+    const mine=T.locked||T.mine;setSigns(me==='a'?mine:'',me==='b'?mine:'');
+    const line=document.getElementById('tline');
+    const placed=Object.values(locks), split=new Set(placed).size>1;
+    if(line&&!T.locked){
+      if(split)line.innerHTML='<b>Red:</b> you don’t all agree. Hold the other price, or wait for them.';
+      else if(placed.length===3)line.innerHTML='Three greens. Your sign goes up.';
+    }
+    if(!T.locked&&placed.length===3&&!split){T.locked=placed[0];lock(placed[0]);}
+  };
+  const lock=p=>{
+    paint();
+    tLater(500,()=>splash(me,p,LBL[me]+' '+station[1]+' · Tutorial',false));
+    tLater(2300,()=>splash(me,p,LBL[me]+' '+station[1]+' · Tutorial',true));
+    tLater(3900,()=>{unsplash();result(p);});
+  };
+  const result=p=>{
+    const theirs=T.theirs;
+    flipSign(me==='a'?'b':'a',theirs);
+    const pa=me==='a'?p:theirs,pb=me==='a'?theirs:p;const c=carSplit(pa,pb,w);
+    const money=profit(p,theirs,w);
+    T.rows[w-1]={w,mine:p,theirs,p:money};T.total+=money;
+    tLater(700,()=>{setCounts(c[0],c[1]);
+      const rec=document.getElementById('trec');if(rec)rec.outerHTML='<div id="trec">'+recordHTML([1,2,3,4,5,6].map(x=>T.rows[x-1]||{w:x,mine:'',theirs:'',p:null}),0)+'</div>';
+      document.querySelector('.top .tot').innerHTML='<small>SO FAR</small>£'+T.total+'k';
+      const line=document.getElementById('tline');
+      const said=theirs===p?(p==='1.50'?'They held too. Forty cars each: <b>£'+money+'k</b>.':'They cut too. Forty-five cars each at the lower price: <b>£'+money+'k</b>.')
+        :(p==='1.50'?'They cut. Ninety cars went to them: <b>£'+money+'k</b> for you.':'They held. Ninety cars came to you: <b>£'+money+'k</b>.');
+      line.innerHTML=said+(dbl?' Double week.':'');
+      const next=document.createElement('button');next.type='button';next.className='big';next.textContent=w<3?'Week '+(w+1):'I’m ready';
+      next.addEventListener('click',()=>{if(w<3){T.week=w+1;tutWeek();}else{try{localStorage.setItem(SK+'tut','1');}catch(_){}render(true);}});
+      line.insertAdjacentElement('afterend',next);
+    });
+  };
+  const prices=(first,theirs,script)=>{
+    T.theirs=theirs;
+    app.innerHTML=top()+junctionSVG(me)+'<div class="line" id="tline">'+first+'</div>'+tilesHTML(me)+'<div id="trec">'+recordHTML(rows,w)+'</div>';
+    wireHold(app,p=>{const fresh=!T.mine;T.mine=p;paint();if(fresh)script(p);else paint();});
+    paint();
+  };
+  if(w===1)prices('Week 1. <b>Hold a price</b> to commit to it. Your team will follow.','1.50',p=>{tLater(1100,()=>{T.mates[0]=p;paint();});tLater(2300,()=>{T.mates[1]=p;paint();});});
+  else if(w===2)prices('Week 2. Your record and money are on the screen. Hold a price.','1.40',p=>{
+    const other=p==='1.50'?'1.40':'1.50';
+    tLater(1000,()=>{T.mates[0]=p;paint();});
+    tLater(2200,()=>{T.mates[1]=other;paint();});
+    tLater(6500,()=>{T.mates[1]=T.mine;paint();});
+  });
+  else{
+    /* week 3: the meeting first, then the double week */
+    app.innerHTML=top()+'<div class="line" id="tline">Week 3 pays double. Do you want to meet the other station?</div>'+
+      '<div class="two"><button type="button" class="big" id="tY">Yes</button><button type="button" class="big quiet" id="tN">No</button></div><div id="twho"></div>';
+    const go=()=>prices('Week 3. Hold a price.','1.50',p=>{tLater(1000,()=>{T.mates[0]=p;paint();});tLater(2000,()=>{T.mates[1]=p;paint();});});
+    document.getElementById('tN').addEventListener('click',()=>{go();});
+    document.getElementById('tY').addEventListener('click',()=>{
+      document.getElementById('tY').classList.add('on');
+      const who=document.getElementById('twho');
+      who.innerHTML='<div class="line" style="margin:14px 0 10px">Who goes?</div><div class="names">'+members.map(x=>'<button type="button" class="big quiet" data-n="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>';
+      who.querySelectorAll('[data-n]').forEach(b=>b.addEventListener('click',()=>{
+        app.innerHTML=top()+'<div class="bigj" style="padding-top:10px"><small>Meeting</small><b>JUNCTION 3</b><span class="st" style="color:var(--ink)">'+(norm(b.dataset.n)===norm(name)?'You go':esc(b.dataset.n)+' goes')+'</span></div>'+
+          '<div class="line" id="tline">Back from the meeting. What did you agree?</div><div class="three"><button type="button" class="big quiet" data-ag="1.50">£1.50</button><button type="button" class="big quiet" data-ag="1.40">£1.40</button><button type="button" class="big quiet" data-ag="none">Nothing</button></div>';
+        app.querySelectorAll('[data-ag]').forEach(x=>x.addEventListener('click',()=>{x.classList.add('on');tLater(600,go);}));
+      }));
+    });
+  }
+}
+
+/* ---------- polling ---------- */
+let pickedAt=0;
+function tick(){
+  Promise.all([answers(ROOM.teams),answers(ROOM.prices),answers(ROOM.huddle),answers(ROOM.meet)]).then(([t,p,h,m])=>{
+    parse(t,p,h,m);
+    const c=name?G.claim[norm(name)]:'';
+    if(c&&c!==station&&Date.now()-pickedAt>12000){station=c;try{localStorage.setItem(SK+'station',station);}catch(_){}parse(t,p,h,m);render(true);return;}
+    render();
+  }).catch(()=>{});
+}
+setInterval(tick,2500);
+render();setTimeout(tick,0);
+
+/* ---------- the theme ---------- */
+(function(){
+  const btn=document.getElementById('theme'), a=document.getElementById('themeAudio');
+  btn.addEventListener('click',()=>{
+    if(!a.paused){a.pause();a.currentTime=0;btn.classList.remove('playing');btn.textContent='Theme';return;}
+    a.volume=0.55;a.onended=()=>{btn.classList.remove('playing');btn.textContent='Theme';};
+    const p=a.play();if(p&&p.then)p.then(()=>{btn.classList.add('playing');btn.textContent='Stop';}).catch(()=>{});
+  });
+})();
+
+/* ---------- demo: the deck's moves, driven from a bar at the foot ----------
+   ?demo=1 keeps everything on this phone: two invented teammates commit
+   behind you (one holds out a while in week 2), the rival team holds
+   early and cuts late, and every press of the bar is one move the deck
+   would make. */
+const demoRoom={};
+function demoAnswers(room){return (demoRoom[room]||[]).slice();}
+function demoSay(room,line){(demoRoom[room]=demoRoom[room]||[]).push(line);}
+if(DEMO){
+  document.body.classList.add('demo-on');
+  const bar=document.createElement('div');bar.className='demo';
+  bar.innerHTML='<span><b>DEMO</b> <span class="dl" id="dl">no network; the deck’s next move is on the right</span></span><button type="button" id="dnext">Start the game</button>';
+  document.body.appendChild(bar);
+  let step=0;
+  const rv=()=>G.pair[station]||(station[0]==='a'?'b3':'a3');
+  const plan=()=>{
+    const s=[];const me=station||'a1';const r=me[0]==='a'?'b3':'a3';const a=me[0]==='a'?me:r,b=me[0]==='a'?r:me;
+    s.push({l:'Start the game',f:()=>{MATES.forEach(m=>demoSay(ROOM.teams,me+'|'+m));demoSay(ROOM.prices,'::pair|'+a+'='+b+',a2=b1,a4=b2');}});
+    for(let w=1;w<=6;w++){
+      if(w===5)s.push({l:'The Junction Gazette',f:()=>{demoSay(ROOM.prices,'::shock|on');}});
+      if((G.shock?[3,5]:[3,6]).includes(w)){
+        s.push({l:'Offer a meeting before week '+w,f:()=>{demoSay(ROOM.prices,'::meet|'+w);setTimeout(()=>{demoSay(ROOM.meet,rv()+'|'+w+'|ask|'+(Math.random()<.8?'y|Sam O':'n'));},1500);}});
+        s.push({l:'Send the reps',f:()=>{demoSay(ROOM.prices,'::reps|'+w);}});
+      }
+      s.push({l:'Open week '+w,f:()=>{demoSay(ROOM.prices,'::open|'+w);}});
+      s.push({l:'Reveal junction, week '+w,f:()=>{
+        const rp=w>=5?'1.40':(w===3?(Math.random()<.5?'1.40':'1.50'):'1.50');
+        demoSay(ROOM.prices,rv()+'|'+w+'|'+rp);
+        demoSay(ROOM.prices,'::shown|'+w+'|'+(station[0]==='a'?station:rv()));demoSay(ROOM.prices,'::reveal|'+w);}});
+    }
+    return s;
+  };
+  const btn=document.getElementById('dnext'), dl=document.getElementById('dl');
+  btn.addEventListener('click',()=>{
+    const s=plan();if(step>=s.length){btn.disabled=true;return;}
+    s[step].f();step++;tick();
+    const n=plan()[step];btn.textContent=n?n.l:'Done';dl.textContent=s[step-1].l;
+  });
+  setInterval(()=>{
+    const w=G.opened;if(!station||!w||G.myRev>=w)return;
+    const k=station+'|'+w;const locks=G.lock[k]||{};const my=locks[norm(name)];
+    MATES.forEach((m,i)=>{if(my&&(!locks[norm(m)]||locks[norm(m)].price!==my.price)&&Math.random()<(w===2&&i===1?.12:.5))demoSay(ROOM.huddle,k+'|lock|'+m+'|'+my.price);});
+  },2200);
+}
+</script>
+</body></html>

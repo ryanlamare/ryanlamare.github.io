@@ -69,6 +69,11 @@ button.pick .pq,a.pick .pq{display:block;font-weight:600;font-size:15.5px;line-h
 button.pick.nextq{background:var(--red);border-color:var(--red);margin-top:6px;padding:22px 18px}
 button.pick.nextq .pm{color:var(--paper);font-size:16px;margin:0}
 button.pick.nextq .pm::after{content:" →"}
+/* a typed /go: whatever QR the deck is showing, one tap away (25 Sep 2026) */
+a.pick.now{background:var(--red);border-color:var(--red);padding:18px 18px 20px}
+a.pick.now .pm{color:var(--paper);opacity:.85}
+a.pick.now .pq{color:var(--paper);font-weight:800;font-size:20px}
+a.pick.now .pq::after{content:" →"}
 /* the points system's participant view */
 .ptslink{align-self:flex-end;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
   font-size:11px;color:var(--muted);text-decoration:none;margin-top:6px}
@@ -98,6 +103,27 @@ a.pick{text-decoration:none}
 .rank button.opt{display:block;padding:12px 14px}
 .rank button.opt .rn,.rank button.opt .rd{display:block}
 .rank.locked .slot.filled{cursor:default}
+
+/* the typed-visit chooser, module by module (28 Sep 2026): on a laptop the two days sit side by side */
+body.chooser .wrap{max-width:1180px}
+.days{display:flex;flex-direction:column;gap:22px;margin-top:2px}
+.day{display:flex;flex-direction:column;gap:10px}
+.dayh{font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.dmods{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
+@media (min-width:900px){.dmods{grid-template-columns:repeat(4,1fr);gap:14px}}
+.mod{border:2.5px solid var(--ink);background:var(--card,#DED6C1)}
+.mod.cur{border-color:var(--red)}
+.modh{padding:10px 14px 8px;border-bottom:1.5px solid var(--rule,#C9BFA6)}
+.modh b{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:3px}
+.modh span{display:block;font-weight:700;font-size:15.5px;line-height:1.3;color:var(--ink)}
+.mod a.row{display:flex;align-items:baseline;gap:8px;padding:7px 14px;text-decoration:none;color:var(--ink);font-weight:600;font-size:14.5px;line-height:1.35;border-top:1px solid var(--rule,#C9BFA6)}
+.mod a.row:first-of-type{border-top:0}
+.mod a.row:hover{background:var(--paper)}
+.mod a.row .rn{flex:1}
+.mod a.row .rx{font-weight:500;font-size:13px;color:var(--muted)}
+.mod a.row::after{content:"\2192";color:var(--red);font-weight:700}
+.mod a.row.cur .rn{color:var(--red)}
+a.pick.notes{margin-top:6px}
 </style>
 </head><body>
 <svg style="display:none" aria-hidden="true">
@@ -111,7 +137,7 @@ a.pick{text-decoration:none}
   <h1 id="q">&hellip;</h1>
   <div id="opts"></div>
   <div class="status" id="status"></div>
-  <div class="links"><a class="ptslink" id="dealsLink" href="deals/" hidden>THE TWO DEALS &rarr;</a><a class="ptslink" href="points/">MY POINTS &rarr;</a></div>
+  <div class="links"><a class="ptslink" id="dealsLink" href="deals/" hidden>THE TWO DEALS &rarr;</a></div>
 </div>
 <script src="names.js"></script>
 <script src="scores.js"></script>
@@ -149,56 +175,108 @@ function showNext(poll){
 }
 function renderChooser(cfg){
   document.getElementById('dealsLink').hidden=true;
-  document.getElementById('q').textContent='Which question is on the screen?';
+  document.body.classList.add('chooser');
+  document.getElementById('q').textContent='Which game or poll is on the screen?';
   const opts=document.getElementById('opts');
   opts.innerHTML='';
-  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='10px';
-  const paired=new Set(Object.values(cfg.polls).map(p=>p.pair).filter(Boolean));
-  Object.entries(cfg.polls).forEach(([id,poll])=>{
-    if(paired.has(id))return; /* shown on its partner's screen */
-    const b=document.createElement('button');
-    b.className='pick';
-    const mod=id.match(/^m(\d+)/);
-    b.innerHTML='<span class="pm">'+(mod?'Module '+mod[1]:'Poll')+'</span><span class="pq"></span>';
-    b.querySelector('.pq').textContent=poll.q;
-    b.addEventListener('click',()=>{
-      history.replaceState(null,'','?p='+id);
-      document.getElementById('status').textContent='';
-      renderPoll(poll,id);
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='16px';
+  /* every game and poll the decks put on a QR, in running order, a card per
+     module (NOW below is the one list: its paths say the module). Two kinds stay
+     off it: the negotiation briefs, offered only as On the screen now while their
+     QR is up, so nobody can read one (or both sides) early; and the hub, which
+     opens only at the end of day two, from the last slide. */
+  const days=document.createElement('div');days.className='days';
+  const cards={};
+  [['Day one',[1,2,3,4]],['Day two',[5,6,7,8]]].forEach(([dh,ms])=>{
+    const d=document.createElement('div');d.className='day';
+    d.innerHTML='<div class="dayh"></div><div class="dmods"></div>';d.firstChild.textContent=dh;
+    const g=d.lastChild;
+    ms.forEach(m=>{
+      const c=document.createElement('div');c.className='mod';c.dataset.m=m;
+      c.innerHTML='<div class="modh"><b>Module '+m+'</b><span></span></div>';
+      c.querySelector('.modh span').textContent=MODS[m-1];
+      cards[m]=c;g.appendChild(c);
     });
-    opts.appendChild(b);
+    days.appendChild(d);
   });
-  /* the game pages, so ryanlamare.com/go is the one address anyone ever types */
-  const gl=document.createElement('div');gl.className='games';
-  gl.innerHTML='<div class="gh">Or, which game is on the screen?</div>';
-  GAMES.forEach(([mod,label,href])=>{
-    const a=document.createElement('a');a.className='pick';a.href=href;
-    a.innerHTML='<span class="pm">Module '+mod+'</span><span class="pq"></span>';
-    a.querySelector('.pq').textContent=label;
-    gl.appendChild(a);
+  Object.entries(NOW).forEach(([path,[href,label]])=>{
+    const m=+(path.match(/\/m(\d)\//)||[])[1];
+    if(!cards[m]||/[?&]hub\b/.test(href)||/your brief$/i.test(label))return;
+    const r=document.createElement('a');r.className='row';r.href=href;r.dataset.path=path;
+    r.innerHTML='<span class="rn"></span>';r.querySelector('.rn').textContent=label;
+    if(EXTRA[path]){const x=document.createElement('span');x.className='rx';x.textContent=EXTRA[path];r.appendChild(x);}
+    cards[m].appendChild(r);
   });
-  opts.appendChild(gl);
+  opts.appendChild(days);
+  /* your notes (27 Sep 2026): optional, kept on the device, easiest on a laptop; typed as ryanlamare.com/go/notes */
+  const nl=document.createElement('a');nl.className='pick notes';nl.href='/teaching/exec/demo/go/notes/';
+  nl.innerHTML='<span class="pm">Optional</span><span class="pq">Your notes from each module, kept on this device</span>';
+  opts.appendChild(nl);
+  offerNow(opts,days);
 }
-const GAMES=[
-  [1,'The median dog, the number game, the offers','/teaching/exec/demo/m1/game/'],
-  [2,'The centipede, last card, the ultimatum','/teaching/exec/demo/m2/game/'],
-  [2,'Your branch on the room’s tree','/teaching/exec/demo/m2/tree/'],
-  [3,'The engine game','/teaching/exec/demo/m3/game/'],
-  [3,'A zero-sum game from your world: your engine','/teaching/exec/demo/m3/engines/'],
-  [4,'Price Wars: the practice week, then the game','/teaching/exec/demo/m4/game/'],
-  [4,'Your own prisoner’s dilemma: your cell, and the way out','/teaching/exec/demo/m4/pds/'],
-  [5,'The investment game','/teaching/exec/demo/m5/game/'],
-  [5,'A coordination game from your world: your window','/teaching/exec/demo/m5/games/'],
-  [6,'Penalties, the inspection game, rock paper scissors','/teaching/exec/demo/m6/game/'],
-  [6,'Unpredictability in your world: your ball in the mix','/teaching/exec/demo/m6/world/'],
-  [7,'Chicken, split or steal, the auction','/teaching/exec/demo/m7/game/'],
-  [7,'Strategic moves in your world: your ship','/teaching/exec/demo/m7/world/'],
-  [8,'The car market, Hidden Agenda','/teaching/exec/demo/m8/game/'],
-];
+const MODS=['Introduction to game theory and strategic thinking','Sequential strategies','Simultaneous zero-sum games','Prisoner’s dilemmas and how to overcome them','Coordination games','Mixed strategies','Credibility, commitment, and strategic moves','Information asymmetries'];
+/* a line after a name, where one entry opens several questions */
+const EXTRA={'/teaching/exec/demo/m5/qr-quiz.svg':'16 questions'};
+/* On the screen now (25 Sep 2026). A long room can be too far from the screen
+   to scan, so people type ryanlamare.com/go. On arriving at a slide with a QR
+   the deck tells the poll server which QR it is (room gt-now, "date|path of the
+   QR image", see deck.js), and this page offers that QR's page first, in red.
+   Only the QRs listed here count, and only today's: a stale or unknown line
+   leaves the ordinary list as it was. */
+const NOW={
+  '/teaching/exec/demo/m1/qr-familiarity.svg':['/teaching/exec/demo/go/?p=m1-familiarity','How familiar are you with game theory?'],
+  '/teaching/exec/demo/m1/qr-number.svg':['/teaching/exec/demo/m1/game/?g=number','The number game'],
+  '/teaching/exec/demo/m1/qr-offers.svg':['/teaching/exec/demo/m1/game/?g=offer','The added value game'],
+  '/teaching/exec/demo/m2/qr-smoke.svg':['/teaching/exec/demo/go/?p=m2-smoke','Should you smoke?'],
+  '/teaching/exec/demo/m2/qr-cards.svg':['/teaching/exec/demo/m2/game/?g=cards','Take the last card'],
+  '/teaching/exec/demo/m2/qr-ult.svg':['/teaching/exec/demo/m2/game/?g=ult','The ultimatum game'],
+  '/teaching/exec/demo/m2/qr-cent.svg':['/teaching/exec/demo/m2/game/?g=cent','The centipede game'],
+  '/teaching/exec/demo/m3/qr-truel.svg':['/teaching/exec/demo/go/?p=m3-truel','The truel'],
+  '/teaching/exec/demo/m3/qr-solve.svg':['/teaching/exec/demo/m3/solve/','The engine game'],
+  '/teaching/exec/demo/m4/qr-price.svg':['/teaching/exec/demo/m4/price/','Price Wars'],
+  '/teaching/exec/demo/m4/qr-axelrod.svg':['/teaching/exec/demo/go/?p=m4-axelrod','Rank the strategies'],
+  '/teaching/exec/demo/m5/qr-quiz.svg':['/teaching/exec/demo/go/?p=m5-k1','How good is your coordination?'],
+  '/teaching/exec/demo/m5/qr-investgame.svg':['/teaching/exec/demo/m5/game/','The investment game'],
+  '/teaching/exec/demo/m5/qr-tapasbos.svg':['/teaching/exec/demo/m5/tapas/?g=bos','Whose system?'],
+  '/teaching/exec/demo/m5/qr-tapaschicken.svg':['/teaching/exec/demo/m5/tapas/?g=chicken','The hub lease'],
+  '/teaching/exec/demo/m6/qr-solo.svg':['/teaching/exec/demo/m6/game/?g=solo','Beat the keeper'],
+  '/teaching/exec/demo/m6/qr-rps.svg':['/teaching/exec/demo/m6/game/?g=rps','Rock, paper, scissors'],
+  '/teaching/exec/demo/m7/qr-twothirds.svg':['/teaching/exec/demo/go/?p=m8-twothirds','Guess two-thirds of the average'],
+  '/teaching/exec/demo/m7/qr-chicken.svg':['/teaching/exec/demo/m7/game/?g=chicken','Chicken'],
+  '/teaching/exec/demo/m7/qr-av-poll.svg':['/teaching/exec/demo/go/?p=m7-av-take','A good deal? For whom?'],
+  '/teaching/exec/demo/m7/qr-gb.svg':['/teaching/exec/demo/m7/game/?g=gb','Split or steal'],
+  '/teaching/exec/demo/m8/qr-car.svg':['/teaching/exec/demo/m8/car/','The car market'],
+  '/teaching/exec/demo/m8/qr-hunt.svg':['/teaching/exec/demo/go/?p=m8-hunt','The signaling scavenger hunt'],
+  '/teaching/exec/demo/m8/qr-wrap.svg':['/teaching/exec/demo/go/?p=m8-wrap-me','What will you use first?'],
+  '/teaching/exec/demo/m8/qr-hub.svg':['/teaching/exec/demo/','Everything from the two days']
+};
+function offerNow(opts,gl){
+  const d=new Date(),day=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  fetch(API+'/p/gt-now/answers').then(r=>r.json()).then(r=>{
+    const a=r.answers||[];if(!a.length||!gl.isConnected)return; /* the chooser may have given way to a poll */
+    const [when,path]=String(a[a.length-1]).split('|');
+    if(when!==day||!NOW[path])return;
+    const b=document.createElement('a');b.className='pick now';b.href=NOW[path][0];
+    b.innerHTML='<span class="pm">On the screen now</span><span class="pq"></span>';
+    b.querySelector('.pq').textContent=NOW[path][1];
+    opts.prepend(b);
+    const row=gl.querySelector('a.row[data-path="'+path+'"]'), m=(path.match(/\/m(\d)\//)||[])[1];
+    if(row)row.classList.add('cur');
+    const card=m&&gl.querySelector('.mod[data-m="'+m+'"]');if(card)card.classList.add('cur');
+  }).catch(()=>{});
+}
 /* a "named" poll makes sure this phone has claimed a class name first —
    the join key for the points system. One picker, once per phone. */
 let myName=null;
 try{myName=localStorage.getItem('gt-name');}catch(_){}
+/* after a Poll Desk reset of the name room the phone forgets its name, and
+   a named poll on screen asks who you are again */
+GT_NAMES.forgotten(voter).then(f=>{
+  if(!f)return;
+  myName=null;
+  const poll=pollId&&CFG&&CFG.polls[pollId];
+  if(poll&&poll.named){document.getElementById('status').textContent='';renderPoll(poll,pollId);}
+});
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===myName;}catch(_){}
@@ -221,25 +299,40 @@ function renderNamePicker(poll,id){
     renderPoll(poll,id);
   };
   const pick=n=>{const v=clean(n);if(v)GT_NAMES.guard(v,voter,commit,opts,{clean});};
-  fetch('roster.json').then(r=>r.json()).then(d=>(d.names||[])).catch(()=>[]).then(names=>{
+  /* the attendee list comes from the Poll Desk and is read again every few
+     seconds while the picker is up: a late joiner added on the desk appears
+     and a name taken off it goes, with no reload */
+  const list=document.createElement('div');list.style.cssText='display:flex;flex-direction:column;gap:10px';
+  const row=document.createElement('div');row.className='sayrow';
+  const inp=document.createElement('input');
+  inp.maxLength=40;inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='THAT’S ME';
+  btn.addEventListener('click',()=>pick(inp.value));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pick(inp.value);}});
+  row.appendChild(inp);row.appendChild(btn);
+  let shown=null;
+  const fill=names=>{
+    const key=JSON.stringify(names);if(key===shown)return;shown=key;
+    list.innerHTML='';
     names.forEach(n=>{
       const b=document.createElement('button');
       b.className='pick';
       b.innerHTML='<span class="pq"></span>';
       b.querySelector('.pq').textContent=n;
-      b.addEventListener('click',()=>pick(n));
-      opts.appendChild(b);
+      b.addEventListener('click',()=>GT_NAMES.confirm(opts,n,'Is that you?',()=>pick(n),()=>renderNamePicker(poll,id)));   /* a tapped name asks once (27 Sep 2026) */
+      list.appendChild(b);
     });
-    const row=document.createElement('div');row.className='sayrow';
-    if(names.length)row.style.marginTop='6px';
-    const inp=document.createElement('input');
-    inp.maxLength=40;inp.placeholder=names.length?'Not on the list? Type your name':'Type your first name';
-    inp.autocomplete='off';
-    const btn=document.createElement('button');btn.textContent='THAT’S ME';
-    btn.addEventListener('click',()=>pick(inp.value));
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pick(inp.value);}});
-    row.appendChild(inp);row.appendChild(btn);
-    opts.appendChild(row);
+    list.style.display=names.length?'flex':'none';
+    row.style.marginTop=names.length?'6px':'0';
+    inp.placeholder=names.length?'Not on the list?':'Type your first name';
+  };
+  GT_NAMES.roster().then(names=>{
+    fill(names);
+    opts.appendChild(list);opts.appendChild(row);
+    const t=setInterval(()=>{
+      if(!document.body.contains(list)){clearInterval(t);return;}
+      GT_NAMES.roster(null).then(n=>{if(n&&document.body.contains(list))fill(n);});
+    },5000);
   });
 }
 function renderPoll(poll,id){
@@ -357,23 +450,39 @@ function setupRank(opts,poll){
     }).catch(()=>{});
   }
 }
+/* a reset room forgets what this phone wrote: then it may answer again
+   (the write-in twin of the votes check in renderPoll). With two rooms, the
+   pair, the phone stays locked unless both have forgotten it. */
+function unsayIfReset(poll,ids){
+  const id=pollId;
+  Promise.all(ids.map(x=>fetch(API+'/p/'+x+'/entries').then(r=>r.json()))).then(ds=>{
+    if(pollId!==id||ds.some(d=>(d.entries||[]).some(e=>e.v===voter)))return;
+    ids.forEach(x=>{try{localStorage.removeItem('gt-said-'+x);}catch(_){}});
+    document.getElementById('status').textContent='';
+    renderPoll(poll,id);
+  }).catch(()=>{});
+}
 function setupText(opts,poll){
   opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
   const st=document.getElementById('status');
   let said=false;
   try{said=poll.once&&localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
-  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);unsayIfReset(poll,[pollId]);return;}
   const row=document.createElement('div');row.className='sayrow'+(poll.long?' long':'');
   /* a "long" poll wants a sentence or two: a bigger box, Enter makes a new line, the button sends */
   const inp=document.createElement(poll.long?'textarea':'input');
   if(poll.long)inp.rows=3;
   inp.maxLength=poll.long?200:80;inp.placeholder=poll.ph||(poll.long?'Type a sentence or two…':'Type an example…');inp.autocomplete='off';
+  /* "num": [lo, hi] opens the number pad and checks the number before it goes (25 Sep 2026) */
+  if(poll.num)inp.inputMode='numeric';
   const btn=document.createElement('button');btn.textContent='SEND';
   row.appendChild(inp);row.appendChild(btn);opts.appendChild(row);
   const sent=document.createElement('div');sent.className='sent';opts.appendChild(sent);
   function send(){
     const t=inp.value.trim();
     if(!t)return;
+    if(poll.num){const n=Number(t.replace(',','.'));
+      if(!/^\d+([.,]\d+)?$/.test(t)||n<poll.num[0]||n>poll.num[1]){st.textContent='A number from '+poll.num[0]+' to '+poll.num[1]+', please.';return;}}
     btn.disabled=true;st.textContent='Sending…';
     fetch(API+'/p/'+pollId+'/say',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({t:t,v:voter})})
@@ -406,7 +515,7 @@ function setupForm(opts,poll){
   const st=document.getElementById('status');
   let said=false;
   try{said=localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
-  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);unsayIfReset(poll,[pollId]);return;}
   const max=poll.max||110, inputs=[], cards=[];
   poll.fields.forEach(([label,q],i)=>{
     const card=document.createElement('div');card.className='pcard s'+i;
@@ -447,7 +556,7 @@ function setupPair(opts,poll,poll2,id2){
   const st=document.getElementById('status');
   let said=false;
   try{said=localStorage.getItem('gt-said-'+pollId)==='1'&&localStorage.getItem('gt-said-'+id2)==='1';}catch(_){}
-  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  if(said){st.innerHTML=RECORDED;showNext(poll);unsayIfReset(poll,[pollId,id2]);return;}
   const mk=(ph)=>{const i=document.createElement('input');i.maxLength=80;i.placeholder=ph||'Type an answer…';i.autocomplete='off';return i;};
   const inp1=mk(poll.ph), inp2=mk(poll2.ph);
   const wrap=i=>{const w=document.createElement('div');w.className='sayrow';w.appendChild(i);return w;};

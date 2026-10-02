@@ -2,7 +2,7 @@
    day one each person builds a small face on their phone, and it is theirs
    through all eight modules: on a ship's deck, an aircraft, a carriage, the
    top-of-the-table boards, the podium. The drawing lives here once, for the
-   phone step (/teaching/exec/demo/go/names.js) and for every deck that wants a face. It is the
+   phone step (/teaching/exec/demo/reel/go/names.js) and for every deck that wants a face. It is the
    plain-face kit of m5/games/flight.js, generalised: flat, inked, warm paper,
    friendly, nobody's likeness, and no part is labelled as anybody's.
 

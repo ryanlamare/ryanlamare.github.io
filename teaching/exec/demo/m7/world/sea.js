@@ -9,16 +9,7 @@
    A click on a ship opens it from the side, the answers written on the ship
    itself: the game on the hull, the move on the sail, what makes it credible
    inside the rope at the mast, the downside under the
-   waterline where a monster coils. The pair's names show straight away (Ryan
-   dropped the anonymity on 18 Sep 2026, and WHOSE SHIP IS THIS? came out).
-
-   The pair ride their own ship (the avatars, 18 Sep 2026; avatar.js, a
-   sample): the figure bound to the mast wears the first name's face and the
-   second name's is at the stern on the chart and at the nearest oar on the
-   opened ship. On the chart a head is too small for a face, so it is the
-   hair and the skin alone. The roster is read from gt-names and gt-avatars,
-   read-only, now and then; a name with no avatar gets the face drawn from
-   the name, and without avatar.js the plain heads are drawn as before.
+   waterline where a monster coils. No name is shown until WHOSE SHIP IS THIS? is clicked.
 
    Then the odyssey (Ryan, 18 Sep, late): a click on Troy sends the whole
    fleet there to gather, as in the book, and then round the trials in turn,
@@ -240,14 +231,6 @@
     4:'M-9 -6 h9 v12 h-9 Z M1 -3 l8 -2 l3 11 l-8 2 Z',
     5:'M-10 0 H9 M3 0 L-4 -8 M3 0 L-4 8 M-8 0 L-11 -4 M-8 0 L-11 4',
     0:'M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z'};
-  /* the avatars: the roster, and the pair's heads on a ship. Demo names draw on every option so a rehearsal shows a full room */
-  const AV=window.GT_AVATAR||null;let roster=new Map();
-  const partsOf=n=>demoOnly||!st.live?AV.fromName(n,{full:true}):AV.of(roster,n);
-  function heads(b){const h=b.heads;if(!h)return;while(h.firstChild)h.firstChild.remove();const d=b.d;
-    if(AV&&d.name)AV.draw(h,partsOf(d.name),{x:0,y:-17.4,size:10.5,bust:false,anchor:'center',bare:true,ink:1.1});
-    else mk('circle',{cx:0,cy:-17.2,r:3.3,fill:PAPER,stroke:INK,'stroke-width':1.2},h);
-    if(AV&&d.name2)AV.draw(h,partsOf(d.name2),{x:-27,y:-15.5,size:10.5,bust:false,anchor:'center',bare:true,ink:1.1});}
-  function readRoster(){if(!AV||demoOnly)return;AV.roster(POLL_API).then(m=>{roster=m;ships.forEach(heads);if(shown)fill(shown);});}
   function shipNode(b,parent){
     const L=b.look, g=mk('g',{class:'seaship',style:'cursor:pointer'},parent), body=mk('g',{},g);
     b.body=body;
@@ -264,7 +247,7 @@
     mk('line',{x1:-25,y1:-52,x2:25,y2:-52,stroke:INK,'stroke-width':2.6,'stroke-linecap':'round'},body);
     /* bound to the mast */
     mk('path',{d:'M-3.6 -14 L3.6 -14 L2.6 -9.5 L-2.6 -9.5 Z',fill:RED,stroke:INK,'stroke-width':1},body);
-    b.heads=mk('g',{},body);heads(b);
+    mk('circle',{cx:0,cy:-17.2,r:3.3,fill:PAPER,stroke:INK,'stroke-width':1.2},body);
     mk('path',{d:'M-5 -13.2 H5 M-5 -10.6 H5',stroke:OCHRE,'stroke-width':1.4,'stroke-linecap':'round'},body);
     /* the hull: a galley, stern curling up behind, a ram and an eye at the bow */
     mk('path',{d:'M-44 -30 C-38 -30 -36 -22 -35 -10 L30 -10 L37 -22 L41 -20 L36 -8 L48 0 L34 0 C30 6 24 8 16 8 L-22 8 C-36 8 -42 -4 -44 -30 Z',fill:L.hull,stroke:INK,'stroke-width':2,'stroke-linejoin':'round'},body);
@@ -287,6 +270,7 @@
   /* ================= the fleet ================= */
   const ships=new Map();                       /* v -> ship */
   let pending=[], home=[], shown=null, lastEnter=0;
+  const revealed=new Set();
   /* ---- the odyssey: three trials in turn, then Ithaca for one ship ---- */
   /* the voyage, as in the book: the fleet gathers off Troy first, then the Cyclops, Charybdis, Scylla, and home. Nobody is lost at Troy. */
   const STOPS=[{name:'Troy',x:300,y:214},{name:'the Cyclops',x:340,y:480},{name:'Charybdis',x:1010,y:520},{name:'Scylla',x:842,y:198}];
@@ -473,12 +457,11 @@
     rope('M468 300 H950 V378 H468 Z');
     /* the figure, bound */
     mk('path',{d:'M400 316 L376 388 H424 Z',fill:RED,stroke:INK,'stroke-width':3,'stroke-linejoin':'round'},g);
-    P.head=mk('g',{},g);
+    mk('circle',{cx:400,cy:302,r:15,fill:PAPER,stroke:INK,'stroke-width':3},g);
     rope('M374 334 H426 M372 350 H428 M374 366 H426');
     rope('M428 350 H468');
     /* the crew at their oars, wax in their ears */
-    [150,196,242,288].forEach(x=>{mk('circle',{cx:x,cy:372,r:12,fill:PAPER,stroke:INK,'stroke-width':2.5},g);mk('circle',{cx:x+9,cy:372,r:3.2,fill:OCHRE,stroke:INK,'stroke-width':1.2},g);});
-    P.mate=mk('g',{},g);                          /* the nearest oar: the second name's face, or one more of the crew */
+    [150,196,242,288,334].forEach(x=>{mk('circle',{cx:x,cy:372,r:12,fill:PAPER,stroke:INK,'stroke-width':2.5},g);mk('circle',{cx:x+9,cy:372,r:3.2,fill:OCHRE,stroke:INK,'stroke-width':1.2},g);});
     /* the hull */
     P.hull=mk('path',{d:'M58 276 C84 280 92 330 100 388 L962 388 L998 344 L1014 350 L994 400 L1052 474 L974 474 C958 520 916 540 868 540 L236 540 C132 540 76 440 58 276 Z',stroke:INK,'stroke-width':4,'stroke-linejoin':'round'},g);
     P.stripe=mk('path',{d:'M96 400 H984',fill:'none','stroke-width':7,'stroke-linecap':'round'},g);
@@ -511,12 +494,7 @@
     const sail=$('seaSailBox');sail.style.color=L.sailInk;
     $('seaGameK').textContent=d.module?'THE GAME · MODULE '+d.module+' · '+S.GAME[d.module].toUpperCase():'THE GAME';
     $('seaMove').textContent=d.move;$('seaGame').textContent=d.module?(S.PLAY[d.module]||d.game):d.game;$('seaCred').textContent=d.cred;$('seaDown').textContent=d.down;
-    $('seaWhose').textContent=[d.name,d.name2].filter(Boolean).join(' & ');
-    [P.head,P.mate].forEach(n=>{while(n.firstChild)n.firstChild.remove();});
-    if(AV&&d.name)AV.draw(P.head,partsOf(d.name),{x:400,y:294,size:62,bust:false,anchor:'center',mood:'firm',ink:3});
-    else mk('circle',{cx:400,cy:302,r:15,fill:PAPER,stroke:INK,'stroke-width':3},P.head);
-    if(AV&&d.name2)AV.draw(P.mate,partsOf(d.name2),{x:334,y:364,size:50,bust:false,anchor:'center',ink:2.6});
-    else{mk('circle',{cx:334,cy:372,r:12,fill:PAPER,stroke:INK,'stroke-width':2.5},P.mate);mk('circle',{cx:343,cy:372,r:3.2,fill:OCHRE,stroke:INK,'stroke-width':1.2},P.mate);}
+    const w=$('seaWhose');w.textContent=revealed.has(b.v)?((d.name||'—')+(d.name2?' & '+d.name2:'')):'WHOSE SHIP IS THIS?';w.classList.toggle('named',revealed.has(b.v));
     ov.classList.add('on');
     fit($('seaMove'),34,15);fit($('seaGame'),22,13);fit($('seaCred'),21,12);fit($('seaDown'),21,13);
   }
@@ -524,6 +502,7 @@
   function close(){
     if(!shown)return;shown=null;fill(null);
   }
+  $('seaWhose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();if(!shown)return;revealed.has(shown.v)?revealed.delete(shown.v):revealed.add(shown.v);fill(shown);});
   $('seaClose').addEventListener('click',e=>{e.stopPropagation();e.currentTarget.blur();close();});
   ov.addEventListener('click',e=>{if(e.target===ov)close();});
   addEventListener('keydown',e=>{if(!shown||!slide.classList.contains('active'))return;
@@ -556,7 +535,7 @@
       if(changed||!was)sync(!was&&slide.classList.contains('active'));
     }).catch(()=>{});
   }
-  if(!demoOnly){setInterval(fetchIt,2500);fetchIt();readRoster();setInterval(()=>{if(slide.classList.contains('active'))readRoster();},20000);}
+  if(!demoOnly){setInterval(fetchIt,2500);fetchIt();}
   setInterval(()=>{if(!st.live&&st.demoShown<DEMO.length&&slide.classList.contains('active')){st.demoShown++;sync();}},650);
   new MutationObserver(()=>{if(slide.classList.contains('active'))wake();}).observe(slide,{attributes:true,attributeFilter:['class']});
   sync();

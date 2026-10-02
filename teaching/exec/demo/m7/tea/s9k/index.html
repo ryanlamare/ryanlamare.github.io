@@ -1,0 +1,215 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/demo.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 7 &middot; Selwood&rsquo;s</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Module 7's negotiation game: one side's brief. The other side's lives at
+   its own address, so it cannot be read from this page. */
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none !important}
+.briefwrap{display:flex;flex-direction:column;gap:20px}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:26px 18px 60px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+.side{display:flex;flex-direction:column;gap:4px;padding-bottom:12px;border-bottom:3px solid currentColor}
+.side .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.08;text-transform:uppercase}
+.side .k{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--ink)}
+.side .who{font-weight:600;font-size:15px;color:var(--ink)}
+.ht{color:var(--terracotta)} .sw{color:var(--teal)}
+.shelf{width:100%;max-width:520px;height:auto;display:block;margin:0 auto}
+.memo{border:2.5px solid var(--ink);background:var(--card);padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.memo .hd{display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:3px;font-size:14px;padding-bottom:12px;border-bottom:1.5px solid var(--rule)}
+.memo .hd b{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);align-self:center}
+.memo p{font-weight:500;font-size:17px}
+.obj{border:2.5px solid var(--red);padding:15px 18px;font-weight:700;font-size:18px;text-align:center}
+.locked{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:16px;color:var(--muted)}
+.locked a{color:var(--red);font-weight:700}
+.form{display:flex;flex-direction:column;gap:14px}
+.form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:16px}
+.form input:not([type=checkbox]),.form textarea{font:inherit;font-weight:500;font-size:17px;line-height:1.4;padding:11px 13px;border:2.5px solid var(--ink);border-radius:0;background:var(--paper-soft);color:var(--ink);width:100%;-webkit-appearance:none;appearance:none}
+.form textarea{resize:vertical}
+.form label.nodeal{flex-direction:row;align-items:center;gap:12px;font-weight:600;cursor:pointer}
+.form label.nodeal input{width:24px;height:24px;flex:none;accent-color:var(--red);margin:0}
+.form input:not([type=checkbox]):focus,.form textarea:focus{outline:3px solid var(--red);outline-offset:0}
+.pctrow{display:flex;align-items:center;gap:10px}
+.pctrow input{max-width:130px}
+.pctrow b{font-family:var(--display);font-weight:900;font-size:26px}
+.ask{display:flex;flex-direction:column;gap:10px}
+.ask .aq{font-weight:700;font-size:16px}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.yn button{font-family:var(--sans);font-weight:800;font-size:16px;letter-spacing:.14em;background:var(--paper-soft);color:var(--ink);border:2.5px solid var(--ink);border-radius:0;padding:13px 10px;cursor:pointer}
+.yn button.on{background:var(--ink);color:var(--paper)}
+.btn{font-family:var(--sans);font-weight:800;font-size:16px;letter-spacing:.14em;text-transform:uppercase;background:var(--red);color:var(--paper);border:none;border-radius:0;padding:15px 18px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.msg{font-weight:600;font-size:15px;color:var(--red)}
+.msg:empty{display:none}
+.swap{text-align:center;font-weight:500;font-size:14px}
+.swap a{color:var(--muted)}
+.hint{font-weight:500;font-size:15px;color:var(--muted);text-align:center}
+.report{border:2.5px solid var(--ink);background:var(--card);padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.report .rt{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--red)}
+.report .rn{font-weight:500;font-size:16px}
+.report .done{font-weight:600;font-size:17px;border:2.5px solid var(--green);color:var(--green);padding:14px 16px}
+@media (max-width:520px){.side .n{font-size:24px}.memo,.report{padding:16px}.memo p{font-size:16px}}
+</style>
+</head><body data-k="s9k" data-side="s">
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY &middot; MODULE 7 &middot; CONFIDENTIAL</div>
+  <div id="lock" class="locked" hidden>You already have a brief, and it is not this one. <a href="../">Back to your brief</a></div>
+  <div id="brief" class="briefwrap">
+    <div class="side sw"><span class="k">Your brief &middot; keep it to yourself</span><span class="n">Selwood&rsquo;s</span><span class="who" id="who" hidden></span></div>
+    <svg class="shelf" viewBox="0 0 560 244" role="img" aria-label="A supermarket shelf stacked with boxes of Hartwell&rsquo;s tea, with a price label and a red sticker reading +10%">
+  <rect x="18" y="8" width="524" height="228" fill="var(--paper-soft)" stroke="var(--ink)" stroke-width="3"/>
+  <rect x="34" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="41" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="106" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="113" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="178" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="185" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="250" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="257" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="322" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="329" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="394" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="401" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="466" y="22" width="60" height="86" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="473" y="46" width="46" height="30" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <g fill="var(--terracotta)"><path d="M64 51 C73.0 55.5 73.0 66.5 64 71 C55.0 66.5 55.0 55.5 64 51 Z"/><path d="M136 51 C145.0 55.5 145.0 66.5 136 71 C127.0 66.5 127.0 55.5 136 51 Z"/><path d="M208 51 C217.0 55.5 217.0 66.5 208 71 C199.0 66.5 199.0 55.5 208 51 Z"/><path d="M280 51 C289.0 55.5 289.0 66.5 280 71 C271.0 66.5 271.0 55.5 280 51 Z"/><path d="M352 51 C361.0 55.5 361.0 66.5 352 71 C343.0 66.5 343.0 55.5 352 51 Z"/><path d="M424 51 C433.0 55.5 433.0 66.5 424 71 C415.0 66.5 415.0 55.5 424 51 Z"/><path d="M496 51 C505.0 55.5 505.0 66.5 496 71 C487.0 66.5 487.0 55.5 496 51 Z"/></g>
+  <rect x="18" y="108" width="524" height="14" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+  <rect x="32" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="38" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="95" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="101" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="158" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="164" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="221" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="227" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="284" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="290" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="347" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="353" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="410" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="416" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <rect x="473" y="158" width="54" height="64" fill="var(--terracotta)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="479" y="176" width="42" height="24" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <g fill="var(--terracotta)"><path d="M59 180 C66.2 183.6 66.2 192.4 59 196 C51.8 192.4 51.8 183.6 59 180 Z"/><path d="M122 180 C129.2 183.6 129.2 192.4 122 196 C114.8 192.4 114.8 183.6 122 180 Z"/><path d="M185 180 C192.2 183.6 192.2 192.4 185 196 C177.8 192.4 177.8 183.6 185 180 Z"/><path d="M248 180 C255.2 183.6 255.2 192.4 248 196 C240.8 192.4 240.8 183.6 248 180 Z"/><path d="M311 180 C318.2 183.6 318.2 192.4 311 196 C303.8 192.4 303.8 183.6 311 180 Z"/><path d="M374 180 C381.2 183.6 381.2 192.4 374 196 C366.8 192.4 366.8 183.6 374 180 Z"/><path d="M437 180 C444.2 183.6 444.2 192.4 437 196 C429.8 192.4 429.8 183.6 437 180 Z"/><path d="M500 180 C507.2 183.6 507.2 192.4 500 196 C492.8 192.4 492.8 183.6 500 180 Z"/></g>
+  <rect x="18" y="222" width="524" height="14" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+  <rect x="222" y="118" width="100" height="40" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+  <text x="272" y="146" text-anchor="middle" fill="var(--ink)" style="font-family:var(--sans);font-weight:800;font-size:21px">&pound;3.20</text>
+  <circle cx="334" cy="118" r="27" fill="var(--red)" stroke="var(--ink)" stroke-width="2.5"/>
+  <text x="334" y="124" text-anchor="middle" fill="var(--paper)" style="font-family:var(--sans);font-weight:800;font-size:15px">+10%</text>
+</svg>
+    <div class="memo">
+      <div class="hd"><b>From</b><span>Chief Executive</span><b>To</b><span>Head of Buying</span><b>Re</b><span>Hartwell&rsquo;s</span></div>
+      <p>You are head of buying at Selwood&rsquo;s, one of the country&rsquo;s biggest supermarket chains. This winter Selwood&rsquo;s has promised its shoppers no price rises on everyday essentials, and its adverts say so on buses across the country.</p>
+      <p>Hartwell&rsquo;s, the family firm behind the country&rsquo;s best-selling tea, wants <b>10% more</b> for every box from Monday. It has just borrowed to build a new packing line, and it has a reputation. Last year Hartwell&rsquo;s stopped supplying a discount chain that turned down a rise, and its managing director has told the press that every supermarket will pay.</p>
+      <p>The chief executive wants you to make it plain to Hartwell&rsquo;s that if it insists, its tea comes off Selwood&rsquo;s shelves and Selwood&rsquo;s own-label tea goes in its place. Selwood&rsquo;s has done it before: two years ago it took a crisp maker&rsquo;s whole range off its shelves for three months.</p>
+      <p>The crisp maker was a small brand. Hartwell&rsquo;s is the best-selling tea in your stores, and your own research shows that one in ten of the people who buy it would do their whole weekly shop somewhere else if it disappeared, many of them for good. That would cost Selwood&rsquo;s far more than the rise ever could, and the own-label tea is six months away from the shelves.</p>
+      <p>Hartwell&rsquo;s head of sales has agreed to see you before the talks end on Friday. Prepare for your meeting.</p>
+    </div>
+    <div class="obj">Your objective: keep Hartwell&rsquo;s on your shelves at the smallest rise you can.</div>
+    <div class="report" id="report">
+      <div class="rt">When the talks are over</div>
+      <p class="rn">Hartwell&rsquo;s types in your deal. You answer one question, and once it is locked in, it stays.</p>
+      <form class="form" id="agree" autocomplete="off">
+        <div class="ask"><div class="aq">Would Hartwell&rsquo;s really have stopped delivering?</div>
+          <div class="yn"><button type="button" data-b="Yes">YES</button><button type="button" data-b="No">NO</button></div></div>
+        <button class="btn" type="submit">LOCK IT IN</button>
+        <div class="msg" id="amsg"></div>
+      </form>
+      <div class="done" id="adone" hidden><b>Locked in.</b> It goes up on the screen at the debrief.</div>
+    </div>
+  </div>
+  <div class="swap" id="swapbox" hidden><a href="../" id="swap">Same brief as your partner? One of you tap here to switch.</a></div>
+</div>
+<script>
+/* One brief per phone or laptop. The first brief it opens is the one it
+   keeps: the other side's address afterwards shows a note, not the brief.
+   ?fresh=1 clears it (for rehearsals). The names come from the landing page. */
+(function(){
+  const ME=document.body.dataset.k, KEY='gt-m7-tea';
+  let held=null;
+  try{
+    if(new URLSearchParams(location.search).has('fresh')){localStorage.removeItem(KEY);localStorage.removeItem('gt-m7-tea-pair');}
+    held=localStorage.getItem(KEY);
+    if(!held){localStorage.setItem(KEY,ME);held=ME;}
+  }catch(_){held=ME;}
+  if(held!==ME){
+    document.getElementById('brief').hidden=true;
+    const n=document.getElementById('lock');n.hidden=false;
+    n.querySelector('a').href='../'+held+'/';
+    return;
+  }
+  try{const p=JSON.parse(localStorage.getItem('gt-m7-tea-pair')||'null');
+    if(p&&p.them){const w=document.getElementById('who');w.textContent='Your partner: '+p.them;w.hidden=false;}}catch(_){}
+  /* a pair who both landed on one side (a nickname or a copied order can do
+     it) switch one phone here: it keeps the names and takes the other brief */
+  document.getElementById('swapbox').hidden=false;
+  document.getElementById('swap').addEventListener('click',e=>{e.preventDefault();
+    const o=ME==='h2x'?'s9k':'h2x';try{localStorage.setItem(KEY,o);}catch(_){}location.replace('../'+o+'/');});
+})();
+</script>
+<script>
+/* Sent once to the poll server, room m7-tea, and locked, like every answer
+   in the programme (a Poll Desk reset of the room unlocks it again). From
+   Hartwell's phone: 0 the pair, 1 the rise (a number from 0 to 10, or "No
+   deal was reached"), 2 anything else. From both phones, the one question:
+   "b" with the side (h or s) and Yes or No. The deck's What did your pair
+   agree? slide reads them all. */
+(function(){
+  const f=document.getElementById('agree');if(!f||document.getElementById('brief').hidden)return;
+  const API='https://gt-poll.rlamare.workers.dev', ROOM='m7-tea', SAID='gt-said-'+ROOM, SIDE=document.body.dataset.side;
+  let voter=null;
+  try{voter=localStorage.getItem('gt-voter');
+    if(!voter){voter=crypto.randomUUID?crypto.randomUUID():'v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);localStorage.setItem('gt-voter',voter);}
+  }catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+  const done=document.getElementById('adone'), msg=document.getElementById('amsg'), btn=f.querySelector('button[type=submit]');
+  const pair=document.getElementById('a0'), rise=document.getElementById('a1'), extra=document.getElementById('a2'), none=document.getElementById('anone');
+  const NODEAL='No deal was reached';
+  let belief='';
+  f.querySelectorAll('.yn button').forEach(b=>b.addEventListener('click',()=>{
+    belief=b.dataset.b;f.querySelectorAll('.yn button').forEach(x=>x.classList.toggle('on',x===b));msg.textContent='';}));
+  if(pair){try{const p=JSON.parse(localStorage.getItem('gt-m7-tea-pair')||'null');if(p&&p.me&&p.them)pair.value=p.me+' & '+p.them;}catch(_){}}
+  if(none)none.addEventListener('change',()=>{[rise,extra].forEach(x=>x.closest('label').hidden=none.checked);msg.textContent='';});
+  function lock(on){f.hidden=on;done.hidden=!on;}
+  let said=false;try{said=localStorage.getItem(SAID)==='1';}catch(_){}
+  if(said){
+    lock(true);
+    fetch(API+'/p/'+ROOM+'/entries').then(r=>r.json()).then(d=>{
+      if((d.entries||[]).some(e=>e.v===voter))return;
+      try{localStorage.removeItem(SAID);}catch(_){}
+      btn.disabled=false;lock(false);
+    }).catch(()=>{});
+  }
+  /* the rise as a plain number from 0 to 10: "5", "4.5", "4,5" and "5%" all do */
+  function riseValue(){
+    const t=rise.value.trim().replace(',','.').replace(/\s*%$/,'');
+    if(!/^\d{1,2}(\.\d{1,2})?$/.test(t))return null;
+    const n=+t;return n>=0&&n<=10?String(n):null;
+  }
+  f.addEventListener('submit',e=>{
+    e.preventDefault();
+    const lines=[];
+    if(pair){
+      const p=pair.value.trim().replace(/\s+/g,' ');
+      if(!p){msg.textContent='Fill in your pair.';return;}
+      let r=NODEAL;
+      if(!none.checked){r=riseValue();if(r===null){msg.textContent='Type the rise as a number from 0 to 10.';return;}}
+      const x=none.checked?'\u2013':(extra.value.trim().replace(/\s+/g,' ')||'\u2013');
+      lines.push('0\u2016'+p,'1\u2016'+r,'2\u2016'+x);
+    }
+    if(!belief){msg.textContent='Answer the question, yes or no.';return;}
+    lines.push('b\u2016'+SIDE+'\u2016'+belief);
+    btn.disabled=true;msg.textContent='Sending\u2026';
+    const post=t=>fetch(API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+    lines.reduce((c,t)=>c.then(()=>post(t)),Promise.resolve()).then(()=>{
+      try{localStorage.setItem(SAID,'1');}catch(_){}
+      msg.textContent='';lock(true);
+    }).catch(code=>{msg.textContent=code===429?'That\u2019s plenty from one phone.':'That didn\u2019t send. Try again.';btn.disabled=false;});
+  });
+})();
+</script>
+</body></html>

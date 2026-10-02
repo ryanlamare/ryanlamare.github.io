@@ -1,4 +1,7 @@
-/* Hidden Agenda — the two tables, in one place.
+/* Hidden Agenda — the table, in one place. (Plain pass, 20 Sep 2026: the
+   game runs as ONE table, the Tapas committee, moderated by Ryan; the Granito
+   table is left in this file and still opens with ?t=granito, but no page
+   offers it.)
 
    Everything client-specific about the capstone game lives here: which
    airline each table is, who the four bidders are, and what the Backers
@@ -11,14 +14,20 @@
    no instruments, and RRPF itself is not on either list on purpose (a room
    of RRPF people would take its side, and the honest committee's job is to
    read each other, not to defend their employer). The Manipulators' bidder is
-   dealt at random by the Worker unless the moderator picks one. Bidders are
-   exactly even: two strengths and two watch-outs each, and no numbers.
+   dealt at random by the Worker unless the table names one in `backed`, which
+   the moderator page sends with the deal. Bidders are exactly even on the
+   cards, as the candidates are in his 565 version: two strengths and two
+   watch-outs each, and no numbers. The Tapas Manipulators back Northlake
+   Leasing (Ryan, 19 Sep 2026: the one that stands out a little to a room of
+   engine-lessor people, by habit, so the honest committee leans the same way
+   and the Manipulators pool with it).
 
    Roles: m committee member, b manipulator, a auditor, c general counsel. */
 const CS_TABLES = {
   tapas: {
     id: 'tapas',
     room: 'm8-cs-tapas',
+    backed: 'B',
     title: 'The Tapas committee',
     airline: 'Tapas Airways',
     body: 'the committee',

@@ -40,35 +40,102 @@ h1 .r{color:var(--red)}
 .bulk .or{font-weight:600;font-size:13px;color:var(--muted)}
 .bulk input{font-family:var(--sans);font-weight:600;font-size:14px;padding:9px 12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);min-width:220px}
 .bulk button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:var(--paper);border:none;padding:11px 14px;cursor:pointer}
+.runlink{display:inline-block;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--paper);padding:11px 14px;text-decoration:none;margin-top:14px}
 .msg{font-size:13px;min-height:1.4em;margin-top:12px;opacity:.8}
 .msg.bad{color:var(--red);opacity:1}
 .sctag{font-weight:700;font-size:9.5px;letter-spacing:.12em;color:var(--red);
   border:1px solid var(--red);padding:1px 6px;vertical-align:2px}
+/* the rooms by module (24 Sep 2026) */
+h3.mod{font-family:var(--display);font-weight:900;font-size:19px;margin:28px 0 10px}
+h3.mod:first-child{margin-top:8px}
+.room .rid .rs{font-weight:700;font-size:11px;letter-spacing:.1em;color:var(--red);margin-left:8px}
+.room .rc{font-size:11.5px;opacity:.45;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.each{margin:-4px 0 12px 18px}
+details.each summary,details.fold summary{font-weight:700;font-size:11.5px;letter-spacing:.12em;cursor:pointer;padding:6px 0;opacity:.75}
+details.each .room{padding:9px 12px;margin-bottom:6px}
+details.fold{margin-top:30px;border-top:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);padding-top:14px}
+details.fold .sub{margin:6px 0 14px}
+details.fold .room{opacity:.8}
+/* the attendee list (24 Sep 2026): the names phones pick from */
+.roster{border:2px solid var(--red);padding:18px 16px 16px;margin-bottom:26px}
+.roster h2{font-family:var(--display);font-weight:900;font-size:22px;margin-bottom:4px}
+.roster .sub{margin-bottom:14px}
+.rcount{font-weight:700;font-size:13px;letter-spacing:.06em;margin-bottom:10px}
+.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:14px}
+.rrow{display:flex;align-items:center;gap:8px;border:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);padding:7px 8px 7px 12px}
+.rrow .nm{flex:1;min-width:0;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow input{flex:1;min-width:0;font-family:var(--sans);font-weight:600;font-size:15px;color:var(--paper);
+  background:transparent;border:0;border-bottom:1.5px dashed color-mix(in srgb, var(--paper) 40%, transparent);padding:3px 0}
+.rrow input:focus{outline:none;border-bottom-color:var(--red)}
+.rrow input.clash{border-bottom:2px solid var(--red)}
+.rrow .x{flex:none;font-family:var(--sans);font-weight:700;font-size:18px;line-height:1;width:32px;height:32px;
+  background:transparent;color:var(--paper);border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent);cursor:pointer}
+.rrow .x:hover{background:var(--red);border-color:var(--red)}
+.roster textarea{width:100%;font-family:var(--sans);font-weight:600;font-size:14.5px;line-height:1.45;padding:11px 14px;
+  background:color-mix(in srgb, var(--paper) 8%, transparent);color:var(--paper);
+  border:2px solid color-mix(in srgb, var(--paper) 30%, transparent);resize:vertical;min-height:150px;margin-bottom:10px}
+.roster details{border-top:1.5px solid color-mix(in srgb, var(--paper) 22%, transparent);padding-top:14px;margin-top:4px}
+.roster summary{font-weight:700;font-size:12px;letter-spacing:.12em;cursor:pointer;margin-bottom:10px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.btnrow button,.roster .go{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.1em;
+  background:var(--red);color:var(--paper);border:0;padding:11px 18px;cursor:pointer}
+.btnrow button.ghost{background:transparent;border:1.5px solid color-mix(in srgb, var(--paper) 35%, transparent)}
+.roster .msg button{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.1em;margin-left:10px;
+  background:transparent;color:var(--paper);border:1.5px solid var(--paper);padding:4px 10px;cursor:pointer}
 </style>
 </head><body>
 <div class="wrap">
   <div class="hkick">Applied Game Theory · Facilitator only</div>
   <h1>POLL <span class="r">DESK</span></h1>
-  <p class="sub">Live answer counts for every room, and a reset for each. Reset every room you plan to
-  use before a session starts. The secret is remembered on this device only.</p>
+  <p class="sub">The rooms by module, in teaching order, with live answer counts and a reset for each.
+  Press RESET EVERY ROOM before a session starts. The secret is remembered on this device only.</p>
   <div class="secretrow">
     <input type="password" id="secret" placeholder="Admin secret" autocomplete="off">
     <button id="saveSecret" type="button">SAVE</button>
   </div>
+  <section class="roster" id="roster">
+    <h2>The attendee list</h2>
+    <p class="sub">The names phones show under “Who are you?”. A change here reaches the phones within a few
+    seconds. People not on the list can still type their name.</p>
+    <div class="rcount" id="rcount"></div>
+    <div class="rlist" id="rlist"></div>
+    <div class="secretrow">
+      <input type="text" id="addName" placeholder="Add a late joiner’s name" autocomplete="off">
+      <button id="addBtn" type="button">ADD</button>
+    </div>
+    <details id="paste">
+      <summary>PASTE A NEW LIST</summary>
+      <p class="sub">Copy the names straight from the spreadsheet or the email and paste them here, one
+      person per line. Extra columns such as email or company are fine: TIDY IT keeps first names only,
+      adding a last initial where two people share a first name.</p>
+      <textarea id="pasteIn" placeholder="Paste the list here" autocomplete="off" spellcheck="false"></textarea>
+      <div class="btnrow"><button id="tidyBtn" type="button">TIDY IT</button></div>
+      <div id="preview" hidden>
+        <p class="sub" id="pvHead" style="margin:18px 0 10px"></p>
+        <div class="rlist" id="pvList"></div>
+        <div class="btnrow">
+          <button id="saveList" type="button">SAVE THIS LIST</button>
+          <button id="cancelList" class="ghost" type="button">CANCEL</button>
+        </div>
+      </div>
+    </details>
+    <div class="msg" id="rmsg"></div>
+  </section>
   <div class="bulk" id="bulk">
     <button id="resetAll" type="button">RESET EVERY ROOM</button>
     <span class="or">or a rehearsal:</span><input type="text" id="suffix" placeholder="room suffix, e.g. trial11" autocomplete="off"><button id="resetTrial" type="button">RESET THAT REHEARSAL</button>
   </div>
-  <div id="rooms"></div>
   <div class="msg" id="msg"></div>
+  <div id="rooms"></div>
 </div>
 <script>
 (function(){
 const API='https://gt-poll.rlamare.workers.dev';
 const EXTRA=[
-  {id:'m1-dog',q:'Median dog drawings (Module 1 game)',draws:true},
+  {id:'m1-dog',q:'Median dog drawings (Module 1; cut to the outtakes 19 Sep 2026)',draws:true},
   {id:'m1-number',q:'Number game guesses + the secret number (Module 1)',guesses:true},
   {id:'m1-av',q:'Added value offers and decisions (Module 1)',text:true},
+  {id:'m1-hands',q:'Build your hand, the four cards per pair (Module 1; cut in the plain pass 19 Sep 2026, the slide now asks the four questions with no phones)',text:true},
   {id:'m2-cards-live',q:'Last-card moves in flight (Module 2 live game)',text:true},
   {id:'m2-lastcard',q:'Last-card finished games (Module 2 live game)',text:true},
   {id:'m2-ult-live',q:'Ultimatum offers in flight (Module 2 live game)',text:true},
@@ -77,45 +144,56 @@ const EXTRA=[
   {id:'m2-centipede',q:'Centipede finished games (Module 2 live game)',text:true},
   {id:'m2-quit',q:'The second smoking poll (Module 2; cut to the outtakes 14 Sep 2026)'},
   {id:'m2-flops',q:'First movers who lost, the write-in wall (Module 2; cut to the outtakes 14 Sep 2026)',text:true},
-  {id:'m2-decade',q:'Long-term-deal votes (Module 2 live game)',text:true},
-  {id:'m2-tapasguess',q:'How-many-ways guesses (Module 2 live game)',text:true},
-  {id:'m2-branch',q:'Branches of the room’s tree, one group per phone (Module 2 closing exercise)',text:true},
+  {id:'m2-decade',q:'Long-term-deal votes (Module 2; off the m2 game menu 14 Sep 2026, in the outtakes)',text:true},
+  {id:'m2-tapasguess',q:'How-many-ways guesses (Module 2; off the m2 game menu 14 Sep 2026, in the outtakes)',text:true},
+  {id:'m2-trees',q:'The closer’s trees (Module 2; a phone form tried and cut the same day, 20 Sep 2026: the closer is four questions, talked through out loud. Holds bot trees; reset and forget)',text:true},
+  {id:'m2-branch',q:'Branches of the room’s tree (Module 2; cut in the plain pass 19 Sep 2026; the closer is four questions talked through out loud, no phones, no paper)',text:true},
   {id:'m2-tree',q:'The room’s tree, first wire format (14 Sep, superseded the same day; reset and forget)',text:true},
-  {id:'m3-engine',q:'Engine game joins, pitches and round markers (Module 3 game)',text:true},
+  {id:'m3-engine',q:'Engine game joins, pitches and round markers (Module 3; the played game was cut in the plain pass 19 Sep 2026, pairs now solve the matrix together on a page that sends nothing)',text:true},
   {id:'m3-matrix',q:'Build your matrix, one pair per two phones (Module 3; cut to the outtakes 15 Sep 2026)',text:true},
   {id:'m3-beach',q:'Two rivals on the beach, in pairs (Module 3; cut to the outtakes 15 Sep 2026)',text:true},
-  {id:'m3-engines',q:'The room’s engines, one phone each, the name on line 1 (Module 3 closing exercise; solo since 18 Sep 2026)',text:true},
-  {id:'m4-prices',q:'Price Wars — the teams’ signs and the deck’s markers: pairing, paper, meetings, open, reveal, shock (Module 4 game)',text:true},
-  {id:'m4-teams',q:'Price Wars team claims — who is on which station (Module 4)',text:true},
-  {id:'m4-huddle',q:'Price Wars — each team’s leanings and locks, seen only by the team (Module 4)',text:true},
-  {id:'m4-meet',q:'Price Wars — meeting asks and the reps’ notes of what was agreed (Module 4)',text:true},
-  {id:'m4-pds',q:'The room’s dilemmas as a prison, one phone each, the name on line 1, and each person’s way out (Module 4 closing exercise; solo since 18 Sep 2026)',text:true},
+  {id:'m3-hotelling',q:'Where else do we see Hotelling? The room’s write-in wall (Module 3; cut 23 Sep 2026, Ryan: his Hotelling is everywhere tiles carry the examples, and he asks for the room’s out loud)',text:true},
+  {id:'m3-lot',q:'One aircraft, two buyers: each pair’s agreement, typed by Harrow’s producer at the bottom of the brief (Module 3 live game; four lines a phone: the pair, the plan, the price, the conditions)',text:true},
+  {id:'m3-engines',q:'The room’s engines (Module 3; cut in the plain pass 19 Sep 2026, the closer is now four questions talked through in pairs, no phones)',text:true},
+  {id:'m4-prices',q:'Price Wars — the teams’ signs and the deck’s markers: pairing, paper, meetings, open, reveal, shock (Module 4 game) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
+  {id:'m4-teams',q:'Price Wars team claims — who is on which station (Module 4) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
+  {id:'m4-huddle',q:'Price Wars — each team’s leanings and locks, seen only by the team (Module 4) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
+  {id:'m4-meet',q:'Price Wars — meeting asks and the reps’ notes of what was agreed (Module 4) (cut in the plain pass 20 Sep 2026: Price Wars is now one phone per team held up across the room, m4/price/, and sends nothing)',text:true},
+  {id:'m4-results',q:'Price Wars — the whole game as Ryan runs it from his desk (m4/desk/): every price, every Told, the meetings and their reps, the teams’ names, and the lines What happened at each junction reads (Module 4, since 29 Sep 2026). A reset starts the game over: the desk goes back to its setup and the phones to their station picker.',text:true},
+  {id:'m4-yourpd',q:'Where do prisoner’s dilemmas show up in your own world?, the write-in wall (Module 4; cut 16 Sep 2026 and off /go/polls.json 20 Sep; kept here so a reset still clears it)',text:true},
+  {id:'m4-pds',q:'The room’s dilemmas as a prison (Module 4; cut in the plain pass 20 Sep 2026, both touches are now plain question slides talked through in twos or threes, no phones)',text:true},
   {id:'m4-tapas',q:'Tapas growth game joins, moves and round markers (Module 4; cut to the outtakes 16 Sep 2026)',text:true},
   {id:'m5-invest',q:'Investment game rounds (Module 5 game)',text:true},
   {id:'m5-bos',q:'The shape of the deal votes + round marker (Module 5 Tapas)',text:true},
   {id:'m5-chicken',q:'The final meeting votes + round marker (Module 5 Tapas)',text:true},
-  {id:'m5-games',q:'Your coordination game, one phone each: the players, the situation, the options, the game, the focal point (Module 5 closing exercise)',text:true},
+  {id:'m5-games',q:'Your coordination games as an aircraft (Module 5; cut in the plain pass 20 Sep 2026, the closer is now a plain question slide talked through in twos or threes, no phones)',text:true},
   {id:'m5-twothirds',q:'Guess two-thirds (Module 5; cut to the outtakes 17 Sep 2026)',text:true},
-  {id:'m6-pk',q:'Penalty shootout joins and kicks (Module 6 game)',text:true},
+  {id:'m6-pk',q:'Penalty shootout joins and kicks (Module 6; cut to the outtakes 22 Sep 2026, beat the keeper is the one penalty game)',text:true},
   {id:'m6-rps',q:'Rock, paper, scissors joins and throws (Module 6 game)',text:true},
   {id:'m6-solo',q:'Beat the keeper \u2014 solo kicks (Module 6 game)',text:true},
-  {id:'m6-vs',q:'Boss battle \u2014 the top scorers\u2019 kicks and the keeper\u2019s moves (Module 6 game)',text:true},
-  {id:'m6-inspect',q:'The inspection game \u2014 regulator and maintenance shop rounds (Module 6 game)',text:true},
-  {id:'m6-world',q:'Unpredictability in your world, one phone each: who is trying to predict you, what, what happens if they can, pays or costs (Module 6 closing exercise)',text:true},
+  {id:'m6-vs',q:'Boss battle \u2014 the top scorers\u2019 kicks and the keeper\u2019s moves (Module 6; cut to the outtakes in the plain pass 20 Sep 2026)',text:true},
+  {id:'m6-inspect',q:'The inspection game \u2014 regulator and maintenance shop rounds (Module 6; cut to the outtakes 22 Sep 2026, the enforcement half is now examples and two clips)',text:true},
+  {id:'m6-world',q:'Unpredictability in your world as a bingo cage, with the room\u2019s bingo (Module 6; cut in the plain pass 20 Sep 2026, the closer is now a plain question slide talked through in twos or threes, no phones)',text:true},
   {id:'m6-yourworld',q:'Unpredictability in your world, the write-in wall (Module 6; cut to the outtakes 17 Sep 2026)',text:true},
+  {id:'m7-tea',q:'Who blinks first?: each pair\u2019s deal, typed by Hartwell\u2019s at the bottom of its brief, and one question from every phone (Module 7; cut to the outtakes 28 Sep 2026, where it still plays; the pair, the rise, anything else, and whether each side thought the other would really do it)',text:true},
   {id:'m7-chicken',q:'Chicken \u2014 joins, wheel decisions and moves (Module 7 game)',text:true},
   {id:'m7-gb',q:'Split or steal \u2014 joins, moves, and hand-over decisions (Module 7 game)',text:true},
-  {id:'m7-auction',q:'The auction \u2014 live bids and the sold marker (Module 7 game)',text:true},
-  {id:'m7-world',q:'Strategic moves in your world, one phone each: the game, the move (commitment, threat or promise), what makes it credible, the downside (Module 7 closing exercise)',text:true},
-  {id:'m8-market',q:'The car market \u2014 joins, cards, deals and the round markers (Module 8 game)',text:true},
-  {id:'m8-cs-tapas',q:'Hidden Agenda, the Tapas table \u2014 seats, roles, nights, votes (Module 8 game)',text:true},
-  {id:'m8-cs-granito',q:'Hidden Agenda, the Granito table \u2014 seats, roles, nights, votes (Module 8 game)',text:true},
-  {id:'gt-names',q:'Class name claims — the points system’s join table',text:true},
-  {id:'gt-avatars',q:'The avatars built on the phones, one line per finish (no points ride on it; a line only counts while its phone still holds the same name in gt-names)',text:true},
+  {id:'m7-auction',q:'The auction \u2014 live bids and the sold marker (Module 7; cut in the plain pass 20 Sep 2026, the auction is run out loud for \u00a3100)',text:true},
+  {id:'m7-world',q:'Strategic moves in your world as ships round the Sirens (Module 7; cut in the plain pass 20 Sep 2026, the closer is now a plain slide talked through in twos or threes, no phones)',text:true},
+  {id:'m8-car',q:'The car market \u2014 joins, the deal, the three rounds and the sellers\u2019 prices (Module 8; reset before the session)',text:true},
+  {id:'m8-market',q:'The car market \u2014 joins, bids and the round markers (Module 8; cut in the plain pass 20 Sep 2026, the car market is now his three-round card game played face to face, m8/car/, and sends nothing)',text:true},
+  {id:'m8-cs-tapas',q:'Hidden Agenda (Module 8; cut 23 Sep 2026 for the signaling scavenger hunt, the game is at tag m8-before-hunt)',text:true},
+  {id:'m8-cs-granito',q:'Hidden Agenda, the Granito table (Module 8; cut in the plain pass 20 Sep 2026, the game runs as one table)',text:true},
+  {id:'m8-yourworld',q:'Information asymmetries in your world, the write-in wall (Module 8; cut in the plain pass 20 Sep 2026, the closer is now a plain question slide talked through in twos or threes, no phones)',text:true},
+  {id:'gt-names',q:'The names phones have picked (the join table from phone to name)',text:true},
+  {id:'gt-now',q:'On the screen now: the QR slide each deck last showed, which a typed ryanlamare.com/go offers first',text:true},
 ];
 /* rooms the class points system scores from: resetting one mid-cohort
    erases earned points, so they carry a tag and a sterner confirm */
-const SCORING=/^(gt-names|m1-dog|m1-number|m2-centipede|m2-lastcard|m3-engine|m4-prices|m4-teams|m5-k\d+|m6-pk|m6-vs|m7-chicken|m7-gb|m7-auction|m8-cs-tapas|m8-cs-granito)$/;
+/* the league went in the plain pass (20 Sep 2026): no room scores, so no room gets the SCORING tag or the
+   "erases points… only between cohorts" confirm, which argued against the reset every session needs.
+   The pattern is kept, matching nothing, so the tag and the confirm below need no other change. */
+const SCORING=/^(?!)$/;
 const secretEl=document.getElementById('secret'), msg=document.getElementById('msg');
 try{secretEl.value=localStorage.getItem('gt-admin')||'';}catch(_){}
 document.getElementById('saveSecret').addEventListener('click',()=>{
@@ -124,74 +202,378 @@ document.getElementById('saveSecret').addEventListener('click',()=>{
 });
 function say(t,bad){msg.textContent=t;msg.className='msg'+(bad?' bad':'');}
 const roomsEl=document.getElementById('rooms');
-/* bulk resets: every listed room (the scoring rooms included: between cohorts only), or one rehearsal's rooms by suffix */
+/* bulk resets: every listed room, or one rehearsal's rooms by suffix */
 let ALL_IDS=[];
 async function resetIds(ids,label){
   const s=secretEl.value.trim();
   if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
   if(prompt('Type RESET to clear '+label+' ('+ids.length+' rooms). This cannot be undone.')!=='RESET'){say('Nothing reset.');return;}
-  /* one try, and one retry a moment later: a dropped request or a throttled
-     one used to read as "refused (is the secret right?)" with no room named
-     (Ryan's rehearsal, 17 Sep). A wrong secret is a 403 on every room. */
-  const once=async id=>{try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});
-    if(r.status===403)return 'secret';const d=await r.json();return d.ok?'ok':'failed';}catch(_){return 'failed';}};
   let ok=0;const failed=[];let wrong=0;
   for(const id of ids){
-    let res=await once(id);
-    if(res==='failed'){await new Promise(z=>setTimeout(z,900));res=await once(id);}
+    const res=await resetOne(id,s);
     if(res==='ok')ok++;else if(res==='secret')wrong++;else failed.push(id);
     say('Resetting '+label+': '+ok+' done'+(failed.length+wrong?', '+(failed.length+wrong)+' not yet':'')+'…');
   }
   if(wrong)say(label+': '+ok+' rooms cleared, '+wrong+' refused: the secret is wrong.',true);
   else if(failed.length)say(label+': '+ok+' rooms cleared. Did not clear after a retry: '+failed.join(', ')+'. Press reset on '+(failed.length>1?'those rooms':'that room')+' below.',true);
   else say(label+': '+ok+' rooms cleared.');
-  document.querySelectorAll('#rooms .ct').forEach(c=>{c.textContent='–';c.className='ct';});
+  refreshAll();
 }
-document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room, scoring rooms included'));
+/* one try, and one retry a moment later: a dropped request or a throttled
+   one used to read as "refused (is the secret right?)" with no room named
+   (Ryan's rehearsal, 17 Sep). A wrong secret is a 403 on every room. */
+async function resetOne(id,s){
+  const once=async()=>{try{const r=await fetch(API+'/p/'+id+'/reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s:s})});
+    if(r.status===403)return 'secret';const d=await r.json();return d.ok?'ok':'failed';}catch(_){return 'failed';}};
+  let res=await once();
+  if(res==='failed'){await new Promise(z=>setTimeout(z,900));res=await once();}
+  return res;
+}
+document.getElementById('resetAll').addEventListener('click',()=>resetIds(ALL_IDS,'EVERY room'));
 document.getElementById('resetTrial').addEventListener('click',()=>{
   const suf=document.getElementById('suffix').value.trim().replace(/[^a-z0-9-]/g,'');
   if(!suf){say('Type the rehearsal room suffix first (the part after ?room=).',true);return;}
-  resetIds(['m3-engines','m4-teams','m4-prices','m4-huddle','m4-meet','m4-pds','m5-invest','m5-bos','m5-chicken','m5-games','m6-world','m7-world'].map(r=>r+'-'+suf),'rehearsal '+suf);
+  resetIds(['m3-engines','m4-results','m4-teams','m4-prices','m4-huddle','m4-meet','m4-pds','m5-invest','m5-bos','m5-chicken','m5-games','m6-world','m7-world'].map(r=>r+'-'+suf),'rehearsal '+suf);
 });
+/* The desk as the programme runs (24 Sep 2026; it had been one list of 80
+   rooms, each module in two places and the cut rooms among the live ones).
+   A section per module in teaching order; each row is one thing he runs,
+   titled as its slide is, with the room or rooms behind it, and a row with
+   several rooms resets them together (a rerun of the ultimatum clears both
+   its rooms). "each" rows fold out their questions, so one quiz question
+   can be reset alone. Rooms placed by the deck that uses them, not by their
+   name (the two-thirds guess, m8-twothirds, runs in module 7). The rooms no
+   deck reads any more are folded away at the bottom, and RESET EVERY ROOM
+   still clears them; a room on neither list shows under "Not sorted yet". */
+const LAYOUT=[
+  ['Module 1',[
+    {t:'How familiar are you with game theory as a strategic concept?',ids:['m1-familiarity']},
+    {t:'I’m thinking of a number',ids:['m1-number']},
+    {t:'Added value game',ids:['m1-av']},
+  ]],
+  ['Module 2',[
+    {t:'Should you smoke?',ids:['m2-smoke']},
+    {t:'A game of backward reasoning (last card)',ids:['m2-cards-live','m2-lastcard']},
+    {t:'The ultimatum game',ids:['m2-ult-live','m2-ultimatum']},
+    {t:'The centipede game',ids:['m2-cent-live','m2-centipede']},
+  ]],
+  ['Module 3',[
+    {t:'A zero-sum truel game',ids:['m3-truel']},
+  ]],
+  ['Module 4',[
+    {t:'Price Wars',ids:['m4-results']},
+    {t:'Rank the strategies',ids:['m4-axelrod']},
+  ]],
+  ['Module 5',[
+    {t:'The common knowledge quiz',ids:Array.from({length:16},(_,i)=>'m5-k'+(i+1)),each:true},
+    {t:'The investment game',ids:['m5-invest']},
+    {t:'Whose system?',ids:['m5-bos']},
+    {t:'The hub lease',ids:['m5-chicken']},
+  ]],
+  ['Module 6',[
+    {t:'Beat the keeper',ids:['m6-solo']},
+    {t:'Rock, paper, scissors',ids:['m6-rps']},
+  ]],
+  ['Module 7',[
+    {t:'Guess two-thirds of the average',ids:['m8-twothirds']},
+    {t:'Chicken',ids:['m7-chicken']},
+    {t:'Surround them, or leave a way out?',ids:['m7-suntzu']},
+    {t:'Would you take the deal?',ids:['m7-av-take','m7-av-who'],each:true},
+    {t:'Split or steal',ids:['m7-gb']},
+  ]],
+  ['Module 8',[
+    {t:'A car market game',ids:['m8-car']},
+    {t:'Signaling scavenger hunt',ids:['m8-hunt']},
+    {t:'What will you use first?',ids:['m8-wrap-me','m8-wrap-room'],each:true},
+  ]],
+  ['Across the programme',[
+    {t:'The names phones have picked',ids:['gt-names'],q:'A reset makes every phone ask who it is again.'},
+    {t:'On the screen now',ids:['gt-now'],q:'The QR each deck last showed, offered first on a typed ryanlamare.com/go. The next QR slide fills it again.'},
+  ]],
+];
+const RETIRED=['m1-dog','m1-hands','m2-quit','m2-flops','m2-decade','m2-tapasguess','m2-trees','m2-branch','m2-tree',
+  'm3-engine','m3-matrix','m3-beach','m3-hotelling','m3-engines','m3-lot','m4-prices','m4-teams','m4-huddle','m4-meet','m4-yourpd','m4-pds','m4-tapas',
+  'm5-games','m5-twothirds','m6-pk','m6-vs','m6-inspect','m6-world','m6-yourworld','m7-auction','m7-world','m7-tea',
+  'm8-market','m8-cs-tapas','m8-cs-granito','m8-yourworld'];
+const ROWS=[];
+function refreshAll(){ROWS.forEach(r=>r.refresh(true));}
 fetch('/teaching/exec/demo/go/polls.json').then(r=>r.json()).then(cfg=>{
-  const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:p.type==='text'||p.type==='form'})).concat(EXTRA);
+  const rooms=Object.entries(cfg.polls).map(([id,p])=>({id,q:p.q,text:['text','form','rank'].includes(p.type)})).concat(EXTRA);
+  const byId=Object.fromEntries(rooms.map(r=>[r.id,r]));
   ALL_IDS=rooms.map(r=>r.id);
-  rooms.forEach(room=>{
-    const div=document.createElement('div');div.className='room';
-    div.innerHTML='<div class="rn"><div class="rid"></div><div class="rq"></div></div>'+
+  const countOf=room=>fetch(API+'/p/'+room.id+(room.draws?'/draws':(room.guesses?'/guesses':(room.text?'/answers':''))),{cache:'no-store'})
+    .then(r=>r.json()).then(d=>d.total||0);
+  /* one row: a title, a line under it, the count, RESET */
+  function row(host,title,line,ids){
+    ids=ids.filter(id=>byId[id]);
+    if(!ids.length)return null;
+    const div=document.createElement('div');div.className='room';div.dataset.ids=ids.join(' ');
+    div.innerHTML='<div class="rn"><div class="rid"><span class="rt"></span><span class="rs"></span></div><div class="rq"></div><div class="rc"></div></div>'+
       '<div class="ct">–</div><button type="button">RESET</button>';
-    div.querySelector('.rid').textContent=room.id;
-    if(SCORING.test(room.id))div.querySelector('.rid').insertAdjacentHTML('beforeend',' <span class="sctag">SCORING</span>');
-    div.querySelector('.rq').textContent=room.q;
-    const ct=div.querySelector('.ct'), btn=div.querySelector('button');
-    function refresh(){
-      const url=API+'/p/'+room.id+(room.draws?'/draws':(room.guesses?'/guesses':(room.text?'/answers':'')));
-      fetch(url).then(r=>r.json()).then(d=>{
-        const n=d.total||0;
-        ct.textContent=n;
-        ct.className='ct'+(n>0?' hot':'');
+    div.querySelector('.rt').textContent=title;
+    if(ids.some(id=>SCORING.test(id)))div.querySelector('.rid').insertAdjacentHTML('beforeend',' <span class="sctag">SCORING</span>');
+    div.querySelector('.rq').textContent=line||'';
+    div.querySelector('.rc').textContent=ids.length>3?ids.length+' rooms: '+ids[0]+' to '+ids[ids.length-1]:ids.join(' · ');
+    const ct=div.querySelector('.ct'), btn=div.querySelector('button'), rs=div.querySelector('.rs');
+    function refresh(now){
+      if(!now&&div.closest('details:not([open])'))return; /* folded away: no polling */
+      Promise.all(ids.map(id=>countOf(byId[id]))).then(ns=>{
+        const n=ns.reduce((a,b)=>a+b,0);
+        ct.textContent=n;ct.className='ct'+(n>0?' hot':'');
       }).catch(()=>{ct.textContent='?';});
     }
-    btn.addEventListener('click',()=>{
+    btn.addEventListener('click',async()=>{
       const s=secretEl.value.trim();
       if(!s){say('Paste the admin secret first, then press SAVE.',true);return;}
-      const warn=SCORING.test(room.id)
-        ?'Reset '+room.id+'? This is a SCORING room — clearing it erases points the class has already earned. Only do this between cohorts.'
-        :'Reset '+room.id+'? This clears every answer in the room.';
+      const what=ids.length>1?'This clears every answer in its '+ids.length+' rooms.':'This clears every answer in the room.';
+      const warn=ids.some(id=>SCORING.test(id))
+        ?'Reset '+title+'? This is a SCORING room — clearing it erases points the class has already earned. Only do this between cohorts.'
+        :'Reset '+title+'? '+what;
       if(!confirm(warn))return;
-      btn.disabled=true;say('Resetting '+room.id+'…');
-      fetch(API+'/p/'+room.id+'/reset',{method:'POST',headers:{'content-type':'application/json'},
-        body:JSON.stringify({s:s})})
-      .then(r=>r.json()).then(d=>{
-        if(d.ok){say(room.id+' is clear.');refresh();}
-        else{say('The worker said no – is the secret right?',true);}
-      }).catch(()=>{say('No connection to the poll server.',true);})
-      .finally(()=>{btn.disabled=false;});
+      btn.disabled=true;rs.textContent='CLEARING…';
+      const res=[];for(const id of ids)res.push(await resetOne(id,s));
+      btn.disabled=false;
+      if(res.every(r=>r==='ok'))rs.textContent='CLEARED';
+      else if(res.includes('secret')){rs.textContent='';say('The poll server refused the secret. Check it at the top of this page.',true);}
+      else rs.textContent='DID NOT CLEAR, PRESS RESET AGAIN';
+      setTimeout(()=>{if(rs.textContent==='CLEARED')rs.textContent='';},5000);
+      refresh(true);
     });
-    roomsEl.appendChild(div);
-    refresh();setInterval(refresh,4000);
+    host.appendChild(div);
+    ROWS.push({refresh});
+    return div;
+  }
+  const placed=new Set();
+  LAYOUT.forEach(([name,items])=>{
+    const h=document.createElement('h3');h.className='mod';h.textContent=name;roomsEl.appendChild(h);
+    items.forEach(it=>{
+      it.ids.forEach(id=>placed.add(id));
+      const one=it.ids.length===1&&byId[it.ids[0]];
+      const line=it.q||(one&&one.q!==it.t&&!EXTRA.includes(one)?one.q:'');
+      row(roomsEl,it.t,line,it.ids);
+      if(it.each){
+        const det=document.createElement('details');det.className='each';
+        det.innerHTML='<summary>EACH QUESTION ON ITS OWN</summary>';
+        it.ids.filter(id=>byId[id]).forEach((id,i)=>row(det,(it.ids.length>3?'Question '+(i+1)+': ':'')+byId[id].q,'',[id]));
+        det.addEventListener('toggle',()=>{if(det.open)refreshAll();});
+        roomsEl.appendChild(det);
+      }
+    });
   });
+  const rest=rooms.filter(r=>!placed.has(r.id)&&!RETIRED.includes(r.id));
+  if(rest.length){
+    const h=document.createElement('h3');h.className='mod';h.textContent='Not sorted yet';roomsEl.appendChild(h);
+    rest.forEach(r=>row(roomsEl,r.id,r.q,[r.id]));
+  }
+  const old=rooms.filter(r=>!placed.has(r.id)&&RETIRED.includes(r.id));
+  if(old.length){
+    const det=document.createElement('details');det.className='fold';
+    det.innerHTML='<summary></summary><p class="sub">Rooms from games and polls cut in earlier passes. No deck reads them any more; they are listed so RESET EVERY ROOM still clears them.</p>';
+    det.querySelector('summary').textContent='RETIRED ROOMS ('+old.length+')';
+    old.forEach(r=>row(det,r.id,r.q,[r.id]));
+    det.addEventListener('toggle',()=>{if(det.open)refreshAll();});
+    roomsEl.appendChild(det);
+  }
+  refreshAll();setInterval(()=>ROWS.forEach(r=>r.refresh()),4000);
 }).catch(()=>{say('Could not load polls.json.',true);});
+})();
+</script>
+<script>
+/* The attendee list (24 Sep 2026). It lives on the poll server in its own
+   room, gt-roster, never in the repo: the repo is public and a name
+   committed once stays in git history. So the list is pasted here, not
+   into a file or a chat. The server keeps whatever this page last saved,
+   RESET EVERY ROOM leaves it alone, and every change fetches the list
+   afresh first, so two devices cannot undo each other's edits. */
+(function(){
+const API='https://gt-poll.rlamare.workers.dev', ROOM='gt-roster';
+const $=id=>document.getElementById(id);
+const secret=()=>$('secret').value.trim();
+const msg=$('rmsg');
+function say(t,bad,undo){
+  msg.textContent=t;msg.className='msg'+(bad?' bad':'');
+  if(undo){const b=document.createElement('button');b.type='button';b.textContent='UNDO';b.addEventListener('click',undo);msg.appendChild(b);}
+}
+const fold=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+const byName=(a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'});
+
+/* ---- tidying a pasted list ----
+   A spreadsheet pastes as tab-separated columns; an email as one person a
+   line. Headed columns are read by their headings (First name / Last name,
+   Nombre / Apellidos, Name); unheaded, the first cell that looks like a
+   name is used, emails and anything with a digit skipped. Then: first
+   names only, capitals fixed when a name came in all caps or all lower
+   case, a last initial where two people share a first name (the whole
+   surname if the initials match too), duplicates out, A to Z. */
+const cap=s=>s.split(/([-'’ ])/).map(p=>/^\p{L}/u.test(p)?p[0].toUpperCase()+p.slice(1).toLowerCase():p).join('');
+const fixCase=s=>(s===s.toUpperCase()||s===s.toLowerCase())?cap(s):s;
+const tidyPart=s=>fixCase(String(s||'').replace(/[\x00-\x1f\x7f|]/g,' ').replace(/\s+/g,' ').trim()).slice(0,30);
+const cellsOf=l=>l.includes('\t')?l.split('\t'):(((l.match(/,/g)||[]).length>=2||l.includes(';'))?l.split(/[;,]/):[l]);
+function splitFull(raw){
+  let t=String(raw||'');
+  let pref=null; /* "Robert (Bob) Smith" or 'Robert "Bob" Smith' goes by Bob */
+  t=t.replace(/\s*(?:\(([^)]+)\)|["“]([^"”]+)["”])\s*/,(m,a,b)=>{pref=(a||b).trim();return ' ';});
+  t=t.replace(/\s+[–—-]\s+.*$/,'').replace(/^((mr|mrs|ms|miss|mx|dr|prof|professor|sir|dame|sr|sra|srta|dña)\.?|d\.)\s+/i,'').trim();
+  let f,s;
+  if(t.includes(',')){const i=t.indexOf(',');s=t.slice(0,i).trim();f=t.slice(i+1).trim().split(/\s+/)[0]||'';}
+  else{const w=t.split(/\s+/);f=w[0]||'';s=w.slice(1).join(' ');}
+  if(pref)f=pref;
+  return [f,s];
+}
+function fromEmail(e){
+  const w=e.split('@')[0].split(/[._-]+/).map(x=>x.replace(/\d+/g,'')).filter(Boolean);
+  return [w[0]||'',w.slice(1).join(' ')];
+}
+const PARTICLE=/^(de|del|la|las|los|da|das|do|dos|di|du|le|van|von|der|den|ter|y|e|st\.?)$/i;
+function initial(s){
+  const w=s.split(/\s+/).filter(Boolean);const k=w.find(x=>!PARTICLE.test(x))||w[0]||'';
+  return k?[...k][0].toUpperCase():'';
+}
+function tidy(text){
+  const lines=String(text||'').replace(/\r/g,'').split('\n').map(l=>l.replace(/^\s*(\d+[.)]\s+|[-•*·–—]\s+)/,'').trim()).filter(Boolean);
+  const notes=[];
+  if(!lines.length)return {names:[],notes};
+  const HEAD=/^((first|given|fore|last|family|sur|full|preferred)[\s_-]*)?names?$|^(forename|surname|nombres?|nombre completo|apellidos?|e-?mail( address)?|correo( electr[oó]nico)?|company|empresa|organi[sz]ation|title|job title|position|role|cargo|puesto|department|departamento)$/i;
+  const head=cellsOf(lines[0]).map(c=>c.trim());
+  let F=-1,L=-1,N=-1,headed=false;
+  if(head.some(c=>HEAD.test(c))&&!head.some(c=>c.includes('@'))){
+    headed=true;lines.shift();notes.push('The first line looked like column headings, so it was left out.');
+    const find=re=>head.findIndex(c=>re.test(c));
+    const P=find(/preferred|known as/i);
+    L=find(/last|family|sur|apellido/i);F=P>=0?P:find(/first|given|fore|^nombres?$/i);
+    N=find(/^(full[\s_-]*)?names?$|^nombre( completo)?$/i);
+    if(!(F>=0&&L>=0)&&N<0)N=F>=0?F:0;
+  }
+  const people=[];let skipped=0;
+  lines.forEach(l=>{
+    const c=cellsOf(l).map(x=>x.trim());
+    let f='',s='';
+    if(headed&&F>=0&&L>=0){f=(c[F]||'');s=c[L]||'';}
+    else if(headed){[f,s]=splitFull(c[N]||'');}
+    else{
+      const cand=c.filter(x=>x&&!x.includes('@')&&!/\d/.test(x)&&/\p{L}/u.test(x));
+      if(!cand.length){const e=c.find(x=>x.includes('@'));if(e)[f,s]=fromEmail(e);}
+      else if(cand.length>=2&&!/\s/.test(cand[0])&&!/\s/.test(cand[1])){f=cand[0];s=cand[1];}
+      else [f,s]=splitFull(cand[0]);
+    }
+    f=tidyPart(f);s=tidyPart(s);
+    if(f)people.push({f,s});else skipped++;
+  });
+  if(skipped)notes.push(skipped+(skipped>1?' lines had':' line had')+' no name I could find, so '+(skipped>1?'they were':'it was')+' left out.');
+  const seen=new Set(),uniq=[];
+  people.forEach(p=>{const k=fold(p.f+' '+p.s);if(!seen.has(k)){seen.add(k);uniq.push(p);}});
+  if(uniq.length<people.length)notes.push((people.length-uniq.length)+' repeated '+(people.length-uniq.length>1?'names were':'name was')+' listed once.');
+  const groups={};
+  uniq.forEach(p=>(groups[fold(p.f)]=groups[fold(p.f)]||[]).push(p));
+  Object.values(groups).forEach(g=>g.forEach(p=>{
+    if(g.length===1||!p.s){p.d=p.f;return;}
+    const same=g.some(q=>q!==p&&initial(q.s)===initial(p.s));
+    p.d=same?p.f+' '+p.s:p.f+' '+initial(p.s)+'.';
+  }));
+  return {names:uniq.map(p=>p.d).sort(byName),notes};
+}
+window.GT_ROSTER={tidy};
+
+/* ---- the server ---- */
+const read=()=>fetch(API+'/p/'+ROOM+'/roster',{cache:'no-store'}).then(r=>r.json()).then(d=>d.names||[]);
+function write(names){
+  const s=secret();
+  if(!s)return Promise.reject(new Error('Paste the admin secret at the top of this page and press SAVE first.'));
+  return fetch(API+'/p/'+ROOM+'/roster',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({s,names:names.slice().sort(byName)})})
+    .then(r=>{if(r.status===403)throw new Error('The poll server refused the secret. Check it at the top of this page.');return r.json();})
+    .then(d=>{if(!d.ok)throw new Error('The poll server did not take the list.');show(d.names);return d.names;});
+}
+const fail=e=>say(e instanceof TypeError||!e||!e.message?'No connection to the poll server. Try again in a moment.':e.message,true);
+
+/* ---- the list as it stands ---- */
+let current=[],shownKey=null;
+function show(names){
+  current=names;
+  const key=JSON.stringify(names);if(key===shownKey)return;shownKey=key;
+  $('rcount').textContent=names.length?names.length+(names.length>1?' names':' name')+' on the list':'No list yet. Phones ask people to type their name.';
+  const box=$('rlist');box.innerHTML='';
+  names.forEach(n=>{
+    const row=document.createElement('div');row.className='rrow';
+    const nm=document.createElement('div');nm.className='nm';nm.textContent=n;
+    const x=document.createElement('button');x.type='button';x.className='x';x.textContent='×';x.title='Take '+n+' off the list';
+    x.addEventListener('click',()=>remove(n));
+    row.appendChild(nm);row.appendChild(x);box.appendChild(row);
+  });
+}
+function remove(n){
+  say('Taking '+n+' off…');
+  read().then(list=>write(list.filter(x=>fold(x)!==fold(n))))
+    .then(()=>say(n+' is off the list.',false,()=>add(n,true))).catch(fail);
+}
+function add(raw,undoing){
+  const n=tidyPart(raw);
+  if(!n){say('Type the name first, then press ADD.',true);return;}
+  say('Adding '+n+'…');
+  read().then(list=>{
+    if(list.some(x=>fold(x)===fold(n))){say(n+' is already on the list.');$('addName').value='';return;}
+    const first=fold(n.split(' ')[0]);
+    if(!undoing&&!n.includes(' ')&&list.some(x=>fold(x.split(' ')[0])===first)){
+      const k=list.find(x=>fold(x.split(' ')[0])===first);
+      say('There is already '+k+' on the list. Add a last initial so the two can tell their names apart, for example '+n+' K., then press ADD.',true);
+      $('addName').focus();return;
+    }
+    return write(list.concat([n])).then(()=>{$('addName').value='';say(n+' is on the list.');});
+  }).catch(fail);
+}
+$('addBtn').addEventListener('click',()=>add($('addName').value));
+$('addName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add($('addName').value);}});
+
+/* ---- pasting a new list ---- */
+function preview(names,notes){
+  const box=$('pvList');box.innerHTML='';
+  names.forEach(n=>{
+    const row=document.createElement('div');row.className='rrow';
+    const inp=document.createElement('input');inp.value=n;inp.maxLength=30;inp.autocomplete='off';inp.spellcheck=false;
+    inp.addEventListener('input',()=>inp.classList.remove('clash'));
+    const x=document.createElement('button');x.type='button';x.className='x';x.textContent='×';x.title='Leave '+n+' out';
+    x.addEventListener('click',()=>{row.remove();count();});
+    row.appendChild(inp);row.appendChild(x);box.appendChild(row);
+  });
+  const count=()=>{
+    const k=box.children.length;
+    $('pvHead').textContent=k+(k===1?' name. This is':' names. This is')+' how the list will read on the phones. Tap a name to change it, or × to leave someone out. Nothing is saved until you press SAVE THIS LIST.'+(notes.length?' '+notes.join(' '):'');
+  };
+  count();
+  $('preview').hidden=!names.length;
+}
+$('tidyBtn').addEventListener('click',()=>{
+  const r=tidy($('pasteIn').value);
+  if(!r.names.length){$('preview').hidden=true;say('I could not find any names in that. Paste the list into the box, then press TIDY IT.',true);return;}
+  preview(r.names,r.notes);say('');
+});
+$('cancelList').addEventListener('click',()=>{$('preview').hidden=true;$('pvList').innerHTML='';say('Nothing saved. The list above is unchanged.');});
+$('saveList').addEventListener('click',()=>{
+  const inputs=[...$('pvList').querySelectorAll('input')];
+  const names=inputs.map(i=>tidyPart(i.value)).filter(Boolean);
+  const seen={};let clash=null;
+  inputs.forEach(i=>{const k=fold(tidyPart(i.value));if(!k)return;if(seen[k]){i.classList.add('clash');seen[k].classList.add('clash');clash=clash||tidyPart(i.value);}else seen[k]=i;});
+  if(clash){say('Two people would both show as '+clash+'. Change one of them (they are underlined in red), then save.',true);return;}
+  if(!names.length){say('The list is empty. Nothing saved.',true);return;}
+  if(current.length&&!confirm('This replaces the '+current.length+' names on the list now with these '+names.length+'. Go ahead?'))return;
+  say('Saving…');
+  write(names).then(saved=>{
+    $('preview').hidden=true;$('pvList').innerHTML='';$('pasteIn').value='';$('paste').open=false;
+    say('Saved: '+saved.length+' names. Phones will show them within a few seconds.');
+  }).catch(fail);
+});
+
+/* ---- clearing it, after the programme ---- */
+const clr=document.createElement('button');clr.type='button';clr.className='ghost';clr.textContent='CLEAR THE WHOLE LIST';
+const crow=document.createElement('div');crow.className='btnrow';crow.style.marginTop='16px';crow.appendChild(clr);
+$('paste').after(crow);
+clr.addEventListener('click',()=>{
+  if(!current.length){say('The list is already empty.');return;}
+  if(!confirm('Take all '+current.length+' names off the list? Phones go back to asking people to type their name.'))return;
+  write([]).then(()=>say('The list is empty.')).catch(fail);
+});
+
+read().then(n=>{show(n);if(!n.length)$('paste').open=true;}).catch(()=>{$('rcount').textContent='Could not reach the poll server to read the list.';});
+setInterval(()=>read().then(show).catch(()=>{}),5000);
 })();
 </script>
 </body></html>

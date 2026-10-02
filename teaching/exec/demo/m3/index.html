@@ -4,6 +4,7 @@
 <title>Applied Game Theory · Module 3 — Simultaneous Zero-Sum Games</title>
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/demo/deck.css">
+<script>/* a deck opened at #N (a reload, or back from the m3 calendar or the Gazette) shows slide N from the first paint instead of the cover fading out first (25 Sep 2026); deck.js removes this once it has read the address */(function(){var m=/^#(\d+)/.exec(location.hash);if(!m||m[1]==="0")return;var s=document.createElement("style");s.id="deckjump";s.textContent=".slide.active{opacity:0!important;visibility:hidden!important}.slide[data-i=\""+m[1]+"\"]{opacity:1!important;visibility:visible!important;transition:none!important}";document.head.appendChild(s);})();</script>
 <style>
 /* Module-3 widgets (shared components live in deck.css) */
 /* pictogram tiles (container lifted from the m2 three-games row) */
@@ -12,6 +13,9 @@
 .gtile .gn{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red)}
 .gtile .gl{font-weight:700;font-size:21px;color:var(--ink);line-height:1.22}
 .gtile .pg{height:88px;width:auto}
+.gtile.ytplay{cursor:pointer;padding:12px 8px 14px;border:2px solid transparent}
+.gtile.ytplay:hover{border-color:var(--red)}
+.gtile .gw{font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
 /* truel rows: names in a column, poll results filling in horizontally */
 .trows{position:absolute;left:96px;right:96px;top:262px;display:flex;flex-direction:column;gap:32px}
 .trow{position:relative;display:flex;align-items:center;gap:24px;min-height:56px}
@@ -24,7 +28,7 @@
 .qrpanel{position:absolute;right:96px;top:246px;width:360px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .5s}
 .qrpanel.hide{opacity:0;pointer-events:none}
 .qrpanel .pq{font-weight:700;font-size:24px;color:var(--red);text-transform:uppercase;letter-spacing:.03em;text-align:center}
-/* country colours on the soccer slide */
+/* country colours on the football slide */
 .bb{color:var(--blue);font-weight:700}
 .gg{color:var(--terracotta);font-weight:700}
 /* the Hotelling examples wall: phones write in, the screen fills when
@@ -44,33 +48,87 @@
 .wall .ex.c4{background:var(--maroon)}
 .wall .ex.c5{background:var(--sienna)}
 .wall .ex.c6{background:var(--ochre);color:var(--ink)}
-/* city planning, told simply: Champaign-Urbana's real streets in the Mini Metro manner, hospitals and grocers, their discs */
-.citywrap.widget{position:absolute;left:50%;margin-left:-484px;width:968px;top:194px;height:478px;background:none;border:0;padding:0;max-width:none}
-.citymap{position:absolute;inset:0;width:100%;height:100%;display:block}
-.citymap .cfield{fill:var(--paper-soft);stroke:var(--ink);stroke-width:2.5}
-.citymap .cr{fill:none;stroke-linecap:round;stroke-linejoin:round}
-.citymap .cr.secondary{stroke:var(--rule);stroke-width:1.6}
-.citymap .cr.primary{stroke:color-mix(in srgb, var(--muted) 55%, var(--rule));stroke-width:2.6}
-.citymap .cr.motorway{stroke:color-mix(in srgb, var(--muted) 80%, var(--rule));stroke-width:5}
-.citymap .cdisc{opacity:.15}
-.citymap.both .cdisc{opacity:.09}
-.citymap .chome{fill:color-mix(in srgb, var(--muted) 45%, var(--rule));transition:fill .5s}
-.citymap .chome.c0{fill:var(--teal)} .citymap .chome.half{fill:var(--ochre)}
-.citymap .cmark{cursor:grab}
-.citymap .cst{fill:#fff;stroke:var(--ink);stroke-width:5}
-.citymap .ccross{fill:var(--red)}
-.citymap .cbasket{fill:var(--green);stroke:var(--green)}
-.citymap .ccredit{font-weight:700;letter-spacing:.14em;font-size:8.5px;fill:var(--muted);opacity:.7}
-.citybtns{position:absolute;top:12px;display:flex;gap:8px}
-.citybtns.cviews{left:14px} .citybtns.cacts{right:14px}
-.citybtns button{font-family:var(--sans);font-weight:600;font-size:13.5px;letter-spacing:.04em;background:var(--paper);border:2px solid var(--ink);color:var(--ink);padding:7px 13px;cursor:pointer}
-.citybtns button.primary{background:var(--red);border-color:var(--red);color:var(--paper)}
-.cchip{position:absolute;display:block;width:auto;max-width:none;left:60px;right:60px;bottom:16px;opacity:0;transition:opacity .5s;pointer-events:none}
-.cchip.on{opacity:1}
-.cchip{background:var(--red);border-color:var(--red);color:var(--paper);font-size:16.5px;padding:8px 22px;text-align:center;line-height:1.3}
 /* clip beside bullets */
 .rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
 .rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.chufig{top:208px;gap:40px}   /* Arthur Chu: four bullets beside the clip, under a two-line title (29 Sep 2026) */
+.chufig ul.bullets li{font-size:21px;line-height:1.33;margin-top:13px}
+.chufig .clipframe iframe,.chufig .clipcover{width:480px;height:270px}
+/* A truel on Pop Culture Jeopardy!: bullets, the clip, and the scores under it at the last press (29 Sep 2026) */
+.pcjfig{top:204px;gap:40px}
+.pcjfig ul.bullets li{font-size:21px;line-height:1.33;margin-top:14px}
+.pcjside{flex:none;width:486px;display:flex;flex-direction:column;gap:16px}
+.pcjfig .clipframe iframe,.pcjfig .clipcover{width:480px;height:270px}
+.pcjscore{width:100%;border-collapse:collapse;font-size:15.5px;color:var(--ink)}
+.pcjscore th{font-weight:700;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:right;padding:0 0 5px 10px}
+.pcjscore td{font-weight:600;text-align:right;padding:6px 0 6px 10px;border-top:2px solid var(--rule);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pcjscore th:first-child,.pcjscore td:first-child{text-align:left;padding-left:0}
+.pcjscore td:last-child{font-weight:800}
+.pcjscore:has(td[data-step="6"].shown) tr.win td{color:var(--red)}   /* the winner goes red only with the final scores, after the clip */
+/* The truel at the junction (29 Sep 2026, his idea): the Price Wars corner a century earlier, an Old West street with
+   a saloon where Aura will stand and a general store where Buco's will. Static shapes stepped by his presses, never
+   innerHTML on SVG (Safari). Every moving part is a <g> inside a translated parent, so a CSS rotate turns it about
+   that parent's origin: the feet, the shoulder, the muzzle. Angles and trace lengths come from the scene's geometry. */
+.tscene{position:absolute;right:96px;top:204px}
+.tsvg{display:block;width:640px;height:400px;border:2.5px solid var(--ink);overflow:hidden}
+.tsvg .gs,.tsvg .arm,.tsvg .flash,.tsvg .tw,.tsvg .twr,.tsvg .smk{transform-box:view-box;transform-origin:0 0}
+.tsvg .gs{transition:transform .55s cubic-bezier(.55,0,.8,.3),opacity .55s}
+.tsvg .arm{transform:rotate(70deg);transition:transform .45s ease}
+.tsvg .flash,.tsvg .trace,.tsvg .bang,.tsvg .smk{opacity:0}
+.tsvg .aim,.tsvg .reload,.tsvg .ttag{opacity:0;transition:opacity .35s}
+.tsvg .tw{transform:translate(-40px,0)}
+.slide.active .tsvg .tw{animation:ttw 5.5s linear .8s both}
+.slide.active .tsvg .twr{animation:ttwr 5.5s linear .8s both}
+@keyframes ttw{0%{transform:translate(-30px,0)}18%{transform:translate(100px,-10px)}30%{transform:translate(190px,0)}48%{transform:translate(310px,-12px)}62%{transform:translate(410px,0)}80%{transform:translate(540px,-8px)}100%{transform:translate(690px,0)}}
+@keyframes ttwr{to{transform:rotate(900deg)}}
+@keyframes tflash{0%{opacity:0;transform:scale(.3)}25%{opacity:1;transform:scale(1.3)}100%{opacity:0;transform:scale(1)}}
+@keyframes tbang{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes tsmoke{0%{opacity:0;transform:translate(0,0) scale(.6)}20%{opacity:1}100%{opacity:0;transform:translate(6px,-34px) scale(1.4)}}
+@keyframes ttrA{0%{opacity:1;stroke-dashoffset:269.2}60%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
+@keyframes ttrC{0%{opacity:1;stroke-dashoffset:146.7}60%{opacity:1;stroke-dashoffset:0}100%{opacity:0;stroke-dashoffset:0}}
+/* Survival of the weakest: the two best aim at each other; the ace fires and reloads; the average shooter shoots first */
+#ts1:has(.m1.shown) .armA,#ts1:has(.m1.shown) .armB{transform:rotate(3.2deg)}
+#ts1:has(.m1.shown) .aimAB,#ts1:has(.m1.shown) .aimBA{opacity:1;transition-delay:.35s}
+#ts1:has(.m2.shown) .flashA{animation:tflash .45s .05s both}
+#ts1:has(.m2.shown) .traceA{animation:ttrA .4s .05s both}
+#ts1:has(.m2.shown) .bangA{animation:tbang 1.3s .05s both}
+#ts1:has(.m2.shown) .aimAB,#ts1:has(.m2.shown) .aimBA{opacity:0;transition-delay:0s}
+#ts1:has(.m2.shown) .gsB{transform:rotate(84deg);opacity:.5;transition-delay:.3s}
+#ts1:has(.m2.shown) .armB{transform:rotate(-84deg);transition-delay:.3s}
+#ts1:has(.m2.shown) .armA{transform:rotate(70deg);transition-delay:1s}
+#ts1:has(.m2.shown) .reload{opacity:1;transition-delay:1.2s}
+#ts1:has(.m3.shown) .armC{transform:rotate(32.0deg)}
+#ts1:has(.m3.shown) .aimCA,#ts1:has(.m3.shown) .pctCA{opacity:1;transition-delay:.45s}
+/* What if he shoots first: he hits one and the ace turns on him; then the take he should play, a shot in the air */
+#ts2:has(.m1.shown) .tagHit{opacity:1}
+#ts2:has(.m1.shown) .armC{transform:rotate(32.0deg)}
+#ts2:has(.m1.shown) .flashC{animation:tflash .45s .5s both}
+#ts2:has(.m1.shown) .traceC{animation:ttrC .35s .5s both}
+#ts2:has(.m1.shown) .bangC{animation:tbang 1.3s .5s both}
+#ts2:has(.m1.shown) .gsB{transform:rotate(84deg);opacity:.5;transition-delay:.75s}
+#ts2:has(.m1.shown) .armB{transform:rotate(-84deg);transition-delay:.75s}
+#ts2:has(.m2.shown) .armA{transform:rotate(-22.0deg)}
+#ts2:has(.m2.shown) .aimAC,#ts2:has(.m2.shown) .pctAC{opacity:1;transition-delay:.4s}
+#ts2:has(.m3.shown) .tagHit{opacity:0}
+#ts2:has(.m3.shown) .tagMiss{opacity:1}
+#ts2:has(.m3.shown) .aimAC,#ts2:has(.m3.shown) .pctAC{opacity:0;transition-delay:0s}
+#ts2:has(.m3.shown) .gsB{transform:none;opacity:1;transition-delay:0s}
+#ts2:has(.m3.shown) .armC{transform:rotate(-80deg);transition-delay:.6s}
+#ts2:has(.m3.shown) .flashCup{animation:tflash .45s 1.05s both}
+#ts2:has(.m3.shown) .bangCup{animation:tbang 1.5s 1.05s both}
+#ts2:has(.m3.shown) .smk{animation:tsmoke 1.8s 1.1s both}
+#ts2:has(.m3.shown) .armA{transform:rotate(3.2deg);transition-delay:1.8s}
+#ts2:has(.m3.shown) .armB{animation:tarmB 2.3s both}
+@keyframes tarmB{0%{transform:rotate(-84deg)}22%{transform:rotate(70deg)}78%{transform:rotate(70deg)}98%,100%{transform:rotate(3.2deg)}}
+#ts2:has(.m3.shown) .aimAB,#ts2:has(.m3.shown) .aimBA{opacity:1;transition-delay:2.3s}
+@media (prefers-reduced-motion: reduce){.tsvg .tw{display:none}.tsvg .gs,.tsvg .arm,.tsvg .aim{transition-duration:.01s}}
+ul.bullets.tlist{position:absolute;left:96px;width:425px;top:444px;margin:0}
+ul.bullets.tlist li{font-size:18.5px;line-height:1.32;margin-top:10px}
+ul.bullets.tlist li:first-child{margin-top:0}
+.tq{position:absolute;left:96px;width:410px;top:212px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-size:19px;line-height:1.35;padding:14px 18px}
+ul.bullets.tlist2{position:absolute;left:96px;width:430px;top:330px;margin:0}
+ul.bullets.tlist2 li{font-size:21px;line-height:1.33;margin-top:16px}
+ul.bullets.tlist2 li:first-child{margin-top:0}
 .clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
 .clipframe iframe{width:640px;height:360px;border:0;display:block}
 /* click-to-load cover: keeps YouTube's title (which gives the ending away)
@@ -99,6 +157,17 @@
 .mx .cell,.mx .cl,.mx .rl{transition:opacity .4s}
 .mx .cell.gone,.mx .cl.gone,.mx .rl.gone{opacity:.07}
 .mx .cell .val{color:var(--ink)}
+/* Casey and Pat (28 Sep 2026) */
+.cpfig{width:300px;flex:none}
+.cpfig .cpname{font-family:var(--sans);font-weight:700;font-size:20px;letter-spacing:.12em}
+/* every m3 matrix is solvable on screen (28 Sep 2026, his call): a click on a row or column name dims the
+   whole line, as Kenney's keypresses do, and a second click brings it back; one row and one column left
+   takes the red box. Dimmed, never crossed out, here and on the phones. */
+.mx.solvable .cl,.mx.solvable .rl{cursor:pointer;user-select:none;-webkit-user-select:none;transition:color .3s,opacity .4s}
+.mx.solvable .cl:hover,.mx.solvable .rl:hover{color:var(--red)}
+.cpsteps{flex:1;max-width:470px;margin-top:0}
+ul.bullets.cpsteps li{font-size:21px}
+ul.bullets.cpsteps li.sub{font-size:20px;color:var(--ink);font-weight:500;margin-top:6px}
 /* definition cards (guidelines) */
 .defcard{background:var(--card);border:2.5px solid var(--ink);padding:24px 30px;max-width:960px;width:100%}
 .defcard .dh{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:16px;color:var(--red);margin-bottom:10px}
@@ -117,9 +186,13 @@
 .bigcart .cwheel{fill:var(--ink)}
 .bigcart .cletter{fill:var(--paper);font-family:var(--display);font-weight:900;font-size:26px}
 /* Hotelling beach: draggable hot-dog carts */
-.beach{position:relative;width:100%;height:180px;background:linear-gradient(180deg,var(--tan-light) 0 62%,var(--blue) 62% 100%);border:2.5px solid var(--ink);user-select:none;touch-action:none}
-.beach .shade{position:absolute;top:0;bottom:38%;background:color-mix(in srgb, var(--teal) 30%, transparent)}
-.beach .shadeB{background:color-mix(in srgb, var(--terracotta) 30%, transparent)}
+.beach{position:relative;width:100%;height:236px;background:linear-gradient(180deg,var(--tan-light) 0 72%,var(--blue) 72% 100%);border:2.5px solid var(--ink);user-select:none;touch-action:none}
+/* the customers (25 Sep 2026 redraw): a row of beachgoers who take the colour of the nearer cart as it is dragged */
+.beach .bathers{position:absolute;left:0;right:0;top:128px;height:38px;pointer-events:none}
+.beach .bathers svg{position:absolute;top:0;width:23px;height:38px;margin-left:-11.5px;color:var(--ink);transition:color .15s}
+.beach .bathers svg.a{color:var(--teal)} .beach .bathers svg.b{color:var(--terracotta)}
+.beach .shade{position:absolute;top:0;bottom:28%;background:color-mix(in srgb, var(--teal) 18%, transparent)}
+.beach .shadeB{background:color-mix(in srgb, var(--terracotta) 18%, transparent)}
 .cart{position:absolute;top:8px;width:92px;margin-left:-46px;text-align:center;cursor:grab}
 .cart svg{width:78px;height:auto;display:block;margin:0 auto}
 .cart .pct{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);margin-top:2px}
@@ -145,104 +218,20 @@
 .cand.r .cpct{color:var(--red)}
 .cand.d .animal{fill:var(--blue)}
 .cand.r .animal{fill:var(--red)}
-/* ---- the engine game (slides 18-19) ---- */
-.engrules ul.bullets li{margin-top:13px}
-.engrules ul.bullets li.sub{margin-top:7px;font-size:19px}
+/* ---- the engine game: the rules and the matrix the pairs solve ---- */
+/* Bidding for the airline's engine business: his set-up on top, the four pitches as cards (24 Sep 2026) */
+.englead{position:absolute;left:110px;right:110px;top:214px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.englead p{font-weight:500;font-size:21px;line-height:1.35;color:var(--ink)}
+.englead p.engask{font-weight:700;margin-top:6px}
+.engcards{position:absolute;left:96px;right:96px;top:398px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.engcard{border:2px solid var(--ink);background:var(--card);padding:16px 16px 18px;display:flex;flex-direction:column;gap:8px}
+.engcard svg{width:40px;height:40px}
+.engcard .en{font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink)}
+.engcard .ed{font-weight:500;font-size:16px;line-height:1.35;color:var(--ink)}
 .mx.mxeng .cell{font-size:19px}
 .mx.mxeng .cell .pc{margin:0 .18em}
-.engrow{position:absolute;left:76px;right:76px;top:180px;bottom:56px;display:flex;gap:34px;align-items:flex-start}
-.engcol{flex:none;width:372px;display:flex;flex-direction:column;align-items:center}
-.engcol svg.efan{width:352px;height:352px;display:block}
-.eshares{display:flex;justify-content:space-between;width:330px;padding-top:2px}
-.eshares .ecol{text-align:center}
-.eshares .ewho{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13px}
-.eshares .en{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;transition:opacity .3s}
-.eshares .ecol.a{color:var(--teal)} .eshares .ecol.b{color:var(--terracotta)}
-.ebook{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--muted);margin-top:6px;text-align:center;max-width:330px}
-.engside{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
-.engtop{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.engbtn{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;background:var(--red);color:var(--paper);border:none;padding:12px 20px;cursor:pointer;text-transform:uppercase}
-.engbtn:disabled{opacity:.35;cursor:default}
-.engbtn.alt{background:var(--paper-soft);color:var(--ink);border:2px solid var(--ink);padding:10px 18px}
-.eround{font-weight:700;letter-spacing:.1em;font-size:17px;color:var(--muted)}
-.ebts{display:flex;flex-wrap:wrap;gap:8px;min-height:88px;align-content:flex-start}
-.ebt{width:102px;border:2.5px solid var(--rule);background:var(--card);padding:6px 4px;text-align:center}
-.ebt .em{font-weight:700;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;line-height:1.2}
-.ebt .em.a{color:var(--teal)} .ebt .em.b{color:var(--terracotta)}
-.ebt .es{font-weight:700;font-size:17px;margin:1px 0}
-.ebt .es .sa{color:var(--teal)} .ebt .es .sb{color:var(--terracotta)}
-.ebt.wa{border-color:var(--teal)} .ebt.wb{border-color:var(--terracotta)}
-.everdict{font-weight:500;font-size:17.5px;line-height:1.4;color:var(--ink);min-height:50px;max-width:62ch}
-.everdict b.g{color:var(--teal)} .everdict b.r{color:var(--terracotta)}
-
-/* the module scoreboard: five rows, revealed fifth place first */
-.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
-.scbrow{display:grid;grid-template-columns:64px 1fr 170px 120px;align-items:center;gap:14px;
-  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
-.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
-.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
-.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
-.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
-.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
-.scbrow:nth-child(2) .tt{color:var(--red)}
-/* ---- the closing exercise: build your matrix (m3/matrix/ on the phones,
-   room m3-matrix), the setup slide on the m2 branch pattern ---- */
-.bsetup{position:absolute;left:96px;top:274px;width:700px;display:flex;flex-direction:column;gap:18px}
-.bq{display:flex;gap:16px;align-items:flex-start;border-left:4px solid var(--side);padding-left:16px}
-.bq.you{--side:var(--teal)} .bq.them{--side:var(--terracotta)} .bq.goal{--side:var(--red)} .bq.pick{--side:var(--ink)} .bq.cross{--side:var(--maroon)}
-.bq .bqk{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--side);white-space:nowrap;padding-top:4px;width:150px;flex:none}
-.bq .bqt{font-weight:600;font-size:19px;line-height:1.35;color:var(--ink)}
-.bq .bqt small{display:block;font-weight:500;font-size:16px;color:var(--muted);margin-top:2px}
-.rtitle{position:absolute;left:60px;top:62px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--muted)}
-.rcount{position:absolute;right:60px;bottom:38px;display:flex;align-items:baseline;gap:10px}
-.rcount .n{font-family:var(--display);font-weight:900;font-size:30px;line-height:1;color:var(--red)}
-.rcount .l{font-weight:600;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--muted)}
-.rreplay{position:absolute;left:60px;bottom:38px;font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.12em;color:var(--muted);background:transparent;border:2px solid var(--rule);padding:8px 14px;cursor:pointer}
-.rreplay:hover{border-color:var(--ink);color:var(--ink)}
-.bhead{display:flex;justify-content:space-between;align-items:baseline;gap:30px;margin-bottom:10px}
-.bhead .bk{font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--muted)}
-/* ---- the closing exercise: the room's engines (m3/engines/ on the phones,
-   room m3-engines). One engine per person, the fan is the pie: how their
-   real zero-sum situation was divided, teal to them and terracotta to the
-   other party; the notes sit around it when an engine comes forward ---- */
-.efan{display:block}
-/* the airfield (engines/field.js): one full-canvas scene, an overlay for the opened aircraft */
-.fieldstage{position:absolute;inset:0;width:1280px;height:720px;display:block}
-.fieldtitle{position:absolute;left:40px;top:62px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:6px 12px}
-.fieldcount{position:absolute;right:40px;top:62px;display:flex;align-items:baseline;gap:6px;font-weight:700;letter-spacing:.1em;font-size:12px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:5px 12px}
-.fieldcount b{font-family:var(--display);font-weight:900;font-size:20px;color:var(--red)}
-.fieldcount b+span{margin-right:14px}
-.fieldcount span:last-child{margin-right:0}
-.fieldopen{position:absolute;inset:0;background:rgba(27,28,25,.42);opacity:0;pointer-events:none;transition:opacity .35s;z-index:20}
-.fieldopen.on{opacity:1;pointer-events:auto}
-.fieldopen .efront{cursor:default;box-shadow:10px 10px 0 rgba(27,28,25,.35);border-radius:0;top:56px;bottom:84px;padding-top:30px;transform:translateY(14px);transition:transform .35s}
-.fieldopen.on .efront{transform:none}
-.fieldopen:not(.on) .efront{pointer-events:none}
-.fieldopen .whose{position:absolute;right:62px;top:16px;font-family:var(--sans);font-weight:700;font-size:26px;color:var(--ink);padding:8px 13px;z-index:2}   /* the pair's names, shown straight away (18 Sep 2026) */
-.fieldopen .x{position:absolute;right:14px;top:16px;width:36px;height:36px;font-family:var(--sans);font-weight:700;font-size:18px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);cursor:pointer;z-index:2;line-height:1}
-/* one engine, forward: the fan big on the left spinning up to its split, the notes on the right */
-.efront{position:absolute;left:56px;right:56px;top:40px;bottom:76px;background:var(--paper-soft);border:3px solid var(--ink);border-radius:14px;padding:16px 36px 14px;display:flex;flex-direction:column;opacity:0;transform:scale(.965);transition:opacity .4s,transform .4s;pointer-events:none}
-.efront.on{opacity:1;transform:none;transition:opacity .6s,transform .6s;pointer-events:auto;cursor:pointer}
-.bhead{display:flex;justify-content:space-between;align-items:baseline;gap:30px;margin-bottom:10px}
-.bhead .bk{font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--muted)}
-.eview{flex:1;display:flex;align-items:center;gap:44px;min-height:0}
-.eview .ecol{flex:none;width:380px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.eview .ecol .efan{width:340px;height:340px}
-.eview .eshares{display:flex;justify-content:space-between;width:330px}
-.eview .eshares .ecol2{text-align:center}
-.eview .eshares .ewho{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13px}
-.eview .eshares .en{font-family:var(--display);font-weight:900;font-size:44px;line-height:1}
-.eview .eshares .a{color:var(--teal)} .eview .eshares .b{color:var(--terracotta)}
-.eview .eword{font-weight:700;letter-spacing:.14em;font-size:13px;color:var(--muted);text-transform:uppercase}
-.eview .enotes{flex:1;min-width:0;display:flex;flex-direction:column;gap:18px}
-.enote{border-left:4px solid var(--side);padding-left:16px}
-.enote.pie{--side:var(--red)} .enote.them{--side:var(--terracotta)} .enote.strat{--side:var(--maroon)}
-.enote .ek{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--side);margin-bottom:4px}
-.enote .et{font-weight:600;font-size:22px;line-height:1.3;color:var(--ink)}
-.enote.pie .et{font-size:26px;font-weight:700}
-.enote .et .kind{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;color:var(--muted);margin-bottom:3px}
-.enote .et.none{color:var(--muted);font-weight:500;font-style:italic}
+.solvecol{width:330px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.solvecol .pq{font-weight:700;font-size:23px;line-height:1.3;color:var(--red);text-align:center}
 /* what did we learn: five tiles, as modules 1 and 2 */
 .learn .tiles{top:256px;gap:22px;left:64px;right:64px}
 .learn .tile{width:206px;gap:14px}
@@ -250,39 +239,71 @@
 .learn .tile .pgwrap .pg{height:92px}
 .learn .tile .lbl{white-space:normal;font-size:15.5px}
 .learn .tile .sent{font-size:15.5px;max-width:none}
+/* Padstow: the three shop signs, drawn under his photo in the shops' own colours */
+.pasty{display:flex;gap:10px;width:664px}
+.psign{flex:1;border:3px solid var(--ink);padding:9px 6px;text-align:center;font-size:16px;line-height:1.2;display:flex;align-items:center;justify-content:center}
+/* Zero-sum games in the airline industry: two cases side by side */
+.avrow{position:absolute;left:80px;right:80px;top:200px;display:flex;gap:28px;align-items:stretch}
+.avcard{flex:1;background:var(--card);border:2.5px solid var(--ink);padding:18px 24px 16px;display:flex;flex-direction:column;gap:8px}
+.avcard .avk{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--red)}
+.avcard .avt{font-family:var(--display);font-weight:900;font-size:26px;line-height:1.1;color:var(--ink)}
+.avcard .avfig{width:100%;height:auto;margin:4px 0 2px}
+.avlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.avlist li{font-weight:500;font-size:18px;line-height:1.35;color:var(--ink);padding-left:18px;position:relative}
+.avlist li::before{content:"";position:absolute;left:0;top:.5em;width:9px;height:9px;background:var(--red)}
+.avlist li b{color:var(--red)}
+/* Hotelling is everywhere: six tiles, three a row, a row a keypress */
+.htask{position:absolute;left:96px;right:96px;top:176px;text-align:center;font-weight:700;font-size:24px;color:var(--red)}
+.htgrid{position:absolute;left:96px;right:96px;top:226px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.htt{display:grid;grid-template-columns:44px 1fr;grid-template-rows:auto 1fr auto;column-gap:14px;background:var(--card);border:2px solid var(--ink);padding:14px 16px;text-decoration:none;color:var(--ink);min-height:160px}
+a.htt:hover{box-shadow:0 4px 0 var(--red)}
+.htt svg{width:44px;height:44px;grid-row:1}
+.htt .htl{font-weight:800;font-size:18px;text-transform:uppercase;letter-spacing:.05em;align-self:center}
+.htt .htx{grid-column:1 / span 2;font-weight:500;font-size:17px;line-height:1.35;margin-top:10px}
+.htt .hts{grid-column:1 / span 2;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-top:8px}
+.clipframe.sm iframe,.clipframe.sm .clipcover{width:560px;height:315px}
+/* One aircraft, two buyers: the sale, the rules, the room's deals, the reveal */
+.lotscene{position:absolute;left:64px;right:64px;top:196px;display:flex;align-items:center;justify-content:center;gap:28px}
+.buyer{width:230px;flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.buyer .bicon{width:64px;height:64px}
+.buyer .bname{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:19px;line-height:1.25}
+.buyer .bdesc{font-weight:500;font-size:16px;line-height:1.4;color:var(--muted)}
+.buyer.hp{color:var(--terracotta)} .buyer.nm{color:var(--teal)}
+.lotmid{flex:none;width:560px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.lotmid .meridian{width:560px;height:auto;display:block}
+.lottag{font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:14px;color:var(--paper);background:var(--red);padding:8px 16px}
+.lotcap{position:absolute;left:120px;right:120px;top:452px;text-align:center;max-width:none;font-size:20px}
+.lotrules{position:absolute;left:96px;right:96px;top:196px;display:flex;gap:44px;align-items:flex-start}
+.lotrules ul.bullets{flex:1;margin-top:6px;max-width:none}
+.lotrules ul.bullets li{font-size:21px;margin-top:14px}
+.lotrules .joinchip{flex:none;margin-top:6px}
+.lotask{top:320px}
+/* What did your pair agree?: a row a pair, like the sheet Ryan uses in WDR */
+.lwall{position:absolute;left:96px;right:96px;top:196px;bottom:40px;display:flex;flex-direction:column}
+.lwall .demotag{top:-26px;left:0;right:auto}
+.lwall [hidden]{display:none !important}   /* the box rules below set display, which would beat the attribute */
+.lwhead,.lwrow{display:grid;grid-template-columns:14% 33% 25% 28%}
+.lwhead{border-bottom:3px solid var(--ink)}
+.lwhead div{font-weight:700;font-size:17px;line-height:1.25;padding:0 14px 10px 0}
+.lwwait{flex:1;display:flex;align-items:center;justify-content:center}
+.lwwait .livecount .n{font-size:64px}
+.lwbody{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.lwrow{height:var(--rh,60px);flex:none;border-bottom:1.5px solid var(--rule);cursor:pointer}
+.lwrow:hover{background:var(--card)}
+.lwc{display:flex;align-items:center;min-width:0;padding:0 14px 0 0;font-weight:500;font-size:var(--fs,16px);line-height:1.3}
+.lwc span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:var(--lines,2);overflow:hidden}
+.lwc.lwp{font-weight:700;color:var(--red)}
+.lwc.lwm{font-weight:700}
+.lwnone{font-weight:600;font-size:18px;color:var(--muted);padding:22px 0}
+.lwc.lwnd{grid-column:2 / -1;font-weight:700;color:var(--muted)}
+.lwopen{position:absolute;inset:0;background:var(--paper);border:3px solid var(--ink);padding:22px 30px;overflow:auto;cursor:pointer;z-index:5;display:flex;flex-direction:column}
+.lwopen .lwon{font-weight:700;font-size:18px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.lwopen .lwoq{font-weight:700;font-size:16px;color:var(--muted);margin-top:16px}
+.lwopen .lwoa{font-weight:600;font-size:27px;line-height:1.3}
 </style>
 </head><body>
 
-<section class="sr-only" aria-label="Full text of all slides">
-<h1>Applied Game Theory, Module 3 — Simultaneous Zero-Sum Games</h1>
-<p>Accessible text version. Each heading below is one slide, in order.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 26: Title slide</h2><p>Zero-sum games. Simultaneous zero-sum strategies. Module 3 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 26: Learning objectives</h2><p>Four numbered objectives: one, recognize zero-sum games, where one side's win is the other side's loss. Two, make strategic choices without knowing what your rival has chosen. Three, solve simultaneous games with payoff matrices, dominant strategies, and inferior strategies. Four, apply Hotelling's game to business and politics.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 26: Introduction to simultaneous zero-sum strategies</h2><p>Lead line: often a player must make a choice without knowing what their rivals have chosen, and vice versa. Two pictogram columns under the line "Two types of simultaneous games": zero-sum (win/lose), drawn as a fixed pie, and non-zero-sum (win/win), drawn as a pie with a growing arrow. Reveals: recall one of the limitations of sequential games, the notion of complete information; in simultaneous games, we have our first application of incomplete information; applications: voting behavior, football plays, pricing moves, etc.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 26: Characteristics of zero-sum games</h2><p>Three pictogram tiles: rational parties (a figure with a check mark); each player has a choice of two or more strategies (a node with two branching arrows); diametrically opposed interests (two figures pulling in opposite directions).</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 26: Zero-sum examples, soccer players during cup games</h2><p>Bullets on the left, with Barbados shown in blue and Grenada in terracotta: Barbados needs to win by two goals. Goals count double if the game goes into overtime. It's 2-0 to Barbados. In the 83rd minute, Grenada scores (2-1). What should Barbados do? What should Grenada do? The Barbados vs. Grenada clip is embedded large on the right of the slide behind a click-to-play cover.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 26: Zero-sum game players throughout history</h2><p>Four pictogram tiles: Westley and Vizzini (two goblets). Anyone who's played rock, paper, scissors. Soccer teams' penalty kick takers (a ball and goal). Anyone who's been in a Mexican standoff (three arrows pointing at each other).</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 26: A zero-sum truel game</h2><p>Lead line: shooting order is random, and after each person fires, he has to reload. The three shooters run down the left in a column with their hit rates in their own colours: Dwight Schrute 100% in blue, Andy Bernard 80% in terracotta, Michael Scott 50% in green. On the right: who would you rather be? — with a QR code for ryanlamare.com/go and a running answer count. Answers stay hidden while the room votes; on a keypress the QR panel fades and each shooter's row fills horizontally with a crowd of Isotype figures in his colour, plus a count. If the poll server is unreachable the slide runs on marked demo data.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 26: "Survival of the weakest"</h2><p>Lead line: what are the win rates? The same three shooters in a column, now with their truel win rates: Dwight 30%, Andy 18%, Michael 52% in red — the weakest shooter wins most often. A reveal asks: what if Michael decides to (or is forced to) shoot first? The Mexican standoff clip is embedded large on the right behind a click-to-play cover.</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 26: Solving zero-sum games</h2><p>Bullets on the left: February 1943, the Japanese are about to reinforce their army in New Guinea. They can sail north of New Britain in the rain, or south in fair weather — three days either way. General Kenney must decide where to concentrate his reconnaissance aircraft. The Japanese want the least possible exposure to his bombers, and of course, Kenney wants the reverse. On the right, a small mid-century wargame-style map: New Guinea at the left, New Britain in the middle, the Japanese convoy in terracotta at the right, Kenney's bombers in teal at the upper left, and two dashed routes — the northern under rain clouds, the southern over suns.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 26: What should each side do?</h2><p>The map fills the slide, with no other text. The convoy drags as one group of ships and the bombers as one group of planes, so the class can war-game the choices live: send the convoy along the northern or southern route, and position the patrols on either side.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 26: The game expressed as a payoff matrix</h2><p>A two-by-two payoff matrix of days of bombing. Allied choice (rows: northern route, southern route) against Japanese choice (columns: northern route, southern route). Northern/northern: 2 days. Northern/southern: 2 days. Southern/northern: 1 day. Southern/southern: 3 days. Steps: the Japanese should never sail south — the northern route means less exposure whatever the Allies do — so the southern column disappears. When Kenney realizes this, his choice is clear — go north — and the southern row disappears. The red box marks the equilibrium at northern/northern, and the game is said to have an "equilibrium point": a stable outcome, because a player unilaterally picking a new strategy is not helped by the change.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 26: Guidelines for solving zero-sum games</h2><p>Two definition cards. Identify dominant (or superior) strategies: a dominant strategy exists if a player's payoff from choosing this strategy is always greater than, or at least equal to, the payoff from choosing any other available strategy. If a dominant strategy exists, choose it. Eliminate dominated (or inferior) strategies: an inferior strategy exists if a player's payoff from choosing this strategy is always less than the payoff from choosing any other available strategy. If an inferior strategy exists, never choose it.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 26: Combining sequential and simultaneous thinking</h2><p>We've so far considered how to solve zero-sum games with finite choices available (go north/go south). But what strategy should we use if the choices are infinite? Consider Hotelling's game. Beneath the bullets, two hot-dog carts, A in teal and B in terracotta, can be dragged around while the instructor sets up the game aloud.</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 26: The beach</h2><p>An interactive beach strip with two draggable hot-dog carts, A in teal and B in terracotta, each showing its live share of customers; the sand shades toward whichever cart is closer. The instructor plays this live with the room by dragging the carts.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 26: Where else do we see Hotelling's game?</h2><p>A paired write-in game: in pairs, think of as many real-world examples of Hotelling's game as you can, and send them from your phones — a QR code links to the write-in page at ryanlamare.com/go, and a counter shows how many examples are in. When the instructor calls time, a keypress fades the setup and fills the screen with everyone's answers as a wall of brightly coloured cards cycling through seven colours, identical answers grouped with a times-N marker. Two debrief reveals: this is also one reason why so many products are marketed and sold with such similar characteristics. But is this clustering socially optimal? If the poll server is unreachable the wall shows marked demo data.</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 26: Let's do some city planning</h2><p>Subtitle: the hospitals and grocery stores of Champaign-Urbana, Illinois. A near full-screen map of Champaign-Urbana's real main roads (from OpenStreetMap, credited on the map), drawn in a spare Mini Metro manner, the interstates heavier than the streets, with about three hundred homes as small grey dots along the street fabric. Two services, two of each: hospitals (round white stations with a red cross, teal and terracotta discs) and grocery stores (square stations with a green basket, green and ochre discs); a disc is a short drive on the map's scale, and homes inside a disc take its colour while the rest stay grey. Three view buttons: Hospitals, Grocery stores, Both; in the Both view a home is coloured when it can reach one of each, amber when only one, grey when neither. The markers start at random spots and the instructor drags them to where they really are: the hospitals side by side, the grocers both in the south, nothing downtown. "Where they should be" glides the shown service's two apart; "Make it a 15-minute city" switches to Both, adds a third and fourth of each service drawn with a dashed edge, and places them all so that no home is grey, a plan worked out at load by a greedy cover of the homes; "Start again" scatters them. No numbers, and no keypress steps: the mouse drives the map and the arrow key moves to the next slide. When the city is made a 15-minute city a line appears under the map: a 15-minute city puts every service within a fifteen-minute walk of every home; it is the anti-Hotelling, and it has to be engineered, because it will not happen on its own.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 26: Application to politics, the median voter theorem</h2><p>Lead line: Hotelling proposed this game in 1929 — in 1957, a political scientist named Downs proposed that political representation operates just like vendors on a beach. An interactive political spectrum from 0, entirely Liberal, to 100, entirely Conservative, drawn as a band blending blue to red. Two draggable candidate badges — a blue donkey and a red rhino — each showing its live vote share, with a divider marking where voters switch sides. Preset buttons replay the beats: candidates apart, then both converging on the median voter for 50/50.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 26: Challenges to the median voter theorem</h2><p>Four numbered points: one, not all voters are evenly distributed across the political spectrum. Two, there are always more than just two options for voters (third candidates/not voting). Three, voters may care about more than just unidimensional political issues. Four, what if the candidates are lying?</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 26: Bidding for the airline's engine business</h2><p>The rules of the engine game. Bullets: an airline needs several engines financed and supported over the coming years, and it will spread that business across two rival bidders. You are an individual contractor pitching for one slice of that business, for Team Aurora (teal) or Team Borealis (terracotta). Four rounds. Each round, choose the one thing your pitch pushes hardest: cut the price (offer the airline the same deal for less money), promise better terms (keep your price, make the deal easier to live with), solve a longstanding concern (fix a problem the airline has lived with for years), or charm the board (goodwill, hospitality, warm words, no substance).</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 26: The engine game expressed as a payoff matrix</h2><p>A four-by-four payoff matrix labelled PRICE, TERMS, SOLVE, CHARM on both axes gives Aurora's and Borealis's percentage split of the contested slice for every pair of pitches; every cell sums to 100. Row values, Aurora's share first: price row 50/50, 55/45, 40/60, 70/30; terms row 45/55, 50/50, 45/55, 65/35; solve row 60/40, 55/45, 50/50, 60/40; charm row 30/70, 35/65, 40/60, 50/50. A reveal adds the points: five to whoever is ahead in their pair over the four rounds; a dead heat pays nobody. Beside the matrix, a QR code links to the phone page at ryanlamare.com/teaching/exec/demo/m3/game/.</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 26: The engine is the pie</h2><p>The play board for the engine game. On the left, a head-on turbofan engine drawn as a pictogram: the fan disc is a pie split between Team Aurora (teal) and Team Borealis (terracotta), with each team's overall percentage of the airline's business shown beneath and the caption "overall share of the airline's business, all rounds so far". Pairs of rivals play on their phones, one pitch per round; each pair's phones spin their own small engine the moment both have played. On the big screen, a counter shows how many pairs have locked the current round; on the instructor's reveal, every pair's contest appears as a card — both pitches and the resulting split — and the big engine spins to the new cumulative book. A verdict line gives the round's counting: how many slices split unevenly, how many dead even, and where the whole book stands. When every pair makes the same pitch, every slice splits 50/50 and the engine spins without moving. If the poll server is unreachable the board runs on marked demo data.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 26: Solving the engine game</h2><p>The debrief. The same four-by-four matrix, solved in front of the room the way the module solves every matrix: one line at a time, alternating sides, no circles, the red box for the equilibrium only. Steps: first the question, which pitch would you never make, whatever your rival did? Then: charming the board, because whatever your rival pitches you do better solving their concern, so the charm row disappears; and your rival will never charm either, so the charm column disappears. With charm gone, solving a longstanding concern is never worse for you than price or terms, whatever they pitch, so the price and terms rows disappear; and the same is true for your rival, so the price and terms columns disappear. The red box marks the equilibrium: both sides solve the concern, and every slice splits 50/50. A final red chip asks: did your pair get there on its own?</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 26: A zero-sum game from your world</h2><p>The closing exercise, in pairs on one phone. Lead line: a situation where you and another party had to divide something and could not collaborate. Four rows, revealed one by one: THE PIE, what was being divided? (one contract, one budget, one slot, one engine: something fixed, that both of you wanted). THE OTHER PARTY, who was on the other side? YOUR STRATEGY, did either side have a dominant or inferior strategy? (tap dominant, inferior, or neither, and say what it was). THE OUTCOME, how was the pie divided in the end? Set it as a percentage split between you and the other side (100% = you won everything; 0% = you lost everything; the fan on your phone follows the slider). On the right, a QR code for ryanlamare.com/go and a running count of engines in.</p></section>
-<section aria-label="Slide 24"><h2>Slide 24 of 26: The room&rsquo;s engines</h2><p>Full screen, an airfield seen from the side: a hangar, a control tower and a terminal on the horizon, a runway along the front, clouds drifting over. Every pair&rsquo;s situation is one aircraft, its two engines and the line along its fuselage painted in that pair&rsquo;s split, teal to them and terracotta to the other party. As the answers arrive the aircraft taxi in and line up beside the runway with their engines running, The slide is driven by the mouse. Clicking an aircraft opens it: the fan head on, winding up from a standstill to a steady spin, with the two shares and a word for the outcome (they won everything, they lost everything, an even split), and on the right the three notes, the pie, the other party, and the dominant or inferior strategy if either side had one. The pair&rsquo;s two names show at the top of the opened aircraft. Every aircraft wears its own livery, a tail colour and cut drawn from its phone. Closing the aircraft sends it out: it taxis to the threshold, rolls down the runway, lifts off, circles over the field for most of a lap, and then leaves on its own route, some off to either side and some away into the distance, drawing a white trail behind it. The day passes as the room departs: the sun rises behind the hangar in a peach morning sky, crosses the sky, the light turns gold, and the last departures go out after dark, under a moon and stars, with the terminal, the tower and the runway lit and the aircraft showing a red beacon and a white strobe. A count shows how many are on the ground and how many have departed. Clicking the sun, or the moon after dark, puts every aircraft back on the ground and winds the day back to morning. Pressing E plays the ending from wherever the day has got to: the aircraft still on the ground leave one after another in quick succession, into the night. Marked demo data when there is no room.</p></section>
-<section aria-label="Slide 25"><h2>Slide 25 of 26: What did we learn?</h2><p>Five pictogram tiles, revealed one by one. A fixed pie: one side's win is the other side's loss. Choose without knowing: you move without knowing what your rival has chosen, and so do they. Never play an inferior strategy: if a move is worse whatever they do, cross it out. If a dominant strategy exists, choose it: if a move is at least as good whatever they do, it's yours. Back to back in the middle: Hotelling, rivals end up in the middle of the beach, and so do candidates.</p></section>
-<section aria-label="Slide 26"><h2>Slide 26 of 26: Top of the table</h2><p>The module scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time, with each player's engine game points (five to whoever came out ahead in their pair over the four rounds; a dead heat pays nobody) and running total. Top five only, never a full ranking; each participant can check their own score privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
-</section>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="im-zero-sum" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="32" cy="32" r="23"></circle><path fill="var(--red,#CE1E32)" d="M32 32 L32 9 A23 23 0 0 1 49.6 46.8 Z"></path><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper,#E9E2D2)" stroke-width="2.4"></line><line x1="32" y1="32" x2="49.6" y2="46.8" stroke="var(--paper,#E9E2D2)" stroke-width="2.4"></line></symbol><symbol id="im-fist" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"></rect><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"></rect><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"></rect><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"></line></symbol><symbol id="im-target" viewBox="0 0 64 64"><circle cx="32" cy="32" r="23" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><circle cx="32" cy="32" r="13" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="32" r="5"></circle></symbol><symbol id="im-payoff-matrix" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/></symbol><symbol id="im-bracket" viewBox="0 0 64 64"><g fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.4" stroke-linecap="round"><path d="M6 11 H17 V24 H28"></path><path d="M6 37 H17 V24"></path><path d="M6 53 H28 V40"></path><path d="M28 24 H39 V40 H28"></path></g><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="3.4" stroke-linecap="round" d="M39 32 H54"></path><circle fill="var(--red,#CE1E32)" cx="56" cy="32" r="4.5"></circle></symbol><symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></symbol><symbol id="im-bather" viewBox="0 0 80 132"><g fill="currentColor"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g></symbol></svg>
 
 <div class="viewport"><div class="stage">
 
@@ -290,8 +311,16 @@
   <div class="ghost">3</div>
   <div class="tag"><i></i>MODULE 3 · APPLIED GAME THEORY · <span class="swapchip">RRPF</span></div>
   <h1>ZERO-SUM<br><span class="r">GAMES</span></h1>
-  <div class="sub">Simultaneous zero-sum strategies</div>
-  <div class="byline">J. RYAN LAMARE</div>
+  <div class="sub">Constant-sum strategic interactions</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-zero-sum"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-fist"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-target"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><use href="#im-payoff-matrix"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-bracket"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></span>
+  </div>
+  <div class="byline">RYAN LAMARE</div>
 </section>
 
 <section class="slide content" data-i="1">
@@ -301,7 +330,8 @@
     <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Recognize zero-sum games, where one side&rsquo;s win is the other side&rsquo;s loss</div></div>
     <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Make strategic choices without knowing what your rival has chosen</div></div>
     <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Solve simultaneous games with payoff matrices, dominant strategies, and inferior strategies</div></div>
-    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Apply Hotelling&rsquo;s game to business and politics</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Apply Hotelling&rsquo;s game to business</div></div>
+    
   </div>
 </section>
 
@@ -313,52 +343,33 @@
   <div class="dvg" style="top:290px;gap:150px">
     <div class="dvgcol accent">
       <svg class="pg" viewBox="0 0 64 64" style="height:80px"><circle class="ink" cx="32" cy="32" r="23"/><path class="red" d="M32 32 L32 9 A23 23 0 0 1 49.6 46.8 Z"/><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper)" stroke-width="2.4"/><line x1="32" y1="32" x2="49.6" y2="46.8" stroke="var(--paper)" stroke-width="2.4"/></svg>
-      <div class="dt">Zero-sum</div>
+      <div class="dt">Zero (Constant) sum</div>
       <div class="dd">Win/lose &ndash; a fixed pie</div>
     </div>
     <div class="dvgcol">
       <svg class="pg" viewBox="0 0 64 64" style="height:80px"><circle class="ink" cx="30" cy="34" r="15"/><path fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" d="M30 13 A21 21 0 0 1 51 34"/><path fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M30 13 l8 1.5 m-8 -1.5 l1.5 8"/></svg>
-      <div class="dt">Non-zero-sum</div>
-      <div class="dd">Win/win</div>
+      <div class="dt">Non-zero (variable) sum</div>
+      <div class="dd">Win/win or lose/lose &ndash; pie not set</div>
     </div>
   </div>
   <div class="chiprow">
-    <div class="chead2" data-step="1">Recall one of the limitations of sequential games: the notion of <b style="color:var(--red)">complete information</b></div>
+    <div class="chead2" data-step="1">Recall one of the limitations of sequential games: the notion of <b style="color:var(--red)">perfect information</b></div>
     <div class="chips" data-step="2">
-      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Simultaneous games are our first application of incomplete information</b></div>
+      <div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Simultaneous games are our first application of imperfect information</b></div>
     </div>
-    <div class="chead2" data-step="3">Applications: voting behavior; football plays; pricing moves; etc.</div>
+    <div class="chead2" data-step="3">Applications: voting behavior; football matches; wages; etc.</div>
   </div>
 </section>
 
 <section class="slide content" data-i="3">
   <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Characteristics of zero-sum games</h2>
-  <div class="gtiles" style="top:280px">
-    <div class="gtile" data-step="1">
-      <svg class="pg" viewBox="0 0 96 132"><g class="ink"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><path d="M64,22 l7,8 l16,-19" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div class="gl">Rational parties</div>
-    </div>
-    <div class="gtile" data-step="2">
-      <svg class="pg" viewBox="0 0 132 132"><rect x="10" y="54" width="24" height="24" fill="var(--ink)"/><path d="M40 66 L100 26 m-16 -2 l16 2 l-8 14" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M40 66 L100 106 m-16 2 l16 -2 l-8 -14" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div class="gl">Each player has a choice of two or more strategies</div>
-    </div>
-    <div class="gtile" data-step="3">
-      <svg class="pg" viewBox="0 0 170 132"><g class="ink"><circle cx="34" cy="24" r="14"/><path d="M11 50 Q34 40 57 50 L49 96 L19 96 Z"/><rect x="20" y="96" width="12" height="32"/><rect x="36" y="96" width="12" height="32"/></g><g class="red"><circle cx="136" cy="24" r="14"/><path d="M113 50 Q136 40 159 50 L151 96 L121 96 Z"/><rect x="122" y="96" width="12" height="32"/><rect x="138" y="96" width="12" height="32"/></g><path d="M80 66 h-14 m10 -8 l-11 8 l11 8" fill="none" stroke="var(--ink)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M90 66 h14 m-10 -8 l11 8 l-11 8" fill="none" stroke="var(--red)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div class="gl">Diametrically opposed interests</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="4">
-  <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Zero-sum examples: soccer players during cup games</h2>
+  <h2>Zero-sum examples: football players during cup games</h2>
   <div class="rowfig">
     <ul class="bullets">
-      <li><span class="bb">Barbados</span> needs to win by two goals</li>
-      <li data-step="1">Goals count double if the game goes into overtime</li>
+      <li><span class="bb">Barbados</span> must win by two goals</li>
+      <li data-step="1">Goals count double if the game goes into extra time</li>
       <li data-step="2">It&rsquo;s 2-0 to <span class="bb">Barbados</span></li>
-      <li data-step="3">In the 83rd minute, <span class="gg">Grenada</span> scores (2-1)</li>
+      <li data-step="3">In the 83rd minute, <span class="gg">Grenada</span> scores, making it 2-1</li>
       <li data-step="4"><b>What should <span class="bb">Barbados</span> do?</b></li>
       <li data-step="5"><b>What should <span class="gg">Grenada</span> do?</b></li>
     </ul>
@@ -371,42 +382,41 @@
   </div>
 </section>
 
-<section class="slide content" data-i="5">
+<!-- Arthur Chu, back from his 550 zero-sum deck (slide 5) and MG478 week 2 at his word, 23 Sep 2026 -->
+<section class="slide content" data-i="4">
   <div class="kicker"><i></i>MODULE 3</div>
-  <h2>Zero-sum game players throughout history</h2>
-  <div class="gtiles" style="top:266px;gap:36px">
-    <div class="gtile" data-step="1">
-      <svg class="pg" viewBox="0 0 120 100"><g class="ink"><path d="M14 8 Q30 8 46 8 Q44 34 34 40 L34 74 L44 80 L16 80 L26 74 L26 40 Q16 34 14 8 Z"/></g><g class="red"><path d="M74 8 Q90 8 106 8 Q104 34 94 40 L94 74 L104 80 L76 80 L86 74 L86 40 Q76 34 74 8 Z"/></g></svg>
-      <div class="gl">Westley and Vizzini</div>
-    </div>
-    <div class="gtile" data-step="2">
-      <svg class="pg" viewBox="0 0 140 100"><circle cx="24" cy="56" r="16" fill="var(--ink)"/><rect x="56" y="36" width="30" height="40" fill="none" stroke="var(--ink)" stroke-width="5"/><g stroke="var(--red)" stroke-width="5" stroke-linecap="round" fill="none"><line x1="104" y1="40" x2="128" y2="72"/><line x1="128" y1="40" x2="104" y2="72"/><circle cx="102" cy="78" r="6"/><circle cx="130" cy="78" r="6"/></g></svg>
-      <div class="gl">Anyone who&rsquo;s played rock, paper, scissors</div>
-    </div>
-    <div class="gtile" data-step="3">
-      <svg class="pg" viewBox="0 0 130 100"><path d="M14 84 L14 16 L116 16 L116 84" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><line x1="14" y1="42" x2="116" y2="42" stroke="var(--ink)" stroke-width="2.5" opacity=".35"/><circle cx="92" cy="32" r="12" fill="var(--red)"/></svg>
-      <div class="gl">Soccer teams&rsquo; penalty kick takers</div>
-    </div>
-    <div class="gtile" data-step="4">
-      <svg class="pg" viewBox="0 0 120 104"><g stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M60 18 L34 66 m2 -16 l-2 16 l16 -3"/><path d="M22 88 L78 78 m-15 -8 l15 8 l-12 12"/></g><path d="M98 84 L68 32 m-1 16 l1 -16 l15 4" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-      <div class="gl">Anyone who&rsquo;s been in a Mexican standoff</div>
+  <h2>Zero-sum examples: Jeopardy champion Arthur Chu</h2>
+  <!-- 29 Sep 2026, his call: rock, paper, scissors and penalty kicks come out here, since the room plays both in Module 6; Arthur Chu gets his own slide, as in his LER 550 master (slide 68) -->
+  <!-- 29 Sep 2026, his ask: bullets beside the clip, as on the Barbados slide. Checked: the $5 was a hockey Daily Double in his second game (J! Archive #6763); rows 3 to 5 held about nine in ten Daily Doubles in his season; Watson's designers on hunting them "while also denying that opportunity to the other players" (Tesauro et al. 2013) -->
+  <div class="rowfig chufig">
+    <ul class="bullets">
+      <li>Only the winner keeps the money and comes back, so every Jeopardy game has one winner and two losers</li>
+      <li data-step="1"><b>Arthur Chu</b> starts at the bottom of the board, where the biggest clues and 90% of Daily Doubles are, and jumps between categories to hunt for them</li>
+      <li data-step="2">There are <b>only three Daily Doubles in a game</b>, so when he finds one in a category he knows nothing about, he bets just $5 to keep it from the others</li>
+      <li data-step="3">IBM&rsquo;s computer used an identical strategy to beat Ken Jennings: find Daily Doubles, <b>deny them to everyone else</b></li>
+    </ul>
+    <div class="clipframe" id="chuwrap">
+      <button class="clipcover" id="chuload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Jeopardy champion Arthur Chu</span>
+      </button>
     </div>
   </div>
 </section>
 
-<section class="slide content" data-i="6">
+<section class="slide content" data-i="5">
   <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
   <h2>A zero-sum truel game</h2>
-  <div class="leadline">Shooting order is random, and after each person fires, he has to <b>reload</b></div>
+  <div class="leadline">Shooting order is random, and after each person fires, they have to <b>reload</b></div>
   <div class="trows">
     <div class="trow" id="tr1"><div class="demotag" id="ptdemo" style="top:-20px;left:96px;right:auto">DEMO DATA</div>
-      <div class="tname">Dwight Schrute</div><div class="tpct" style="color:var(--blue)">100%</div>
+      <div class="tname">The ace sharpshooter</div><div class="tpct" style="color:var(--blue)">100%</div>
       <div class="crowd" style="color:var(--blue)"></div><div class="pnum"></div></div>
     <div class="trow" id="tr2">
-      <div class="tname">Andy Bernard</div><div class="tpct" style="color:var(--terracotta)">80%</div>
+      <div class="tname">The pretty decent shot</div><div class="tpct" style="color:var(--terracotta)">80%</div>
       <div class="crowd" style="color:var(--terracotta)"></div><div class="pnum"></div></div>
     <div class="trow" id="tr3">
-      <div class="tname">Michael Scott</div><div class="tpct" style="color:var(--green)">50%</div>
+      <div class="tname">just an average shooter</div><div class="tpct" style="color:var(--green)">50%</div>
       <div class="crowd" style="color:var(--green)"></div><div class="pnum"></div></div>
   </div>
   <div class="qrpanel" id="qrpanel">
@@ -417,38 +427,93 @@
     </div>
     <div class="livecount"><span class="n" id="ptN">0</span><span class="l">RESPONSES</span></div>
   </div>
-  <span data-step="1" data-stepcall="ptReveal" style="position:absolute;width:0;height:0"></span>
+  <span data-step="2" data-stepcall="ptReveal" style="position:absolute;width:0;height:0"></span>
+  <div class="talk" data-step="1" style="right:400px">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> Talk it out before the results come up.</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
+  <h2>&ldquo;Survival of the weakest&rdquo;</h2>
+  <div class="leadline" style="text-align:left;max-width:420px">What are the actual <b>win rates</b>?</div>
+  <div class="trows" style="right:auto;width:400px;top:236px;gap:14px">
+    <div class="trow"><div class="tname">The ace sharpshooter</div><div class="tpct" style="color:var(--blue)">30%</div></div>
+    <div class="trow"><div class="tname">The pretty decent shot</div><div class="tpct" style="color:var(--terracotta)">18%</div></div>
+    <div class="trow"><div class="tname">just an average shooter</div><div class="tpct" style="color:var(--green)">52%</div></div>
+  </div>
+  <!-- 29 Sep 2026, his idea: the truel played out at the junction, in place of the Key &amp; Peele standoff (now the module's
+       wrap, before the takeaways). His note, split across the presses. The order is random, so the scene shows the pattern
+       (whoever survives, the average shooter shoots first), not a claimed result; 30/18/52 holds with a random order when the
+       two best shots aim at each other and the average shooter misses on purpose -->
+  <ul class="bullets tlist">
+    <li data-step="1">The two best shots aim at each other, since each is the other&rsquo;s biggest threat. Nobody bothers with the average shooter</li>
+    <li data-step="3">Whoever survives, the average shooter gets the first shot at them</li>
+  </ul>
+  <div class="tscene" id="ts1"><svg class="tsvg" viewBox="0 0 640 400" role="img" aria-label="An Old West street at the junction, a saloon on the left and a general store on the right. The ace and the pretty decent shot aim at each other; the ace fires and the pretty decent shot falls; the ace reloads, and the average shooter takes the first shot at him, fifty-fifty."><rect width="640" height="400" fill="var(--paper-soft)"/><circle cx="320" cy="108" r="44" fill="var(--ochre)" opacity=".5"/><path d="M150 214 L178 186 L234 186 L254 204 L264 214 Z" fill="var(--tan)"/><path d="M388 214 L402 194 L452 194 L472 214 Z" fill="var(--tan)"/><rect y="214" width="640" height="186" fill="var(--tan-light)"/><path d="M309 214 L331 214 L470 258 L170 258 Z" fill="var(--tan)" opacity=".5"/><path d="M0 318 Q320 306 640 318 M0 342 Q320 330 640 342" fill="none" stroke="var(--tan)" stroke-width="2"/><path d="M-2 258 V140 H22 V120 H148 V140 H170 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="30" y="128" width="110" height="24" fill="var(--ink)"/><text x="85" y="145" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="3" fill="var(--paper)">SALOON</text><rect x="20" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="120" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="64" y="198" width="42" height="60" fill="var(--ink)" opacity=".85"/><path d="M67 210 H84 V240 H67 Z M86 210 H103 V240 H86 Z" fill="var(--tan)" stroke="var(--ink)" stroke-width="2"/><rect x="-2" y="172" width="172" height="8" fill="var(--sienna)"/><rect x="6" y="180" width="5" height="78" fill="var(--sienna)"/><rect x="159" y="180" width="5" height="78" fill="var(--sienna)"/><path d="M642 258 V148 H620 V128 H490 V148 H470 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="496" y="136" width="118" height="24" fill="var(--ink)"/><text x="555" y="152" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="11" letter-spacing="2" fill="var(--paper)">GENERAL STORE</text><rect x="484" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="588" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="538" y="200" width="36" height="58" fill="var(--ink)" opacity=".85"/><rect x="470" y="176" width="172" height="8" fill="var(--sienna)"/><rect x="476" y="184" width="5" height="74" fill="var(--sienna)"/><rect x="631" y="184" width="5" height="74" fill="var(--sienna)"/><line class="aim aimAB" x1="214.5" y1="277.8" x2="483.1" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimBA" x1="425.5" y1="277.8" x2="156.9" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimCA" x1="280.2" y1="216.3" x2="156.9" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="trace traceA" x1="214.5" y1="277.8" x2="483.1" y2="295.8" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="269.2 269.2" stroke-dashoffset="269.2"/><g transform="translate(320,264) scale(-0.8,0.8)"><g class="gs gsC"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--green)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--green)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--green)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--green)"/><g transform="translate(6,-84)"><g class="arm armC"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--green)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><g transform="translate(150,374) scale(1.1,1.1)"><g class="gs gsA"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--blue)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--blue)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--blue)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--blue)"/><g transform="translate(6,-84)"><g class="arm armA"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--blue)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/><g transform="translate(50,-2.5)"><g class="flash flashA"><polygon points="12,0 4.2,1.7 8.5,8.5 1.7,4.2 0,12 -1.7,4.2 -8.5,8.5 -4.2,1.7 -12,0 -4.2,-1.7 -8.5,-8.5 -1.7,-4.2 -0,-12 1.7,-4.2 8.5,-8.5 4.2,-1.7" fill="var(--ochre)"/><circle r="4" fill="var(--paper)"/></g></g></g></g></g></g><g transform="translate(490,374) scale(-1.1,1.1)"><g class="gs gsB"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--terracotta)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--terracotta)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--terracotta)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--terracotta)"/><g transform="translate(6,-84)"><g class="arm armB"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--terracotta)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><text class="aim pctCA" x="222.6" y="246.1" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="22" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">50%</text><text class="bang bangA" x="222.5" y="257.8" text-anchor="start" font-family="League Spartan,sans-serif" font-weight="900" font-size="21" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">BANG!</text><g class="reload"><rect x="98" y="196" width="104" height="22" rx="3" fill="var(--ink)"/><text x="150" y="211" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="11" letter-spacing="1.6" fill="var(--paper)">RELOADING&hellip;</text></g><text x="150" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--blue)" class="tlab">THE ACE &middot; 100%</text><text x="490" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--terracotta)" class="tlab">PRETTY DECENT &middot; 80%</text><text x="350" y="176" text-anchor="start" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--green)" class="tlab">AVERAGE &middot; 50%</text><g class="tw"><g transform="translate(0,352)"><g class="twr"><circle r="13" fill="none" stroke="var(--sienna)" stroke-width="2"/><path d="M-10 -6 Q0 -14 10 -4 Q4 8 -8 6 Q-12 0 -4 -6 M-6 10 Q6 2 2 -10 M-12 2 Q0 4 12 -2" fill="none" stroke="var(--sienna)" stroke-width="1.6"/></g></g></g></svg><span class="m1" data-step="1"></span><span class="m2" data-step="2"></span><span class="m3" data-step="3"></span></div>
 </section>
 
 <section class="slide content" data-i="7">
   <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
   <h2>&ldquo;Survival of the weakest&rdquo;</h2>
-  <div class="leadline" style="text-align:left;max-width:420px">What are the <b>win rates</b>?</div>
-  <div class="trows" style="right:auto;width:400px">
-    <div class="trow"><div class="tname">Dwight Schrute</div><div class="tpct" style="color:var(--blue)">30%</div></div>
-    <div class="trow"><div class="tname">Andy Bernard</div><div class="tpct" style="color:var(--terracotta)">18%</div></div>
-    <div class="trow"><div class="tname">Michael Scott</div><div class="tpct" style="color:var(--green)">52%</div></div>
-  </div>
-  <div class="chip" data-step="1" style="position:absolute;left:96px;width:404px;top:518px;background:var(--red);border-color:var(--red);color:var(--paper);text-align:center;font-size:18.5px;line-height:1.35;padding:13px 18px">What if Michael decides to (or is forced to) shoot first?</div>
-  <div class="clipframe" id="standoffwrap" style="position:absolute;right:96px;top:212px">
-    <button class="clipcover" id="standoffload" type="button">
-      <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
-      <span class="ct">Mexican Standoff</span>
-    </button>
+  <div class="chip tq">What if the average shooter decides to (or is forced to) shoot first?</div>
+  <ul class="bullets tlist2">
+    <li data-step="2">Hit either one, and the survivor hits him</li>
+    <li data-step="3">So if he gets the first shot, his best move is to <b>miss on purpose</b></li>
+  </ul>
+  <div class="tscene" id="ts2"><svg class="tsvg" viewBox="0 0 640 400" role="img" aria-label="The same street. If the average shooter shoots first and hits the pretty decent shot, the ace turns on him and never misses. So he fires into the air instead, and the two best shots go back to aiming at each other."><rect width="640" height="400" fill="var(--paper-soft)"/><circle cx="320" cy="108" r="44" fill="var(--ochre)" opacity=".5"/><path d="M150 214 L178 186 L234 186 L254 204 L264 214 Z" fill="var(--tan)"/><path d="M388 214 L402 194 L452 194 L472 214 Z" fill="var(--tan)"/><rect y="214" width="640" height="186" fill="var(--tan-light)"/><path d="M309 214 L331 214 L470 258 L170 258 Z" fill="var(--tan)" opacity=".5"/><path d="M0 318 Q320 306 640 318 M0 342 Q320 330 640 342" fill="none" stroke="var(--tan)" stroke-width="2"/><path d="M-2 258 V140 H22 V120 H148 V140 H170 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="30" y="128" width="110" height="24" fill="var(--ink)"/><text x="85" y="145" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="13" letter-spacing="3" fill="var(--paper)">SALOON</text><rect x="20" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="120" y="192" width="30" height="34" fill="var(--ink)" opacity=".8"/><rect x="64" y="198" width="42" height="60" fill="var(--ink)" opacity=".85"/><path d="M67 210 H84 V240 H67 Z M86 210 H103 V240 H86 Z" fill="var(--tan)" stroke="var(--ink)" stroke-width="2"/><rect x="-2" y="172" width="172" height="8" fill="var(--sienna)"/><rect x="6" y="180" width="5" height="78" fill="var(--sienna)"/><rect x="159" y="180" width="5" height="78" fill="var(--sienna)"/><path d="M642 258 V148 H620 V128 H490 V148 H470 V258 Z" fill="var(--paper)" stroke="var(--ink)" stroke-width="3"/><rect x="496" y="136" width="118" height="24" fill="var(--ink)"/><text x="555" y="152" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="11" letter-spacing="2" fill="var(--paper)">GENERAL STORE</text><rect x="484" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="588" y="194" width="42" height="34" fill="var(--ink)" opacity=".8"/><rect x="538" y="200" width="36" height="58" fill="var(--ink)" opacity=".85"/><rect x="470" y="176" width="172" height="8" fill="var(--sienna)"/><rect x="476" y="184" width="5" height="74" fill="var(--sienna)"/><rect x="631" y="184" width="5" height="74" fill="var(--sienna)"/><line class="aim aimAB" x1="214.5" y1="277.8" x2="483.1" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimBA" x1="425.5" y1="277.8" x2="156.9" y2="295.8" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 6"/><line class="aim aimAC" x1="209.1" y1="253.2" x2="324.8" y2="209.6" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><line class="trace traceC" x1="359.8" y1="216.3" x2="483.1" y2="295.8" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="146.7 146.7" stroke-dashoffset="146.7"/><g transform="translate(320,264) scale(0.8,0.8)"><g class="gs gsC"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--green)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--green)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--green)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--green)"/><g transform="translate(6,-84)"><g class="arm armC"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--green)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/><g transform="translate(50,-2.5)"><g class="flash flashC"><polygon points="12,0 4.2,1.7 8.5,8.5 1.7,4.2 0,12 -1.7,4.2 -8.5,8.5 -4.2,1.7 -12,0 -4.2,-1.7 -8.5,-8.5 -1.7,-4.2 -0,-12 1.7,-4.2 8.5,-8.5 4.2,-1.7" fill="var(--ochre)"/><circle r="4" fill="var(--paper)"/></g></g><g transform="translate(50,-2.5)"><g class="flash flashCup"><polygon points="12,0 4.2,1.7 8.5,8.5 1.7,4.2 0,12 -1.7,4.2 -8.5,8.5 -4.2,1.7 -12,0 -4.2,-1.7 -8.5,-8.5 -1.7,-4.2 -0,-12 1.7,-4.2 8.5,-8.5 4.2,-1.7" fill="var(--ochre)"/><circle r="4" fill="var(--paper)"/></g></g></g></g></g></g><g transform="translate(150,374) scale(1.1,1.1)"><g class="gs gsA"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--blue)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--blue)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--blue)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--blue)"/><g transform="translate(6,-84)"><g class="arm armA"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--blue)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><g transform="translate(490,374) scale(-1.1,1.1)"><g class="gs gsB"><path d="M-10 0 L-8 -46 L-1 -46 L-2 0 Z" fill="var(--ink)"/><path d="M2 0 L1 -46 L8 -46 L10 0 Z" fill="var(--ink)"/><path d="M-12 0 H-1 V-6 H-10 Z" fill="var(--sienna)"/><path d="M2 0 H14 L12 -6 H2 Z" fill="var(--sienna)"/><path d="M-12 -85 L-17 -57 L-11 -56 L-7 -83 Z" fill="var(--terracotta)"/><circle cx="-14" cy="-55" r="4" fill="var(--tan)"/><path d="M-13 -46 L13 -46 L14 -86 Q0 -92 -14 -86 Z" fill="var(--terracotta)"/><rect x="-14" y="-51" width="28" height="6" fill="var(--ink)"/><rect x="-3" y="-51" width="6" height="6" fill="var(--ochre)"/><rect x="-19" y="-50" width="7" height="18" rx="2" fill="var(--sienna)"/><rect x="-4" y="-96" width="8" height="8" fill="var(--tan)"/><circle cx="1" cy="-103" r="10" fill="var(--tan)"/><circle cx="6" cy="-105" r="1.4" fill="var(--ink)"/><path d="M-8 -93 L11 -93 L2 -86 Z" fill="var(--terracotta)"/><path d="M-22 -110 Q1 -106 24 -110 L23 -106 Q1 -102 -21 -106 Z" fill="var(--ink)"/><path d="M-10 -109 L-8 -123 Q1 -127 10 -123 L12 -109 Z" fill="var(--ink)"/><rect x="-9.5" y="-113" width="21" height="3" fill="var(--terracotta)"/><g transform="translate(6,-84)"><g class="arm armB"><rect x="0" y="-3.5" width="31" height="7" rx="3.5" fill="var(--terracotta)"/><path d="M29 -1 L35 -1 L33 8 L28 8 Z" fill="var(--sienna)"/><rect x="29" y="-4.5" width="20" height="4.5" fill="var(--ink)"/><circle cx="31" cy="1" r="4" fill="var(--tan)"/></g></g></g></g><text class="aim pctAC" x="261" y="219.4" text-anchor="middle" font-family="League Spartan,sans-serif" font-weight="900" font-size="22" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">100%</text><text class="bang bangC" x="365.8" y="200.3" text-anchor="start" font-family="League Spartan,sans-serif" font-weight="900" font-size="21" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">BANG!</text><text class="bang bangCup" x="317.8" y="149.1" text-anchor="end" font-family="League Spartan,sans-serif" font-weight="900" font-size="21" fill="var(--red)" stroke="var(--paper-soft)" stroke-width="5" paint-order="stroke">BANG!</text><g class="smoke" transform="translate(329.8,151.1)"><g class="smk"><circle r="6" fill="var(--grey)" opacity=".55"/><circle cx="7" cy="-9" r="5" fill="var(--grey)" opacity=".45"/><circle cx="-3" cy="-17" r="4" fill="var(--grey)" opacity=".35"/></g></g><g class="ttag tagHit"><rect x="12" y="12" width="140" height="26" fill="var(--ink)"/><text x="82" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.6" fill="var(--paper)">IF HE HITS ONE</text></g><g class="ttag tagMiss"><rect x="12" y="12" width="214" height="26" fill="var(--ink)"/><text x="119" y="30" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.6" fill="var(--paper)">IF HE MISSES ON PURPOSE</text></g><text x="150" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--blue)" class="tlab">THE ACE &middot; 100%</text><text x="490" y="394" text-anchor="middle" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--terracotta)" class="tlab">PRETTY DECENT &middot; 80%</text><text x="350" y="176" text-anchor="start" font-family="Jost,sans-serif" font-weight="700" font-size="12" letter-spacing="1.4" fill="var(--green)" class="tlab">AVERAGE &middot; 50%</text><g class="tw"><g transform="translate(0,352)"><g class="twr"><circle r="13" fill="none" stroke="var(--sienna)" stroke-width="2"/><path d="M-10 -6 Q0 -14 10 -4 Q4 8 -8 6 Q-12 0 -4 -6 M-6 10 Q6 2 2 -10 M-12 2 Q0 4 12 -2" fill="none" stroke="var(--sienna)" stroke-width="1.6"/></g></g></g></svg><span class="m1" data-step="1"></span><span class="m2" data-step="2"></span><span class="m3" data-step="3"></span></div>
+</section>
+
+<!-- 29 Sep 2026, his find: Pop Culture Jeopardy! season 2 (Netflix), Semifinal 2, 2 June 2026. After the truel on purpose,
+     since before it the story gives the poll away. Checked against thejeopardyfan.com's box score: Only Howards In The
+     Building and Ert & Bernie tied on 22,000 points, both bet it all and missed (What is Bohemian Rhapsody?); Snake
+     Juice, No Pulp, on 3,600, bet 1,738 (a nod to Fetty Wap's "1738"), missed too, and went through on 1,862. They
+     finished third in the final. Points, not dollars. The clip is the official Jeopardy! upload of that Final
+     Jeopardy!; Netflix has the whole episode. -->
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>MODULE 3 · FINAL JEOPARDY</div>
+  <h2>A Pop Culture Jeopardy! semifinal</h2>
+  <!-- 29 Sep 2026, his redesign: the room says what each team should bet before the clip, as with Barbados and Grenada;
+       nothing on the slide gives the ending away until the bets and the final scores, after the clip. The title names no
+       truel on purpose: the room works it out, and the last press names it -->
+  <div class="rowfig pcjfig">
+    <ul class="bullets">
+      <li>Only the winning team goes through to the final</li>
+      <li data-step="1">Going into Final Jeopardy, two teams are tied, and the third is far behind</li>
+      <li data-step="2">Each team bets in secret, up to its current score: right answers add the amount, and wrong ones take it away</li>
+      <li data-step="3"><b>What should the two leaders bet?</b></li>
+      <li data-step="4"><b>What should Snake Juice, No Pulp bet?</b></li>
+      <li data-step="7">A real-life truel! The two strongest teams aimed at each other, and the weakest went through to the final</li>
+    </ul>
+    <div class="pcjside">
+      <div class="clipframe" id="pcjwrap">
+        <button class="clipcover" id="pcjload" type="button">
+          <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+          <span class="ct">Final Jeopardy: Iconic Songs</span>
+        </button>
+      </div>
+      <table class="pcjscore" data-step="1">
+        <tr><th>Team</th><th>Going in</th><th>Bet</th><th>Final</th></tr>
+        <tr><td>Only Howards In The Building</td><td>22,000</td><td data-step="5">22,000</td><td data-step="6">0</td></tr>
+        <tr><td>Ert &amp; Bernie</td><td>22,000</td><td data-step="5">22,000</td><td data-step="6">0</td></tr>
+        <tr class="win"><td>Snake Juice, No Pulp</td><td>3,600</td><td data-step="5">1,738</td><td data-step="6">1,862</td></tr>
+      </table>
+    </div>
   </div>
 </section>
 
-<section class="slide content" data-i="8">
+<section class="slide content" data-i="9">
   <div class="kicker"><i></i>MODULE 3 · WAR GAME</div>
   <h2>Solving zero-sum games</h2>
   <div class="rowfig" style="top:200px;align-items:center">
     <ul class="bullets" style="flex:1">
       <li>February 1943: the Japanese are about to reinforce their army in New Guinea</li>
-      <li data-step="1">They can sail <b>north</b> of New Britain in the rain, or <b>south</b> in fair weather &ndash; three days either way</li>
+      <li data-step="1">They can sail <b>north</b> of New Britain in the rain, or <b>south</b> in fair weather &ndash; the journey will take three days either way</li>
       <li data-step="2">General Kenney must decide where to concentrate his reconnaissance aircraft</li>
       <li data-step="3">The Japanese want the least possible exposure to his bombers, and of course, Kenney wants the reverse</li>
     </ul>
-    <svg class="wmap" viewBox="0 0 1000 400" style="max-width:560px;flex:none">
+    <a class="exlink" href="https://www.dam.brown.edu/people/huiwang/classes/am121/Archive/game_121_1.pdf" target="_blank" rel="noopener"><svg class="wmap" viewBox="0 0 1000 400" style="max-width:560px;flex:none">
       <rect class="sea" x="1.5" y="1.5" width="997" height="397"/>
       <path class="land" d="M2 150 Q90 168 150 210 Q210 252 245 312 Q268 355 278 398 L2 398 Z"/>
       <text class="isl" x="48" y="330">NEW GUINEA</text>
@@ -469,15 +534,15 @@
       <g transform="translate(430,330)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
       <g transform="translate(590,300)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
       <g transform="translate(750,262)"><circle r="11" fill="var(--ochre)"/><g stroke="var(--ochre)" stroke-width="3" stroke-linecap="round"><line y1="-18" y2="-25"/><line y1="18" y2="25"/><line x1="-18" x2="-25"/><line x1="18" x2="25"/><line x1="-13" y1="-13" x2="-18" y2="-18"/><line x1="13" y1="13" x2="18" y2="18"/><line x1="13" y1="-13" x2="18" y2="-18"/><line x1="-13" y1="13" x2="-18" y2="18"/></g></g>
-    </svg>
+    </svg></a>
   </div>
 </section>
 
-<section class="slide content" data-i="9">
+<section class="slide content" data-i="10">
   <div class="kicker"><i></i>MODULE 3 · WAR GAME</div>
   <h2>What should each side do?</h2>
   <div class="fig" style="top:176px;bottom:56px">
-    <svg class="wmap" id="warmap" viewBox="0 0 1000 400" style="max-width:980px">
+    <a class="exlink" href="https://www.dam.brown.edu/people/huiwang/classes/am121/Archive/game_121_1.pdf" target="_blank" rel="noopener"><svg class="wmap" id="warmap" viewBox="0 0 1000 400" style="max-width:980px">
       <rect class="sea" x="1.5" y="1.5" width="997" height="397"/>
       <path class="land" d="M2 150 Q90 168 150 210 Q210 252 245 312 Q268 355 278 398 L2 398 Z"/>
       <text class="isl" x="40" y="376">NEW GUINEA</text>
@@ -505,31 +570,33 @@
         <g transform="translate(56,0) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
         <g transform="translate(72,64) rotate(70)"><rect x="-3" y="-18" width="6" height="34" rx="3"/><rect x="-17" y="-7" width="34" height="6" rx="3"/><rect x="-9" y="11" width="18" height="5" rx="2.5"/></g>
       </g>
-    </svg>
+    </svg></a>
   </div>
 </section>
 
-<section class="slide content" data-i="10">
+<section class="slide content" data-i="11">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>The game expressed as a payoff matrix</h2>
   <div class="fig" style="top:180px">
     <div class="mxwrap">
-      <div class="mx" style="--cols:2;--rows:2;--cw:220px;--rh:96px">
+      <div class="mx solvable" style="--cols:2;--rows:2;--cw:220px;--rh:96px">
         <div class="chead">JAPANESE CHOICE</div>
         <div class="rhead">ALLIED CHOICE</div>
         <div class="cl" style="grid-column:3">Northern Route</div>
         <div class="cl" id="bcl2" style="grid-column:4">Southern Route</div>
         <div class="rl" style="grid-row:3">Northern Route</div>
         <div class="rl" id="brl2" style="grid-row:4">Southern Route</div>
-        <div class="cell" id="b11" style="grid-row:3;grid-column:3"><span class="val">2 Days</span></div>
-        <div class="cell" id="b12" style="grid-row:3;grid-column:4"><span class="val">2 Days</span></div>
-        <div class="cell" id="b21" style="grid-row:4;grid-column:3"><span class="val">1 Day</span></div>
-        <div class="cell" id="b22" style="grid-row:4;grid-column:4"><span class="val">3 Days</span></div>
+        <div class="cell" id="b11" style="grid-row:3;grid-column:3"><span class="pa">2</span><span class="pc">&middot;</span><span class="pb">1</span></div>
+        <div class="cell" id="b12" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">&middot;</span><span class="pb">1</span></div>
+        <div class="cell" id="b21" style="grid-row:4;grid-column:3"><span class="pa">1</span><span class="pc">&middot;</span><span class="pb">2</span></div>
+        <div class="cell" id="b22" style="grid-row:4;grid-column:4"><span class="pa">3</span><span class="pc">&middot;</span><span class="pb">0</span></div>
       </div>
+      <!-- 28 Sep 2026, his ask: the Japanese number too. The voyage takes three days, so theirs is the days the convoy sails free; every cell sums to three, as the engine game's sum to 100 -->
+      <div class="mxnote" style="color:var(--ink)">Each cell is <b style="color:var(--teal)">the days Kenney can bomb the convoy</b> &middot; <b style="color:var(--terracotta)">the days it sails free</b>, out of a three-day voyage</div>
       <div class="mxnote">
-        <span data-step="1">The Japanese should never sail south &ndash; the northern route means less exposure whatever the Allies do&hellip;</span>
-        <span data-step="2"> when Kenney realizes this, his choice is clear&hellip;go north.</span>
-        <span data-step="3"> <b>The game has an &ldquo;equilibrium point&rdquo;</b> &ndash; a stable outcome, because a player unilaterally picking a new strategy is not helped by the change</span>
+        <span data-step="1">The Japanese should never sail south &ndash; the northern route never means more exposure, whatever the Allies do&hellip;</span>
+        <span data-step="2"> when Kenney realizes this, his choice is clear&hellip;he should go north.</span>
+        <span data-step="3"> <b>The game has an equilibrium point</b> &ndash; any player unilaterally picking a new strategy is not helped by the change</span>
       </div>
     </div>
     <span data-step="1" data-stepcall="mxMark" data-cells="bcl2,b12,b22" data-cls="gone" style="position:absolute;width:0;height:0"></span>
@@ -538,8 +605,69 @@
   </div>
 </section>
 
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>MODULE 3 &middot; THE MATRIX</div>
+  <h2>A workplace example</h2>
+  <!-- 28 Sep 2026: the middle step between Kenney and the engine game, his LER 550 master slides 81-89 (565 slides 55-59). His union election is a company's negotiating team here; his words and numbers otherwise -->
+  <div class="rowfig" style="top:200px;align-items:center">
+    <ul class="bullets" style="flex:1">
+      <li>Two managers, Casey and Pat, are vying to lead the company&rsquo;s team in an upcoming negotiation with a major customer</li>
+      <li data-step="1">There is a dispute over whether the team should employ <b>hard or soft tactics</b> in the negotiation</li>
+      <li data-step="2">Each candidate must decide whether to favor hard or soft tactics, or evade the issue</li>
+      <li data-step="3">The candidates can calculate how their decision will influence the <b>votes they will receive</b> when the board decides who will lead</li>
+      <li data-step="4">They must pick their best responses to what they think each other will do</li>
+    </ul>
+    <svg class="cpfig" viewBox="0 0 300 230" role="img" aria-label="Casey and Pat, two candidates facing each other">
+      <g transform="translate(70 40)" fill="var(--teal)"><circle cx="0" cy="0" r="22"/><path d="M-36 34 Q0 20 36 34 L26 110 L-26 110 Z"/><rect x="-22" y="110" width="18" height="56"/><rect x="4" y="110" width="18" height="56"/></g>
+      <g transform="translate(230 40)" fill="var(--terracotta)"><circle cx="0" cy="0" r="22"/><path d="M-36 34 Q0 20 36 34 L26 110 L-26 110 Z"/><rect x="-22" y="110" width="18" height="56"/><rect x="4" y="110" width="18" height="56"/></g>
+      <text x="70" y="226" text-anchor="middle" class="cpname" fill="var(--teal)">CASEY</text>
+      <text x="230" y="226" text-anchor="middle" class="cpname" fill="var(--terracotta)">PAT</text>
+    </svg>
+  </div>
+</section>
 
-<section class="slide content" data-i="11">
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>MODULE 3 &middot; THE MATRIX</div>
+  <h2>Seeking the dominant strategy</h2>
+  <!-- 28 Sep 2026: his LER 550 slide 89, word for word, beside his slide 82 matrix (Casey's share, and Pat's as the rest). He demonstrates the phones' move on it: a click on a name dims its whole line (Kimberly's run: people tapped the numbers; dimmed, not crossed out, since 28 Sep, his call, like every m3 matrix). Dominance is what is left standing, no circle. His keypresses dim whatever he has not clicked. -->
+  <div class="rowfig" style="top:188px;align-items:center;gap:44px">
+    <div class="mxwrap" style="gap:12px">
+      <div class="mx solvable" id="cpmx" style="--cols:3;--rows:3;--cw:132px;--rh:70px">
+        <div class="chead">PAT</div>
+        <div class="rhead">CASEY</div>
+        <div class="cl" style="grid-column:3">Favor hard tactics</div>
+        <div class="cl" style="grid-column:4">Favor soft tactics</div>
+        <div class="cl" style="grid-column:5">Dodge the issue</div>
+        <div class="rl" style="grid-row:3">Favor hard tactics</div>
+        <div class="rl" style="grid-row:4">Favor soft tactics</div>
+        <div class="rl" style="grid-row:5">Dodge the issue</div>
+        <div class="cell" data-r="0" data-c="0" style="grid-row:3;grid-column:3"><span class="pa">45</span><span class="pc">&middot;</span><span class="pb">55</span></div>
+        <div class="cell" data-r="0" data-c="1" style="grid-row:3;grid-column:4"><span class="pa">50</span><span class="pc">&middot;</span><span class="pb">50</span></div>
+        <div class="cell" data-r="0" data-c="2" style="grid-row:3;grid-column:5"><span class="pa">40</span><span class="pc">&middot;</span><span class="pb">60</span></div>
+        <div class="cell" data-r="1" data-c="0" style="grid-row:4;grid-column:3"><span class="pa">60</span><span class="pc">&middot;</span><span class="pb">40</span></div>
+        <div class="cell" data-r="1" data-c="1" style="grid-row:4;grid-column:4"><span class="pa">55</span><span class="pc">&middot;</span><span class="pb">45</span></div>
+        <div class="cell" data-r="1" data-c="2" style="grid-row:4;grid-column:5"><span class="pa">50</span><span class="pc">&middot;</span><span class="pb">50</span></div>
+        <div class="cell" data-r="2" data-c="0" style="grid-row:5;grid-column:3"><span class="pa">45</span><span class="pc">&middot;</span><span class="pb">55</span></div>
+        <div class="cell" data-r="2" data-c="1" style="grid-row:5;grid-column:4"><span class="pa">55</span><span class="pc">&middot;</span><span class="pb">45</span></div>
+        <div class="cell" data-r="2" data-c="2" style="grid-row:5;grid-column:5"><span class="pa">40</span><span class="pc">&middot;</span><span class="pb">60</span></div>
+      </div>
+      <div class="mxnote" style="color:var(--ink);font-size:17px">Each cell is <b style="color:var(--teal)">Casey&rsquo;s share of the vote</b> &middot; <b style="color:var(--terracotta)">Pat&rsquo;s share</b></div>
+      <div class="mxnote" style="font-size:15px">Click a name to rule out its whole line, as on your phones</div>
+    </div>
+    <ul class="bullets cpsteps">
+      <li data-step="1">Is there a dominant strategy for Casey?</li>
+      <li data-step="2" class="sub">Yes: <b>Favor soft tactics</b></li>
+      <li data-step="3">How about for Pat?</li>
+      <li data-step="4" class="sub">Yes: If Pat realizes what Casey&rsquo;s strategy is certain to be, then clearly Pat should <b>dodge the issue</b></li>
+      <li data-step="5">What is the outcome? The outcome is <b>50%</b> (conveniently an even split)</li>
+      <li data-step="6"><b>Moral: Always look for the dominant strategy, if there is one</b></li>
+    </ul>
+    <span data-step="2" data-stepcall="mxLine" data-mx="cpmx" data-lines="r3,r5" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="mxLine" data-mx="cpmx" data-lines="c3,c4" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="14">
   <div class="kicker"><i></i>MODULE 3 · THE MATRIX</div>
   <h2>Guidelines for solving zero-sum games</h2>
   <div class="fig" style="top:220px;gap:30px">
@@ -549,165 +677,34 @@
     </div>
     <div class="defcard" data-step="2">
       <div class="dh">Eliminate dominated (or inferior) strategies</div>
-      <div class="db">An inferior strategy exists if a player&rsquo;s payoff from choosing this strategy is always less than the payoff from choosing any other available strategy. <b>If an inferior strategy exists, never choose it!</b></div>
+      <div class="db">An inferior strategy exists if a player&rsquo;s payoff from choosing this strategy is always less than the payoff from choosing another available strategy. <b>If an inferior strategy exists, never choose it!</b></div>
+      <div class="db" style="margin-top:10px">Once it&rsquo;s ruled out, look again at the smaller matrix that&rsquo;s left, for both players.</div>   <!-- 29 Sep 2026, his yes: his LER 550 slide 106 point (the reduced matrix), which the engine game needs -->
     </div>
   </div>
-</section>
-
-<section class="slide content" data-i="12">
-  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
-  <h2>Combining sequential and simultaneous thinking</h2>
-  <ul class="bullets" style="margin-top:34px">
-    <li>We&rsquo;ve so far considered how to solve zero-sum games with <b>finite</b> choices available (go north/go south)</li>
-    <li data-step="1">But what strategy should we use if the choices are <b>infinite</b>?</li>
-    <li data-step="2">Consider <b>Hotelling&rsquo;s game</b></li>
-  </ul>
-  <div class="cartstage" id="cartstage">
-    <div class="bigcart a" id="bigA" style="left:22%;top:6%">
-      <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
-    </div>
-    <div class="bigcart b" id="bigB" style="left:58%;top:6%">
-      <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="13">
-  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
-  <h2>The beach</h2>
-  <div class="fig" style="top:180px">
-    <div class="widget">
-      <div class="whead">
-        <span class="wlabel">DRAG THE CARTS &middot; CUSTOMERS WALK TO THE NEAREST ONE</span>
-      </div>
-      <div class="beach" id="beach">
-        <div class="shade" id="shadeA"></div>
-        <div class="shade shadeB" id="shadeB"></div>
-        <div class="cart a" id="cartA">
-          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
-          <div class="pct" id="pctA">50%</div>
-        </div>
-        <div class="cart b" id="cartB">
-          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
-          <div class="pct" id="pctB">50%</div>
-        </div>
-      </div>
-      <div class="widgetnote" id="beachnote">An even split. Can either vendor do better by moving?</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="14">
-  <div class="kicker"><i></i>MODULE 3 · IN PAIRS</div>
-  <h2>Where else do we see Hotelling&rsquo;s game?</h2>
-  <ul class="bullets" id="hgbul" style="max-width:620px">
-    <li>In pairs: think of <b>as many real-world examples</b> of Hotelling&rsquo;s game as you can, and send them from your phones</li>
-  </ul>
-  <div class="qrpanel" id="hgqr" style="top:236px">
-    <div class="joinchip">
-      <div class="qr"><img src="qr-hotelling.svg" alt="QR code for the examples poll at ryanlamare.com/go"></div>
-      <div class="ju">ryanlamare.com/go</div>
-    </div>
-    <div class="livecount"><span class="n" id="hgN">0</span><span class="l">RESPONSES</span></div>
-  </div>
-  <div class="wall" id="hgwall"></div>
-  <div class="demotag" id="hgdemo" style="position:absolute;top:168px;right:76px;display:none">DEMO DATA</div>
-  <div class="cap" style="position:absolute;bottom:58px;left:96px;right:96px;text-align:center;max-width:none;margin:0">
-    <span data-step="2">This is also one reason why so many products are marketed and sold with such similar characteristics.</span>
-    <span data-step="3"> <b>BUT&hellip;is this clustering socially optimal?</b></span>
-  </div>
-  <span data-step="1" data-stepcall="hgReveal" style="position:absolute;width:0;height:0"></span>
 </section>
 
 <section class="slide content" data-i="15">
-  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
-  <h2>Let&rsquo;s do some city planning</h2>
-  <div class="leadline" style="margin-top:2px;font-size:20px">The hospitals and grocery stores of Champaign-Urbana, Illinois</div>
-  <div class="citywrap widget">
-    <svg class="citymap" id="citymap" role="img" aria-label="A map of Champaign-Urbana's main roads, homes as dots, and the hospitals and grocery stores with circles around them"></svg>
-    <span class="citybtns cviews">
-      <button id="cvH" type="button" class="primary">Hospitals</button>
-      <button id="cvG" type="button">Grocery stores</button>
-      <button id="cvB" type="button">Both</button>
-    </span>
-    <span class="citybtns cacts">
-      <button id="cityA" type="button">Start again</button>
-      <button id="cityB" type="button">Where they should be</button>
-      <button id="cityC" type="button">Make it a 15-minute city</button>
-    </span>
-    <div class="chip cchip" id="cchip"><b>A 15-minute city puts every service within a fifteen-minute walk of every home. It is the anti-Hotelling, and it has to be engineered, because it will not happen on its own.</b></div>
+  <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
+  <h2>Bidding for the airline&rsquo;s engine business</h2>
+  <div class="englead">
+    <p>An airline needs <b>several engines financed and supported</b> over the coming years, and it will spread its business across two rival bidders aiming for maximum market share</p>
+    <p data-step="1">You and a rival bidder are each pitching for as much of that business as you can each get</p>
+    <p class="engask" data-step="2">Each of you simultaneously chooses what to emphasize in your pitch to the airline:</p>
+  </div>
+  <div class="engcards" data-step="2">
+    <div class="engcard"><svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21 L20 8 H32 V20 L19 33 Z"/><circle cx="26.5" cy="13.5" r="2.4"/></svg><div class="en">Cut the price</div><div class="ed">Offer the airline the same terms as your rival, but for less money</div></div>
+    <div class="engcard"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg><div class="en">Promise better terms</div><div class="ed">Keep your price higher, make the terms as attractive as possible to the airline</div></div>
+    <div class="engcard"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><div class="en">Solve a longstanding concern</div><div class="ed">Pledge to fix a problem the airline has lived with for years</div></div>
+    <div class="engcard"><svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 32 C8 23 6 16 10 11 C14 7 19 9 20 13 C21 9 26 7 30 11 C34 16 32 23 20 32 Z"/></svg><div class="en">Charm the board</div><div class="ed">Focus the pitch not on substance but entirely on goodwill, hospitality, and warm words</div></div>
   </div>
 </section>
 
 <section class="slide content" data-i="16">
-  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
-  <h2>Application to politics: the median voter theorem</h2>
-  <div class="leadline" style="max-width:1010px;margin-left:auto;margin-right:auto">Hotelling proposed this game in 1929 &ndash; in 1957, a political scientist named Downs proposed that <b>political representation</b> operates just like vendors on a beach</div>
-  <div class="fig" style="top:312px;bottom:74px">
-    <div class="widget">
-      <div class="whead">
-        <span class="wlabel">DRAG THE CANDIDATES &middot; VOTERS PICK THE NEARER ONE</span>
-        <span>
-          <button id="presetC">Suppose they set up like this&hellip;</button>
-          <button id="presetD" class="primary">They should always end up like this&hellip;</button>
-        </span>
-      </div>
-      <div class="spec" id="spec">
-        <div class="specband"></div>
-        <div class="specsplit" id="specsplit"></div>
-        <span class="speclbl" style="left:14px">0 &middot; ENTIRELY LIBERAL</span>
-        <span class="speclbl" style="right:14px">100 &middot; ENTIRELY CONSERVATIVE</span>
-        <div class="cand d" id="candD">
-          <div class="badge"><svg viewBox="0 0 68 60"><g class="animal"><ellipse cx="28" cy="36" rx="17" ry="11"/><rect x="15" y="42" width="5" height="16"/><rect x="24" y="44" width="5" height="14"/><rect x="33" y="44" width="5" height="14"/><rect x="41" y="42" width="5" height="16"/><polygon points="40,32 52,16 58,18 50,34"/><ellipse cx="56" cy="17" rx="9" ry="5.5" transform="rotate(18 56 17)"/><polygon points="49,13 45,1 50,2 53,12"/><polygon points="54,12 52,0 57,2 58,13"/><path d="M12 30 q-7 2 -8 10 l2 1 q3 -6 8 -7 z"/></g></svg></div>
-          <div class="stem"></div>
-          <div class="cpct" id="pctD">50%</div>
-        </div>
-        <div class="cand r" id="candR">
-          <div class="badge"><svg viewBox="0 0 68 60"><g class="animal"><ellipse cx="38" cy="34" rx="20" ry="13"/><rect x="24" y="44" width="6" height="14"/><rect x="34" y="46" width="6" height="12"/><rect x="46" y="44" width="6" height="14"/><path d="M22 27 Q10 28 6 38 L6 44 Q12 46 18 44 L22 40 Z"/><polygon points="7,36 0,24 11,32"/><polygon points="21,24 23,16 27,23"/><path d="M57 28 q6 4 4 12 l-2 0 q0 -6 -4 -9 z"/></g></svg></div>
-          <div class="stem"></div>
-          <div class="cpct" id="pctR">50%</div>
-        </div>
-      </div>
-      <div class="widgetnote" id="specnote">An even split. Can either candidate do better by moving?</div>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="17">
-  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
-  <h2>Challenges to the median voter theorem</h2>
-  <div class="ptrow">
-    <div class="ptiles">
-      <div class="ptile" data-step="1"><div class="pn">1</div><div class="pt">Not all voters are evenly distributed across the political spectrum</div></div>
-      <div class="ptile" data-step="2"><div class="pn">2</div><div class="pt">There are always more than just two options for voters (third candidates/not voting)</div></div>
-      <div class="ptile" data-step="3"><div class="pn">3</div><div class="pt">Voters may care about more than just unidimensional political issues</div></div>
-      <div class="ptile" data-step="4"><div class="pn">4</div><div class="pt">What if the candidates are lying?</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- The engine game (two slides). The customer is an unnamed airline (the
-     client case name came off on 15 Sep 2026); the mechanics are client-neutral. -->
-<section class="slide content" data-i="18">
-  <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
-  <h2>Bidding for the airline&rsquo;s engine business</h2>
-  <ul class="bullets engrules" style="margin-top:30px;max-width:1040px">
-    <li>An airline needs <b>several engines financed and supported</b> over the coming years, and it will spread that business across two rival bidders</li>
-    <li data-step="1">You are an individual contractor pitching for one slice of that business, for <b style="color:var(--teal)">TEAM AURORA</b> or <b style="color:var(--terracotta)">TEAM BOREALIS</b></li>
-    <li data-step="2"><b>Four rounds.</b> Each round, choose the one thing your pitch pushes hardest:</li>
-    <li class="sub" data-step="2"><b style="color:var(--ink)">Cut the price</b> &ndash; offer the airline the same deal for less money</li>
-    <li class="sub" data-step="2"><b style="color:var(--ink)">Promise better terms</b> &ndash; keep your price, make the deal easier to live with</li>
-    <li class="sub" data-step="2"><b style="color:var(--ink)">Solve a longstanding concern</b> &ndash; fix a problem the airline has lived with for years</li>
-    <li class="sub" data-step="2"><b style="color:var(--ink)">Charm the board</b> &ndash; goodwill, hospitality, warm words. No substance</li>
-  </ul>
-</section>
-
-<section class="slide content" data-i="19">
   <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
   <h2>The engine game expressed as a payoff matrix</h2>
-  <div class="fig" style="top:176px;bottom:56px;flex-direction:row;gap:70px;align-items:center;justify-content:center">
+  <div class="fig" style="top:170px;bottom:128px;flex-direction:row;gap:70px;align-items:center;justify-content:center">   <!-- bottom 56 until 28 Sep, when the tables band came in -->
     <div class="mxwrap" style="gap:16px">
-      <div class="mx mxeng" style="--cols:4;--rows:4;--cw:124px;--rh:54px">
+      <div class="mx solvable mxeng" style="--cols:4;--rows:4;--cw:124px;--rh:54px">
         <div class="chead">YOUR RIVAL&rsquo;S PITCH</div>
         <div class="rhead">YOUR PITCH</div>
         <div class="cl" style="grid-column:3">Price</div>
@@ -735,59 +732,29 @@
         <div class="cell" style="grid-row:6;grid-column:5"><span class="pa">40</span><span class="pc">&middot;</span><span class="pb">60</span></div>
         <div class="cell" style="grid-row:6;grid-column:6"><span class="pa">50</span><span class="pc">&middot;</span><span class="pb">50</span></div>
       </div>
-      <div class="mxnote" style="max-width:60ch">The matrix sets your split of the slice, and <b>every cell sums to 100</b>.<span data-step="1"> <b>Five points</b> to whoever is ahead in their pair over the four rounds; a dead heat pays nobody.</span></div>
+      <div class="mxnote" style="max-width:60ch;color:var(--ink)">Each cell is <b style="color:var(--teal)">your share</b> &middot; <b style="color:var(--terracotta)">your rival&rsquo;s share</b>, and <b>every cell sums to 100</b>.</div>
     </div>
-    <div class="joinchip">
-      <div class="qr"><img src="qr-engine.svg" alt="QR code for the engine game at ryanlamare.com/teaching/exec/demo/m3/game/"></div>
-      <div class="ju">ryanlamare.com/go &middot; the engine game</div>
+    <div class="solvecol">
+      <div class="pq">Try to solve this game: can you find the equilibrium?</div>
+      <div class="joinchip">
+        <div class="qr"><img src="qr-solve.svg" alt="QR code for the matrix page at ryanlamare.com/teaching/exec/demo/m3/solve/"></div>
+        <div class="ju">ryanlamare.com/go</div>
+      </div>
     </div>
+  </div>
+  <!-- 28 Sep 2026, his call: the room solves the engine game in groups, at the tables -->
+  <div class="talk" data-step="1">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> Solve it together, and check that everyone at your table lands on the same cell.</div>
   </div>
 </section>
 
-<section class="slide content" data-i="20">
-  <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
-  <h2>The engine is the pie</h2>
-  <div class="engrow">
-    <div class="engcol">
-      <svg class="efan" viewBox="0 0 460 460" aria-hidden="true">
-        <circle cx="230" cy="230" r="222" fill="var(--ink)"/>
-        <circle cx="230" cy="230" r="204" fill="var(--tan-light)"/>
-        <circle cx="230" cy="230" r="196" fill="var(--ink)"/>
-        <g id="erotor" transform="rotate(0 230 230)">
-          <path id="esecA" fill="var(--teal)"/>
-          <path id="esecB" fill="var(--terracotta)"/>
-          <g id="eblades" stroke="var(--paper)" stroke-width="3" opacity=".55" fill="none"></g>
-          <circle cx="230" cy="230" r="46" fill="var(--ink)"/>
-          <path d="M230 196 q30 14 12 46 q-14 24 -42 12" stroke="var(--paper)" stroke-width="9" fill="none" stroke-linecap="round"/>
-        </g>
-        <circle cx="230" cy="230" r="196" fill="none" stroke="var(--ink)" stroke-width="5" opacity=".18"/>
-      </svg>
-      <div class="eshares">
-        <div class="ecol a"><div class="ewho">Team Aurora</div><div class="en" id="enA">50</div></div>
-        <div class="ecol b"><div class="ewho">Team Borealis</div><div class="en" id="enB">50</div></div>
-      </div>
-      <div class="ebook">Overall share of the airline&rsquo;s business, all rounds so far</div>
-    </div>
-    <div class="engside">
-      <div class="engtop">
-        <span class="eround" id="eround">ROUND 1</span>
-        <div class="livecount"><span class="n" id="elocked">0</span><span class="l">PAIRS<br>LOCKED</span></div>
-        <button class="engbtn" id="ereveal" type="button">Reveal round 1</button>
-        <button class="engbtn alt" id="eopen" type="button" disabled>Open round 2</button>
-        <div class="demotag" id="edemo" style="position:static">DEMO DATA</div>
-      </div>
-      <div class="ebts" id="ebts"></div>
-      <div class="everdict" id="everdict"></div>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="21">
+<section class="slide content" data-i="17">
   <div class="kicker"><i></i>MODULE 3 · GAME THEORY IN YOUR WORLD</div>
   <h2>Solving the engine game</h2>
   <div class="fig" style="top:172px;bottom:60px;gap:0">
     <div class="mxwrap" style="gap:14px">
-      <div class="mx mxeng" style="--cols:4;--rows:4;--cw:124px;--rh:54px">
+      <div class="mx solvable mxeng" style="--cols:4;--rows:4;--cw:124px;--rh:54px">
         <div class="chead">YOUR RIVAL&rsquo;S PITCH</div>
         <div class="rhead">YOUR PITCH</div>
         <div class="cl" id="egc1" style="grid-column:3">Price</div>
@@ -821,9 +788,9 @@
         <span data-step="3"> and your rival will never charm either.</span>
         <span data-step="4"> With charm gone, solving a longstanding concern is never worse for you than price or terms, whatever they pitch&hellip;</span>
         <span data-step="5"> and the same is true for your rival.</span>
-        <span data-step="6"> <b>The equilibrium: both sides solve the concern, and every slice splits 50/50.</b></span>
+        <span data-step="6"> <b>The equilibrium: both sides solve the concern, and the pie splits 50/50.</b></span>
       </div>
-      <div class="chip" data-step="7" style="background:var(--red);border-color:var(--red);color:var(--paper);font-size:19px;padding:12px 26px"><b>Did your pair get there on its own?</b></div>
+      <div class="chip" data-step="7" style="background:var(--red);border-color:var(--red);color:var(--paper);font-size:19px;padding:12px 26px"><b>Did your table get there on its own?</b></div>
     </div>
     <span data-step="2" data-stepcall="mxMark" data-cells="egr4,eg41,eg42,eg43,eg44" data-cls="gone" style="position:absolute;width:0;height:0"></span>
     <span data-step="3" data-stepcall="mxMark" data-cells="egc4,eg14,eg24,eg34" data-cls="gone" style="position:absolute;width:0;height:0"></span>
@@ -833,65 +800,221 @@
   </div>
 </section>
 
-<section class="slide content" data-i="22">
-  <div class="kicker"><i></i>MODULE 3 · YOUR ENGINE</div>
-  <h2>A zero-sum game from your world</h2>
-  <div class="leadline" style="text-align:left;max-width:800px;margin-top:18px">In pairs, one phone: a situation where one of you and another party had to divide something and could not collaborate.</div>
-  <div class="bsetup" style="gap:12px;top:300px">
-    <div class="bq goal"><div class="bqk">THE PIE</div><div class="bqt">What was being divided?<small>One contract, one budget, one slot, one engine: something fixed, that both of you wanted</small></div></div>
-    <div class="bq them" data-step="1"><div class="bqk">THE OTHER PARTY</div><div class="bqt">Who was on the other side?</div></div>
-    <div class="bq cross" data-step="2"><div class="bqk">YOUR STRATEGY</div><div class="bqt">Did either side have a dominant or inferior strategy?<small>Tap dominant, inferior, or neither, and say what it was</small></div></div>
-    <div class="bq pick" data-step="3"><div class="bqk">THE OUTCOME</div><div class="bqt">How was the pie divided in the end?<small>Set it as a percentage split between you and the other side (100% = you won everything; 0% = you lost everything). The fan on your phone follows the slider</small></div></div>
-  </div>
-  <div style="position:absolute;right:96px;top:290px;width:300px;display:flex;flex-direction:column;align-items:center;gap:18px">
-    <div class="joinchip">
-      <div class="qr"><img src="qr-engines.svg" alt="QR code for the engine page at ryanlamare.com/go"></div>
-      <div class="ju">ryanlamare.com/go</div>
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
+  <h2>What if the choices are infinite?</h2>
+  <ul class="bullets" style="margin-top:34px">
+    <li>We&rsquo;ve considered how to solve zero-sum games with <b>finite</b> choices available (north / south)</li>
+    <li data-step="1">But what strategy should we use if the choices are <b>infinite</b>?</li>
+    <li data-step="2">Let&rsquo;s consider <b>Hotelling&rsquo;s game</b></li>
+  </ul>
+  <div class="cartstage" id="cartstage">
+    <div class="bigcart a" id="bigA" style="left:22%;top:6%">
+      <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
     </div>
-    <div class="livecount"><span class="n" data-engn>0</span><span class="l">ENGINES<br>IN</span></div>
+    <div class="bigcart b" id="bigB" style="left:58%;top:6%">
+      <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+    </div>
   </div>
 </section>
 
-<section class="slide content" data-i="23" style="padding:0">
-  <svg class="fieldstage" id="fieldSvg" viewBox="0 0 1280 720" aria-hidden="true"></svg>
-  <div class="fieldtitle">MODULE 3 · THE ROOM&rsquo;S ENGINES</div>
-  <div class="fieldcount"><b id="fieldGnd">0</b><span>ON THE GROUND</span><b id="fieldAir">0</b><span>DEPARTED</span></div>
-  <div class="demotag" id="fieldDemo" style="position:absolute;top:20px;left:40px;right:auto;display:none">DEMO DATA</div>
-  <div class="fieldopen" id="fieldOpen">
-    <div class="efront on" id="fieldCard">
-      <div class="whose" id="fieldWhose"></div>
-      <button type="button" class="x" id="fieldClose" aria-label="Close the aircraft">&times;</button>
-      <div class="eview">
-        <div class="ecol"><div id="fieldFan"></div>
-          <div class="eshares"><div class="ecol2 a"><div class="ewho">This side</div><div class="en" id="fieldA"></div></div><div class="ecol2 b"><div class="ewho">The other party</div><div class="en" id="fieldB"></div></div></div>
-          <div class="eword" id="fieldWord"></div></div>
-        <div class="enotes">
-          <div class="enote pie"><div class="ek">The pie</div><div class="et" id="fieldPie"></div></div>
-          <div class="enote them"><div class="ek">The other party</div><div class="et" id="fieldParty"></div></div>
-          <div class="enote strat"><div class="ek">Dominant or inferior strategy</div><div class="et" id="fieldStrat"><span class="kind" id="fieldKind"></span><span id="fieldMove"></span></div></div>
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>MODULE 3 · LIVE</div>
+  <h2>The beach</h2>
+  <div class="fig" style="top:180px">
+    <div class="widget">
+      <div class="whead">
+        <span class="wlabel">customers care only about visiting the closest vendor, all else is equal to them</span>
+      </div>
+      <div class="beach" id="beach">
+        <div class="shade" id="shadeA"></div>
+        <div class="shade shadeB" id="shadeB"></div>
+        <div class="bathers" id="bathers"></div>
+        <div class="cart a" id="cartA">
+          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">A</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+          <div class="pct" id="pctA">50%</div>
+        </div>
+        <div class="cart b" id="cartB">
+          <svg viewBox="0 0 90 96"><path class="cbody" d="M8 34 Q45 4 82 34 L82 38 L8 38 Z"/><rect class="cwheel" x="43" y="38" width="4" height="12"/><rect class="cbody" x="18" y="50" width="54" height="28"/><text class="cletter" x="45" y="72" text-anchor="middle">B</text><circle class="cwheel" cx="30" cy="86" r="8"/><circle class="cwheel" cx="60" cy="86" r="8"/></svg>
+          <div class="pct" id="pctB">50%</div>
         </div>
       </div>
+      <div class="widgetnote" id="beachnote">An even split. Can either vendor do better by moving?</div>
+    </div>
+  </div>
+  <!-- 29 Sep 2026, his yes: his LER 550 slide 130 question, answered; below the widget, clear of its equilibrium note -->
+  <div class="mxnote" data-step="1" style="position:absolute;left:96px;right:96px;top:600px;max-width:none;color:var(--ink)"><b>BUT&hellip; is this clustering socially optimal?</b><br>No: at a quarter and three-quarters each vendor still gets half the beach, and nobody walks more than a quarter of it</div>
+</section>
+
+<!-- Hotelling is everywhere: his 550 slide 49 examples (Applications of
+     Hotelling's game to business strategies) as tiles, after the room's own
+     wall, 23 Sep 2026. His NPR cupcake link is dead, so that tile has none. -->
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>MODULE 3 &middot; HOTELLING</div>
+  <h2>Hotelling is everywhere</h2>
+  <div class="htask">Where else do you see Hotelling?</div>
+  <div class="htgrid">
+      <div class="htt" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="16" height="26" rx="2"/><rect x="11" y="11" width="10" height="7"/><path d="M24 14 L30 18 V29 A2 2 0 0 0 34 29 V16"/></svg>
+        <span class="htl">Petrol stations</span>
+        <span class="htx">Rival forecourts on the same junction, facing each other</span>
+        
+      </div>
+      <a class="htt" href="https://finance.yahoo.com/news/home-depot-finds-way-beat-223018190.html" target="_blank" rel="noopener" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 32 L22 18"/><path d="M18 10 L30 22 L34 18 L22 6 Z"/></svg>
+        <span class="htl">DIY superstores</span>
+        <span class="htx">Home Depot and Lowe&rsquo;s open within sight of each other</span>
+        <span class="hts">TheStreet &#8599;</span>
+      </a>
+      <a class="htt" href="https://mindyourdecisions.com/blog/2012/10/23/why-are-mcdonalds-and-burger-king-usually-located-near-each-other-fast-food-location-game-theory/" target="_blank" rel="noopener" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 17 C8 9 32 9 32 17 Z"/><path d="M7 21 H33"/><path d="M8 25 H32 V28 A3 3 0 0 1 29 31 H11 A3 3 0 0 1 8 28 Z"/></svg>
+        <span class="htl">Fast food</span>
+        <span class="htx">McDonald&rsquo;s and Burger King so often share a junction that economists study why</span>
+        <span class="hts">Mind Your Decisions &#8599;</span>
+      </a>
+      <a class="htt" href="https://en.wikipedia.org/wiki/Hatton_Garden" target="_blank" rel="noopener" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15 L14 8 H26 L32 15 L20 33 Z"/><path d="M8 15 H32 M14 8 L17 15 L20 33 M26 8 L23 15 L20 33"/></svg>
+        <span class="htl">Jewellers</span>
+        <span class="htx">London&rsquo;s Hatton Garden: nearly 300 jewellery businesses in a few streets, like New York&rsquo;s Diamond District</span>
+        <span class="hts">Wikipedia &#8599;</span>
+      </a>
+      <div class="htt" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20 L14 33 H26 L29 20 Z"/><path d="M9 20 C9 11 31 11 31 20 Z"/><path d="M20 8 V11"/></svg>
+        <span class="htl">Cupcake wars</span>
+        <span class="htx">Coeur d&rsquo;Alene, Idaho, 2011: two new cupcake shops open almost opposite each other</span>
+        
+      </div>
+      <a class="htt" href="https://skift.com/2014/11/19/the-new-jetblue-will-have-more-bag-fees-and-less-legroom/" target="_blank" rel="noopener" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 3 C21.6 3 22.4 4.8 22.4 7 L22.4 14.5 L35.5 21.5 L35.5 24.5 L22.4 20.5 L22.4 29.5 L27 33 L27 35.5 L20 33.5 L13 35.5 L13 33 L17.6 29.5 L17.6 20.5 L4.5 24.5 L4.5 21.5 L17.6 14.5 L17.6 7 C17.6 4.8 18.4 3 20 3 Z"/></svg><!-- an airliner from above (25 Sep 2026): the side view read as a handgun -->
+        <span class="htl">JetBlue</span>
+        <span class="htx">The airline built to be different added bag fees and cut legroom, like everyone else</span>
+        <span class="hts">Skift &#8599;</span>
+      </a>
+  </div>
+</section>
+
+<section class="slide content" data-i="21">
+  <div class="kicker"><i></i>MODULE 3 · HOTELLING</div>
+  <h2>Hotelling in real life</h2>
+  <div class="fig" style="top:172px;bottom:60px;gap:14px">
+    <img class="figimg" src="padstow.jpg" alt="Three pasty shops next door to one another on Market Place in Padstow: Cornish Bakery, The Cornish Pasty Co. and The Padstow Pasty Company" style="height:366px;max-height:none">
+    <div class="pasty" data-step="1">
+      <div class="psign" style="background:#ece6d2;color:#2f4f7a;font-weight:600;letter-spacing:.04em">Cornish Bakery</div>
+      <div class="psign" style="background:#3d628c;color:#d9b36c;font-family:Georgia,'Times New Roman',serif;font-variant:small-caps;letter-spacing:.05em">The Cornish Pasty Co.</div>
+      <div class="psign" style="background:#141414;color:#fff;font-family:'Courier New',Courier,monospace;font-weight:700">The Padstow Pasty Company</div>
+    </div>
+    <div class="cap" data-step="1">Three Cornish pasty shops, sitting side by side in Padstow, Cornwall</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="22">
+  <div class="kicker"><i></i>MODULE 3 &middot; YOUR INDUSTRY</div>
+  <h2>Zero-sum games in aviation</h2>
+  <div class="avrow">
+    <div class="avcard" data-step="1">
+      <div class="avk">A fixed pie</div>
+      <div class="avt">Heathrow slots</div>
+      <svg class="avfig" viewBox="0 0 520 96" aria-hidden="true">
+        <g fill="var(--card)" stroke="var(--ink)" stroke-width="2.5">
+          <rect x="20" y="22" width="48" height="48" rx="4"/><rect x="80" y="22" width="48" height="48" rx="4"/><rect x="140" y="22" width="48" height="48" rx="4"/><rect x="200" y="22" width="48" height="48" rx="4"/><rect x="260" y="22" width="48" height="48" rx="4"/><rect x="320" y="22" width="48" height="48" rx="4"/><rect x="380" y="22" width="48" height="48" rx="4"/><rect x="440" y="22" width="48" height="48" rx="4"/>
+        </g>
+        <g fill="var(--teal)"><rect x="26" y="28" width="36" height="36" rx="3"/><rect x="86" y="28" width="36" height="36" rx="3"/><rect x="206" y="28" width="36" height="36" rx="3"/><rect x="386" y="28" width="36" height="36" rx="3"/></g>
+        <g fill="var(--terracotta)"><rect x="146" y="28" width="36" height="36" rx="3"/><rect x="266" y="28" width="36" height="36" rx="3"/><rect x="326" y="28" width="36" height="36" rx="3"/><rect x="446" y="28" width="36" height="36" rx="3"/></g>
+        <text x="260" y="92" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:13px;letter-spacing:.1em;fill:var(--muted)">EVERY SLOT IS TAKEN: ONE AIRLINE&rsquo;S GAIN IS ANOTHER&rsquo;S LOSS</text>
+      </svg>
+      <ul class="avlist">
+        <li data-step="2">In 2016, Oman Air<a class="exlink" href="https://simpleflying.com/biggest-ever-airport-slot-deal-story/" target="_blank" rel="noopener"> paid <b>$75 million</b> for one pair of slots</a></li>   <!-- 30 Sep 2026 overnight check: the first reports named Air France-KLM as the seller, but it was later confirmed as Kenya Airways (Simple Flying, Business Traveller); the seller is left out, and the link is the account that carries the correction -->
+        <li data-step="3">&ldquo;Use it or lose it&rdquo;<a class="exlink" href="https://www.cnbc.com/2022/01/13/european-carriers-are-flying-near-empty-planes-this-winter-to-keep-airport-slots.html" target="_blank" rel="noopener">: in winter 2021&ndash;22 Lufthansa said it would have to fly about <b>18,000 unnecessary flights</b> to keep its slots from rivals</a></li>
+      </ul>
+    </div>
+    <div class="avcard" data-step="4">
+      <div class="avk">Hotelling on a clock</div>
+      <div class="avt">Why do all the flights leave at 8 am?</div>
+      <a class="exlink" href="https://faculty.haas.berkeley.edu/borenste/download/IJIO99Bunch.pdf" target="_blank" rel="noopener"><svg class="avfig" viewBox="0 0 520 96" aria-hidden="true">
+        <line x1="20" y1="52" x2="500" y2="52" stroke="var(--ink)" stroke-width="3"/>
+        <line x1="40" y1="46" x2="40" y2="58" stroke="var(--ink)" stroke-width="2"/><text x="40" y="80" text-anchor="middle" style="font-family:var(--sans);font-weight:600;font-size:13px;fill:var(--muted)">6 AM</text><line x1="170" y1="46" x2="170" y2="58" stroke="var(--ink)" stroke-width="2"/><text x="170" y="80" text-anchor="middle" style="font-family:var(--sans);font-weight:600;font-size:13px;fill:var(--muted)">8 AM</text><line x1="300" y1="46" x2="300" y2="58" stroke="var(--ink)" stroke-width="2"/><text x="300" y="80" text-anchor="middle" style="font-family:var(--sans);font-weight:600;font-size:13px;fill:var(--muted)">12 PM</text><line x1="430" y1="46" x2="430" y2="58" stroke="var(--ink)" stroke-width="2"/><text x="430" y="80" text-anchor="middle" style="font-family:var(--sans);font-weight:600;font-size:13px;fill:var(--muted)">6 PM</text><g transform="translate(128 36)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="translate(150 24)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="translate(172 36)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="translate(194 24)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="translate(161 12)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="translate(330 36)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g><g transform="translate(470 36)"><path d="M-9 0 L9 0 M0 -7 L4 0 L0 7 M-8 -3 L-8 3" stroke="var(--red)" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+      </svg></a>
+      <ul class="avlist">
+        <li data-step="5">On routes with more competition, rival airlines <b>bunch their departures</b> closer together, like vendors moving to the middle of the beach</li>
+        <li data-step="6">Where scheduling rules loosened, they <b>spread out a little</b>, to avoid competing head-on on price</li>
+      </ul>
     </div>
   </div>
 </section>
 
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>MODULE 3 · YOUR WORLD</div>
+  <h2>A zero-sum game from your world</h2>
+  <div class="leadline" style="margin-top:22px">Think of a situation where one of you and another party had to divide something and could not collaborate.</div>
+  <div class="rail" style="min-width:980px;top:290px">
+    <div class="ritem"><div class="rn">1</div><div class="rt">What was being divided?</div></div>
+    <div class="ritem"><div class="rn">2</div><div class="rt">Who was on the other side?</div></div>
+    <div class="ritem"><div class="rn">3</div><div class="rt">Did either side have a dominant or inferior strategy?</div></div>
+    <div class="ritem"><div class="rn">4</div><div class="rt">How was the pie divided in the end?</div></div>
+  </div>
+  <div class="talk" data-step="1">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> (a)&nbsp;Think of a situation on your own; (b)&nbsp;talk it out at your table; (c)&nbsp;one person shares with the whole group.</div>
+    <div class="tnote"><b>YOUR NOTES, OPTIONAL</b><span>ryanlamare.com/go/notes</span></div>
+  </div>
+</section>
 
+<section class="slide content" data-i="24">
+  <div class="kicker"><i></i>MODULE 3 &middot; YOUR WORLD</div>
+  <h2>Is it really a zero-sum game?</h2>
+  <div style="position:absolute;left:96px;right:96px;top:200px;bottom:80px;display:flex;gap:48px;align-items:center">
+    <ul class="bullets" style="margin:0;flex:1;max-width:none">
+      <li>Zero-sum strategic thinking often reflects an <b>inability to see the possibility of mutual gains</b></li>
+      <li data-step="1">Many problems are <b>not in fact zero-sum</b>, but are perceived to be that way</li>
+      <li data-step="2"><b>Was the game from your world really zero-sum?</b></li>
+    </ul>
+    <svg viewBox="0 0 440 300" style="flex:none;width:440px;height:auto" role="img" aria-label="A small pie split in half, and beside it a larger pie: the pie may be able to grow">
+      <g>
+        <circle cx="100" cy="150" r="80" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M100 70 L100 230" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M100 70 A80 80 0 0 1 100 230 Z" fill="var(--teal)" opacity=".75"/>
+        <path d="M100 70 A80 80 0 0 0 100 230 Z" fill="var(--terracotta)" opacity=".75"/>
+        <text x="100" y="272" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.1em;fill:var(--muted)">A FIXED PIE</text>
+      </g>
+      <g data-step="1">
+        <circle cx="320" cy="150" r="112" fill="var(--card)" stroke="var(--red)" stroke-width="3" stroke-dasharray="10 7"/>
+        <path d="M320 38 L320 262" stroke="var(--ink)" stroke-width="3"/>
+        <path d="M320 38 A112 112 0 0 1 320 262 Z" fill="var(--teal)" opacity=".75"/>
+        <path d="M320 38 A112 112 0 0 0 320 262 Z" fill="var(--terracotta)" opacity=".75"/>
+        <text x="320" y="292" text-anchor="middle" style="font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.1em;fill:var(--red)">OR ONE THAT CAN GROW?</text>
+      </g>
+    </svg>
+  </div>
+</section>
 
+<!-- 29 Sep 2026, his call: the Key &amp; Peele standoff moved here from Survival of the weakest to wrap the module, with his framing -->
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>MODULE 3 · A TRUEL</div>
+  <h2>One last truel</h2>
+  <div class="leadline">A Mexican standoff combines <b>sequential reasoning</b>, <b>common knowledge</b>, and <b>zero-sum thinking</b></div>
+  <div class="fig" style="top:236px;bottom:70px">
+    <div class="clipframe" id="standoffwrap">
+      <button class="clipcover" id="standoffload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Mexican Standoff</span>
+      </button>
+    </div>
+  </div>
+</section>
 
-
-<section class="slide content learn" data-i="24">
-  <div class="kicker"><i></i>MODULE 3 · WHAT DID WE LEARN</div>
-  <h2>What did we learn?</h2>
+<section class="slide content learn" data-i="26">
+  <div class="kicker"><i></i>MODULE 3 · TAKEAWAYS</div>
+  <h2>a few key takeaways...</h2>
   <div class="tiles">
     <div class="tile">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><circle class="ink" cx="32" cy="32" r="23"/><path class="red" d="M32 32 L32 9 A23 23 0 0 1 49.6 46.8 Z"/><line x1="32" y1="32" x2="32" y2="9" stroke="var(--paper)" stroke-width="2.4"/><line x1="32" y1="32" x2="49.6" y2="46.8" stroke="var(--paper)" stroke-width="2.4"/></svg></div>
-      <div class="lbl">A fixed pie</div>
-      <div class="sent">One side&rsquo;s win is the other side&rsquo;s loss</div>
+      <div class="lbl">zero-sum = fixed pie</div>
+      <div class="sent">One side&rsquo;s win must be the other side&rsquo;s loss</div>
     </div>
     <div class="tile" data-step="1">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 200 132" aria-hidden="true"><g class="ink"><circle cx="34" cy="20" r="14"/><path d="M11 46 Q34 36 57 46 L49 92 L19 92 Z"/><rect x="20" y="92" width="12" height="36"/><rect x="36" y="92" width="12" height="36"/></g><rect x="90" y="10" width="20" height="118" fill="var(--red)"/><g class="ink"><circle cx="166" cy="20" r="14"/><path d="M143 46 Q166 36 189 46 L181 92 L151 92 Z"/><rect x="152" y="92" width="12" height="36"/><rect x="168" y="92" width="12" height="36"/></g></svg></div>
-      <div class="lbl">Choose without knowing</div>
-      <div class="sent">You move without knowing what your rival has chosen, and so do they</div>
+      <div class="lbl">Simultaneous</div>
+      <div class="sent">Both move without knowing what the other has chosen</div>
     </div>
     <div class="tile" data-step="2">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 96 96" aria-hidden="true"><g fill="var(--card)" stroke="var(--ink)" stroke-width="3"><rect x="6" y="6" width="40" height="40"/><rect x="50" y="6" width="40" height="40"/><rect x="6" y="50" width="40" height="40" opacity=".15"/><rect x="50" y="50" width="40" height="40" opacity=".15"/></g><line x1="2" y1="70" x2="94" y2="70" stroke="var(--red)" stroke-width="5" stroke-linecap="round"/></svg></div>
@@ -899,54 +1022,80 @@
       <div class="sent">If a move is worse whatever they do, cross it out</div>
     </div>
     <div class="tile" data-step="3">
-      <div class="pgwrap"><svg class="pg" viewBox="0 0 96 96" aria-hidden="true"><g fill="var(--card)" stroke="var(--ink)" stroke-width="3"><rect x="6" y="6" width="40" height="40"/><rect x="50" y="6" width="40" height="40"/><rect x="6" y="50" width="40" height="40"/><rect x="50" y="50" width="40" height="40"/></g><rect x="52" y="52" width="36" height="36" fill="none" stroke="var(--red)" stroke-width="6"/></svg></div>
-      <div class="lbl">If a dominant strategy exists, choose it</div>
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 96 96" aria-hidden="true"><g fill="var(--card)" stroke="var(--ink)" stroke-width="3"><rect x="6" y="6" width="40" height="40"/><rect x="50" y="6" width="40" height="40"/><rect x="6" y="50" width="40" height="40"/><rect x="50" y="50" width="40" height="40"/></g><rect x="3" y="3" width="90" height="46" fill="none" stroke="var(--red)" stroke-width="6"/></svg></div>
+      <div class="lbl">SEEK OUT dominant strategIES</div>
       <div class="sent">If a move is at least as good whatever they do, it&rsquo;s yours</div>
     </div>
     <div class="tile" data-step="4">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 140 96" aria-hidden="true"><rect x="4" y="80" width="132" height="10" fill="var(--tan)"/><g fill="var(--teal)"><path d="M18 40 Q40 18 62 40 L62 44 L18 44 Z"/><rect x="24" y="48" width="32" height="22"/><circle cx="32" cy="76" r="5" fill="var(--ink)"/><circle cx="50" cy="76" r="5" fill="var(--ink)"/></g><g fill="var(--terracotta)"><path d="M78 40 Q100 18 122 40 L122 44 L78 44 Z"/><rect x="84" y="48" width="32" height="22"/><circle cx="92" cy="76" r="5" fill="var(--ink)"/><circle cx="110" cy="76" r="5" fill="var(--ink)"/></g></svg></div>
       <div class="lbl">Back to back in the middle</div>
-      <div class="sent">Hotelling: rivals end up in the middle of the beach, and so do candidates</div>
+      <div class="sent">Rivals end up in the middle, side by side</div>
     </div>
   </div>
 </section>
 
-
-<section class="slide content" data-i="25">
-  <div class="kicker"><i></i>MODULE 3 · TOP OF THE TABLE</div>
-  <h2>Top of the table</h2>
-  <div class="fig" style="top:200px;gap:30px">
-    <div class="scb">
-      <div class="scbrow head"><span class="rk"></span><span class="nm"></span><span class="pv">Engine game</span><span class="tt">Total</span></div>
-      <div class="scbrow" data-step="5" id="scbr0"><div class="demotag" id="scbD">DEMO DATA</div><span class="rk">1</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="4" id="scbr1"><span class="rk">2</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="3" id="scbr2"><span class="rk">3</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="2" id="scbr3"><span class="rk">4</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="1" id="scbr4"><span class="rk">5</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+<section class="slide content" data-i="27">
+  <div class="kicker"><i></i>MODULE 3 · RESOURCES</div>
+  <h2>Extra resources</h2>
+  <div class="resrc dense">
+    <div class="rcol">
+      <div class="rhead">Watch and read</div>
+      <a class="rcard" href="https://www.youtube.com/watch?v=jILgxeNBK_8" target="_blank" rel="noopener" data-yt="jILgxeNBK_8">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Why do competitors open next to one another?</div><div class="rmeta">TED-Ed &middot; 4 minutes</div><div class="rwhy">The beach you just played on, with hot dog vendors</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=mmkCS5eA4f8" target="_blank" rel="noopener" data-yt="mmkCS5eA4f8">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Can you solve the wizard standoff riddle?</div><div class="rmeta">TED-Ed &middot; 5 minutes</div><div class="rwhy">A truel, and why the best shot can be a deliberate miss</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=mGiVDAuvB7A" target="_blank" rel="noopener" data-yt="mGiVDAuvB7A">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Why airport slots are worth so much</div><div class="rmeta">Simple Flying &middot; 5 minutes</div><div class="rwhy">How slots are handed out, and the $75 million pair</div></span>
+      </a>
+  <a class="rcard" href="https://slate.com/culture/2014/02/ken-jennings-on-jeopardy-champion-arthur-chu-and-daily-double-hunting.html" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Arthur Chu and Daily Double hunting</div><div class="rmeta">Ken Jennings &middot; Slate</div><div class="rwhy">Where the Daily Doubles hide, and why finding them wins</div></span>
+      </a>
+      <a class="rcard" href="https://midwestfilmjournal.com/2026/06/08/we-have-to-bet-on-ourselves/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">We have to bet on ourselves</div><div class="rmeta">Nick Rogers &middot; Midwest Film Journal</div><div class="rwhy">The Pop Culture Jeopardy! truel, from a team that bet it all</div></span>
+      </a>
     </div>
-    <div class="cap">Five points to whoever came out ahead in their pair over the four rounds; a dead heat pays nobody. Top five only &ndash; check your own score any time at <b>ryanlamare.com/go/points</b>.</div>
+    <div class="rcol">
+      <div class="rhead">Read</div>
+      <a class="rcard" href="https://www.ft.com/content/980cbbe2-0f5d-4330-872d-c7a9d6a97bf6" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Are we destined for a zero-sum future?</div><div class="rmeta">John Burn-Murdoch &middot; Financial Times</div><div class="rwhy">Why more people now see the world as zero-sum</div></span>
+      </a>
+      <a class="rcard" href="https://iea.org.uk/how-zero-sum-thinking-leads-to-zero-sum-policies/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">How zero-sum thinking leads to zero-sum policies</div><div class="rmeta">Institute of Economic Affairs</div><div class="rwhy">What that belief does to the choices we make</div></span>
+      </a>
+      <a class="rcard" href="https://faculty.haas.berkeley.edu/borenste/download/IJIO99Bunch.pdf" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Why do all the flights leave at 8 am?</div><div class="rmeta">Borenstein and Netz &middot; journal article</div><div class="rwhy">Hotelling in airline schedules: rivals bunch their departures</div></span>
+      </a>
+      <a class="rcard" href="https://www.cnn.com/travel/article/ghost-flights-pandemic-greenpeace-cmd" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Why the sky is still full of empty ghost flights</div><div class="rmeta">CNN</div><div class="rwhy">Flying empty to keep a slot from a rival</div></span>
+      </a>
+      <a class="rcard" href="https://doi.org/10.2307/2224214" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Stability in Competition</div><div class="rmeta">Harold Hotelling &middot; The Economic Journal, 1929</div><div class="rwhy">Why rival sellers crowd together and look alike</div></span>
+      </a>
+    </div>
   </div>
 </section>
 
 </div></div>
 
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/demo/">ALL MODULES</a>
 
-<script src="/teaching/exec/demo/go/scores.js"></script>
-<script src="cu-map.js"></script>
 <script>
 /* ---- live poll on the truel slide: crowds fill the shooter tiles as
    answers arrive; falls back to marked demo data ---- */
 const POLL_API='https://gt-poll.rlamare.workers.dev';
-/* ?room=<x> suffixes the closing exercise's room (m3-engines) for a rehearsal;
-   trial/m3.js plays the phones into the same room. A chip on the screen says
-   so, because a QR scanned off this deck still opens the real room. */
-const M3SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
-window.M3SUF=M3SUF;
-if(M3SUF)addEventListener('DOMContentLoaded',()=>{const c=document.createElement('div');c.textContent='REHEARSAL ROOM '+M3SUF.slice(1).toUpperCase();
-  c.style.cssText='position:absolute;left:14px;top:12px;z-index:9;background:var(--ochre);color:var(--ink);font-weight:700;font-size:11px;letter-spacing:.14em;padding:3px 10px';
-  document.querySelector('.stage').appendChild(c);});
 const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
 (function(){
   const rowIds=['tr1','tr2','tr3'], demoDist=[11,6,4];
@@ -987,175 +1136,17 @@ const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="curren
 })();
 
 /* ---- embedded clips: load YouTube only on click (the titles spoil the endings) ---- */
-function clipOnClick(btnId,wrapId,videoId,title){
-  document.getElementById(btnId).addEventListener('click',()=>{
-    const wrap=document.getElementById(wrapId);
-    const f=document.createElement('iframe');
-    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
-    f.title=title;
-    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    f.allowFullscreen=true;
-    wrap.replaceChildren(f);
-  });
+function clipOnClick(btnId,wrapId,videoId,title,start,end){
+  /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
+     whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
+  const btn=document.getElementById(btnId);
+  btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
+  if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
 }
 clipOnClick('clipload','clipwrap','TbuD-6BbnQw','Barbados vs. Grenada');
+clipOnClick('chuload','chuwrap','f4CWhPdpDbs','ABC News: Jeopardy champion Arthur Chu');
+clipOnClick('pcjload','pcjwrap','--OyCTEPBOQ','Pop Culture Jeopardy!: Final Jeopardy, Iconic Songs');
 clipOnClick('standoffload','standoffwrap','IHQr0HCIN2w','Mexican standoff');
-
-/* ---- Hotelling examples wall: phones write in via /go?p=m3-hotelling,
-   the wall populates when the instructor calls time (a keypress) ---- */
-(function(){
-  const DEMO=['Petrol stations','Coffee shops','Estate agents on the high street','Curry houses on Brick Lane','Airport lounges','Phone shops','Burger chains','Supermarkets'];
-  const nEl=document.getElementById('hgN'), wall=document.getElementById('hgwall');
-  const demoTag=document.getElementById('hgdemo');
-  const st={live:false,answers:[],revealed:false};
-  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function render(){
-    const answers=st.live?st.answers:DEMO;
-    nEl.textContent=st.live?st.answers.length:0;
-    demoTag.style.display=(st.live||!st.revealed)?'none':'';
-    if(!st.revealed)return;
-    const groups=new Map();
-    answers.forEach(t=>{const k=t.toLowerCase();
-      if(!groups.has(k))groups.set(k,{t:t,n:0});
-      groups.get(k).n++;});
-    wall.classList.toggle('dense',groups.size>26);
-    let h='', i=0;
-    groups.forEach(g=>{h+='<span class="ex c'+(i++%7)+'">'+esc(g.t)+(g.n>1?'<span class="xn">&times;'+g.n+'</span>':'')+'</span>';});
-    wall.innerHTML=h;
-  }
-  function fetchIt(){
-    fetch(POLL_API+'/p/m3-hotelling/answers').then(r=>r.json()).then(d=>{
-      st.live=true;st.answers=d.answers||[];render();
-    }).catch(()=>{});
-  }
-  setInterval(fetchIt,2500);fetchIt();
-  render();
-  window.hgReveal=function(el,on){
-    st.revealed=on;
-    document.getElementById('hgbul').classList.toggle('faded',on);
-    document.getElementById('hgqr').classList.toggle('faded',on);
-    wall.classList.toggle('on',on);
-    if(on)render();
-  };
-})();
-
-
-/* ---- city planning, told simply: Champaign-Urbana, its hospitals and its
-   grocery stores. The map is the real one: the city's main roads from
-   OpenStreetMap (cu-map.js, projected and simplified), drawn in the Mini
-   Metro manner, the interstates a shade heavier, with homes seeded along
-   the street fabric as grey dots. Two services, two of each: hospitals
-   (round stations with a red cross, teal and terracotta discs) and grocery
-   stores (square stations with a green mark, green and ochre discs). A disc
-   is a short drive on this map's scale. Homes inside a disc take its
-   colour; the rest stay grey. The markers start at random spots in town and
-   Ryan drags them to where they really are (the hospitals side by side, the
-   grocers both in the south, nothing downtown). The view switches between
-   hospitals, grocery stores, and both; in the both view a home is coloured
-   when it can reach one of each, amber when it can reach only one, grey
-   when neither. "Where they should be" glides the shown service's two
-   apart. "Make it a 15-minute city" adds what the planner needs (a third
-   and fourth of each, drawn with a dashed edge) and places them all so no
-   home is grey: the plan is worked out at load by a greedy cover over the
-   homes. "Start again" scatters them afresh. Every move is tweened by hand
-   (no CSS transforms on SVG, which some browsers mishandle). ---- */
-(function(){
-  const svg=document.getElementById('citymap'); if(!svg||!window.CU_MAP)return;
-  const NS='http://www.w3.org/2000/svg', M=window.CU_MAP, W=M.w, H=M.h, R=250;
-  svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  const homes=M.homes.map(([x,y])=>({x,y}));
-  const SERV={
-    h:{name:'Hospitals',cols:['var(--teal)','var(--terracotta)','var(--blue)','var(--maroon)'],shape:'round'},
-    g:{name:'Grocery stores',cols:['var(--green)','var(--ochre)','var(--sienna)','var(--tan)'],shape:'square'}
-  };
-  let seed=Date.now()%100000; const rnd=()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296;};
-  const within=(h,c)=>Math.hypot(h.x-c[0],h.y-c[1])<=R;
-  /* the planner's answer: a greedy cover of the homes, four per service, the grocers' grid offset so the two sets never coincide */
-  function greedy(x0,y0,avoid){const cand=[];for(let x=x0;x<W-20;x+=25)for(let y=y0;y<H-20;y+=25)if(!(avoid||[]).some(a=>Math.hypot(a[0]-x,a[1]-y)<55))cand.push([x,y]);
-    let left=new Set(homes.map((_,i)=>i));const out=[];
-    while(left.size&&out.length<4){let best=null,bn=-1;cand.forEach(c=>{let n=0;left.forEach(i=>{if(within(homes[i],c))n++;});if(n>bn){bn=n;best=c;}});out.push(best);left=new Set([...left].filter(i=>!within(homes[i],best)));}
-    return out;}
-  const PLAN={h:greedy(60,50)};PLAN.g=greedy(72,62,PLAN.h);
-  const scatter=()=>{const a=homes[Math.floor(rnd()*homes.length)];let b=a,t=0;while(t++<50&&Math.hypot(b.x-a.x,b.y-a.y)<220)b=homes[Math.floor(rnd()*homes.length)];return [[a.x,a.y],[b.x,b.y]];};
-  const pos={h:scatter(),g:scatter()}; /* current positions per service; a third and fourth appear when the planner adds them */
-  let view='h';
-  /* the map */
-  const seg=r=>'M'+r.map(p=>p[0]+' '+p[1]).join(' L');
-  let s='<defs><clipPath id="cclip"><rect x="0" y="0" width="'+W+'" height="'+H+'" rx="22"/></clipPath></defs>';
-  s+='<rect x="0" y="0" width="'+W+'" height="'+H+'" rx="22" class="cfield"/>';
-  s+='<g class="croads" clip-path="url(#cclip)">'+['secondary','primary','motorway'].map(k=>'<path class="cr '+k+'" d="'+M.roads[k].map(seg).join('')+'"/>').join('')+'</g>';
-  s+='<g id="discs" clip-path="url(#cclip)"></g>';
-  s+='<g id="homes">'+homes.map((h,i)=>'<circle class="chome" data-i="'+i+'" cx="'+h.x+'" cy="'+h.y+'" r="4.6"/>').join('')+'</g>';
-  s+='<g id="marks"></g>';
-  s+='<text class="ccredit" x="14" y="'+(H-10)+'">MAP DATA © OPENSTREETMAP CONTRIBUTORS</text>';
-  svg.innerHTML=s;
-  const homeEls=[...svg.querySelectorAll('.chome')], discsG=svg.querySelector('#discs'), marksG=svg.querySelector('#marks');
-  const shownServices=()=>view==='both'?['h','g']:[view];
-  /* markers and discs are rebuilt when the set changes (a view switch, a planner's addition); positions are then driven by attributes only */
-  const els={}; /* key "h0" -> {mark, disc} */
-  function build(){
-    discsG.innerHTML='';marksG.innerHTML='';for(const k in els)delete els[k];
-    shownServices().forEach(sv=>pos[sv].forEach((p,i)=>{
-      const S=SERV[sv], col=S.cols[i%S.cols.length], added=i>=2;
-      const d=document.createElementNS(NS,'circle');d.setAttribute('class','cdisc');d.setAttribute('r',R);d.style.fill=col;discsG.appendChild(d);
-      const g=document.createElementNS(NS,'g');g.setAttribute('class','cmark '+(added?'added':''));
-      g.innerHTML=S.shape==='round'
-        ?'<circle r="22" class="cst"'+(added?' stroke-dasharray="6 4"':'')+'/><rect x="-10" y="-3.2" width="20" height="6.4" rx="2" class="ccross"/><rect x="-3.2" y="-10" width="6.4" height="20" rx="2" class="ccross"/>'
-        :'<rect x="-21" y="-21" width="42" height="42" rx="7" class="cst"'+(added?' stroke-dasharray="6 4"':'')+'/><path class="cbasket" d="M-11 -3 L11 -3 L8 9 L-8 9 Z"/><path class="cbasket" d="M-6 -3 L-2 -11 M6 -3 L2 -11" fill="none" stroke-width="2.6" stroke-linecap="round"/>';
-      marksG.appendChild(g);
-      els[sv+i]={mark:g,disc:d};
-      g.addEventListener('pointerdown',e=>{
-        e.preventDefault();g.setPointerCapture(e.pointerId);
-        const pt=svg.createSVGPoint();
-        const toSvg=ev=>{pt.x=ev.clientX;pt.y=ev.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());};
-        const move=ev=>{const q=toSvg(ev);pos[sv][i]=[Math.max(24,Math.min(W-24,q.x)),Math.max(24,Math.min(H-24,q.y))];place();};
-        const up=()=>{g.removeEventListener('pointermove',move);g.removeEventListener('pointerup',up);};
-        g.addEventListener('pointermove',move);g.addEventListener('pointerup',up);
-      });
-    }));
-    place();
-  }
-  function place(){
-    for(const k in els){const sv=k[0],i=+k.slice(1),p=pos[sv][i];
-      els[k].mark.setAttribute('transform','translate('+p[0].toFixed(1)+' '+p[1].toFixed(1)+')');
-      els[k].disc.setAttribute('cx',p[0].toFixed(1));els[k].disc.setAttribute('cy',p[1].toFixed(1));}
-    colour();
-  }
-  function colour(){
-    const svs=shownServices();
-    homes.forEach((h,i)=>{
-      let cls='';
-      if(svs.length===1){const sv=svs[0];let bi=-1,bd=Infinity;pos[sv].forEach((p,j)=>{const d=Math.hypot(h.x-p[0],h.y-p[1]);if(d<bd){bd=d;bi=j;}});if(bd<=R)cls='c'+(bi%4);}
-      else{const n=svs.filter(sv=>pos[sv].some(p=>within(h,p))).length;cls=n===2?'c0':n===1?'half':'';}
-      homeEls[i].setAttribute('class','chome'+(cls?' '+cls:''));
-      if(svs.length===1&&cls){const sv=svs[0];homeEls[i].style.fill=SERV[sv].cols[+cls[1]];}else homeEls[i].style.fill='';
-    });
-  }
-  /* a hand-made tween: every marker glides from where it is to where it is going */
-  let tweenTok=0;
-  function glide(target){ /* target: {h:[...],g:[...]} for the shown services */
-    const tok=++tweenTok, from={};
-    for(const sv in target){from[sv]=target[sv].map((p,i)=>pos[sv][i]?pos[sv][i].slice():p.slice());pos[sv]=from[sv].map(p=>p.slice());}
-    build();
-    const t0=performance.now(), DUR=1100;
-    const step=ts=>{if(tok!==tweenTok)return;const t=Math.min(1,(ts-t0)/DUR),e=1-Math.pow(1-t,3);
-      for(const sv in target)target[sv].forEach((p,i)=>{pos[sv][i]=[from[sv][i][0]+(p[0]-from[sv][i][0])*e,from[sv][i][1]+(p[1]-from[sv][i][1])*e];});
-      place();if(t<1)requestAnimationFrame(step);};
-    requestAnimationFrame(step);
-  }
-  const E=id=>document.getElementById(id);
-  const viewBtns={h:E('cvH'),g:E('cvG'),both:E('cvB')};
-  function setView(v){view=v;svg.classList.toggle('both',v==='both');for(const k in viewBtns)viewBtns[k].classList.toggle('primary',k===v);build();}
-  for(const k in viewBtns)viewBtns[k].addEventListener('click',()=>setView(k));
-  E('cityA').addEventListener('click',()=>{const t={};shownServices().forEach(sv=>{t[sv]=scatter();});pos.h=pos.h.slice(0,2);pos.g=pos.g.slice(0,2);chip.classList.remove('on');glide(t);});
-  E('cityB').addEventListener('click',apart);
-  E('cityC').addEventListener('click',fifteen);
-  function apart(){const t={};shownServices().forEach(sv=>{const P=PLAN[sv];t[sv]=[P[1].slice(),P[0].slice()];pos[sv]=pos[sv].slice(0,2);});glide(t);}
-  const chip=E('cchip');
-  function fifteen(){setView('both');glide({h:PLAN.h.map(p=>p.slice()),g:PLAN.g.map(p=>p.slice())});setTimeout(()=>chip.classList.add('on'),900);}
-  /* no keypress steps on this slide: the mouse drives the map, and the arrow keys only move on */
-  setView('h');
-})();
 
 /* ---- war-game map: every ship and plane drags freely ---- */
 (function(){
@@ -1206,17 +1197,28 @@ const cartA=document.getElementById('cartA'), cartB=document.getElementById('car
 const shadeA=document.getElementById('shadeA'), shadeB=document.getElementById('shadeB');
 const pctA=document.getElementById('pctA'), pctB=document.getElementById('pctB');
 const note=document.getElementById('beachnote');
+/* thirty-two customers spread evenly along the sand; each walks to the nearer cart */
+const NS='http://www.w3.org/2000/svg', bathers=[];
+for(let i=0;i<32;i++){
+  const sv=document.createElementNS(NS,'svg'), u=document.createElementNS(NS,'use');
+  sv.setAttribute('viewBox','0 0 80 132');u.setAttribute('href','#im-bather');sv.appendChild(u);
+  const x=(i+0.5)/32*100;sv.style.left=x+'%';
+  document.getElementById('bathers').appendChild(sv);bathers.push({sv,x});
+}
 function layout(){
   const mid=(Math.min(A,B)+Math.max(A,B))/2;
   const leftIsA=A<=B;
   const sA=leftIsA?mid:100-mid, sB=100-sA;
-  cartA.style.left=A+'%'; cartB.style.left=B+'%';
+  /* at the equilibrium the carts are drawn back to back, so the two 50% labels do not print on top of each other (29 Sep 2026; drawing only) */
+  const atEq=Math.abs(A-50)<2.5&&Math.abs(B-50)<2.5;
+  cartA.style.left=(atEq?(leftIsA?45.5:54.5):A)+'%'; cartB.style.left=(atEq?(leftIsA?54.5:45.5):B)+'%';
   const aEl=leftIsA?shadeA:shadeB, bEl=leftIsA?shadeB:shadeA;
   aEl.style.left='0'; aEl.style.width=mid+'%';
   bEl.style.left=mid+'%'; bEl.style.width=(100-mid)+'%';
   pctA.textContent=Math.round(sA*10)/10+'%';
   pctB.textContent=Math.round(sB*10)/10+'%';
-  if(Math.abs(A-50)<2.5&&Math.abs(B-50)<2.5){note.innerHTML='<b>Equilibrium:</b> back to back in the middle of the beach. Neither vendor can gain by moving.';}
+  bathers.forEach(b=>{const dA=Math.abs(b.x-A), dB=Math.abs(b.x-B);b.sv.setAttribute('class',dA<dB?'a':dB<dA?'b':'');});
+  if(atEq){note.innerHTML='<b>Equilibrium:</b> back to back in the middle of the beach. Neither vendor can gain by moving.';}
   else if(Math.abs(sA-sB)<0.5){note.textContent='An even split. Can either vendor do better by moving?';}
   else{note.textContent=(sA>sB?'Vendor A':'Vendor B')+' is winning. What should the other vendor do?';}
 }
@@ -1233,272 +1235,45 @@ drag(cartA,v=>A=v); drag(cartB,v=>B=v);
 layout();
 })();
 
-/* ---- median voter: same mechanics on the political spectrum ---- */
+
+
+/* ---- Every m3 matrix, solvable on screen (28 Sep 2026, his call): a click
+   on a row or column name dims that whole line with the same class his
+   keypress steps use (gone), and a second click brings it back; the last line
+   on a side stays. Whenever one row and one column are left, that cell takes
+   the red box. mxLine is the keypress version for slides whose lines have no
+   ids (Casey and Pat): data-lines="r3,c4" names grid rows and columns. ---- */
 (function(){
-const spec=document.getElementById('spec');
-let D=25, R=75; // positions 0-100
-const candD=document.getElementById('candD'), candR=document.getElementById('candR');
-const split=document.getElementById('specsplit');
-const pctD=document.getElementById('pctD'), pctR=document.getElementById('pctR');
-const note=document.getElementById('specnote');
-function layout(){
-  const mid=(Math.min(D,R)+Math.max(D,R))/2;
-  const leftIsD=D<=R;
-  const sD=leftIsD?mid:100-mid, sR=100-sD;
-  candD.style.left=D+'%'; candR.style.left=R+'%';
-  split.style.left=mid+'%';
-  pctD.textContent=Math.round(sD*10)/10+'%';
-  pctR.textContent=Math.round(sR*10)/10+'%';
-  if(Math.abs(D-50)<2.5&&Math.abs(R-50)<2.5){note.innerHTML='<b>Equilibrium:</b> both candidates converge on the median voter.';}
-  else if(Math.abs(sD-sR)<0.5){note.textContent='An even split. Can either candidate do better by moving?';}
-  else{note.textContent=(sD>sR?'The blue candidate':'The red candidate')+' is winning. What should the other candidate do?';}
-}
-function drag(el,setter){
-  el.addEventListener('pointerdown',e=>{
-    e.preventDefault();el.setPointerCapture(e.pointerId);
-    const move=ev=>{const r=spec.getBoundingClientRect();
-      setter(Math.max(2,Math.min(98,(ev.clientX-r.left)/r.width*100)));layout();};
-    const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);};
-    el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+  const at=(el,k)=>parseInt(el.style[k==='r'?'gridRow':'gridColumn'],10);
+  function settle(mx){
+    const rl=[...mx.querySelectorAll(':scope>.rl')], cl=[...mx.querySelectorAll(':scope>.cl')];
+    const rOff=new Set(rl.filter(e=>e.classList.contains('gone')).map(e=>at(e,'r')));
+    const cOff=new Set(cl.filter(e=>e.classList.contains('gone')).map(e=>at(e,'c')));
+    const rOn=rl.filter(e=>!e.classList.contains('gone')), cOn=cl.filter(e=>!e.classList.contains('gone'));
+    mx.querySelectorAll(':scope>.cell').forEach(c=>{
+      const r=at(c,'r'), k=at(c,'c');
+      c.classList.toggle('gone',rOff.has(r)||cOff.has(k));
+      c.classList.toggle('eq',rOn.length===1&&cOn.length===1&&r===at(rOn[0],'r')&&k===at(cOn[0],'c'));
+    });
+  }
+  document.querySelectorAll('.mx.solvable').forEach(mx=>{
+    mx.addEventListener('click',e=>{
+      if(new URLSearchParams(location.search).has('edit'))return;
+      const b=e.target.closest('.cl,.rl');if(!b||b.parentElement!==mx)return;
+      const side=[...mx.querySelectorAll(':scope>.'+(b.classList.contains('rl')?'rl':'cl'))];
+      if(!b.classList.contains('gone')&&side.filter(x=>!x.classList.contains('gone')).length===1)return;
+      b.classList.toggle('gone');settle(mx);
+    });
   });
-}
-drag(candD,v=>D=v); drag(candR,v=>R=v);
-document.getElementById('presetC').addEventListener('click',()=>{D=15;R=65;layout();});
-document.getElementById('presetD').addEventListener('click',()=>{D=49;R=51;layout();});
-layout();
+  window.mxLine=function(el,on){
+    const mx=document.getElementById(el.dataset.mx);if(!mx)return;
+    el.dataset.lines.split(',').forEach(t=>{
+      const k=t[0], i=+t.slice(1);
+      mx.querySelectorAll(':scope>.'+(k==='r'?'rl':'cl')).forEach(b=>{if(at(b,k)===i)b.classList.toggle('gone',on);});
+    });
+    settle(mx);
+  };
 })();
-
-/* ---- the engine game (slide 19 board) ----
-   Wire: room m3-engine, one line per action. Aurora's phone posts a join
-   ("aurora|borealis|0|a|j"), then each seat posts one pitch per round
-   ("aurora|borealis|r|a-or-b|p-t-s-c"), latest line per pair+round+seat
-   wins. The deck posts "::open|r" markers to open rounds and NEVER
-   adjudicates: every split is a matrix lookup, the board reveals a round
-   only on the instructor's button. The big engine shows the cumulative
-   book (mean pair share over all revealed rounds). Falls back to marked
-   demo data when the Worker is unreachable. */
-(function(){
-  const ROOM='m3-engine', ROUNDS=4;
-  const SHARE=[[50,55,40,70],[45,50,45,65],[60,55,50,60],[30,35,40,50]];
-  const MK={p:0,t:1,s:2,c:3}, ML=['PRICE','TERMS','SOLVE','CHARM'];
-  const norm=n=>String(n).trim().toLowerCase().replace(/\s+/g,' ');
-  const pairKey=(a,b)=>[norm(a),norm(b)].sort().join('~');
-  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const NS='http://www.w3.org/2000/svg', CX=230, CY=230, RR=196;
-  const bl=document.getElementById('eblades');
-  for(let i=0;i<18;i++){
-    const p=document.createElementNS(NS,'path');
-    p.setAttribute('d','M230 82 q26 60 8 138');
-    p.setAttribute('transform','rotate('+(i*20)+' 230 230)');
-    bl.appendChild(p);
-  }
-  function sector(a0,a1){
-    const big=(a1-a0)%360>180?1:0;
-    const x0=CX+RR*Math.sin(a0*Math.PI/180), y0=CY-RR*Math.cos(a0*Math.PI/180);
-    const x1=CX+RR*Math.sin(a1*Math.PI/180), y1=CY-RR*Math.cos(a1*Math.PI/180);
-    return 'M'+CX+' '+CY+' L'+x0+' '+y0+' A'+RR+' '+RR+' 0 '+big+' 1 '+x1+' '+y1+' Z';
-  }
-  function draw(f){
-    const a=f*3.6;
-    document.getElementById('esecA').setAttribute('d',sector(0,a));
-    document.getElementById('esecB').setAttribute('d',sector(a,360));
-  }
-  const setRot=d=>document.getElementById('erotor').setAttribute('transform','rotate('+d+' 230 230)');
-  function nums(y,show){
-    const a=document.getElementById('enA'), b=document.getElementById('enB');
-    a.textContent=Math.round(y); b.textContent=Math.round(100-y);
-    a.style.opacity=b.style.opacity=show?1:.15;
-  }
-  let split=50, rot=0, spinning=false;
-  draw(split); nums(split,true);
-
-  const st={live:false, lines:[], revealed:[], demoRound:1};
-  try{st.revealed=JSON.parse(localStorage.getItem('m3eng1')||'[]');}catch(_){ }
-  if(!Array.isArray(st.revealed))st.revealed=[];
-  let deckN=0;
-  const dvBase='m3deck-'+Math.random().toString(36).slice(2,8);
-  function post(line){
-    deckN++;
-    return fetch(POLL_API+'/p/'+ROOM+'/say',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({t:line,v:dvBase+'-'+(deckN%9)})});
-  }
-  function parsed(){
-    let markers=[], moves=[];
-    st.lines.forEach(t=>{
-      const p=String(t).split('|').map(s=>s.trim());
-      if(p.length===2&&p[0]==='::open'&&/^\d{1,2}$/.test(p[1]))markers.push(+p[1]);
-      else if(p.length===5&&p[0]&&p[1]&&/^\d{1,2}$/.test(p[2])&&/^[ab]$/.test(p[3])&&/^[jptsc]$/.test(p[4]))
-        moves.push({A:p[0],B:p[1],r:+p[2],seat:p[3],m:p[4]});
-    });
-    return {round:Math.max(1,...markers,...st.revealed.map(r=>r+0)), markers, moves};
-  }
-  /* complete pairs for a round: latest line per pair+seat */
-  function pairsFor(moves,r){
-    const latest=new Map();
-    moves.filter(m=>m.r===r&&m.m!=='j').forEach(m=>latest.set(pairKey(m.A,m.B)+'|'+m.seat,m));
-    const byPair=new Map();
-    latest.forEach(m=>{
-      const k=pairKey(m.A,m.B);
-      if(!byPair.has(k))byPair.set(k,{});
-      byPair.get(k)[m.seat]=m.m;
-    });
-    const out=[];
-    byPair.forEach((s,k)=>{if(s.a&&s.b)out.push({k,a:s.a,b:s.b,sa:SHARE[MK[s.a]][MK[s.b]]});});
-    return out.sort((x,y)=>x.k<y.k?-1:1);
-  }
-  /* demo room: the simulated cohort drifts from scattered to all-solve */
-  function demoPairs(r){
-    const w=r===1?[.3,.2,.2,.3]:r===2?[.35,.3,.25,.1]:r===3?[.3,.15,.55,0]:[.1,.05,.85,0];
-    const pick=()=>{const x=Math.random();let c=0;for(let i=0;i<4;i++){c+=w[i];if(x<c)return 'ptsc'[i];}return 's';};
-    const out=[];
-    for(let i=0;i<10;i++){const a=pick(),b=pick();out.push({k:'demo'+i,a,b,sa:SHARE[MK[a]][MK[b]]});}
-    return out;
-  }
-  const roundCache={}; /* r -> pairs shown at reveal (demo rounds live only here) */
-  function bookFrom(){
-    const avgs=[];
-    st.revealed.forEach(r=>{
-      const ps=roundCache[r]||[];
-      if(ps.length)avgs.push(ps.reduce((s,p)=>s+p.sa,0)/ps.length);
-    });
-    return avgs.length?avgs.reduce((s,x)=>s+x,0)/avgs.length:50;
-  }
-  function renderCards(ps){
-    const box=document.getElementById('ebts');
-    while(box.firstChild)box.removeChild(box.firstChild);
-    ps.forEach(p=>{
-      const d=document.createElement('div');
-      d.className='ebt '+(p.sa>50?'wa':(p.sa<50?'wb':''));
-      const m1=document.createElement('div');m1.className='em a';m1.textContent=ML[MK[p.a]];
-      const es=document.createElement('div');es.className='es';
-      const s1=document.createElement('span');s1.className='sa';s1.textContent=p.sa;
-      const s2=document.createElement('span');s2.className='sb';s2.textContent=100-p.sa;
-      es.appendChild(s1);es.appendChild(document.createTextNode(' · '));es.appendChild(s2);
-      const m2=document.createElement('div');m2.className='em b';m2.textContent=ML[MK[p.b]];
-      d.appendChild(m1);d.appendChild(es);d.appendChild(m2);
-      box.appendChild(d);
-    });
-  }
-  function spinTo(target){
-    if(reduceMotion||spinning){split=target;setRot(rot);draw(split);nums(split,true);return;}
-    spinning=true;
-    const from=split, move=target-from;
-    const dir=move>=0?-1:1, turns=2.5+Math.min(2.5,Math.abs(move)/4);
-    const startRot=rot; let t0=null; const DUR=2200;
-    nums(from,false);
-    function step(ts){
-      if(!t0)t0=ts;
-      const t=Math.min(1,(ts-t0)/DUR), e=1-Math.pow(1-t,3);
-      setRot(startRot+dir*turns*360*e);
-      draw(from+move*e);
-      if(t<1)requestAnimationFrame(step);
-      else{rot=(startRot+dir*turns*360)%360;split=target;spinning=false;nums(target,true);}
-    }
-    requestAnimationFrame(step);
-  }
-  function verdictFor(r,ps,book){
-    const v=document.getElementById('everdict');
-    if(!ps.length){v.textContent='No pairs locked round '+r+' yet.';return;}
-    const even=ps.filter(p=>p.sa===50).length, uneven=ps.length-even;
-    const avg=Math.round(ps.reduce((s,p)=>s+p.sa,0)/ps.length);
-    let line;
-    if(even===ps.length){
-      line='Round '+r+': every pitch matched, every slice 50/50. The engine spun and <b>nothing moved</b>.';
-    }else{
-      line='Round '+r+': '+uneven+' slice'+(uneven>1?'s':'')+' split unevenly, '+even+' dead even &mdash; Aurora&rsquo;s contractors took <b class=g>'+avg+'%</b> of the business on offer.';
-    }
-    v.innerHTML=line+' After '+st.revealed.length+' round'+(st.revealed.length>1?'s':'')+', the book stands at <b class=g>'+Math.round(book)+'</b> &middot; <b class=r>'+Math.round(100-book)+'</b>.';
-  }
-  const btnReveal=document.getElementById('ereveal'), btnOpen=document.getElementById('eopen');
-  function currentRound(){
-    if(!st.live)return st.demoRound;
-    const p=parsed();
-    return Math.min(ROUNDS,Math.max(p.round,st.revealed.length?Math.max(...st.revealed):0));
-  }
-  function refreshTop(){
-    const r=currentRound();
-    const revealed=st.revealed.includes(r);
-    document.getElementById('eround').textContent='ROUND '+r+(revealed?' · REVEALED':'');
-    const ps=st.live?pairsFor(parsed().moves,r):null;
-    document.getElementById('elocked').textContent=st.live?(ps?ps.length:0):'–';
-    btnReveal.textContent='Reveal round '+r;
-    btnReveal.disabled=revealed;
-    btnOpen.textContent='Open round '+Math.min(ROUNDS,r+1);
-    btnOpen.disabled=!(revealed&&r<ROUNDS);
-    document.getElementById('edemo').style.display=st.live?'none':'';
-  }
-  btnReveal.addEventListener('click',()=>{
-    const r=currentRound();
-    if(st.revealed.includes(r))return;
-    const ps=st.live?pairsFor(parsed().moves,r):demoPairs(r);
-    if(!ps.length){document.getElementById('everdict').textContent='No pairs locked round '+r+' yet.';return;}
-    roundCache[r]=ps;
-    st.revealed.push(r);
-    if(st.live){try{localStorage.setItem('m3eng1',JSON.stringify(st.revealed));}catch(_){}}
-    renderCards(ps);
-    const book=bookFrom();
-    spinTo(book);
-    verdictFor(r,ps,book);
-    refreshTop();
-  });
-  btnOpen.addEventListener('click',()=>{
-    const r=currentRound();
-    if(!st.revealed.includes(r)||r>=ROUNDS)return;
-    if(st.live)post('::open|'+(r+1)).catch(()=>{});
-    else st.demoRound=r+1;
-    document.getElementById('everdict').textContent='';
-    renderCards([]);
-    refreshTop();
-  });
-  let booted=false;
-  function fetchIt(){
-    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{
-      st.live=true;
-      st.lines=d.answers||[];
-      /* rebuild revealed rounds' cards from the wire after a reload */
-      st.revealed.forEach(r=>{if(!roundCache[r])roundCache[r]=pairsFor(parsed().moves,r);});
-      if(!booted){
-        booted=true;
-        const last=st.revealed.length?Math.max(...st.revealed):0;
-        if(last&&roundCache[last]&&roundCache[last].length){
-          split=bookFrom();draw(split);nums(split,true);
-          renderCards(roundCache[last]);
-          verdictFor(last,roundCache[last],split);
-        }
-      }
-      refreshTop();
-    }).catch(()=>{refreshTop();});
-  }
-  setInterval(fetchIt,2500);fetchIt();
-  refreshTop();
-})();
-
-/* ---- top of the table: recomputed from the poll rooms via /go/scores.js;
-   rows reveal fifth place first, one keypress each ---- */
-(function(){
-  const DEMO=[{name:'Priya',byEvent:{engine:5},total:17},{name:'Marcus',byEvent:{engine:5},total:14},{name:'Elena',byEvent:{engine:0},total:12},{name:'Sam',byEvent:{engine:5},total:11},{name:'Tom',byEvent:{engine:0},total:8}];
-  const EVS=['engine'];
-  function fill(players,demo){
-    for(let i=0;i<5;i++){
-      const row=document.getElementById('scbr'+i), p=players[i];
-      row.querySelector('.nm').textContent=p?p.name:'—';
-      const pvs=row.querySelectorAll('.pv');
-      EVS.forEach((k,j)=>{pvs[j].textContent=p?(p.byEvent[k]||0):'';});
-      row.querySelector('.tt').textContent=p?p.total:'';
-    }
-    document.getElementById('scbD').style.display=demo?'':'none';
-  }
-  function refresh(){
-    GT_SCORES.load().then(d=>{
-      if(d.players.length)fill(d.players,false);
-      else fill(DEMO,true);
-    }).catch(()=>fill(DEMO,true));
-  }
-  setInterval(refresh,10000);refresh();
-})();
-
-/* the room's engines, module 3's closing exercise, are engines/field.js (the airfield), loaded below */
 </script>
-<script src="/teaching/exec/demo/m3/engines/field.js"></script>
 <script src="/teaching/exec/demo/deck.js"></script>
 </body></html>

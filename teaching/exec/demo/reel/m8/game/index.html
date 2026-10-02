@@ -1,0 +1,460 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/reel/reel.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Module 8 · Games</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 8 games.
+
+     ?g=market   the car market: everyone is a buyer, the lot on the big
+                 screen is the sellers. Each round one bid; the deck closes
+                 the round and every phone computes its own result from the
+                 same bids and seed (lot.js), so nothing is posted back. A
+                 sale washes the whole screen peach or lemon. Unscored.
+     ?g=cs       Hidden Agenda, the capstone: pick your table, take a seat,
+                 and the Worker deals you a role only this phone can read.
+                 Nights are played here; the day vote is here; the reveal is
+                 on the big screen. Scored: ten to the winning side.
+
+   Names come from the shared gt-name and are claimed into gt-names for the
+   points system. ?room=<id> plays into a scratch room (rehearsals) and
+   ?api=<url> points at a local Worker. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:15px 18px;cursor:pointer;text-decoration:none}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+button.opt:disabled{opacity:.55;cursor:default}
+.choices{display:flex;flex-direction:column;gap:11px}
+.bigrow{display:flex;gap:12px}
+.bigrow button.opt{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:26px;padding:22px 10px;letter-spacing:.02em}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.me .who{font-weight:700;font-size:16px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.lbl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.waitcard{border:2.5px dashed var(--muted);padding:18px;font-weight:600;font-size:15px;color:var(--muted)}
+.pulse{display:inline-block;width:10px;height:10px;background:var(--red);border-radius:50%;
+  margin-right:9px;vertical-align:middle;animation:pu 1.2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.25}50%{opacity:1}}
+button.send{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;width:100%}
+button.send:disabled{opacity:.45;cursor:default}
+button.send.quiet{background:var(--paper);color:var(--ink);border-color:var(--ink)}
+.card{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px}
+.card .head{font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:var(--ink)}
+.card .head.red{color:var(--red)} .card .head.teal{color:var(--teal)} .card .head.terra{color:var(--terracotta)}
+.card .sub{font-weight:600;font-size:15px;color:var(--ink);margin-top:10px;line-height:1.4}
+.card .sub b{color:var(--red)}
+.card .small{font-weight:500;font-size:13px;color:var(--muted);margin-top:8px;line-height:1.35}
+.rule{border-left:6px solid var(--red);background:var(--card);padding:12px 16px;font-weight:600;font-size:15px;line-height:1.4}
+.rule b{color:var(--red)}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.plist button{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2px solid var(--ink);padding:9px 14px;cursor:pointer}
+.plist button.on{background:var(--red);border-color:var(--red);color:var(--paper)}
+.plist button:disabled{opacity:.4;cursor:default}
+.plist button.dim{opacity:.4;text-decoration:line-through}
+.res{border-left:6px solid var(--red);padding:10px 14px;font-weight:600;font-size:16px;background:var(--card)}
+.res b{color:var(--red)}
+.hist{font-weight:500;font-size:13.5px;color:var(--muted);line-height:1.5}
+.hist b{color:var(--ink)}
+.rolebar{display:flex;justify-content:space-between;align-items:center;gap:10px;border:2px solid var(--ink);background:var(--paper-soft);padding:10px 14px}
+.rolebar .r{font-family:var(--display);font-weight:900;font-size:20px;color:var(--ink);min-width:0}
+.rolebar .r.hidden{color:var(--muted);font-family:var(--sans);font-weight:600;font-size:14px}
+.rolebar button{font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;padding:8px 12px;cursor:pointer;flex:none}
+.priceRow{display:flex;gap:10px}
+.priceRow input{flex:1;font-family:var(--display);font-weight:900;font-size:28px;color:var(--ink);text-align:center;background:var(--card);border:2.5px solid var(--ink);padding:10px 12px;min-width:0}
+.deals{display:flex;flex-direction:column;gap:6px}
+.deals .d{border:2px solid var(--rule);background:var(--card);font-weight:600;font-size:14px;padding:8px 12px}
+
+/* the market: the whole screen washes peach or lemon on a sale */
+body{transition:background .9s ease}
+body.wash-P.washing{background:var(--terracotta)}
+body.wash-L.washing{background:var(--ochre)}
+body.washing .tag,body.washing h1{color:var(--ink)}
+.card.result{background:var(--paper);text-align:center}
+.card.result .head{font-size:40px}
+.card.result .head small{display:block;font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.16em;margin-top:6px;color:var(--muted)}
+.card.result.P .head{color:var(--terracotta)} .card.result.L .head{color:var(--ochre)}
+.rcar{width:180px;height:auto;display:block;margin:14px auto 6px;animation:drivein .9s ease-out}
+.rcar .win{fill:var(--paper-soft)} .rcar .tyre{fill:var(--ink)} .rcar .hub{fill:var(--paper)}
+.card.result.P .rcar .body{fill:var(--terracotta)} .card.result.L .rcar .body{fill:var(--ochre)}
+@keyframes drivein{from{transform:translateX(-140%)}to{transform:translateX(0)}}
+.card .gain{font-family:var(--display);font-weight:900;font-size:44px;line-height:1;color:var(--green);margin-top:10px}
+.card .gain.neg{color:var(--red)}
+.rolebar .r.neg{color:var(--red)}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 8</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/demo/reel/go/names.js"></script>
+<script src="/teaching/exec/demo/reel/m8/game/cs.js"></script>
+<script src="/teaching/exec/demo/reel/m8/game/lot.js"></script>
+<script>
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')||'https://gt-poll.rlamare.workers.dev';
+let voter=qs.get('v')||null; /* ?v= is a rehearsal override, never used in the room */
+try{
+  if(!voter)voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    if(!qs.get('v'))localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+const GAME=qs.get('g');
+let name=qs.get('n')||null, roster=[]; /* ?n= is a rehearsal override, never used in the room */
+try{if(!name)name=localStorage.getItem('gt-name');}catch(_){}
+if(name)claimOnce();
+fetch('/teaching/exec/demo/reel/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+const clean=n=>n.trim().replace(/[|]/g,' ').replace(/\s+/g,' ').slice(0,30);
+const norm=s=>String(s||'').trim().toLowerCase();
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+let poller=null;
+function stopPolling(){if(poller){clearInterval(poller);poller=null;}}
+const failMsg=code=>code===429?'That’s plenty from one phone — flag the instructor.':'That didn’t send — try again.';
+const post=(path,body)=>fetch(API+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json().then(d=>({ok:r.ok,status:r.status,d})));
+
+function meRow(){
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  return me;
+}
+function renderName(title,done){
+  q.textContent=title;
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>done(clean(n)));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='OK';
+  const go=()=>{const v=clean(inp.value);if(v)done(v);};
+  btn.addEventListener('click',go);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function render(){
+  stopPolling();st.textContent='';
+  if(GAME!=='market'&&GAME!=='cs'){
+    q.textContent='Which game is on the screen?';
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=market">The car market</a><a class="pick" href="?g=cs">Hidden Agenda</a></div>';
+    return;
+  }
+  if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{name=m;try{localStorage.setItem('gt-name',name);}catch(_){}claimOnce();render();},app,{clean}));return;}
+  if(GAME==='market')return renderMarket();
+  return renderCS();
+}
+
+/* ================= the car market ================= */
+const MROOM=qs.get('room')||'m8-market';
+const money=v=>'$'+Math.abs(v).toLocaleString('en-GB');
+let sayN=0;
+function say(room,line){sayN++;return fetch(API+'/p/'+room+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:voter+'-'+(sayN%9)})}).then(r=>{if(!r.ok)throw r.status;});}
+const answers=room=>fetch(API+'/p/'+room+'/answers').then(r=>r.json()).then(d=>d.answers||[]);
+function renderMarket(){
+  q.textContent='The car market';
+  app.innerHTML='';app.appendChild(meRow());
+  const stage=document.createElement('div');stage.style.marginTop='6px';stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';app.appendChild(stage);
+  let joined=false, shown='', lastWash='';
+  function put(el){stage.appendChild(el);}
+  const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
+  const wait=t=>{const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>'+esc(t);return w;};
+  function wash(kind){ /* the whole screen turns peach or lemon; kind '' clears it */
+    document.body.classList.remove('wash-P','wash-L','washing');
+    if(kind){void document.body.offsetWidth;document.body.classList.add('wash-'+kind);requestAnimationFrame(()=>document.body.classList.add('washing'));}
+  }
+  function bidUI(r,cur,warranty){
+    const box=document.createElement('div');box.style.display='flex';box.style.flexDirection='column';box.style.gap='10px';
+    const row=(label,key,val)=>{
+      const wrap=document.createElement('div');wrap.style.display='flex';wrap.style.flexDirection='column';wrap.style.gap='8px';
+      if(label)wrap.appendChild(lbl(label));
+      const chips=document.createElement('div');chips.className='plist';
+      const inp=document.createElement('input');inp.type='number';inp.inputMode='numeric';inp.placeholder='$';inp.min=0;inp.max=9999;inp.dataset.key=key;
+      if(val!==null&&val!==undefined)inp.value=val;
+      [1000,1500,2000,2500,3000,3500,4000].forEach(v=>{const b=document.createElement('button');b.textContent='$'+v.toLocaleString('en-GB');if(+inp.value===v)b.classList.add('on');b.addEventListener('click',()=>{inp.value=v;chips.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});chips.appendChild(b);});
+      const pr=document.createElement('div');pr.className='priceRow';pr.appendChild(inp);
+      wrap.appendChild(chips);wrap.appendChild(pr);
+      return {wrap,inp};
+    };
+    const a=row(warranty?'For a car WITH a warranty':null,'p',cur?cur.wprice!==null&&warranty?cur.wprice:cur.price:null);
+    let b=null;
+    if(warranty){ b=row('For a car WITHOUT a warranty','w',cur?cur.price:null); }
+    const go=document.createElement('button');go.className='send';go.textContent='LOCK IT IN';
+    go.addEventListener('click',()=>{
+      const pw=Math.round(+a.inp.value), pp=warranty?Math.round(+b.inp.value):pw;
+      if(!(pp>=0&&pp<10000)||(warranty&&!(pw>=0&&pw<10000))){st.textContent='Enter a price.';return;}
+      go.disabled=true;
+      say(MROOM,'bid|'+r+'|'+name+'|'+pp+(warranty?'|'+pw:'')).then(()=>{st.textContent='';shown='';tick();}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});
+    });
+    if(warranty){box.appendChild(a.wrap);box.appendChild(b.wrap);}else box.appendChild(a.wrap);
+    box.appendChild(go);
+    return box;
+  }
+  function tick(){
+    answers(MROOM).then(lines=>{
+      const S=LOT.parse(lines), sim=LOT.simulate(S);
+      const me=S.joins.find(n=>LOT.norm(n)===LOT.norm(name));
+      if(!me&&!joined){joined=true;say(MROOM,'join|'+name).then(()=>{shown='';tick();}).catch(c=>{joined=false;st.textContent=failMsg(c);});return;}
+      const results=LOT.mine(sim,name);
+      const total=results.reduce((a,x)=>a+(x.outcome==='sold'?x.profit:0),0);
+      const bought=results.filter(x=>x.outcome==='sold');
+      const r=sim.round, open=sim.open, myBid=(S.bids[r]||{})[LOT.norm(name)];
+      const last=results.length?results[results.length-1]:null;
+      const key=[r,open,myBid?myBid.price+'/'+myBid.wprice:'',results.length,total,S.joins.length].join('#');
+      if(key===shown)return;shown=key;
+      stage.innerHTML='';
+      if(!r){wash('');put(lbl('You are a buyer · '+S.joins.length+' in the market'));put(wait('Keep this page open. The lot opens from the big screen.'));return;}
+      const tot=document.createElement('div');tot.className='rolebar';tot.innerHTML='<span class="r'+(total<0?' neg':'')+'">'+(total<0?'−':'')+money(total)+'</span><span style="font-weight:600;font-size:12px;letter-spacing:.1em;color:var(--muted)">SO FAR · '+bought.length+' CAR'+(bought.length===1?'':'S')+'</span>';
+      put(tot);
+      if(open){
+        /* a new round: clear the wash and ask for a bid */
+        wash('');
+        put(lbl((sim.warranty?'The rule change · round 4':'Round '+r)+' · bid for a car off the lot'));
+        if(sim.warranty){const c=document.createElement('div');c.className='rule';c.innerHTML='The peach owners are back, and they now offer a <b>warranty</b>. A warranty would cost a lemon owner more than the car is worth, so only peach owners offer one. Bid two prices.';put(c);}
+        else if(last&&last.r===r-1){const c=document.createElement('div');c.className='hist';c.innerHTML=last.outcome==='sold'?'Last round: '+(last.type==='P'?'a peach':'a lemon')+' for '+money(last.price)+', '+(last.profit<0?'−':'+')+money(last.profit):(last.outcome==='refused'?'Last round: the owner wouldn’t sell at '+money(last.price):'Last round: no car left for you');put(c);}
+        /* one bid per round: once it is in, it is in */
+        if(myBid)put(wait('Response locked in: '+money(myBid.price)+(myBid.wprice!==null?' without, '+money(myBid.wprice)+' with a warranty':'')+'. The round closes from the big screen.'));
+        else put(bidUI(r,myBid,sim.warranty));
+        return;
+      }
+      /* the round is closed: my result */
+      const res=results.find(x=>x.r===r);
+      if(!res){wash('');put(lbl('Round '+r+' closed'));put(wait('You didn’t bid this round. The next one opens from the big screen.'));return;}
+      if(res.outcome==='sold'){
+        const k=r+':'+res.type; if(lastWash!==k){lastWash=k;wash(res.type);}
+        const c=document.createElement('div');c.className='card result '+res.type;
+        c.innerHTML='<div class="head">'+(res.type==='P'?'A PEACH':'A LEMON')+(res.warranty?' <small>WITH A WARRANTY</small>':'')+'</div>'+
+          '<svg class="rcar" viewBox="0 0 120 60"><path class="body" d="M6 40 Q6 28 18 27 L30 27 L42 14 Q45 11 50 11 L80 11 Q85 11 88 14 L98 27 L108 28 Q114 29 114 36 L114 42 Q114 46 110 46 L10 46 Q6 46 6 42 Z"/><path class="win" d="M46 16 L55 16 L55 27 L36 27 Z"/><path class="win" d="M60 16 L78 16 L86 27 L60 27 Z"/><circle class="tyre" cx="30" cy="46" r="9"/><circle class="tyre" cx="90" cy="46" r="9"/><circle class="hub" cx="30" cy="46" r="3.5"/><circle class="hub" cx="90" cy="46" r="3.5"/></svg>'+
+          '<div class="sub">You paid <b>'+money(res.price)+'</b>. It is worth <b>'+money(res.value)+'</b> to you.</div><div class="gain'+(res.profit<0?' neg':'')+'">'+(res.profit<0?'−':'+')+money(res.profit)+'</div>';
+        put(c);
+      }else{
+        wash('');
+        const c=document.createElement('div');c.className='card';
+        c.innerHTML=res.outcome==='refused'?'<div class="head">NO SALE</div><div class="sub">The owner wouldn’t sell at <b>'+money(res.price)+'</b>. You keep your money, and you never find out what the car was.</div>':'<div class="head">NO CAR</div><div class="sub">The lot is thinning. There was no car left for you this round.</div>';
+        put(c);
+      }
+      put(wait('The next round opens from the big screen.'));
+    }).catch(()=>{});
+  }
+  poller=setInterval(tick,2000);tick();
+}
+
+/* ================= Hidden Agenda ================= */
+function renderCS(){
+  let table=qs.get('t');
+  try{table=table||localStorage.getItem('m8-cs-table');}catch(_){}
+  if(!table||!CS_TABLES[table]){
+    q.textContent='Which table are you at?';
+    app.innerHTML='';app.appendChild(meRow());
+    const ch=document.createElement('div');ch.className='bigrow';ch.style.marginTop='8px';
+    [['TAPAS','tapas'],['GRANITO','granito']].forEach(([l,k])=>{const b=document.createElement('button');b.className='opt';b.textContent=l;b.addEventListener('click',()=>{try{localStorage.setItem('m8-cs-table',k);}catch(_){}renderCS();});ch.appendChild(b);});
+    app.appendChild(ch);return;
+  }
+  const T=CS_TABLES[table], ROOM=qs.get('room')||T.room;
+  const bidderName=k=>{const b=T.bidders.find(x=>x.k===k);return b?b.name:k;};
+  q.textContent=T.title;
+  app.innerHTML='';app.appendChild(meRow());
+  const sl=document.createElement('a');sl.className='pick';sl.style.textAlign='center';sl.style.fontSize='14px';sl.style.padding='10px';sl.href='/teaching/exec/demo/reel/m8/game/bidders.html?t='+table;sl.target='_blank';sl.textContent='OPEN THE SHORTLIST \u2197';
+  app.appendChild(sl);
+  const bar=document.createElement('div');bar.className='rolebar';bar.style.display='none';
+  bar.innerHTML='<span class="r hidden">Your role is dealt to this phone</span><button type="button">SHOW</button>';
+  app.appendChild(bar);
+  const stage=document.createElement('div');stage.style.display='flex';stage.style.flexDirection='column';stage.style.gap='12px';app.appendChild(stage);
+  const leave=document.createElement('button');leave.className='back';leave.type='button';leave.textContent='← change table';
+  leave.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/unseat',{v:voter}).finally(()=>{try{localStorage.removeItem('m8-cs-table');}catch(_){}renderCS();});});
+  app.appendChild(leave);
+  let seated=false, shown='', roleShown=false, roleTimer=null, S=null;
+  bar.querySelector('button').addEventListener('click',()=>{roleShown=!roleShown;drawBar();clearTimeout(roleTimer);if(roleShown)roleTimer=setTimeout(()=>{roleShown=false;drawBar();},8000);});
+  function drawBar(){
+    if(!S||!S.me||!S.me.role){bar.style.display='none';return;}
+    bar.style.display='';
+    const r=bar.querySelector('.r'), b=bar.querySelector('button');
+    if(roleShown){r.className='r';r.textContent=CS_ROLES[S.me.role].title+(S.me.role==='b'?' · '+bidderName(S.bidder):'');b.textContent='HIDE';}
+    else{r.className='r hidden';r.textContent='Your role is on this phone';b.textContent='SHOW';}
+  }
+  function seat(){
+    /* ok: seated (or moved onto a released seat). taken: someone at this table already has this name.
+       late: the table has started and no seat is released for this name — keep trying, the moderator may release one */
+    return post('/p/'+ROOM+'/cs/seat',{v:voter,n:name}).then(r=>{
+      if(r.ok){seated=true;return {};}
+      if(r.status===409&&r.d&&r.d.error==='taken')return {taken:true};
+      if(r.status===409)return {late:true};
+      throw r.status;
+    });
+  }
+  function showCard(k,html){if(shown===k)return;shown=k;stage.innerHTML='<div class="waitcard">'+html+'</div>';}
+  const takenCard=()=>showCard('taken','Someone at this table is already <b>'+esc(name)+'</b>. Tap <b>change</b> above and add your last initial.');
+  const others=()=>S.seats.filter(s=>s.n!==name);
+  const alive=()=>S.seats.filter(s=>s.alive);
+  function nameBtns(list,cur,onPick,disabledFn){
+    const pl=document.createElement('div');pl.className='plist';
+    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(cur&&norm(cur)===norm(s.n))b.classList.add('on');
+      if(disabledFn&&disabledFn(s)){b.disabled=true;b.classList.add('dim');}
+      b.addEventListener('click',()=>onPick(s,b,pl));pl.appendChild(b);});
+    return pl;
+  }
+  const idOf=n=>{const s=S.seats.find(x=>x.n===n);return s?s.v:null;};
+  function tick(){
+    fetch(API+'/p/'+ROOM+'/cs/me?v='+encodeURIComponent(voter)).then(r=>r.json()).then(d=>{
+      S=d;
+      if(!d.me){
+        seat().then(r=>{
+          if(r.taken)takenCard();
+          else if(r.late)showCard('late','This table has already started. Watch the big screen, and join the next one. (If your old phone died, the moderator can move your seat to this one: pick the same name.)');
+          else{shown='';tick();}
+        }).catch(()=>{st.textContent='Couldn’t take a seat — try again.';});
+        return; }
+      if(d.phase==='lobby'&&d.me.n!==name){ /* the name changed on this phone: rename the seat */
+        seat().then(r=>{if(r.taken)takenCard();else{shown='';tick();}}).catch(()=>{});
+        return; }
+      drawBar();
+      const me=d.me, role=me.role;
+      const key=[d.phase,d.round,role,me.alive,JSON.stringify(d.night||null),JSON.stringify(d.day||null),d.reco,(d.mates||[]).map(m=>m.pick).join(',')].join('#');
+      if(key===shown)return;shown=key;
+      stage.innerHTML='';
+      const put=el=>stage.appendChild(el);
+      const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
+      const wait=t=>{const w=document.createElement('div');w.className='waitcard';w.innerHTML='<span class="pulse"></span>'+esc(t);return w;};
+      if(d.phase==='lobby'){
+        if(!role){put(lbl('Seated · '+d.seats.length+' at this table'));put(wait('You have a seat. Keep this page open; your role is dealt from the moderator’s phone.'));return;}
+        roleCard();put(wait('Everyone introduces themselves. The first night starts from the big screen.'));return;
+      }
+      if(d.phase==='over'){
+        const c=document.createElement('div');c.className='card';
+        const won=(d.winner==='backers')===(role==='b');
+        c.innerHTML='<div class="head '+(won?'teal':'terra')+'">'+(d.winner==='backers'?'THE MANIPULATORS WIN':'THE COMMITTEE WINS')+'</div><div class="sub">'+(won?'Your side won. Ten points.':'Your side lost this one.')+' You were the <b>'+CS_ROLES[role].title+'</b>'+(role==='b'?', backing '+esc(bidderName(d.bidder)):'')+'.</div>';
+        put(c);
+        put(lbl('Last thing: which bidder should '+T.airline+' choose?'));
+        const pl=document.createElement('div');pl.className='choices';
+        T.bidders.forEach(b=>{const bt=document.createElement('button');bt.className='opt'+(d.reco===b.k?' mine':'');bt.innerHTML='<b>'+esc(b.name)+'</b><br><span style="font-weight:500;font-size:14px">'+esc(b.arch)+'</span>';
+          bt.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'reco',b:b.k}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});pl.appendChild(bt);});
+        put(pl);
+        if(d.reco)put(wait('Response recorded. Results on the screen soon.'));
+        return;
+      }
+      if(!me.alive){
+        put(lbl((me.out&&me.out.how==='recused'?'Voted off on day ':'Removed on night ')+(me.out?me.out.r:'')+' · you keep watching'));
+        if(d.phase==='night')notesPage(d,true);
+        else put(wait('You are off the committee, but your read still counts: your notes go into the reveal.'));
+        return;
+      }
+      if(d.phase==='night'){
+        put(lbl('Night '+d.round+' · phones only, no talking'));
+        if(role==='b'){
+          const mates=d.mates||[];
+          const c=document.createElement('div');c.className='rule';
+          c.innerHTML='You back <b>'+esc(bidderName(d.bidder))+'</b>. '+(mates.length?'Your fellow Manipulator'+(mates.length>1?'s':'')+': <b>'+mates.map(m=>esc(m.n)+(m.alive?'':' (out)')).join(', ')+'</b>. Agree on one name for tonight\u2019s allegation.':'You are the last Manipulator at the table. Name one person for tonight\u2019s allegation.');
+          put(c);
+          const mateNames=new Set(mates.map(m=>norm(m.n)));
+          const targets=alive().filter(s=>s.n!==name&&!mateNames.has(norm(s.n)));
+          put(nameBtns(targets,d.night&&d.night.myPick,(s,b,pl)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'pick',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
+          const live=mates.filter(m=>m.alive);
+          if(live.length){const h=document.createElement('div');h.className='hist';h.innerHTML=live.map(m=>'<b>'+esc(m.n)+'</b> has picked '+(m.pick?'<b>'+esc(m.pick)+'</b>':'nobody yet')).join(' · ');put(h);}
+          const myPick=d.night&&d.night.myPick;
+          if(myPick&&live.every(m=>m.pick&&norm(m.pick)===norm(myPick)))put(wait('Agreed on '+myPick+'. Wait for the morning.'));
+          else if(myPick)put(wait('You picked '+myPick+'. The allegation needs every Manipulator on the same name, or nobody is removed tonight.'));
+          return;
+        }
+        if(role==='a'){
+          const c=d.night&&d.night.myCheck;
+          put(lbl('Auditor · check one committee member for a hidden agenda'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(c.target)+'</b> '+(c.role==='b'?'has a <b>hidden agenda</b>: a Manipulator':'is honest, '+CS_ROLES[c.role].title.toLowerCase())+'.';put(r);}
+          else put(nameBtns(others().filter(s=>s.alive),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'check',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});}));
+          const past=(d.checks||[]).filter(x=>x.r<d.round);
+          if(past.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Your checks so far: '+past.map(x=>'night '+x.r+', <b>'+esc(x.target)+'</b>, '+(x.role==='b'?'a Manipulator':'honest')).join(' · ');put(h);}
+          if(c)notesPage(d,false);
+          return;
+        }
+        if(role==='c'){
+          const c=d.night&&d.night.myClear;
+          put(lbl('General Counsel · shield one committee member tonight'));
+          if(c){const r=document.createElement('div');r.className='res';r.innerHTML='You are shielding <b>'+esc(c)+'</b>. Any allegation against them tonight is dismissed.';put(r);}
+          else{
+            const lastV=d.lastClear;
+            put(nameBtns(alive(),null,(s)=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'clear',target:s.v}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=cd===409?'Not the same person two nights running.':failMsg(cd);});},s=>lastV&&s.v===lastV));
+            if(lastV){const h=document.createElement('div');h.className='hist';h.textContent='Not the same person as last night. You may shield yourself.';put(h);}
+          }
+          if(c)notesPage(d,false);
+          return;
+        }
+        notesPage(d,false);return;
+      }
+      /* day */
+      put(lbl('Day '+d.round+' · the committee is in session'));
+      if(d.lastNotes&&d.lastNotes.s&&d.lastNotes.s.length){const h=document.createElement('div');h.className='hist';h.innerHTML='Last night you suspected <b>'+d.lastNotes.s.map(v=>esc((d.seats.find(x=>x.v===v)||{}).n||'')).join(', ')+'</b>';put(h);}
+      const day=d.day;
+      if(day&&day.open){
+        if(day.accusedV===voter){put(wait('The vote is about you. Thirty seconds to make your case, then the committee decides.'));return;}
+        const c=document.createElement('div');c.className='rule';c.innerHTML='The committee has moved to remove <b>'+esc(day.accused)+'</b>. Your vote:';put(c);
+        const row=document.createElement('div');row.className='bigrow';
+        [['REMOVE','y'],['KEEP','n']].forEach(([l,y])=>{const b=document.createElement('button');b.className='opt'+(day.myVote===y?' mine':'');b.textContent=l;
+          b.addEventListener('click',()=>{post('/p/'+ROOM+'/cs/act',{v:voter,kind:'vote',y}).then(r=>{if(!r.ok)throw r.status;shown='';tick();}).catch(cd=>{st.textContent=failMsg(cd);});});row.appendChild(b);});
+        put(row);
+        if(day.myVote)put(wait('Vote in. It lands on the big screen by name.'));
+        return;
+      }
+      if(day&&day.result){const r=document.createElement('div');r.className='res';r.innerHTML='<b>'+esc(day.accused)+'</b> '+(day.result.recused?'was removed':'stays')+', '+day.result.yes+' to '+day.result.no+'.';put(r);}
+      put(wait('Debate. Accuse someone, get it seconded, and the vote comes to this phone.'));
+      function roleCard(){
+        const c=document.createElement('div');c.className='card';
+        c.innerHTML='<div class="head '+(role==='b'?'red':'')+'">'+esc(CS_ROLES[role].title.toUpperCase())+'</div><div class="sub">'+esc(CS_ROLES[role].line)+'</div>'+(role==='b'?'<div class="sub">You back <b>'+esc(bidderName(d.bidder))+'</b>.'+((d.mates||[]).length?' Your fellow Manipulator'+(d.mates.length>1?'s':'')+': <b>'+d.mates.map(m=>esc(m.n)).join(', ')+'</b>.':'')+'</div>':'')+'<div class="small">Keep this to yourself. Tap HIDE and nobody beside you sees it.</div>';
+        put(c);
+        const hb=document.createElement('button');hb.className='send quiet';hb.textContent='HIDE MY ROLE';hb.addEventListener('click',()=>{c.style.display='none';hb.style.display='none';roleShown=false;drawBar();});put(hb);
+      }
+    }).catch(()=>{});
+  }
+  function notesPage(d,spectator){
+    const n=(d.night&&d.night.myNotes)||{s:[]};
+    const sel=new Set(n.s||[]);
+    const put=el=>stage.appendChild(el);
+    const lbl=t=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;return e;};
+    put(lbl(spectator?'You still get a say · who do you suspect?':'Who do you suspect? Up to three'));
+    const list=others().filter(s=>s.alive);
+    const pl=document.createElement('div');pl.className='plist';
+    list.forEach(s=>{const b=document.createElement('button');b.textContent=s.n;if(sel.has(s.v))b.classList.add('on');
+      b.addEventListener('click',()=>{if(sel.has(s.v))sel.delete(s.v);else{if(sel.size>=3){st.textContent='Three at most. Untap one first.';return;}sel.add(s.v);}b.classList.toggle('on',sel.has(s.v));});pl.appendChild(b);});
+    put(pl);
+    const go=document.createElement('button');go.className='send';go.textContent=n.s&&n.s.length?'UPDATE':'SAVE';
+    go.addEventListener('click',()=>{go.disabled=true;post('/p/'+ROOM+'/cs/act',{v:voter,kind:'notes',s:[...sel],a:null,c:null}).then(r=>{if(!r.ok)throw r.status;st.textContent='Saved. It comes back to you in the morning.';go.disabled=false;go.textContent='UPDATE';}).catch(cd=>{go.disabled=false;st.textContent=failMsg(cd);});});
+    put(go);
+  }
+  poller=setInterval(tick,2000);tick();
+}
+</script>
+</body></html>

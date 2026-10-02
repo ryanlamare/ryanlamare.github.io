@@ -1,0 +1,268 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/reel/reel.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>The Investment Game</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for the Module 5 investment game — a four-round repeated
+   stag hunt. Pick your name once (from /go/roster.json when the class list
+   is loaded, typed otherwise; remembered per phone as gt-name, shared by
+   every named game), then invest or sit out each round as the instructor
+   calls it. Choices post to the gt-poll /say lane, room m5-invest, as
+   "name|round|i-or-d" lines; the latest line per name and round wins, so a
+   answer is picked, then locked in: one choice per round, no changes.
+   When the deck reveals a round (it posts "::reveal|n" into the room),
+   this phone plays the outcome for that round from the lines that came
+   before the marker, the same snapshot the big screen took: your $100
+   pays $50 on top when nine in ten invested, or is gone when they did
+   not; money you kept stays as it was. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt,button.pick{display:block;text-align:left;width:100%;font-family:var(--sans);font-weight:600;
+  font-size:17px;line-height:1.35;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);
+  padding:16px 18px;cursor:pointer}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* pick, then lock: one send per round, no changes after */
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+.choices.locked button.opt{pointer-events:none}
+.choices.locked button.opt:not(.mine){opacity:.4}
+.namerow{display:flex;gap:10px}
+.namerow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.namerow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.me{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.me .who{font-weight:700;font-size:17px}
+.me .who b{color:var(--red)}
+.me button{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline}
+.rounds{display:flex;gap:8px}
+.rounds button{flex:1;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.06em;
+  background:var(--card);border:2.5px solid var(--ink);color:var(--ink);padding:12px 0;cursor:pointer}
+.rounds button.cur{background:var(--ink);color:var(--paper)}
+.rounds button .done{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;color:inherit;opacity:.75}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+.choices{display:flex;flex-direction:column;gap:12px}
+/* the round's outcome: your money, then what happened to it */
+.inv{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px;text-align:center}
+.inv .rate{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);min-height:1.4em;opacity:0;transition:opacity .5s}
+.inv .rate.on{opacity:1}
+.inv .cash{display:inline-block;margin:14px 0 6px;font-family:var(--display);font-weight:900;font-size:46px;line-height:1;color:var(--ink);padding:10px 22px;border:3px solid var(--ink);border-radius:40px;background:var(--paper-soft);transition:transform .9s cubic-bezier(.4,0,.2,1),background .6s,color .6s,opacity .9s,border-color .6s}
+.inv .cash.grow{transform:scale(1.18);background:var(--teal);color:var(--paper);border-color:var(--teal)}
+.inv .cash.lost{transform:scale(.7) rotate(-8deg);opacity:.25;background:var(--terracotta);color:var(--paper);border-color:var(--terracotta)}
+.inv .cash.kept{background:var(--card);color:var(--muted)}
+.inv.tot .trs{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.inv.tot .tr{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid var(--rule);padding-bottom:6px}
+.inv.tot .trl{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted)}
+.inv.tot .trv{font-family:var(--display);font-weight:900;font-size:24px;line-height:1}
+.inv.tot .up{color:var(--teal)} .inv.tot .down{color:var(--terracotta)} .inv.tot .flat{color:var(--muted)}
+.inv.tot .cash.big{font-size:56px;margin-top:16px}
+.inv.tot .cash.big.up{background:var(--teal);border-color:var(--teal);color:var(--paper)}
+.inv.tot .cash.big.down{background:var(--terracotta);border-color:var(--terracotta);color:var(--paper)}
+.inv .verdict{font-weight:700;font-size:17px;line-height:1.35;color:var(--ink);margin-top:8px;min-height:1.4em;opacity:0;transition:opacity .5s}
+.inv .verdict.on{opacity:1}
+.inv .verdict.good{color:var(--teal)} .inv .verdict.bad{color:var(--terracotta)}
+button.ok{width:100%;font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer;margin-top:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · THE INVESTMENT GAME</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="app"></div>
+  <div class="status" id="status"></div>
+</div>
+<script src="/teaching/exec/demo/reel/go/names.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
+/* ?room=<x> plays into a rehearsal room (m5-invest-<x>) and keeps its picks apart from the real game's */
+const SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
+let name=null, round=1, mine={}, seen={}, outcomes={};
+try{name=localStorage.getItem('gt-name');mine=JSON.parse(localStorage.getItem('gt-invest'+SUF)||'{}');seen=JSON.parse(localStorage.getItem('gt-invest-seen'+SUF)||'{}');}catch(_){}
+function saveSeen(){try{localStorage.setItem('gt-invest-seen'+SUF,JSON.stringify(seen));}catch(_){}}
+if(name)claimOnce();
+let roster=[];
+fetch('/teaching/exec/demo/reel/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+function saveMine(){try{localStorage.setItem('gt-invest'+SUF,JSON.stringify(mine));}catch(_){}}
+const cleanName=n=>n.trim().replace(/\s+/g,' ').slice(0,40);
+function setName(n){
+  const v=cleanName(n);
+  if(!v)return;
+  GT_NAMES.guard(v,voter,m=>{
+    name=m;
+    try{localStorage.setItem('gt-name',name);}catch(_){}
+    claimOnce();
+    render();
+  },app,{clean:cleanName});
+}
+/* register name<->voter in the gt-names room, the points system's join table */
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
+  if(done||!name)return;
+  fetch(API+'/p/gt-names/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name,v:voter})})
+  .then(r=>{if(r.ok){try{localStorage.setItem('gt-claimed',name);}catch(_){}}})
+  .catch(()=>{});
+}
+function render(){
+  st.textContent='';
+  if(!name){renderName();return;}
+  /* a revealed round you answered and have not yet seen plays its outcome first */
+  const due=[1,2].find(r=>outcomes[r]&&mine[r]&&!seen[r]);
+  if(due){renderOutcome(due);return;}
+  /* both rounds are revealed and seen: the game is over, and the phone shows the total the button promised */
+  if(outcomes[2]){renderTotal();return;}
+  q.textContent='Round '+round+': what do you choose?';
+  app.innerHTML='';
+  const me=document.createElement('div');me.className='me';
+  me.innerHTML='<span class="who">Playing as <b></b></span><button type="button">change</button>';
+  me.querySelector('b').textContent=name;
+  me.querySelector('button').addEventListener('click',()=>{name=null;try{localStorage.removeItem('gt-name');}catch(_){}render();});
+  app.appendChild(me);
+  /* one round at a time: round 2 opens from the big screen */
+  const rd=document.createElement('div');rd.className='rounds';
+  for(let r=1;r<=2;r++){
+    const b=document.createElement('button');b.disabled=true;
+    b.innerHTML='Round '+r+'<span class="done">'+(mine[r]==='i'?'INVESTED':(mine[r]==='d'?'DIDN’T INVEST':(r>round?'NOT YET':'&nbsp;')))+'</span>';
+    if(r===round)b.classList.add('cur');
+    rd.appendChild(b);
+  }
+  app.appendChild(rd);
+  const ch=document.createElement('div');ch.className='choices'+(mine[round]?' locked':'');ch.style.marginTop='14px';
+  let picked=null;
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
+  [['i','Invest'],['d','Don’t invest']].forEach(([code,label])=>{
+    const b=document.createElement('button');
+    b.className='opt'+(mine[round]===code?' mine':'');
+    b.textContent=label;
+    b.addEventListener('click',()=>{picked=code;ch.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));b.classList.add('mine');lock.disabled=false;});
+    ch.appendChild(b);
+  });
+  if(!mine[round])ch.appendChild(lock);
+  lock.addEventListener('click',()=>{if(picked)send(picked,lock);});
+  app.appendChild(ch);
+  if(mine[round])st.innerHTML=received();
+}
+const received=()=>'<b>Response locked in.</b> Results on the screen soon.'+(round===1?' Round 2 opens from the big screen.':'');
+/* the round's outcome, played back: the rate, then your money grows, goes, or stays */
+/* the end of the game: each round's money as a figure, and the total. No
+   sentences (Ryan, 16 Sep: dots and colour, not text). Invested and it paid
+   is +$50, invested and it failed is -$100, sat out is $0. Built 17 Sep,
+   when Ryan tapped See my total in rehearsal and nothing happened: the
+   button had only ever put the round screen back. */
+function renderTotal(){
+  q.textContent='Your total';
+  app.innerHTML='';
+  const amt=r=>!mine[r]||!outcomes[r]?null:(mine[r]==='i'?(outcomes[r].pays?50:-100):0);
+  const fmt=n=>(n>0?'+':n<0?'\u2212':'')+'$'+Math.abs(n);
+  const cls=n=>n>0?'up':n<0?'down':'flat';
+  const box=document.createElement('div');box.className='inv tot';
+  let sum=0,h='<div class="trs">';
+  [1,2].forEach(r=>{const a=amt(r);if(a!==null)sum+=a;
+    h+='<div class="tr"><span class="trl">Round '+r+'</span><span class="trv '+(a===null?'flat':cls(a))+'">'+(a===null?'\u2013':fmt(a))+'</span></div>';});
+  h+='</div><div class="cash big '+cls(sum)+'">'+fmt(sum)+'</div>';
+  box.innerHTML=h;app.appendChild(box);
+}
+function renderOutcome(r){
+  const o=outcomes[r], invested=mine[r]==='i';
+  q.textContent='Round '+r+': the reveal';
+  app.innerHTML='';
+  const box=document.createElement('div');box.className='inv';
+  box.innerHTML='<div class="rate">'+Math.round(o.rate*100)+'% of the room invested</div><div class="cash">$100</div><div class="verdict"></div>';
+  app.appendChild(box);
+  const cash=box.querySelector('.cash'), v=box.querySelector('.verdict');
+  const ok=document.createElement('button');ok.className='ok';ok.textContent=r===1?'OK':'See my total';ok.hidden=true;
+  ok.addEventListener('click',()=>{seen[r]=true;saveSeen();render();});
+  app.appendChild(ok);
+  setTimeout(()=>box.querySelector('.rate').classList.add('on'),400);
+  setTimeout(()=>{
+    if(!invested){cash.classList.add('kept');v.textContent='You kept your $100';}
+    else if(o.pays){cash.textContent='$150';cash.classList.add('grow');v.textContent='It paid out: $50 on top';v.classList.add('good');}
+    else{cash.classList.add('lost');v.textContent='Under 90%: your $100 is gone';v.classList.add('bad');}
+    v.classList.add('on');
+  },1700);
+  setTimeout(()=>{ok.hidden=false;},3000);
+}
+/* round 2 opens when the deck posts its marker into the room; a reveal
+   marker means the big screen has shown that round, from the lines that
+   came before it */
+const sentAt={};
+function tick(){
+  const t0=Date.now();
+  fetch(API+'/p/m5-invest'+SUF+'/answers').then(r=>r.json()).then(d=>{
+    const lines=(d.answers||[]).map(t=>String(t).trim());
+    const open2=lines.some(t=>t==='::open|2');
+    let changed=false;
+    /* a Poll Desk reset empties the room: a pick this phone holds that the
+       room no longer has under this name is forgotten, so the phone starts
+       again like the polls do (Ryan's rehearsal, 17 Sep). A pick sent after
+       this fetch began is left alone. */
+    if(name){const me=name.trim().toLowerCase();
+      [1,2].forEach(r=>{
+        if(!mine[r]||(sentAt[r]&&sentAt[r]>t0-500))return;
+        const held=lines.some(t=>{const m=t.match(/^(.{1,40}?)\s*\|\s*([12])\s*\|\s*([id])$/i);return m&&+m[2]===r&&m[1].trim().toLowerCase()===me;});
+        if(!held){delete mine[r];delete seen[r];delete outcomes[r];saveMine();saveSeen();changed=true;}
+      });}
+    [1,2].forEach(r=>{
+      const at=lines.indexOf('::reveal|'+r);
+      if(at<0&&outcomes[r]){delete outcomes[r];changed=true;}
+      if(at<0||outcomes[r])return;
+      const latest=new Map();
+      lines.slice(0,at).forEach(t=>{const m=t.match(/^(.{1,40}?)\s*\|\s*([12])\s*\|\s*([id])$/i);if(m&&+m[2]===r)latest.set(m[1].trim().toLowerCase(),m[3].toLowerCase());});
+      let inN=0,part=0;latest.forEach(c=>{part++;if(c==='i')inN++;});
+      outcomes[r]={rate:part?inN/part:0,pays:part?inN/part>=0.9:false};
+      changed=true;
+    });
+    const nr=open2?2:1;
+    if(nr!==round){round=nr;changed=true;}
+    if(changed&&name){st.textContent='';render();}
+  }).catch(()=>{});
+}
+setInterval(tick,2500);tick();
+function renderName(){
+  q.textContent='Who are you?';
+  app.innerHTML='';
+  const list=document.createElement('div');list.className='choices';
+  roster.forEach(n=>{
+    const b=document.createElement('button');b.className='pick';b.textContent=n;
+    b.addEventListener('click',()=>setName(n));
+    list.appendChild(b);
+  });
+  app.appendChild(list);
+  const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
+  const inp=document.createElement('input');
+  inp.maxLength=40;inp.placeholder=roster.length?'Not on the list? Type your name':'Type your first name';
+  inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='THAT’S ME';
+  btn.addEventListener('click',()=>setName(inp.value));
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();setName(inp.value);}});
+  row.appendChild(inp);row.appendChild(btn);
+  app.appendChild(row);
+}
+function send(code,lock){
+  lock.disabled=true;
+  st.textContent='Sending…';
+  fetch(API+'/p/m5-invest'+SUF+'/say',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({t:name+'|'+round+'|'+code,v:voter})})
+  .then(r=>{if(!r.ok)throw r.status;
+    mine[round]=code;sentAt[round]=Date.now();saveMine();
+    render();
+    st.innerHTML=received();})
+  .catch(code=>{lock.disabled=false;st.textContent=code===429?'That’s plenty from one phone — flag the instructor if you’re stuck.':'That didn’t send — try again.';});
+}
+</script>
+</body></html>

@@ -40,6 +40,10 @@
               step). Seat a is the regulator for rounds 1-4, seat b for
               5-8. Payoffs in INSPECT_PAY, regulator first. Unscored.
 
+   Since 22 Sep 2026 the module plays only ?g=solo and ?g=rps; the
+   shootout (pk) and the inspection game are in m6/outtakes.html, off the
+   chooser, and still open by their links.
+
    Names come from the shared gt-name and are claimed into gt-names for
    the points system. ?room=<id> plays into a scratch room (rehearsals). */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -107,6 +111,18 @@ button.opt:disabled{opacity:.55;cursor:default}
 .hand .who{position:absolute;top:100%;left:-10px;right:-10px;text-align:center;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .hands .vs{font-family:var(--display);font-weight:900;font-size:22px;color:var(--muted)}
 @keyframes pump{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.hand svg .ink.facet,.hist svg .ink.facet{fill:none!important;stroke-width:4}
+/* rock, paper, scissors: every throw so far, yours over theirs, the winning throw in its player's colour */
+.hist{display:grid;grid-template-columns:auto repeat(10,1fr);gap:3px;margin-top:12px;align-items:center}
+.hist .hl{font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-right:6px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist .hl.me{color:var(--teal)} .hist .hl.them{color:var(--terracotta)}
+.hist .hc{aspect-ratio:1;border:2px solid var(--rule);background:var(--paper-soft);display:flex;align-items:center;justify-content:center;min-width:0}
+.hist .hc svg{width:86%;height:86%;display:block}
+.hist svg .ink{fill:var(--paper-soft);stroke:var(--ink);stroke-width:7;stroke-linejoin:round;stroke-linecap:round}
+.hist .hc.lose svg{opacity:.4}
+.hist .hc.won.me{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 20%,var(--card))}
+.hist .hc.won.them{border-color:var(--terracotta);background:color-mix(in srgb,var(--terracotta) 20%,var(--card))}
+.hist .hc.empty{border-style:dashed;background:none}
 .beats{font-weight:700;font-size:16px;color:var(--ink);margin-top:10px;min-height:1.4em;opacity:0;transition:opacity .4s}
 .beats.on{opacity:1}
 /* the inspection game: the matrix, with the round's cell lighting up */
@@ -173,7 +189,7 @@ const GAMES={
       wait:'Keep this page open. The game starts when your partner picks you.'},
   rps:{room:'m6-rps',title:'Rock, paper, scissors',n:10,codes:/^[rps]$/,
       opts:[{k:'r',n:'ROCK'},{k:'p',n:'PAPER'},{k:'s',n:'SCISSORS'}],
-      pairLead:'Same partner as the shootout, or pair up again',
+      pairLead:'Pair up with the person next to you',
       seats:['I’ll pick my partner','My partner picks me'],
       wait:'Keep this page open. The game starts when your partner picks you.'}
 };
@@ -188,6 +204,13 @@ const INSPECT_PAY={if:[-1,0],ik:[4,-8],tf:[0,0],tk:[-5,2]};
 const INSPECT_HEAD={if:['NOTHING TO FIND','ALL CLEAR'],ik:['CAUGHT IT','CAUGHT'],tf:['QUIET ROUND','QUIET ROUND'],tk:['MISSED IT','GOT AWAY WITH IT']};
 const regSeat=n=>n<=4?'a':'b';
 /* r beats s, s beats p, p beats r: 1 = first wins, -1 = second wins, 0 draw */
+/* the three throws, drawn on a 100 by 100 box: an angular stone with its
+   facets, a sheet with a folded corner, open scissors */
+const RPS_SH={
+  r:'<path class="ink" d="M12 70 L20 44 L38 26 L62 22 L82 34 L90 58 L80 78 L54 86 L28 84 Z"/><path class="ink facet" d="M20 44 L46 50 L62 22 M46 50 L82 34 M46 50 L54 86"/>',
+  p:'<path class="ink" d="M28 14 H62 L76 28 V86 H28 Z"/><path class="ink" d="M62 14 V28 H76"/>',
+  s:'<path class="ink" d="M34 30 L70 68"/><path class="ink" d="M66 30 L30 68"/><circle class="ink" cx="26" cy="78" r="9"/><circle class="ink" cx="74" cy="78" r="9"/>'
+};
 const rpsWin=(a,b)=>a===b?0:((a==='r'&&b==='s')||(a==='s'&&b==='p')||(a==='p'&&b==='r')?1:-1);
 
 let voter=null;
@@ -200,9 +223,35 @@ const app=document.getElementById('app'), q=document.getElementById('q'), st=doc
 const G=GAMES[qs.get('g')];
 const ROOM=G?(qs.get('room')||G.room):null;
 let name=null, roster=[], kitId=null;
-try{name=localStorage.getItem('gt-name');kitId=localStorage.getItem('gt-kit');}catch(_){}
-if(name)claimOnce();
-fetch('/teaching/exec/demo/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+/* the team pick went in the plain pass (Ryan, 20 Sep 2026): kitId stays null, every
+   player wears pk.js's default colours, and no kit line is sent. renderKit and
+   the kit wire are left in place, unreached. */
+try{name=localStorage.getItem('gt-name');}catch(_){}
+if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
+GT_NAMES.roster().then(n=>{roster=n;return roomReset();}).then(render); /* the attendee list, kept on the poll server and edited on the Poll Desk */
+/* a Poll Desk reset empties the room, and a phone that finds nothing of its
+   own game left there forgets it, so the page opens on its first screen
+   (Ryan, 24 Sep 2026: the phones kept their games through every reset).
+   Beat the keeper forgets its kicks once none of this name's lines is left;
+   a pair game forgets the pairing, and the results it has already shown,
+   once no line of the pair is left. A phone whose lines never reached the
+   room is not judged, and a server out of reach changes nothing. */
+function roomReset(){
+  if(!G||!ROOM)return Promise.resolve();
+  let solo=null,pair=null;
+  try{solo=JSON.parse(localStorage.getItem('m6-solo-'+ROOM)||'null');pair=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||'null');}catch(_){}
+  const soloHeld=!!(name&&solo&&Array.isArray(solo.kicks)&&solo.kicks.length);
+  const pairHeld=!!(pair&&pair.A&&pair.B&&pair.joined);
+  if(!soloHeld&&!pairHeld)return Promise.resolve();
+  const ask=answers().then(lines=>{
+    if(soloHeld&&!lines.some(t=>{const f=String(t).split('|');return f.length===3&&norm(f[0])===norm(name);}))
+      try{localStorage.removeItem('m6-solo-'+ROOM);}catch(_){}
+    if(pairHeld){const key=pairKey(pair.A,pair.B);
+      if(!parseLines(lines).some(m=>pairKey(m.A,m.B)===key))
+        try{localStorage.removeItem('m6-pair-'+ROOM);localStorage.removeItem('m6-ack-'+ROOM+'-'+key);}catch(_){}}
+  }).catch(()=>{});
+  return Promise.race([ask,new Promise(r=>setTimeout(r,4000))]);
+}
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
@@ -244,22 +293,26 @@ function render(){
   st.textContent='';
   if(!G){
     q.textContent='Which game is on the screen?';
-    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=pk">The penalty shootout</a><a class="pick" href="?g=vs">Boss battle</a><a class="pick" href="?g=rps">Rock, paper, scissors</a><a class="pick" href="?g=inspect">The inspection game</a></div>';
+    /* the shootout and the inspection game left the module on 22 Sep 2026 (m6/outtakes.html); ?g=pk and ?g=inspect still open them */
+    app.innerHTML='<div class="choices"><a class="pick" href="?g=solo">Beat the keeper</a><a class="pick" href="?g=rps">Rock, paper, scissors</a></div>';
     return;
   }
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
     name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   },app,{clean}));return;}
-  if(G!==GAMES.rps&&G!==GAMES.inspect&&!myKit()){renderKit();return;}
   if(G===GAMES.solo)return renderSolo();
   if(G===GAMES.vs)return renderVs();
   /* rejoin a pair this phone already sat in (the shootout pair carries into RPS) */
   let saved=null;
   try{saved=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||localStorage.getItem('m6-pair-'+G.room)||'null');}catch(_){}
   if(saved&&saved.A&&saved.B&&(norm(saved.seat==='a'?saved.A:saved.B)===norm(name))){
-    if(saved.seat==='a'&&!saved.joined){say(saved.A+'|'+saved.B+'|0|a|j').catch(()=>{});}
-    return renderPlay(saved.A,saved.B,saved.seat);
+    /* a pair keeps knowing it has joined across reloads: until 25 Sep 2026 a reload stored joined:false, so every
+       reload posted the join again, and after a Poll Desk reset that put the old pair straight back into the room */
+    if(saved.seat==='a'&&!saved.joined){say(saved.A+'|'+saved.B+'|0|a|j').then(()=>{
+      try{const x=JSON.parse(localStorage.getItem('m6-pair-'+ROOM)||'null');if(x&&x.A===saved.A&&x.B===saved.B){x.joined=true;localStorage.setItem('m6-pair-'+ROOM,JSON.stringify(x));}}catch(_){}
+    }).catch(()=>{});}
+    return renderPlay(saved.A,saved.B,saved.seat,saved.joined);
   }
   q.textContent=G.title;
   app.innerHTML='';
@@ -294,15 +347,17 @@ function renderName(title,done){
   q.textContent=title;
   app.innerHTML='';
   const list=document.createElement('div');list.className='choices';
-  roster.forEach(n=>{
+  const me=title==='Who are you?'?'':String(name||'').toLowerCase();   /* your own name is not on your partner list */
+  roster.filter(n=>n.toLowerCase()!==me).forEach(n=>{
     const b=document.createElement('button');b.className='pick';b.textContent=n;
-    b.addEventListener('click',()=>done(clean(n)));
+    /* a tapped name asks once (27 Sep 2026: a stray tap had made Kimberly "Laura") */
+    b.addEventListener('click',()=>GT_NAMES.confirm(app,clean(n),title==='Who are you?'?'Is that you?':'Is that your partner?',()=>done(clean(n)),()=>renderName(title,done)));
     list.appendChild(b);
   });
   app.appendChild(list);
   const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
   const inp=document.createElement('input');
-  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list?':'Type the first name';
   inp.autocomplete='off';
   const btn=document.createElement('button');btn.textContent='OK';
   const go=()=>{const v=clean(inp.value);if(v)done(v);};
@@ -366,7 +421,7 @@ function renderSolo(){
     go.addEventListener('click',()=>{
       game={kicks:[]};
       try{localStorage.setItem('m6-solo-'+ROOM,JSON.stringify(game));}catch(_){}
-      say(name+'|0|k-'+kitId).catch(()=>{});
+      if(kitId)say(name+'|0|k-'+kitId).catch(()=>{});
       renderSolo();
     });
     app.appendChild(go);
@@ -441,7 +496,7 @@ function renderVs(){
   app.appendChild(box);
   const stage=document.createElement('div');app.appendChild(stage);
   say(name+'|0|j').catch(()=>{});
-  say(name+'|0|k-'+kitId).catch(()=>{});
+  if(kitId)say(name+'|0|k-'+kitId).catch(()=>{});
   let shownKey='', posting=false, myKick={};
   const key='vs|'+norm(name);
   function parse(lines){
@@ -539,6 +594,10 @@ function renderWaitPick(){
   const hint=document.createElement('div');hint.className='lbl';hint.style.marginTop='12px';
   hint.textContent='They need to pick exactly “'+name+'”';
   app.appendChild(hint);
+  /* both chose "My partner picks me" (25 Sep 2026): nobody would ever pick, so after a while say how out */
+  const both=document.createElement('div');both.className='lbl';both.style.marginTop='8px';both.hidden=true;
+  both.textContent='Both waiting? One of you: \u2190 start over, then \u201cI\u2019ll pick my partner\u201d.';
+  app.appendChild(both);setTimeout(()=>{if(both.isConnected)both.hidden=false;},20000);
   app.appendChild(backBtn());
   const check=()=>{
     answers().then(lines=>{
@@ -564,7 +623,7 @@ function renderPlay(A,B,seat,joined){
   let sc=null;
   if(isPK){
     const b=sceneBox();sc=b.sc;b.box.style.marginTop='12px';app.appendChild(b.box);
-    say(A+'|'+B+'|0|'+seat+'|k-'+kitId).catch(()=>{});
+    if(kitId)say(A+'|'+B+'|0|'+seat+'|k-'+kitId).catch(()=>{});
   }
   const stage=document.createElement('div');stage.style.marginTop='12px';
   app.appendChild(stage);
@@ -606,6 +665,21 @@ function renderPlay(A,B,seat,joined){
     if(isAudit)return '<div class="score"><span class="me"><b>'+(t.mine>0?'+':'')+t.mine+'</b><small>you</small></span><span class="them"><b>'+(t.theirs>0?'+':'')+t.theirs+'</b><small>'+esc(them)+'</small></span></div>';
     if(isPK)return '<div class="score"><span class="me"><b>'+t.mine+'</b><small>your goals</small></span><span class="me"><b>'+t.mySaves+'</b><small>your saves</small></span><span class="them"><b>'+t.theirs+'</b><small>'+esc(them)+'’s goals</small></span><span class="them"><b>'+t.theirSaves+'</b><small>'+esc(them)+'’s saves</small></span></div>';
     return '<div class="score"><span class="me"><b>'+t.mine+'</b> you</span><span><b>'+t.draws+'</b> drawn</span><span class="them"><b>'+t.theirs+'</b> '+esc(them)+'</span></div>';
+  }
+  /* rock, paper, scissors: the throws so far, so a player can see what
+     they have leaned on and what they have not thrown in a while */
+  function histRow(per,upto){
+    const ico=x=>'<svg viewBox="0 0 100 100">'+RPS_SH[x]+'</svg>';
+    let me='<div class="hl me">You</div>', th='<div class="hl them">'+esc(them)+'</div>';
+    for(let i=1;i<=G.n;i++){
+      const k=per[i];
+      if(i>upto||!k||!k.a||!k.b){me+='<div class="hc empty"></div>';th+='<div class="hc empty"></div>';continue;}
+      const mx=k[seat], tx=k[seat==='a'?'b':'a'], w=rpsWin(mx,tx);
+      me+='<div class="hc me'+(w>0?' won':(w<0?' lose':''))+'">'+ico(mx)+'</div>';
+      th+='<div class="hc them'+(w<0?' won':(w>0?' lose':''))+'">'+ico(tx)+'</div>';
+    }
+    const d=document.createElement('div');d.className='hist';d.setAttribute('aria-label','Your throws and theirs so far');d.innerHTML=me+th;
+    return d;
   }
   function paintKits(n){
     if(!sc)return;
@@ -652,6 +726,7 @@ function renderPlay(A,B,seat,joined){
     });
     stage.appendChild(row);
     if(n>1){const t=tally(per,n-1);const sc2=document.createElement('div');sc2.innerHTML=scoreRow(t);stage.appendChild(sc2);}
+    if(n>1&&!isPK&&!isAudit)stage.appendChild(histRow(per,n-1));
   }
   let animatedN=0;
   function resultUI(n,per){
@@ -717,11 +792,7 @@ function renderPlay(A,B,seat,joined){
       const T=animatedN<n?1:0.3;animatedN=n;
       stage.innerHTML='';
       const lead=document.createElement('div');lead.className='lbl';lead.textContent='Throw '+n+' of '+G.n;stage.appendChild(lead);
-      const SH={
-        r:'<path class="ink" d="M24 62 C16 46 26 34 38 36 C40 22 56 18 64 28 C78 26 86 40 80 52 C90 62 82 78 68 78 L36 80 C24 80 20 72 24 62 Z"/>',
-        p:'<path class="ink" d="M28 14 H62 L76 28 V86 H28 Z"/><path class="ink" d="M62 14 V28 H76"/>',
-        s:'<path class="ink" d="M34 30 L70 68"/><path class="ink" d="M66 30 L30 68"/><circle class="ink" cx="26" cy="78" r="9"/><circle class="ink" cx="74" cy="78" r="9"/>'
-      };
+      const SH=RPS_SH;
       const hand=(x,cls2,who)=>'<div class="hand '+cls2+'"><svg class="fist" viewBox="0 0 100 100">'+SH.r+'</svg><svg class="shape" viewBox="0 0 100 100">'+SH[x]+'</svg><div class="who">'+esc(who)+'</div></div>';
       const hs=document.createElement('div');hs.className='hands';
       hs.innerHTML=hand(mineX,'me','you')+'<div class="vs">VS</div>'+hand(theirsX,'them',them);
@@ -766,16 +837,21 @@ function renderPlay(A,B,seat,joined){
         '<div class="sub">Ten throws</div>'+scoreRow(t);
     }
     stage.appendChild(card);
+    if(!isPK&&!isAudit)stage.appendChild(histRow(per,G.n));
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
     note.textContent='Response recorded. Results on the screen soon.';
     stage.appendChild(note);
   }
   function tick(){
     answers().then(lines=>{
+      /* both partners picked each other (25 Sep 2026): each phone posted its own join as the picker, so
+         both claimed seat a and no round could complete. The pair settles itself: the name that sorts
+         first keeps seat a, and the other phone becomes seat b of the same pair. */
+      if(seat==='a'&&norm(me)>norm(them)&&lines.some(t=>{const p=String(t).split('|').map(x=>x.trim());return p.length===5&&p[4]==='j'&&p[3]==='a'&&norm(p[0])===norm(them)&&norm(p[1])===norm(me);})){renderPlay(them,me,'b',true);return;}
       const s=state(parseLines(lines));
-      document.getElementById('rdlbl').textContent=(isPK?'KICK ':(isAudit?'ROUND ':'THROW '))+Math.min(s.n,G.n)+' OF '+G.n;
       /* show the last completed kick's result until it is acknowledged */
       const last=s.n-1;
+      document.getElementById('rdlbl').textContent=(isPK?'KICK ':(isAudit?'ROUND ':'THROW '))+(last>=1&&ackN<last?last:Math.min(s.n,G.n))+' OF '+G.n;
       let k;
       if(last>=1&&ackN<last)k='res:'+last;
       else if(s.n>G.n)k='final';

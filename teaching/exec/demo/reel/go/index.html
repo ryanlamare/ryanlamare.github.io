@@ -1,0 +1,488 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/demo/reel/reel.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Answer</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* Participant page for live polls in the exec sessions. Tap an option,
+   then LOCK IT IN: the answer is sent once and cannot be changed — the
+   two taps are there so a wrong finger can be fixed before it counts.
+   Results never show here — the reveal happens on the room screen. Poll definitions live in ./polls.json;
+   ?p=<id> picks a poll (every slide QR carries one), and a hand-typed
+   bare /go shows a pick-your-question list instead — so nothing ever
+   needs switching on. */
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+button.opt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+  font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:16px 18px;cursor:pointer}
+button.opt .sw{flex:none;width:34px;height:34px}
+button.opt .sw.ink{background:var(--ink)}
+button.opt .sw.red{background:var(--red)}
+button.opt.mine .sw{outline:3px solid var(--paper);outline-offset:-6px}
+button.opt.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+/* choice polls: pick, then lock — one send, no changes after */
+button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.1em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 18px;cursor:pointer;margin-top:4px}
+button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
+#opts.locked button.opt{pointer-events:none}
+#opts.locked button.opt:not(.mine){opacity:.4}
+.status{font-weight:600;font-size:15px;color:var(--muted);min-height:1.4em}
+.status b{color:var(--red)}
+/* write-in polls (type:"text"): send as many answers as you like */
+.sayrow{display:flex;gap:10px}
+.sayrow input{flex:1;font-family:var(--sans);font-weight:600;font-size:17px;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-width:0}
+.sayrow button{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.08em;
+  background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:14px 20px;cursor:pointer}
+.sayrow.long{flex-direction:column}
+.sayrow textarea{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);
+  background:var(--card);border:2.5px solid var(--ink);padding:14px 16px;min-height:120px;width:100%;resize:vertical}
+.sayrow.long button{align-self:flex-end}
+.sent{display:flex;flex-direction:column;gap:8px}
+/* the hand (type:"form"): each question is a card face to write on, the
+   same four suits and pips as the deck's cards */
+.pcard{position:relative;border:3px solid var(--suit);border-radius:14px;background:var(--paper-soft);padding:14px 16px 16px;box-shadow:0 4px 0 rgba(0,0,0,.07);display:flex;flex-direction:column;gap:8px;--suit:var(--red)}
+.pcard.s0{--suit:var(--red)} .pcard.s1{--suit:var(--teal)} .pcard.s2{--suit:var(--ochre)} .pcard.s3{--suit:var(--terracotta)}
+.pcard .suit{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--suit);padding-bottom:7px;border-bottom:2px solid var(--suit)}
+.pcard.s2 .suit{color:var(--ink)}
+.pcard .pq{font-weight:600;font-size:16px;line-height:1.35;color:var(--ink)}
+.pcard textarea{font-family:var(--sans);font-weight:600;font-size:17px;line-height:1.35;color:var(--ink);background:transparent;border:0;border-bottom:1.5px dashed var(--rule);padding:6px 0 8px;min-height:84px;width:100%;resize:vertical;outline:none}
+.pcard textarea:focus{border-bottom-color:var(--suit)}
+.pcard textarea::placeholder{color:var(--muted);font-weight:400;opacity:.8}
+.pcard .foot{display:flex;justify-content:space-between;align-items:flex-end;min-height:30px}
+.pcard .fcnt{font-weight:600;font-size:12px;color:var(--muted)}
+.pcard .pip{width:32px;height:32px;color:var(--suit)}
+.pcard.s2 .pip{color:var(--ink)}
+.pcard.done{opacity:.85}
+.sent .s{border:2px solid var(--ink);background:var(--card);font-weight:600;font-size:15px;padding:9px 14px}
+/* hand-typed /go: pick the question that is on the screen */
+button.pick,a.pick{display:block;text-align:left;width:100%;font-family:var(--sans);
+  background:var(--card);border:2.5px solid var(--ink);padding:13px 16px;cursor:pointer}
+button.pick .pm,a.pick .pm{display:block;font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--red);margin-bottom:4px}
+button.pick .pq,a.pick .pq{display:block;font-weight:600;font-size:15.5px;line-height:1.35;color:var(--ink)}
+/* chained polls: once you've answered, the next question is one tap away */
+button.pick.nextq{background:var(--red);border-color:var(--red);margin-top:6px;padding:22px 18px}
+button.pick.nextq .pm{color:var(--paper);font-size:16px;margin:0}
+button.pick.nextq .pm::after{content:" →"}
+/* the points system's participant view */
+.ptslink{align-self:flex-end;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  font-size:11px;color:var(--muted);text-decoration:none;margin-top:6px}
+.ptslink:hover{color:var(--red)}
+.links{display:flex;justify-content:flex-end;gap:22px}
+/* the game pages, listed under the polls on a hand-typed /go */
+.games{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.games .gh{font-weight:700;font-size:16px;color:var(--red);margin-bottom:2px}
+a.pick{text-decoration:none}
+/* the ranking poll (m4 Axelrod): tap the strategy you think finishes first,
+   then the next; the anchor sits in its given place; tap a placed one to
+   take it back; LOCK IT IN when the list is full */
+.rank{display:flex;flex-direction:column;gap:14px}
+.rank .order{display:flex;flex-direction:column;gap:8px}
+.rank .slot{display:flex;align-items:center;gap:14px;min-height:40px;border:2.5px dashed var(--rule);padding:0 14px 0 0}
+.rank .slot.filled,.rank .slot.anchor{min-height:58px}
+.rank .slot .n{flex:none;width:44px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:24px;color:var(--muted)}
+.rank .slot .body{flex:1;min-width:0;padding:8px 0;display:flex;flex-direction:column;justify-content:center}
+.rank .slot.filled{border:2.5px solid var(--ink);background:var(--card);cursor:pointer}
+.rank .slot.filled .n{background:var(--ink);color:var(--paper)}
+.rank .slot.anchor{border:2.5px solid var(--rule);background:var(--paper-soft)}
+.rank .slot.anchor .n{background:var(--rule);color:var(--paper)}
+.rank .slot.anchor .body{opacity:.75}
+.rank .rn{font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
+.rank .rd{font-weight:500;font-size:13.5px;line-height:1.3;color:var(--muted);margin-top:2px}
+.rank .pool{display:flex;flex-direction:column;gap:8px}
+.rank button.opt{display:block;padding:12px 14px}
+.rank button.opt .rn,.rank button.opt .rd{display:block}
+.rank.locked .slot.filled{cursor:default}
+</style>
+</head><body>
+<svg style="display:none" aria-hidden="true">
+<symbol id="pip0" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="13" cy="9" r="5"/><path d="M5 18 Q13 14 21 18 L18 33 L8 33 Z"/><circle cx="29" cy="9" r="5"/><path d="M21 18 Q29 14 37 18 L34 33 L24 33 Z" opacity=".55"/></g></symbol>
+<symbol id="pip1" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="8" cy="8" r="4"/><path d="M2 15 Q8 12 14 15 L12 26 L4 26 Z"/><circle cx="20" cy="8" r="4"/><path d="M14 15 Q20 12 26 15 L24 26 L16 26 Z"/><circle cx="32" cy="8" r="4"/><path d="M26 15 Q32 12 38 15 L36 26 L28 26 Z"/><circle cx="14" cy="26" r="4"/><path d="M8 33 Q14 30 20 33 L18 40 L10 40 Z"/><circle cx="26" cy="26" r="4"/><path d="M20 33 Q26 30 32 33 L30 40 L22 40 Z"/></g></symbol>
+<symbol id="pip2" viewBox="0 0 40 40"><text x="20" y="34" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="38" fill="currentColor">?</text></symbol>
+<symbol id="pip3" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="22" cy="14" rx="15" ry="11"/><circle cx="9" cy="28" r="3"/><circle cx="4" cy="35" r="1.8"/></g><g fill="currentColor"><circle cx="22" cy="10" r="3.6"/><path d="M16 20 Q22 17 28 20 L27 23 L17 23 Z"/></g></symbol>
+</svg>
+<div class="wrap">
+  <div class="tag"><i></i>APPLIED GAME THEORY · LIVE</div>
+  <h1 id="q">&hellip;</h1>
+  <div id="opts"></div>
+  <div class="status" id="status"></div>
+  <div class="links"><a class="ptslink" id="dealsLink" href="deals/" hidden>THE TWO DEALS &rarr;</a><a class="ptslink" href="points/">MY POINTS &rarr;</a></div>
+</div>
+<script src="names.js"></script>
+<script src="scores.js"></script>
+<script>
+const API='https://gt-poll.rlamare.workers.dev';
+const qs=new URLSearchParams(location.search);
+let voter=null;
+try{
+  voter=localStorage.getItem('gt-voter');
+  if(!voter){voter=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+    localStorage.setItem('gt-voter',voter);}
+}catch(_){voter='v'+Math.random().toString(36).slice(2,12)+Date.now().toString(36);}
+let pollId=null, CFG=null;
+fetch('polls.json').then(r=>r.json()).then(cfg=>{
+  CFG=cfg;
+  const wanted=qs.get('p');
+  if(wanted&&cfg.polls[wanted]){renderPoll(cfg.polls[wanted],wanted);}
+  else{renderChooser(cfg);}
+}).catch(()=>{document.getElementById('q').textContent='Could not load the poll — check the address.';});
+/* a poll with "next" chains to the following question once this one is
+   answered — one scan carries a whole session */
+function showNext(poll){
+  if(!poll.next||!CFG||!CFG.polls[poll.next])return;
+  if(document.querySelector('.nextq'))return;
+  const nid=poll.next, np=CFG.polls[nid];
+  const b=document.createElement('button');
+  b.className='pick nextq';
+  b.innerHTML='<span class="pm">Next question</span>'; /* the question itself waits for the tap */
+  b.addEventListener('click',()=>{
+    history.replaceState(null,'','?p='+nid);
+    document.getElementById('status').textContent='';
+    renderPoll(np,nid);
+  });
+  const wrap=document.querySelector('.wrap');wrap.insertBefore(b,wrap.querySelector('.links')); /* above the points link */
+}
+function renderChooser(cfg){
+  document.getElementById('dealsLink').hidden=true;
+  document.getElementById('q').textContent='Which question is on the screen?';
+  const opts=document.getElementById('opts');
+  opts.innerHTML='';
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='10px';
+  const paired=new Set(Object.values(cfg.polls).map(p=>p.pair).filter(Boolean));
+  Object.entries(cfg.polls).forEach(([id,poll])=>{
+    if(paired.has(id))return; /* shown on its partner's screen */
+    const b=document.createElement('button');
+    b.className='pick';
+    const mod=id.match(/^m(\d+)/);
+    b.innerHTML='<span class="pm">'+(mod?'Module '+mod[1]:'Poll')+'</span><span class="pq"></span>';
+    b.querySelector('.pq').textContent=poll.q;
+    b.addEventListener('click',()=>{
+      history.replaceState(null,'','?p='+id);
+      document.getElementById('status').textContent='';
+      renderPoll(poll,id);
+    });
+    opts.appendChild(b);
+  });
+  /* the game pages, so ryanlamare.com/go is the one address anyone ever types */
+  const gl=document.createElement('div');gl.className='games';
+  gl.innerHTML='<div class="gh">Or, which game is on the screen?</div>';
+  GAMES.forEach(([mod,label,href])=>{
+    const a=document.createElement('a');a.className='pick';a.href=href;
+    a.innerHTML='<span class="pm">Module '+mod+'</span><span class="pq"></span>';
+    a.querySelector('.pq').textContent=label;
+    gl.appendChild(a);
+  });
+  opts.appendChild(gl);
+}
+const GAMES=[
+  [1,'The median dog, the number game, the offers','/teaching/exec/demo/reel/m1/game/'],
+  [2,'The centipede, last card, the ultimatum','/teaching/exec/demo/reel/m2/game/'],
+  [2,'Your branch on the room’s tree','/teaching/exec/demo/reel/m2/tree/'],
+  [3,'The engine game','/teaching/exec/demo/reel/m3/game/'],
+  [3,'A zero-sum game from your world: your engine','/teaching/exec/demo/reel/m3/engines/'],
+  [4,'Price Wars: the practice week, then the game','/teaching/exec/demo/reel/m4/game/'],
+  [4,'Your own prisoner’s dilemma: your cell, and the way out','/teaching/exec/demo/reel/m4/pds/'],
+  [5,'The investment game','/teaching/exec/demo/reel/m5/game/'],
+  [5,'A coordination game from your world: your window','/teaching/exec/demo/reel/m5/games/'],
+  [6,'Penalties, the inspection game, rock paper scissors','/teaching/exec/demo/reel/m6/game/'],
+  [6,'Unpredictability in your world: your ball in the mix','/teaching/exec/demo/reel/m6/world/'],
+  [7,'Chicken, split or steal, the auction','/teaching/exec/demo/reel/m7/game/'],
+  [7,'Strategic moves in your world: your ship','/teaching/exec/demo/reel/m7/world/'],
+  [8,'The car market, Hidden Agenda','/teaching/exec/demo/reel/m8/game/'],
+];
+/* a "named" poll makes sure this phone has claimed a class name first —
+   the join key for the points system. One picker, once per phone. */
+let myName=null;
+try{myName=localStorage.getItem('gt-name');}catch(_){}
+function claimOnce(){
+  let done=false;
+  try{done=localStorage.getItem('gt-claimed')===myName;}catch(_){}
+  if(done||!myName)return;
+  GT_SCORES.claimName(myName,voter).then(r=>{
+    if(r.ok){try{localStorage.setItem('gt-claimed',myName);}catch(_){}}
+  }).catch(()=>{});
+}
+function renderNamePicker(poll,id){
+  document.getElementById('q').textContent='First, who are you?';
+  const opts=document.getElementById('opts');
+  opts.innerHTML='';
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='10px';
+  const clean=n=>n.trim().replace(/\s+/g,' ').slice(0,40);
+  const commit=n=>{
+    myName=n;
+    try{localStorage.setItem('gt-name',myName);}catch(_){}
+    claimOnce();
+    document.getElementById('status').textContent='';
+    renderPoll(poll,id);
+  };
+  const pick=n=>{const v=clean(n);if(v)GT_NAMES.guard(v,voter,commit,opts,{clean});};
+  fetch('roster.json').then(r=>r.json()).then(d=>(d.names||[])).catch(()=>[]).then(names=>{
+    names.forEach(n=>{
+      const b=document.createElement('button');
+      b.className='pick';
+      b.innerHTML='<span class="pq"></span>';
+      b.querySelector('.pq').textContent=n;
+      b.addEventListener('click',()=>pick(n));
+      opts.appendChild(b);
+    });
+    const row=document.createElement('div');row.className='sayrow';
+    if(names.length)row.style.marginTop='6px';
+    const inp=document.createElement('input');
+    inp.maxLength=40;inp.placeholder=names.length?'Not on the list? Type your name':'Type your first name';
+    inp.autocomplete='off';
+    const btn=document.createElement('button');btn.textContent='THAT’S ME';
+    btn.addEventListener('click',()=>pick(inp.value));
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pick(inp.value);}});
+    row.appendChild(inp);row.appendChild(btn);
+    opts.appendChild(row);
+  });
+}
+function renderPoll(poll,id){
+  pollId=id;
+  document.getElementById('opts').classList.remove('locked');
+  document.getElementById('dealsLink').hidden=!poll.deals; /* the two deals belong only to the case polls */
+  document.querySelectorAll('.nextq').forEach(b=>b.remove());
+  if(poll.named&&!myName){renderNamePicker(poll,id);return;}
+  if(poll.named)claimOnce();
+  document.getElementById('q').textContent=poll.q;
+  const opts=document.getElementById('opts');
+  opts.innerHTML='';
+  if(poll.type==='text'&&poll.pair&&CFG&&CFG.polls[poll.pair]){setupPair(opts,poll,CFG.polls[poll.pair],poll.pair);return;}
+  if(poll.type==='form'){setupForm(opts,poll);return;}
+  if(poll.type==='rank'){setupRank(opts,poll);return;}
+  if(poll.type==='text'){setupText(opts,poll);return;}
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='12px';
+  let picked=null;
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
+  poll.options.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML=(o.c?'<span class="sw '+(o.c==='red'?'red':'ink')+'"></span>':'')+'<span></span>';
+    b.lastChild.textContent=o.t;
+    b.addEventListener('click',()=>{
+      picked=i;
+      document.querySelectorAll('.opt').forEach(x=>x.classList.remove('mine'));
+      b.classList.add('mine');
+      lock.disabled=false;
+    });
+    opts.appendChild(b);
+  });
+  opts.appendChild(lock);
+  lock.addEventListener('click',()=>{if(picked!==null)vote(picked,lock,poll);});
+  let mine=null;
+  try{mine=localStorage.getItem('gt-vote-'+pollId);}catch(_){}
+  if(mine!==null&&opts.children[+mine]){
+    opts.children[+mine].classList.add('mine');lockDone(poll);
+    /* a reset room forgets the vote: then this phone may answer again */
+    fetch(API+'/p/'+pollId+'/votes').then(r=>r.json()).then(d=>{
+      if(pollId!==id||(d.votes&&d.votes[voter]!==undefined))return;
+      try{localStorage.removeItem('gt-vote-'+pollId);}catch(_){}
+      document.getElementById('status').textContent='';
+      renderPoll(poll,id);
+    }).catch(()=>{});
+  }
+}
+/* the locked state: the chosen option stays red, the rest fade, the button goes */
+const LOCKED='<b>Response locked in.</b> Results on the screen soon.';
+function lockDone(poll){
+  const opts=document.getElementById('opts');
+  opts.classList.add('locked');
+  const lk=opts.querySelector('button.lock');if(lk)lk.remove();
+  document.getElementById('status').innerHTML=LOCKED;
+  showNext(poll);
+}
+const RECORDED='<b>Response recorded.</b> Results on the screen soon.';
+/* the ranking poll: one line "rank|i,i,i,i,i,i" (option indexes, best first,
+   the anchor left out) sent once through /say; the order is kept on the
+   phone, and a room reset (no line from this phone any more) unlocks it */
+function setupRank(opts,poll){
+  const id=pollId, st=document.getElementById('status');
+  const anchor=poll.anchor||null, at=anchor?anchor.at:0, n=poll.options.length+(anchor?1:0);
+  const slots=[];for(let k=1;k<=n;k++)if(k!==at)slots.push(k);
+  let placed=[], locked=null;
+  try{const m=localStorage.getItem('gt-rank-'+id);if(m)locked=m.split(',').map(Number);}catch(_){}
+  opts.style.display='block';opts.innerHTML='';
+  const box=document.createElement('div');box.className='rank';opts.appendChild(box);
+  const order=document.createElement('div');order.className='order';
+  const pool=document.createElement('div');pool.className='pool';
+  const lock=document.createElement('button');lock.className='lock';lock.textContent='LOCK IT IN';lock.disabled=true;
+  box.append(order,pool,lock);
+  function render(){
+    const list=locked||placed, at_={};list.forEach((o,i)=>at_[slots[i]]=o);
+    order.innerHTML='';
+    for(let k=1;k<=n;k++){
+      const d=document.createElement('div');const o=at_[k];
+      const isA=anchor&&k===at;
+      d.className='slot'+(isA?' anchor':(o===undefined?'':' filled'));
+      const nn=document.createElement('div');nn.className='n';nn.textContent=k;d.appendChild(nn);
+      const body=document.createElement('div');body.className='body';
+      const item=isA?anchor:(o===undefined?null:poll.options[o]);
+      if(item){const a=document.createElement('div');a.className='rn';a.textContent=item.t;const b=document.createElement('div');b.className='rd';b.textContent=item.d||'';body.append(a,b);}
+      d.appendChild(body);
+      if(!isA&&o!==undefined&&!locked)d.addEventListener('click',()=>{placed=placed.filter(x=>x!==o);render();});
+      order.appendChild(d);
+    }
+    pool.innerHTML='';
+    if(!locked){
+      poll.options.forEach((op,i)=>{if(placed.includes(i))return;
+        const b=document.createElement('button');b.className='opt';b.type='button';
+        const a=document.createElement('span');a.className='rn';a.textContent=op.t;const g=document.createElement('span');g.className='rd';g.textContent=op.d||'';b.append(a,g);
+        b.addEventListener('click',()=>{placed.push(i);render();});pool.appendChild(b);});
+    }
+    lock.disabled=!!locked||placed.length<slots.length;
+    box.classList.toggle('locked',!!locked);
+    if(locked){lock.remove();}
+  }
+  lock.addEventListener('click',()=>{
+    if(placed.length<slots.length)return;
+    lock.disabled=true;st.textContent='Sending…';
+    const line='rank|'+placed.join(',');
+    fetch(API+'/p/'+id+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:voter})})
+    .then(r=>{if(!r.ok)throw r.status;locked=placed.slice();try{localStorage.setItem('gt-rank-'+id,locked.join(','));}catch(_){}
+      st.innerHTML=LOCKED;render();showNext(poll);})
+    .catch(()=>{lock.disabled=false;st.textContent='That didn’t send — try again.';});
+  });
+  render();
+  if(locked){
+    st.innerHTML=LOCKED;showNext(poll);
+    fetch(API+'/p/'+id+'/entries').then(r=>r.json()).then(d=>{
+      if(pollId!==id||(d.entries||[]).some(e=>e.v===voter))return;
+      try{localStorage.removeItem('gt-rank-'+id);}catch(_){}
+      st.textContent='';renderPoll(poll,id);
+    }).catch(()=>{});
+  }
+}
+function setupText(opts,poll){
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
+  const st=document.getElementById('status');
+  let said=false;
+  try{said=poll.once&&localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
+  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  const row=document.createElement('div');row.className='sayrow'+(poll.long?' long':'');
+  /* a "long" poll wants a sentence or two: a bigger box, Enter makes a new line, the button sends */
+  const inp=document.createElement(poll.long?'textarea':'input');
+  if(poll.long)inp.rows=3;
+  inp.maxLength=poll.long?200:80;inp.placeholder=poll.ph||(poll.long?'Type a sentence or two…':'Type an example…');inp.autocomplete='off';
+  const btn=document.createElement('button');btn.textContent='SEND';
+  row.appendChild(inp);row.appendChild(btn);opts.appendChild(row);
+  const sent=document.createElement('div');sent.className='sent';opts.appendChild(sent);
+  function send(){
+    const t=inp.value.trim();
+    if(!t)return;
+    btn.disabled=true;st.textContent='Sending…';
+    fetch(API+'/p/'+pollId+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:t,v:voter})})
+    .then(r=>{if(!r.ok)throw r.status;
+      const s=document.createElement('div');s.className='s';s.textContent=t;
+      sent.prepend(s);
+      if(poll.once){
+        try{localStorage.setItem('gt-said-'+pollId,'1');}catch(_){}
+        row.remove();
+        st.innerHTML=RECORDED;
+      }else{
+        inp.value='';inp.focus();
+        st.innerHTML='<b>Sent.</b> Keep them coming — send as many as you can think of.';
+      }
+      showNext(poll);})
+    .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';})
+    .finally(()=>{btn.disabled=false;});
+  }
+  btn.addEventListener('click',send);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&(!poll.long||e.metaKey||e.ctrlKey)){e.preventDefault();send();}});
+  inp.focus();
+}
+/* a "form": several short answers on ONE screen (the m1 hand: four cards
+   from one group on one phone), one LOCK IT IN. Each field goes to the room
+   as its own line, "k‖text", so the Worker's 200-character cap holds per
+   card; the deck reads /entries and groups the lines by phone. Answers lock:
+   the phone never offers a change afterwards. */
+function setupForm(opts,poll){
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='16px';
+  const st=document.getElementById('status');
+  let said=false;
+  try{said=localStorage.getItem('gt-said-'+pollId)==='1';}catch(_){}
+  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  const max=poll.max||110, inputs=[], cards=[];
+  poll.fields.forEach(([label,q],i)=>{
+    const card=document.createElement('div');card.className='pcard s'+i;
+    card.innerHTML='<div class="suit"></div><div class="pq"></div>';
+    card.querySelector('.suit').textContent=label;card.querySelector('.pq').textContent=q;
+    const ta=document.createElement('textarea');ta.rows=3;ta.maxLength=max;ta.placeholder='Write on the card…';ta.autocomplete='off';
+    const foot=document.createElement('div');foot.className='foot';
+    const cnt=document.createElement('div');cnt.className='fcnt';cnt.textContent='0 / '+max;
+    foot.innerHTML='<svg class="pip" viewBox="0 0 40 40"><use href="#pip'+i+'"/></svg>';
+    foot.insertBefore(cnt,foot.firstChild);
+    ta.addEventListener('input',()=>{cnt.textContent=ta.value.length+' / '+max;});
+    card.appendChild(ta);card.appendChild(foot);
+    opts.appendChild(card);inputs.push(ta);cards.push(card);
+  });
+  const row=document.createElement('div');row.className='sayrow';
+  const btn=document.createElement('button');btn.textContent='LOCK IT IN';btn.style.flex='1';
+  row.appendChild(btn);opts.appendChild(row);
+  function send(){
+    const vals=inputs.map(i=>i.value.trim());
+    if(vals.some(v=>!v)){st.textContent='Fill all four cards, then lock it in.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    const post=(k,t)=>fetch(API+'/p/'+pollId+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:(k+1)+'‖'+t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+    vals.reduce((chain,t,k)=>chain.then(()=>post(k,t)),Promise.resolve()).then(()=>{
+      try{localStorage.setItem('gt-said-'+pollId,'1');}catch(_){}
+      inputs.forEach(i=>i.disabled=true);cards.forEach(c=>c.classList.add('done'));row.remove();
+      st.innerHTML='<b>Your hand is in.</b> It lands on the screen face down.';
+      showNext(poll);})
+    .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';btn.disabled=false;});
+  }
+  btn.addEventListener('click',send);
+  inputs[0].focus();
+}
+/* a "pair": two write-in questions on ONE screen, one SEND, each answer
+   going to its own room — the questions are meant to be read together */
+function setupPair(opts,poll,poll2,id2){
+  opts.style.display='flex';opts.style.flexDirection='column';opts.style.gap='14px';
+  const st=document.getElementById('status');
+  let said=false;
+  try{said=localStorage.getItem('gt-said-'+pollId)==='1'&&localStorage.getItem('gt-said-'+id2)==='1';}catch(_){}
+  if(said){st.innerHTML=RECORDED;showNext(poll);return;}
+  const mk=(ph)=>{const i=document.createElement('input');i.maxLength=80;i.placeholder=ph||'Type an answer…';i.autocomplete='off';return i;};
+  const inp1=mk(poll.ph), inp2=mk(poll2.ph);
+  const wrap=i=>{const w=document.createElement('div');w.className='sayrow';w.appendChild(i);return w;};
+  const q2=document.createElement('h1');q2.textContent=poll2.q;q2.style.marginTop='6px';
+  const row=document.createElement('div');row.className='sayrow';
+  const btn=document.createElement('button');btn.textContent='SEND BOTH';btn.style.flex='1';
+  row.appendChild(btn);
+  opts.appendChild(wrap(inp1));opts.appendChild(q2);opts.appendChild(wrap(inp2));opts.appendChild(row);
+  function send(){
+    const t1=inp1.value.trim(), t2=inp2.value.trim();
+    if(!t1||!t2){st.textContent='Answer both, then send.';return;}
+    btn.disabled=true;st.textContent='Sending…';
+    const post=(id,t)=>fetch(API+'/p/'+id+'/say',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({t:t,v:voter})}).then(r=>{if(!r.ok)throw r.status;});
+    Promise.all([post(pollId,t1),post(id2,t2)]).then(()=>{
+      try{localStorage.setItem('gt-said-'+pollId,'1');localStorage.setItem('gt-said-'+id2,'1');}catch(_){}
+      [inp1,inp2].forEach(i=>i.disabled=true);row.remove();
+      st.innerHTML=RECORDED;
+      showNext(poll);})
+    .catch(code=>{st.textContent=code===429?'That’s plenty from one phone — thank you!':'That didn’t send — try again.';btn.disabled=false;});
+  }
+  btn.addEventListener('click',send);
+  [inp1,inp2].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}}));
+  inp1.focus();
+}
+function vote(i,lock,poll){
+  const st=document.getElementById('status');
+  lock.disabled=true;
+  st.textContent='Sending…';
+  fetch(API+'/p/'+pollId+'/vote',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({o:i,v:voter})})
+  .then(r=>{if(!r.ok)throw 0;
+    try{localStorage.setItem('gt-vote-'+pollId,String(i));}catch(_){}
+    lockDone(poll);})
+  .catch(()=>{lock.disabled=false;st.textContent='That didn’t send — try again.';});
+}
+</script>
+</body></html>

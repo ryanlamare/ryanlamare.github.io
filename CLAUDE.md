@@ -163,15 +163,17 @@ every poll-server call from `rooms.json` (every room as it stood at the end of
 day two) and drops every write, so a Poll Desk reset changes nothing here.
 Don't edit the copies or sync them with `gt/`; there is no `?edit` on them.
 
-**`teaching/exec/demo/` is a sandbox for family and friends** (2 Oct 2026): the
-whole programme as built on 19 Sep (tag `gt-full-production-2026-09-19`, every
-scene, avatar and game) behind a hand-written landing page, with the outtakes
-and a link to Pavilion. Each page loads `demo.js` first, which sends every
-poll-server call to the same room with `-demo` on the end, so play there never
-touches a real session's rooms; its own `poll-desk/` resets them. The QR codes
-were regenerated to point inside `demo/`, and the name picker reads
-`demo/go/roster.json`. Like `exec/rrpf/`, it is a snapshot: don't sync it with
-`gt/`.
+**`teaching/exec/demo/` is a sandbox for family and friends** (2 Oct 2026), a
+hand-written landing page with two halves. **The class** (`demo/m1`–`m8`, with
+their outtakes) is `exec/gt` as RRPF had it, playable: `demo.js` sends every
+poll-server call to the same room with `-demo` on the end and answers the
+attendee list from `demo/names.json`. **The blooper reel** (`demo/reel/`) is the
+19 Sep full build (tag `gt-full-production-2026-09-19`), the only place the
+scenes the plain pass removed still run; the landing page opens six of them,
+and `reel/reel.js` uses `-reel` rooms with names from `reel/go/roster.json`.
+Neither half touches a real session's rooms, and each has its own `poll-desk/`.
+The QR codes were regenerated to point inside each half. Like `exec/rrpf/`, it
+is a snapshot: don't sync it with `gt/`.
 
 Everything under `teaching/` carries `<meta name="robots" content="noindex,nofollow">`,
 including the decks. `robots.txt` does **not** disallow the path, and that is on

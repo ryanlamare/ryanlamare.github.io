@@ -4,6 +4,7 @@
 <title>Applied Game Theory · Module 5 — Coordination Games</title>
 <link rel="stylesheet" href="/brand.css">
 <link rel="stylesheet" href="/teaching/exec/demo/deck.css">
+<script>/* a deck opened at #N (a reload, or back from the m3 calendar or the Gazette) shows slide N from the first paint instead of the cover fading out first (25 Sep 2026); deck.js removes this once it has read the address */(function(){var m=/^#(\d+)/.exec(location.hash);if(!m||m[1]==="0")return;var s=document.createElement("style");s.id="deckjump";s.textContent=".slide.active{opacity:0!important;visibility:hidden!important}.slide[data-i=\""+m[1]+"\"]{opacity:1!important;visibility:visible!important;transition:none!important}";document.head.appendChild(s);})();</script>
 <style>
 /* Module-5 widgets (shared components live in deck.css). The live spine runs
    through gt-poll: the common knowledge quiz runs self-paced on
@@ -12,11 +13,10 @@
    two-round repeated stag hunt (one volunteer after round one) played from game/ under each player's name;
    the two vote games (whose system, the hub lease) run from
    tapas/ in two rounds with one volunteer's pitch in between; the closing
-   exercise (games/, room m5-games) is one coordination game from each
-   person's world, lit as one window of an aircraft. Scoring (in
-   /go/scores.js) is the quiz at a point a cleared question, up to 10; the investment game, the
-   vote games and the closing exercise are played for their lessons, not
-   for points. Guess two-thirds was cut on 17 Sep 2026 (outtakes.html).
+   exercise is one plain question slide, talked through out loud,
+   no phones (the plain pass, 20 Sep 2026: the aircraft, Top of the table
+   and the /go/scores.js league are gone; the quiz is scored by each person
+   keeping their own count as the boards are walked). Guess two-thirds was cut on 17 Sep 2026 (outtakes.html).
    Every live slide falls back to marked DEMO DATA when the Worker is unreachable. */
 
 /* clip beside text, click-to-load (keeps YouTube's title off screen) */
@@ -28,6 +28,8 @@
 .clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
 .clipframe.sm .clipcover{width:560px;height:315px}
+/* a clip beside three long bullets (Challenger): the text needs the width */
+.clipframe.xs iframe,.clipframe.xs .clipcover{width:480px;height:270px}
 .clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
 .clipcover .bigplay svg{width:24px;height:24px;display:block}
 .clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
@@ -38,6 +40,10 @@
    player's colour, red box on the equilibrium cell */
 .mx .cell .pa,.mx .cell .pb{position:relative;display:inline-block}
 .mx .cell .circ::after{content:"";position:absolute;inset:-5px -10px;border:3.5px solid currentColor;border-radius:50%;pointer-events:none}
+.brx .cell .pc{margin:0 .6em}   /* room for a ring either side of the comma */
+/* best response, one line at a time (28 Sep 2026): the column or row being read stays full strength, the rest fades */
+.brx .cell{transition:opacity .3s}
+.brx .cell.brdim{opacity:.28}
 .mkey{display:flex;gap:26px;justify-content:center;flex-wrap:wrap}
 .mkey .k{display:flex;align-items:center;gap:10px;font-weight:500;font-size:16px;color:var(--muted)}
 .mkey .sw{width:22px;height:22px;background:var(--card);flex:none}
@@ -98,6 +104,7 @@
 
 /* live poll join chrome + the write-in wall (Module-4 idioms) */
 .qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .5s}
+.quizpanel .joinchip .qr{width:196px;height:196px}   /* the quiz panel carries the timer and the counters too: a smaller code keeps them off the progress bar */
 .faded{opacity:.06 !important;pointer-events:none}
 #ycbul,#ycqr{transition:opacity .5s}
 .wall{position:absolute;left:70px;right:70px;top:176px;bottom:80px;display:flex;flex-wrap:wrap;
@@ -135,23 +142,23 @@
 .stopnote b{color:var(--red);font-weight:700}
 /* the closing tiles, as m2 and m3 close (lifted from the m3 deck) */
 .learn .tiles{top:246px;gap:22px;left:64px;right:64px}
+/* Bargaining as a coordination game (28 Sep 2026) */
+ul.bullets.bgbul{position:absolute;left:96px;right:96px;top:202px;margin:0;max-width:none}
+ul.bullets.bgbul li{font-size:21px;margin-top:8px}
+.bgpair{position:absolute;left:96px;right:96px;top:322px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.bgcard{border:2.5px solid var(--ink);background:var(--card);padding:12px 18px}
+.bgk{font-weight:700;font-size:13px;letter-spacing:.12em;color:var(--red)}
+.bgt{font-weight:600;font-size:19px;line-height:1.35;margin-top:4px}
+.bghead{position:absolute;left:96px;right:96px;top:442px;font-weight:700;font-size:21px;color:var(--ink)}
+.bglev{position:absolute;left:96px;right:96px;top:480px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.bgl{border-top:4px solid var(--red);padding-top:10px}
+.bgn{font-weight:800;font-size:18px;color:var(--ink)}
+.bgd{font-weight:500;font-size:16px;line-height:1.4;color:var(--muted);margin-top:4px}
 .learn .tile{width:206px;gap:14px}
 .learn .tile .pgwrap{height:96px}
 .learn .tile .pgwrap .pg{height:92px}
 .learn .tile .lbl{white-space:normal;font-size:15.5px}
 .learn .tile .sent{font-size:15.5px;max-width:none}
-
-/* the module scoreboard: five rows, revealed fifth place first */
-.scb{width:100%;max-width:980px;display:flex;flex-direction:column;gap:12px}
-.scbrow{display:grid;grid-template-columns:64px 1fr 150px 120px;align-items:center;gap:14px;
-  border:2.5px solid var(--ink);background:var(--card);padding:12px 22px;position:relative}
-.scbrow.head{border-color:transparent;background:transparent;padding-top:0;padding-bottom:0}
-.scbrow.head .pv,.scbrow.head .tt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--muted)}
-.scbrow .rk{font-family:var(--display);font-weight:900;font-size:34px;color:var(--red)}
-.scbrow .nm{font-weight:700;font-size:23px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.scbrow .pv{font-weight:600;font-size:20px;color:var(--muted);text-align:right}
-.scbrow .tt{font-family:var(--display);font-weight:900;font-size:30px;color:var(--ink);text-align:right}
-.scbrow:nth-child(2) .tt{color:var(--red)}
 
 /* pictogram tiles (the m3 idiom) and the five example tiles */
 .gtiles{position:absolute;left:96px;right:96px;top:250px;display:flex;justify-content:center;gap:52px;align-items:flex-start}
@@ -173,6 +180,18 @@
 .ba .station .slbl{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:18px;color:var(--ink);line-height:1.2}
 .ba .station.now .slbl{color:var(--red)}
 .ba .arrow{font-size:72px;color:var(--red);line-height:1}
+.ba .station .ssub{font-weight:600;font-size:15px;color:var(--muted);margin-top:-12px}
+.ba.nummi{gap:18px}
+.ba.nummi .station{width:150px}
+.ba.nummi .arrow{font-size:56px}
+/* Coordination games are everywhere: the tiles of Module 4's Prisoner's dilemmas are everywhere */
+.pdgrid{position:absolute;left:64px;right:64px;top:222px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;justify-items:stretch}
+.pdt{display:grid;grid-template-columns:40px 1fr;grid-template-rows:auto auto 1fr;column-gap:12px;row-gap:2px;background:var(--card);border:2px solid var(--ink);padding:10px 14px;text-decoration:none;color:var(--ink);min-height:150px}
+.pdt:hover{box-shadow:0 4px 0 var(--red)}
+.pdt svg{grid-row:1 / span 2;width:40px;height:40px}
+.pdt .pdtl{font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);align-self:center}
+.pdt .pdtx{grid-column:1 / span 2;font-weight:500;font-size:16px;line-height:1.3;color:var(--ink);margin-top:6px}
+.pdt .pdts{grid-column:1 / span 2;align-self:end;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-top:6px}
 
 /* story props beside the bullets: the animals, the café signs, the posters */
 .props{flex:none;width:400px;align-self:center;display:flex;flex-direction:column;gap:18px;align-items:center}
@@ -203,7 +222,9 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 /* the vote games: rules slide (bullets left, QR + matrix right) and
    the two-round board (a crowd per side per option, round 1 beside round 2) */
 .tpside{flex:none;display:flex;flex-direction:column;align-items:center;gap:20px;align-self:center}
-.tpqr{width:110px;height:110px;flex:none;border:2.5px solid var(--ink);background:#fff;padding:5px}
+.tpqr{width:160px;height:160px;flex:none;border:2.5px solid var(--ink);background:#fff;padding:6px} /* was 110px, the smallest code in the suite (25 Sep 2026) */
+.tpjoin{display:flex;flex-direction:column;align-items:center;gap:8px}
+.tpjoin .ju{font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--muted)}
 .tpqr img{width:100%;height:100%;display:block}
 .tboard{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:16px}
 .tbar{display:flex;align-items:center;gap:26px;justify-content:center}
@@ -243,6 +264,16 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 .tpanel.revealed .tverdict{opacity:1}
 .tpanel .tverdict b{color:var(--red)}
 .tpanel.waiting{opacity:.45}
+/* Who gave ground? as the game's own matrix (30 Sep 2026): the counts come up with the reveal, the landed cell is boxed */
+.cmx{align-self:center;margin-top:4px}
+.cmx .cl{flex-direction:column;align-items:center;justify-content:flex-end}
+.cmx .rl{flex-direction:column;align-items:flex-end;justify-content:center}
+.cmx .cmn{display:block;font-family:var(--display);font-weight:900;font-size:22px;line-height:1;margin-top:4px;min-height:22px;opacity:0;transition:opacity .4s}
+.cmx .cl .cmn{color:var(--terracotta)} .cmx .rl .cmn{color:var(--teal)}
+.tpanel.revealed .cmx .cmn{opacity:1}
+.cmx .cell.words{flex-direction:column;gap:3px;line-height:1.2}   /* each side's outcome on its own line: USA Air above, Vicksburg below */
+.cmx .cell .pc{display:none}
+.cmx .cell.landed::after{content:"";position:absolute;inset:3px;border:5px solid var(--red);pointer-events:none}
 /* Moneyball: two small matrices stacked beside the clip */
 .mbclips{position:relative;width:560px;height:315px;flex:none}
 .mbclip{position:absolute;inset:0;transition:opacity .7s}
@@ -254,60 +285,19 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 
 /* ---- the day-two opener: the two-column close of m4, day one dimmed, the
    module in front lit (Ryan, 16 Sep: start the day where we left off) ---- */
-.days{position:absolute;left:96px;right:96px;top:210px;display:grid;grid-template-columns:1fr 1fr;gap:70px}
-.day{display:flex;flex-direction:column;gap:18px}
-.day .dh{font-weight:700;letter-spacing:.18em;font-size:14px;color:var(--muted);padding-bottom:10px;border-bottom:2px solid var(--rule)}
-.day.two .dh{color:var(--red);border-color:var(--red)}
+.days{position:absolute;left:150px;right:150px;top:230px}
+.day{display:flex;flex-direction:column;gap:30px}
 .day .dl{display:flex;align-items:baseline;gap:18px}
-.day .dn{flex:none;width:52px;text-align:right;font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:var(--ink)}
-.day .dt{font-weight:600;font-size:22px;line-height:1.3;color:var(--ink)}
-.day.one{opacity:.45}
+.day .dn{flex:none;width:84px;text-align:right;font-family:var(--display);font-weight:900;font-size:38px;line-height:1;color:var(--ink)}
+.day .dt{font-weight:600;font-size:27px;line-height:1.3;color:var(--ink)}
 .day.two .dl{opacity:.42}
 .day.two .dl.now{opacity:1}
 .day.two .dl.now .dn{color:var(--red)}
-.day .dl.league{margin-top:14px;padding-top:22px;border-top:2px dashed var(--rule)}
-.day .dl.league .dn{align-self:center} .day .dl.league svg{width:38px;height:38px;display:block;margin-left:auto}
+/* day two as rerun (1 Oct 2026, after day one): the day opens on the same plan
+   in m4 with 4 lit; here 5-6 is lit. The interlude has no module number, so its
+   mark is a red square */
+.day .dn i{display:inline-block;width:20px;height:20px;background:currentColor;vertical-align:2px}
 
-/* ---- the closing exercise: your coordination game (m5/games/ on the phones,
-   room m5-games). The setup slide's five questions, then the aircraft: one
-   window per phone, tinted by the game, the five answers under it ---- */
-.ysetup{position:absolute;left:96px;top:270px;width:740px;display:flex;flex-direction:column;gap:22px}
-.yq{display:flex;gap:16px;align-items:flex-start;border-left:4px solid var(--side);padding-left:16px}
-.yq.ply{--side:var(--terracotta)} .yq.sit{--side:var(--red)} .yq.opt{--side:var(--teal)} .yq.game{--side:var(--maroon)} .yq.fp{--side:var(--ink)}
-.yq .yk{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--side);white-space:nowrap;padding-top:4px;width:150px;flex:none}
-.yq .yt{font-weight:600;font-size:18px;line-height:1.3;color:var(--ink)}
-/* the closing scene: one flight (games/flight.js). The title and the counts are Module 3's chips */
-.fieldstage{position:absolute;inset:0;width:1280px;height:720px;display:block}
-.fieldtitle{position:absolute;left:40px;top:62px;font-weight:700;letter-spacing:.16em;font-size:14px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:6px 12px}
-.fieldcount{position:absolute;right:40px;top:62px;display:flex;align-items:baseline;gap:6px;font-weight:700;letter-spacing:.1em;font-size:12px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--ink);padding:5px 12px}
-.fieldcount b{font-family:var(--display);font-weight:900;font-size:20px;color:var(--red)}
-.fieldcount b+span{margin-right:14px}
-.fieldcount span:last-child{margin-right:0}
-.fieldcount i{width:13px;height:13px;display:inline-block;align-self:center;margin-right:2px}
-.fieldcount i.s{background:var(--teal)} .fieldcount i.b{background:var(--terracotta)} .fieldcount i.c{background:var(--red)}
-/* a row, opened: the cabin on the left with the focal point on the seat-back screen, the pair's answers on the right */
-.rowopen{position:absolute;inset:0;background:var(--paper-soft);opacity:0;pointer-events:none;transition:opacity .32s;z-index:20;cursor:pointer}
-.rowopen.on{opacity:1;pointer-events:auto}
-.rowopen .rowsvg{position:absolute;left:40px;top:62px;width:686px;height:598px;display:block}
-.rowopen .rowscreen{position:absolute;left:167px;bottom:70px;width:432px;min-height:96px;box-sizing:border-box;background:#1F2B2D;border:9px solid var(--ink);border-radius:16px;padding:14px 20px 16px;box-shadow:0 0 0 3px var(--paper-soft)}
-.rowopen .rowscreen .k{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--ochre);margin-bottom:5px}
-.rowopen .rowscreen .t{font-weight:700;font-size:24px;line-height:1.2;color:var(--card);overflow-wrap:anywhere}
-.rowopen .rownotes{position:absolute;left:770px;right:48px;top:62px;display:flex;flex-direction:column;gap:24px}
-/* the pair's names head the notes from the moment the row opens (Ryan, 18 Sep: anonymity is dropped), right-aligned beside
-   the close button, where the revealed name used to stand. .rowav is the place for the pair's two avatars, about 56px
-   round, from the shared avatar kit (not built here): it takes no room while it is empty, and the notes below simply
-   move down when the block grows, as they do under two long names */
-.rowopen .rowwho{display:flex;justify-content:flex-end;align-items:center;gap:14px;min-height:36px;margin:0 48px 14px 0}
-.rowopen .rowav{display:flex;gap:8px;flex:none} .rowopen .rowav:empty{display:none}
-.rowopen .rowwho .n{font-weight:700;font-size:26px;line-height:1.15;color:var(--ink);text-align:right;overflow-wrap:anywhere}
-.rowopen .g{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.04em;line-height:1}
-.rowopen .g.s{color:var(--teal)} .rowopen .g.b{color:var(--terracotta)} .rowopen .g.c{color:var(--red)}
-.rowopen .f{border-left:4px solid var(--side);padding-left:16px}
-.rowopen .f.sit{--side:var(--red)} .rowopen .f.ply{--side:var(--terracotta)} .rowopen .f.opt{--side:var(--teal)}
-.rowopen .f .k{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:var(--side);margin-bottom:3px}
-.rowopen .f .t{font-weight:600;font-size:24px;line-height:1.25;color:var(--ink);overflow-wrap:anywhere}
-.rowopen .f.sit .t{font-size:28px;font-weight:700}
-.rowopen .x{position:absolute;right:48px;top:62px;width:36px;height:36px;font-family:var(--sans);font-weight:700;font-size:18px;color:var(--ink);background:var(--paper-soft);border:2.5px solid var(--ink);cursor:pointer;z-index:2;line-height:1}
 </style>
 </head><body>
 
@@ -324,41 +314,6 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <symbol id="im-bank" viewBox="0 0 96 64"><path d="M48 2 L92 20 L4 20 Z" fill="var(--ink)"/><rect x="8" y="22" width="80" height="6" fill="var(--ink)"/><rect x="14" y="30" width="8" height="22" fill="var(--ink)"/><rect x="30" y="30" width="8" height="22" fill="var(--ink)"/><rect x="58" y="30" width="8" height="22" fill="var(--ink)"/><rect x="74" y="30" width="8" height="22" fill="var(--ink)"/><rect x="6" y="54" width="84" height="8" fill="var(--ink)"/><g fill="var(--red)"><circle cx="48" cy="34" r="4"/><path d="M42 40 h12 l3 10 h-4 l-2 -6 v14 h-6 v-14 l-2 6 h-4 Z"/></g></symbol>
 </svg>
 
-<section class="sr-only" aria-label="Full text of all slides">
-<h1>Applied Game Theory, Module 5 — Coordination Games</h1>
-<p>Accessible text version. Each heading below is one slide, in order. Payoff matrices are described cell by cell.</p>
-<section aria-label="Slide 1"><h2>Slide 1 of 30: Title slide</h2><p>Coordination games. Solving games with multiple equilibria. Module 5 of the Applied Game Theory executive programme. Instructor: J. Ryan Lamare.</p></section>
-<section aria-label="Slide 2"><h2>Slide 2 of 30: Learning objectives</h2><p>Four numbered objectives: one, take the common knowledge quiz and see where the room converges. Two, use best response analysis to find every Nash equilibrium in a game. Three, play three coordination games, stag hunt, battle of the sexes, and chicken. Four, find a coordination game in your own world.</p></section>
-<section aria-label="Slide 3"><h2>Slide 3 of 30: Learning objectives</h2><p>Four numbered objectives: one, take the common knowledge quiz and see where the room converges. Two, use best response analysis to find every Nash equilibrium in a game. Three, play three coordination games, stag hunt, battle of the sexes, and chicken. Four, find a coordination game in your own world.</p></section>
-<section aria-label="Slide 4"><h2>Slide 4 of 30: Games with multiple equilibria</h2><p>So far, we have considered only games where one unique solution is present. But there are often instances where individuals can conceive of many strategies capable of generating similar outcomes. Games with multiple equilibria often require some sort of coordination by the players in order to reach a useful resolution. Beside the bullets, a before-and-after figure: a matrix with one red box, labelled "one equilibrium", then an arrow to a matrix with three red boxes down its diagonal, labelled "several equilibria".</p></section>
-<section aria-label="Slide 5"><h2>Slide 5 of 30: Let's have a pop quiz!</h2><p>A full-slide picture: the two-buttons meme. A hand hovers between a button labelled "the answer I think is correct" and one labelled "the answer I think everyone else thinks is correct"; below, a man sweats over the choice.</p></section>
-<section aria-label="Slide 6"><h2>Slide 6 of 30: The common knowledge quiz</h2><p>Rules for the self-paced quiz: the goal is to get as many answers correct as you possibly can — but the right answer is the answer the room provides, and you score a point only when at least 80 percent of the room answers the way you did. No conferring: you are coordinating on instinct. Ten minutes, sixteen questions, on your phones, then the scores are gone through together. A QR code starts the quiz, and a ten-minute countdown timer sits under it.</p></section>
-<section aria-label="Slide 7"><h2>Slide 7 of 30: Quiz scores, questions one to eight</h2><p>A board of eight rows revealed one keypress at a time, each computed live from the room's answers: the coin flip; name any positive number; choose one of the boxes (four ink boxes and one red, the fourth); choose one of the numbers 13, 261, 100, 99, 555; meet in Paris; meet in New York City; meet in London; your favorite American football player. Each row shows the room's top answer, its share as a bar and percentage, and a point marker when the share reached 80 percent. If the poll server is unreachable the board runs on marked demo data.</p></section>
-<section aria-label="Slide 8"><h2>Slide 8 of 30: Quiz scores, questions nine to sixteen</h2><p>Eight more rows, same format: your favorite pop singer (asked on the phone beside the football player); the election second ballot (Brown 15, Jones 28, Robinson 19, Smith 29, White 9); divide $100 into two piles; the favorite football club (Barcelona, Liverpool, Real Madrid, Paris Saint-Germain, Arsenal); the favorite national team (Argentina, Brazil, England, Italy, Mexico, Spain); what time you turn up for a meeting called for first thing tomorrow (8:00, 8:30, 9:00, 9:30); who calls back when a call drops (the one who made the call, or the one who received it); and pick a colour (blue, green, red, yellow).</p></section>
-<section aria-label="Slide 9"><h2>Slide 9 of 30: Focal points and common knowledge</h2><p>The right answer was wherever the room landed together: we need to identify a focal point where our expectations can converge. How might we find one? We have to consider common knowledge, in three steps: do you know what everyone else in the room will answer? Does everyone else know that you know? Are you all 100 percent sure? Beside the bullets, a drawn figure: two red arrows converge on a clock tower that fades in — the spot everyone guesses is the focal point.</p></section>
-<section aria-label="Slide 10"><h2>Slide 10 of 30: Best response and the Nash equilibrium</h2><p>We need a comprehensive way to identify parties' ideal strategies in all games, not just prisoner's dilemmas or zero-sum games. We know to identify dominant strategies and reject inferior ones — but what if there are no clear answers even then? Can we still find an equilibrium? The answer is yes — thanks to John Nash. Beside the bullets, a pictogram of a four-cell payoff matrix with a question mark in it.</p></section>
-<section aria-label="Slide 11"><h2>Slide 11 of 30: Nash equilibrium</h2><p>A Nash equilibrium is a combination of two conditions, shown as a numbered rail: one, each player is choosing a best response to what he believes the other players will do in the game; two, each player's beliefs are correct — the other players are doing just what everyone else thinks they are doing.</p></section>
-<section aria-label="Slide 12"><h2>Slide 12 of 30: Best response analysis, worked</h2><p>A four-by-three matrix. Player 1 rows: top, high, low, bottom. Player 2 columns: left, middle, right. Payoffs (player 1, player 2) by row — top: 3,1; 2,3; 10,2. High: 4,5; 3,0; 6,4. Low: 2,2; 5,4; 12,3. Bottom: 5,6; 4,5; 9,7. Steps circle player 1's best-response payoffs in each column in teal (bottom-left, low-middle, low-right), then player 2's best-response payoffs in each row in terracotta (top-middle, high-left, low-middle, bottom-right), then draw a red box on the one cell holding both circles — low/middle, 5, 4 — the Nash equilibrium.</p></section>
-<section aria-label="Slide 13"><h2>Slide 13 of 30: The investment game</h2><p>Let's play a game where you can win lots of money! You have two choices — invest, or don't invest. Investing puts $100 into the pot; sitting out puts in nothing and risks nothing. If you invest and at least 90% of the room invests too, you get your $100 back plus another $50; if less than 90% invest, you lose your $100. We play two rounds and your wins and losses add up. Round one is played in silence; then one volunteer can address the room before round two. A QR code links to the game page, where each player picks their name and locks a choice per round.</p></section>
-<section aria-label="Slide 14"><h2>Slide 14 of 30: The investment board</h2><p>The live board, same layout as the vote games: two panels, round 1 and round 2, each with two cells, invested and didn't invest, filling with one small person figure per player and a count, and a verdict line under each: the investment rate and whether it paid out (90 percent or more: $50 on top for every investor; under 90 percent: every investor loses their $100). Three keypresses in order: reveal round 1, open round 2 on every phone after the volunteer has spoken, reveal round 2. A counter above shows how many are in the current round. Nobody's money is named on screen. If the poll server is unreachable the board runs on marked demo data.</p></section>
-<section aria-label="Slide 15"><h2>Slide 15 of 30: What you just played</h2><p>You against everyone else, choices invest or don't invest. Both invest: plus fifty dollars each. You invest while the room doesn't: minus a hundred for you, nothing for them. You sit out while the room invests: nothing for you, plus fifty for them. Nobody invests: nothing for anyone. A step rings the two diagonal equilibria, then narrates: two Nash equilibria on the diagonal — everyone invests, or nobody does — and investing pays only if you can trust the room to invest too. A coordination game, commonly known as stag hunt.</p></section>
-<section aria-label="Slide 16"><h2>Slide 16 of 30: Stag hunt</h2><p>Two hunters set off to find food. A stag feeds both of them, but it takes both of them to catch it; a hare feeds one, and one hunter can catch it alone. With no way to communicate before they set off, each has to guess what the other will hunt. If Hunter 1 goes after the stag, Hunter 2 should go too — but there is no way for Hunter 2 to know where Hunter 1 is going. Both sides need to coordinate in order to be successful. The matrix, Hunter 1 rows against Hunter 2 columns: stag/stag 3, 3; stag/hare 0, 1; hare/stag 1, 0; hare/hare 1, 1. A step rings the two diagonal equilibria.</p></section>
-<section aria-label="Slide 17"><h2>Slide 17 of 30: Overcoming coordination problems</h2><p>If only we could communicate, we could assure the other side that we're better off at a certain equilibrium. This is why key figureheads give speeches to restore confidence — one reason why leadership matters. And a crucial difference from the prisoner's dilemma: would strategic communication matter under a PD? On the right, a JetBlue clip labeled "JetBlue customers, game theorists" is embedded behind a click-to-play cover.</p></section>
-<section aria-label="Slide 18"><h2>Slide 18 of 30: Battle of the sexes</h2><p>Here, unlike in stag hunt, you have a problem: there are two equilibria, but the players have different preferences for each equilibrium point. You'd both rather end up together than apart — and that makes coordination more difficult, and communication trickier as well. Commonly (and misogynistically) known as the Battle of the Sexes. The matrix, Partner A rows against Partner B columns, plans A and B: A/A 2, 1; A/B 0, 0; B/A 0, 0; B/B 1, 2. A step rings the two diagonal equilibria.</p></section>
-<section aria-label="Slide 19"><h2>Slide 19 of 30: Whose system?</h2><p>A played battle of the sexes, with a QR code to the vote page and a two-by-two matrix (Northeast rows, Balta columns; Northeast's system or Balta's system; 2,1 / 0,0 / 0,0 / 1,2). Northeast Airlines and Balta Air Lines have just merged and have to run one booking system. Both airlines are used to their own systems, but the merger cannot be finalized until a single system is agreed on. Your phone puts you on one airline. If both sides back the same system you switch to it; if not, the merger is delayed. Vote, then one volunteer addresses the room, and we vote again.</p></section>
-<section aria-label="Slide 20"><h2>Slide 20 of 30: Where did the room land?</h2><p>The live board: two panels, round 1 and round 2. Each panel has two columns, Northeast's system and Balta's system, and each column fills with one small person figure per vote, coloured by the voter's side, teal for Northeast and terracotta for Balta, with the column's total and the split between the two sides under it. A legend names the two colours. Under each panel a verdict: the teams will eventually coordinate on a system once it holds six votes in ten, each side backed its own system, or the teams haven't settled yet. Three keypresses in order: reveal round 1, open round 2 on every phone (after the volunteer has spoken), reveal round 2. The counter above shows how many are in the round in play, and a chip shows which round is open. If the poll server is unreachable the board shows marked demo data.</p></section>
-<section aria-label="Slide 21"><h2>Slide 21 of 30: The coordination problem in scouting in Moneyball</h2><p>Two small matrices, Head Scout or Billy Beane against everyone else in the room, choices "subjective looks" or "objective skills". Grady's room: looks/looks 2, 2; looks/skills 0, minus 1; skills/looks 0, minus 1; skills/skills 1, 1 — both diagonal cells boxed. On a keypress, Billy Beane's room appears: looks/looks 1, 2; skills/skills 2, 1; off-diagonal 0, minus 1 — both diagonal cells boxed — and on the right the first clip, "Grady overrules Billy", fades into the second, "Billy brings in Peter Brand", each behind a click-to-play cover.</p></section>
-<section aria-label="Slide 22"><h2>Slide 22 of 30: Chicken</h2><p>Two drivers head straight at each other. Whoever swerves first loses face, and whoever holds the line wins. If both swerve, nobody wins and nobody loses. If neither swerves, both crash — the worst outcome for both of them. Two equilibria again — one of you swerves — but each of you wants to be the one who goes straight. The matrix, Driver 1 rows against Driver 2 columns: both swerve 0, 0; swerve/straight minus 10, plus 10; straight/swerve plus 10, minus 10; both straight minus 100, minus 100. A step rings the two swerve/straight cells.</p></section>
-<section aria-label="Slide 23"><h2>Slide 23 of 30: Solving games of chicken</h2><p>There are two equilibrium points in this game (swerve/straight). So how do you win? One way is to convince the other side that under no circumstances will you swerve — we'll return to commitment and credibility later. Another way is to alternate swerve/straight strategies if you play a repeated game. Beside the bullets, the chicken matrix again, small, with both swerve/straight cells boxed in red.</p></section>
-<section aria-label="Slide 24"><h2>Slide 24 of 30: Let's play chicken!</h2><p>Rebel Without a Cause: two stolen cars, one cliff, and whoever jumps first is chicken. Buzz's sleeve catches on the door handle; he cannot jump, so he goes over, committed to go straight by accident. Jim swerved because he could. Was Buzz playing chicken at all by the end? On the right, the chickie run clip from Rebel Without a Cause behind a click-to-play cover.</p></section>
-<section aria-label="Slide 25"><h2>Slide 25 of 30: The hub lease</h2><p>A played chicken. USA Air runs its hub out of Plattsburgh Airport; the lease is up and the airline wants a big cut in its gate and landing fees or it moves the hub. Plattsburgh has said it cannot afford the cut. Each side can hold firm or give ground. If one side gives ground the other gets its way; if both give, you split the difference; if both hold firm the hub is moved elsewhere, USA Air loses its network and Plattsburgh loses its biggest tenant and the jobs that come with it. Vote, then one volunteer addresses the room, and we vote again. A QR code links to the phone page, a counter shows responses, and the matrix in words (USA Air rows, Plattsburgh columns): both give, split and split; USA Air gives, gives in and gets its way; Plattsburgh gives, gets its way and gives in; both hold, hub moves and hub moves.</p></section>
-<section aria-label="Slide 26"><h2>Slide 26 of 30: Who gave ground?</h2><p>The live board for the hub lease, same layout as the whose-system board: two panels, round 1 and round 2, each with two columns, give ground and hold firm, filling with one person figure per vote coloured by side, teal for USA Air and terracotta for Plattsburgh, with the column's total and the split between the sides. Three keypresses in order: reveal round 1 with its verdict, open round 2 on every phone after the volunteer, reveal round 2 with its verdict. The verdicts: the hub is moved elsewhere if both sides held, one side gets its way if the other gave, split the difference if both gave. The counter shows how many are in the round in play. If the poll server is unreachable the board runs on marked demo data.</p></section>
-<section aria-label="Slide 27"><h2>Slide 27 of 30: A coordination game from your world</h2><p>The setup for the closing exercise, in pairs on one phone: a situation from your world where two sides had to land on the same thing. Five questions, revealed one a press: who were the players, what was the situation, what were the options, stag hunt or battle of the sexes or chicken, and what was the focal point. A QR code links to the phone page at ryanlamare.com/go, with a count of windows lit.</p></section>
-<section aria-label="Slide 28"><h2>Slide 28 of 30: Your coordination games</h2><p>A full-screen scene: a single-aisle jet seen from the side, nose to the left, in flight. Clouds stream past it in three layers, a patchwork of fields, rivers, woods and small towns scrolls far below, the aircraft bobs a little, its wing flexes, its lights blink, two contrails run out behind it, and now and then another aircraft crosses far off. A small title at the top left reads Module 5, your coordination games; at the top right a count of stag hunts, battles of the sexes and chickens, and the total in. One window arrives on the aircraft for each pair as its answers land, in order from the front: two panes under one shade, outlined in teal for stag hunt, terracotta for battle of the sexes, or red for chicken, spread evenly from the front door to the rear door and closing up as more arrive, so the fuselage shows the room's split at a glance. Clicking a window raises its shade and the camera pushes in to that window; the view that opens is that row of the cabin. Two passengers sit side by side: they are the two players the pair named, drawn as plain faces, dots for eyes and a mouth, nobody's likeness, and their faces draw the game the pair chose. For a stag hunt both are smiling and turned toward each other. For a battle of the sexes one is pleased and one is glum, and they are turned toward each other. For chicken both have their arms folded and their chins up, and neither looks at the other. They blink, breathe and glance about. The pair's focal point is on the seat-back screen between them; beside the row are the pair's own names, shown as soon as the row opens, and under them the name of the game, the situation, the players and the options. Escape, an arrow key, space or a click closes the row and the camera pulls back; the shade stays up, with two small heads in the window. With no row open the arrow keys move on, so the slide can be passed quickly or dwelt on. When the last shade is up the flight lands: the aircraft descends, the land comes up, the wheels come down, a runway scrolls in, it touches down with a puff from the tyres and rolls to a stop; the windows can still be opened, and a window that arrives late simply lights. Pressing the E key plays the ending from wherever the flight is: an open row closes, every shade still down goes up in a quick ripple from the front of the cabin to the back without the camera moving, and the flight lands at once; once it is on its way down or on the ground the key does nothing. A click on the sun lowers every shade and takes off again. Nothing else is on the screen; the questions are asked out loud. Until the room answers, the aircraft fills with marked demo data.</p></section>
-<section aria-label="Slide 29"><h2>Slide 29 of 30: What did we learn?</h2><p>Five tiles, revealed one a press. Focal points, a clock tower: the right answer is wherever the room lands together. Nash equilibrium, a matrix with several boxed cells: each player is choosing a best response to what the others do. Stag hunt, a matrix with both diagonal cells ringed: aligned, trust unlocks the best one. Battle of the sexes, the same figure: different preferences over which one. Chicken, a matrix with its bottom-right cell solid red: opposed, miscoordination is disaster. A last press adds one line: where you land turns on focal points.</p></section>
-<section aria-label="Slide 30"><h2>Slide 30 of 30: Top of the table</h2><p>The module scoreboard, computed live from the poll rooms: the top five names, revealed fifth place first, one keypress at a time. Columns show each player's points from the common knowledge quiz and the running total. Top five only, never a full ranking; each participant can check their own score privately at ryanlamare.com/go/points. If the score server is unreachable the board shows marked demo data.</p></section>
-</section>
-
 <div class="viewport"><div class="stage">
 
 <section class="slide cover active" data-i="0">
@@ -374,39 +329,30 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
     <span class="cchip"><svg class="pg" viewBox="0 0 96 64"><use href="#im-bank"/></svg></span>
     <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-reverse-arrows"/></svg></span>
   </div>
-  <div class="byline">J. RYAN LAMARE</div>
+  <div class="byline">RYAN LAMARE</div>
 </section>
 
 <section class="slide content" data-i="1">
   <div class="kicker"><i></i>MODULE 5 · DAY TWO</div>
   <h2>The plan for the day</h2>
   <div class="days">
-    <div class="day one">
-      <div class="dh">DAY ONE</div>
-      <div class="dl"><span class="dn">1</span><span class="dt">The median dog, the number game, and your hand</span></div>
-      <div class="dl"><span class="dn">2</span><span class="dt">The centipede, the last card, and the room&rsquo;s tree</span></div>
-      <div class="dl"><span class="dn">3</span><span class="dt">The truel, the engine game, and the room&rsquo;s engines</span></div>
-      <div class="dl"><span class="dn">4</span><span class="dt">Six weeks at the junction, the room&rsquo;s dilemmas, and Axelrod</span></div>
-    </div>
     <div class="day two">
-      <div class="dh">DAY TWO</div>
-      <div class="dl now"><span class="dn" style="font-size:26px">5&ndash;6</span><span class="dt">What happens when there is more than one equilibrium, or none at all?</span></div>
+      <div class="dl"><span class="dn">4</span><span class="dt">How do we get out of a prisoner&rsquo;s dilemma?</span></div>
+      <div class="dl now"><span class="dn">5&ndash;6</span><span class="dt">What happens when there is more than one equilibrium, or none at all?</span></div>
+      <div class="dl"><span class="dn"><i></i></span><span class="dt">Which games are you playing in your world?</span></div>
       <div class="dl"><span class="dn">7</span><span class="dt">How does changing the rules affect our strategies?</span></div>
-      <div class="dl"><span class="dn">8</span><span class="dt">What if one side knows something the other doesn&rsquo;t?</span></div>
-      <div class="dl league"><span class="dn"><svg viewBox="0 0 64 64" aria-hidden="true"><path fill="var(--ochre)" d="M18 8h28v14a14 14 0 0 1-28 0z"/><path fill="none" stroke="var(--ochre)" stroke-width="5" d="M18 14H9v6a9 9 0 0 0 9 9M46 14h9v6a9 9 0 0 1-9 9"/><rect fill="var(--ochre)" x="28" y="34" width="8" height="10"/><rect fill="var(--ochre)" x="18" y="44" width="28" height="7" rx="2"/></svg></span><span class="dt">And who will finish top of the Game Theory League?</span></div>
     </div>
   </div>
-  <div class="chiprow" style="bottom:46px"><div class="chead2" data-step="1" style="text-align:center;white-space:nowrap">Same as yesterday: the games are on your phones, they score points, and the day ends with the awards and the podium.</div></div>
 </section>
 
 <section class="slide content" data-i="2">
   <div class="kicker"><i></i>MODULE 5</div>
   <h2>Learning objectives</h2>
   <div class="rail" style="min-width:980px">
-    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Take the common knowledge quiz and see where the room converges</div></div>
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">A test of your common knowledge skills</div></div>
     <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Use best response analysis to find every Nash equilibrium in a game</div></div>
-    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Play three coordination games &ndash; stag hunt, battle of the sexes, and chicken</div></div>
-    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Find a coordination game in your own world</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">Play three coordination games: stag hunt, battle of the sexes, and chicken</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Find coordination games in your own world</div></div>
   </div>
 </section>
 
@@ -423,7 +369,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
     <div class="ba">
       <div class="station then"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx1"/></svg><div class="slbl">One equilibrium</div></div>
       <div class="arrow" data-step="1">&rarr;</div>
-      <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx3"/></svg><div class="slbl">Several equilibria</div></div>
+      <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx3"/></svg><div class="slbl">MANY equilibria</div></div>
     </div>
   </div>
 </section>
@@ -438,16 +384,16 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 
 <section class="slide content" data-i="5">
   <div class="kicker"><i></i>MODULE 5 · THE COMMON KNOWLEDGE QUIZ</div>
-  <h2>The common knowledge quiz</h2>
+  <h2>HOW GOOD IS YOUR COORDINATION?</h2>
   <div class="rowfig" style="top:200px">
     <ul class="bullets" style="max-width:640px">
-      <li>The goal is to get as many answers correct as you possibly can</li>
+      <li>The goal is to get as many answers correct as you possibly can within a ten-minute time window</li>
       <li data-step="1">But here&rsquo;s the thing: <b>the right answer is the answer the room provides</b>. You score a point only when at least 80% of the room answers the way you did</li>
-      <li data-step="2">No conferring: you are coordinating on <b>instinct</b>!</li>
-      <li data-step="3">Ten minutes, sixteen questions, on your phones. Then we&rsquo;ll go through the scores together</li>
+      <li data-step="2">No conferring: you are coordinating on your <b>instinct</b>!</li>
+      <li data-step="3">Answer all the questions on your phones. Then we&rsquo;ll go through the scores together</li>
     </ul>
   </div>
-  <div class="qrpanel" style="top:200px">
+  <div class="qrpanel quizpanel" style="top:188px">
     <div class="joinchip">
       <div class="qr"><img src="qr-quiz.svg" alt="QR code for the common knowledge quiz at ryanlamare.com/go"></div>
       <div class="ju">ryanlamare.com/go</div>
@@ -458,6 +404,10 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
     </div>
     <div class="quizprog"><span><b id="qzStart">&ndash;</b>STARTED</span><span><b id="qzDone">&ndash;</b>FINISHED</span></div>
   </div>
+  <div class="talk" data-step="4" style="right:480px">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> Compare your answers. Where did you match without talking, and why?</div>
+  </div>
 </section>
 
 <section class="slide content" data-i="6">
@@ -465,14 +415,14 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <h2>Where the room converged</h2>
   <div class="fig" style="top:180px;bottom:50px;justify-content:flex-start;gap:0">
     <div class="krows">
-      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k1"><div class="demotag" style="top:-13px" id="krD">DEMO DATA</div><span class="ql">The coin flip</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k2"><span class="ql">A positive number</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k3"><span class="ql">The boxes</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k1"><div class="demotag" style="top:-13px" id="krD">DEMO DATA</div><span class="ql">coin flip</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k2"><span class="ql">positive number</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k3"><span class="ql">boxes</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
       <div class="krow" data-step="4" data-stepcall="krRow" data-k="k4"><span class="ql">13 &middot; 261 &middot; 100 &middot; 99 &middot; 555</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
       <div class="krow" data-step="5" data-stepcall="krRow" data-k="k5"><span class="ql">Meet in Paris</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
       <div class="krow" data-step="6" data-stepcall="krRow" data-k="k6"><span class="ql">Meet in New York</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
       <div class="krow" data-step="7" data-stepcall="krRow" data-k="k7"><span class="ql">Meet in London</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="8" data-stepcall="krRow" data-k="k8"><span class="ql">The football player</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="8" data-stepcall="krRow" data-k="k8"><span class="ql">american football player</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
     </div>
   </div>
 </section>
@@ -482,13 +432,13 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <h2>Where the room converged</h2>
   <div class="fig" style="top:180px;bottom:50px;justify-content:flex-start;gap:0">
     <div class="krows">
-      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k9"><div class="demotag" style="top:-13px" id="krD2">DEMO DATA</div><span class="ql">The pop singer</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k10"><span class="ql">The election</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k11"><span class="ql">$100, two piles</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="4" data-stepcall="krRow" data-k="k12"><span class="ql">The favorite club</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="5" data-stepcall="krRow" data-k="k13"><span class="ql">The favorite national team</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k9"><div class="demotag" style="top:-13px" id="krD2">DEMO DATA</div><span class="ql">pop singer</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k10"><span class="ql">election</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k11"><span class="ql">&pound;100, two piles</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="4" data-stepcall="krRow" data-k="k12"><span class="ql">favourite football club</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="5" data-stepcall="krRow" data-k="k13"><span class="ql">favourite national team</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
       <div class="krow" data-step="6" data-stepcall="krRow" data-k="k14"><span class="ql">First thing tomorrow</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
-      <div class="krow" data-step="7" data-stepcall="krRow" data-k="k15"><span class="ql">The dropped call</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="7" data-stepcall="krRow" data-k="k15"><span class="ql">dropped call</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
       <div class="krow" data-step="8" data-stepcall="krRow" data-k="k16"><span class="ql">Pick a colour</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
     </div>
   </div>
@@ -496,17 +446,17 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 
 <section class="slide content" data-i="8">
   <div class="kicker"><i></i>MODULE 5 · FOCAL POINTS</div>
-  <h2>Focal points and common knowledge</h2>
+  <h2>COORDINATION, Focal points, and common knowledge</h2>
   <div class="rowfig" style="align-items:flex-start;gap:50px">
     <ul class="bullets" style="max-width:640px;margin-top:0">
-      <li>The right answer was wherever the room landed together. We need to identify a <b>focal point</b> where our expectations can converge</li>
-      <li data-step="1">How might we find one? We have to consider <b>common knowledge</b></li>
+      <li>The right answer was wherever you thought the room would agree together. We need to identify a <b>focal point</b> where our expectations can converge</li>
+      <li data-step="1">How might we find one? We have to recall what we know about <b>common knowledge</b></li>
       <li class="sub" data-step="2">Do you know what everyone else in the room will answer?</li>
       <li class="sub" data-step="3">Does everyone else know that you know?</li>
       <li class="sub" data-step="4">Are you all 100 percent sure?</li>
     </ul>
     <div class="conv" style="flex:none;width:400px;align-self:center">
-      <svg class="pg" viewBox="0 0 240 150" style="height:280px"><g data-step="1"><rect fill="var(--ink)" x="100" y="108" width="40" height="22"></rect><rect fill="var(--ink)" x="105" y="86" width="30" height="22"></rect><rect fill="var(--ink)" x="111" y="42" width="18" height="44"></rect><rect fill="var(--ink)" x="114" y="34" width="12" height="8"></rect><rect fill="var(--ink)" x="119" y="16" width="2" height="18"></rect><circle fill="var(--ink)" cx="120" cy="16" r="3"></circle><rect fill="var(--paper)" x="113" y="50" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="58" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="66" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="74" width="14" height="2"></rect><rect fill="var(--paper)" x="108" y="94" width="24" height="2"></rect><rect fill="var(--paper)" x="104" y="116" width="32" height="2"></rect></g><g transform="translate(94,102) rotate(28)"><line x1="-62" y1="0" x2="-6" y2="0" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"></line><path d="M0 0 l-12 -6 m12 6 l-12 6" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path></g><g transform="translate(146,102) rotate(152)"><line x1="-62" y1="0" x2="-6" y2="0" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round"></line><path d="M0 0 l-12 -6 m12 6 l-12 6" fill="none" stroke="var(--red)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+      <svg class="pg" viewBox="0 0 300 200" style="height:290px" role="img" aria-label="People all around the room, every line of sight meeting at one tower: the focal point"><!-- 25 Sep 2026 redraw: the room converging on one spot (was two arrows) --><g fill="var(--ink)"><circle cx="26" cy="112" r="5.5"/><path d="M18 121 Q26 118 34 121 L32 136 L20 136 Z"/></g><g fill="var(--ink)"><circle cx="58" cy="176" r="5.5"/><path d="M50 185 Q58 182 66 185 L64 200 L52 200 Z"/></g><g fill="var(--ink)"><circle cx="242" cy="176" r="5.5"/><path d="M234 185 Q242 182 250 185 L248 200 L236 200 Z"/></g><g fill="var(--ink)"><circle cx="274" cy="112" r="5.5"/><path d="M266 121 Q274 118 282 121 L280 136 L268 136 Z"/></g><g fill="var(--ink)"><circle cx="66" cy="44" r="5.5"/><path d="M58 53 Q66 50 74 53 L72 68 L60 68 Z"/></g><g fill="var(--ink)"><circle cx="234" cy="44" r="5.5"/><path d="M226 53 Q234 50 242 53 L240 68 L228 68 Z"/></g><g stroke="var(--red)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="7 6"><line x1="41.7" y1="118.7" x2="120.6" y2="102.2"/><line x1="69.4" y1="174.8" x2="128.6" y2="117.0"/><line x1="230.6" y1="174.8" x2="171.4" y2="117.0"/><line x1="258.3" y1="118.7" x2="179.4" y2="102.2"/><line x1="80.3" y1="61.2" x2="123.2" y2="82.6"/><line x1="219.7" y1="61.2" x2="176.8" y2="82.6"/></g><g data-step="1" transform="translate(30 22)"><rect fill="var(--ink)" x="100" y="108" width="40" height="22"></rect><rect fill="var(--ink)" x="105" y="86" width="30" height="22"></rect><rect fill="var(--ink)" x="111" y="42" width="18" height="44"></rect><rect fill="var(--ink)" x="114" y="34" width="12" height="8"></rect><rect fill="var(--ink)" x="119" y="16" width="2" height="18"></rect><circle fill="var(--ink)" cx="120" cy="16" r="3"></circle><rect fill="var(--paper)" x="113" y="50" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="58" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="66" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="74" width="14" height="2"></rect><rect fill="var(--paper)" x="108" y="94" width="24" height="2"></rect><rect fill="var(--paper)" x="104" y="116" width="32" height="2"></rect></g></svg>
       <div class="cap" style="text-align:center;max-width:32ch">The spot everyone guesses is the <b>focal point</b></div>
     </div>
   </div>
@@ -517,7 +467,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <h2>Best response and the Nash equilibrium</h2>
   <div class="rowfig" style="align-items:flex-start;gap:50px">
     <ul class="bullets" style="margin-top:0;flex:1">
-      <li>We need a comprehensive way to identify parties&rsquo; ideal strategies in <b>all</b> games, not just prisoner&rsquo;s dilemmas or zero-sum games</li>
+      <li>To solve coordination games, we need a comprehensive way to identify parties&rsquo; ideal strategies in <b>all</b> games, not just prisoner&rsquo;s dilemmas or zero-sum games</li>
       <li data-step="1">We know to identify dominant strategies and reject inferior ones &ndash; but what if there are no clear answers even then? Can we still find an equilibrium?</li>
       <li data-step="2"><b>The answer is yes &ndash; thanks to John Nash!</b></li>
     </ul>
@@ -532,17 +482,17 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <h2>Nash equilibrium</h2>
   <div class="leadline" style="margin-top:30px">A <b style="color:var(--red)">Nash equilibrium</b> is a combination of two conditions:</div>
   <div class="rail" style="top:300px;min-width:960px;gap:44px">
-    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Each player is choosing a best response to what he believes the other players will do in the game</div></div>
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">Each player is choosing a best response to what they believe the other players will do in the game</div></div>
     <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Each player&rsquo;s beliefs are correct. The other players are doing just what everyone else thinks they are doing</div></div>
   </div>
 </section>
 
 <section class="slide content" data-i="11">
   <div class="kicker"><i></i>MODULE 5 · BEST RESPONSE</div>
-  <h2>Best response analysis, worked</h2>
+  <h2>Best response analysis</h2>
   <div class="fig" style="top:170px;gap:18px">
     <div class="mxwrap">
-      <div class="mx" style="--cols:3;--rows:4;--cw:170px;--rh:64px">
+      <div class="mx brx" style="--cols:3;--rows:4;--cw:170px;--rh:64px">
         <div class="chead" style="grid-column:3 / span 3">PLAYER 2</div>
         <div class="rhead" style="grid-row:3 / span 4">PLAYER 1</div>
         <div class="cl" style="grid-column:3">Left</div>
@@ -552,28 +502,36 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
         <div class="rl" style="grid-row:4">High</div>
         <div class="rl" style="grid-row:5">Low</div>
         <div class="rl" style="grid-row:6">Bottom</div>
-        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">3</span><span class="pc">,</span><span class="pb">1</span></div>
-        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb" id="b2c1">3</span></div>
-        <div class="cell" style="grid-row:3;grid-column:5"><span class="pa">10</span><span class="pc">,</span><span class="pb">2</span></div>
-        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">4</span><span class="pc">,</span><span class="pb" id="b2c2">5</span></div>
-        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">3</span><span class="pc">,</span><span class="pb">0</span></div>
-        <div class="cell" style="grid-row:4;grid-column:5"><span class="pa">6</span><span class="pc">,</span><span class="pb">4</span></div>
-        <div class="cell" id="n32" style="grid-row:5;grid-column:4"><span class="pa" id="b1c2">5</span><span class="pc">,</span><span class="pb" id="b2c3">4</span></div>
-        <div class="cell" style="grid-row:5;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">2</span></div>
-        <div class="cell" style="grid-row:5;grid-column:5"><span class="pa" id="b1c3">12</span><span class="pc">,</span><span class="pb">3</span></div>
-        <div class="cell" style="grid-row:6;grid-column:3"><span class="pa" id="b1c1">5</span><span class="pc">,</span><span class="pb">6</span></div>
-        <div class="cell" style="grid-row:6;grid-column:4"><span class="pa">4</span><span class="pc">,</span><span class="pb">5</span></div>
-        <div class="cell" style="grid-row:6;grid-column:5"><span class="pa">9</span><span class="pc">,</span><span class="pb" id="b2c4">7</span></div>
+        <div class="cell" data-r="3" data-c="3" style="grid-row:3;grid-column:3"><span class="pa">3</span><span class="pc">,</span><span class="pb">1</span></div>
+        <div class="cell" data-r="3" data-c="4" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb" id="b2c1">3</span></div>
+        <div class="cell" data-r="3" data-c="5" style="grid-row:3;grid-column:5"><span class="pa">10</span><span class="pc">,</span><span class="pb">2</span></div>
+        <div class="cell" data-r="4" data-c="3" style="grid-row:4;grid-column:3"><span class="pa">4</span><span class="pc">,</span><span class="pb" id="b2c2">5</span></div>
+        <div class="cell" data-r="4" data-c="4" style="grid-row:4;grid-column:4"><span class="pa">3</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" data-r="4" data-c="5" style="grid-row:4;grid-column:5"><span class="pa">6</span><span class="pc">,</span><span class="pb">4</span></div>
+        <div class="cell" data-r="5" data-c="4" id="n32" style="grid-row:5;grid-column:4"><span class="pa" id="b1c2">5</span><span class="pc">,</span><span class="pb" id="b2c3">4</span></div>
+        <div class="cell" data-r="5" data-c="3" style="grid-row:5;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">2</span></div>
+        <div class="cell" data-r="5" data-c="5" style="grid-row:5;grid-column:5"><span class="pa" id="b1c3">12</span><span class="pc">,</span><span class="pb">3</span></div>
+        <div class="cell" data-r="6" data-c="3" style="grid-row:6;grid-column:3"><span class="pa" id="b1c1">5</span><span class="pc">,</span><span class="pb">6</span></div>
+        <div class="cell" data-r="6" data-c="4" style="grid-row:6;grid-column:4"><span class="pa">4</span><span class="pc">,</span><span class="pb">5</span></div>
+        <div class="cell" data-r="6" data-c="5" style="grid-row:6;grid-column:5"><span class="pa">9</span><span class="pc">,</span><span class="pb" id="b2c4">7</span></div>
       </div>
+      <div class="mxnote" style="color:var(--ink);font-size:17px;margin-top:-6px">Each cell is <b style="color:var(--teal)">Player 1&rsquo;s payoff</b> &middot; <b style="color:var(--terracotta)">Player 2&rsquo;s</b></div>
       <div class="mkey">
         <div class="k" data-step="1"><span class="sw circA"></span><span><b>Player 1&rsquo;s best response</b> in each column</span></div>
-        <div class="k" data-step="2"><span class="sw circB"></span><span><b>Player 2&rsquo;s best response</b> in each row</span></div>
-        <div class="k" data-step="3"><span class="sw eq"></span><span><b>Nash equilibrium.</b> The one cell holding both circles.</span></div>
+        <div class="k" data-step="4"><span class="sw circB"></span><span><b>Player 2&rsquo;s best response</b> in each row</span></div>
+        <div class="k" data-step="8"><span class="sw eq"></span><span><b>Nash equilibrium.</b> Any cell with both circles.</span></div>
       </div>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="b1c1,b1c2,b1c3" data-cls="circ" style="position:absolute;width:0;height:0"></span>
-    <span data-step="2" data-stepcall="mxMark" data-cells="b2c1,b2c2,b2c3,b2c4" data-cls="circ" style="position:absolute;width:0;height:0"></span>
-    <span data-step="3" data-stepcall="mxMark" data-cells="n32" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <!-- 28 Sep 2026: his LER 550 slides 205-214 (590GT 157-166): one column at a time for Player 1, then one row at a time for Player 2, then the cell with both circles -->
+    <span data-step="1" data-stepcall="brFocus" data-line="c3" data-circ="b1c1" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="brFocus" data-line="c4" data-circ="b1c2" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="brFocus" data-line="c5" data-circ="b1c3" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="brFocus" data-line="r3" data-circ="b2c1" style="position:absolute;width:0;height:0"></span>
+    <span data-step="5" data-stepcall="brFocus" data-line="r4" data-circ="b2c2" style="position:absolute;width:0;height:0"></span>
+    <span data-step="6" data-stepcall="brFocus" data-line="r5" data-circ="b2c3" style="position:absolute;width:0;height:0"></span>
+    <span data-step="7" data-stepcall="brFocus" data-line="r6" data-circ="b2c4" style="position:absolute;width:0;height:0"></span>
+    <span data-step="8" data-stepcall="brFocus" data-line="" data-circ="" style="position:absolute;width:0;height:0"></span>
+    <span data-step="8" data-stepcall="mxMark" data-cells="n32" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
 
@@ -583,17 +541,17 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <div class="rowfig" style="top:200px">
     <ul class="bullets" style="max-width:640px">
       <li><b>Let&rsquo;s play a game where you can win lots of money!</b></li>
-      <li data-step="1">You have two choices &ndash; invest, or don&rsquo;t invest. Investing puts <b>$100</b> into the pot; sitting out puts in nothing, and risks nothing</li>
-      <li data-step="2">If you invest and <b>90% of the room</b> invests too, you get your $100 back and I&rsquo;ll give you another $50</li>
-      <li data-step="3">If less than 90% of the room invests, you lose your $100 and get nothing back</li>
+      <li data-step="1">You have two choices &ndash; invest, or don&rsquo;t invest. Investing puts <b>&pound;100</b> into the pot; sitting out puts in nothing, and risks nothing</li>
+      <li data-step="2">If you invest and <b>90% of the room</b> invests too, you get your &pound;100 back and I&rsquo;ll give you another &pound;50</li>
+      <li data-step="3">If less than 90% of the room invests, you lose your &pound;100 and get nothing back</li>
       <li data-step="4">We&rsquo;ll play <b>two rounds</b>, and your wins and losses add up</li>
-      <li data-step="5">Round one is played in silence. Then <b>one volunteer can address the room</b> before round two</li>
+      <li data-step="5">Round one is played in silence. Then <b>one volunteer should try to convince the room to switch</b> before round two</li>   <!-- his line for the hub lease, 30 Sep 2026, carried here at his word ("and stag hunt"); no sides in this game, so "the room" -->
     </ul>
   </div>
   <div class="qrpanel" style="top:220px">
     <div class="joinchip">
       <div class="qr"><img src="qr-investgame.svg" alt="QR code for the investment game page"></div>
-      <div class="ju">ryanlamare.com/go &middot; pick your name, then choose each round</div>
+      <div class="ju">ryanlamare.com/go</div>
     </div>
   </div>
 </section>
@@ -632,36 +590,47 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 </section>
 
 <section class="slide content" data-i="14">
-  <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
+  <div class="kicker"><i></i>MODULE 5 · THE INVESTMENT GAME</div>
   <h2>What you just played</h2>
-  <div class="fig" style="top:200px;gap:22px">
-    <div class="mx" style="--cols:2;--rows:2;--cw:250px;--rh:104px">
+  <!-- 25 Sep 2026: best response run on the room's own game, which has two equilibria (the objective promises every one).
+       The lower-left cell was +£50 for everyone else, which left only one equilibrium; it mirrors the cell above it now -->
+  <div class="fig" style="top:184px;gap:16px">
+    <div class="mx brx" style="--cols:2;--rows:2;--cw:250px;--rh:92px">
       <div class="chead">EVERYONE ELSE</div>
       <div class="rhead">YOU</div>
       <div class="cl" style="grid-column:3">Invest</div>
       <div class="cl" style="grid-column:4">Don&rsquo;t Invest</div>
       <div class="rl" style="grid-row:3">Invest</div>
       <div class="rl" style="grid-row:4">Don&rsquo;t Invest</div>
-      <div class="cell" id="iv11" style="grid-row:3;grid-column:3"><span class="pa">+$50</span><span class="pc">,</span><span class="pb">+$50</span></div>
-      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">&minus;$100</span><span class="pc">,</span><span class="pb">$0</span></div>
-      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">$0</span><span class="pc">,</span><span class="pb">+$50</span></div>
-      <div class="cell" id="iv22" style="grid-row:4;grid-column:4"><span class="pa">$0</span><span class="pc">,</span><span class="pb">$0</span></div>
+      <div class="cell" id="iv11" style="grid-row:3;grid-column:3"><span class="pa" id="iv11a">+&pound;50</span><span class="pc">,</span><span class="pb" id="iv11b">+&pound;50</span></div>
+      <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">&minus;&pound;100</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
+      <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">&minus;&pound;100</span></div>
+      <div class="cell" id="iv22" style="grid-row:4;grid-column:4"><span class="pa" id="iv22a">&pound;0</span><span class="pc">,</span><span class="pb" id="iv22b">&pound;0</span></div>
+    </div>
+    <!-- 29 Sep audit: the key line, in slide 11's form; "as if the room were one other player" is what makes the lower-left cell true (a lone abstainer would not sink the room's 90%) -->
+    <div class="mxnote" style="color:var(--ink);font-size:17px;margin-top:-6px">Each cell is <b style="color:var(--teal)">your payoff</b> &middot; <b style="color:var(--terracotta)">everyone else&rsquo;s</b>, as if the room were one other player</div>
+    <div class="mkey">
+      <div class="k" data-step="1"><span class="sw circA"></span><span><b>Your best response</b> in each column</span></div>
+      <div class="k" data-step="2"><span class="sw circB"></span><span><b>Everyone else&rsquo;s best response</b> in each row</span></div>
+      <div class="k" data-step="3"><span class="sw eq"></span><span><b>Nash equilibrium.</b> Any cell with both circles.</span></div>
     </div>
     <div class="mxnote">
-      <span data-step="1">Two Nash equilibria on the diagonal &ndash; everyone invests, or nobody does&hellip;</span>
-      <span data-step="2"> and investing pays only if you can trust the room to invest too.</span>
-      <span data-step="3"> <b>A coordination game, commonly known as stag hunt.</b></span>
+      <span data-step="3">Two Nash equilibria on the diagonal &ndash; everyone invests, or nobody does&hellip;</span>
+      <span data-step="4"> so investing pays only if you can trust everyone else in the room to invest too.</span><span data-step="5"> This is a <b>coordination game, commonly known as stag hunt.</b></span>
     </div>
-    <span data-step="1" data-stepcall="mxMark" data-cells="iv11,iv22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <span data-step="1" data-stepcall="mxMark" data-cells="iv11a,iv22a" data-cls="circ" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="iv11b,iv22b" data-cls="circ" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="mxMark" data-cells="iv11,iv22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
   </div>
 </section>
+
 
 <section class="slide content" data-i="15">
   <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
   <h2>Stag hunt</h2>
   <div class="rowfig" style="align-items:flex-start;gap:44px">
     <ul class="bullets" style="margin-top:0;flex:1">
-      <li>Two hunters set off to find food. A stag feeds both of them, but it takes both of them to catch it. A hare feeds one, and one hunter can catch it alone</li>
+      <li>Two hunters set off to find food. A stag feeds many people, but it takes both hunters to catch it. A hare feeds one person, and one hunter can catch it alone</li>
       <li data-step="1">With no way to communicate before they set off, each has to guess what the other will hunt</li>
       <li data-step="2">If Hunter 1 goes after the stag, Hunter 2 should go too &ndash; but there is no way for Hunter 2 to know where Hunter 1 is going</li>
       <li data-step="3"><b>Both sides need to coordinate in order to be successful</b></li>
@@ -684,21 +653,22 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   </div>
 </section>
 
-<!-- COMPANY SLOT (the swap layer, one beat in this module): the Tapas stag hunt
-     (discussed). The battle of the sexes and the chicken are played on airline
+<!-- No COMPANY SLOT in this module since 17 Sep 2026 (the Tapas stag hunt is in
+     outtakes.html). The battle of the sexes and the chicken are played on airline
      stories of their own (whose system, the hub lease) and carry no client nouns. -->
-
 <section class="slide content" data-i="16">
   <div class="kicker"><i></i>MODULE 5 · STAG HUNT</div>
   <h2>Overcoming coordination problems</h2>
   <div class="rowfig" style="align-items:center">
     <ul class="bullets">
-      <li>If only we could communicate, we could assure the other side that we&rsquo;re better off at a certain equilibrium</li>
-      <li data-step="1">This is why key figureheads give speeches to restore confidence</li>
-      <li data-step="2"><b>This is also one reason why leadership matters!</b></li>
-      <li data-step="3">Would strategic communication matter under a PD?</li>
+      <li>If we could communicate, we could assure the other side that we&rsquo;re better off at a specific equilibrium</li>
+      <li data-step="1">Think of bank runs: we all keep our money in the banks only as long as we&rsquo;re sure it&rsquo;s safe</li>
+      <li data-step="2">This is why key figureheads give speeches to restore confidence</li>
+      <li data-step="3"><b>This is also one reason why leadership matters!</b></li>
+      <li data-step="4">Would strategic communication matter under a PD?</li>
+      <li data-step="5">Not really: in a PD each side still gains by breaking its word (remember your Price Wars meetings), but in a stag hunt nobody gains by misleading the other, so <b>talking works</b></li>   <!-- 28 Sep 2026: the answer, Claude's line for his edit. 29 Sep audit: "in a coordination game" became "in a stag hunt", since in battle of the sexes and chicken a side can gain by misleading (#19, #24) -->
     </ul>
-    <div class="clipframe" id="jbwrap">
+    <div class="clipframe xs" id="jbwrap">
       <button class="clipcover" id="jbload" type="button">
         <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
         <span class="ct">JetBlue customers, game theorists</span>
@@ -708,6 +678,72 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 </section>
 
 <section class="slide content" data-i="17">
+  <div class="kicker"><i></i>MODULE 5 · LET&rsquo;S PLAY</div>
+  <h2>Whose system?</h2>
+  <div class="rowfig tprules" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li>Skylark Air and Kestrel Airways have just merged, and they have to consolidate their bookings into <b>one booking system</b></li>
+      <li data-step="1">Both are used to and strongly prefer their own systems, but the merger can&rsquo;t be finalised until a single system is agreed on</li>
+      <li data-step="2">Your phone will place you on one airline</li>
+      <li data-step="3">If both sides back the same system, you switch to it. If not, <b>the merger is delayed</b></li>
+      <li data-step="4">Vote. Then <b>one volunteer should try to convince the other side to switch</b> &ndash; and we vote again</li>   <!-- his line, 30 Sep 2026, as on the hub lease -->
+    </ul>
+    <div class="tpside">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="tpjoin"><div class="tpqr"><img src="qr-tapasbos.svg" alt="QR code for the whose-system vote at ryanlamare.com/teaching/exec/demo/m5/tapas/?g=bos"></div><div class="ju">ryanlamare.com/go</div></div>
+        <div class="livecount"><span class="n" id="bosN">0</span><span class="l" id="bosL">IN ROUND 1</span></div>
+      </div>
+      <div class="mx" style="--cols:2;--rows:2;--cw:170px;--rh:72px">
+        <div class="chead" style="white-space:nowrap">Kestrel</div>
+        <div class="rhead" style="white-space:nowrap">Skylark</div>
+        <div class="cl" style="grid-column:3">Skylark&rsquo;s system</div>
+        <div class="cl" style="grid-column:4">Kestrel&rsquo;s system</div>
+        <div class="rl" style="grid-row:3;max-width:none">Skylark&rsquo;s system</div>
+        <div class="rl" style="grid-row:4;max-width:none">Kestrel&rsquo;s system</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">1</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">2</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>MODULE 5 · LET&rsquo;S PLAY</div>
+  <h2>Where did the room land?</h2>
+  <div class="tboard" id="bosBoard">
+    <div class="tbar">
+      <div class="livecount"><span class="n" id="bosN2">0</span><span class="l" id="bosL2">IN ROUND 1</span></div>
+      <div class="tlegend"><span class="lg r"><i></i>Skylark</span><span class="lg t"><i></i>Kestrel</span></div>
+      <span class="tstate" id="bosState">ROUND 1 OPEN</span>
+      <div class="demotag" id="bosD" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="tpanels">
+      <div class="tpanel" id="bosP1">
+        <div class="tph">Round 1</div>
+        <div class="tgrid one">
+          <div class="tcol">Skylark&rsquo;s system</div><div class="tcol">Kestrel&rsquo;s system</div>
+          <div class="tcell" id="bos-1-a"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div><div class="tcell" id="bos-1-b"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div>
+        </div>
+        <div class="tverdict" id="bos-1-v"></div>
+      </div>
+      <div class="tpanel" id="bosP2">
+        <div class="tph">Round 2</div>
+        <div class="tgrid one">
+          <div class="tcol">Skylark&rsquo;s system</div><div class="tcol">Kestrel&rsquo;s system</div>
+          <div class="tcell" id="bos-2-a"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div><div class="tcell" id="bos-2-b"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div>
+        </div>
+        <div class="tverdict" id="bos-2-v"></div>
+      </div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="tbReveal" data-g="bos" data-r="1" style="position:absolute;width:0;height:0"></span>
+  <span data-step="2" data-stepcall="tbOpen" data-g="bos" style="position:absolute;width:0;height:0"></span>
+  <span data-step="3" data-stepcall="tbReveal" data-g="bos" data-r="2" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="19">
   <div class="kicker"><i></i>MODULE 5 · BATTLE OF THE SEXES</div>
   <h2>Battle of the sexes</h2>
   <div class="rowfig" style="align-items:flex-start;gap:44px">
@@ -715,7 +751,7 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
       <li>Here, unlike in stag hunt, you have a problem</li>
       <li data-step="1">There are two equilibria, but the players have <b>different preferences</b> for each equilibrium point</li>
       <li data-step="2">You&rsquo;d both rather end up together than apart &ndash; and that makes coordination more difficult, and communication trickier as well</li>
-      <li data-step="3"><b>Commonly (and misogynistically) known as the &ldquo;Battle of the Sexes&rdquo;</b></li>
+      <li data-step="3"><b>Commonly known as the &ldquo;Battle of the Sexes&rdquo;</b></li>
     </ul>
     <div style="flex:none;align-self:center">
       <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
@@ -735,72 +771,6 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   </div>
 </section>
 
-<section class="slide content" data-i="18">
-  <div class="kicker"><i></i>MODULE 5 · LET&rsquo;S PLAY</div>
-  <h2>Whose system?</h2>
-  <div class="rowfig tprules" style="top:180px;gap:36px;align-items:flex-start">
-    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
-      <li>Northeast Airlines and Balta Air Lines have just merged, and they have to run <b>one booking system</b></li>
-      <li data-step="1">Both airlines are used to their own systems, but the merger can&rsquo;t be finalized until a single system is agreed on</li>
-      <li data-step="2">Your phone puts you on one airline</li>
-      <li data-step="3">If both sides back the same system, you switch to it. If not, <b>the merger is delayed</b></li>
-      <li data-step="4">Vote. Then <b>one volunteer addresses the room</b> &ndash; and we vote again</li>
-    </ul>
-    <div class="tpside">
-      <div style="display:flex;align-items:center;gap:24px">
-        <div class="tpqr"><img src="qr-tapasbos.svg" alt="QR code for the whose-system vote at ryanlamare.com/teaching/exec/demo/m5/tapas/?g=bos"></div>
-        <div class="livecount"><span class="n" id="bosN">0</span><span class="l" id="bosL">IN ROUND 1</span></div>
-      </div>
-      <div class="mx" style="--cols:2;--rows:2;--cw:170px;--rh:72px">
-        <div class="chead" style="white-space:nowrap">DALTA</div>
-        <div class="rhead" style="white-space:nowrap">NORTHEAST</div>
-        <div class="cl" style="grid-column:3">Northeast&rsquo;s system</div>
-        <div class="cl" style="grid-column:4">Balta&rsquo;s system</div>
-        <div class="rl" style="grid-row:3;max-width:none">Northeast&rsquo;s system</div>
-        <div class="rl" style="grid-row:4;max-width:none">Balta&rsquo;s system</div>
-        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">1</span></div>
-        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">2</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="19">
-  <div class="kicker"><i></i>MODULE 5 · LET&rsquo;S PLAY</div>
-  <h2>Where did the room land?</h2>
-  <div class="tboard" id="bosBoard">
-    <div class="tbar">
-      <div class="livecount"><span class="n" id="bosN2">0</span><span class="l" id="bosL2">IN ROUND 1</span></div>
-      <div class="tlegend"><span class="lg r"><i></i>Northeast</span><span class="lg t"><i></i>Balta</span></div>
-      <span class="tstate" id="bosState">ROUND 1 OPEN</span>
-      <div class="demotag" id="bosD" style="position:static">DEMO DATA</div>
-    </div>
-    <div class="tpanels">
-      <div class="tpanel" id="bosP1">
-        <div class="tph">Round 1</div>
-        <div class="tgrid one">
-          <div class="tcol">Northeast&rsquo;s system</div><div class="tcol">Balta&rsquo;s system</div>
-          <div class="tcell" id="bos-1-a"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div><div class="tcell" id="bos-1-b"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div>
-        </div>
-        <div class="tverdict" id="bos-1-v"></div>
-      </div>
-      <div class="tpanel" id="bosP2">
-        <div class="tph">Round 2</div>
-        <div class="tgrid one">
-          <div class="tcol">Northeast&rsquo;s system</div><div class="tcol">Balta&rsquo;s system</div>
-          <div class="tcell" id="bos-2-a"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div><div class="tcell" id="bos-2-b"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div>
-        </div>
-        <div class="tverdict" id="bos-2-v"></div>
-      </div>
-    </div>
-  </div>
-  <span data-step="1" data-stepcall="tbReveal" data-g="bos" data-r="1" style="position:absolute;width:0;height:0"></span>
-  <span data-step="2" data-stepcall="tbOpen" data-g="bos" style="position:absolute;width:0;height:0"></span>
-  <span data-step="3" data-stepcall="tbReveal" data-g="bos" data-r="2" style="position:absolute;width:0;height:0"></span>
-</section>
-
 <section class="slide content flex" data-i="20">
   <div class="kicker"><i></i>MODULE 5 · BATTLE OF THE SEXES</div>
   <h2>The coordination problem in scouting in Moneyball</h2>
@@ -816,8 +786,8 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
           <div class="rl" style="grid-row:3">Subjective looks</div>
           <div class="rl" style="grid-row:4">Objective skills</div>
           <div class="cell eq" style="grid-row:3;grid-column:3;font-size:20px"><span class="pa">2</span><span class="pc">,</span><span class="pb">2</span></div>
-          <div class="cell" style="grid-row:3;grid-column:4;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">-1</span></div>
-          <div class="cell" style="grid-row:4;grid-column:3;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">-1</span></div>
+          <div class="cell" style="grid-row:3;grid-column:4;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">&minus;1</span></div>
+          <div class="cell" style="grid-row:4;grid-column:3;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">&minus;1</span></div>
           <div class="cell eq" style="grid-row:4;grid-column:4;font-size:20px"><span class="pa">1</span><span class="pc">,</span><span class="pb">1</span></div>
         </div>
       </div>
@@ -831,8 +801,8 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
           <div class="rl" style="grid-row:3">Subjective looks</div>
           <div class="rl" style="grid-row:4">Objective skills</div>
           <div class="cell eq" style="grid-row:3;grid-column:3;font-size:20px"><span class="pa">1</span><span class="pc">,</span><span class="pb">2</span></div>
-          <div class="cell" style="grid-row:3;grid-column:4;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">-1</span></div>
-          <div class="cell" style="grid-row:4;grid-column:3;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">-1</span></div>
+          <div class="cell" style="grid-row:3;grid-column:4;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">&minus;1</span></div>
+          <div class="cell" style="grid-row:4;grid-column:3;font-size:20px"><span class="pa">0</span><span class="pc">,</span><span class="pb">&minus;1</span></div>
           <div class="cell eq" style="grid-row:4;grid-column:4;font-size:20px"><span class="pa">2</span><span class="pc">,</span><span class="pb">1</span></div>
         </div>
       </div>
@@ -856,96 +826,23 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
 </section>
 
 <section class="slide content" data-i="21">
-  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
-  <h2>Chicken</h2>
-  <div class="rowfig" style="align-items:flex-start;gap:44px">
-    <ul class="bullets" style="margin-top:0;flex:1">
-      <li>Two drivers head straight at each other. Whoever swerves first loses face, and whoever holds the line wins</li>
-      <li data-step="1">If both swerve, nobody wins and nobody loses</li>
-      <li data-step="2">If neither swerves, both crash &ndash; the worst outcome for both of them</li>
-      <li data-step="3">Two equilibria again &ndash; one of you swerves &ndash; <b>but each of you wants to be the one who goes straight</b></li>
-    </ul>
-    <div style="flex:none;align-self:center">
-      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
-        <div class="chead">DRIVER 2</div>
-        <div class="rhead">DRIVER 1</div>
-        <div class="cl" style="grid-column:3">Swerve</div>
-        <div class="cl" style="grid-column:4">Straight</div>
-        <div class="rl" style="grid-row:3">Swerve</div>
-        <div class="rl" style="grid-row:4">Straight</div>
-        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-        <div class="cell" id="k12" style="grid-row:3;grid-column:4"><span class="pa">-10</span><span class="pc">,</span><span class="pb">+10</span></div>
-        <div class="cell" id="k21" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">-10</span></div>
-        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">-100</span><span class="pc">,</span><span class="pb">-100</span></div>
-      </div>
-    </div>
-    <span data-step="3" data-stepcall="mxMark" data-cells="k12,k21" data-cls="eq" style="position:absolute;width:0;height:0"></span>
-  </div>
-</section>
-
-<section class="slide content" data-i="22">
-  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
-  <h2>Solving games of chicken</h2>
-  <div class="rowfig" style="align-items:flex-start;gap:44px">
-    <ul class="bullets" style="margin-top:0;flex:1">
-      <li>There are two equilibrium points in this game (swerve/straight)</li>
-      <li data-step="1"><b>So how do you win?</b></li>
-      <li data-step="2">One way is to convince the other side that under no circumstances will you swerve &ndash; we&rsquo;ll return to commitment and credibility later</li>
-      <li data-step="3">Another way is to alternate swerve/straight strategies if you play a repeated game</li>
-    </ul>
-    <div style="flex:none;align-self:center">
-      <div class="mx" style="--cols:2;--rows:2;--cw:130px;--rh:70px">
-        <div class="chead">CHUCK</div>
-        <div class="rhead">REN</div>
-        <div class="cl" style="grid-column:3">Swerve</div>
-        <div class="cl" style="grid-column:4">Straight</div>
-        <div class="rl" style="grid-row:3">Swerve</div>
-        <div class="rl" style="grid-row:4">Straight</div>
-        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
-        <div class="cell eq" style="grid-row:3;grid-column:4"><span class="pa">-10</span><span class="pc">,</span><span class="pb">+10</span></div>
-        <div class="cell eq" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">-10</span></div>
-        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">-100</span><span class="pc">,</span><span class="pb">-100</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="23">
-  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
-  <h2>Let&rsquo;s play chicken!</h2>
-  <div class="rowfig" style="align-items:flex-start;gap:40px">
-    <ul class="bullets" style="margin-top:0;flex:1">
-      <li>Rebel Without a Cause: two stolen cars, one cliff, and whoever jumps first is chicken</li>
-      <li data-step="1">Buzz&rsquo;s sleeve catches on the door handle. He cannot jump, so he goes over &ndash; <b>committed to go straight, by accident</b></li>
-      <li data-step="2">Jim swerved because he could. <b>Was Buzz playing chicken at all by the end?</b></li>
-    </ul>
-    <div class="clipframe sm" id="ftwrap" style="align-self:center">
-      <button class="clipcover" id="ftload" type="button">
-        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
-        <span class="ct">Rebel Without a Cause, the chickie run</span>
-      </button>
-    </div>
-  </div>
-</section>
-
-<section class="slide content" data-i="24">
   <div class="kicker"><i></i>MODULE 5 · LET&rsquo;S PLAY</div>
   <h2>The hub lease</h2>
   <div class="rowfig tprules" style="top:180px;gap:36px;align-items:flex-start">
     <ul class="bullets tight" style="margin-top:0;max-width:none;flex:1;min-width:0">
-      <li>USA Air runs its hub out of Plattsburgh Airport. The lease is up, and the airline wants <b>a big cut in its gate and landing fees</b>, or it moves the hub</li>
-      <li data-step="1">Plattsburgh has said it can&rsquo;t afford the cut. Each side can <b>hold firm</b> or <b>give ground</b></li>
+      <li>USA Air runs its hub out of Vicksburg Airport. The lease is up, and the airline wants <b>a big cut in its gate and landing fees</b>, or it moves the hub</li>
+      <li data-step="1">Vicksburg has said it can&rsquo;t afford the cut. Each side can <b>hold firm</b> or <b>give ground</b></li>
       <li data-step="2">If one side gives ground, the other gets its way. If both give, you split the difference</li>
-      <li data-step="3">If both hold firm, <b>the hub is moved elsewhere</b>: USA Air loses its network, and Plattsburgh loses its biggest tenant and the jobs that come with it</li>
-      <li data-step="4">Vote. Then <b>one volunteer addresses the room</b> &ndash; and we vote again</li>
+      <li data-step="3">If both hold firm, <b>the hub is moved elsewhere</b>: USA Air loses its network, and Vicksburg loses its biggest tenant and the jobs that come with it</li>
+      <li data-step="4">Vote. Then <b>one volunteer should try to convince the other side to switch</b> &ndash; and we vote again</li>   <!-- his wording, 30 Sep 2026: in chicken the volunteer's talk is a threat, not a bridge -->
     </ul>
     <div class="tpside">
       <div style="display:flex;align-items:center;gap:24px">
-        <div class="tpqr"><img src="qr-tapaschicken.svg" alt="QR code for the hub-lease vote at ryanlamare.com/teaching/exec/demo/m5/tapas/?g=chicken"></div>
+        <div class="tpjoin"><div class="tpqr"><img src="qr-tapaschicken.svg" alt="QR code for the hub-lease vote at ryanlamare.com/teaching/exec/demo/m5/tapas/?g=chicken"></div><div class="ju">ryanlamare.com/go</div></div>
         <div class="livecount"><span class="n" id="chkN">0</span><span class="l" id="chkL">IN ROUND 1</span></div>
       </div>
-      <div class="mx" style="--cols:2;--rows:2;--cw:170px;--rh:72px">
-        <div class="chead" style="white-space:nowrap">PLATTSBURGH</div>
+      <div class="mx" style="--cols:2;--rows:2;--cw:186px;--rh:72px"> <!-- 186px: "Hub moves, Hub moves" on one line (25 Sep 2026) -->
+        <div class="chead" style="white-space:nowrap">VICKSBURG</div>
         <div class="rhead" style="white-space:nowrap">USA AIR</div>
         <div class="cl" style="grid-column:3">Give ground</div>
         <div class="cl" style="grid-column:4">Hold firm</div>
@@ -960,30 +857,48 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   </div>
 </section>
 
-<section class="slide content" data-i="25">
+<section class="slide content" data-i="22">
   <div class="kicker"><i></i>MODULE 5 · LET&rsquo;S PLAY</div>
   <h2>Who gave ground?</h2>
   <div class="tboard" id="chkBoard">
     <div class="tbar">
       <div class="livecount"><span class="n" id="chkN2">0</span><span class="l" id="chkL2">IN ROUND 1</span></div>
-      <div class="tlegend"><span class="lg r"><i></i>USA Air</span><span class="lg t"><i></i>Plattsburgh</span></div>
+      <div class="tlegend"><span class="lg r"><i></i>USA Air</span><span class="lg t"><i></i>Vicksburg</span></div>
       <span class="tstate" id="chkState">ROUND 1 OPEN</span>
       <div class="demotag" id="chkD" style="position:static">DEMO DATA</div>
     </div>
     <div class="tpanels">
+      <!-- 30 Sep 2026, his ask: chicken is won by a split, so each round is the game's own matrix (the rules slide's), each side's votes beside its
+           moves and the cell the two majorities land in boxed in red; no equilibrium is marked, since the next slide names them -->
       <div class="tpanel" id="chkP1">
         <div class="tph">Round 1</div>
-        <div class="tgrid one">
-          <div class="tcol">Give ground</div><div class="tcol">Hold firm</div>
-          <div class="tcell" id="chk-1-a"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div><div class="tcell" id="chk-1-b"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div>
+        <div class="mx cmx" style="--cols:2;--rows:2;--cw:156px;--rh:82px">
+        <div class="chead" style="white-space:nowrap">VICKSBURG</div>
+        <div class="rhead" style="white-space:nowrap">USA AIR</div>
+        <div class="cl" style="grid-column:3">Give ground<b class="cmn" id="chk-1-ta"></b></div>
+        <div class="cl" style="grid-column:4">Hold firm<b class="cmn" id="chk-1-tb"></b></div>
+        <div class="rl" style="grid-row:3;max-width:none">Give ground<b class="cmn" id="chk-1-ra"></b></div>
+        <div class="rl" style="grid-row:4;max-width:none">Hold firm<b class="cmn" id="chk-1-rb"></b></div>
+        <div class="cell words" id="chk-1-aa" style="grid-row:3;grid-column:3;font-size:15px"><span class="pa">Split</span><span class="pc">,</span><span class="pb">Split</span></div>
+        <div class="cell words" id="chk-1-ab" style="grid-row:3;grid-column:4;font-size:15px"><span class="pa">Gives in</span><span class="pc">,</span><span class="pb">Gets its way</span></div>
+        <div class="cell words" id="chk-1-ba" style="grid-row:4;grid-column:3;font-size:15px"><span class="pa">Gets its way</span><span class="pc">,</span><span class="pb">Gives in</span></div>
+        <div class="cell words" id="chk-1-bb" style="grid-row:4;grid-column:4;font-size:15px"><span class="pa">Hub moves</span><span class="pc">,</span><span class="pb">Hub moves</span></div>
         </div>
         <div class="tverdict" id="chk-1-v"></div>
       </div>
       <div class="tpanel" id="chkP2">
         <div class="tph">Round 2</div>
-        <div class="tgrid one">
-          <div class="tcol">Give ground</div><div class="tcol">Hold firm</div>
-          <div class="tcell" id="chk-2-a"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div><div class="tcell" id="chk-2-b"><span class="tcount"></span><span class="tsplit"></span><div class="tlane"></div></div>
+        <div class="mx cmx" style="--cols:2;--rows:2;--cw:156px;--rh:82px">
+        <div class="chead" style="white-space:nowrap">VICKSBURG</div>
+        <div class="rhead" style="white-space:nowrap">USA AIR</div>
+        <div class="cl" style="grid-column:3">Give ground<b class="cmn" id="chk-2-ta"></b></div>
+        <div class="cl" style="grid-column:4">Hold firm<b class="cmn" id="chk-2-tb"></b></div>
+        <div class="rl" style="grid-row:3;max-width:none">Give ground<b class="cmn" id="chk-2-ra"></b></div>
+        <div class="rl" style="grid-row:4;max-width:none">Hold firm<b class="cmn" id="chk-2-rb"></b></div>
+        <div class="cell words" id="chk-2-aa" style="grid-row:3;grid-column:3;font-size:15px"><span class="pa">Split</span><span class="pc">,</span><span class="pb">Split</span></div>
+        <div class="cell words" id="chk-2-ab" style="grid-row:3;grid-column:4;font-size:15px"><span class="pa">Gives in</span><span class="pc">,</span><span class="pb">Gets its way</span></div>
+        <div class="cell words" id="chk-2-ba" style="grid-row:4;grid-column:3;font-size:15px"><span class="pa">Gets its way</span><span class="pc">,</span><span class="pb">Gives in</span></div>
+        <div class="cell words" id="chk-2-bb" style="grid-row:4;grid-column:4;font-size:15px"><span class="pa">Hub moves</span><span class="pc">,</span><span class="pb">Hub moves</span></div>
         </div>
         <div class="tverdict" id="chk-2-v"></div>
       </div>
@@ -994,48 +909,196 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
   <span data-step="3" data-stepcall="tbReveal" data-g="chk" data-r="2" style="position:absolute;width:0;height:0"></span>
 </section>
 
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
+  <h2>Chicken</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:44px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>Two drivers head straight at each other. Whoever swerves first loses face, and whoever holds the line wins</li>
+      <li data-step="1">If both swerve, nobody wins and nobody loses</li>
+      <li data-step="2">If neither swerves, both crash &ndash; the worst outcome for both of them</li>
+      <li data-step="3">Two equilibria again &ndash; one swerves, one goes straight &ndash; <b>but each of you wants to be the one who goes straight</b></li>
+    </ul>
+    <div style="flex:none;align-self:flex-start;margin-top:14px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
+        <div class="chead">DRIVER 2</div>
+        <div class="rhead">DRIVER 1</div>
+        <div class="cl" style="grid-column:3">Swerve</div>
+        <div class="cl" style="grid-column:4">Straight</div>
+        <div class="rl" style="grid-row:3">Swerve</div>
+        <div class="rl" style="grid-row:4">Straight</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" id="k12" style="grid-row:3;grid-column:4"><span class="pa">&minus;10</span><span class="pc">,</span><span class="pb">+10</span></div>
+        <div class="cell" id="k21" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">&minus;10</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">&minus;100</span><span class="pc">,</span><span class="pb">&minus;100</span></div>
+      </div>
+    </div>
+    <span data-step="3" data-stepcall="mxMark" data-cells="k12,k21" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="24">
+  <div class="kicker"><i></i>MODULE 5 · CHICKEN</div>
+  <h2>Solving games of chicken</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:44px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>There are two equilibria here but the incentive to go straight results in a catastrophic outcome if you can't coordinate</li>
+      <li data-step="1"><b>So how do you win?</b></li>
+      <li data-step="2">One way is to convince the other side that under no circumstances will you swerve &ndash; we&rsquo;ll return to commitment and credibility later when we talk about strategic moves</li>
+      <li data-step="3">Another way is to alternate swerve/straight strategies if you play a repeated game (knowing if a game repeats is crucial)</li>
+    </ul>
+    <div style="flex:none;align-self:flex-start;margin-top:14px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
+        <div class="chead">DRIVER 2</div>
+        <div class="rhead">DRIVER 1</div>
+        <div class="cl" style="grid-column:3">Swerve</div>
+        <div class="cl" style="grid-column:4">Straight</div>
+        <div class="rl" style="grid-row:3">Swerve</div>
+        <div class="rl" style="grid-row:4">Straight</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell eq" style="grid-row:3;grid-column:4"><span class="pa">&minus;10</span><span class="pc">,</span><span class="pb">+10</span></div>
+        <div class="cell eq" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">&minus;10</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">&minus;100</span><span class="pc">,</span><span class="pb">&minus;100</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>MODULE 5 · WHEN IT GOES WRONG</div>
+  <h2>When coordination locks in</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets">
+      <li>The night before the Challenger launch in 1986, the engineers who built the booster rockets told NASA it was too cold to launch safely</li>
+      <li data-step="1">NASA pushed back, and the engineers&rsquo; managers reversed the decision. NASA asked if anyone had anything to add. The engineers there stayed silent</li>
+      <li data-step="2"><b>This is a battle of the sexes.</b> The engineers and NASA had to give one answer. Engineers preferred to wait but NASA preferred to launch, and the call settled on NASA&rsquo;s equilibrium -- with devastating consequences</li>
+    </ul>
+    <div class="clipframe xs" id="chwrap">
+      <button class="clipcover" id="chload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Challenger, the night before the launch</span>
+      </button>
+    </div>
+  </div>
+</section>
+
 <section class="slide content" data-i="26">
-  <div class="kicker"><i></i>MODULE 5 · YOUR GAME</div>
-  <h2 style="max-width:40ch">A coordination game from your world</h2>
-  <div class="leadline" style="text-align:left;max-width:800px;margin-top:22px">In pairs, one phone: a situation from one of your worlds where two sides had to land on the same thing.</div>
-  <div class="ysetup">
-    <div class="yq ply"><div class="yk">THE PLAYERS</div><div class="yt">Who were the players?</div></div>
-    <div class="yq sit" data-step="1"><div class="yk">THE SITUATION</div><div class="yt">What was the situation?</div></div>
-    <div class="yq opt" data-step="2"><div class="yk">THE OPTIONS</div><div class="yt">What were the options?</div></div>
-    <div class="yq game" data-step="3"><div class="yk">THE GAME</div><div class="yt">Stag hunt, battle of the sexes, or chicken?</div></div>
-    <div class="yq fp" data-step="4"><div class="yk">THE FOCAL POINT</div><div class="yt">What was the focal point?</div></div>
-  </div>
-  <div style="position:absolute;right:96px;top:290px;width:300px;display:flex;flex-direction:column;align-items:center;gap:18px">
-    <div class="joinchip">
-      <div class="qr"><img src="qr-games.svg" alt="QR code for the coordination game page at ryanlamare.com/go"></div>
-      <div class="ju">ryanlamare.com/go</div>
+  <div class="kicker"><i></i>MODULE 5 · WHEN IT GOES WRONG</div>
+  <h2>How do you break a bad focal point?</h2>
+  <div class="rowfig" style="align-items:center;gap:40px;top:252px">
+    <ul class="bullets">
+      <li>The focal point on that call became &ldquo;go&rdquo;. Once everyone expected everyone else to go along with it, going along was the best response</li>
+      <li data-step="1">If you lead the room, your job might be to move the focal point: <b>you can invite dissent, and you can protect the people who give it</b></li>
+      <li data-step="2">One tool is the &ldquo;premortem&rdquo;: before a big decision, assume it has already failed, and ask everyone in the room to say why</li>
+    </ul>
+    <div class="ba">
+      <div class="station then"><svg class="pg" viewBox="0 0 116 132"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 21 Q52 17 61 21 L58 38 L46 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 21 Q92 17 101 21 L98 38 L86 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 61 Q12 57 21 61 L18 78 L6 78 Z"></path><circle fill="var(--red,#CE1E32)" cx="52" cy="52" r="5"></circle><path fill="var(--red,#CE1E32)" d="M43 61 Q52 57 61 61 L58 78 L46 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="52" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 61 Q92 57 101 61 L98 78 L86 78 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 101 Q12 97 21 101 L18 118 L6 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="52" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M43 101 Q52 97 61 101 L58 118 L46 118 Z"></path><circle fill="var(--ink,#1B1C19)" cx="92" cy="92" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M83 101 Q92 97 101 101 L98 118 L86 118 Z"></path></svg><div class="slbl">Conformity &amp; silence</div></div>
+      <div class="arrow" data-step="1">&rarr;</div>
+      <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 64 64"><circle fill="var(--ink,#1B1C19)" cx="24" cy="13" r="7"></circle><path fill="var(--ink,#1B1C19)" d="M16,23 L32,23 L29,46 L19,46 Z"></path><rect fill="var(--ink,#1B1C19)" x="19" y="46" width="5" height="14"></rect><rect fill="var(--ink,#1B1C19)" x="25" y="46" width="5" height="14"></rect><line fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" stroke-linecap="round" x1="30" y1="26" x2="46" y2="12"></line><circle fill="var(--ink,#1B1C19)" cx="47" cy="11" r="2.6"></circle><line fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" stroke-linecap="round" x1="18" y1="26" x2="14" y2="40"></line><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M52,9 q3,4 0,9"></path><path fill="none" stroke="var(--red,#CE1E32)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M56,5 q5,8 0,17"></path></svg><div class="slbl">Invite &amp; protect dissent</div></div>
     </div>
-    <div class="livecount"><span class="n" data-jetn>0</span><span class="l">WINDOWS<br>LIT</span></div>
   </div>
 </section>
 
-<section class="slide content" data-i="27" style="padding:0">
-  <svg class="fieldstage" id="flightSvg" viewBox="0 0 1280 720" aria-hidden="true"></svg>
-  <div class="fieldtitle">MODULE 5 · YOUR COORDINATION GAMES</div>
-  <div class="fieldcount"><i class="s"></i><b id="lgS">0</b><span>STAG HUNT</span><i class="b"></i><b id="lgB">0</b><span>BATTLE OF THE SEXES</span><i class="c"></i><b id="lgC">0</b><span>CHICKEN</span><b data-jetn>0</b><span>IN</span></div>
-  <div class="demotag" id="jetD" style="position:absolute;top:20px;left:40px;right:auto">DEMO DATA</div>
-  <div class="rowopen" id="rowOpen">
-    <svg class="rowsvg" id="rowSvg" viewBox="0 0 700 610" aria-hidden="true"></svg>
-    <div class="rowscreen"><div class="k">The focal point</div><div class="t" id="rowFp"></div></div>
-    <div class="rownotes">
-      <div class="rowwho"><span class="rowav" id="rowAv"></span><div class="n" id="rowWho"></div></div>
-      <div class="g s" id="rowG"></div>
-      <div class="f sit"><div class="k">The situation</div><div class="t" id="rowSit"></div></div>
-      <div class="f ply"><div class="k">The players</div><div class="t" id="rowP"></div></div>
-      <div class="f opt"><div class="k">The options</div><div class="t" id="rowOpt"></div></div>
-    </div>
-    <button type="button" class="x" id="rowClose" aria-label="Close the row">&times;</button>
+<section class="slide content" data-i="27">
+  <div class="kicker"><i></i>MODULE 5 &middot; WHEN IT GOES RIGHT</div>
+  <h2>How NUMMI moved A BAD focal point TO A GOOD ONE</h2>
+  <div class="rowfig" style="align-items:center;gap:32px;top:206px">
+    <ul class="bullets">
+      <li>In 1982, GM closed its Fremont plant, where absenteeism ran over 20%</li>
+      <li data-step="1">In 1984, GM and Toyota reopened it as NUMMI, and rehired most of the same workers</li>
+      <li data-step="2">Managers and workers had coordinated around hostility and conflict. The new leadership <b>changed the focal point from conflict to kaizen</b></li>
+      <li data-step="3">By 1986, absenteeism was about 2%, and NUMMI&rsquo;s quality had gone from GM&rsquo;s worst to its best</li>
+      <li data-step="4">But there is no reason to expect the coordination to hold if new leaders come in with different priorities. GM never fully embraced the equilibrium, and NUMMI closed in 2010</li>
+    </ul>
+    <a class="exlink" href="https://www.lean.org/the-lean-post/articles/how-nummi-changed-its-culture/" target="_blank" rel="noopener"><div class="ba nummi">
+      <div class="station then"><svg class="pg" viewBox="0 0 136 82" style="height:92px" aria-hidden="true"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"></path><circle fill="none" stroke="var(--ink,#1B1C19)" stroke-width="1.6" stroke-dasharray="2.5 2" cx="40" cy="12" r="5"></circle><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="1.6" stroke-dasharray="2.5 2" d="M31 21 Q40 17 49 21 L46 38 L34 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="68" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M59 21 Q68 17 77 21 L74 38 L62 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="96" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M87 21 Q96 17 105 21 L102 38 L90 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="124" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M115 21 Q124 17 133 21 L130 38 L118 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 63 Q12 59 21 63 L18 80 L6 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="40" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M31 63 Q40 59 49 63 L46 80 L34 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="68" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M59 63 Q68 59 77 63 L74 80 L62 80 Z"></path><circle fill="none" stroke="var(--ink,#1B1C19)" stroke-width="1.6" stroke-dasharray="2.5 2" cx="96" cy="54" r="5"></circle><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="1.6" stroke-dasharray="2.5 2" d="M87 63 Q96 59 105 63 L102 80 L90 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="124" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M115 63 Q124 59 133 63 L130 80 L118 80 Z"></path></svg><div class="slbl">Conflict</div><div class="ssub">1982 &middot; over 20% absent</div></div>
+      <div class="arrow" data-step="2">&rarr;</div>
+      <div class="station now" data-step="3"><svg class="pg" viewBox="0 0 136 82" style="height:92px" aria-hidden="true"><circle fill="var(--ink,#1B1C19)" cx="12" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 21 Q12 17 21 21 L18 38 L6 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="40" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M31 21 Q40 17 49 21 L46 38 L34 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="68" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M59 21 Q68 17 77 21 L74 38 L62 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="96" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M87 21 Q96 17 105 21 L102 38 L90 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="124" cy="12" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M115 21 Q124 17 133 21 L130 38 L118 38 Z"></path><circle fill="var(--ink,#1B1C19)" cx="12" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M3 63 Q12 59 21 63 L18 80 L6 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="40" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M31 63 Q40 59 49 63 L46 80 L34 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="68" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M59 63 Q68 59 77 63 L74 80 L62 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="96" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M87 63 Q96 59 105 63 L102 80 L90 80 Z"></path><circle fill="var(--ink,#1B1C19)" cx="124" cy="54" r="5"></circle><path fill="var(--ink,#1B1C19)" d="M115 63 Q124 59 133 63 L130 80 L118 80 Z"></path></svg><div class="slbl">Kaizen</div><div class="ssub">1986 &middot; about 2% absent</div></div>
+    </div></a>
   </div>
 </section>
 
-<section class="slide content learn" data-i="28">
-  <div class="kicker"><i></i>MODULE 5 · WHAT DID WE LEARN</div>
-  <h2>What did we learn?</h2>
+<section class="slide content" data-i="28" data-short="out">
+  <div class="kicker"><i></i>MODULE 5 · YOUR WORLD</div>
+  <h2 style="max-width:40ch">coordination games in your world</h2>
+  <div class="leadline" style="margin-top:22px">Think of a situation from your world, a negotiation perhaps, where two sides had to coordinate on the same thing for it to work.</div>
+  <div class="rail" style="min-width:980px;top:258px;gap:18px">   <!-- 290/24 until 29 Sep, when the band grew a line (then share it with the room) -->
+    <div class="ritem"><div class="rn">1</div><div class="rt">Who were the players, and what was the situation?</div></div>
+    <div class="ritem"><div class="rn">2</div><div class="rt">What were the options?</div></div>
+    <div class="ritem"><div class="rn">3</div><div class="rt">Was it a stag hunt, battle of the sexes, or chicken game?</div></div>
+    <div class="ritem"><div class="rn">4</div><div class="rt">What was the focal point?</div></div>
+    <div class="ritem"><div class="rn">5</div><div class="rt">Did the equilibrium you coordinated on align with your personal preferences?</div></div>
+  </div>
+  <div class="talk" data-step="1" style="bottom:44px">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> (a)&nbsp;Think of a situation on your own; (b)&nbsp;talk it out at your table; (c)&nbsp;one person shares with the whole group.</div>
+    <div class="tnote"><b>YOUR NOTES, OPTIONAL</b><span>ryanlamare.com/go/notes</span></div>
+  </div>
+</section>
+
+<!-- Coordination games are everywhere (23 Sep 2026, Ryan's call): after the room has
+     given its own, his, like Prisoner's dilemmas are everywhere in Module 4; a row a
+     keypress, each tile a link to the story. Readings and academic work go to Extra
+     resources instead (his split, the same night). -->
+<section class="slide content" data-i="29">
+  <div class="kicker"><i></i>MODULE 5 &middot; EXAMPLES</div>
+  <h2>Coordination games are everywhere</h2>
+  <div class="pdgrid">
+      <a class="pdt" href="https://www.youtube.com/watch?v=QACGoKb48_0" target="_blank" rel="noopener" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15 L20 7 L34 15 Z"/><path d="M10 18 V29 M17 18 V29 M23 18 V29 M30 18 V29"/><path d="M6 32 H34"/></svg>
+        <span class="pdtl">Bank runs</span>
+        <span class="pdtx">Silicon Valley Bank, March 2023: $42 billion left in a single day</span>
+        <span class="pdts">WSJ &#8599;</span>
+      </a>
+      <a class="pdt" href="https://www.kastle.com/resource/evidence-of-the-new-hybrid-work-pattern/" target="_blank" rel="noopener" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="9" width="26" height="24" rx="2"/><path d="M7 16 H33 M13 6 V12 M27 6 V12"/><path d="M12 24 H15 M18.5 24 H21.5 M25 24 H28" stroke-width="4"/></svg>
+        <span class="pdtl">Office anchor days</span>
+        <span class="pdtx">Offices fill up Tuesday to Thursday; Fridays run 43% below midweek</span>
+        <span class="pdts">Kastle &#8599;</span>
+      </a>
+      <a class="pdt" href="https://www.youtube.com/watch?v=ZoPEaBAe0CY" target="_blank" rel="noopener" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 31 L15 22 L21 26 L32 11"/><path d="M25 11 H32 V18"/></svg>
+        <span class="pdtl">GameStop</span>
+        <span class="pdtx">January 2021: small investors piled in together, and the price rose 1,600% in sixteen days</span>
+        <span class="pdts">CNET &#8599;</span>
+      </a>
+      <a class="pdt" href="https://guides.loc.gov/this-month-in-business-history/november/day-of-two-noons" target="_blank" rel="noopener" data-step="1">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="20" r="13"/><path d="M20 12 V20 L26 23"/></svg>
+        <span class="pdtl">Railway time</span>
+        <span class="pdtx">18 November 1883: North America&rsquo;s railroads reset their clocks to one set of time zones</span>
+        <span class="pdts">Library of Congress &#8599;</span>
+      </a>
+      <a class="pdt" href="https://www.yahoo.com/news/factbox-more-automakers-plug-teslas-135303379.html" target="_blank" rel="noopener" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7 V13 M25 7 V13"/><path d="M11 13 H29 V19 C29 25 25 28 20 28 C15 28 11 25 11 19 Z"/><path d="M20 28 V34"/></svg>
+        <span class="pdtl">Electric car plugs</span>
+        <span class="pdtx">Ford took Tesla&rsquo;s plug in May 2023, and twenty more brands followed within nine months</span>
+        <span class="pdts">Reuters &#8599;</span>
+      </a>
+      <a class="pdt" href="https://www.hollywoodreporter.com/business/business-news/warners-sides-blu-ray-high-101891/" target="_blank" rel="noopener" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="20" cy="20" r="13"/><circle cx="20" cy="20" r="3.5"/><path d="M20 10 A10 10 0 0 1 30 20" stroke-width="1.8"/></svg>
+        <span class="pdtl">Blu-ray VS. HD DVD</span>
+        <span class="pdtx">Warner went Blu-ray only on 4 January 2008, and Toshiba gave up six weeks later</span>
+        <span class="pdts">Hollywood Reporter &#8599;</span>
+      </a>
+      <a class="pdt" href="https://commission.europa.eu/news-and-media/news/eu-common-charger-rules-power-all-your-devices-single-charger-2024-12-28_en" target="_blank" rel="noopener" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="12" width="22" height="11" rx="5.5"/><path d="M14.5 17.5 H25.5"/><path d="M20 23 V33"/></svg>
+        <span class="pdtl">One charger</span>
+        <span class="pdtx">A voluntary deal never produced one plug; an EU law did, and the iPhone switched in 2023</span>
+        <span class="pdts">European Commission &#8599;</span>
+      </a>
+      <a class="pdt" href="https://www.popsci.com/technology/sweden-switch-sides-of-road/" target="_blank" rel="noopener" data-step="2">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6 L9 34 M26 6 L31 34"/><path d="M20 8 V12 M20 17 V21 M20 26 V30"/></svg>
+        <span class="pdtl">SWITCHING LANES</span>
+        <span class="pdtx">Sweden switched sides at 4:50 am on 3 September 1967, twelve years after 83% voted no</span>
+        <span class="pdts">Popular Science &#8599;</span>
+      </a>
+  </div>
+</section>
+
+<section class="slide content learn" data-i="30">
+  <div class="kicker"><i></i>MODULE 5 · TAKEAWAYS</div>
+  <h2>a few key takeaways...</h2>
   <div class="tiles">
     <div class="tile">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><use href="#im-tower"/></svg></div>
@@ -1045,52 +1108,96 @@ ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
     <div class="tile" data-step="1">
       <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100" aria-hidden="true"><use href="#im-mx3"/></svg></div>
       <div class="lbl">Nash equilibrium</div>
-      <div class="sent">Each player is choosing a best response to what the others do</div>
+      <div class="sent">Each player is choosing a best response to the others</div>
     </div>
     <div class="tile" data-step="2">
-      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4.0"></rect></svg></div>
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><circle cx="18" cy="26" r="7" fill="var(--teal)"></circle><circle cx="34" cy="26" r="7" fill="var(--terracotta)"></circle></svg></div>
       <div class="lbl">Stag hunt</div>
-      <div class="sent">Aligned: trust unlocks the best one</div>
+      <div class="sent">Symmetrical preferences: assurance and trust are key</div>
     </div>
     <div class="tile" data-step="3">
-      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.7"></rect></svg></div>
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><circle cx="26" cy="26" r="7" fill="var(--teal)"></circle><circle cx="74" cy="74" r="7" fill="var(--terracotta)"></circle></svg></div>
       <div class="lbl">Battle of the sexes</div>
-      <div class="sent">Different preferences over which one</div>
+      <div class="sent">Asymmetric preferences: coordination becomes harder, as in most negotiations</div>
     </div>
     <div class="tile" data-step="4">
-      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--red)" x="54" y="54" width="40" height="40"></rect></svg></div>
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--red)" x="54" y="54" width="40" height="40"></rect><rect x="57" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><rect x="9" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><circle cx="74" cy="26" r="7" fill="var(--terracotta)"></circle><circle cx="26" cy="74" r="7" fill="var(--teal)"></circle></svg></div>
       <div class="lbl">Chicken</div>
-      <div class="sent">Opposed: miscoordination is disaster</div>
+      <div class="sent">Opposed preferences: miscoordination is disaster</div>
     </div>
   </div>
-  <div class="stopnote" data-step="5" style="position:absolute;left:0;right:0;bottom:84px;justify-content:center"><i></i><span>Where you land turns on <b>focal points</b></span></div>
+  <div class="stopnote" data-step="5" style="position:absolute;left:0;right:0;bottom:84px;justify-content:center"><i></i><span>How you solve these games depends on <b>focal points, irrespective of your personal preferences or beliefs!</b></span></div>
 </section>
 
-<section class="slide content" data-i="29">
-  <div class="kicker"><i></i>MODULE 5 · TOP OF THE TABLE</div>
-  <h2>Top of the table</h2>
-  <div class="fig" style="top:200px;gap:30px">
-    <div class="scb">
-      <div class="scbrow head"><span class="rk"></span><span class="nm"></span><span class="pv">Quiz</span><span class="tt">Total</span></div>
-      <div class="scbrow" data-step="5" id="scbr0"><div class="demotag" id="scbD">DEMO DATA</div><span class="rk">1</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="4" id="scbr1"><span class="rk">2</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="3" id="scbr2"><span class="rk">3</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="2" id="scbr3"><span class="rk">4</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
-      <div class="scbrow" data-step="1" id="scbr4"><span class="rk">5</span><span class="nm"></span><span class="pv"></span><span class="tt"></span></div>
+<section class="slide content" data-i="31">
+  <div class="kicker"><i></i>MODULE 5 · RESOURCES</div>
+  <h2>Extra resources</h2>
+  <div class="resrc dense">
+    <div class="rcol">
+      <div class="rhead">Watch and listen</div>
+      <a class="rcard" href="https://www.youtube.com/watch?v=o2VFgHGKzx4" target="_blank" rel="noopener" data-yt="o2VFgHGKzx4">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Bert and Ernie, game theorists</div><div class="rmeta">Sesame Street &middot; 10 minutes</div><div class="rwhy">Which of our three games are they playing?</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=Ds6ie8IV-LI" target="_blank" rel="noopener" data-yt="Ds6ie8IV-LI">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Lessons From the Challenger Tragedy</div><div class="rmeta">Retro Report &middot; 18 minutes</div><div class="rwhy">The whole film behind the clip, through to Columbia in 2003</div></span>
+      </a>
+      <a class="rcard" href="https://www.netflix.com/title/70264888" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Black Mirror: Nosedive</div><div class="rmeta">Netflix &middot; 63 minutes</div><div class="rwhy">Nosedive as a stag hunt game</div></span>
+      </a>
+      <a class="rcard" href="https://freakonomics.com/podcast/failure-is-your-friend-rebroadcast/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Failure Is Your Friend</div><div class="rmeta">Freakonomics Radio &middot; podcast</div><div class="rwhy">Allan McDonald on the launch, Gary Klein on the premortem</div></span>
+      </a>
+      <a class="rcard" href="https://www.thisamericanlife.org/403/nummi-2010" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">NUMMI</div><div class="rmeta">This American Life &middot; 55 minutes</div><div class="rwhy">How GM&rsquo;s worst plant became its best, and why it never spread</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=b7nnmZWC8_E" target="_blank" rel="noopener" data-yt="b7nnmZWC8_E">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Inside Henry Ford&rsquo;s Failed Amazon City</div><div class="rmeta">Business Insider &middot; video</div><div class="rwhy">Ford&rsquo;s town in the Amazon, as a battle of the sexes</div></span>
+      </a>
     </div>
-    <div class="cap">Points from the common knowledge quiz, on top of your running total. Top five only &ndash; check your own score any time at <b>ryanlamare.com/go/points</b>.</div>
+    <div class="rcol">
+      <div class="rhead">Read</div>
+      <a class="rcard" href="https://www.hup.harvard.edu/books/9780674840317" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Strategy of Conflict</div><div class="rmeta">Thomas Schelling &middot; 1960</div><div class="rwhy">The book that named focal points, and our New York question</div></span>
+      </a>
+      <a class="rcard" href="https://wwnorton.com/books/9780393337174" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Art of Strategy, chapter 4</div><div class="rmeta">Dixit and Nalebuff &middot; A Beautiful Equilibrium</div><div class="rwhy">Focal points, battle of the sexes and chicken, in our book</div></span>
+      </a>
+      <a class="rcard" href="https://www.nobelprize.org/prizes/economic-sciences/2022/popular-information/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Banks and financial crises</div><div class="rmeta">The Nobel Prize in Economics, 2022</div><div class="rwhy">Bank runs as a coordination problem, in plain language</div></span>
+      </a>
+      <a class="rcard" href="https://hbr.org/1993/01/time-and-motion-regained" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Time-and-Motion Regained</div><div class="rmeta">Paul Adler &middot; Harvard Business Review, 1993</div><div class="rwhy">What changed at NUMMI, from the researcher who studied it</div></span>
+      </a>
+      <a class="rcard" href="https://cmr.berkeley.edu/1999/02/41-2-the-art-of-standards-wars/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Art of Standards Wars</div><div class="rmeta">Shapiro and Varian &middot; California Management Review, 1999</div><div class="rwhy">How standards wars are won, from a century of them</div></span>
+      </a>
+      <a class="rcard" href="https://www.npr.org/2021/03/07/974534021/remembering-allan-mcdonald-he-refused-to-approve-challenger-launch-exposed-cover" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Remembering Allan McDonald</div><div class="rmeta">Howard Berkes &middot; NPR</div><div class="rwhy">What happened to the engineer who refused to sign</div></span>
+      </a>
+    </div>
   </div>
 </section>
 
 </div></div>
-<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
 <a class="homelink" href="/teaching/exec/demo/">ALL MODULES</a>
 
-<script src="/teaching/exec/demo/go/scores.js"></script>
 <script>
 const POLL_API='https://gt-poll.rlamare.workers.dev';
-/* ?room=<x> suffixes the module's game rooms (m5-invest, m5-bos, m5-chicken,
-   m5-games) for a rehearsal, the same switch as m4; trial/m5.js plays the
+/* ?room=<x> suffixes the module's game rooms (m5-invest, m5-bos, m5-chicken)
+   for a rehearsal, the same switch as m4; trial/m5.js plays the
    phones into the same rooms. The quiz stays on its real polls. A chip on
    the screen says so, because a QR scanned off this deck still opens the
    real rooms. */
@@ -1116,7 +1223,7 @@ function refreshShownCalls(){
    open round 2 on every phone (the deck posts a "::open|2" marker, once),
    reveal round 2. Each panel is a crowd of invested against didn't invest,
    the investment rate, and whether the venture paid. Nobody's money is
-   named on screen; each person sees their own on /go/points. ---- */
+   named on screen; each person sees their own on their phone. ---- */
 (function(){
   const R=2;
   const DEMO=[['Alex','i','i'],['Sam','d','i'],['Priya','i','i'],['Marcus','d','i'],['Elena','i','i'],['Tom','d','i'],['Nadia','i','i'],['Chris','d','i'],['Dara','i','i'],['Kai','i','i']];
@@ -1142,7 +1249,7 @@ function refreshShownCalls(){
       const ci=document.getElementById('inv-'+r+'-i'), cd=document.getElementById('inv-'+r+'-d');
       ci.querySelector('.tcount').textContent=on?x.inN:''; cd.querySelector('.tcount').textContent=on?x.out:'';
       lane(ci,on?x.inN:0); lane(cd,on?x.out:0);
-      document.getElementById('inv-'+r+'-v').innerHTML=on?(x.part?Math.round(x.rate*100)+'% invested &ndash; '+(x.pays?'<b>it pays out: $50 on top for every investor</b>':'<b>under 90%: every investor loses their $100</b>'):'Nobody answered'):'';
+      document.getElementById('inv-'+r+'-v').innerHTML=on?(x.part?Math.round(x.rate*100)+'% invested &ndash; '+(x.pays?'<b>it pays out: &pound;50 on top for every investor</b>':'<b>under 90%: every investor loses their &pound;100</b>'):'Nobody answered'):'';
     }
   }
   window.invReveal=function(r,on){
@@ -1157,12 +1264,16 @@ function refreshShownCalls(){
   function fetchIt(){
     return fetch(POLL_API+'/p/m5-invest'+M5SUF+'/answers').then(r=>r.json()).then(d=>{
       st.live=true; st.players=new Map(); st.open2=false;
+      /* a marker counts only once someone has played before it (25 Sep 2026): a click-through
+         of the deck with no phones leaves markers that must not move the day's phones to round 2 */
+      let played1=false;
       (d.answers||[]).forEach(t=>{
         const line=String(t).trim();
-        if(line==='::open|2'){st.open2=true;return;}
+        if(line==='::open|2'){if(played1)st.open2=true;return;}
         const m=line.match(/^(.{1,40}?)\s*\|\s*([12])\s*\|\s*([id])$/i);
         if(!m)return;
         const key=m[1].trim().toLowerCase();
+        if(+m[2]===1)played1=true;
         if(!st.players.has(key))st.players.set(key,{name:m[1].trim(),rounds:['','']});
         st.players.get(key).rounds[+m[2]-1]=m[3].toLowerCase();
       });
@@ -1237,7 +1348,14 @@ function krTop(k){
    dropped, a leading "the" ignored, digit-only answers compared without
    spaces ("50 - 50" is "50/50"), and a shorter answer joins a longer one
    that contains it as whole words ("Kelce" joins "Travis Kelce") */
-function fuzzyKey(t){
+function fuzzyKey(t,id){
+  /* the two piles: only the numbers count, larger first, and one number
+     alone is a pile and what it leaves ("50 and 50", "£50 each", "60" all land) */
+  if(id==='m5-k11'){
+    const n=(String(t).match(/\d+(\.\d+)?/g)||[]).map(Number);
+    if(n.length===1&&n[0]<=100)n.push(100-n[0]);
+    if(n.length===2)return n.sort((a,b)=>b-a).join('-');
+  }
   let s=String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   s=s.replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
   s=s.replace(/^(the|a|an) /,'');
@@ -1257,10 +1375,14 @@ function fuzzyGroups(counts){
 
 window.krRow=function(el,on){
   const k=KROWS[el.dataset.k];
-  if(k)k.frozen=on; /* the reveal is a snapshot: the row stops taking new answers from the room */
+  /* the reveal is a snapshot: the row stops taking new answers from the room. A row that has not
+     yet heard from the room is fetched at once and freezes when its answers arrive: until 25 Sep 2026
+     a reload on this slide could freeze a row on its demo numbers, with no DEMO DATA tag */
+  if(k){k.frozen=on&&!!k.live;if(on&&!k.live&&window.krFetch)window.krFetch(k);}
   const qa=el.querySelector('.qa'), bar=el.querySelector('.qbar i'),
         qp=el.querySelector('.qp'), qm=el.querySelector('.qm');
   if(!on||!k){qa.textContent='';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  if(!k.live&&Object.values(KROWS).some(x=>x.live)){qa.textContent='\u2026';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
   const t=krTop(k);
   if(!t){qa.textContent='no answers yet';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
   const pct=Math.round(t.n/t.total*100);
@@ -1277,6 +1399,9 @@ window.krRow=function(el,on){
   function fetchOne(){
     const k=KROWS[keys[i%keys.length]];i++;
     if(k.frozen)return;
+    fetchRow(k);
+  }
+  function fetchRow(k){
     const url=POLL_API+'/p/'+k.id+(k.type==='t'?'/answers':'');
     fetch(url).then(r=>r.json()).then(d=>{
       k.live=true;
@@ -1287,6 +1412,7 @@ window.krRow=function(el,on){
       refreshShownCalls();
     }).catch(()=>{});
   }
+  window.krFetch=fetchRow;
   setInterval(fetchOne,700);fetchOne();
 })();
 
@@ -1316,36 +1442,6 @@ window.krRow=function(el,on){
   });
 })();
 
-/* ---- top of the table: recomputed from the poll rooms via /go/scores.js;
-   rows reveal fifth place first, one keypress each ---- */
-(function(){
-  const DEMO=[
-    {name:'Marcus',byEvent:{quiz:5},total:5},
-    {name:'Priya',byEvent:{quiz:4},total:4},
-    {name:'Elena',byEvent:{quiz:4},total:4},
-    {name:'Sam',byEvent:{quiz:3},total:3},
-    {name:'Tom',byEvent:{quiz:2},total:2}
-  ];
-  const EVS=['quiz'];
-  function fill(players,demo){
-    for(let i=0;i<5;i++){
-      const row=document.getElementById('scbr'+i), p=players[i];
-      row.querySelector('.nm').textContent=p?p.name:'—';
-      const pvs=row.querySelectorAll('.pv');
-      EVS.forEach((k,j)=>{pvs[j].textContent=p?(p.byEvent[k]||0):'';});
-      row.querySelector('.tt').textContent=p?p.total:'';
-    }
-    document.getElementById('scbD').style.display=demo?'':'none';
-  }
-  function refresh(){
-    GT_SCORES.load().then(d=>{
-      if(d.players.length)fill(d.players,false);
-      else fill(DEMO,true);
-    }).catch(()=>fill(DEMO,true));
-  }
-  setInterval(refresh,10000);refresh();
-})();
-
 /* ---- the two vote games: whose system (battle of the sexes) and the hub
    lease (chicken). Each phone is put on one side (r or t, by its own voter id) and votes once per round. The shape of the
    deal is ONE round, voted after the volunteer has spoken; the final
@@ -1365,7 +1461,7 @@ function makeTapasBoard(cfg){
     const votes={1:{},2:{}}; let open2=false;
     lines.forEach(t=>{
       const p=String(t).split('|').map(s=>s.trim());
-      if(p[0]==='::open'&&p[1]==='2')open2=true;
+      if(p[0]==='::open'&&p[1]==='2'){if(Object.keys(votes[1]).length)open2=true;} /* only once round 1 has votes before it (25 Sep 2026) */
       else if(p[0]==='v'&&p.length===5&&/^[A-Za-z0-9-]{8,64}$/.test(p[1])&&/^[rt]$/.test(p[2])&&/^[12]$/.test(p[3])&&/^[ab]$/.test(p[4]))
         votes[+p[3]][p[1]]={side:p[2],opt:p[4]};
     });
@@ -1400,9 +1496,19 @@ function makeTapasBoard(cfg){
       const c=counts(w,r);
       panel.classList.toggle('waiting',r===2&&!(w.open2||st.opened));
       panel.classList.toggle('revealed',st.revealed[r]);
+      /* the chicken board is the game's matrix: each side's count beside its moves, and the cell the
+         two majorities land in boxed (30 Sep 2026); the other boards keep their columns */
+      if(cfg.matrix){
+        const rev=st.revealed[r], mr=maj(c.r), mt=maj(c.t);
+        ['a','b'].forEach(o=>{
+          const er=document.getElementById(cfg.gid+'-'+r+'-r'+o), et=document.getElementById(cfg.gid+'-'+r+'-t'+o);
+          if(er)er.textContent=rev?c.r[o]:''; if(et)et.textContent=rev?c.t[o]:'';
+        });
+        ['aa','ab','ba','bb'].forEach(k=>{const e=document.getElementById(cfg.gid+'-'+r+'-'+k);if(e)e.classList.toggle('landed',!!(rev&&mr&&mt&&k===mr+mt));});
+      }
       /* a column per option; inside it one person per vote, the first side's
          people first, each in their side's colour */
-      ['a','b'].forEach(opt=>{
+      if(!cfg.matrix)['a','b'].forEach(opt=>{
         const cell=document.getElementById(cfg.gid+'-'+r+'-'+opt);
         const nr=st.revealed[r]?c.r[opt]:0, nt=st.revealed[r]?c.t[opt]:0;
         cell.querySelector('.tcount').textContent=st.revealed[r]?(nr+nt):'';
@@ -1458,47 +1564,63 @@ window.tbOpen=function(el,on){const f=window[el.dataset.g+'OpenRound'];if(!f)ret
 makeTapasBoard({gid:'bos',room:'m5-bos'+M5SUF,n:'bosN',n2:'bosN2',
   verdict:(mr,mt,c)=>{
     const A=c.r.a+c.t.a, B=c.r.b+c.t.b, tot=A+B;
-    if(Math.max(A,B)/tot>=0.6)return 'The teams will eventually coordinate on <b>'+(A>B?'Northeast':'Balta')+'&rsquo;s system</b>';
+    if(Math.max(A,B)/tot>=0.6)return 'The teams will eventually coordinate on <b>'+(A>B?'Skylark':'Kestrel')+'&rsquo;s system</b>';
     if(mr==='a'&&mt==='b')return 'Each side backed its own system';
     return 'The teams haven&rsquo;t settled on a system yet';
   },
   demo:{1:{r:['a','a','a','a','a','a','a','a','b','a'],t:['b','b','b','b','b','b','b','a','b','b']},
         2:{r:['a','a','a','a','a','a','a','a','a','b'],t:['a','a','a','a','a','a','b','a','a','b']}}});
-makeTapasBoard({gid:'chk',room:'m5-chicken'+M5SUF,n:'chkN',n2:'chkN2',
+makeTapasBoard({gid:'chk',room:'m5-chicken'+M5SUF,n:'chkN',n2:'chkN2',matrix:true,
   demo:{1:{r:['b','b','b','b','b','b','b','a','b','b'],t:['b','b','b','b','b','b','a','b','b','b']},
         2:{r:['b','b','b','b','b','b','b','b','b','a'],t:['a','a','a','a','a','a','a','b','a','a']}},
-  verdict:(mr,mt)=>{
-    if(!mr||!mt)return (mr?'Plattsburgh':'USA Air')+' is tied down the middle &ndash; no majority yet';
+  verdict:(mr,mt,c)=>{
+    const nr=c.r.a+c.r.b, nt=c.t.a+c.t.b;   /* 29 Sep 2026: an empty side and an evenly split side say so plainly */
+    if(!nr||!nt)return 'Waiting for '+(!nr?'USA Air':'Vicksburg')+'&rsquo;s votes';
+    if(!mr||!mt)return (!mr?'USA Air':'Vicksburg')+' is split evenly, so it has no move yet';
     if(mr==='b'&&mt==='b')return 'Both sides held firm &ndash; <b>the hub is moved elsewhere</b>';
     if(mr==='a'&&mt==='a')return 'Both sides gave ground &ndash; you split the difference';
-    return (mr==='b'?'USA Air':'Plattsburgh')+' held firm and '+(mr==='b'?'Plattsburgh':'USA Air')+' gave ground &ndash; <b>'+(mr==='b'?'USA Air':'Plattsburgh')+' gets its way</b>';
+    return (mr==='b'?'USA Air':'Vicksburg')+' held firm and '+(mr==='b'?'Vicksburg':'USA Air')+' gave ground &ndash; <b>'+(mr==='b'?'USA Air':'Vicksburg')+' gets its way</b>';
   }});
 
 /* ---- embedded clips: load YouTube only on click (the title spoils the punchline) ---- */
-const CLIP_REBEL='cyXaW9Jucmc';   /* the chickie run from Rebel Without a Cause */
-function clipOnClick(btnId,wrapId,videoId,title){
+function clipOnClick(btnId,wrapId,videoId,title,start,end){
+  /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
+     whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
   const btn=document.getElementById(btnId);
   if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
-  btn.addEventListener('click',()=>{
-    const wrap=document.getElementById(wrapId);
-    const f=document.createElement('iframe');
-    f.src='https://www.youtube.com/embed/'+videoId+'?autoplay=1';
-    f.title=title;
-    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-    f.allowFullscreen=true;
-    wrap.replaceChildren(f);
-  });
+  btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
+  if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
 }
 clipOnClick('jbload','jbwrap','9nB-JXH2Wyc','JetBlue customers, game theorists');
+/* Retro Report, Lessons From the Challenger Tragedy (2019, 18 min): only the teleconference,
+   6:36 'On the day before Challenger' to 10:43, McDonald refusing to sign and Kilminster signing
+   instead: the one person who stands up against the equilibrium (Ryan, 21 Sep 2026) */
+clipOnClick('chload','chwrap','Ds6ie8IV-LI','Challenger, the night before the launch (Retro Report)',396,643);
 clipOnClick('mb1load','mb1wrap','pWgyy_rlmag','Moneyball: the coordination problem in scouting');
 clipOnClick('mb2load','mb2wrap','DtumWOsgFXc','Moneyball: how Billy Beane solved it');
 /* the second clip fades in over the first on the same keypress that brings in Billy Beane's room; a playing first clip is stopped */
 window.mbSwap=function(el,on){const w1=document.getElementById('mb1wrap');w1.classList.toggle('gone',on);document.getElementById('mb2wrap').classList.toggle('shown2',on);
   if(on){const f=w1.querySelector('iframe');if(f)f.remove();}};
-clipOnClick('ftload','ftwrap',CLIP_REBEL,'Rebel Without a Cause, the chickie run');
 
-/* the closing exercise, your coordination game, is one flight: games/flight.js, loaded below (it needs POLL_API and M5SUF) */
+/* ---- Best response analysis (28 Sep 2026): each press reads one column
+   (Player 1) or one row (Player 2): that line stays lit, the rest fades, and
+   its best payoff gets a ring that stays. The last press lights nothing and
+   boxes the cell with both rings. A stack keeps going back exact. ---- */
+(function(){
+  const stack=[];
+  function paint(){
+    const line=stack.length?stack[stack.length-1]:'';
+    document.querySelectorAll('.brx .cell').forEach(c=>{
+      const on=!line||(line[0]==='c'?c.dataset.c===line.slice(1):c.dataset.r===line.slice(1));
+      c.classList.toggle('brdim',!on);
+    });
+  }
+  window.brFocus=function(el,on){
+    if(on){stack.push(el.dataset.line);}else{stack.pop();}
+    if(el.dataset.circ){const t=document.getElementById(el.dataset.circ);if(t)t.classList.toggle('circ',on);}
+    paint();
+  };
+})();
 </script>
-<script src="/teaching/exec/demo/m5/games/flight.js"></script>
 <script src="/teaching/exec/demo/deck.js"></script>
 </body></html>

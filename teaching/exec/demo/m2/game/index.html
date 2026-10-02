@@ -21,7 +21,11 @@
                     pile sizes the winner left, last few, dash-joined —
                     the deck counts who was leaving multiples of four)
      m2-centipede: "taker|other|turn"     (taker first; turn 10 = it ran)
-   Ultimatum is a two-move handshake: the proposer's offer goes through
+   Ultimatum (rebuilt 20 Sep 2026, Ryan's design): the proposer taps one of
+   six splits, 99/1 to 50/50, and locks it in; the responder sees it and
+   accepts or rejects; both phones then go green or red, and that is all.
+   The offers are discrete so the deck's board has a column for each. It
+   is a two-move handshake: the proposer's offer goes through
    m2-ult-live as "prop|resp|offer", and the responder posts the final
    "prop|resp|offer|a-or-r" line into m2-ultimatum — exactly the line
    the deck's theory-vs-results slide already plots. Latest line per
@@ -72,27 +76,24 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
 .send:disabled{opacity:.4;cursor:default}
 .back{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;
   color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
-/* the split control */
-.split{border:2.5px solid var(--ink);background:var(--card);padding:16px 16px 18px}
-.split .vals{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-.split .vals b{font-size:26px;font-weight:700}
-.split .vals .yours{color:var(--ink)}
-.split .vals .theirs{color:var(--red)}
-.split .who{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;
-  letter-spacing:.1em;font-size:11px;color:var(--muted);margin-bottom:14px}
-.split input[type=range]{width:100%;accent-color:var(--red);height:34px}
+/* the eleven offers: one tap picks a split, LOCK IT IN sends it */
+.bandhead{display:flex;justify-content:space-between;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);padding:0 4px}
+.bands{display:flex;flex-direction:column;gap:8px}
+.bands button{display:flex;justify-content:space-between;align-items:baseline;width:100%;font-family:var(--sans);font-weight:700;
+  font-size:18px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:11px 16px;cursor:pointer}
+.bands button .t{color:var(--red)}
+.bands button.mine{background:var(--red);border-color:var(--red);color:var(--paper)}
+.bands button.mine .t{color:var(--paper)}
+/* the ending, on both phones: green if it was accepted, red if it was rejected */
+body.ult-a{background:var(--green)}
+body.ult-r{background:var(--red)}
+body.ult-a,body.ult-r,body.ult-a .tag,body.ult-r .tag,body.ult-a h1,body.ult-r h1{color:var(--paper)}
+body.ult-a .tag i,body.ult-r .tag i{background:var(--paper)}
+.ultend{text-align:center;padding:34px 0 10px}
+.ultend .w{font-family:var(--display);font-weight:900;font-size:50px;line-height:1;letter-spacing:.03em}
+.ultend .s{font-weight:600;font-size:17px;line-height:1.4;margin-top:16px}
+body.ult-a .send,body.ult-r .send{background:none;border-color:var(--paper);color:var(--paper)}
 /* the landed offer */
-/* the ultimatum's ending: the £1,000 splits into the two shares, or goes to nobody */
-.ubar{border:2.5px solid var(--ink);background:var(--card);padding:16px}
-.ubar .track{display:flex;height:54px;border:2.5px solid var(--ink);background:var(--paper-soft);overflow:hidden}
-.ubar .track i{display:block;height:100%;transition:width 1.2s cubic-bezier(.4,0,.2,1),opacity .8s}
-.ubar .track i.pro{background:var(--ink);width:100%} .ubar .track i.res{background:var(--red);width:0}
-.ubar.gone .track i{width:0!important;opacity:0}
-.ubar .ul{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-weight:700;font-size:15px}
-.ubar .ul span{opacity:0;transition:opacity .5s}
-.ubar .ul span.on{opacity:1}
-.ubar .ul .a{color:var(--ink)} .ubar .ul .b{color:var(--red)}
-.ubar .whole{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);margin-bottom:8px}
 /* the turn games' ending: the pot, or the last card, goes to the taker */
 .ustage{border:2.5px solid var(--ink);background:var(--card);padding:18px 12px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
 .ustage .nm{flex:none;width:96px;text-align:center;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
@@ -114,15 +115,14 @@ input.amt{width:100%;font-family:var(--sans);font-weight:700;font-size:22px;colo
   background:var(--red);border:2.5px solid var(--red);color:var(--paper);padding:16px 6px;cursor:pointer}
 .actions button.alt{background:var(--card);color:var(--ink);border-color:var(--ink)}
 .actions button:disabled{opacity:.4;cursor:default}
-/* the pile, in the deck's four suit colours with their pips (the module 1 hand) */
+.actions.stack{flex-direction:column}   /* the card game's three removes, one above the other (27 Sep 2026) */
+.askline{font-weight:700;font-size:17px;margin-top:16px}
+/* the pile: plain cards in one colour */
 .cardpile{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:12px}
-.cardpile i{display:block;aspect-ratio:2/3;position:relative;border-radius:4px;border:2px solid var(--ink);background:var(--suit);box-shadow:0 2px 0 rgba(0,0,0,.12);--suit:var(--red)}
-.cardpile i.s0{--suit:var(--red)} .cardpile i.s1{--suit:var(--teal)} .cardpile i.s2{--suit:var(--ochre)} .cardpile i.s3{--suit:var(--terracotta)}
-.cardpile i::before{content:"";position:absolute;inset:3px;border:1.5px solid rgba(255,255,255,.55);border-radius:2px}
-.cardpile i svg{position:absolute;left:50%;top:50%;width:55%;height:55%;transform:translate(-50%,-50%);color:var(--paper)}
-.cardpile i.s2 svg{color:var(--ink)}
+.cardpile i{display:block;aspect-ratio:2/3;position:relative;border-radius:4px;border:2px solid var(--ink);background:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.cardpile i::before{content:"";position:absolute;inset:3px;border:1.5px solid rgba(255,255,255,.35);border-radius:2px}
 .cardpile i.gone{background:none;border:1.5px dashed var(--muted);opacity:.45;box-shadow:none}
-.cardpile i.gone::before,.cardpile i.gone svg{display:none}
+.cardpile i.gone::before{display:none}
 /* outcome */
 .bigcard{border:2.5px solid var(--ink);background:var(--card);padding:20px;text-align:center}
 .bigcard .head{font-weight:700;font-size:22px}
@@ -147,10 +147,6 @@ button.lock{width:100%;font-family:var(--sans);font-weight:700;font-size:16px;le
 button.lock:disabled{background:var(--card);border-color:var(--ink);color:var(--ink);opacity:.45;cursor:default}
 </style>
 </head><body>
-<svg style="display:none" aria-hidden="true"><symbol id="pip0" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="13" cy="9" r="5"/><path d="M5 18 Q13 14 21 18 L18 33 L8 33 Z"/><circle cx="29" cy="9" r="5"/><path d="M21 18 Q29 14 37 18 L34 33 L24 33 Z" opacity=".55"/></g></symbol>
-<symbol id="pip1" viewBox="0 0 40 40"><g fill="currentColor"><circle cx="8" cy="8" r="4"/><path d="M2 15 Q8 12 14 15 L12 26 L4 26 Z"/><circle cx="20" cy="8" r="4"/><path d="M14 15 Q20 12 26 15 L24 26 L16 26 Z"/><circle cx="32" cy="8" r="4"/><path d="M26 15 Q32 12 38 15 L36 26 L28 26 Z"/><circle cx="14" cy="26" r="4"/><path d="M8 33 Q14 30 20 33 L18 40 L10 40 Z"/><circle cx="26" cy="26" r="4"/><path d="M20 33 Q26 30 32 33 L30 40 L22 40 Z"/></g></symbol>
-<symbol id="pip2" viewBox="0 0 40 40"><text x="20" y="34" text-anchor="middle" font-family="var(--display)" font-weight="900" font-size="38" fill="currentColor">?</text></symbol>
-<symbol id="pip3" viewBox="0 0 40 40"><g fill="none" stroke="currentColor" stroke-width="3"><ellipse cx="22" cy="14" rx="15" ry="11"/><circle cx="9" cy="28" r="3"/><circle cx="4" cy="35" r="1.8"/></g><g fill="currentColor"><circle cx="22" cy="10" r="3.6"/><path d="M16 20 Q22 17 28 20 L27 23 L17 23 Z"/></g></symbol></svg>
 <div class="wrap">
   <div class="tag"><i></i>APPLIED GAME THEORY · MODULE 2</div>
   <h1 id="q">&hellip;</h1>
@@ -169,8 +165,8 @@ try{
 const app=document.getElementById('app'), q=document.getElementById('q'), st=document.getElementById('status');
 let name=null, roster=[];
 try{name=localStorage.getItem('gt-name');}catch(_){}
-if(name)claimOnce();
-fetch('/teaching/exec/demo/go/roster.json').then(r=>r.json()).then(d=>{roster=d.names||[];render();}).catch(()=>{render();});
+if(name)GT_NAMES.forgotten(voter).then(f=>{if(f){name=null;render();}else claimOnce();}); /* a Poll Desk reset of the name room: ask again */
+GT_NAMES.roster().then(n=>{roster=n;render();}); /* the attendee list, kept on the poll server and edited on the Poll Desk */
 function claimOnce(){
   let done=false;
   try{done=localStorage.getItem('gt-claimed')===name;}catch(_){}
@@ -208,13 +204,14 @@ try{jump=new URLSearchParams(location.search).get('g');}catch(_){}
 
 function render(){
   stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
   st.textContent='';
   if(!name){renderName('Who are you?',n=>GT_NAMES.guard(n,voter,m=>{
     name=m;try{localStorage.setItem('gt-name',name);}catch(_){}
     claimOnce();render();
   },app,{clean}));return;}
   if(jump){
-    const g=jump;jump=null;
+    const g=jump; /* a phone that came in by a game's QR stays in that game: start over comes back here */
     if(g==='guess')return renderGuess();
     if(g==='decade')return renderDecade();
     if(GAMES[g])return renderRole(g);
@@ -237,8 +234,52 @@ function render(){
      outtakes deck can run them */
   app.appendChild(ch);
 }
+/* one game each (Ryan, 20 Sep 2026): a phone whose name is already in a game's
+   finished games gets that game's ending, and no way back in. A Poll Desk
+   reset of the finals room lets everyone play again. If the room cannot be
+   read, the game opens. */
+const FINALS={cards:'m2-lastcard',ult:'m2-ultimatum',cent:'m2-centipede'};
 function renderRole(id){
   stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
+  q.textContent=GAMES[id].label;
+  app.innerHTML='';st.textContent='';
+  answers(FINALS[id]).catch(()=>[]).then(lines=>{
+    const mine=lines.map(t=>String(t).split('|').map(x=>x.trim()))
+      .filter(p=>p.length>=3&&(norm(p[0])===norm(name)||norm(p[1])===norm(name))).pop();
+    if(!mine)return renderRoleOpen(id);
+    if(id==='ult'){
+      const iProp=norm(mine[0])===norm(name), other=iProp?mine[1]:mine[0], offer=+mine[2], ok=String(mine[3]).toLowerCase()==='a';
+      renderUltDone(ok,ok?(iProp?'You keep &pound;'+(1000-offer)+' and '+esc(other)+' takes &pound;'+offer+'.':'You take &pound;'+offer+' and '+esc(other)+' keeps &pound;'+(1000-offer)+'.')
+                         :(iProp?esc(other)+' rejected the &pound;'+offer+', so nobody gets anything.':'You rejected the &pound;'+offer+', so nobody gets anything.'));
+    }else if(id==='cent'){
+      const turn=+mine[2];
+      centEnd({taker:mine[0],other:mine[1],ran:turn===10,pot:turn===10?1000:turn*100});
+    }else{
+      const won=norm(mine[0])===norm(name);
+      const big=document.createElement('div');big.className='bigcard';
+      big.innerHTML='<div class="head '+(won?'good':'bad')+'">'+(won?'You took the last card':esc(mine[0])+' took the last card')+'</div>'+
+        '<div class="sub">'+(won?'That wins it.':'That wins it for them.')+'</div>';
+      app.appendChild(big);
+    }
+  });
+}
+/* the centipede's ending, the ultimatum's way: a colour, the pot and one line.
+   Green on the phone that took it, red on the other */
+function centEnd(s){
+  stopPolling();
+  const mine=norm(s.taker)===norm(name);
+  document.body.classList.add(mine?'ult-a':'ult-r');
+  q.textContent='';st.textContent='';app.innerHTML='';
+  const end=document.createElement('div');end.className='ultend';
+  end.innerHTML='<div class="w">&pound;'+(s.ran?'1,000':s.pot)+'</div><div class="s">'+
+    (s.ran?'It ran all the way. '+(mine?'You were':esc(s.taker)+' was')+' up next and take'+(mine?'':'s')+' it all.'
+          :(mine?'You took it. '+esc(s.other)+' walks away with nothing.':esc(s.taker)+' took it. You walk away with nothing.'))+'</div>';
+  app.appendChild(end);
+}
+function renderRoleOpen(id){
+  stopPolling();
+  document.body.classList.remove('ult-a','ult-r');
   q.textContent=GAMES[id].label;
   app.innerHTML='';
   const ch=document.createElement('div');ch.className='choices';
@@ -257,15 +298,17 @@ function renderName(title,done){
   q.textContent=title;
   app.innerHTML='';
   const list=document.createElement('div');list.className='choices';
-  roster.forEach(n=>{
+  const me=title==='Who are you?'?'':String(name||'').toLowerCase();   /* your own name is not on your partner list */
+  roster.filter(n=>n.toLowerCase()!==me).forEach(n=>{
     const b=document.createElement('button');b.className='pick';b.textContent=n;
-    b.addEventListener('click',()=>done(clean(n)));
+    /* a tapped name asks once (27 Sep 2026: a stray tap had made Kimberly "Laura") */
+    b.addEventListener('click',()=>GT_NAMES.confirm(app,clean(n),title==='Who are you?'?'Is that you?':'Is that your partner?',()=>done(clean(n)),()=>renderName(title,done)));
     list.appendChild(b);
   });
   app.appendChild(list);
   const row=document.createElement('div');row.className='namerow';row.style.marginTop=roster.length?'12px':'0';
   const inp=document.createElement('input');
-  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list? Type the name':'Type the first name';
+  inp.maxLength=30;inp.placeholder=roster.length?'Not on the list?':'Type the first name';
   inp.autocomplete='off';
   const btn=document.createElement('button');btn.textContent='OK';
   const go=()=>{const v=clean(inp.value);if(v)done(v);};
@@ -492,7 +535,8 @@ function gameScreen(id,A,B,g,meIsA){
       cls=mine?'good':'bad';
       sub=s.ran?esc(s.taker)+' was up next and takes it all.':(mine?esc(s.other)+' walks away with nothing.':'You walk away with nothing.');
     }
-    /* the playback: the pot, or the last card, slides to whoever took it */
+    if(id==='cent'){centEnd(s);return;}
+    /* the card game's playback: the last card slides to whoever took it */
     const meLeft=true, takerIsMe=id==='cards'?norm(s.winner)===norm(name):norm(s.taker)===norm(name);
     const chipText=id==='cards'?'THE LAST CARD':'&pound;'+(s.ran?1000:s.pot);
     show('<div class="ustage"><div class="nm me">you</div><div class="mid"><div class="chip'+(id==='cards'?' card':'')+'">'+chipText+'</div></div><div class="nm them">'+esc(opp)+'</div></div>'+
@@ -501,12 +545,8 @@ function gameScreen(id,A,B,g,meIsA){
     setTimeout(()=>{const d=Math.max(20,mid.getBoundingClientRect().width/2-chip.offsetWidth/2-4);chip.style.transform='translate(calc(-50% + '+((takerIsMe?-1:1)*d)+'px),-50%)';},400);
     setTimeout(()=>{stage.querySelector('.bigcard').hidden=false;},2000);
     const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-    note.textContent='Response recorded. Results on the screen soon. Play again any time — your first game is the one that counts for points.';
+    note.textContent='Response recorded. Results on the screen soon.';
     stage.appendChild(note);
-    const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
-    again.textContent='PLAY AGAIN';
-    again.addEventListener('click',render);
-    stage.appendChild(again);
   }
   function renderState(moves){
     const s=id==='cards'?cardState(moves,A,B):centState(moves,A,B);
@@ -515,12 +555,12 @@ function gameScreen(id,A,B,g,meIsA){
     const myTurn=norm(s.actor)===norm(name);
     if(id==='cards'){
       let pile='<div class="cardpile">';
-      for(let i=0;i<23;i++)pile+='<i class="s'+(i%4)+(i>=s.pile?' gone':'')+'"><svg viewBox="0 0 40 40"><use href="#pip'+(i%4)+'"/></svg></i>';
+      for(let i=0;i<23;i++)pile+='<i'+(i>=s.pile?' class="gone"':'')+'></i>';
       pile+='</div>';
       show('<div class="pot"><div class="big">'+s.pile+' card'+(s.pile===1?'':'s')+'</div>'+
         '<div class="sub">'+(myTurn?'your turn: taking the last card wins':esc(opp)+' is choosing…')+'</div>'+pile+'</div>'+
-        (myTurn?'<div class="actions">'+
-          [1,2,3].map(n=>'<button data-n="'+n+'"'+(n>s.pile?' disabled':'')+'>TAKE '+n+'</button>').join('')+'</div>'
+        (myTurn?'<div class="askline">How many cards do you want to remove?</div><div class="actions stack" style="margin-top:10px">'+
+          [1,2,3].map(n=>'<button data-n="'+n+'"'+(n>s.pile?' disabled':'')+'>REMOVE '+n+' CARD'+(n===1?'':'S')+'</button>').join('')+'</div>'
         :'<div class="waitcard" style="margin-top:14px"><span class="pulse"></span>Waiting on '+esc(opp)+'…</div>'));
       if(myTurn)stage.querySelectorAll('.actions button').forEach(b=>
         b.addEventListener('click',()=>act(b.dataset.n)));
@@ -593,28 +633,35 @@ function renderUltPropose(partner){
   stopPolling();
   q.textContent='Your offer to '+partner;
   app.innerHTML='';
-  const card=document.createElement('div');card.className='split';
-  card.innerHTML='<div class="vals"><b class="yours">&pound;500</b><b class="theirs">&pound;500</b></div>'+
-    '<div class="who"><span>You keep</span><span>'+esc(partner)+' gets</span></div>'+
-    '<input type="range" min="0" max="1000" step="10" value="500" aria-label="Their share of the £1,000">';
-  const rng=card.querySelector('input');
-  const yv=card.querySelector('.yours'), tv=card.querySelector('.theirs');
-  rng.addEventListener('input',()=>{
-    tv.textContent='£'+rng.value;yv.textContent='£'+(1000-rng.value);
+  /* every split, 99/1 through 50/50 to 1/99 (Ryan, 27 Sep 2026: six splits that stopped at half
+     looked odd; it was six from 20 Sep): the deck's board has one column for each */
+  const head=document.createElement('div');head.className='bandhead';
+  head.innerHTML='<span>You keep</span><span>'+esc(partner)+' gets</span>';
+  app.appendChild(head);
+  const card=document.createElement('div');card.className='bands';
+  let offer=null;
+  [10,100,200,300,400,500,600,700,800,900,990].forEach(v=>{
+    const b=document.createElement('button');b.type='button';
+    b.innerHTML='<span>&pound;'+(1000-v)+'</span><span class="t">&pound;'+v+'</span>';
+    b.addEventListener('click',()=>{offer=v;
+      card.querySelectorAll('button').forEach(x=>x.classList.remove('mine'));
+      b.classList.add('mine');send.disabled=false;
+      send.scrollIntoView({block:'nearest',behavior:'smooth'});});   /* 29 Sep 2026: eleven splits push LOCK IT IN below a phone's fold */
+    card.appendChild(b);
   });
   app.appendChild(card);
-  const send=document.createElement('button');send.className='send';send.textContent='SEND THE OFFER';
+  const send=document.createElement('button');send.className='send';send.textContent='LOCK IT IN';send.disabled=true;
   send.style.marginTop='14px';
   send.addEventListener('click',()=>{
     send.disabled=true;
-    const offer=+rng.value;
+    card.querySelectorAll('button').forEach(x=>x.disabled=true);
     st.textContent='Sending…';
     /* count the pair's answered games first, so we know which reply is ours */
     answers('m2-ultimatum').catch(()=>[]).then(lines=>{
       const before=parseFinals(lines).filter(f=>pairKey(f.prop,f.resp)===pairKey(name,partner)).length;
       say('m2-ult-live',name+'|'+partner+'|'+offer)
         .then(()=>renderUltAwaitReply(partner,offer,before))
-        .catch(code=>{send.disabled=false;st.textContent=failMsg(code);});
+        .catch(code=>{send.disabled=false;card.querySelectorAll('button').forEach(x=>x.disabled=false);st.textContent=failMsg(code);});
     });
   });
   app.appendChild(send);
@@ -718,32 +765,13 @@ function renderUltRespond(o){
 }
 function renderUltDone(accepted,detail,x){
   stopPolling();
-  q.textContent='The deal is done';
+  document.body.classList.add(accepted?'ult-a':'ult-r');
+  q.textContent='';
   st.textContent='';
   app.innerHTML='';
-  /* the playback: the whole £1,000, then the split, or nothing */
-  if(x){
-    const u=document.createElement('div');u.className='ubar';
-    const keep=1000-x.offer;
-    u.innerHTML='<div class="whole">The &pound;1,000 on the table</div><div class="track"><i class="pro"></i><i class="res"></i></div>'+
-      '<div class="ul"><span class="a">'+(x.iPropose?'You keep':esc(x.other)+' keeps')+' &pound;'+keep+'</span><span class="b">'+(x.iPropose?esc(x.other)+' takes':'You take')+' &pound;'+x.offer+'</span></div>';
-    app.appendChild(u);
-    setTimeout(()=>{u.querySelector('.pro').style.width=(keep/10)+'%';u.querySelector('.res').style.width=(x.offer/10)+'%';u.querySelectorAll('.ul span').forEach(e=>e.classList.add('on'));},400);
-    if(!accepted)setTimeout(()=>{u.classList.add('gone');u.querySelector('.ul').innerHTML='<span class="on" style="color:var(--muted)">Rejected: nobody gets anything</span>';},2200);
-  }
-  const big=document.createElement('div');big.className='bigcard';big.style.marginTop='12px';
-  big.hidden=!!x;
-  setTimeout(()=>{big.hidden=false;},accepted?2200:3600);
-  big.innerHTML='<div class="head '+(accepted?'good':'bad')+'">'+(accepted?'Accepted':'Rejected')+'</div>'+
-    '<div class="sub">'+detail+'</div>';
-  app.appendChild(big);
-  const note=document.createElement('div');note.className='lbl';note.style.marginTop='12px';
-  note.textContent='Response recorded. Results on the screen soon. Play again any time — swap roles if you like; the latest game per pair is the one that counts.';
-  app.appendChild(note);
-  const again=document.createElement('button');again.className='send';again.style.marginTop='14px';
-  again.textContent='PLAY AGAIN';
-  again.addEventListener('click',render);
-  app.appendChild(again);
+  const end=document.createElement('div');end.className='ultend';
+  end.innerHTML='<div class="w">'+(accepted?'ACCEPTED':'REJECTED')+'</div><div class="s">'+detail+'</div>';
+  app.appendChild(end);
 }
 </script>
 </body></html>
