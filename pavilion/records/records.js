@@ -23,6 +23,10 @@ import { standings, byName, records, seasonsOf, playerCard, bossBattles } from '
 import { SPRITE, EMBLEMS } from './isotypes.js';
 
 const LEAGUE = document.body.dataset.league;
+// ?opening (the page's first script adds body.fair): its links keep the flag while Ryan looks.
+if (document.body.classList.contains('fair')) {
+  for (const a of document.querySelectorAll('a[href^="/pavilion/"]')) a.href += '?opening';
+}
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
 const DEFAULT_BOARD = 5;
 
@@ -631,6 +635,10 @@ function rigSvg() {
     <circle class="rim" cx="${cx}" cy="${cy}" r="${rim}" />
     <circle class="rim inner" cx="${cx}" cy="${cy}" r="${rim - 9}" />
     <circle class="hub" cx="${cx}" cy="${cy}" r="11" />
+    <g class="bulbs">
+      <circle class="glow" cx="${cx}" cy="${cy}" r="${rim}" /><circle class="dots" cx="${cx}" cy="${cy}" r="${rim}" />
+      <circle class="glow" cx="${cx}" cy="${cy}" r="${rim - 9}" /><circle class="dots" cx="${cx}" cy="${cy}" r="${rim - 9}" />
+    </g>
   </svg>`;
 }
 

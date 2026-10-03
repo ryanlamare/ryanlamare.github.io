@@ -1411,6 +1411,81 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   pavilion's door, rather than across the building's front (Ryan: people
   "walking into the tops of the pavilions").
 
+
+## Opening night, and the rest of the polish pass — 3 Oct 2026 (on `?opening` until Ryan says it goes live)
+
+Ryan, sending the game to his parents: the end screen "looks like it's just kinda
+tacked on from the first cut", and anything else that would improve the game or
+match the World's Fair. Asked first, answered in prose, then "yes to all of the
+above … build anything you want!", with one idea of his own: workers carrying the
+tiles into their spaces between rounds, "but if it interferes it's not worth it".
+All of it is behind **`?opening`** (game and records alike) so the live game does
+not change until he has seen it; making it live is deleting the flag checks (one
+`OPENING` constant in `ui.js`, and the first script on each records page).
+
+- **Opening night: the end of the game.** The game ends at the Fair it began at.
+  After the judges' round on the board, the board steps aside and the front
+  door's scene (`scene.js`) comes back at dusk with the players' own pavilions on
+  its promenade, one per seat, each wall exactly as built, the name on a lit sign
+  over the facade and the score in a medallion at its end. "The World's Fair is
+  Open!" stands over it while the lights come on; then the fireworks start, the
+  judges' card arrives in the sky, and the medal comes down onto the winner's
+  roof. The medal is the real one, simplified: **the 1893 judges gave
+  prize-winning exhibitors a bronze medal** (Saint-Gaudens and Barber's), its
+  reverse a tablet for the name between two torches, the Santa Maria below; ours
+  carries the winner's name on the tablet. Both pavilions stay lit; only the
+  medal differs, and a draw gives each leader one. A click on the sky sends up a
+  firework. Rematch goes straight to a board; Home returns to the front door at
+  night with the two pavilions still on its promenade until the month turns over.
+  - Mechanics: `ui.js` sends `pavilion:finale` with each player's name, wall,
+    score and whether they won (once per game, from the judges' round, or from
+    `endGame` after a timeout), and `pavilion:finale-end` when the card closes.
+    `scene.js` holds `FIN`: its own clock (dusk to `FIN_TO` over `FIN_RAMP`, then a
+    night that holds), its own layout (pavilions either side of the card on a wide
+    screen, a row along the foot on a tall one, up to four), and the pavilions
+    moved above everything but the medal, so no lamp or far bulb shines through
+    them. A game that ends before `scene.js` has run (the look link under reduced
+    motion) leaves the players on `window.__pavilionFinale`, and the scene picks
+    them up as it starts. Reduced motion gets one still frame of the night.
+  - The card keeps every word Ryan set (the whistle, his winner's line in red, no
+    sub-line under a natural win, rows · columns · colors in plain board words),
+    and the breakdown now sits under each name, so the table no longer has
+    "Bonuses" beside "Bonus".
+- **The look link:** `/pavilion/?opening&finale` plays a whole game in an instant
+  (two greedy hands, seed `opening-night`, which the first seat wins 46–43) and
+  the last move at full speed, so the month's close, the judges' round and
+  opening night can be seen without playing first. `&players=3` or `4`,
+  `&seed=`, `&names=` vary it.
+- **The month's sky.** The board stands in daylight while the crews are hired;
+  while the displays go up the sun sets behind the skyline at the foot of the
+  page, which stands dark against it; the next month opens in daylight again, and
+  the last month's dusk runs on into opening night. Behind the boards, never over
+  them (`#sky`, `setSky` in `ui.js`).
+- **The hire preview** (a gameplay aid, the one change to play): after a pick,
+  every crew it could go to carries a small red figure, the idle bill for whoever
+  would not fit, read off the engine's own `applyTake` (the First Call token
+  costs the same everywhere, so it is not on the bill); the idle row carries the
+  bill for sending them all there. Pointing at a crew, or tabbing to it, shows
+  where everyone would stand: faint tiles in the crew and on the idle row, and
+  the bay it would build lit if the crew would be complete. Taking more than a
+  line holds is the classic first-game Azul mistake, and the board used to show
+  only where tiles could go. The bill is also in the crew's label for a screen
+  reader.
+- **The crews carry their displays up** (Ryan's idea): at the month's close a
+  finished crew's lead hand, a workman in a cap and waistcoat, walks the display
+  along the gallery into its bay, holding it over his head the way the front
+  door's craftspeople hold up their tiles, and steps away once it is in. It takes
+  exactly the time the throw it replaces took, so the month closes no later.
+- **The records in the Fair's dress.** Abril Fatface and Libre Franklin (the
+  game's own `fonts/`), a night-sky masthead with the skyline along its foot, the
+  board's framed plates for cards, navy medallions for the top of the table with
+  the first in gold, and the Hall of Champions as the front door's Wheel lit up
+  at night: bulbs along both rims, a gold hub, the cars glowing, the boarding car
+  ringed in gold. Not a word changed. The Record Book and the Hall of Champions
+  themselves were built on 13–14 Aug and fill themselves from recorded games;
+  what is left for Ryan is the admin page's jobs (delete the demo term, set the
+  real one and its roster, enter the champion's emblem and line after the final).
+
 ## Two devices — built 2026-08-12 (build step 4)
 
 Students on separate devices now play a real game against each other. The wire

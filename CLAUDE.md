@@ -388,7 +388,12 @@ fetched from Google); `?plain` plays it as it was. Links can carry their own
 names (`?names=Mary,Jim,…`, which never record), `&clock=0`, and `?join=CODE`
 (what the lobby's invite link sends). The front door's music is Bandcamp's
 embedded player for a track Ryan bought: **never commit the audio file**, a
-purchase is a personal licence and everything in this repo is public.
+purchase is a personal licence and everything in this repo is public. The
+3 Oct polish pass waits on **`?opening`** until Ryan OKs it (PAVILION.md,
+*Opening night*): the end of the game as the Fair at night with the players'
+pavilions and the judges' medal (`pavilion:finale` from `ui.js` to `scene.js`),
+the month's sky, the hire preview, the crews carrying their displays, and the
+records site in the Fair's dress; `?opening&finale` jumps straight to the end.
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)

@@ -57,6 +57,9 @@
   const LIGHTS_ON = 0.57, CLOSE = 0.955, RESET = 0.975;
   const ROUNDS_TO = 0.45, HIRES_FROM = 0.08, HIRES_TO = 0.53, LEAVE = 0.535;
   const FIRE_FROM = 0.64, FIRE_TO = 0.93;
+  // Opening night (?opening, at the end of a game): the Fair comes back at dusk, the lights come on
+  // over FIN_RAMP seconds and the night holds at FIN_TO, with the fireworks; the medal arrives at MEDAL_AT.
+  const FIN_FROM = 0.555, FIN_TO = 0.68, FIN_RAMP = 5, MEDAL_AT = 4.4;
   const HIRE_GAP = 1.35;                              // seconds between hires
 
   /* ---------------------------------------------------------------- colour */
@@ -314,6 +317,81 @@
     el('path', { d, fill: 'none', stroke: '#FFF1C4', 'stroke-width': 2 / u, 'stroke-dasharray': `0.01 ${(4.4 / u).toFixed(2)}`, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, lt);
   }
   const sil = (c, d) => el('path', { d, transform: c.t }, c.clip);   // a clipPath takes no <g>
+
+  // Opening night's lettering is the title's poster face.
+  const SERIF = '"Abril Fatface", Didot, "Bodoni 72", Georgia, serif';
+  // A pavilion's sign on opening night: the player's name on a navy board, and the score in a medallion
+  // at its end, the way the board shows a score.
+  function sign(p, cx, y, sw, sh, name, score) {
+    const g = el('g', null, p), x = cx - sw / 2, mr = sh * 0.8, mx = x + sw - mr * 0.42, my = y + sh / 2;
+    rect(g, x, y, sw, sh, '#1C2747', { 'stroke-width': 0.8 });
+    rect(g, x + 2.5, y + 2.5, sw - 5, sh - 5, 'none', { stroke: '#D9AE3A', 'stroke-width': 1 });
+    const avail = mx - mr - x - sh * 0.35, fs = sh * 0.6;
+    const t = el('text', { x: (x + sh * 0.35 + avail / 2).toFixed(1), y: (my + fs * 0.36).toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': fs.toFixed(1), fill: '#F8F2E4' }, g);
+    t.textContent = name;
+    if (t.getComputedTextLength() > avail) { t.setAttribute('textLength', avail.toFixed(1)); t.setAttribute('lengthAdjust', 'spacingAndGlyphs'); }
+    circ(g, mx, my, mr, '#1C2747', { 'stroke-width': 1 });
+    circ(g, mx, my, mr - 2.4, 'none', { stroke: '#E8B84B', 'stroke-width': 1.4 });
+    const digits = String(score), sfs = mr * (digits.length > 2 ? 0.74 : 0.95);
+    el('text', { x: mx.toFixed(1), y: (my + sfs * 0.36).toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': sfs.toFixed(1), fill: '#F8F2E4' }, g).textContent = digits;
+  }
+  // A long name goes on the medal in two lines, broken at the space nearest its middle.
+  function splitName(name) {
+    if (name.length <= 9 || !name.includes(' ')) return [name];
+    let at = -1;
+    for (let i = 0; i < name.length; i++) if (name[i] === ' ' && (at < 0 || Math.abs(i - name.length / 2) < Math.abs(at - name.length / 2))) at = i;
+    return [name.slice(0, at), name.slice(at + 1)];
+  }
+  function starPath(cx, cy, r) {
+    let d = '';
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5, q = i % 2 ? r * 0.45 : r;
+      d += (i ? 'L' : 'M') + (cx + Math.cos(a) * q).toFixed(2) + ',' + (cy + Math.sin(a) * q).toFixed(2);
+    }
+    return d + 'Z';
+  }
+  // The judges' medal, after the one the 1893 Exposition struck for its prize-winning exhibitors: bronze,
+  // a beaded rim, and on the reverse a tablet for the name between two torches, the Santa Maria below.
+  function medal(p, r, name, id) {
+    const g = el('g', null, p);                          // shown while its words are measured, hidden after
+    const halo = el('circle', { r: r * 2.6, fill: 'url(#fair-halo)', opacity: 0 }, g);
+    circ(g, 0, 0, r, '#7A4A1E', { 'stroke-width': 1.1 });
+    circ(g, 0, 0, r * 0.94, 'url(#fair-bronze)', NO);
+    for (let i = 0; i < 44; i++) {
+      const a = (i / 44) * Math.PI * 2;
+      el('circle', { cx: (Math.cos(a) * r * 0.87).toFixed(2), cy: (Math.sin(a) * r * 0.87).toFixed(2), r: (r * 0.026).toFixed(2), fill: '#EEC489' }, g);
+    }
+    circ(g, 0, 0, r * 0.8, 'none', { stroke: '#6E4520', 'stroke-width': 0.8 });
+    const B = { stroke: '#6E4520', 'stroke-width': 0.6 };
+    for (const sx of [-1, 1]) {
+      const tx = sx * r * 0.6;
+      path(g, `M${tx - r * 0.04},${r * 0.5} L${tx - r * 0.065},${-r * 0.2} L${tx + r * 0.065},${-r * 0.2} L${tx + r * 0.04},${r * 0.5} Z`, '#B9824A', B);
+      path(g, `M${tx},${-r * 0.56} C${tx + r * 0.12},${-r * 0.42} ${tx + r * 0.1},${-r * 0.24} ${tx},${-r * 0.21} C${tx - r * 0.1},${-r * 0.24} ${tx - r * 0.12},${-r * 0.42} ${tx},${-r * 0.56} Z`, '#EBC07E', B);
+    }
+    path(g, starPath(0, -r * 0.5, r * 0.1), '#EBC07E', B);
+    const sy = r * 0.62;
+    path(g, `M${-r * 0.17},${sy} L${r * 0.19},${sy} L${r * 0.13},${sy + r * 0.08} L${-r * 0.12},${sy + r * 0.08} Z`, '#B9824A', B);
+    for (const [mx, h] of [[-r * 0.09, r * 0.16], [r * 0.01, r * 0.21], [r * 0.1, r * 0.14]]) path(g, `M${mx},${sy} V${sy - h} L${mx + r * 0.07},${sy - h * 0.35} Z`, '#E1B271', B);
+    const tw = r * 0.96, th = r * 0.52, ty = r * 0.03;
+    rect(g, -tw / 2, ty - th / 2, tw, th, '#CB955A', { rx: th * 0.16, stroke: '#6E4520', 'stroke-width': 0.8 });
+    const lines = splitName(name), longest = Math.max(...lines.map(l => l.length));
+    const fs = Math.min(th * (lines.length > 1 ? 0.4 : 0.6), (tw * 0.9) / (longest * 0.56));
+    const texts = lines.map((ln, i) => {
+      const y = ty + (i - (lines.length - 1) / 2) * fs * 1.04 + fs * 0.36;
+      const lo = el('text', { x: 0, y: (y + 0.7).toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': fs.toFixed(1), fill: '#F3D7A6' }, g);
+      const hi = el('text', { x: 0, y: y.toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': fs.toFixed(1), fill: '#4A2A0E' }, g);
+      lo.textContent = hi.textContent = ln;
+      return [lo, hi];
+    });
+    const widest = Math.max(...texts.map(([, hi]) => hi.getComputedTextLength()));
+    if (widest > tw * 0.88) for (const pair of texts) for (const t of pair) t.setAttribute('font-size', ((fs * tw * 0.88) / widest).toFixed(1));
+    // a glint crosses the face every few seconds
+    const cp = el('clipPath', { id: 'fair-medal-' + id }, g);
+    el('circle', { r: r * 0.94 }, cp);
+    const shine = el('rect', { x: -r * 0.16, y: -r * 1.4, width: r * 0.32, height: r * 2.8, fill: '#FFF6DE', opacity: 0.45, transform: `translate(${(-r * 3).toFixed(1)}) rotate(24)` }, el('g', { 'clip-path': `url(#fair-medal-${id})` }, g));
+    g.setAttribute('display', 'none');
+    return { g, halo, shine };
+  }
   const arches = (g, x0, n, step, w, top, fill) => {
     for (let i = 0; i < n; i++) {
       const x = x0 + i * step;
@@ -492,6 +570,19 @@
   }
   const builtFor = f => (f >= RESET || f < HIRES_FROM ? 0 : Math.round(clamp((f - 0.1) / 0.42, 0, 1) * 13));
 
+  /* ------------------------------------------------------- opening night
+
+     When a game ends (ui.js sends 'pavilion:finale' with each player's name,
+     wall, score and whether they won), the Fair comes back at dusk with the
+     players' own pavilions on the promenade, one per seat, each wall exactly as
+     it was built, the name over the door and the score beside it. The lights
+     come on, the fireworks start, and the judges' medal comes down over the
+     winner: the 1893 judges gave prize-winning exhibitors a bronze medal with a
+     tablet for the name. FIN is null the rest of the time. */
+
+  let FIN = null;
+  const baysOf = wall => wall.flatMap((row, r) => row.map((v, c) => (v ? kindAt(r, c) : -1)));
+
   /* ---------------------------------------------------------------- layout
 
      One panorama for whatever shape the window is, never a frame around a
@@ -573,6 +664,25 @@
     L.keepOut = pb.height ? [lb, pb].map(r => [r.left, r.right, r.bottom]) : [];   // what the balloon must stay under
     const domeTop = Math.max(titleBottom + 0.03 * H, L.hz - 0.32 * H);
     L.u = clamp((L.hz - domeTop) / 119, 0.45, 2.6);
+    if (FIN) {
+      // Opening night: one pavilion per seat, sized as the stars of the show. On a wide screen they stand
+      // either side of the judges' card (which style.css keeps to min(520px, 42vw)), on a tall one in a
+      // row along the foot of the screen under it.
+      const n = FIN.players.length;
+      if (land) {
+        const side = (W - Math.min(520, 0.42 * W)) / 2, perSide = Math.ceil(n / 2);
+        L.pw = clamp(Math.min((side / perSide) * (n > 2 ? 0.86 : 0.72), 0.31 * H), 60, 300);
+        L.pavX = FIN.players.map((_, i) => {
+          const right = i >= perSide, k = right ? n - perSide : perSide, j = right ? i - perSide : i;
+          const gap = (side - k * L.pw) / (k + 1);
+          return (right ? W - side : 0) + gap * (j + 1) + L.pw * (j + 0.5);
+        });
+      } else {
+        L.pw = clamp(Math.min((0.88 * W) / n, (n > 2 ? 0.13 : 0.19) * H), 50, 240);
+        const gap = (W - n * L.pw) / (n + 1);
+        L.pavX = FIN.players.map((_, i) => gap * (i + 1) + L.pw * (i + 0.5));
+      }
+    }
     return L;
   }
 
@@ -590,6 +700,10 @@
     radial('fair-halo', '#FFF2C8', 0.85);
     radial('fair-glow', '#FFDF96', 0.8);
     radial('fair-moon', '#E9ECF6', 0.45);
+    if (FIN) {
+      const bz = el('radialGradient', { id: 'fair-bronze', cx: 0.38, cy: 0.32, r: 0.78 }, defs);
+      [[0, '#F2CB8E'], [0.45, '#C58E50'], [1, '#7A481D']].forEach(([o, c]) => el('stop', { offset: o, 'stop-color': c }, bz));
+    }
     const beamG = el('linearGradient', { id: 'fair-beam', x1: 0, y1: 1, x2: 0, y2: 0 }, defs);
     el('stop', { offset: 0, 'stop-color': '#FFF8E0', 'stop-opacity': 0.9 }, beamG);
     el('stop', { offset: 1, 'stop-color': '#FFF8E0', 'stop-opacity': 0 }, beamG);
@@ -876,28 +990,39 @@
     // people once those exist (below): a stroller passes behind a pavilion, never
     // across its front (Ryan, 3 Oct: people "walking into the tops of the pavilions").
     const pavL = el('g', null, worldL);
-    const pav = [0, 1].map(n => {
+    // On opening night the pavilions are the players', one per seat. Their layer moves above the Wheel
+    // and above the night that falls on the rest of the Fair (end of build), so they are drawn here in
+    // floodlit colours, warm stone against the dark, with bulbs along the roofs and a lit sign over the
+    // facade carrying the player's name and score.
+    const nt = c => (FIN ? mix(mix(c, '#F2C77E', 0.18), '#2A2340', 0.16) : c);
+    const signs = [];
+    const pav = (FIN ? FIN.players : [0, 1]).map((pl, n) => {
       const cx = L.pavX[n], w = L.pw, base = L.pb;
       const g = el('g', null, pavL), gl = lit(1.1);
       const pw = w * 0.04, bw = (w - 6 * pw) / 5, bh = bw * 1.08, rg = bw * 0.26;
       const plinth = bw * 0.55, facH = 5 * bh + 6 * rg;
       const top = base - plinth - facH, x0 = cx - w / 2;
-      rect(g, x0 - w * 0.04, base - plinth, w * 1.08, plinth, STONE2);
-      rect(g, x0, top, w, facH, STONE);
-      const nat = NATION[n];
-      if (n === 0) {
-        rect(g, x0 - 3, top - 4, w + 6, 4, STONE2);
-        path(g, `M${cx - w * 0.3},${top - 4} C${cx - w * 0.3},${top - w * 0.42} ${cx + w * 0.3},${top - w * 0.42} ${cx + w * 0.3},${top - 4} Z`, '#EDE5D2');
-        path(g, `M${cx},${top - w * 0.32} C${cx + w * 0.17},${top - w * 0.31} ${cx + w * 0.3},${top - w * 0.2} ${cx + w * 0.3},${top - 4} L${cx + w * 0.14},${top - 4} C${cx + w * 0.14},${top - w * 0.2} ${cx + w * 0.07},${top - w * 0.29} ${cx},${top - w * 0.32} Z`, '#D9CFBA', NO);
-        line(g, cx, top - w * 0.32, cx, top - w * 0.46, { stroke: '#4A4038', 'stroke-width': 1 });
-        flag(g, cx, top - w * 0.46, w * 0.13, w * 0.08, nat.a);
+      const signH = FIN ? w * 0.13 : 0, rt = top - signH;     // the roof stands on the sign
+      rect(g, x0 - w * 0.04, base - plinth, w * 1.08, plinth, nt(STONE2));
+      rect(g, x0, top, w, facH, nt(STONE));
+      const nat = NATION[n % NATION.length];
+      let roofLine;
+      if (n % 2 === 0) {
+        rect(g, x0 - 3, rt - 4, w + 6, 4, nt(STONE2));
+        roofLine = `M${cx - w * 0.3},${rt - 4} C${cx - w * 0.3},${rt - w * 0.42} ${cx + w * 0.3},${rt - w * 0.42} ${cx + w * 0.3},${rt - 4}`;
+        path(g, roofLine + ' Z', nt('#EDE5D2'));
+        path(g, `M${cx},${rt - w * 0.32} C${cx + w * 0.17},${rt - w * 0.31} ${cx + w * 0.3},${rt - w * 0.2} ${cx + w * 0.3},${rt - 4} L${cx + w * 0.14},${rt - 4} C${cx + w * 0.14},${rt - w * 0.2} ${cx + w * 0.07},${rt - w * 0.29} ${cx},${rt - w * 0.32} Z`, nt('#D9CFBA'), NO);
+        line(g, cx, rt - w * 0.32, cx, rt - w * 0.46, { stroke: '#4A4038', 'stroke-width': 1 });
+        flag(g, cx, rt - w * 0.46, w * 0.13, w * 0.08, nat.a);
       } else {
-        path(g, `M${x0 - 3},${top} L${cx},${top - w * 0.2} L${x0 + w + 3},${top} Z`, STONE2);
+        roofLine = `M${x0 - 3},${rt} L${cx},${rt - w * 0.2} L${x0 + w + 3},${rt}`;
+        path(g, roofLine + ' Z', nt(STONE2));
         for (const tx of [x0 + w * 0.1, x0 + w * 0.9]) {
-          rect(g, tx - w * 0.06, top - w * 0.3, w * 0.12, w * 0.3, STONE);
-          path(g, `M${tx - w * 0.07},${top - w * 0.3} L${tx},${top - w * 0.42} L${tx + w * 0.07},${top - w * 0.3} Z`, nat.a);
-          line(g, tx, top - w * 0.42, tx, top - w * 0.5, { stroke: '#4A4038', 'stroke-width': 1 });
-          flag(g, tx, top - w * 0.5, w * 0.1, w * 0.065, nat.b);
+          rect(g, tx - w * 0.06, rt - w * 0.3, w * 0.12, w * 0.3, nt(STONE));
+          path(g, `M${tx - w * 0.07},${rt - w * 0.3} L${tx},${rt - w * 0.42} L${tx + w * 0.07},${rt - w * 0.3} Z`, nat.a);
+          line(g, tx, rt - w * 0.42, tx, rt - w * 0.5, { stroke: '#4A4038', 'stroke-width': 1 });
+          flag(g, tx, rt - w * 0.5, w * 0.1, w * 0.065, nat.b);
+          if (FIN) roofLine += ` M${tx - w * 0.06},${rt} V${rt - w * 0.3} L${tx},${rt - w * 0.42} L${tx + w * 0.06},${rt - w * 0.3} V${rt}`;
         }
       }
       const bunt = el('g', null, g);
@@ -909,7 +1034,7 @@
       for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
         const bx = x0 + pw + c * (bw + pw), by = top + rg + r * (bh + rg) + bw * 0.12, k = kindAt(r, c), rad = bw / 2;
         const d = `M${bx},${by + bh} V${by + rad} A${rad},${rad} 0 0 1 ${bx + bw},${by + rad} V${by + bh} Z`;
-        path(g, d, mix(KC[k], '#E8DEC9', 0.8), { 'stroke-width': 0.6 });
+        path(g, d, nt(mix(KC[k], '#E8DEC9', 0.8)), { 'stroke-width': 0.6 });
         if (bw > 12) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.22, y: by + bh * 0.3, width: bw * 0.56, height: bw * 0.56, opacity: 0.32, style: `color:${KC[k]};--t-bg:transparent` }, g);
         const fillG = el('g', { class: 'bayfill', opacity: 0, display: 'none' }, g);
         path(fillG, d, KC[k], { stroke: KBD[k], 'stroke-width': 0.9 });
@@ -923,20 +1048,24 @@
       const dw = bw * 0.9;
       path(g, `M${cx - dw / 2},${base} V${base - plinth * 0.9 + dw / 2 * 0.4} Q${cx},${base - plinth * 1.2} ${cx + dw / 2},${base - plinth * 0.9 + dw / 2 * 0.4} V${base} Z`, '#4A3E33', { 'stroke-width': 0.6 });
       el('path', { d: `M${cx - dw * 0.36},${base} V${base - plinth * 0.75} Q${cx},${base - plinth * 1.05} ${cx + dw * 0.36},${base - plinth * 0.75} V${base} Z`, fill: '#FFD98A', opacity: 0.7 }, gl);
-      bulbs(gl, `M${x0},${top + 0.5} H${x0 + w} M${x0 - w * 0.04},${base - plinth} H${x0 + w * 1.04}`, 1);
-      const scaff = el('g', { class: 'scaff' }, g);
-      for (let c = 0; c <= 5; c++) line(scaff, x0 + c * (bw + pw) + pw / 2, top - w * 0.06, x0 + c * (bw + pw) + pw / 2, base - plinth, { stroke: '#8B6B45', 'stroke-width': 1.2 });
-      for (let r = 0; r <= 5; r++) line(scaff, x0 - 2, top + r * (bh + rg) + rg * 0.4, x0 + w + 2, top + r * (bh + rg) + rg * 0.4, { stroke: '#9C7A50', 'stroke-width': 1.4 });
-      for (let r = 0; r < 5; r++) line(scaff, x0 + pw / 2, top + r * (bh + rg) + rg * 0.4, x0 + w * 0.36, top + (r + 1) * (bh + rg) + rg * 0.4, { stroke: '#8B6B45', 'stroke-width': 0.8 });
-      const mastX = n ? x0 + w * 0.22 : x0 + w * 0.78;
-      line(scaff, mastX, top - w * 0.06, mastX, top - w * 0.55, { stroke: '#6B5136', 'stroke-width': 1.6 });
-      line(scaff, mastX, top - w * 0.5, mastX + (n ? 1 : -1) * w * 0.3, top - w * 0.36, { stroke: '#6B5136', 'stroke-width': 1.2 });
-      const hoist = el('g', { class: 'hoist', style: `--lift:${(-w * 0.12).toFixed(1)}px;animation-delay:${(-rr(0, 3)).toFixed(2)}s` }, scaff);
-      const hx = mastX + (n ? 1 : -1) * w * 0.28;
-      line(hoist, hx, top - w * 0.37, hx, top - w * 0.12, { stroke: '#4A4038', 'stroke-width': 0.6 });
-      rect(hoist, hx - w * 0.04, top - w * 0.12, w * 0.08, w * 0.06, STONE2, { 'stroke-width': 0.6 });
+      bulbs(gl, `M${x0},${top + 0.5} H${x0 + w} M${x0 - w * 0.04},${base - plinth} H${x0 + w * 1.04}` + (FIN ? ' ' + roofLine : ''), 1);
+      let scaff = null;
+      if (!FIN) {
+        scaff = el('g', { class: 'scaff' }, g);
+        for (let c = 0; c <= 5; c++) line(scaff, x0 + c * (bw + pw) + pw / 2, top - w * 0.06, x0 + c * (bw + pw) + pw / 2, base - plinth, { stroke: '#8B6B45', 'stroke-width': 1.2 });
+        for (let r = 0; r <= 5; r++) line(scaff, x0 - 2, top + r * (bh + rg) + rg * 0.4, x0 + w + 2, top + r * (bh + rg) + rg * 0.4, { stroke: '#9C7A50', 'stroke-width': 1.4 });
+        for (let r = 0; r < 5; r++) line(scaff, x0 + pw / 2, top + r * (bh + rg) + rg * 0.4, x0 + w * 0.36, top + (r + 1) * (bh + rg) + rg * 0.4, { stroke: '#8B6B45', 'stroke-width': 0.8 });
+        const mastX = n ? x0 + w * 0.22 : x0 + w * 0.78;
+        line(scaff, mastX, top - w * 0.06, mastX, top - w * 0.55, { stroke: '#6B5136', 'stroke-width': 1.6 });
+        line(scaff, mastX, top - w * 0.5, mastX + (n ? 1 : -1) * w * 0.3, top - w * 0.36, { stroke: '#6B5136', 'stroke-width': 1.2 });
+        const hoist = el('g', { class: 'hoist', style: `--lift:${(-w * 0.12).toFixed(1)}px;animation-delay:${(-rr(0, 3)).toFixed(2)}s` }, scaff);
+        const hx = mastX + (n ? 1 : -1) * w * 0.28;
+        line(hoist, hx, top - w * 0.37, hx, top - w * 0.12, { stroke: '#4A4038', 'stroke-width': 0.6 });
+        rect(hoist, hx - w * 0.04, top - w * 0.12, w * 0.08, w * 0.06, STONE2, { 'stroke-width': 0.6 });
+      }
+      if (FIN) signs.push(p => sign(p, cx, rt, w * 1.04, signH, pl.name, pl.score));
       return {
-        bays, door: { x: cx, y: base - 1 },
+        bays, door: { x: cx, y: base - 1 }, g, gl, cx, w, base, roofTop: rt - w * 0.56, crown: rt - w * 0.3,
         idle: [1, 2, 3, 4].map(i => ({ x: cx + (n ? -1 : 1) * (w / 2 + 6 * s + i * 9 * s), y: base })),
         sync(list, pop) {
           let count = 0;
@@ -955,10 +1084,12 @@
               setTimeout(() => { if (!b.on) b.fillG.setAttribute('display', 'none'); }, 1500);
             }
           });
-          scaff.setAttribute('opacity', clamp(1 - count / 15, 0, 1).toFixed(2));
+          if (scaff) scaff.setAttribute('opacity', clamp(1 - count / 15, 0, 1).toFixed(2));
         },
       };
     });
+    const signG = signs.length ? el('g', null, lightL) : null;
+    if (signG) signs.forEach(f => f(signG));
 
     // ---- the promenade: lamps, a Cracker Jack cart, the agencies and the gate, and everyone on it
     const farLane = el('g', null, worldL), kioskL = el('g', null, worldL), craftL = el('g', null, worldL);
@@ -1358,8 +1489,8 @@
     }
 
     // ---- start where the day is
-    if (!story.seeded) { seedBays(builtFor(f0)); story.seeded = true; }
-    pav.forEach((p, n) => p.sync(story.bays[n], false));
+    if (!story.seeded && !FIN) { seedBays(builtFor(f0)); story.seeded = true; }
+    pav.forEach((p, n) => p.sync(FIN ? baysOf(FIN.players[n].wall) : story.bays[n], false));
     if (f0 >= HIRES_FROM && f0 < ROUNDS_TO) {
       refill(true);
       for (let i = 0, n = (R() * 3) | 0; i < n; i++) { const a = craft((R() * 5) | 0, gate.x, L.kb, 1, 'gate'); sendToGate(a); a.x = a.tx; a.y = a.ty; a.state = 'gate'; place(a); }
@@ -1398,7 +1529,7 @@
         sunDisc.setAttribute('fill', mix('#FFF6DC', '#FF8F4F', edge * edge));
       } else sunG.setAttribute('display', 'none');
       const q = (f - SUNSET + 1) % 1;
-      if (q < 0.47) { const [x, y] = arc(q / 0.47); moonG.setAttribute('display', 'inline'); moonG.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`); }
+      if (q < 0.47 && !FIN) { const [x, y] = arc(q / 0.47); moonG.setAttribute('display', 'inline'); moonG.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`); }
       else moonG.setAttribute('display', 'none');
       // clouds and gulls
       for (const c of clouds) { c.x += c.v * dt; if (c.x > W + 80) c.x = -80; c.g.setAttribute('transform', `translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`); }
@@ -1618,6 +1749,24 @@
         fl.e.setAttribute('opacity', Math.max(0, 1 - fl.t / 0.5).toFixed(2));
         fl.e.setAttribute('r', (fl.r * (0.6 + fl.t)).toFixed(1));
       }
+      // opening night: the medal comes down over the winner, settles, and sways a little as it hangs there
+      for (const m of medals) {
+        const t = FIN.t - m.at, k = STILL ? 1 : clamp(t / 0.9, 0, 1);
+        if (k <= 0) { m.g.setAttribute('display', 'none'); continue; }
+        m.g.setAttribute('display', 'inline');
+        const e = 1 + 1.8 * Math.pow(k - 1, 3) + 0.8 * Math.pow(k - 1, 2);   // a small bounce as it settles
+        const y = m.y - (1 - e) * (m.y + m.r * 3);
+        const sway = STILL ? 0 : Math.sin(t * 1.4) * 3 * clamp(t - 0.9, 0, 1);
+        m.g.setAttribute('transform', `translate(${m.x.toFixed(1)} ${y.toFixed(1)}) rotate(${sway.toFixed(2)})`);
+        m.halo.setAttribute('opacity', (k * (0.6 + 0.15 * Math.sin(t * 2.2))).toFixed(2));
+        m.spot.setAttribute('opacity', (0.55 * smooth(clamp((t - 0.6) / 1.2, 0, 1))).toFixed(2));
+        const gl = ((t % 3.6) + 3.6) % 3.6;
+        m.shine.setAttribute('transform', `translate(${((gl / 0.9 - 0.5) * m.r * 4).toFixed(1)}) rotate(24)`);
+        if (k >= 1 && !m.landed) {
+          m.landed = true;
+          if (!STILL) { const sy = Math.min(m.y - m.r * 3.2, L.hz - 0.06 * H); launch(m.x - m.r * 0.8, sy); launch(m.x + m.r * 1.2, sy - m.r * 0.9); }
+        }
+      }
       prevF = f;
     }
 
@@ -1627,7 +1776,7 @@
       const free = sparks.find(p => p.life <= 0 && !p.rocket);
       if (!free) return;
       free.rocket = true;
-      rockets.push({ e: free.e, x, y0: L.hz, y1: y, t: 0, dur: rr(0.55, 0.85), scale: sc });
+      rockets.push({ e: free.e, x, y0: y > L.hz - 10 ? H : L.hz, y1: y, t: 0, dur: rr(0.55, 0.85), scale: sc });
       free.e.setAttribute('stroke', '#FFE9B0'); free.e.setAttribute('stroke-width', 1.6);
       setTimeout(() => { free.rocket = false; }, 1200);
     }
@@ -1646,6 +1795,27 @@
       }
       const fl = flashes.find(q => q.t > 0.5);
       if (fl) { fl.t = 0; fl.r = 26 * sc; fl.e.setAttribute('cx', x.toFixed(1)); fl.e.setAttribute('cy', y.toFixed(1)); }
+    }
+
+    // ---- opening night: the players' pavilions in front of the Wheel, and the medal over each winner
+    // with a glow behind the pavilion it comes down to
+    const medals = [];
+    if (FIN) {
+      // in front of everything but the medal: the pavilions, their own lights, then their signs, so no lamp
+      // on the promenade or bulb in the far city shines through them
+      const frontG = el('g', null, svg);
+      frontG.appendChild(pavL);
+      pav.forEach(p => frontG.appendChild(p.gl));
+      if (signG) frontG.appendChild(signG);
+      const ML = el('g', null, svg);
+      FIN.players.forEach((pl, n) => {
+        if (!pl.win) return;
+        const p = pav[n], r = clamp(p.w * 0.19, 18, 60), h = p.base - p.roofTop;
+        const spot = el('ellipse', { cx: p.cx, cy: p.base - h * 0.5, rx: p.w * 0.95, ry: h * 0.72, fill: 'url(#fair-glow)', opacity: 0 });
+        pavL.insertBefore(spot, p.g);
+        const m = medal(ML, r, pl.name, n);
+        medals.push(Object.assign(m, { x: p.cx, y: p.crown, r, spot, at: MEDAL_AT + medals.length * 0.4, landed: false }));
+      });
     }
 
     return { update, fireAt(x, y) { if (y < L.hz - 6) launch(x, y); } };
@@ -1670,7 +1840,8 @@
   /* -------------------------------------------------------------- the loop */
 
   let clockT = 0, world = null, raf = 0, last = 0, running = false;
-  const fNow = () => (START + clockT / CYCLE) % 1;
+  // On opening night the hour is the finale's own: dusk, the lights coming on, then a night that holds.
+  const fNow = () => (FIN ? (STILL ? FIN_TO : FIN_FROM + (FIN_TO - FIN_FROM) * smooth(clamp(FIN.t / FIN_RAMP, 0, 1))) : (START + clockT / CYCLE) % 1);
 
   function rebuild() {
     measure();
@@ -1689,10 +1860,12 @@
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
     last = now;
     clockT += dt; acc += dt;
+    if (FIN) FIN.t += dt;
     if (now < calmUntil) { raf = requestAnimationFrame(frame); return; }
-    if (body.dataset.front === 'title') ema = ema * 0.97 + dt * 0.03;
+    const show = body.dataset.front === 'title' || body.dataset.front === 'finale';   // the Fair is the picture
+    if (show) ema = ema * 0.97 + dt * 0.03;
     if (!slow && clockT > 5 && ema > 0.03) slow = true;
-    skip = (slow || body.dataset.front !== 'title') && !skip;
+    skip = (slow || !show) && !skip;
     if (!skip) { world.update(Math.min(acc, 0.1), fNow()); acc = 0; }
     raf = requestAnimationFrame(frame);
   }
@@ -1962,6 +2135,14 @@
   });
 
   function sync(first) {
+    if (FIN) {
+      host.classList.remove('hidden');
+      scrim.classList.add('hidden');
+      titleEl.classList.add('hidden');
+      front('finale');
+      start();
+      return;
+    }
     const onSetup = visible(setup), onLobby = visible(lobby), on = onSetup || onLobby;
     host.classList.toggle('hidden', !on);
     scrim.classList.toggle('hidden', !on);
@@ -1990,6 +2171,37 @@
   });
   watch.last = (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '');
   for (const sec of [setup, lobby]) watch.observe(sec, { attributes: true, attributeFilter: ['class'] });
+
+  // Opening night (ui.js sends these; see FIN above). When it ends, by a rematch, Home or Escape, the front
+  // door takes the night up where the finale left it, and with two players it keeps their pavilions on its
+  // promenade until the month turns over.
+  document.addEventListener('pavilion:finale', e => {
+    const players = (e.detail && e.detail.players) || [];
+    if (!players.length) return;
+    FIN = { players, t: 0 };
+    rebuild();
+    sync(false);
+  });
+  document.addEventListener('pavilion:finale-end', () => {
+    if (!FIN) return;
+    const kept = FIN.players.length === 2 ? FIN.players.map(p => baysOf(p.wall)) : null;
+    FIN = null;
+    clockT = (((FIN_TO - START) % 1) + 1) % 1 * CYCLE;
+    if (kept) { story.bays = kept; story.seeded = true; } else story.seeded = false;
+    rebuild();
+    sync(false);
+  });
+  // A click on the night sky around the judges' card sends up a firework, as the title's sky does.
+  document.addEventListener('pointerdown', e => {
+    if (!FIN || !world || !e.target || e.target.id !== 'end-modal') return;
+    const r = e.target.getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) return;
+    world.fireAt(e.clientX, e.clientY);
+  });
+
+  // a game that ended before this script ran (ui.js leaves the players where this looks)
+  const early = window.__pavilionFinale, endModal = document.getElementById('end-modal');
+  if (early && early.players && early.players.length && endModal && endModal.open) FIN = { players: early.players, t: 0 };
 
   rebuild();
   sync(true);

@@ -66,6 +66,12 @@ const T = (ms) => Math.round(ms * TEMPO);
 // real arcs, a hire that reads in order, the Commissioner showing its pick
 // before it moves. ?plain plays the way the game did before.
 const FAIR = !new URLSearchParams(location.search).has('plain');
+// Opening night (built 3 Oct 2026 for Ryan's look, on ?opening until he says it replaces the old end):
+// the game ends at the Fair it began at, lit for the night, the players' own pavilions on its promenade
+// and the judges' medal over the winner's (scene.js draws all of it; startFinale below sends it the
+// players). The same link carries the month's sky, the hire preview and the crews carrying their
+// displays up.
+const OPENING = FAIR && new URLSearchParams(location.search).has('opening');
 const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
@@ -269,6 +275,8 @@ function renderBoards(st) {
 function applySelection() {
   $$('.tile.sel, .tile.dim').forEach((t) => t.classList.remove('sel', 'dim'));
   $$('.crew.can-drop, .idle.can-drop').forEach((t) => t.classList.remove('can-drop'));
+  $$('.bill').forEach((b) => b.remove());
+  clearPreview();
   if (!sel || !G || G.cur.over) return;
 
   const srcEl =
@@ -287,15 +295,88 @@ function applySelection() {
   const boardEl = $(`.board[data-seat="${G.cur.seatToMove}"]`);
   if (!boardEl) return;
   for (const m of dests) {
-    if (m.dest.type === 'line') {
-      const row = $(`.crew[data-row="${m.dest.row}"]`, boardEl);
-      row.classList.add('can-drop');
-      row.setAttribute('aria-label', row.getAttribute('aria-label') + ' — legal destination');
-    } else {
-      const idle = $('.idle', boardEl);
-      idle.classList.add('can-drop');
+    const el = m.dest.type === 'line' ? $(`.crew[data-row="${m.dest.row}"]`, boardEl) : $('.idle', boardEl);
+    el.classList.add('can-drop');
+    if (m.dest.type === 'line') el.setAttribute('aria-label', el.getAttribute('aria-label') + ' — legal destination');
+    // ?opening: the bill for whoever would not fit, on the crew before it is chosen
+    if (OPENING) {
+      const { bill, idled } = idleBill(G.cur.seatToMove, m);
+      if (bill > 0) {
+        el.insertAdjacentHTML('beforeend', `<span class="bill" aria-hidden="true">−${bill}</span>`);
+        el.setAttribute('aria-label', el.getAttribute('aria-label') + ` — ${idled} would stand idle, −${bill}`);
+      }
     }
   }
+}
+
+// ?opening, the hire preview: what a hire would cost, shown before it is made.
+// A crew the pick could go to carries a small red figure, the idle bill for
+// the craftspeople who would not fit (exactly what the idle row charges at the
+// month's end, read off the engine's own applyTake), and the idle row carries
+// the bill for sending them all there. Pointing at a crew, or tabbing to it,
+// shows where everyone would stand: faint tiles in the crew and on the idle row,
+// and the bay the crew would build lit, if it would be complete.
+function idleBill(seat, move) {
+  const before = G.cur.boards[seat];
+  const after = E.applyTake(G.cur, { source: move.source, kind: move.kind, dest: move.dest }).boards[seat];
+  // the First Call token lands first and costs the same wherever the hire goes, so it is not on the bill
+  const token = after.floor.includes(E.FIRST_TOKEN) && !before.floor.includes(E.FIRST_TOKEN) ? 1 : 0;
+  let bill = 0;
+  for (let i = before.floor.length + token; i < after.floor.length; i++) bill += E.FLOOR_PENALTIES[i];
+  return { bill, idled: after.floor.length - before.floor.length - token, before, after };
+}
+function clearPreview() {
+  $$('.ghost-tile').forEach((e) => e.remove());
+  $$('.wcell.ghost-cell').forEach((e) => e.classList.remove('ghost-cell'));
+}
+function showPreview(target) {
+  clearPreview();
+  if (!OPENING || !sel || !G || G.cur.over || animating) return;
+  const seat = G.cur.seatToMove;
+  const boardEl = target.closest('.board');
+  if (!boardEl || Number(boardEl.dataset.seat) !== seat) return;
+  const dest = target.classList.contains('idle') ? { type: 'floor' } : { type: 'line', row: Number(target.dataset.row) };
+  let res;
+  try {
+    res = idleBill(seat, { source: sel.source, kind: sel.kind, dest });
+  } catch {
+    return;
+  }
+  const { before, after } = res;
+  if (dest.type === 'line') {
+    const r = dest.row;
+    const cells = $$('.ccell', target);
+    for (let i = r + 1 - after.lines[r].count; i < r + 1 - before.lines[r].count; i++) {
+      cells[i]?.insertAdjacentHTML('beforeend', tileHTML(sel.kind, 'ghost-tile'));
+    }
+    if (after.lines[r].count === r + 1) {
+      $(`.wcell[data-rc="${r}-${E.wallColumn(sel.kind, r)}"]`, boardEl)?.classList.add('ghost-cell');
+    }
+  }
+  const slots = $$('.icell .islot', boardEl);
+  for (let i = before.floor.length; i < after.floor.length; i++) {
+    const t = after.floor[i];
+    slots[i]?.insertAdjacentHTML(
+      'beforeend',
+      t === E.FIRST_TOKEN ? tokenHTML().replace('class="token"', 'class="token ghost-tile"') : tileHTML(t, 'ghost-tile')
+    );
+  }
+}
+if (OPENING) {
+  const over = (e) => {
+    const t = e.target.closest?.('.crew.can-drop, .idle.can-drop');
+    if (t) showPreview(t);
+  };
+  const out = (e) => {
+    const t = e.target.closest?.('.crew.can-drop, .idle.can-drop');
+    if (t && !t.contains(e.relatedTarget)) clearPreview();
+  };
+  if (matchMedia('(hover: hover)').matches) {
+    $('#boards').addEventListener('pointerover', over);
+    $('#boards').addEventListener('pointerout', out);
+  }
+  $('#boards').addEventListener('focusin', over);
+  $('#boards').addEventListener('focusout', out);
 }
 
 function renderClocks() {
@@ -433,6 +514,57 @@ function flyArc(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26, arc =
     .then(() => {
       el.remove();
       reveal();
+    })
+    .catch(() => el.remove());
+}
+
+// ?opening, the crews carry their displays up (Ryan's idea, 3 Oct, on the one
+// condition that it never slows the game): at the month's close a finished
+// crew's lead hand walks the display along the gallery into its bay, holding it
+// over their head the way the front door's craftspeople hold up their tiles. It
+// takes exactly the time the throw it replaces took, so the month closes no
+// later, and the hand steps away once the display is in.
+const COATS = ['#3F342A', '#2F3441', '#4B4F53', '#2A3A57', '#5B4A39', '#4A3B44'];
+function workerSVG() {
+  const coat = COATS[(Math.random() * COATS.length) | 0];
+  return `<svg class="worker" viewBox="0 0 20 26" aria-hidden="true">
+    <path class="leg l" d="M8.7 15.6 L7.9 25" /><path class="leg r" d="M11.3 15.6 L12.1 25" />
+    <path d="M6.3 8.5 Q10 7.5 13.7 8.5 L13.1 16.2 H6.9 Z" fill="${coat}" />
+    <path d="M8.4 8.1 L10 11.8 L11.6 8.1 Z" fill="#F3EADA" />
+    <path class="arm" d="M6.7 9.1 L4.9 1.6 M13.3 9.1 L15.1 1.6" />
+    <circle cx="4.9" cy="1.4" r="1" fill="#E3B590" /><circle cx="15.1" cy="1.4" r="1" fill="#E3B590" />
+    <circle cx="10" cy="5.5" r="2.4" fill="#E3B590" />
+    <path d="M7.4 4.8 Q10 2.3 12.6 4.8 L13.5 5.1 H7.4 Z" fill="#4B4F53" />
+  </svg>`;
+}
+function carry(fromRect, toRect, html) {
+  if (instant() || fromRect.width < 2 || toRect.width < 2) return Promise.resolve();
+  const w = toRect.width;
+  const h = toRect.height;
+  const el = document.createElement('div');
+  el.className = 'fx-carry';
+  el.style.width = w + 'px';
+  el.innerHTML = `<div class="carry-tile" style="height:${h}px">${html}</div>${workerSVG()}`;
+  $('#fx').appendChild(el);
+  const ax = fromRect.left + fromRect.width / 2 - w / 2;
+  const ay = fromRect.top + fromRect.height / 2 - h / 2;
+  const dist = Math.hypot(toRect.left - ax, toRect.top - ay);
+  const dur = T(460 * (0.85 + Math.min(0.45, dist / 1400))); // the throw's own timing
+  const steps = Math.max(3, Math.round(dist / (w * 0.5)));
+  el.style.setProperty('--stride', (dur / steps / 1000).toFixed(3) + 's');
+  const frames = [];
+  for (let i = 0, N = steps * 6; i <= N; i++) {
+    const t = i / N;
+    const x = ax + (toRect.left - ax) * t;
+    const y = ay + (toRect.top - ay) * t - Math.abs(Math.sin(t * steps * Math.PI)) * h * 0.07;
+    frames.push({ offset: t, transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)` });
+  }
+  const anim = el.animate(frames, { duration: dur, easing: 'ease-in-out', fill: 'both' });
+  return anim.finished
+    .then(() => {
+      el.querySelector('.carry-tile')?.remove();
+      el.classList.add('done'); // the hand steps away, and nobody waits for it
+      setTimeout(() => el.remove(), T(260));
     })
     .catch(() => el.remove());
 }
@@ -647,6 +779,7 @@ async function animatePhaseA(before, interim, move) {
 async function animateResolution(interim, final) {
   await coachOn('resolve', { interim });
   setPhase('The displays go up');
+  setSky('dusk');
   await banner(splashHTML('Craftspeople build the displays'), 'splash');
 
   for (let seat = 0; seat < interim.players; seat++) {
@@ -668,11 +801,17 @@ async function animateResolution(interim, final) {
       const lead = cells[cells.length - 1];
       const target = $(`.wcell[data-rc="${r}-${c}"]`, boardEl);
 
-      await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.kind), {
-        dur: 460,
-        arc: 0.45,
-        tilt: 0,
-      });
+      if (OPENING && !instant()) {
+        const from = lead.getBoundingClientRect();
+        if (lead.firstElementChild) lead.firstElementChild.style.visibility = 'hidden'; // picked up
+        await carry(from, target.getBoundingClientRect(), tileHTML(t.kind));
+      } else {
+        await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.kind), {
+          dur: 460,
+          arc: 0.45,
+          tilt: 0,
+        });
+      }
       target.innerHTML = tileHTML(t.kind);
       target.classList.add('filled', 'landed');
 
@@ -783,7 +922,9 @@ async function animateResolution(interim, final) {
       }
     }
     // The one splash on black: the Fair opening is the end of the game, and
-    // the ground going dark says so before the words are read.
+    // the ground going dark says so before the words are read. On ?opening the
+    // Fair itself comes up behind the words at dusk, and its lights come on.
+    startFinale(final.result);
     await banner(splashHTML("The World's Fair is Open!"), 'splash finale');
     await beat(700);
     return;
@@ -810,6 +951,7 @@ async function animateResolution(interim, final) {
   G.view = snap(final);
   renderAll();
   setPhase('');
+  setSky('');
   hideDealTiles();
   await banner(monthSplashHTML(final.round), 'splash');
   await dealAnimation();
@@ -1080,6 +1222,7 @@ function startGame(cfg) {
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   $('#end-modal').close?.();
+  setSky('');
   renderAll();
   // renderAll only writes the phase label when the game is over, so without
   // this a rematch opened under the last game's "The World's Fair is open"
@@ -1188,11 +1331,13 @@ function endGame(ending, flaggedSeat = null) {
     })
     .join('');
 
+  startFinale(result);
+  $('#end-modal').classList.toggle('finale', OPENING);
   body.innerHTML = `
     <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Judging the Pavilions'}</p>
     <p class="champion spot${draw || ending === 'timeout' ? '' : ' story'}">${titleHTML}</p>
     <p class="end-sub">${sub}</p>
-    <table class="final-table">
+    <table class="final-table${OPENING ? ' compact' : ''}">
       <tr><th>Player</th><th class="detail">Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
       ${rows}
     </table>`;
@@ -1212,6 +1357,39 @@ function endGame(ending, flaggedSeat = null) {
 
   $('#end-modal').showModal?.();
 }
+
+// ?opening, the month's sky: the board stands in daylight while the crews are
+// hired, and the sun goes down behind the skyline while the displays go up;
+// the next month starts in daylight again, and the last month's dusk runs on
+// into opening night.
+function setSky(v) {
+  if (OPENING) document.body.dataset.sky = v;
+}
+if (OPENING) $('#game').insertAdjacentHTML('afterbegin', '<div id="sky" aria-hidden="true"><div class="sky-glow"></div><div class="sky-line"></div></div>');
+
+// Opening night: hand the Fair (scene.js) each player's name, wall, score and
+// whether they won, once per game. The board steps aside while it plays
+// (style.css, data-front="finale"); closing the result card ends it.
+function startFinale(result) {
+  if (!OPENING || !G || G.finale) return;
+  G.finale = true;
+  const draw = result.winner === -1;
+  const players = G.names.map((name, seat) => ({
+    name,
+    wall: G.cur.boards[seat].wall.map((row) => row.slice()),
+    score: result.scores[seat],
+    win: draw ? result.leaders.includes(seat) : seat === result.winner,
+  }));
+  // kept where scene.js looks on load too, in case the game ended before the Fair's script ran
+  window.__pavilionFinale = { players };
+  document.dispatchEvent(new CustomEvent('pavilion:finale', { detail: { players } }));
+}
+$('#end-modal').addEventListener('close', () => {
+  if (!OPENING) return;
+  window.__pavilionFinale = null;
+  setSky('');
+  document.dispatchEvent(new CustomEvent('pavilion:finale-end'));
+});
 
 // --- the archive's receipt --------------------------------------------------
 //
@@ -3062,6 +3240,32 @@ if (smokeParams.get('uitest') === 'online') {
     // The Node side is waiting on this, not on the DOM: headless Chrome has
     // no way to tell it the page is finished otherwise.
     fetch('/__done?r=' + encodeURIComponent(out.textContent)).catch(() => {});
+  })();
+}
+
+// ?opening&finale is the look link for the end of the game: two greedy hands
+// play a whole game in an instant (seed 'opening-night', which the first seat
+// wins 46–43; &seed= for another), and the last move plays out at full speed,
+// so the month's close, the judges' round and opening night can be seen without
+// playing a game first. ?names= names the seats, &players=3 or 4 seats more.
+if (OPENING && smokeParams.has('finale') && !smokeParams.has('smoke')) {
+  (async () => {
+    if (document.readyState !== 'complete') await new Promise((r) => addEventListener('load', r, { once: true }));
+    window.__instant = true;
+    const players = Math.min(4, Math.max(2, Number(smokeParams.get('players')) || 2));
+    startGame({
+      players,
+      names: FAMILY.length >= players ? FAMILY.slice(0, players) : players === 2 ? ['You', BOT_NAME] : ['You', 'Alex', 'Sam', 'Jordan'].slice(0, players),
+      bot: false,
+      clockMs: 0,
+      seed: smokeParams.get('seed') || 'opening-night',
+    });
+    while (G && !G.cur.over) {
+      const m = greedyMove(G.cur);
+      if (E.apply(G.cur, m).over) window.__instant = false;
+      sel = { source: m.source, kind: m.kind };
+      await submitMove(m.dest);
+    }
   })();
 }
 

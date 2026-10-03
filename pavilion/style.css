@@ -1226,6 +1226,19 @@ body.fair #game::after {
   background: url("./fair-skyline.svg") left bottom / auto 100% repeat-x;
 }
 body.fair #table { position: relative; z-index: 1; }
+/* ?opening, the month's sky (ui.js setSky): while the displays go up the sun sets behind the skyline, which
+   stands dark against it; the next month opens in daylight again. Behind the boards, never over them. */
+#sky { display: none; }
+body.fair #sky { display: block; position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+body.fair #sky .sky-glow, body.fair #sky .sky-line { position: absolute; left: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 1.8s ease; }
+body.fair #sky .sky-glow { top: 0; background: linear-gradient(to top, rgba(242, 150, 88, .5) 0, rgba(219, 128, 112, .3) 14vh, rgba(128, 112, 164, .12) 32vh, rgba(128, 112, 164, 0) 50vh); }
+body.fair #sky .sky-line {
+  height: clamp(90px, 17vh, 180px); background: #2A2E4E;
+  -webkit-mask: url("./fair-skyline.svg") left bottom / auto 100% repeat-x; mask: url("./fair-skyline.svg") left bottom / auto 100% repeat-x;
+}
+body.fair[data-sky="dusk"] #sky .sky-glow { opacity: 1; }
+body.fair[data-sky="dusk"] #sky .sky-line { opacity: .4; }
+body.fair[data-sky="dusk"] #game::after { opacity: 0; }
 
 /* the top bar: a programme's header, the month on a navy plaque */
 body.fair #topbar {
@@ -1348,9 +1361,36 @@ body.fair .crew.can-drop, body.fair .idle.can-drop {
 }
 @keyframes fair-drop { 50% { border-color: rgba(224, 169, 40, .4); background: rgba(224, 169, 40, .05); } }
 body.fair .crew.can-drop:hover, body.fair .idle.can-drop:hover { background: rgba(224, 169, 40, .3); }
+/* ?opening, the hire preview: a crew's idle bill in red beside it, the idle row's after it, and faint
+   tiles where a hire would stand while a crew is pointed at */
+.bill { display: none; }
+body.fair .crew .bill, body.fair .idle .bill {
+  display: block; position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  min-width: 28px; padding: 2px 7px 3px; border-radius: 999px; background: var(--red); color: #FFF8EC;
+  font-weight: 800; font-size: 12.5px; line-height: 1.25; text-align: center; font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 0 #8E1424, 0 4px 8px rgba(142, 20, 36, .25); pointer-events: none;
+  animation: fair-bill-in calc(.28s * var(--tempo, 1)) cubic-bezier(.3, 1.6, .5, 1) both;
+}
+body.fair .crew .bill { right: calc(100% + 7px); }
+body.fair .idle { position: relative; }
+body.fair .idle .bill { left: calc(100% + 9px); top: calc(50% - 7px); }
+@keyframes fair-bill-in { 0% { opacity: 0; transform: translateY(-50%) scale(.6); } }
+body.fair .ghost-tile { opacity: .5; box-shadow: 0 0 0 2px #E0A928 !important; }
+body.fair .wcell.ghost-cell { box-shadow: 0 0 0 3px #E0A928, 0 0 16px 4px rgba(224, 169, 40, .45); }
+body.fair .wcell.ghost-cell .tile.open { opacity: .8; }
 /* the Commissioner's choice, shown before it is made */
 body.fair .crew.aim, body.fair .idle.aim { border-color: #E0A928; background: rgba(224, 169, 40, .28); animation: none; }
 
+/* ?opening: a lead hand carrying a display up into its bay, walking (ui.js carry) */
+.fx-carry { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; }
+.fx-carry .carry-tile { position: relative; z-index: 0; }
+.fx-carry .carry-tile .tile { width: 100%; height: 100%; box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 8px 12px rgba(27, 28, 25, .3); }
+.fx-carry .worker { position: relative; z-index: 1; display: block; width: 78%; margin: -17% auto 0; overflow: visible; }
+.fx-carry .worker .leg { stroke: #2F3441; stroke-width: 1.9; stroke-linecap: round; fill: none; transform-origin: 10px 15.6px; animation: carry-stride var(--stride, .2s) ease-in-out infinite alternate; }
+.fx-carry .worker .leg.r { animation-direction: alternate-reverse; }
+.fx-carry .worker .arm { stroke: #F3EADA; stroke-width: 1.7; stroke-linecap: round; fill: none; }
+@keyframes carry-stride { from { transform: rotate(-17deg); } to { transform: rotate(17deg); } }
+.fx-carry.done .worker { transition: opacity calc(.26s * var(--tempo, 1)) ease, transform calc(.26s * var(--tempo, 1)) ease; opacity: 0; transform: translateY(30%); }
 /* a thrown tile carries its height in its shadow, and a display that lands flashes its bay */
 body.fair .fx-tile.thrown .tile, body.fair .fx-tile.thrown .token { box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 12px 18px rgba(27, 28, 25, .3); }
 body.fair .wcell.landed::after {
@@ -1387,6 +1427,32 @@ body.fair .whistle { color: var(--red); font-weight: 800; }
 body.fair .champion { font-family: "Abril Fatface", var(--display); font-weight: 400; }
 body.fair .champion.story { font-size: clamp(24px, 4.6vw, 32px); line-height: 1.18; }
 body.fair .final-table .total { font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 22px; }
+
+/* Opening night (?opening, 3 Oct 2026): at the end of a game the board steps aside for the Fair at night
+   (scene.js, body[data-front="finale"]), and the judges' card hangs in its sky: at the top on a phone, over
+   the middle of the sky between the pavilions on a wider screen, which is the 42vw scene.js keeps clear. */
+body.fair #topbar, body.fair #table, body.fair #game::after, body.fair #sky { transition: opacity .8s ease; }
+body.fair[data-front="finale"] #topbar, body.fair[data-front="finale"] #table, body.fair[data-front="finale"] #game::after, body.fair[data-front="finale"] #sky { opacity: 0; pointer-events: none; }
+body.fair[data-front="finale"] #music { visibility: hidden; }
+body.fair #end-modal.finale {
+  margin: max(14px, 4vh) auto auto; width: min(520px, 94vw); max-height: calc(100vh - 28px); overflow-y: auto;
+  animation: fair-judges-in .7s cubic-bezier(.2, .95, .3, 1.06) both;
+  box-shadow: inset 0 0 0 1px #CDBFA6, inset 0 0 0 9px #F7F1E4, inset 0 0 0 10px rgba(201, 162, 39, .75), 0 30px 90px rgba(6, 8, 24, .6);
+}
+@media (min-aspect-ratio: 21/20) { body.fair #end-modal.finale { width: min(520px, 42vw); } }
+body.fair #end-modal.finale::backdrop { background: transparent; backdrop-filter: none; }
+@keyframes fair-judges-in { 0% { opacity: 0; transform: translateY(-26px) scale(.97); } }
+body.fair #end-modal.finale #end-body { padding: 28px 30px 6px; }
+body.fair #end-modal.finale .end-actions { padding: 12px 22px 20px; }
+@media (max-width: 480px) {
+  body.fair #end-modal.finale #end-body { padding: 22px 22px 4px; }
+  body.fair #end-modal.finale .champion.story { font-size: 23px; margin-bottom: 12px; }
+}
+/* The score card's breakdown always sits under the name now, so the table has one column for each number
+   and no "Bonuses" beside "Bonus". */
+.final-table.compact .detail { display: none; }
+.final-table.compact .detail-under { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) { body.fair #end-modal.finale { animation: none; } }
 
 @media (max-width: 940px) {
   body.fair #topbar { padding: 8px 12px; }
