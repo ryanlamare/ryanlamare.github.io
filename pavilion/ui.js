@@ -993,8 +993,8 @@ function endGame(ending, flaggedSeat = null) {
             : '—';
       const win = draw ? result.leaders.includes(seat) : seat === result.winner;
       return `<tr class="${win ? 'win' : ''}">
-        <td>${esc(name)}</td>
-        <td>${detail}</td>
+        <td>${esc(name)}<span class="detail-under">${detail}</span></td>
+        <td class="detail">${detail}</td>
         <td class="num">${result.scores[seat] - bonus}</td>
         <td class="num">${bonus ? '+' + bonus : ''}</td>
         <td class="num total">${result.scores[seat]}</td>
@@ -1007,7 +1007,7 @@ function endGame(ending, flaggedSeat = null) {
     <p class="champion spot${draw || ending === 'timeout' ? '' : ' story'}">${titleHTML}</p>
     <p class="end-sub">${sub}</p>
     <table class="final-table">
-      <tr><th>Player</th><th>Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
+      <tr><th>Player</th><th class="detail">Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
       ${rows}
     </table>`;
   announce(`${titleText}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');

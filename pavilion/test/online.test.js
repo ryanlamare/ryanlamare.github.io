@@ -113,10 +113,15 @@ const timeout = setTimeout(() => {
 
 await reported;
 clearTimeout(timeout);
+// Chrome is still writing its profile as it exits, so wait for it to go and let
+// the delete retry: removing the folder at once failed about half the runs with
+// ENOTEMPTY, after the game itself had passed (3 Oct 2026).
+const exited = new Promise(r => proc.once('exit', r));
 proc.kill();
+await exited;
 files.close();
 relayServer.close();
-await rm(profile, { recursive: true, force: true });
+await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
 
 // --- verdict ----------------------------------------------------------------
 
