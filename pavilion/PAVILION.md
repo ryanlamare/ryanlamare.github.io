@@ -1232,7 +1232,7 @@ the design can fix it.
 
 ---
 
-## The front door's Fair — a sample, 3 Oct 2026 (`scene.js`, only on `?fair`)
+## The front door's Fair — 3 Oct 2026 (`scene.js`; the default since that evening, `?plain` for the old front door)
 
 Ryan asked for "a world in motion surrounding the game opening screen": the
 1893 Fair alive, a day-to-night cycle, and the game's own story told in the
@@ -1290,7 +1290,7 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   hang off `body.fair`, which only `scene.js` adds. Nothing in the engine, the
   wire or `ui.js` knows the scene exists (the tutorial is `ui.js`'s, above). People walk on CSS (limbs swing on
   their own top edge), so the loop only moves them. `prefers-reduced-motion`
-  gets one still frame at dusk and no title animation. `?fair&at=0.62` opens the
+  gets one still frame at dusk and no title animation. `?at=0.62` opens the
   cycle at that point (0 midnight, 0.25 morning, 0.585 sunset), `&still` holds
   it, `&menu` opens straight on the menu.
 - **The promenade's life** (Ryan: fill the space the card left, and be
@@ -1362,18 +1362,18 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   agency at a time; placards hold the board until they have gone; at the
   month's end the leftover crew walk off and the idle row shudders. Measured at
   60 fps in a headless laptop browser. `--tempo` is unchanged (2).
-  `FAIR` in `ui.js` and `body.fair` in `style.css` keep all of it on `?fair`;
-  the plain URL plays exactly as before.
+  `FAIR` in `ui.js` and `body.fair` in `style.css` hold all of it, so `?plain`
+  plays exactly as the game did before.
 - **Playing each other, and the family link** (Ryan, 3 Oct, before showing his
   parents: is there an easier way to match up, and could the choices be Mary,
   Jim, Ryan and Genese instead of the fake names). The lobby has **Send an
-  invite link** (on `?fair`): on a phone it opens the share sheet, elsewhere it
+  invite link**: on a phone it opens the share sheet, elsewhere it
   copies the link, which opens the join screen with the room's code already in
   (`?join=CODE`, straight to the menu, no title), keeping the link's own names,
   clock and dress. Nobody types a code. `?names=Mary,Jim,Ryan,Genese` puts those
   names on the setup screen as the choices instead of the relay's class list,
   remembered on the device; `&clock=0` starts live games without a clock. The
-  family demo page links `/pavilion/?fair&names=Mary,Jim,Ryan,Genese&clock=0`.
+  family demo page links `/pavilion/?names=Mary,Jim,Ryan,Genese&clock=0`.
   Neither touches the relay: a name picked from the link has no roster id, so
   those games never record. The "fake names" are the relay's own demo term,
   `ler565-2026-demo`, sixteen invented students and Ryan, which every other
@@ -1384,17 +1384,30 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   purchase is a personal licence, and anything here is public (the site, and
   the repo on GitHub). It plays in **Bandcamp's own embedded player**, from the
   artist's page (sufjanstevens.bandcamp.com, album *Illinois*, every track
-  streamable, embedding on), the way Bandcamp offers it. A note button in the
-  sky's top-right corner, and in a game in the top bar, opens a small card with
-  the player; nothing loads from Bandcamp until it is pressed, the card closes
-  without stopping the music, and the music plays on through the menu into a
-  game. Two taps (the note, then play): browsers never start sound by themselves.
+  streamable, embedding on), the way Bandcamp offers it. **One click** (Ryan:
+  not a button that opens a card and then play): Bandcamp's player has no
+  autoplay and takes no commands from the page (checked in its code), and a
+  page must not press another site's button for you, so **Bandcamp's slim
+  player is the music button**. On the title screen it sits in the sky's
+  top-right corner (at the foot of the screen on a phone), in the menu at the
+  bottom right (out of sight on a phone, still playing), and one click on its
+  play starts the song. It loads 2.4 s after the page, once the title has
+  landed, so nothing waits on it; it is never moved in the page (an iframe that
+  moves reloads), so the song plays on through the menu into a game, where the
+  note in the top bar shows the player again to pause it. The album-cover
+  player was tried first and rejected: at button size a hover slides Bandcamp's
+  info panel over the cover and clicks stop playing.
 - **Performance.** While the menu or lobby is open the dimmed Fair moves at half
   the frame rate, and it holds still for the 0.75 s a card takes to arrive. On a
   machine averaging under ~33 fps after five seconds it drops to every other frame.
-- **Before it goes live** it needs Ryan's look; making it the default is
-  deleting the `?fair` check at the top of `scene.js`. The demo page for Ryan's
-  family links `/pavilion/?fair` meanwhile.
+- **Live as the front door** (Ryan, 3 Oct evening: "make this one go live and
+  replace the original"), for the class as well as the family link. The gate at
+  the top of `scene.js` is now `?plain`, which brings back the old front door
+  and the game as it was, should a room ever need it; `?fair` still works and
+  means nothing. Also that evening: the pavilions now stand in front of the
+  promenade's strollers, and a hired crew walks along the ground to its
+  pavilion's door, rather than across the building's front (Ryan: people
+  "walking into the tops of the pavilions").
 
 ## Two devices — built 2026-08-12 (build step 4)
 

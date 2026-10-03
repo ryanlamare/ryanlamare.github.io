@@ -1,7 +1,8 @@
 /* Pavilion — the front door as a video game's: the 1893 World's Fair alive across
    the whole screen, PAVILION set in tiles over the sky, and "Play a game" opening
-   the menu (the setup card) over a dimmed Fair. A sample (3 Oct 2026), shown only
-   on ?fair until Ryan has seen it.
+   the menu (the setup card) over a dimmed Fair. Built 3 Oct 2026 as a sample on
+   ?fair, and the front door for everyone since that evening (Ryan: "make this
+   one go live and replace the original"). ?plain shows the old front door.
 
    Ryan's brief: "a world in motion surrounding the game opening screen…
    placing people inside the world's fair with some cool motion and animated
@@ -28,14 +29,14 @@
    it. The title's words live in index.html with the rest of the copy; this
    file only shows them and runs the title → menu → lobby states. It draws while
    the front door or the lobby is showing and the tab is visible, stops for a
-   game, and prefers-reduced-motion gets one still frame at dusk. ?fair&at=0.62
+   game, and prefers-reduced-motion gets one still frame at dusk. ?at=0.62
    opens the cycle at that point of the day (0 midnight, 0.25 morning, 0.585
    sunset), &still holds it there, &menu opens straight on the menu. */
 (() => {
   'use strict';
 
   const QS = new URLSearchParams(location.search);
-  if (!QS.has('fair')) return;
+  if (QS.has('plain')) return;
 
   const setup = document.getElementById('setup');
   const card = setup && setup.querySelector('.setup-card');
@@ -868,10 +869,14 @@
       }
     }
 
-    // ---- the pavilions: the board's wall, five galleries of five
+    // ---- the pavilions: the board's wall, five galleries of five. They stand at
+    // the very front of the picture, so their layer is moved above the promenade's
+    // people once those exist (below): a stroller passes behind a pavilion, never
+    // across its front (Ryan, 3 Oct: people "walking into the tops of the pavilions").
+    const pavL = el('g', null, worldL);
     const pav = [0, 1].map(n => {
       const cx = L.pavX[n], w = L.pw, base = L.pb;
-      const g = el('g', null, worldL), gl = lit(1.1);
+      const g = el('g', null, pavL), gl = lit(1.1);
       const pw = w * 0.04, bw = (w - 6 * pw) / 5, bh = bw * 1.08, rg = bw * 0.26;
       const plinth = bw * 0.55, facH = 5 * bh + 6 * rg;
       const top = base - plinth - facH, x0 = cx - w / 2;
@@ -956,6 +961,8 @@
     // ---- the promenade: lamps, a Cracker Jack cart, the agencies and the gate, and everyone on it
     const farLane = el('g', null, worldL), kioskL = el('g', null, worldL), craftL = el('g', null, worldL);
     const midLane = el('g', null, worldL), pigeonL = el('g', null, worldL), nearLane = el('g', null, worldL);
+    worldL.appendChild(pavL);                            // the pavilions in front of everyone on the promenade,
+    const frontL = el('g', null, worldL);                // and a crew on the ground at its own door in front of them
     const lampXs = [];
     for (let i = 0; i < L.items.length - 1; i++) lampXs.push((L.items[i] + L.items[i + 1]) / 2);
     lampXs.push(L.items[0] - 0.045 * W, L.items[L.items.length - 1] + 0.045 * W);
@@ -1313,7 +1320,14 @@
         freeSlot(a);
         if (fromGate) gate.people.splice(gate.people.indexOf(a), 1);
         a.crew = crew; a.nation = n; a.v = 52 * s;
-        if (room) { a.state = 'hired'; a.tx = pav[n].door.x + (i - (crew.length - 1) / 2) * 4 * s; a.ty = pav[n].door.y; }
+        if (room) {
+          // down to the ground beside the pavilion first, then along the front to the door
+          const d = pav[n].door, edge = n ? L.pavX[1] - L.pw / 2 - 6 * s : L.pavX[0] + L.pw / 2 + 6 * s;
+          a.state = 'hired';
+          a.via = { x: edge + (n ? -1 : 1) * i * 6 * s, y: d.y };
+          a.door = { x: d.x + (i - (crew.length - 1) / 2) * 4 * s, y: d.y };
+          a.tx = a.via.x; a.ty = a.via.y;
+        }
         else {                                           // nowhere to put them: they stand idle by the pavilion
           const spot = pav[n].idle.find(sp => !sp.c) || pav[n].idle[3];
           spot.c = a; a.slot = spot; a.state = 'toIdle'; a.tx = spot.x; a.ty = spot.y;
@@ -1554,6 +1568,11 @@
         else if (a.state === 'toGate') a.state = 'gate';
         else if (a.state === 'toIdle') a.state = 'idle';
         else if (a.state === 'leave') drop(a);
+        else if (a.state === 'hired' && a.via) {
+          a.via = null;
+          frontL.appendChild(a.g);
+          a.tx = a.door.x; a.ty = a.door.y;
+        }
         else if (a.state === 'hired') {
           a.state = 'gone';
           a.g.style.transition = 'opacity .35s'; a.g.style.opacity = 0;
@@ -1851,17 +1870,19 @@
   function vStart() { vStop(); vBuild(); if (!STILL) vTimer = setInterval(vStep, 560); }
   function vStop() { clearInterval(vTimer); vTimer = 0; }
 
-  // Music: Bandcamp's own player for the artist's track, created the first time
-  // either music button is pressed (nothing loads from Bandcamp before that) and
-  // then kept in the page, so it plays on through the menu and into a game.
+  // Music: Bandcamp's own player for the artist's track. One click on its play
+  // starts the song (Ryan: one click, not a card and then play; a page cannot
+  // press another site's button, so the player is the button). It loads once the
+  // title has landed, so the page never waits on it, and stays in the page so the
+  // song plays on through the menu and into a game, where the note in the top
+  // bar shows the player again.
   const music = document.getElementById('music');
   if (music) {
     music.classList.remove('hidden');
     const holder = music.querySelector('.music-player');
-    const buttons = [document.getElementById('btn-music'), document.getElementById('btn-music-top')].filter(Boolean);
-    const toggle = () => {
-      const open = !music.classList.contains('open');
-      if (open && holder && !holder.firstElementChild) {
+    const buttons = [document.getElementById('btn-music-top')].filter(Boolean);
+    const load = () => {
+      if (holder && !holder.firstElementChild) {
         const f = document.createElement('iframe');
         f.src = holder.dataset.src;
         f.title = holder.dataset.title;
@@ -1872,6 +1893,11 @@
         f.appendChild(a);
         holder.appendChild(f);
       }
+    };
+    setTimeout(load, REDUCED ? 0 : 2400);
+    const toggle = () => {
+      load();
+      const open = !music.classList.contains('open');
       music.classList.toggle('open', open);
       buttons.forEach(b => b.setAttribute('aria-expanded', String(open)));
     };

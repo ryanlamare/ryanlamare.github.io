@@ -62,10 +62,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const TEMPO =
   parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tempo')) || 1;
 const T = (ms) => Math.round(ms * TEMPO);
-// The Fair's dress for the game (3 Oct 2026, a sample on ?fair like the front
-// door): flights on real arcs, a hire that reads in order, the Commissioner
-// showing its pick before it moves. The plain URL plays exactly as before.
-const FAIR = new URLSearchParams(location.search).has('fair');
+// The Fair's dress for the game (3 Oct 2026, with the front door): flights on
+// real arcs, a hire that reads in order, the Commissioner showing its pick
+// before it moves. ?plain plays the way the game did before.
+const FAIR = !new URLSearchParams(location.search).has('plain');
 const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
@@ -370,7 +370,7 @@ function fly(fromRect, toRect, html, opts = {}) {
   return anim.finished.then(() => el.remove()).catch(() => el.remove());
 }
 
-// Under ?fair a flight is a throw (Ryan, 3 Oct: "the animations are kinda
+// In the Fair's dress a flight is a throw (Ryan, 3 Oct: "the animations are kinda
 // choppy"). The old flight went up one straight line and down another, with a
 // corner at the top, and scaled about the wrong point, so it landed a few
 // pixels off its cell and the tile jumped into place: that was the chop. This
@@ -444,7 +444,7 @@ function squareAt(rect, like) {
   return { left: rect.left + rect.width / 2 - s / 2, top: rect.top + rect.height / 2 - s / 2, width: s, height: s };
 }
 
-// Craftspeople leaving the board under ?fair: they walk off and fade where they
+// Craftspeople leaving the board, in the Fair's dress: they walk off and fade where they
 // stood, rather than flying to a hidden corner.
 function walkOff(rect, html, { delay = 0, dx = 30, dy = -6, rot = 0 } = {}) {
   if (instant() || rect.width < 2) return Promise.resolve();
@@ -490,7 +490,7 @@ function banner(html, cls = '') {
   el.innerHTML = html;
   el.classList.add('show');
   if (FAIR) {
-    // Under ?fair the board waits for the placard to go: a month's opening or
+    // In the Fair's dress the board waits for the placard to go: a month's opening or
     // the displays going up should read as a beat, not happen under the words.
     bannerTimer = setTimeout(() => el.classList.remove('show'), T(1150));
     return sleep(T(1180));
@@ -610,7 +610,7 @@ async function animatePhaseA(before, interim, move) {
       })
     );
   }
-  // Under ?fair the ones passed over stay standing at the agency until the
+  // In the Fair's dress the ones passed over stay standing at the agency until the
   // hire has gone, then make for the gate.
   let spill = 0;
   const spillAt = () => ({ delay: 300 + spill++ * 55, arc: 0.16, tilt: 3 });
@@ -960,12 +960,12 @@ function scheduleBot() {
   const game = G; // if the game is abandoned mid-think, stay quiet
   (async () => {
     $('#turn-label').innerHTML = `<b>${esc(BOT_NAME)}</b> is weighing options…`;
-    await beat(FAIR ? 380 : 750); // under ?fair the pick is shown as well, below
+    await beat(FAIR ? 380 : 750); // in the Fair's dress the pick is shown as well, below
     if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
     const m = greedyMove(G.cur);
     sel = { source: m.source, kind: m.kind };
     if (FAIR && !instant()) {
-      // Under ?fair you see the Commissioner's hand the way you see your own:
+      // In the Fair's dress you see the Commissioner's hand the way you see your own:
       // its pick lifts and its legal crews light, then only the crew it chose.
       applySelection();
       await beat(560);
@@ -2315,7 +2315,7 @@ if (!RELAY_URL) {
 }
 
 // ---------------------------------------------------------------------------
-// Learn to play (a sample on ?fair, 3 Oct 2026; the button shows only there).
+// Learn to play (3 Oct 2026; the button is the Fair's, so not on ?plain).
 //
 // Ryan: rather than a page of rules, "a scripted tutorial like they do in video
 // games, with highlights for 'grab these tiles' and 'put them here'". So the
@@ -2771,13 +2771,13 @@ if (JOIN && RELAY_URL) {
   $('#code-input').value = JOIN;
 }
 
-// The invite (3 Oct 2026; the button shows on ?fair): one link that opens the
+// The invite (3 Oct 2026; the button is the Fair's): one link that opens the
 // join screen with this room's code in, keeping the link's own names and clock,
 // so nobody has to type a code. On a phone it goes to the share sheet.
 const INVITE_TEXT = 'Join my game of Pavilion';
 function inviteLink() {
   const p = new URLSearchParams();
-  for (const k of ['fair', 'names', 'clock']) if (params.has(k)) p.set(k, params.get(k));
+  for (const k of ['plain', 'names', 'clock']) if (params.has(k)) p.set(k, params.get(k));
   p.set('join', net?.code || '');
   // A bare `fair`, and commas left as commas, so the link reads cleanly in a message.
   return location.origin + location.pathname + '?' + p.toString().replace(/=(?=&|$)/g, '').replace(/%2C/gi, ',');

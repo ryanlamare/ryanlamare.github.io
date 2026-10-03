@@ -376,15 +376,15 @@ relay, and refuses any term that isn't a `demo`/`test`/`trial`).
 
 `pavilion/scene.js` is the front door's animated World's Fair (PAVILION.md, *The
 front door's Fair*): decorative, wordless, outside the engine and the copy layer,
-and while it is a sample it only runs on `?fair`. Its menu's **Learn to play** is
+and since 3 Oct 2026 it is the front door for everyone (`?plain` brings back the old one). Its menu's **Learn to play** is
 `ui.js`'s coach: a guided first game on the fixed seed `lesson-7`, hooked into
 the game through `coachOn` (a no-op outside the tutorial), every line in
 `LESSON_LINES`. A change to the engine or the bot that alters that seed's first
 month breaks the script; the coach then falls back to plain hints, but re-pick
-the seed rather than live with it. On `?fair` the game itself wears the Fair's
+the seed rather than live with it. The game itself wears the Fair's
 dress too (`body.fair` rules in `style.css`, the `FAIR` flag in `ui.js` for the
 motion), in Abril Fatface and Libre Franklin from `pavilion/fonts/` (OFL, never
-fetched from Google); the plain URL is untouched. Links can carry their own
+fetched from Google); `?plain` plays it as it was. Links can carry their own
 names (`?names=Mary,Jim,…`, which never record), `&clock=0`, and `?join=CODE`
 (what the lobby's invite link sends). The front door's music is Bandcamp's
 embedded player for a track Ryan bought: **never commit the audio file**, a

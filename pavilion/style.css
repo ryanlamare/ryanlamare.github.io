@@ -9,7 +9,7 @@
    moments; Libre Franklin, after Franklin Gothic, for the board's words. Both
    OFL, both served from fonts/ beside this file and never from Google, so a
    phone waits on nothing: the words draw in the stack below them at once and
-   change face when the file lands. Only ?fair uses them so far. */
+   change face when the file lands. The Fair's dress uses them (not ?plain). */
 @font-face { font-family: "Abril Fatface"; src: url("./fonts/AbrilFatface.woff2") format("woff2"); font-display: block; }
 @font-face { font-family: "Libre Franklin"; src: url("./fonts/LibreFranklin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
 
@@ -984,12 +984,12 @@ button.tile:hover { transform: translateY(-3px); }
   .menu { gap: 4px; }
 }
 
-/* ------------------------------------------- the Fair (scene.js, a sample on ?fair)
+/* ------------------------------------------- the Fair (scene.js; the front door since 3 Oct 2026)
    A video game's front door: the World's Fair fills the screen, PAVILION is set
    in tiles over the sky, and "Play a game" opens the menu (the setup card) over a
    dimmed scene, as a card on a laptop and as a sheet from the bottom on a phone.
    The lobby floats over the Fair the same way. Everything here hangs off
-   body.fair, which only scene.js adds, so without ?fair none of it applies.
+   body.fair, which only scene.js adds, so on ?plain none of it applies.
    body[data-front] is title | menu | lobby, and empty in a game. */
 #fair { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #1A2350; }
 #fair svg { display: block; }
@@ -1207,7 +1207,7 @@ body.fair[data-front="title"] #fair { pointer-events: auto; }
   #fair *, #title, #title *, body.fair .setup-card, body.fair .setup-card * { animation: none !important; transition: none !important; }
 }
 
-/* -------------------------------------- the game in the Fair's dress (?fair)
+/* -------------------------------------- the game in the Fair's dress (body.fair)
    Ryan (3 Oct): the game itself should look as good as the front door: the
    fonts, the graphics and the motion. Same board, same rules, same places for
    everything, and every decision the punch lists made still holds (a border
@@ -1407,7 +1407,7 @@ body.fair .final-table .total { font-family: "Abril Fatface", var(--display); fo
   body.fair .wall::before { top: -9px; height: 8px; background-size: auto 8px; }
 }
 
-/* ----------------------------------------- the invite and the music (?fair)
+/* ----------------------------------------- the invite and the music (body.fair)
    The lobby's invite link, and the family link's names as buttons. Music is
    Bandcamp's own player in a small card: in the sky's top-right corner on the
    front door, and under the top bar's note button in a game. */
@@ -1427,27 +1427,31 @@ body.fair .invite-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 r
 .roster.family { grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr)); }
 .roster.family .roster-btn { text-align: center; font-size: 16px; font-weight: 700; }
 
-#music { position: fixed; top: 14px; right: 14px; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+/* the player: the sky's top-right corner on the title, the bottom-right under a
+   card on a laptop; on a phone the foot of the title screen, and out of sight
+   (still playing) while the sheet is up; in a game, under the top bar's note */
+#music { position: fixed; z-index: 2; pointer-events: none; }
 #music.hidden { display: none; }
-#music .music-btn {
-  pointer-events: auto; width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer;
-  background: #F7F1E4; color: var(--ink); font-size: 21px; line-height: 1;
-  box-shadow: 0 0 0 1.5px rgba(43, 38, 32, .28), 0 6px 16px rgba(10, 12, 28, .3);
-}
-#music .music-btn[aria-expanded="true"] { background: var(--red); color: #FFF8EC; }
 #music .music-panel {
-  width: min(330px, calc(100vw - 28px)); padding: 9px 10px 6px; border-radius: 12px;
-  background: #F7F1E4; box-shadow: 0 0 0 1px rgba(43, 38, 32, .2), 0 14px 34px rgba(10, 12, 28, .35);
-  opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+  width: min(300px, calc(100vw - 28px)); height: 42px; overflow: hidden; border-radius: 10px; pointer-events: none;
+  background: #F7F1E4; box-shadow: 0 0 0 1px rgba(43, 38, 32, .22), 0 10px 26px rgba(10, 12, 28, .3);
+  opacity: 0; transition: opacity .5s ease;
 }
-#music.open .music-panel { opacity: 1; transform: none; pointer-events: auto; }
-#music .music-credit { margin: 0 0 5px 2px; font-size: 11.5px; color: var(--muted); }
+#music .music-player:not(:empty) { animation: fair-music-in .5s ease .3s both; }
+#music .music-panel:has(iframe) { opacity: 1; pointer-events: auto; }
+@keyframes fair-music-in { from { opacity: 0; } to { opacity: 1; } }
 #music .music-player iframe { display: block; width: 100%; height: 42px; border: 0; }
-/* in a game the note lives in the top bar, and the card hangs under it */
+body.fair[data-front="title"] #music { top: 14px; right: 14px; }
+body.fair[data-front="menu"] #music, body.fair[data-front="lobby"] #music { bottom: 14px; right: 14px; }
+@media (max-width: 939px) {
+  body.fair[data-front="title"] #music { top: auto; right: auto; bottom: 14px; left: 50%; transform: translateX(-50%); }
+  body.fair[data-front="menu"] #music, body.fair[data-front="lobby"] #music { visibility: hidden; }
+}
+/* in a game the note lives in the top bar, and the player hangs under it */
 body.fair .music-top { display: inline-block; font-size: 15px; line-height: 1; padding: 6px 10px; }
 body.fair .music-top[aria-expanded="true"] { color: #FFF8EC; background: var(--red); border-color: var(--red); }
-body.fair[data-front=""] #music { top: 62px; z-index: 31; }
-body.fair[data-front=""] #music .music-btn { display: none; }
+body.fair[data-front=""] #music { top: 62px; right: 14px; z-index: 31; visibility: hidden; }
+body.fair[data-front=""] #music.open { visibility: visible; }
 
 /* ------------------------------------------- Learn to play (ui.js, the coach)
    A spotlight on the real board, the manicule pointing at what to tap, and a
