@@ -1244,9 +1244,9 @@ body.fair .ghost-btn { font-weight: 700; }
 
 /* the agencies: striped daises, as on the promenade */
 body.fair #market { gap: 26px; margin-bottom: 26px; }
-body.fair #sources { gap: 14px; }
+body.fair #sources { gap: 12px; }
 body.fair .source {
-  padding: 7px; border: 7px solid transparent; border-radius: 22px;
+  padding: 6px; border: 6px solid transparent; border-radius: 20px;
   background:
     radial-gradient(circle at 50% 40%, #FDFAF2, #EFE6D2 75%) padding-box,
     repeating-conic-gradient(from -6deg, #C42B3B 0 12deg, #F6EEDD 12deg 24deg) border-box;
@@ -1254,10 +1254,13 @@ body.fair .source {
   transition: opacity .5s ease, filter .5s ease;
 }
 body.fair .source.empty { opacity: .4; filter: saturate(.35); }
-@media (min-width: 941px) {
+/* Round where there is room for five of them and the gate on one line (a
+   laptop); the same stripes on a rounded square below that, so an iPad held
+   sideways keeps the market on one line and the board above the fold. */
+@media (min-width: 1290px) {
   body.fair .source {
     --dais: calc((var(--tile) * 2 + 6px) * 1.36);
-    width: calc(var(--dais) + 14px); height: calc(var(--dais) + 14px);
+    width: calc(var(--dais) + 12px); height: calc(var(--dais) + 12px);
     padding: 0; border-radius: 50%; display: grid; place-items: center;
   }
 }
@@ -1403,6 +1406,48 @@ body.fair .final-table .total { font-family: "Abril Fatface", var(--display); fo
   body.fair .crews { padding-top: 6px; }
   body.fair .wall::before { top: -9px; height: 8px; background-size: auto 8px; }
 }
+
+/* ----------------------------------------- the invite and the music (?fair)
+   The lobby's invite link, and the family link's names as buttons. Music is
+   Bandcamp's own player in a small card: in the sky's top-right corner on the
+   front door, and under the top bar's note button in a game. */
+.invite-btn, .music-top { display: none; }
+body.fair .invite-btn {
+  display: inline-flex; align-items: center; gap: 9px; margin: 2px 0 12px; padding: 9px 18px 9px 10px;
+  border-radius: 999px; border: 1.5px solid var(--ink); background: #FBF7EE; color: var(--ink);
+  font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 3px 0 rgba(43, 38, 32, .2);
+}
+body.fair .invite-btn::before {
+  content: ''; width: 24px; height: 24px; border-radius: 50%; flex: none;
+  background: var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFF8EC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 0 0 5.6 0l3-3a4 4 0 0 0-5.6-5.6l-1 1'/%3E%3Cpath d='M14 10a4 4 0 0 0-5.6 0l-3 3a4 4 0 0 0 5.6 5.6l1-1'/%3E%3C/svg%3E") center / 70% no-repeat;
+}
+body.fair .invite-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(43, 38, 32, .2); }
+.invite-note { font-size: 12.5px; color: var(--muted); margin: -4px 0 12px; overflow-wrap: anywhere; }
+.invite-note:empty { display: none; }
+.roster.family { grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr)); }
+.roster.family .roster-btn { text-align: center; font-size: 16px; font-weight: 700; }
+
+#music { position: fixed; top: 14px; right: 14px; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+#music.hidden { display: none; }
+#music .music-btn {
+  pointer-events: auto; width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer;
+  background: #F7F1E4; color: var(--ink); font-size: 21px; line-height: 1;
+  box-shadow: 0 0 0 1.5px rgba(43, 38, 32, .28), 0 6px 16px rgba(10, 12, 28, .3);
+}
+#music .music-btn[aria-expanded="true"] { background: var(--red); color: #FFF8EC; }
+#music .music-panel {
+  width: min(330px, calc(100vw - 28px)); padding: 9px 10px 6px; border-radius: 12px;
+  background: #F7F1E4; box-shadow: 0 0 0 1px rgba(43, 38, 32, .2), 0 14px 34px rgba(10, 12, 28, .35);
+  opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity .25s ease, transform .25s ease;
+}
+#music.open .music-panel { opacity: 1; transform: none; pointer-events: auto; }
+#music .music-credit { margin: 0 0 5px 2px; font-size: 11.5px; color: var(--muted); }
+#music .music-player iframe { display: block; width: 100%; height: 42px; border: 0; }
+/* in a game the note lives in the top bar, and the card hangs under it */
+body.fair .music-top { display: inline-block; font-size: 15px; line-height: 1; padding: 6px 10px; }
+body.fair .music-top[aria-expanded="true"] { color: #FFF8EC; background: var(--red); border-color: var(--red); }
+body.fair[data-front=""] #music { top: 62px; z-index: 31; }
+body.fair[data-front=""] #music .music-btn { display: none; }
 
 /* ------------------------------------------- Learn to play (ui.js, the coach)
    A spotlight on the real board, the manicule pointing at what to tap, and a

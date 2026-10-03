@@ -6,7 +6,7 @@
 <title>Pavilion</title>
 <!-- ?v= is a cache-buster: bump it when shipping UI changes so browsers
      holding older copies pick up the new files on a plain reload. -->
-<link rel="stylesheet" href="./style.css?v=25">
+<link rel="stylesheet" href="./style.css?v=26">
 <!-- The title's face, fetched early so the word never appears in a stand-in.
      13 KB, from this site (fonts/, OFL), never from Google. -->
 <link rel="preload" href="./fonts/AbrilFatface.woff2" as="font" type="font/woff2" crossorigin>
@@ -202,6 +202,10 @@
     <h1 class="room-code" id="lobby-code">…</h1>
     <p class="sub" id="lobby-wait"></p>
     <ul id="lobby-seats" class="seat-list"></ul>
+    <!-- The invite (3 Oct 2026, shown on ?fair): a link that opens the join
+         screen with this code in, so nobody types it. ui.js builds the link. -->
+    <button type="button" class="invite-btn" id="btn-invite">Send an invite link</button>
+    <p class="invite-note" id="invite-note" role="status"></p>
     <!-- The pre-game splash (build step 6). It lives in the lobby rather than
          between the start and the board because it must not eat the clock:
          here the host's "Start the game" is the click-to-start, and nobody's
@@ -232,6 +236,7 @@
          wants seed + move list for any bug report, so they survive behind
          ?dev=1 rather than being deleted. -->
     <div class="menu">
+      <button id="btn-music-top" class="ghost-btn music-top" type="button" aria-controls="music-panel" aria-expanded="false" title="Music">&#9835;</button>
       <button id="btn-export" class="ghost-btn hidden" title="Download the game record (seed + moves)">Record</button>
       <button id="btn-new" class="ghost-btn" title="Abandon this game">End</button>
     </div>
@@ -277,10 +282,24 @@
   </div>
 </dialog>
 
-<script type="module" src="./ui.js?v=18"></script>
+<!-- Music (3 Oct 2026, ?fair only): Sufjan Stevens' "Come On! Feel the
+     Illinoise!", whose first part is the World's Columbian Exposition itself.
+     It plays in Bandcamp's own player, embedded from the artist's page the way
+     Bandcamp offers it; the file is never copied onto this site (Ryan bought it,
+     and a purchase is a personal licence). Nothing loads from Bandcamp until the
+     button is pressed. scene.js opens and closes it. -->
+<div id="music" class="hidden">
+  <button type="button" class="music-btn" id="btn-music" aria-controls="music-panel" aria-expanded="false" title="Music">&#9835;</button>
+  <div class="music-panel" id="music-panel" aria-label="Music">
+    <p class="music-credit">Sufjan Stevens, <i>Come On! Feel the Illinoise!</i></p>
+    <div class="music-player" data-src="https://bandcamp.com/EmbeddedPlayer/album=781775666/size=small/bgcol=f7f1e4/linkcol=ce1e32/track=2152491985/transparent=true/" data-title="Come On! Feel the Illinoise! by Sufjan Stevens" data-link="https://sufjanstevens.bandcamp.com/album/illinois"></div>
+  </div>
+</div>
+
+<script type="module" src="./ui.js?v=20"></script>
 <!-- The World's Fair in motion around the front door (a sample, 3 Oct 2026:
      it only wakes on ?fair until Ryan has seen it). Decorative and wordless;
      the game never talks to it. -->
-<script src="./scene.js?v=8" defer></script>
+<script src="./scene.js?v=9" defer></script>
 </body>
 </html>

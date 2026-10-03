@@ -1364,6 +1364,31 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   60 fps in a headless laptop browser. `--tempo` is unchanged (2).
   `FAIR` in `ui.js` and `body.fair` in `style.css` keep all of it on `?fair`;
   the plain URL plays exactly as before.
+- **Playing each other, and the family link** (Ryan, 3 Oct, before showing his
+  parents: is there an easier way to match up, and could the choices be Mary,
+  Jim, Ryan and Genese instead of the fake names). The lobby has **Send an
+  invite link** (on `?fair`): on a phone it opens the share sheet, elsewhere it
+  copies the link, which opens the join screen with the room's code already in
+  (`?join=CODE`, straight to the menu, no title), keeping the link's own names,
+  clock and dress. Nobody types a code. `?names=Mary,Jim,Ryan,Genese` puts those
+  names on the setup screen as the choices instead of the relay's class list,
+  remembered on the device; `&clock=0` starts live games without a clock. The
+  family demo page links `/pavilion/?fair&names=Mary,Jim,Ryan,Genese&clock=0`.
+  Neither touches the relay: a name picked from the link has no roster id, so
+  those games never record. The "fake names" are the relay's own demo term,
+  `ler565-2026-demo`, sixteen invented students and Ryan, which every other
+  link still offers; changing that is the admin page's job (`admin/`, his key).
+- **Music** (Ryan, 3 Oct: a song he bought, which "will fit perfectly"). It
+  does: Sufjan Stevens' "Come On! Feel the Illinoise!", whose first part is the
+  World's Columbian Exposition. **The file is never on this site**: a Bandcamp
+  purchase is a personal licence, and anything here is public (the site, and
+  the repo on GitHub). It plays in **Bandcamp's own embedded player**, from the
+  artist's page (sufjanstevens.bandcamp.com, album *Illinois*, every track
+  streamable, embedding on), the way Bandcamp offers it. A note button in the
+  sky's top-right corner, and in a game in the top bar, opens a small card with
+  the player; nothing loads from Bandcamp until it is pressed, the card closes
+  without stopping the music, and the music plays on through the menu into a
+  game. Two taps (the note, then play): browsers never start sound by themselves.
 - **Performance.** While the menu or lobby is open the dimmed Fair moves at half
   the frame rate, and it holds still for the 0.75 s a card takes to arrive. On a
   machine averaging under ~33 fps after five seconds it drops to every other frame.

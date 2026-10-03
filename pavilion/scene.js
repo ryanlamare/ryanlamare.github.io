@@ -1851,6 +1851,33 @@
   function vStart() { vStop(); vBuild(); if (!STILL) vTimer = setInterval(vStep, 560); }
   function vStop() { clearInterval(vTimer); vTimer = 0; }
 
+  // Music: Bandcamp's own player for the artist's track, created the first time
+  // either music button is pressed (nothing loads from Bandcamp before that) and
+  // then kept in the page, so it plays on through the menu and into a game.
+  const music = document.getElementById('music');
+  if (music) {
+    music.classList.remove('hidden');
+    const holder = music.querySelector('.music-player');
+    const buttons = [document.getElementById('btn-music'), document.getElementById('btn-music-top')].filter(Boolean);
+    const toggle = () => {
+      const open = !music.classList.contains('open');
+      if (open && holder && !holder.firstElementChild) {
+        const f = document.createElement('iframe');
+        f.src = holder.dataset.src;
+        f.title = holder.dataset.title;
+        f.setAttribute('seamless', '');
+        const a = document.createElement('a');
+        a.href = holder.dataset.link;
+        a.textContent = holder.dataset.title;
+        f.appendChild(a);
+        holder.appendChild(f);
+      }
+      music.classList.toggle('open', open);
+      buttons.forEach(b => b.setAttribute('aria-expanded', String(open)));
+    };
+    buttons.forEach(b => b.addEventListener('click', toggle));
+  }
+
   // the title's letters jig when clicked, and a click on the sky sends up a firework
   titleEl.querySelectorAll('.tl').forEach(t => {
     t.addEventListener('click', () => { t.classList.remove('spin'); void t.getBoundingClientRect(); t.classList.add('spin'); });
@@ -1915,7 +1942,7 @@
     if (onLobby) { titleEl.classList.remove('intro'); front('lobby'); }
     else if (first) {
       const rejoin = document.getElementById('rejoin');
-      if ((rejoin && !rejoin.classList.contains('hidden')) || QS.has('menu')) front('menu');
+      if ((rejoin && !rejoin.classList.contains('hidden')) || QS.has('menu') || QS.has('join')) front('menu');
       else { front('title'); titleEl.classList.add('intro'); setTimeout(() => titleEl.classList.remove('intro'), 3400); }
     } else { titleEl.classList.remove('intro'); front('menu'); }
     requestAnimationFrame(fit);

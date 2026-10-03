@@ -1565,6 +1565,19 @@ function downloadRecord() {
 // rematch in the same room. So it hangs here rather than on G.
 
 const params = new URLSearchParams(location.search);
+// A link for one group of people (3 Oct 2026, for Ryan's family): ?names=Mary,Jim,…
+// puts those names on the setup screen as the choices instead of the relay's
+// class list, and &clock=0 starts a live game without a clock. Neither touches
+// the relay: a name picked here carries no roster id, so these games never
+// record. ?join=CODE is what the lobby's invite link sends: the join screen
+// opens with the room's code already in.
+const FAMILY = (params.get('names') || '')
+  .split(',')
+  .map((n) => n.trim().slice(0, 20))
+  .filter(Boolean)
+  .slice(0, 12);
+const START_CLOCK = params.get('clock');
+const JOIN = (params.get('join') || '').trim().toUpperCase().slice(0, 24);
 const RELAY_URL = defaultRelayUrl(location, params.get('relay'));
 const SESSION_KEY = 'pavilion.session';
 
@@ -1869,7 +1882,9 @@ function renderLobby() {
   btn.disabled = seats.length < 2;
   $('#lobby-wait').textContent = host
     ? seats.length < 2
-      ? 'Read the code out in your breakout room, then start when everyone is in.'
+      ? FAIR
+        ? 'Send the invite link, or read out the code, then start when everyone is in.'
+        : 'Read the code out in your breakout room, then start when everyone is in.'
       : 'Everyone is in — start when you are ready.'
     : `Waiting for ${seats[0]?.name || 'the host'} to start the game.`;
   renderTape();
@@ -2002,10 +2017,62 @@ function savePlayer(entry) {
   }
 }
 
+// The link's own names (?names=), when it has them: tap yours, and this device
+// remembers it, the way the class list does.
+const FAMILY_KEY = 'pavilion.family';
+let familyPick = null;
+try {
+  const saved = localStorage.getItem(FAMILY_KEY);
+  if (saved && FAMILY.includes(saved)) familyPick = saved;
+} catch {
+  /* private browsing: pick again next time */
+}
+function pickFamily(name) {
+  familyPick = name;
+  try {
+    if (name) localStorage.setItem(FAMILY_KEY, name);
+    else localStorage.removeItem(FAMILY_KEY);
+  } catch {
+    /* as above */
+  }
+  $('#name-field').classList.remove('needed');
+  renderNameInputs();
+}
+function renderFamilyNames(wrap) {
+  wrap.innerHTML = '';
+  if (familyPick) {
+    const p = document.createElement('p');
+    p.className = 'whoami';
+    p.innerHTML = `Playing as <b>${esc(familyPick)}</b>. `;
+    const not = document.createElement('button');
+    not.type = 'button';
+    not.className = 'link-btn';
+    not.textContent = `Not ${familyPick}?`;
+    not.addEventListener('click', () => pickFamily(null));
+    p.appendChild(not);
+    wrap.appendChild(p);
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'roster family';
+  list.setAttribute('role', 'group');
+  list.setAttribute('aria-label', 'Who are you?');
+  for (const name of FAMILY) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'roster-btn';
+    btn.textContent = name;
+    btn.addEventListener('click', () => pickFamily(name));
+    list.appendChild(btn);
+  }
+  wrap.appendChild(list);
+}
+
 // You only ever name yourself: the other pavilions name themselves, on their
 // own devices, or are the bot.
 function renderNameInputs() {
   const wrap = $('#name-inputs');
+  if (FAMILY.length) return renderFamilyNames(wrap);
   if (!session) {
     const existing = $$('input', wrap)[0]?.value;
     wrap.innerHTML = '';
@@ -2065,6 +2132,7 @@ function renderNameInputs() {
 // picked from a roster, which is what keeps a stranger's game out of the
 // archive (relay/archive.js, classify).
 function whoAmI() {
+  if (FAMILY.length && familyPick) return { name: familyPick, pid: null };
   if (session && me) return { name: me.name, pid: me.id };
   return { name: $('#name-inputs input')?.value.trim() || lastTypedName || 'You', pid: null };
 }
@@ -2073,6 +2141,7 @@ function whoAmI() {
 // rather than delaying the page. A relay with no term configured — a laptop
 // playtest, or anyone who found the URL — never gets one.
 async function loadRoster() {
+  if (FAMILY.length) return; // the link brought its own names
   const s = await fetchSession(RELAY_URL);
   if (!s) return;
   session = s;
@@ -2144,7 +2213,7 @@ $('#setup-form').addEventListener('submit', (e) => {
   // A roster with nobody picked is the one thing that stops here: a game that
   // played anonymously would silently not record, which is the worst version
   // of "results record themselves".
-  if (session && !me) {
+  if ((session && !me) || (FAMILY.length && !familyPick)) {
     $('#name-field').classList.add('needed');
     $('#name-field .roster-btn')?.focus();
     return;
@@ -2690,6 +2759,44 @@ $('#btn-learn')?.addEventListener('click', startLesson);
 
 applySetupMode();
 loadRoster();
+if (START_CLOCK !== null && $(`#clock-select option[value="${CSS.escape(START_CLOCK)}"]`)) {
+  $('#clock-select').value = START_CLOCK;
+}
+if (JOIN && RELAY_URL) {
+  setupMode = 'online';
+  setupJoin = true;
+  $$('#mode-seg .seg-btn').forEach((b) => b.classList.toggle('on', b.dataset.mode === 'online'));
+  $$('#online-seg .seg-btn').forEach((b) => b.classList.toggle('on', b.dataset.online === 'join'));
+  applySetupMode();
+  $('#code-input').value = JOIN;
+}
+
+// The invite (3 Oct 2026; the button shows on ?fair): one link that opens the
+// join screen with this room's code in, keeping the link's own names and clock,
+// so nobody has to type a code. On a phone it goes to the share sheet.
+const INVITE_TEXT = 'Join my game of Pavilion';
+function inviteLink() {
+  const p = new URLSearchParams();
+  for (const k of ['fair', 'names', 'clock']) if (params.has(k)) p.set(k, params.get(k));
+  p.set('join', net?.code || '');
+  // A bare `fair`, and commas left as commas, so the link reads cleanly in a message.
+  return location.origin + location.pathname + '?' + p.toString().replace(/=(?=&|$)/g, '').replace(/%2C/gi, ',');
+}
+$('#btn-invite')?.addEventListener('click', async () => {
+  const url = inviteLink();
+  const note = $('#invite-note');
+  try {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      await navigator.share({ title: 'Pavilion', text: INVITE_TEXT, url });
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    note.textContent = 'Link copied. Paste it into a message to whoever is playing.';
+  } catch (err) {
+    if (err && err.name === 'AbortError') return; // the share sheet, closed
+    note.textContent = url; // no clipboard here: the link, to copy by hand
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Headless smoke test: ?smoke=1 plays a full deterministic game through the

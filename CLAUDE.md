@@ -384,7 +384,11 @@ month breaks the script; the coach then falls back to plain hints, but re-pick
 the seed rather than live with it. On `?fair` the game itself wears the Fair's
 dress too (`body.fair` rules in `style.css`, the `FAIR` flag in `ui.js` for the
 motion), in Abril Fatface and Libre Franklin from `pavilion/fonts/` (OFL, never
-fetched from Google); the plain URL is untouched.
+fetched from Google); the plain URL is untouched. Links can carry their own
+names (`?names=Mary,Jim,…`, which never record), `&clock=0`, and `?join=CODE`
+(what the lobby's invite link sends). The front door's music is Bandcamp's
+embedded player for a track Ryan bought: **never commit the audio file**, a
+purchase is a personal licence and everything in this repo is public.
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)
