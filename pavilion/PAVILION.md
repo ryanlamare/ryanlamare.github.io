@@ -1286,8 +1286,31 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   gets one still frame at dusk and no title animation. `?fair&at=0.62` opens the
   cycle at that point (0 midnight, 0.25 morning, 0.585 sunset), `&still` holds
   it, `&menu` opens straight on the menu.
+- **The promenade's life** (Ryan: fill the space the card left, and be
+  vibrant, "it's a game"). A mosaic plaza in the middle, a rosette in the five
+  disciplines' colours, the ground tiled like the board; a bandstand with a brass
+  band and music notes rising (lit at night); a balloon seller whose bunch now
+  and then lets one go into the sky; flags along the basin; rolling chairs (the
+  Fair rented wicker push-chairs by the hour); a boy rolling a hoop with his dog
+  after him; pigeons pecking on the mosaic that flutter up and resettle; a
+  photographer under his black cloth, a family posing, and a puff of flash
+  powder now and then. The Cracker Jack cart moved to the right, by the seller.
+- **How to play** (Ryan: "we might need to explain this game somewhere"). The
+  menu's left side is two-faced: the story (the pitch, bigger, with "Chicago.
+  1893." set as a dateline under a rule of the five disciplines, then a small
+  pavilion whose front fills tile by tile and celebrates when it is complete)
+  and, behind a **How to play** button, six steps with diagrams drawn in the
+  board's own tiles, a First Call note, and **Back to the story**. The six steps'
+  wording is Claude's draft in the settled terms (rules spec §4–§8), in
+  `index.html`, for Ryan to change. On a phone the same button turns the sheet.
+- **Small delights.** On the title screen a click on the sky sends up a firework
+  where you clicked, and a click on a title tile spins it.
+- **Performance.** While the menu or lobby is open the dimmed Fair moves at half
+  the frame rate, and it holds still for the 0.75 s a card takes to arrive. On a
+  machine averaging under ~33 fps after five seconds it drops to every other frame.
 - **Before it goes live** it needs Ryan's look; making it the default is
-  deleting the `?fair` check at the top of `scene.js`.
+  deleting the `?fair` check at the top of `scene.js`. The demo page for Ryan's
+  family links `/pavilion/?fair` meanwhile.
 
 ## Two devices — built 2026-08-12 (build step 4)
 

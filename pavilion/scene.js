@@ -832,6 +832,40 @@
     rect(worldL, -2, L.pt, W + 4, H - L.pt + 2, '#DCCFAC', { 'stroke-width': 0.6 });
     for (let y = L.pt + 9 * s; y < H; y += 9 * s) el('path', { d: `M0,${y.toFixed(1)} H${W}`, stroke: '#CFC09A', 'stroke-width': 0.6 }, worldL);
 
+    // ---- a mosaic plaza in the middle of the promenade: a rosette laid in the five disciplines' colours,
+    // the ground itself tiled like the board, and the pigeons' favourite spot
+    const plazaC = { x: 0.5 * W, y: land ? L.pt + 0.66 * (H - L.pt) : L.pt + 0.72 * (H - L.pt), rx: land ? clamp(0.2 * W, 120, 360) : clamp(0.36 * W, 90, 200) };
+    plazaC.ry = plazaC.rx * (land ? 0.15 : 0.17);
+    {
+      const g = el('g', { transform: `translate(${plazaC.x.toFixed(1)} ${plazaC.y.toFixed(1)}) scale(1 ${(plazaC.ry / plazaC.rx).toFixed(3)})` }, worldL);
+      const rx = plazaC.rx, sw = { stroke: '#6B5B44', 'stroke-width': 0.5, 'vector-effect': 'non-scaling-stroke' };
+      const tc = KC.map(c => mix(c, '#E2D2AE', 0.14));
+      const pt2 = (r, a) => `${(Math.cos(a) * r).toFixed(1)},${(Math.sin(a) * r).toFixed(1)}`;
+      const ring = (r0, r1, n, cols) => {
+        for (let i = 0; i < n; i++) {
+          const a0 = (i / n) * 2 * Math.PI + 0.012, a1 = ((i + 1) / n) * 2 * Math.PI - 0.012;
+          el('path', Object.assign({ d: `M${pt2(r0, a0)} A${r0},${r0} 0 0 1 ${pt2(r0, a1)} L${pt2(r1, a1)} A${r1},${r1} 0 0 0 ${pt2(r1, a0)} Z`, fill: cols[i % cols.length] }, sw), g);
+        }
+      };
+      el('circle', Object.assign({ r: rx, fill: '#CDBB95' }, sw), g);
+      ring(rx * 0.86, rx * 0.97, 40, tc);
+      ring(rx * 0.74, rx * 0.84, 32, ['#F1E7D2', '#E3D6B9']);
+      for (let i = 0; i < 10; i++) el('path', Object.assign({ d: `M0,0 Q${(rx * 0.13).toFixed(1)},${(-rx * 0.32).toFixed(1)} 0,${(-rx * 0.7).toFixed(1)} Q${(-rx * 0.13).toFixed(1)},${(-rx * 0.32).toFixed(1)} 0,0 Z`, transform: `rotate(${i * 36})`, fill: tc[i % 5] }, sw), g);
+      el('circle', Object.assign({ r: rx * 0.13, fill: '#D3A632' }, sw), g);
+      el('circle', { r: rx * 0.07, fill: '#F3D57E' }, g);
+    }
+    // flags along the basin's edge, swallowtails in the Fair's colours
+    {
+      const g = el('g', null, worldL), cols = ['#CE1E32', '#D9AE3A', '#24356B', '#3C8B51', '#F3EADA', '#8E3E28'], ph = (land ? 0.085 : 0.07) * H;
+      let i = 0;
+      for (let x = shoreX + 0.04 * W; x < W - 0.02 * W; x += (land ? 0.075 : 0.13) * W) {
+        if ([L.stX, L.fX].some(a => Math.abs(a - x) < (land ? 0.035 : 0.07) * W)) continue;
+        limb(g, x, L.shore - 1, x, L.shore - ph, 1.2, '#F4EFE3');
+        circ(g, x, L.shore - ph - 1.6, 1.7, GOLD, { 'stroke-width': 0.5 });
+        el('path', { class: 'flag', d: `M${x.toFixed(1)},${(L.shore - ph + 1).toFixed(1)} h${(13 * s).toFixed(1)} l${(-3.4 * s).toFixed(1)},${(4.4 * s).toFixed(1)} l${(3.4 * s).toFixed(1)},${(4.4 * s).toFixed(1)} h${(-13 * s).toFixed(1)} Z`, fill: cols[i++ % cols.length], stroke: INK, 'stroke-width': 0.5, style: `animation-delay:${(-R() * 1.2).toFixed(2)}s` }, g);
+      }
+    }
+
     // ---- the pavilions: the board's wall, five galleries of five
     const pav = [0, 1].map(n => {
       const cx = L.pavX[n], w = L.pw, base = L.pb;
@@ -919,7 +953,7 @@
 
     // ---- the promenade: lamps, a Cracker Jack cart, the agencies and the gate, and everyone on it
     const farLane = el('g', null, worldL), kioskL = el('g', null, worldL), craftL = el('g', null, worldL);
-    const midLane = el('g', null, worldL), nearLane = el('g', null, worldL);
+    const midLane = el('g', null, worldL), pigeonL = el('g', null, worldL), nearLane = el('g', null, worldL);
     const lampXs = [];
     for (let i = 0; i < L.items.length - 1; i++) lampXs.push((L.items[i] + L.items[i + 1]) / 2);
     lampXs.push(L.items[0] - 0.045 * W, L.items[L.items.length - 1] + 0.045 * W);
@@ -934,7 +968,7 @@
       for (const lx of [-7, 0, 7]) el('circle', { cx: lx, cy: lx ? -54.5 : -56.5, r: 2.6, fill: '#FFF0BF' }, l);
     }
     if (land) {
-      const x = (L.pavX[0] + L.pw * 0.5 + L.items[0]) / 2 - 0.02 * W, cj = el('g', { transform: tr(x, L.foot[0], s * 1.1) }, kioskL);
+      const x = L.items[L.items.length - 1] + 0.08 * W, cj = el('g', { transform: tr(x, L.foot[0], s * 1.1) }, kioskL);
       rect(cj, -10, -12, 20, 10, '#CE1E32', { rx: 1 });
       rect(cj, -8, -10, 16, 4, '#F3D57E', NO);
       circ(cj, -6, -1, 2.4, '#3A332B'); circ(cj, 6, -1, 2.4, '#3A332B');
@@ -984,6 +1018,157 @@
         const dx = (i % 2 ? 1 : -1) * (7 + ((i / 2) | 0) * 11) + (row % 2) * 5;
         gate.spots.push({ x: gate.x + dx * s, y: L.kb + (3 + row * 5) * s, c: null });
       }
+    }
+
+    // ---- the promenade's life: a bandstand, a balloon seller, rolling chairs, a boy with a hoop and his
+    // dog, pigeons on the mosaic, and a photographer with his flash powder
+    if (land && W >= 1000) {
+      const bx = (L.pavX[0] + L.pw / 2 + L.items[0] - 0.045 * W) / 2, by = L.foot[0] + 2 * s, bs = s * 1.05;
+      const g = el('g', { transform: tr(bx, by, bs) }, kioskL);
+      rect(g, -34, -11, 68, 11, '#F1E7D2');
+      for (let x = -32; x < 33; x += 6) {
+        line(g, x, -10, x + 5, -1, { stroke: '#B8A27A', 'stroke-width': 0.6 });
+        line(g, x + 5, -10, x, -1, { stroke: '#B8A27A', 'stroke-width': 0.6 });
+      }
+      rect(g, -37, -14, 74, 3.2, '#CE1E32');
+      [[-21, 'tuba'], [-7, 'cornet'], [7, 'cornet'], [21, 'drum']].forEach(([mx, inst], i) => {
+        const m = person(g, 'man', { coat: '#24356B' });
+        m.setAttribute('transform', `translate(${mx} -14) scale(.58)`);
+        const ins = el('g', { class: 'play', style: `animation-delay:${(-i * 0.13).toFixed(2)}s` }, g);
+        if (inst === 'tuba') {
+          path(ins, `M${mx - 2},-23 q-4,6 1,9`, 'none', { stroke: GOLDD, 'stroke-width': 1.6 });
+          circ(ins, mx + 2.5, -27, 5.2, GOLD, { stroke: GOLDD });
+          el('circle', { cx: mx + 2.5, cy: -27, r: 2.6, fill: '#8C6A14' }, ins);
+        } else if (inst === 'drum') {
+          rect(ins, mx - 5, -24, 10, 8, '#F3EADA');
+          rect(ins, mx - 5.5, -24.6, 11, 1.6, '#CE1E32', NO);
+          rect(ins, mx - 5.5, -17, 11, 1.6, '#CE1E32', NO);
+        } else path(ins, `M${mx + 2},-29 l7,-2 l1.6,2.6 l-1.6,2.6 l-7,-2 Z`, GOLD, { stroke: GOLDD });
+      });
+      for (const px of [-33, -16.5, 0, 16.5, 33]) limb(g, px, -14, px, -48, 1.8, '#F3EADA');
+      path(g, 'M-41,-48 Q-38,-58 -22,-62 Q-7,-66 0,-79 Q7,-66 22,-62 Q38,-58 41,-48 Z', '#CE1E32');
+      for (const sx of [-26, -9, 9, 26]) path(g, `M${sx - 3.5},-49 Q${(sx * 0.55 - 1.5).toFixed(1)},-63 0,-77.5 Q${(sx * 0.55 + 1.5).toFixed(1)},-63 ${sx + 3.5},-49 Z`, '#F3EADA', NO);
+      const val = [];
+      for (let x = -41; x < 41; x += 6.8) val.push(`Q${(x + 3.4).toFixed(1)},-43 ${(x + 6.8).toFixed(1)},-48`);
+      path(g, `M-41,-48 ${val.join(' ')} Z`, '#F3EADA', { 'stroke-width': 0.5 });
+      line(g, 0, -79, 0, -86, { stroke: '#4A3E33', 'stroke-width': 0.8 });
+      flag(g, 0, -86, 6, 3.6, '#D9AE3A');
+      for (let i = 0; i < 6; i++) {
+        const nx = [-46, -40, 38, 44, -43, 41][i], ny = -30 - (i % 3) * 5;
+        const n = el('g', { class: 'note', style: `animation-delay:${(i * 0.57).toFixed(2)}s` }, g);
+        el('ellipse', { cx: nx, cy: ny, rx: 2.2, ry: 1.6, fill: INK, transform: `rotate(-20 ${nx} ${ny})` }, n);
+        el('path', { d: `M${nx + 2},${ny} V${ny - 8} q3,1 4,4`, fill: 'none', stroke: INK, 'stroke-width': 0.9 }, n);
+      }
+      const l = el('g', { transform: tr(bx, by, bs) }, lit(lightAt(bx) + 0.1));
+      el('ellipse', { cx: 0, cy: -30, rx: 36, ry: 18, fill: 'url(#fair-glow)', opacity: 0.6 }, l);
+      bulbs(l, 'M-41,-48 Q-38,-58 -22,-62 Q-7,-66 0,-79 Q7,-66 22,-62 Q38,-58 41,-48', 1);
+    }
+    // the balloon seller, whose bunch now and then lets one go
+    const seller = { x: land ? Math.min(0.83 * W, W - L.pw - 0.035 * W) : 0.64 * W, y: land ? L.foot[1] - 1 : L.foot[2] - 1, sc: s, next: rr(5, 10) };
+    {
+      const g = el('g', { transform: tr(seller.x, seller.y, seller.sc) }, midLane);
+      person(g, 'man');
+      const bunch = el('g', null, g);
+      seller.balloons = [[-12, -78], [-4, -84], [5, -80], [13, -86], [-8, -92], [3, -95], [12, -96]].map(([bx, by], i) => {
+        const b = el('g', { class: 'bob', style: `animation-delay:${(-i * 0.37).toFixed(2)}s` }, bunch);
+        const col = ['#E8322F', '#2F6FD0', '#F2C230', '#3FA35A', '#9A4FD0', '#F07A2A', '#F4F0E6'][i];
+        el('path', { d: `M1,-22 Q${((1 + bx) / 2 + 3).toFixed(1)},${((by - 22) / 2).toFixed(1)} ${bx},${by + 5}`, fill: 'none', stroke: '#6A5F59', 'stroke-width': 0.5 }, b);
+        el('ellipse', { cx: bx, cy: by, rx: 4.6, ry: 5.6, fill: col, stroke: INK, 'stroke-width': 0.6, 'vector-effect': 'non-scaling-stroke' }, b);
+        el('ellipse', { cx: bx - 1.5, cy: by - 2, rx: 1.2, ry: 1.8, fill: '#FFFFFF', opacity: 0.55 }, b);
+        el('path', { d: `M${bx - 1},${by + 5.4} l1,1.2 l1,-1.2 Z`, fill: col }, b);
+        return { g: b, x: bx, y: by, col, away: false };
+      });
+    }
+    const loose = [];                                   // balloons that got away, rising over the Fair
+    // rolling chairs: wicker chairs the Fair rented by the hour, pushed by an attendant
+    const chairs = [];
+    for (let i = 0; i < (land ? 2 : 1); i++) {
+      const g = el('g', null, midLane);
+      const att = person(g, 'man', { coat: '#2A3A57' });
+      att.setAttribute('transform', 'translate(-18 0)');
+      att.style.setProperty('--stp', '0.42s');
+      if (!STILL) att.classList.add('walk');
+      const skin = pick(SKIN), dress = pick(SKIRT), hatC = pick(['#E6D3A3', '#F1EBDD', '#D9C08A']);
+      path(g, 'M-12,-9 L13,-9 L14,-15 L-1,-15 L-4,-33 Q-7.5,-36 -11.5,-33 Z', '#B98A4E');
+      for (let y = -31; y < -10; y += 3.4) path(g, `M-10.5,${y} L${y > -15 ? 12 : -3},${y}`, 'none', { stroke: '#8C6236', 'stroke-width': 0.5 });
+      path(g, 'M-1,-15 L11,-15 Q15,-13 14.5,-9 L2,-9 Z', dress);
+      path(g, 'M-6.5,-15 L1,-15 L1.6,-27 Q-2.4,-29.6 -6.2,-27 Z', tint(dress, 0.25));
+      circ(g, -2.4, -31.4, 3.6, skin);
+      circ(g, -0.6, -32, 0.4, INK, NO);
+      ell(g, -2, -34.6, 6.6, 1.4, hatC);
+      path(g, 'M-5,-34.8 Q-5,-38 -2,-38 Q1,-38 1,-34.8 Z', hatC);
+      circ(g, -4.4, -37.4, 1.1, pick(RIBBON), NO);
+      line(g, -12.5, -30, -16.5, -27.5, { stroke: '#3A332B', 'stroke-width': 1.2 });
+      line(g, -11, -33, -11, -46, { stroke: '#4A4038', 'stroke-width': 0.8 });
+      line(g, 12, -15, 12, -46, { stroke: '#4A4038', 'stroke-width': 0.8 });
+      path(g, 'M-14,-46 H15 L13,-42 H-12 Z', '#CE1E32');
+      for (let x = -12; x < 13; x += 4) path(g, `M${x},-42 l2,2.4 l2,-2.4`, 'none', { stroke: '#F3EADA', 'stroke-width': 0.6 });
+      const wheel1 = el('g', { transform: 'translate(-3 -7.5)' }, g);
+      circ(wheel1, 0, 0, 7.5, 'none', { stroke: '#3A332B', 'stroke-width': 1.4 });
+      for (let a = 0; a < 6; a++) line(wheel1, 0, 0, Math.cos(a * Math.PI / 3) * 7, Math.sin(a * Math.PI / 3) * 7, { stroke: '#5A4E44', 'stroke-width': 0.5 });
+      circ(g, 12.5, -3.6, 3.6, 'none', { stroke: '#3A332B', 'stroke-width': 1.2 });
+      chairs.push({ g, wheel: wheel1, x: rr(0, W), y: L.foot[1] + rr(-2, 2) * s, s, face: R() < 0.5 ? 1 : -1, v: rr(14, 18) * s, turn: 0 });
+    }
+    // a boy rolling a hoop, and his dog after him
+    const runner = { g: el('g', null, nearLane), x: rr(0, W), y: L.foot[2] - 1, s: s * 1.05, face: 1, v: 46 * s, turn: 0 };
+    {
+      const g = runner.g, boy = person(g, 'boy');
+      boy.setAttribute('transform', 'scale(.72)');
+      boy.style.setProperty('--stp', '0.17s');
+      if (!STILL) boy.classList.add('walk');
+      runner.hoop = el('g', { transform: 'translate(16 -9.5)' }, g);
+      el('circle', { r: 9.2, fill: 'none', stroke: '#8B6B45', 'stroke-width': 1.5 }, runner.hoop);
+      el('path', { d: 'M0,-9.2 A9.2,9.2 0 0 1 6.5,-6.5', fill: 'none', stroke: '#CE1E32', 'stroke-width': 1.7 }, runner.hoop);
+      line(g, 3.5, -16, 9.5, -15, { stroke: '#6B5136', 'stroke-width': 0.9 });
+      const dog = el('g', { transform: 'translate(-26 0)', class: STILL ? '' : 'trot' }, g);
+      for (const side of ['b', 'a']) {
+        const lg = el('g', { class: 'lg ' + side }, dog);
+        line(lg, -4.6, -6, -4.6, -0.4, { stroke: '#7A5230', 'stroke-width': 1.4 });
+        line(lg, 4, -6, 4, -0.4, { stroke: '#7A5230', 'stroke-width': 1.4 });
+      }
+      ell(dog, 0, -7.6, 7, 3.6, '#B07A45');
+      circ(dog, 7.6, -10.6, 3, '#B07A45');
+      path(dog, 'M6.6,-13.2 l-1.6,4.2 l2.4,-0.8 Z', '#7A5230', NO);
+      path(dog, 'M10.2,-10.6 l2.4,0.6 l-2.2,1.2 Z', '#3A2A1E', NO);
+      el('path', { class: STILL ? '' : 'wag', d: 'M-6.6,-9 q-3,-4 -4.6,-5', fill: 'none', stroke: '#B07A45', 'stroke-width': 1.6, 'stroke-linecap': 'round' }, dog);
+    }
+    // pigeons pecking on the mosaic, which flutter up and land somewhere else
+    const plazaSpot = () => { const a = rr(0, 2 * Math.PI), r = Math.sqrt(R()) * 0.82; return { x: plazaC.x + Math.cos(a) * r * plazaC.rx, y: plazaC.y + Math.sin(a) * r * plazaC.ry }; };
+    const pigeons = [];
+    for (let i = 0; i < (land ? 8 : 5); i++) {
+      const g = el('g', null, pigeonL), body2 = el('g', { class: STILL ? '' : 'peck', style: `animation-delay:${(-rr(0, 2)).toFixed(2)}s` }, g);
+      ell(body2, 0, -3.2, 4.2, 2.6, '#8C8E96', { 'stroke-width': 0.6 });
+      circ(body2, 3.6, -5.2, 1.7, '#6E7079', { 'stroke-width': 0.5 });
+      path(body2, 'M5.2,-5.4 l1.7,.5 l-1.7,.5 Z', '#C9A227', NO);
+      path(body2, 'M-4,-3.6 l-3,-1.2 l1,2.2 Z', '#6E7079', NO);
+      const wing = el('path', { class: 'wing', d: 'M-2.4,-4 Q1,-11 4.4,-4 Z', fill: '#A9ABB3', stroke: INK, 'stroke-width': 0.5, display: 'none' }, g);
+      const sp = plazaSpot();
+      pigeons.push({ g, wing, x: sp.x, y: sp.y, face: R() < 0.5 ? 1 : -1, fly: null });
+    }
+    let nextFlutter = rr(1, 3);
+    // a photographer under his black cloth, a family holding still, and now and then a puff of flash powder
+    let flash = null;
+    if (land && W >= 1100) {
+      const px = 0.385 * W, py = L.foot[2] - 1;
+      const g = el('g', { transform: tr(px, py, s) }, nearLane);
+      for (const [x2, y2] of [[2, 0], [10, 0], [6, 0]]) line(g, 6, -27, x2, y2, { stroke: '#6B5136', 'stroke-width': 0.9 });
+      rect(g, 1, -35, 11, 8.5, '#5A3A2A', { rx: 1 });
+      rect(g, 12, -33.5, 4.4, 5, '#3A2E2A', { 'stroke-width': 0.5 });
+      circ(g, 17, -31, 1.9, '#1E1C1A');
+      const ph = person(g, 'man');
+      ph.setAttribute('transform', 'translate(-4 0)');
+      path(g, 'M-10,-41 Q-5,-53 5,-45 L4,-27 L-9.5,-24.5 Z', '#1E1C1A');
+      line(g, -7, -37, -11, -57, { stroke: '#3A332B', 'stroke-width': 1 });
+      rect(g, -15, -59, 8, 2, '#3A332B', NO);
+      [['man', 1, 30], ['woman', 1, 38], ['girl', 0.7, 44]].forEach(([t, sc2, dx]) => {
+        const f = person(g, t);
+        f.setAttribute('transform', `translate(${dx} 0) scale(${-sc2} ${sc2})`);
+      });
+      const fx = px - 11 * s, fy = py - 59 * s, fg = el('g', { opacity: 0 }, lightL);
+      el('circle', { cx: fx, cy: fy, r: 34 * s, fill: 'url(#fair-glow)' }, fg);
+      el('circle', { cx: fx, cy: fy, r: 7 * s, fill: '#FFFDF2' }, fg);
+      const smoke = [0, 1, 2].map(() => el('circle', { cx: fx, cy: fy, r: 4 * s, fill: '#D9D4CC', opacity: 0 }, lightL));
+      flash = { g: fg, smoke, x: fx, y: fy, t: 9, next: rr(4, 8) };
     }
 
     // ---- the overlays the dusk and the night fall through, and the Wheel and the balloon above them
@@ -1062,7 +1247,7 @@
     const walkers = [];
     const walkerTypes = ['man', 'man', 'man', 'woman', 'woman', 'woman', 'woman', 'boy', 'girl'];
     const lanes = [[farLane, L.foot[0], 0.82], [midLane, L.foot[1], 0.95], [nearLane, L.foot[2], 1.08]];
-    const counts = land ? [Math.round(W / 95), Math.round(W / 125), Math.round(W / 170)] : [5, 4, 4];
+    const counts = land ? [Math.round(W / 110), Math.round(W / 140), Math.round(W / 190)] : [5, 4, 3];
     lanes.forEach(([par, y, sc], li) => {
       for (let i = 0; i < counts[li]; i++) {
         const type = pick(walkerTypes), child = type === 'boy' || type === 'girl';
@@ -1271,6 +1456,76 @@
         h.g.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${Math.sin(a) > 0 ? 1 : -1} 1)`);
         h.g.setAttribute('opacity', Math.sin(a) > 0 ? 1 : 0.55);
       });
+      // the promenade's life
+      for (const c of chairs) {
+        c.x += c.v * c.face * dt;
+        if (c.x > W + 40 || c.x < -40) { c.face = R() < 0.5 ? 1 : -1; c.x = c.face > 0 ? -35 : W + 35; c.g.setAttribute('display', late ? 'none' : 'inline'); }
+        c.turn += (c.v * dt) / (7.5 * c.s);
+        c.wheel.setAttribute('transform', `translate(-3 -7.5) rotate(${(c.turn * 57.3).toFixed(1)})`);
+        c.g.setAttribute('transform', tr(c.x, c.y, c.s, c.face < 0));
+      }
+      {
+        const r = runner;
+        r.x += r.v * r.face * dt;
+        if (r.x > W + 60) { r.x = -30; r.g.setAttribute('display', late ? 'none' : 'inline'); }
+        r.turn += (r.v * dt) / (9.2 * r.s);
+        r.hoop.setAttribute('transform', `translate(16 ${(-9.5 - Math.abs(Math.sin(r.turn * 2)) * 0.8).toFixed(2)}) rotate(${(r.turn * 57.3).toFixed(1)})`);
+        r.g.setAttribute('transform', tr(r.x, r.y, r.s, false));
+      }
+      nextFlutter -= dt;
+      if (nextFlutter <= 0) {
+        nextFlutter = rr(1.8, 4.5);
+        const pg = pick(pigeons);
+        if (!pg.fly) { const to = plazaSpot(); pg.fly = { x0: pg.x, y0: pg.y, x1: to.x, y1: to.y, t: 0, d: rr(0.8, 1.3) }; pg.wing.setAttribute('display', 'inline'); }
+      }
+      for (const pg of pigeons) {
+        if (pg.fly) {
+          const F = pg.fly; F.t += dt;
+          const k = Math.min(1, F.t / F.d);
+          pg.x = lerp(F.x0, F.x1, k); pg.y = lerp(F.y0, F.y1, k) - Math.sin(Math.PI * k) * 24 * s;
+          pg.face = F.x1 > F.x0 ? 1 : -1;
+          if (k >= 1) { pg.fly = null; pg.wing.setAttribute('display', 'none'); }
+        }
+        pg.g.setAttribute('transform', tr(pg.x, pg.y, s, pg.face < 0));
+      }
+      seller.next -= dt;
+      if (seller.next <= 0 && day) {
+        seller.next = rr(10, 18);
+        const b = pick(seller.balloons.filter(q => !q.away));
+        if (b) {
+          b.away = true; b.g.setAttribute('opacity', 0);
+          const g = el('g', null, nearL);
+          el('path', { d: `M0,5 q2,6 -1,12`, fill: 'none', stroke: '#6A5F59', 'stroke-width': 0.6 }, g);
+          el('ellipse', { cx: 0, cy: 0, rx: 4.6 * seller.sc, ry: 5.6 * seller.sc, fill: b.col, stroke: INK, 'stroke-width': 0.6 }, g);
+          el('ellipse', { cx: -1.5 * seller.sc, cy: -2 * seller.sc, rx: 1.2 * seller.sc, ry: 1.8 * seller.sc, fill: '#FFFFFF', opacity: 0.55 }, g);
+          loose.push({ g, b, x: seller.x + b.x * seller.sc, y: seller.y + b.y * seller.sc, t: 0 });
+        }
+      }
+      for (let i = loose.length - 1; i >= 0; i--) {
+        const q = loose[i];
+        q.t += dt; q.y -= (24 + q.t * 4) * dt * clamp(H / 800, 0.7, 1.4); q.x += Math.sin(q.t * 1.3) * 10 * dt + 6 * dt;
+        q.g.setAttribute('transform', `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) scale(${Math.max(0.35, 1 - q.t * 0.05).toFixed(2)})`);
+        if (q.y < -30) {
+          q.g.remove(); loose.splice(i, 1);
+          setTimeout(() => { q.b.away = false; q.b.g.setAttribute('opacity', 1); }, 2500);
+        }
+      }
+      if (flash) {
+        flash.next -= dt;
+        if (flash.next <= 0 && !late) { flash.next = rr(8, 13); flash.t = 0; }
+        if (flash.t < 3) {
+          flash.t += dt;
+          flash.g.setAttribute('opacity', Math.max(0, 1 - flash.t / 0.35).toFixed(2));
+          flash.smoke.forEach((c, i) => {
+            const k = clamp((flash.t - 0.1 - i * 0.15) / 2.2, 0, 1);
+            c.setAttribute('cy', (flash.y - k * 34 * s).toFixed(1));
+            c.setAttribute('cx', (flash.x + (i - 1) * 4 * s + k * 6 * s).toFixed(1));
+            c.setAttribute('r', ((4 + k * 9) * s).toFixed(1));
+            c.setAttribute('opacity', (k > 0 && k < 1 ? 0.55 * (1 - k) : 0).toFixed(2));
+          });
+        }
+      }
+
       // the story: rounds, hires, crews putting displays up
       if (f >= HIRES_FROM && f < HIRES_TO) {
         hireT -= dt;
@@ -1342,9 +1597,9 @@
       prevF = f;
     }
 
-    function launch() {
+    function launch(cx, cy) {
       const sc = clamp(Math.min(W, H) / 560, 0.6, 1.6);
-      const x = rr(0.06, 0.94) * W, y = rr(0.06, 1) * (L.hz - 0.14 * H);
+      const x = cx != null ? cx : rr(0.06, 0.94) * W, y = cy != null ? cy : rr(0.06, 1) * (L.hz - 0.14 * H);
       const free = sparks.find(p => p.life <= 0 && !p.rocket);
       if (!free) return;
       free.rocket = true;
@@ -1369,7 +1624,7 @@
       if (fl) { fl.t = 0; fl.r = 26 * sc; fl.e.setAttribute('cx', x.toFixed(1)); fl.e.setAttribute('cy', y.toFixed(1)); }
     }
 
-    return { update };
+    return { update, fireAt(x, y) { if (y < L.hz - 6) launch(x, y); } };
   }
 
   // How lit a group is at f, switching on (with a flicker) after its delay at dusk and off again at closing.
@@ -1399,13 +1654,22 @@
     world = build(fNow());
     world.update(0, fNow());
   }
+  // A slow machine (an old tablet, say) draws every other frame instead of falling behind: after five
+  // seconds, if frames have been averaging slower than about 33 fps, the Fair moves at half the frame rate.
+  // While the menu or the lobby is open the Fair is dimmed behind it, so it moves at half the frame rate,
+  // and it holds still for the moment a card is arriving, so the card gets every frame.
+  let ema = 1 / 60, slow = false, skip = false, acc = 0, calmUntil = 0;
   function frame(now) {
     raf = 0;
     if (!running) return;
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
     last = now;
-    clockT += dt;
-    world.update(dt, fNow());
+    clockT += dt; acc += dt;
+    if (now < calmUntil) { raf = requestAnimationFrame(frame); return; }
+    if (body.dataset.front === 'title') ema = ema * 0.97 + dt * 0.03;
+    if (!slow && clockT > 5 && ema > 0.03) slow = true;
+    skip = (slow || body.dataset.front !== 'title') && !skip;
+    if (!skip) { world.update(Math.min(acc, 0.1), fNow()); acc = 0; }
     raf = requestAnimationFrame(frame);
   }
   function start() {
@@ -1427,12 +1691,141 @@
      rejoin, or coming back from a game, goes straight to the menu: the title is
      for arriving. */
 
-  const front = mode => { body.dataset.front = mode; };
+  /* ---------------------------------------------- the menu's little pavilion
+
+     Below the pitch, on a laptop: a pavilion whose front fills tile by tile
+     in the board's pattern, glows when it is complete, and starts again. The
+     game's goal, shown rather than told. It runs only while the menu is open. */
+
+  const pitch = card.querySelector('.pitch');
+  const howBtn = document.getElementById('btn-howto'), howBack = document.getElementById('btn-howto-back'), howto = document.getElementById('howto');
+  const vig = document.createElement('div');
+  vig.className = 'pitch-scene';
+  vig.setAttribute('aria-hidden', 'true');
+  if (pitch) pitch.insertBefore(vig, howBtn && howBtn.parentNode === pitch ? howBtn : null);
+  const vsvg = el('svg', { focusable: 'false' }, vig);
+  let V = null, vTimer = 0;
+  function vBuild() {
+    while (vsvg.firstChild) vsvg.firstChild.remove();
+    V = null;
+    const w = vig.offsetWidth, h = vig.offsetHeight;
+    if (w < 60 || h < 60) return;
+    vsvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const d = el('defs', null, vsvg), sg = el('linearGradient', { id: 'vig-sky', x1: 0, y1: 0, x2: 0, y2: 1 }, d);
+    el('stop', { offset: 0, 'stop-color': '#B9D2DF' }, sg);
+    el('stop', { offset: 0.75, 'stop-color': '#F3E6C8' }, sg);
+    el('rect', { width: w, height: h, fill: 'url(#vig-sky)' }, vsvg);
+    const gy = h * 0.9, hz = h * 0.66;
+    // the far city in a pale line, then the promenade
+    const far = el('g', { fill: '#EDE6D6', stroke: '#B8AD97', 'stroke-width': 0.6 }, vsvg);
+    for (let x = 6; x < w; x += 46) {
+      const bw = 30 + (x % 3) * 6, bh = 12 + ((x * 7) % 5) * 3;
+      el('rect', { x, y: hz - bh, width: bw, height: bh }, far);
+      if ((x / 46) % 2 < 1) el('path', { d: `M${x + bw * 0.25},${hz - bh} Q${x + bw / 2},${hz - bh - bw * 0.42} ${x + bw * 0.75},${hz - bh} Z` }, far);
+    }
+    for (let x = 0; x < w; x += 13) el('ellipse', { cx: x, cy: hz, rx: 9, ry: 6, fill: '#6E8B57', opacity: 0.9 }, vsvg);
+    el('rect', { y: hz, width: w, height: gy - hz, fill: '#9FBFC4' }, vsvg);
+    el('rect', { y: gy, width: w, height: h - gy, fill: '#DCCFAC' }, vsvg);
+    // the pavilion, sized to the panel
+    const pwid = Math.min(w * 0.5, (gy - h * 0.06) / 1.45);
+    const pw = pwid * 0.04, bw = (pwid - 6 * pw) / 5, bh = bw * 1.08, rg = bw * 0.26, plinth = bw * 0.55;
+    const cx = w / 2, base = gy + 2, top = base - plinth - (5 * bh + 6 * rg), x0 = cx - pwid / 2;
+    const g = el('g', null, vsvg);
+    rect(g, x0 - pwid * 0.04, base - plinth, pwid * 1.08, plinth, STONE2);
+    rect(g, x0, top, pwid, base - plinth - top, STONE);
+    rect(g, x0 - 3, top - 4, pwid + 6, 4, STONE2);
+    path(g, `M${cx - pwid * 0.3},${top - 4} C${cx - pwid * 0.3},${top - pwid * 0.42} ${cx + pwid * 0.3},${top - pwid * 0.42} ${cx + pwid * 0.3},${top - 4} Z`, '#EDE5D2');
+    line(g, cx, top - pwid * 0.32, cx, top - pwid * 0.46, { stroke: '#4A4038', 'stroke-width': 1 });
+    flag(g, cx, top - pwid * 0.46, pwid * 0.13, pwid * 0.08, '#CE1E32');
+    for (let i = 0; i < 9; i++) {
+      const bx = x0 + pwid * (i + 0.5) / 9, bwd = pwid / 9;
+      path(g, `M${bx - bwd * 0.45},${top + 1} L${bx + bwd * 0.45},${top + 1} L${bx},${top + 1 + bwd * 0.5} Z`, i % 2 ? '#F3EADA' : '#CE1E32', { 'stroke-width': 0.5 });
+    }
+    const bays = [];
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+      const bx = x0 + pw + c * (bw + pw), by = top + rg + r * (bh + rg) + bw * 0.12, k = kindAt(r, c), rad = bw / 2;
+      const dd = `M${bx},${by + bh} V${by + rad} A${rad},${rad} 0 0 1 ${bx + bw},${by + rad} V${by + bh} Z`;
+      path(g, dd, mix(KC[k], '#E8DEC9', 0.8), { 'stroke-width': 0.6 });
+      el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.22, y: by + bh * 0.3, width: bw * 0.56, height: bw * 0.56, opacity: 0.32, style: `color:${KC[k]};--t-bg:transparent` }, g);
+      bays.push({ d: dd, k, bx, by });
+    }
+    const dw = bw * 0.9;
+    path(g, `M${cx - dw / 2},${base} V${base - plinth * 0.9} Q${cx},${base - plinth * 1.25} ${cx + dw / 2},${base - plinth * 0.9} V${base} Z`, '#4A3E33', { 'stroke-width': 0.6 });
+    // lamp posts either side
+    for (const lx of [x0 - pwid * 0.2, x0 + pwid * 1.2]) {
+      rect(vsvg, lx - 1, gy - 46, 2, 46, '#2F3B33', NO);
+      circ(vsvg, lx, gy - 48, 3.2, '#F4EDDC', { 'stroke-width': 0.6 });
+    }
+    const tiles = el('g', null, vsvg), confetti = el('g', null, vsvg);
+    V = { bays, tiles, confetti, order: [...Array(25).keys()].sort(() => R() - 0.5), i: 0, hold: 0, h };
+    if (STILL) for (let i = 0; i < 25; i++) vDrop(true);
+  }
+  function vDrop(still) {
+    const b = V.bays[V.order[V.i++]];
+    const t = el('g', { class: still ? 'bayon' : 'bayon drop', style: `--dy:${(-(b.by + 40)).toFixed(0)}px` }, V.tiles);
+    path(t, b.d, KC[b.k], { stroke: KBD[b.k], 'stroke-width': 0.9 });
+    const bw = (b.d.match(/A([\d.]+)/) || [0, 8])[1] * 2;
+    el('use', { href: '#ic-' + KIND[b.k], x: b.bx + bw * 0.2, y: b.by + bw * 1.08 * 0.3, width: bw * 0.6, height: bw * 0.6, style: `color:${KIC[b.k]};--t-bg:${KC[b.k]}` }, t);
+  }
+  function vStep() {
+    if (!V) return;
+    if (V.i < 25) { vDrop(false); return; }
+    if (!V.hold) {
+      V.tiles.classList.add('won');
+      for (let i = 0; i < 26; i++) {
+        const c = el('rect', { x: rr(0, vig.offsetWidth), y: -6, width: 4, height: 6, fill: pick(['#CE1E32', '#D9AE3A', '#37658A', '#3C8B51', '#F3EADA', '#8E3E28']) }, V.confetti);
+        c.animate([{ transform: 'translate(0,0) rotate(0)' }, { transform: `translate(${rr(-30, 30).toFixed(0)}px, ${(V.h + 12).toFixed(0)}px) rotate(${rr(-540, 540).toFixed(0)}deg)` }],
+          { duration: rr(1600, 2600), delay: rr(0, 500), easing: 'cubic-bezier(.3,.1,.6,1)', fill: 'both' });
+      }
+    }
+    if (++V.hold > 6) {
+      V.tiles.style.transition = 'opacity .6s'; V.tiles.style.opacity = 0;
+      setTimeout(() => { if (!V) return; while (V.tiles.firstChild) V.tiles.firstChild.remove(); while (V.confetti.firstChild) V.confetti.firstChild.remove(); V.tiles.classList.remove('won'); V.tiles.style.opacity = 1; V.order.sort(() => R() - 0.5); V.i = 0; V.hold = 0; }, 650);
+      V.hold = -99;
+    }
+  }
+  function vStart() { vStop(); vBuild(); if (!STILL) vTimer = setInterval(vStep, 560); }
+  function vStop() { clearInterval(vTimer); vTimer = 0; }
+
+  // How to play: the story side of the card turns over to the rules and back
+  if (howBtn && howto && howBack && pitch) {
+    howBtn.addEventListener('click', () => {
+      pitch.classList.remove('flipped-back');
+      pitch.classList.add('rules');
+      howto.hidden = false;
+      howBtn.setAttribute('aria-expanded', 'true');
+      const h2 = howto.querySelector('h2');
+      if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus({ preventScroll: true }); }
+      vStop();
+    });
+    howBack.addEventListener('click', () => {
+      pitch.classList.remove('rules');
+      howto.hidden = true;
+      howBtn.setAttribute('aria-expanded', 'false');
+      pitch.classList.add('flipped-back');
+      setTimeout(() => pitch.classList.remove('flipped-back'), 600);
+      howBtn.focus({ preventScroll: true });
+      requestAnimationFrame(vStart);
+    });
+  }
+
+  // the title's tiles spin when clicked, and a click on the sky sends up a firework
+  titleEl.querySelectorAll('.tl').forEach(t => {
+    t.addEventListener('click', () => { t.classList.remove('spin'); void t.offsetWidth; t.classList.add('spin'); });
+    t.addEventListener('animationend', e => { if (e.animationName === 'fair-spin') t.classList.remove('spin'); });
+  });
+  host.addEventListener('click', e => { if (body.dataset.front === 'title' && world && world.fireAt) world.fireAt(e.clientX, e.clientY); });
+
+  const front = mode => {
+    if (mode !== body.dataset.front && (mode === 'menu' || mode === 'lobby')) calmUntil = performance.now() + 750;
+    body.dataset.front = mode;
+    if (mode === 'menu') requestAnimationFrame(vStart); else vStop();
+  };
   const visible = sec => !sec.classList.contains('hidden');
   function fit() {
     const target = visible(lobby) ? lobby.querySelector('.setup-card') : card;
     const lb = titleEl.querySelector('.title-logo').getBoundingClientRect();
-    const ch = target ? target.getBoundingClientRect().height : 0;
+    const ch = target ? target.offsetHeight : 0;             // its laid-out size: mid-animation its box is shrunk
     if (innerWidth >= 940) {
       const room = lb.bottom + 18 + ch <= innerHeight - 12;
       body.classList.toggle('fair-roomy', room);
@@ -1490,7 +1883,7 @@
   let pending = 0;
   addEventListener('resize', () => {
     clearTimeout(pending);
-    pending = setTimeout(() => { if (visible(setup) || visible(lobby)) { rebuild(); fit(); } }, 200);
+    pending = setTimeout(() => { if (visible(setup) || visible(lobby)) { rebuild(); fit(); if (body.dataset.front === 'menu') vStart(); } }, 200);
   });
   const watch = new MutationObserver(() => {
     const now = (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '');
