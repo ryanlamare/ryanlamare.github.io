@@ -376,7 +376,12 @@ relay, and refuses any term that isn't a `demo`/`test`/`trial`).
 
 `pavilion/scene.js` is the front door's animated World's Fair (PAVILION.md, *The
 front door's Fair*): decorative, wordless, outside the engine and the copy layer,
-and while it is a sample it only runs on `?fair`.
+and while it is a sample it only runs on `?fair`. Its menu's **Learn to play** is
+`ui.js`'s coach: a guided first game on the fixed seed `lesson-7`, hooked into
+the game through `coachOn` (a no-op outside the tutorial), every line in
+`LESSON_LINES`. A change to the engine or the bot that alters that seed's first
+month breaks the script; the coach then falls back to plain hints, but re-pick
+the seed rather than live with it.
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)

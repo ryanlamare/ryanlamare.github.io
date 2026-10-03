@@ -14,6 +14,7 @@ import {
   TOTAL_TILES,
 } from '../engine.js';
 import { greedyMove } from '../bot.js';
+import { lessonHolds } from '../lesson.js';
 
 let passed = 0;
 let failed = 0;
@@ -118,6 +119,14 @@ console.log('— greedy vs greedy: sane, finite, replayable games');
   ok(avgWinner >= 25, `winning scores look like real play, not noise (avg ${avgWinner.toFixed(1)})`);
   ok(maxRounds <= 12, `games end in sensible time (max ${maxRounds} rounds)`);
 }
+
+// ---------------------------------------------------------------------------
+console.log('— the Learn-to-play deal still holds its lesson');
+
+// The tutorial (ui.js) scripts the first round of one seed against this bot.
+// A change to the bot's preferences or the engine's dealing can quietly break
+// that; re-pick the seed in lesson.js if this fails.
+ok(lessonHolds(), 'lesson.js: the seed, the two scripted moves and the bot\'s reply line up');
 
 // ---------------------------------------------------------------------------
 console.log(`\n${passed} passed, ${failed} failed (${GAMES} greedy-vs-random games)`);

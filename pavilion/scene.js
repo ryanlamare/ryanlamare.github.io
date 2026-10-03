@@ -495,8 +495,8 @@
      card: the menu opens over the scene rather than living in it. A wide window
      looks down the Grand Basin to the Administration Building with the Wheel on
      the Midway at the left; a tall one (a phone) stacks the same Fair. The
-     title's button decides how tall the far city may stand, so the dome always
-     clears it. */
+     title (the arch, or the button under it on a phone) decides how tall the far
+     city may stand, so the dome always clears it. */
 
   const body = document.body;
   const lobby = document.getElementById('lobby');
@@ -526,8 +526,8 @@
 
   function layout() {
     const land = W / H >= 1.05, L = { land };
-    const pb = playBtn.getBoundingClientRect();
-    const titleBottom = pb.height ? pb.bottom : (land ? 0.34 : 0.32) * H;
+    const pb = playBtn.getBoundingClientRect(), lb = titleEl.querySelector('.title-logo').getBoundingClientRect();
+    const titleBottom = pb.height ? Math.max(pb.bottom, lb.bottom) : (land ? 0.34 : 0.32) * H;
     if (land) {
       L.hz = 0.585 * H; L.shore = 0.775 * H; L.pt = 0.79 * H;
       L.midG = 0.712 * H; L.midX1 = 0.33 * W;
@@ -566,6 +566,7 @@
     L.kb = L.pt + 0.42 * P;
     L.pb = H - 0.012 * H;
     L.pavX = [L.pw * 0.5 + 0.014 * W, W - L.pw * 0.5 - 0.014 * W];
+    L.keepOut = pb.height ? [lb, pb].map(r => [r.left, r.right, r.bottom]) : [];   // what the balloon must stay under
     const domeTop = Math.max(titleBottom + 0.03 * H, L.hz - 0.32 * H);
     L.u = clamp((L.hz - domeTop) / 119, 0.45, 2.6);
     return L;
@@ -1413,7 +1414,8 @@
       // the captive balloon goes up and down by day and comes down for the night
       {
         const up = f > 0.09 && f < 0.54 ? smooth(clamp(Math.min(f - 0.09, 0.54 - f) / 0.04, 0, 1)) * (0.55 + 0.45 * Math.sin(clockT * 0.21)) : 0;
-        const topY = L.hz - (0.12 + 0.7 * up) * (L.hz - 0.12 * H);
+        let topY = L.hz - (0.12 + 0.7 * up) * (L.hz - 0.12 * H);
+        for (const [x0, x1, y1] of L.keepOut) if (balloon.x > x0 - 2 * balloon.r && balloon.x < x1 + 2 * balloon.r) topY = Math.max(topY, y1 + 2.8 * balloon.r);
         const bx = balloon.x + Math.sin(clockT * 0.4) * 2, by = topY + Math.sin(clockT * 0.9) * 1.2;
         balloon.body.setAttribute('transform', `translate(${bx.toFixed(1)} ${by.toFixed(1)})`);
         balloon.tether.setAttribute('y1', by.toFixed(1));
@@ -1698,11 +1700,11 @@
      game's goal, shown rather than told. It runs only while the menu is open. */
 
   const pitch = card.querySelector('.pitch');
-  const howBtn = document.getElementById('btn-howto'), howBack = document.getElementById('btn-howto-back'), howto = document.getElementById('howto');
+  const learnBtn = document.getElementById('btn-learn');
   const vig = document.createElement('div');
   vig.className = 'pitch-scene';
   vig.setAttribute('aria-hidden', 'true');
-  if (pitch) pitch.insertBefore(vig, howBtn && howBtn.parentNode === pitch ? howBtn : null);
+  if (pitch) pitch.insertBefore(vig, learnBtn && learnBtn.parentNode === pitch ? learnBtn : null);
   const vsvg = el('svg', { focusable: 'false' }, vig);
   let V = null, vTimer = 0;
   function vBuild() {
@@ -1786,28 +1788,6 @@
   }
   function vStart() { vStop(); vBuild(); if (!STILL) vTimer = setInterval(vStep, 560); }
   function vStop() { clearInterval(vTimer); vTimer = 0; }
-
-  // How to play: the story side of the card turns over to the rules and back
-  if (howBtn && howto && howBack && pitch) {
-    howBtn.addEventListener('click', () => {
-      pitch.classList.remove('flipped-back');
-      pitch.classList.add('rules');
-      howto.hidden = false;
-      howBtn.setAttribute('aria-expanded', 'true');
-      const h2 = howto.querySelector('h2');
-      if (h2) { h2.setAttribute('tabindex', '-1'); h2.focus({ preventScroll: true }); }
-      vStop();
-    });
-    howBack.addEventListener('click', () => {
-      pitch.classList.remove('rules');
-      howto.hidden = true;
-      howBtn.setAttribute('aria-expanded', 'false');
-      pitch.classList.add('flipped-back');
-      setTimeout(() => pitch.classList.remove('flipped-back'), 600);
-      howBtn.focus({ preventScroll: true });
-      requestAnimationFrame(vStart);
-    });
-  }
 
   // the title's tiles spin when clicked, and a click on the sky sends up a firework
   titleEl.querySelectorAll('.tl').forEach(t => {

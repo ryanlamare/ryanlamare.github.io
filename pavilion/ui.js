@@ -25,6 +25,7 @@
 
 import * as E from './engine.js';
 import { greedyMove } from './bot.js';
+import { LESSON, lessonHolds } from './lesson.js';
 import { freshSeed } from './words.js';
 import { Relay, defaultRelayUrl, deviceKind, fetchSession, fetchLeagueGames } from './net.js';
 // The stats screens read the archive through the same pure queries the records
@@ -67,6 +68,10 @@ const snap = (s) => JSON.parse(JSON.stringify(s));
 let G = null; // the running game
 let sel = null; // {source, kind} — first tap of the two-tap
 let animating = false;
+// The Learn-to-play coach (see "Learn to play" below), or null. Every hook into
+// the game goes through coachOn, which is a no-op outside the tutorial.
+let coach = null;
+const coachOn = (ev, data) => (coach ? coach.on(ev, data || {}) : Promise.resolve());
 
 // ---------------------------------------------------------------------------
 // Markup helpers.
@@ -82,6 +87,12 @@ function tokenHTML() {
 // reads as a typo when the count is one.
 function count(n, one, many) {
   return `${n} ${n === 1 ? one : many}`;
+}
+
+// Someone who leaves the name box empty plays as "You", and "You is hiring"
+// reads as a typo: the sentences built from a name agree with it.
+function verb(name, one, you) {
+  return name === 'You' ? you : one;
 }
 
 function sameSource(a, b) {
@@ -100,7 +111,8 @@ function renderAll(st = G.view) {
     turn.textContent = '';
     setPhase("The World's Fair is open");
   } else {
-    turn.innerHTML = `<b>${esc(G.names[st.seatToMove])}</b> is hiring craftspeople`;
+    const who = G.names[st.seatToMove];
+    turn.innerHTML = `<b>${esc(who)}</b> ${verb(who, 'is', 'are')} hiring craftspeople`;
   }
   renderSources(st);
   renderPool(st);
@@ -516,6 +528,7 @@ async function animatePhaseA(before, interim, move) {
 // placement and the rest of the crew moves on to another pavilion. Then the
 // idle row's bill, and either opening day or next week's arrivals.
 async function animateResolution(interim, final) {
+  await coachOn('resolve', { interim });
   setPhase('The displays go up');
   await banner(splashHTML('Craftspeople build the displays'), 'splash');
 
@@ -549,6 +562,7 @@ async function animateResolution(interim, final) {
       score += d;
       popup('+' + d, target.getBoundingClientRect(), 'pos');
       setScore(seat, score);
+      await coachOn('display', { seat, r, c, d });
 
       // The display stands; the rest of the crew moves on to another
       // pavilion (engine: to the lid).
@@ -745,6 +759,7 @@ async function playMove(move, local) {
   G.cur = final;
   sel = null;
   animating = true;
+  coachOn('move', { seat, move });
 
   if (local && G.net && !G.net.move(ply, move)) {
     // The board moved but the relay didn't hear it. Resync on reconnect is
@@ -772,12 +787,16 @@ async function playMove(move, local) {
     if (G.net) G.net.over(final.result);
     endGame('natural');
   } else {
+    // The coach can hold the next turn for a word (the tutorial's Next).
+    const game = G;
+    await coachOn('settled', { before, interim, final, move, resolved });
+    if (G !== game || game.dead) return;
     startClock(final.seatToMove);
     if (resolved) {
       announce(
         `Month ${final.round} begins. ` +
           G.names.map((n, i) => `${n} ${final.boards[i].score}`).join(', ') +
-          `. ${G.names[final.startPlayer]} starts.`
+          `. ${G.names[final.startPlayer]} ${verb(G.names[final.startPlayer], 'starts', 'start')}.`
       );
     }
     scheduleBot();
@@ -808,7 +827,7 @@ function describeMove(before, interim, move) {
       : before.pool[move.kind];
   const src =
     move.source.type === 'source' ? `the ${AGENCY_NAMES[move.source.index]} agency` : 'the gate';
-  let msg = `${name} engages ${n} ${DISC[move.kind]} from ${src}`;
+  let msg = `${name} ${verb(name, 'engages', 'engage')} ${n} ${DISC[move.kind]} from ${src}`;
   if (move.source.type === 'pool' && before.firstTokenInPool) {
     msg += ' and takes the First Call token';
   }
@@ -866,6 +885,7 @@ function clockTick() {
 // Game lifecycle.
 
 function startGame(cfg) {
+  if (!cfg.lesson) endCoach();
   const seed = cfg.seed && cfg.seed.trim() ? cfg.seed.trim() : freshSeed();
   const s = E.newGame(seed, cfg.players);
   G = {
@@ -905,7 +925,7 @@ function startGame(cfg) {
   // (Ryan, playtest 2026-08-13). The first move clears it.
   setPhase('Construction begins');
   announce(
-    `New game, seed ${seed}. ${G.names[s.startPlayer]} hires first in month 1.`
+    `New game, seed ${seed}. ${G.names[s.startPlayer]} ${verb(G.names[s.startPlayer], 'hires', 'hire')} first in month 1.`
   );
   // Resuming a game already in progress: the caller is about to replay the
   // move list onto this state, so there is no opening to play.
@@ -916,6 +936,9 @@ function startGame(cfg) {
     await banner(monthSplashHTML(1), 'splash');
     await dealAnimation();
     animating = false;
+    const game = G;
+    await coachOn('settled', { final: s });
+    if (G !== game || game.dead) return;
     startClock(s.seatToMove);
     scheduleBot(); // the seed may hand the bot the opening move
   })();
@@ -924,6 +947,7 @@ function startGame(cfg) {
 function endGame(ending, flaggedSeat = null) {
   if (!G || G.ended) return; // both clients may reach the same ending
   G.ended = ending;
+  endCoach();
   if (G.clockTimer) {
     clearInterval(G.clockTimer);
     G.clockTimer = null;
@@ -960,13 +984,13 @@ function endGame(ending, flaggedSeat = null) {
   const titleText = draw
     ? 'Shared victory'
     : ending === 'timeout'
-      ? `${winName} wins on time`
-      : `${winName} has built the most prestigious pavilion in the world!`;
+      ? `${winName} ${verb(winName, 'wins', 'win')} on time`
+      : `${winName} ${verb(winName, 'has', 'have')} built the most prestigious pavilion in the world!`;
   const titleHTML = draw
     ? 'Shared victory'
     : ending === 'timeout'
-      ? `${esc(winName)} wins on time`
-      : `<span class="champ-name">${esc(winName)}</span> has built the most prestigious pavilion in the world!`;
+      ? `${esc(winName)} ${verb(winName, 'wins', 'win')} on time`
+      : `<span class="champ-name">${esc(winName)}</span> ${verb(winName, 'has', 'have')} built the most prestigious pavilion in the world!`;
   // A natural win needs no explanation under the headline (Ryan, playtest
   // 2026-08-13); the two endings that *are* surprising still get a line.
   const sub =
@@ -1721,6 +1745,7 @@ document.addEventListener('click', (e) => {
         );
       }
       applySelection();
+      coachOn('select');
       return;
     }
   }
@@ -1750,6 +1775,7 @@ document.addEventListener('click', (e) => {
     sel = null;
     applySelection();
     announce('Selection cleared.');
+    coachOn('select');
   }
 });
 
@@ -1758,6 +1784,7 @@ document.addEventListener('keydown', (e) => {
     sel = null;
     applySelection();
     announce('Selection cleared.');
+    coachOn('select');
   }
 });
 
@@ -1988,6 +2015,7 @@ $('#setup-form').addEventListener('submit', (e) => {
 // Leaving a game means leaving the room it was played in — otherwise the seat
 // sits there "reconnecting…" on the other player's screen forever.
 function toSetup() {
+  endCoach();
   if (G) {
     G.dead = true;
     if (G.clockTimer) clearInterval(G.clockTimer);
@@ -2024,7 +2052,7 @@ $('#btn-rematch').addEventListener('click', () => {
   // `started` — for everyone, including whoever clicked.
   if (G.online) return void net?.rematch();
   $('#end-modal').close();
-  startGame({ ...G.cfg, seed: '' }); // a new crowd, the same room
+  startGame({ ...G.cfg, seed: '', lesson: false }); // a new crowd, the same room
 });
 $('#btn-setup').addEventListener('click', toSetup);
 
@@ -2054,6 +2082,407 @@ if (!RELAY_URL) {
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Learn to play (a sample on ?fair, 3 Oct 2026; the button shows only there).
+//
+// Ryan: rather than a page of rules, "a scripted tutorial like they do in video
+// games, with highlights for 'grab these tiles' and 'put them here'". So the
+// first game is coached on the real board: a spotlight, a pointing hand and one
+// short line at a time, and every move is a real move through submitMove and
+// playMove like any other. The deal is a fixed seed with the lesson in month 1:
+// two Science at the middle agency fill the gallery 2 crew exactly, the
+// Commissioner (deterministic) answers from another agency, and the one
+// Machinery left at the gate fills gallery 1, so at the month's end the two
+// displays go up one above the other and score 1, then 2. After the first month
+// the coach steps back and the game plays on as a rehearsal. Practice games
+// never record, and neither does this one.
+//
+// Everything the coach says is in LESSON_LINES: Claude's draft, Ryan's to change.
+// The deal itself (the seed and the two moves) is lesson.js: LESSON.first is
+// the two Science at the middle agency, to gallery 2; LESSON.second the lone
+// Machinery at the gate, to gallery 1.
+const LESSON_LINES = {
+  hire: ['Hire these two', 'You always hire every one of a color at an agency.'],
+  place: ['Put them on this crew', 'It has room for exactly two.'],
+  gate: ['The rest wait at the gate', 'Anyone can hire them from here later.'],
+  rival: ["The Commissioner's turn", 'Your rival builds a pavilion too, from the same crowd.'],
+  hire2: ['Hire this one from the gate', 'The first to the gate each month takes the First Call token too.'],
+  place2: ['Put it on this crew', 'This one has room for one.'],
+  token: ['You hold First Call', 'You start next month. But the token stands idle, and idle costs points.'],
+  free: ['Your turn: hire any group', 'Then put them on a crew that lights up.'],
+  freePlace: ['Now pick a lit crew', "Anyone who doesn't fit stands idle."],
+  idle: ['Extras stand idle', 'Each one costs points when the month ends.'],
+  build: ['The month is over', 'Every full crew now puts up one display in your pavilion.'],
+  first: ['Your first display: +1', 'A display on its own scores 1.'],
+  joined: (d) => [`Joined up: +${d}`, 'A display that joins others scores for the whole unbroken line.'],
+  goal: ['Fill a row to open the Fair', 'The month someone fills a row, the game ends. Most points wins.'],
+  bye: ['Over to you', 'The rest of the game is yours. Beat the Commissioner!'],
+  next: 'Next',
+  go: 'Play on',
+  skip: 'Skip the tutorial',
+};
+
+// A Victorian printer's pointing hand, the manicule: the bill-poster's own way
+// of saying "here". Drawn pointing right; the fingertip is at (91, 19.5).
+const HAND_SVG = `<svg viewBox="0 0 96 52" aria-hidden="true"><g fill="#FFFCF4" stroke="#2B2620" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M3,8 L16,8 L16,46 L3,46 Z"/><path d="M7,8 V46 M11.5,8 V46" fill="none" stroke-width="1.2"/>
+  <path d="M38,27 H55 C60,27 60,35 55,35 H38 Z"/><path d="M37,34 H53 C58,34 58,41.5 53,41.5 H37 Z"/><path d="M35,40.5 H49 C53.5,40.5 53.5,47 49,47 H35 Z"/>
+  <path d="M16,10 C24,8 32,10 40,14 L40,44 C32,48 24,48 16,46 Z"/>
+  <path d="M36,14 H86 C93,14 93,25 86,25 H40 Z"/><path d="M82,16.5 C85.5,17.5 85.5,21.5 82,22.5" fill="none" stroke-width="1.2"/>
+  <path d="M26,24 C34,22 44,22 52,24.5 C56,25.6 55.5,30 51.5,30 C44,30 36,29.5 30,30"/>
+</g></svg>`;
+
+function startLesson() {
+  endCoach();
+  coach = makeCoach();
+  startGame({
+    players: 2,
+    names: [whoAmI().name, BOT_NAME],
+    bot: true,
+    clockMs: 0,
+    seed: LESSON.seed,
+    lesson: true,
+  });
+}
+
+function endCoach() {
+  if (!coach) return;
+  const c = coach;
+  coach = null;
+  c.end();
+}
+
+// The coach: a script of beats keyed to the game's own events (coachOn). A beat
+// is a line, an optional spotlight, and one of three holds: a tap (only the
+// spotlit thing answers, and the hand points at it), a Next (the game waits),
+// or nothing (the board is yours).
+function makeCoach() {
+  const L = LESSON_LINES;
+  const root = document.createElement('div');
+  root.id = 'coach';
+  root.innerHTML = `
+    <svg class="coach-dim" aria-hidden="true">
+      <defs><mask id="coach-mask"><rect width="100%" height="100%" fill="#fff"/><g class="coach-holes"></g></mask></defs>
+      <rect class="coach-shade" width="100%" height="100%" mask="url(#coach-mask)"/>
+      <g class="coach-rings"></g>
+    </svg>
+    <div class="coach-hand"><div class="coach-poke">${HAND_SVG}</div></div>
+    <div class="coach-card" role="status" aria-live="polite">
+      <p class="coach-line"></p>
+      <p class="coach-sub"></p>
+      <div class="coach-actions">
+        <button type="button" class="coach-next"></button>
+        <button type="button" class="coach-skip">${esc(L.skip)}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(root);
+  const holes = $('.coach-holes', root);
+  const rings = $('.coach-rings', root);
+  const hand = $('.coach-hand', root);
+  const card = $('.coach-card', root);
+  const nextBtn = $('.coach-next', root);
+
+  const mine = (q) => $(`.board[data-seat="0"] ${q}`);
+  // On a phone your board folds away while the Commissioner plays; a beat
+  // about it opens it first. Never mid-theatre (a redraw then would undo the
+  // displays the sweep has already put up), except on the month's last move,
+  // just before the sweep begins, when the board on screen is still G.view.
+  function openMine(beforeSweep = false) {
+    if ((animating && !beforeSweep) || !$('.board[data-seat="0"]')?.classList.contains('collapsed')) return;
+    G.expand[0] = true;
+    renderBoards(G.view);
+    applySelection();
+  }
+  // If the engine or the bot ever stops dealing this lesson, the coach gives
+  // plain hints rather than point at tiles that aren't there.
+  let stage = lessonHolds() ? 'hire1' : 'free'; // the script's place
+  const seen = new Set();
+  let step = null; // the beat showing: {key, spot, aim, tap, hold}
+  let release = null; // resumes the game a Next beat is holding
+  let raf = 0;
+  let scrolled = false;
+  const last = new Map();
+
+  function say(lines) {
+    $('.coach-line', card).textContent = lines[0];
+    $('.coach-sub', card).textContent = lines[1] || '';
+  }
+
+  // spot: what to light; aim: what the hand points at and a tap may land on
+  // (the spot, unless said otherwise).
+  function show(key, { spot = null, aim = null, tap = false, next = false, lines = L[key] } = {}) {
+    if (release) release();
+    release = null;
+    step = { key, spot, aim: aim || spot, tap, hold: tap ? 'tap' : next ? 'next' : 'free' };
+    say(lines);
+    nextBtn.hidden = !next;
+    if (next) nextBtn.textContent = next === true ? L.next : next;
+    skipBtn.hidden = key === 'bye';
+    root.dataset.hold = step.hold;
+    root.classList.add('on');
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.classList.add('pop');
+    scrolled = false;
+    if (!raf) raf = requestAnimationFrame(track);
+    if (!next) return Promise.resolve();
+    nextBtn.focus({ preventScroll: true });
+    return new Promise((r) => (release = r));
+  }
+
+  function hide() {
+    step = null;
+    root.classList.remove('on');
+  }
+
+  nextBtn.addEventListener('click', () => {
+    const r = release;
+    release = null;
+    hide();
+    r?.();
+  });
+  const skipBtn = $('.coach-skip', root);
+  skipBtn.addEventListener('click', endCoach);
+
+  // Follow the spotlit things every frame: the board re-renders under the coach
+  // (and scrolls on a phone), so a beat holds a query, never an element. Each
+  // thing gets its own hole in the dim, so "these two" lights two tiles and
+  // not the agency around them.
+  function px(el, prop, v) {
+    const k = prop + (el === hand ? 'a' : 'c');
+    if (last.get(k) === v) return;
+    last.set(k, v);
+    el.style.setProperty(prop, v);
+  }
+  const overlaps = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  function track() {
+    raf = 0;
+    if (!step) return;
+    const pad = 6;
+    const els = (step.spot ? step.spot() : []).filter(Boolean);
+    const rs = [];
+    for (const e of els) {
+      const b = e.getBoundingClientRect();
+      if (b.width && b.height) rs.push({ l: b.left - pad, t: b.top - pad, r: b.right + pad, b: b.bottom + pad, e });
+    }
+    const vw = document.documentElement.clientWidth;
+    const vh = innerHeight;
+    const top = ($('#topbar')?.getBoundingClientRect().bottom || 0) + 8;
+    const u = rs.length
+      ? { l: Math.min(...rs.map((r) => r.l)), t: Math.min(...rs.map((r) => r.t)), r: Math.max(...rs.map((r) => r.r)), b: Math.max(...rs.map((r) => r.b)) }
+      : null;
+    if (u && !scrolled && (u.t < top || u.b > vh)) {
+      scrolled = true;
+      rs[0].e.scrollIntoView({ block: 'center', behavior: instant() ? 'auto' : 'smooth' });
+    }
+    root.classList.toggle('lit', !!u);
+    const key = rs.map((r) => [r.l, r.t, r.r, r.b].map(Math.round).join(',')).join(';');
+    if (last.get('holes') !== key) {
+      last.set('holes', key);
+      const box = (r, k = 0) =>
+        `x="${(r.l - k).toFixed(1)}" y="${(r.t - k).toFixed(1)}" width="${(r.r - r.l + 2 * k).toFixed(1)}" height="${(r.b - r.t + 2 * k).toFixed(1)}" rx="${10 + k}"`;
+      holes.innerHTML = rs.map((r) => `<rect ${box(r)} fill="#000"/>`).join('');
+      rings.innerHTML = rs.map((r) => `<rect class="glow" ${box(r, 1.5)}/><rect class="ring" ${box(r, 1.5)}/>`).join('');
+    }
+    // The hand points up from below at the lowest of the things to tap (so it
+    // covers as little as it can), and turns to point the other way near the
+    // right edge.
+    const targets = step.aim === step.spot ? rs : step.aim().filter(Boolean).map((e) => {
+      const b = e.getBoundingClientRect();
+      return { l: b.left - pad, t: b.top - pad, r: b.right + pad, b: b.bottom + pad, e };
+    }).filter((r) => r.r - r.l > 2 * pad);
+    const handOn = !!(u && step.tap && targets.length);
+    root.classList.toggle('handed', handOn);
+    const hs = vw < 600 ? 0.62 : 0.8;
+    let hb = null;
+    if (handOn) {
+      const aim = targets.reduce((a, r) => (r.b > a.b + 1 || (Math.abs(r.b - a.b) <= 1 && r.l < a.l) ? r : a));
+      const tx = (aim.l + aim.r) / 2;
+      const ty = (aim.t + aim.b) / 2 + (aim.b - aim.t) * 0.16;
+      const flip = tx > vw - 110 * hs;
+      px(hand, '--hs', String(hs));
+      px(hand, 'transform', `translate(${(tx - 91 * hs).toFixed(1)}px, ${(ty - 19.5 * hs).toFixed(1)}px) ${flip ? 'rotate(-45deg)' : 'scaleX(-1) rotate(-45deg)'}`);
+      const h = hand.getBoundingClientRect();
+      hb = { l: h.left, t: h.top, r: h.right, b: h.bottom };
+    }
+    // The card waits at the foot of the screen, the way a game puts its
+    // subtitles, unless that would cover what it is talking about: then just
+    // below that, or just above it, or at the top.
+    const cw = card.offsetWidth;
+    const ch = card.offsetHeight;
+    const m = 12;
+    const cx = Math.min(Math.max(u ? (u.l + u.r) / 2 - cw / 2 : (vw - cw) / 2, m), vw - cw - m);
+    const tries = [
+      [(vw - cw) / 2, vh - ch - 16],
+      [cx, u ? (hb ? Math.max(u.b, hb.b) : u.b) + 12 : 0],
+      [cx, u ? (hb ? Math.min(u.t, hb.t) : u.t) - 12 - ch : 0],
+      [(vw - cw) / 2, top],
+    ];
+    let at = tries[0];
+    for (const [x, y] of tries) {
+      if (y < top - 8 || y + ch > vh - 4) continue;
+      const c = { l: x, t: y, r: x + cw, b: y + ch };
+      if (rs.some((r) => overlaps(c, r)) || (hb && overlaps(c, hb))) continue;
+      at = [x, y];
+      break;
+    }
+    px(card, 'transform', `translate(${Math.round(Math.min(Math.max(at[0], m), vw - cw - m))}px, ${Math.round(at[1])}px)`);
+    raf = requestAnimationFrame(track);
+  }
+
+  // A tap anywhere but the spotlit thing, while the coach is holding for it,
+  // does nothing but remind you where to look. The coach's own buttons, the
+  // top bar (End) and the end-of-game dialog always answer.
+  function guard(e) {
+    if (!step || step.hold === 'free') return;
+    if (e.target.closest('#coach .coach-card, #topbar, dialog')) return;
+    if (step.hold === 'tap' && (step.aim ? step.aim() : []).some((el) => el && el.contains(e.target))) return;
+    e.stopPropagation();
+    e.preventDefault();
+    card.classList.remove('nudge');
+    void card.offsetWidth;
+    card.classList.add('nudge');
+  }
+  window.addEventListener('click', guard, true);
+
+  const lessonTiles = (src, kind) => () =>
+    $$(`.tile[data-kind="${kind}"]`, src === 'pool' ? $('#pool') : $(`.source[data-source="${src}"]`));
+  const crew = (row) => () => [mine(`.crew[data-row="${row}"]`)];
+  const picked = (src, kind) =>
+    !!sel &&
+    sel.kind === kind &&
+    (src === 'pool' ? sel.source.type === 'pool' : sel.source.type === 'source' && sel.source.index === src);
+
+  function turn() {
+    if (stage === 'hire1') return show('hire', { spot: lessonTiles(LESSON.first.source, LESSON.first.kind), tap: true });
+    if (stage === 'hire2') {
+      const tile = lessonTiles('pool', LESSON.second.kind);
+      return show('hire2', { spot: () => [...tile(), $('#fm-token')], aim: tile, tap: true });
+    }
+    if (stage === 'free') {
+      stage = 'freeSel';
+      return show('free');
+    }
+    hide();
+  }
+
+  async function settled({ before, interim, final, move, resolved }) {
+    const st = final || G.cur;
+    const moved = move ? before.seatToMove : null;
+    if (moved === 0 && stage === 'moved1') {
+      await show('gate', { spot: () => [$('#pool-wrap')], next: true });
+      if (!coach) return;
+      stage = 'rival';
+    } else if (moved === 0 && stage === 'moved2') {
+      openMine();
+      await show('token', { spot: () => [mine('.idle')], next: true });
+      if (!coach) return;
+      stage = 'free';
+    } else if (moved === 0 && !resolved && !seen.has('idle')) {
+      const hands = (b) => b.floor.filter((x) => x !== E.FIRST_TOKEN).length;
+      if (hands(interim.boards[0]) > hands(before.boards[0])) {
+        seen.add('idle');
+        openMine();
+        await show('idle', { spot: () => [mine('.idle')], next: true });
+        if (!coach) return;
+      }
+    }
+    if (resolved) {
+      // A new month: the goal, then the game is theirs.
+      const wall = st.boards[0].wall;
+      let row = 0;
+      for (let r = 1; r < 5; r++) if (wall[r].reduce((a, b) => a + b, 0) > wall[row].reduce((a, b) => a + b, 0)) row = r;
+      openMine();
+      await show('goal', { spot: () => [$$('.board[data-seat="0"] .wrow')[row]], next: true });
+      if (!coach) return;
+      await show('bye', { next: L.go });
+      endCoach();
+      return;
+    }
+    if (st.seatToMove !== 0) {
+      if (stage === 'rival') {
+        stage = 'hire2';
+        return show('rival', { spot: () => [$('.board[data-seat="1"]')] });
+      }
+      return hide();
+    }
+    return turn();
+  }
+
+  function select() {
+    if (stage === 'hire1' || stage === 'place1') {
+      const ok = picked(LESSON.first.source, LESSON.first.kind);
+      stage = ok ? 'place1' : 'hire1';
+      return ok ? show('place', { spot: crew(LESSON.first.row), tap: true }) : turn();
+    }
+    if (stage === 'hire2' || stage === 'place2') {
+      const ok = picked('pool', LESSON.second.kind);
+      stage = ok ? 'place2' : 'hire2';
+      return ok ? show('place2', { spot: crew(LESSON.second.row), tap: true }) : turn();
+    }
+    if (stage === 'freeSel') return sel ? show('freePlace', { spot: () => $$('.board[data-seat="0"] .can-drop') }) : show('free');
+  }
+
+  function moved({ seat }) {
+    if (seat !== 0) {
+      if (step?.key !== 'rival') hide();
+      return;
+    }
+    if (stage === 'place1') stage = 'moved1';
+    else if (stage === 'place2') stage = 'moved2';
+    else if (stage === 'freeSel') stage = 'month';
+    hide();
+  }
+
+  async function resolving() {
+    if (seen.has('build')) return;
+    seen.add('build');
+    const full = () =>
+      $$('.board[data-seat="0"] .crew').filter((el) => {
+        const r = Number(el.dataset.row);
+        return G.view.boards[0].lines[r].count === r + 1;
+      });
+    openMine(true);
+    if (!full().length) return;
+    await show('build', { spot: full, next: true });
+  }
+
+  async function display({ seat, r, c, d }) {
+    if (seat !== 0) return;
+    const cell = () => [mine(`.wcell[data-rc="${r}-${c}"]`)];
+    if (!seen.has('first')) {
+      seen.add('first');
+      await show('first', { spot: cell, next: true });
+    } else if (d >= 2 && !seen.has('joined')) {
+      seen.add('joined');
+      await show('joined', { spot: cell, next: true, lines: L.joined(d) });
+    }
+  }
+
+  return {
+    on(ev, d) {
+      if (ev === 'settled') return settled(d);
+      if (ev === 'select') return Promise.resolve(select());
+      if (ev === 'move') return Promise.resolve(moved(d));
+      if (ev === 'resolve') return resolving();
+      if (ev === 'display') return display(d);
+      return Promise.resolve();
+    },
+    end() {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      window.removeEventListener('click', guard, true);
+      root.remove();
+      const r = release;
+      release = null;
+      step = null;
+      r?.();
+    },
+  };
+}
+
+$('#btn-learn')?.addEventListener('click', startLesson);
 
 applySetupMode();
 loadRoster();

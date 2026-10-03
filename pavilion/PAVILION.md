@@ -1247,10 +1247,13 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
 
 - **The title screen.** The Fair fills the window. PAVILION is set as eight
   tiles in the logo's colour pairs (Machinery's black sits it out, as in the
-  logo), which land one by one like displays going up and light as they land; a
-  light runs along the word now and then, and at night the tiles glow with the
-  illumination. Under it, the pitch's own line on a ribbon, and **Play a game**
-  (Ryan's phrase), which opens the menu; Enter does the same.
+  logo), arched like a dome (Ryan, later on 3 Oct: larger, "dome shaped", and
+  minimal text), which land one by one like displays going up and light as they
+  land; a light runs along the word now and then, and at night the tiles glow
+  with the illumination. Under the arch's crown, one button, **PLAY**, which
+  opens the menu; Enter does the same. On a phone the button sits below the
+  arch. The tagline ribbon and the records link came off the title the same day
+  (the card carries both).
 - **The menu.** The setup card, framed like a bill of the Fair (a double rule,
   corner ornaments, red-square headings, a start button with a shine), drops in
   over a dimmed Fair under the word when it fits, its parts arriving in turn. On
@@ -1262,7 +1265,7 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
 - **The scene.** One panorama for any window, never a frame around the card:
   wide, it looks down the Grand Basin to the Administration Building; tall, it
   stacks the same Fair. The White City along the horizon (the far city never
-  rises past the title's button), the Ferris Wheel on the Midway with festoons,
+  rises past the title), the Ferris Wheel on the Midway with festoons,
   a carousel and strollers, the Peristyle and the gilded Statue of the Republic
   (it stood in the Grand Basin), an electric fountain, a gondola and a launch,
   the Intramural Railway on the far shore, a captive balloon, a Cracker Jack cart.
@@ -1281,7 +1284,7 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
 - **Engineering.** `scene.js` draws and runs the title → menu → lobby states;
   the title's words live in `index.html` with the rest of the copy; the styles
   hang off `body.fair`, which only `scene.js` adds. Nothing in the engine, the
-  wire or `ui.js` knows any of it exists. People walk on CSS (limbs swing on
+  wire or `ui.js` knows the scene exists (the tutorial is `ui.js`'s, above). People walk on CSS (limbs swing on
   their own top edge), so the loop only moves them. `prefers-reduced-motion`
   gets one still frame at dusk and no title animation. `?fair&at=0.62` opens the
   cycle at that point (0 midnight, 0.25 morning, 0.585 sunset), `&still` holds
@@ -1295,14 +1298,31 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   after him; pigeons pecking on the mosaic that flutter up and resettle; a
   photographer under his black cloth, a family posing, and a puff of flash
   powder now and then. The Cracker Jack cart moved to the right, by the seller.
-- **How to play** (Ryan: "we might need to explain this game somewhere"). The
-  menu's left side is two-faced: the story (the pitch, bigger, with "Chicago.
-  1893." set as a dateline under a rule of the five disciplines, then a small
-  pavilion whose front fills tile by tile and celebrates when it is complete)
-  and, behind a **How to play** button, six steps with diagrams drawn in the
-  board's own tiles, a First Call note, and **Back to the story**. The six steps'
-  wording is Claude's draft in the settled terms (rules spec §4–§8), in
-  `index.html`, for Ryan to change. On a phone the same button turns the sheet.
+- **The menu's story side.** The pitch, bigger, with "Chicago. 1893." set as a
+  dateline under a rule of the five disciplines, then a small pavilion whose
+  front fills tile by tile and celebrates when it is complete, then **Learn to
+  play**.
+- **Learn to play** (Ryan: not a page of rules, but "a scripted tutorial like
+  they do in video games, with highlights for 'grab these tiles' and 'put them
+  here'"; show, don't tell). It replaced a six-step text panel the same day. The
+  button starts a coached first game against the Commissioner on the real board:
+  the board dims, light falls on what to tap, a Victorian printer's pointing
+  hand (the manicule) taps at it, and a card at the foot of the screen says one
+  line. Every move is a real move through `submitMove`/`playMove`. The deal is
+  the fixed seed `lesson-7`, chosen because its month 1 holds the lesson: hire
+  the two Science at the middle agency onto the gallery 2 crew (the rest go to
+  the gate); watch the Commissioner (deterministic, so it answers the same way
+  every time); take the lone Machinery from the gate onto gallery 1, with First
+  Call (the token stands idle); then free play on lit crews, with a word about
+  idling the first time it happens. At the month's end the two displays go up
+  one above the other, +1 and then +2 ("joined up"); month 2 opens on the goal
+  (fill a row) and "Over to you", and the game plays on as a rehearsal. While
+  the coach waits for a tap, other taps only nudge the card; a Next holds the
+  game; Skip ends the coaching and the game carries on. On a phone, a beat
+  about your own board unfolds it first. The coach lives in `ui.js` because it
+  is copy, and it hears the game through `coachOn`, a no-op outside the
+  tutorial. **Every line it says is in `LESSON_LINES`: Claude's draft, for Ryan
+  to change.** Practice games never record, and neither does this one.
 - **Small delights.** On the title screen a click on the sky sends up a firework
   where you clicked, and a click on a title tile spins it.
 - **Performance.** While the menu or lobby is open the dimmed Fair moves at half
