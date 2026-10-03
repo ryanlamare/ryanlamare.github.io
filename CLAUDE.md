@@ -164,13 +164,17 @@ day two) and drops every write, so a Poll Desk reset changes nothing here.
 Don't edit the copies or sync them with `gt/`; there is no `?edit` on them.
 
 **`teaching/exec/demo/` is a sandbox for family and friends** (2 Oct 2026), a
-hand-written landing page with two halves. **The class** (`demo/m1`–`m8`, with
-their outtakes) is `exec/gt` as RRPF had it, playable: `demo.js` sends every
+hand-written landing page with two halves. **The class** (`demo/m1`–`m8`) is `exec/gt` as RRPF had it, playable: `demo.js` sends every
 poll-server call to the same room with `-demo` on the end and answers the
 attendee list from `demo/names.json`. **The blooper reel** (`demo/reel/`) is the
 19 Sep full build (tag `gt-full-production-2026-09-19`), the only place the
 scenes the plain pass removed still run; the landing page opens six of them,
+in module order, under "My favorite slides that didn't make the final cut",
 and `reel/reel.js` uses `-reel` rooms with names from `reel/go/roster.json`.
+The reel rooms are seeded with that build's own bots (`trial/m3–m7.js --room
+reel`, run from a checkout of the tag; the car lot runs its in-memory
+`?demo=1`), so a reset of the reel rooms empties the scenes until they are
+seeded again. The landing page credits Claude Code, at Ryan's ask.
 Neither half touches a real session's rooms, and each has its own `poll-desk/`.
 The QR codes were regenerated to point inside each half. Like `exec/rrpf/`, it
 is a snapshot: don't sync it with `gt/`.
