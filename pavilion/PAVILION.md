@@ -1232,6 +1232,48 @@ the design can fix it.
 
 ---
 
+## The front door's Fair — a sample, 3 Oct 2026 (`scene.js`, only on `?fair`)
+
+Ryan asked for "a world in motion surrounding the game opening screen": the
+1893 Fair alive around the setup card, a day-to-night cycle, and the game's own
+story told in the picture. It is the decoration pass this memo deferred (*The
+Ferris Wheel*, last paragraph), done for the front door first. His calls on 3
+Oct: maximalism is right for a game's title screen; people in **1893 dress, not
+Isotype** (Isotype is 1920s Vienna, and this is a game anyone can play, not the
+teaching brand); and the specs need not constrain it. The Midway's "villages"
+still stay out, for the reason in *The register*; the rest of the Midway is in.
+
+- **What it shows.** The White City along the top (the Administration dome,
+  the Electricity Building's spires, Diana on the Agricultural Building,
+  Machinery Hall's towers) clearing the card's top edge; the Ferris Wheel on the
+  Midway, with festoons and strollers; the Peristyle and the gilded Statue of the
+  Republic in the Grand Basin, an electric fountain, a gondola and a launch; the
+  Intramural Railway crossing behind the card; a captive balloon.
+- **The story is the game.** Craftspeople arrive in fours at striped agency
+  daises, each holding up their discipline's tile on a pole, so a dais reads as
+  a display; a nation hires every one of a discipline and they walk to its
+  pavilion; the rest wait at the gate; each crew puts its tile up on the
+  pavilion's front, which is the board's 5×5 wall with its faint pattern, and
+  the scaffolding comes down as it fills. Turns alternate between the two
+  nations. A crew with nowhere to go stands idle beside its pavilion.
+- **The day.** 84 seconds, midnight to midnight. At dusk the illumination comes
+  on from the middle outward (bulbs along every cornice and dome, the Wheel's
+  rims and cars, the floodlit statue, the fountain in colour, searchlights,
+  the White City's lights on the water), then fireworks; at closing the lights
+  go out and the pavilions reset in the dark for a new month.
+- **Engineering.** One file, wordless, aria-hidden, pointer-events off; nothing
+  in the engine, the wire or the copy layer knows it exists. People walk on CSS
+  (limbs swing on their own top edge), so the loop only moves them. It draws only
+  while `#setup` is showing and the tab is visible, and stops for a game.
+  `prefers-reduced-motion` gets one still frame at dusk. On a laptop it fills the
+  window around the card (a little narrower than before, so the margins have
+  room); on a phone or tablet it is a band above the card. A short laptop window
+  keeps the frame and moves the card up, so the start button never leaves the
+  first screen. `?fair&at=0.62` opens the cycle at that point (0 midnight, 0.25
+  morning, 0.585 sunset) and `&still` holds it there.
+- **Before it goes live** it needs Ryan's look; making it the default is
+  deleting the `?fair` check at the top of `scene.js`.
+
 ## Two devices — built 2026-08-12 (build step 4)
 
 Students on separate devices now play a real game against each other. The wire

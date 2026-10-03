@@ -374,6 +374,10 @@ An empty archive shows you nothing, so `node pavilion/relay/seed.js` starts a
 dev relay full of plausible games (`--live` plays real ones into the deployed
 relay, and refuses any term that isn't a `demo`/`test`/`trial`).
 
+`pavilion/scene.js` is the front door's animated World's Fair (PAVILION.md, *The
+front door's Fair*): decorative, wordless, outside the engine and the copy layer,
+and while it is a sample it only runs on `?fair`.
+
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)
 before committing engine or bot changes. The board UI (`index.html`/`style.css`/`ui.js`) previews through

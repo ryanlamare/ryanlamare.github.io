@@ -974,3 +974,53 @@ button.tile:hover { transform: translateY(-3px); }
   .ghost-btn { padding: 4px 8px; font-size: 12px; }
   .menu { gap: 4px; }
 }
+
+/* ------------------------------------- the Fair in motion (scene.js, a sample)
+   The front door's World's Fair. On a laptop it fills the window and the card
+   floats in it, a little narrower so the Wheel and the pavilions have room;
+   on a phone it is a band above the card, which tucks over its lower edge.
+   Only present when scene.js has added .fair to #setup. */
+#fair { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #1A2350; }
+#fair svg { display: block; }
+#setup.fair > .setup-card {
+  position: relative; z-index: 1;
+  box-shadow: 0 30px 90px rgba(10, 12, 28, .38), 0 3px 12px rgba(10, 12, 28, .16);
+}
+@media (min-width: 940px) {
+  #setup.fair:not(.band) > .setup-card { width: min(1040px, calc(100vw - 2 * clamp(120px, 15vw, 280px))); }
+}
+#setup.fair.band { display: block; padding: 0 0 28px; }
+#setup.fair.band #fair { position: relative; inset: auto; }
+#setup.fair.band > .setup-card { margin: -16px auto 0; width: min(520px, calc(100% - 28px)); }
+
+/* People walk on CSS: legs, arms and skirts swing about their own top edge,
+   so the loop only has to move each person along. */
+#fair .lg, #fair .am, #fair .sk { transform-box: fill-box; transform-origin: 50% 0; }
+#fair .walk .lg.a { animation: fair-leg var(--stp, .4s) ease-in-out infinite alternate; }
+#fair .walk .lg.b { animation: fair-leg var(--stp, .4s) ease-in-out infinite alternate-reverse; }
+#fair .walk .am.b { animation: fair-arm var(--stp, .4s) ease-in-out infinite alternate; }
+#fair .walk .am.a { animation: fair-arm var(--stp, .4s) ease-in-out infinite alternate-reverse; }
+#fair .walk .sk { animation: fair-sway var(--stp, .4s) ease-in-out infinite alternate; }
+#fair .walk .ub { animation: fair-bob calc(var(--stp, .4s) / 2) ease-in-out infinite alternate; }
+@keyframes fair-leg { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+@keyframes fair-arm { from { transform: rotate(-15deg); } to { transform: rotate(15deg); } }
+@keyframes fair-sway { from { transform: skewX(-6deg); } to { transform: skewX(6deg); } }
+@keyframes fair-bob { from { transform: translateY(0); } to { transform: translateY(-.7px); } }
+
+#fair .flag { transform-box: fill-box; transform-origin: 0 50%; animation: fair-flutter 1.2s ease-in-out infinite alternate; }
+@keyframes fair-flutter { from { transform: skewY(-9deg) scaleX(.9); } to { transform: skewY(7deg) scaleX(1); } }
+#fair .star { animation: fair-twinkle var(--tw, 2.6s) ease-in-out infinite alternate; }
+@keyframes fair-twinkle { from { opacity: 1; } to { opacity: .25; } }
+#fair .wing { transform-box: fill-box; transform-origin: 50% 100%; animation: fair-flap .5s ease-in-out infinite alternate; }
+@keyframes fair-flap { from { transform: scaleY(1); } to { transform: scaleY(-.6); } }
+#fair .oar { transform-box: fill-box; transform-origin: 50% 0; animation: fair-oar 1.6s ease-in-out infinite alternate; }
+@keyframes fair-oar { from { transform: rotate(-16deg); } to { transform: rotate(14deg); } }
+#fair .jet { animation: fair-flow .7s linear infinite; }
+@keyframes fair-flow { to { stroke-dashoffset: -12; } }
+#fair .hoist { animation: fair-hoist 3.4s ease-in-out infinite alternate; }
+@keyframes fair-hoist { from { transform: translateY(0); } to { transform: translateY(var(--lift, -14px)); } }
+#fair .pop { transform-box: fill-box; transform-origin: 50% 50%; animation: fair-pop .75s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes fair-pop { from { transform: scale(.15); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+#fair .scaff { transition: opacity 1.6s ease; }
+#fair .bayfill { transition: opacity 1.4s ease; }
+@media (prefers-reduced-motion: reduce) { #fair * { animation: none !important; transition: none !important; } }
