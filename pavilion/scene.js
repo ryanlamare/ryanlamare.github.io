@@ -57,7 +57,7 @@
   const LIGHTS_ON = 0.57, CLOSE = 0.955, RESET = 0.975;
   const ROUNDS_TO = 0.45, HIRES_FROM = 0.08, HIRES_TO = 0.53, LEAVE = 0.535;
   const FIRE_FROM = 0.64, FIRE_TO = 0.93;
-  // Opening night (?opening, at the end of a game): the Fair comes back at dusk, the lights come on
+  // Opening night (at the end of every game since 3 Oct): the Fair comes back at dusk, the lights come on
   // over FIN_RAMP seconds and the night holds at FIN_TO, with the fireworks; the medal arrives at MEDAL_AT.
   const FIN_FROM = 0.555, FIN_TO = 0.68, FIN_RAMP = 5, MEDAL_AT = 4.4;
   const HIRE_GAP = 1.35;                              // seconds between hires

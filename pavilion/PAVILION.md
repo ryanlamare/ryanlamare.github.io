@@ -1412,16 +1412,17 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   "walking into the tops of the pavilions").
 
 
-## Opening night, and the rest of the polish pass — 3 Oct 2026 (on `?opening` until Ryan says it goes live)
+## Opening night, and the rest of the polish pass — 3 Oct 2026 (the default since that night; `?plain` plays the game as it was)
 
 Ryan, sending the game to his parents: the end screen "looks like it's just kinda
 tacked on from the first cut", and anything else that would improve the game or
 match the World's Fair. Asked first, answered in prose, then "yes to all of the
 above … build anything you want!", with one idea of his own: workers carrying the
 tiles into their spaces between rounds, "but if it interferes it's not worth it".
-All of it is behind **`?opening`** (game and records alike) so the live game does
-not change until he has seen it; making it live is deleting the flag checks (one
-`OPENING` constant in `ui.js`, and the first script on each records page).
+It was built behind `?opening` for his look, and the same night he said "lets
+make it the default!": the game's part now rides on the Fair's dress (`FAIR` in
+`ui.js`, so `?plain` still plays the game as it was), and every records page
+carries `class="fair"` on its `<body>`. `?opening` now means nothing.
 
 - **Opening night: the end of the game.** The game ends at the Fair it began at.
   After the judges' round on the board, the board steps aside and the front
@@ -1451,7 +1452,7 @@ not change until he has seen it; making it live is deleting the flag checks (one
     sub-line under a natural win, rows · columns · colors in plain board words),
     and the breakdown now sits under each name, so the table no longer has
     "Bonuses" beside "Bonus".
-- **The look link:** `/pavilion/?opening&finale` plays a whole game in an instant
+- **The look link:** `/pavilion/?finale` (or `?opening&finale`, the link he saw it on) plays a whole game in an instant
   (two greedy hands, seed `opening-night`, which the first seat wins 46–43) and
   the last move at full speed, so the month's close, the judges' round and
   opening night can be seen without playing first. `&players=3` or `4`,

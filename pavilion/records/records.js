@@ -23,10 +23,6 @@ import { standings, byName, records, seasonsOf, playerCard, bossBattles } from '
 import { SPRITE, EMBLEMS } from './isotypes.js';
 
 const LEAGUE = document.body.dataset.league;
-// ?opening (the page's first script adds body.fair): its links keep the flag while Ryan looks.
-if (document.body.classList.contains('fair')) {
-  for (const a of document.querySelectorAll('a[href^="/pavilion/"]')) a.href += '?opening';
-}
 const ME_KEY = `pavilion.records.me.${LEAGUE}`;
 const DEFAULT_BOARD = 5;
 

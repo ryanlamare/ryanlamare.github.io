@@ -64,14 +64,13 @@ const TEMPO =
 const T = (ms) => Math.round(ms * TEMPO);
 // The Fair's dress for the game (3 Oct 2026, with the front door): flights on
 // real arcs, a hire that reads in order, the Commissioner showing its pick
-// before it moves. ?plain plays the way the game did before.
+// before it moves. ?plain plays the way the game did before. Since the night of
+// 3 Oct (Ryan: "lets make it the default!") the dress also ends the game at the
+// Fair it began at, lit for the night, with the players' own pavilions on its
+// promenade and the judges' medal over the winner's (scene.js draws it;
+// startFinale below sends it the players), and carries the month's sky, the hire
+// preview and the crews carrying their displays up.
 const FAIR = !new URLSearchParams(location.search).has('plain');
-// Opening night (built 3 Oct 2026 for Ryan's look, on ?opening until he says it replaces the old end):
-// the game ends at the Fair it began at, lit for the night, the players' own pavilions on its promenade
-// and the judges' medal over the winner's (scene.js draws all of it; startFinale below sends it the
-// players). The same link carries the month's sky, the hire preview and the crews carrying their
-// displays up.
-const OPENING = FAIR && new URLSearchParams(location.search).has('opening');
 const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
@@ -298,8 +297,8 @@ function applySelection() {
     const el = m.dest.type === 'line' ? $(`.crew[data-row="${m.dest.row}"]`, boardEl) : $('.idle', boardEl);
     el.classList.add('can-drop');
     if (m.dest.type === 'line') el.setAttribute('aria-label', el.getAttribute('aria-label') + ' — legal destination');
-    // ?opening: the bill for whoever would not fit, on the crew before it is chosen
-    if (OPENING) {
+    // the bill for whoever would not fit, on the crew before it is chosen
+    if (FAIR) {
       const { bill, idled } = idleBill(G.cur.seatToMove, m);
       if (bill > 0) {
         el.insertAdjacentHTML('beforeend', `<span class="bill" aria-hidden="true">−${bill}</span>`);
@@ -309,7 +308,7 @@ function applySelection() {
   }
 }
 
-// ?opening, the hire preview: what a hire would cost, shown before it is made.
+// The hire preview (3 Oct 2026): what a hire would cost, shown before it is made.
 // A crew the pick could go to carries a small red figure, the idle bill for
 // the craftspeople who would not fit (exactly what the idle row charges at the
 // month's end, read off the engine's own applyTake), and the idle row carries
@@ -331,7 +330,7 @@ function clearPreview() {
 }
 function showPreview(target) {
   clearPreview();
-  if (!OPENING || !sel || !G || G.cur.over || animating) return;
+  if (!FAIR || !sel || !G || G.cur.over || animating) return;
   const seat = G.cur.seatToMove;
   const boardEl = target.closest('.board');
   if (!boardEl || Number(boardEl.dataset.seat) !== seat) return;
@@ -362,7 +361,7 @@ function showPreview(target) {
     );
   }
 }
-if (OPENING) {
+if (FAIR) {
   const over = (e) => {
     const t = e.target.closest?.('.crew.can-drop, .idle.can-drop');
     if (t) showPreview(t);
@@ -518,7 +517,7 @@ function flyArc(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26, arc =
     .catch(() => el.remove());
 }
 
-// ?opening, the crews carry their displays up (Ryan's idea, 3 Oct, on the one
+// The crews carry their displays up (Ryan's idea, 3 Oct, on the one
 // condition that it never slows the game): at the month's close a finished
 // crew's lead hand walks the display along the gallery into its bay, holding it
 // over their head the way the front door's craftspeople hold up their tiles. It
@@ -801,7 +800,7 @@ async function animateResolution(interim, final) {
       const lead = cells[cells.length - 1];
       const target = $(`.wcell[data-rc="${r}-${c}"]`, boardEl);
 
-      if (OPENING && !instant()) {
+      if (FAIR && !instant()) {
         const from = lead.getBoundingClientRect();
         if (lead.firstElementChild) lead.firstElementChild.style.visibility = 'hidden'; // picked up
         await carry(from, target.getBoundingClientRect(), tileHTML(t.kind));
@@ -922,8 +921,8 @@ async function animateResolution(interim, final) {
       }
     }
     // The one splash on black: the Fair opening is the end of the game, and
-    // the ground going dark says so before the words are read. On ?opening the
-    // Fair itself comes up behind the words at dusk, and its lights come on.
+    // the ground going dark says so before the words are read. In the Fair's
+    // dress the Fair itself comes up behind the words at dusk, and its lights come on.
     startFinale(final.result);
     await banner(splashHTML("The World's Fair is Open!"), 'splash finale');
     await beat(700);
@@ -1332,12 +1331,12 @@ function endGame(ending, flaggedSeat = null) {
     .join('');
 
   startFinale(result);
-  $('#end-modal').classList.toggle('finale', OPENING);
+  $('#end-modal').classList.toggle('finale', FAIR);
   body.innerHTML = `
     <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Judging the Pavilions'}</p>
     <p class="champion spot${draw || ending === 'timeout' ? '' : ' story'}">${titleHTML}</p>
     <p class="end-sub">${sub}</p>
-    <table class="final-table${OPENING ? ' compact' : ''}">
+    <table class="final-table${FAIR ? ' compact' : ''}">
       <tr><th>Player</th><th class="detail">Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
       ${rows}
     </table>`;
@@ -1358,20 +1357,20 @@ function endGame(ending, flaggedSeat = null) {
   $('#end-modal').showModal?.();
 }
 
-// ?opening, the month's sky: the board stands in daylight while the crews are
+// The month's sky: the board stands in daylight while the crews are
 // hired, and the sun goes down behind the skyline while the displays go up;
 // the next month starts in daylight again, and the last month's dusk runs on
 // into opening night.
 function setSky(v) {
-  if (OPENING) document.body.dataset.sky = v;
+  if (FAIR) document.body.dataset.sky = v;
 }
-if (OPENING) $('#game').insertAdjacentHTML('afterbegin', '<div id="sky" aria-hidden="true"><div class="sky-glow"></div><div class="sky-line"></div></div>');
+if (FAIR) $('#game').insertAdjacentHTML('afterbegin', '<div id="sky" aria-hidden="true"><div class="sky-glow"></div><div class="sky-line"></div></div>');
 
 // Opening night: hand the Fair (scene.js) each player's name, wall, score and
 // whether they won, once per game. The board steps aside while it plays
 // (style.css, data-front="finale"); closing the result card ends it.
 function startFinale(result) {
-  if (!OPENING || !G || G.finale) return;
+  if (!FAIR || !G || G.finale) return;
   G.finale = true;
   const draw = result.winner === -1;
   const players = G.names.map((name, seat) => ({
@@ -1385,7 +1384,7 @@ function startFinale(result) {
   document.dispatchEvent(new CustomEvent('pavilion:finale', { detail: { players } }));
 }
 $('#end-modal').addEventListener('close', () => {
-  if (!OPENING) return;
+  if (!FAIR) return;
   window.__pavilionFinale = null;
   setSky('');
   document.dispatchEvent(new CustomEvent('pavilion:finale-end'));
@@ -3243,12 +3242,13 @@ if (smokeParams.get('uitest') === 'online') {
   })();
 }
 
-// ?opening&finale is the look link for the end of the game: two greedy hands
+// ?finale is the look link for the end of the game (?opening&finale, the link
+// Ryan first saw it on, still works): two greedy hands
 // play a whole game in an instant (seed 'opening-night', which the first seat
 // wins 46–43; &seed= for another), and the last move plays out at full speed,
 // so the month's close, the judges' round and opening night can be seen without
 // playing a game first. ?names= names the seats, &players=3 or 4 seats more.
-if (OPENING && smokeParams.has('finale') && !smokeParams.has('smoke')) {
+if (FAIR && smokeParams.has('finale') && !smokeParams.has('smoke')) {
   (async () => {
     if (document.readyState !== 'complete') await new Promise((r) => addEventListener('load', r, { once: true }));
     window.__instant = true;
