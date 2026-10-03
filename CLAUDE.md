@@ -381,7 +381,10 @@ and while it is a sample it only runs on `?fair`. Its menu's **Learn to play** i
 the game through `coachOn` (a no-op outside the tutorial), every line in
 `LESSON_LINES`. A change to the engine or the bot that alters that seed's first
 month breaks the script; the coach then falls back to plain hints, but re-pick
-the seed rather than live with it.
+the seed rather than live with it. On `?fair` the game itself wears the Fair's
+dress too (`body.fair` rules in `style.css`, the `FAIR` flag in `ui.js` for the
+motion), in Abril Fatface and Libre Franklin from `pavilion/fonts/` (OFL, never
+fetched from Google); the plain URL is untouched.
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)

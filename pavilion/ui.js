@@ -62,6 +62,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const TEMPO =
   parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tempo')) || 1;
 const T = (ms) => Math.round(ms * TEMPO);
+// The Fair's dress for the game (3 Oct 2026, a sample on ?fair like the front
+// door): flights on real arcs, a hire that reads in order, the Commissioner
+// showing its pick before it moves. The plain URL plays exactly as before.
+const FAIR = new URLSearchParams(location.search).has('fair');
 const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
@@ -337,7 +341,9 @@ function esc(s) {
 // ---------------------------------------------------------------------------
 // Flights and theatre.
 
-function fly(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26 } = {}) {
+function fly(fromRect, toRect, html, opts = {}) {
+  if (FAIR) return flyArc(fromRect, toRect, html, opts);
+  const { dur = 420, delay = 0, lift = 26 } = opts;
   // A collapsed board's cells measure 0×0; flying "to" them smears a tile
   // across the screen. Skip the flight, keep the state change.
   if (instant() || fromRect.width < 2 || toRect.width < 2) return Promise.resolve();
@@ -360,6 +366,101 @@ function fly(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26 } = {}) {
       { transform: `translate(${toRect.left}px, ${toRect.top}px) scale(${scale})` },
     ],
     { duration: T(dur), delay: T(delay), easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'both' }
+  );
+  return anim.finished.then(() => el.remove()).catch(() => el.remove());
+}
+
+// Under ?fair a flight is a throw (Ryan, 3 Oct: "the animations are kinda
+// choppy"). The old flight went up one straight line and down another, with a
+// corner at the top, and scaled about the wrong point, so it landed a few
+// pixels off its cell and the tile jumped into place: that was the chop. This
+// one rides a curve, eases out of its place and into the next, lifts and tilts
+// a little with the throw, and lands exactly on the cell, which shows its tile
+// at that moment and settles under it (`land`).
+function flyArc(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26, arc = 0.3, tilt = 6, land = null } = {}) {
+  const reveal = () => {
+    if (!land) return;
+    land.classList.remove('pre');
+    if (!instant()) {
+      land.animate([{ transform: 'scale(1.12)' }, { transform: 'scale(.94)', offset: 0.45 }, { transform: 'none' }], {
+        duration: T(150),
+        easing: 'ease-out',
+      });
+    }
+  };
+  if (instant() || fromRect.width < 2 || toRect.width < 2) {
+    reveal();
+    return Promise.resolve();
+  }
+  const w = fromRect.width;
+  const h = fromRect.height;
+  const el = document.createElement('div');
+  el.className = 'fx-tile thrown';
+  el.style.width = w + 'px';
+  el.style.height = h + 'px';
+  el.innerHTML = html;
+  $('#fx').appendChild(el);
+  const ax = fromRect.left + w / 2;
+  const ay = fromRect.top + h / 2;
+  const bx = toRect.left + toRect.width / 2;
+  const by = toRect.top + toRect.height / 2;
+  const dist = Math.hypot(bx - ax, by - ay);
+  const cx = (ax + bx) / 2;
+  const cy = Math.min(ay, by) - Math.max(lift, Math.min(170, dist * arc));
+  const s1 = toRect.width / w;
+  const dir = bx >= ax ? 1 : -1;
+  const frames = [];
+  for (let i = 0, N = 22; i <= N; i++) {
+    const t = i / N;
+    const u = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // ease in and out along the curve
+    const x = (1 - u) * (1 - u) * ax + 2 * (1 - u) * u * cx + u * u * bx;
+    const y = (1 - u) * (1 - u) * ay + 2 * (1 - u) * u * cy + u * u * by;
+    const k = Math.sin(Math.PI * u);
+    const sc = (1 + (s1 - 1) * u) * (1 + 0.12 * k);
+    frames.push({
+      offset: t,
+      transform: `translate(${(x - w / 2).toFixed(1)}px, ${(y - h / 2).toFixed(1)}px) rotate(${(dir * tilt * k).toFixed(2)}deg) scale(${sc.toFixed(3)})`,
+    });
+  }
+  // a longer throw takes a little longer, as it would
+  const anim = el.animate(frames, {
+    duration: T(dur * (0.85 + Math.min(0.45, dist / 1400))),
+    delay: T(delay),
+    easing: 'linear',
+    fill: 'both',
+  });
+  return anim.finished
+    .then(() => {
+      el.remove();
+      reveal();
+    })
+    .catch(() => el.remove());
+}
+
+// A square the size of `like`, centred on `rect`: where a flight from a chip or
+// a corner starts, so the tile is a tile from the first frame.
+function squareAt(rect, like) {
+  const s = like.width * 0.6;
+  return { left: rect.left + rect.width / 2 - s / 2, top: rect.top + rect.height / 2 - s / 2, width: s, height: s };
+}
+
+// Craftspeople leaving the board under ?fair: they walk off and fade where they
+// stood, rather than flying to a hidden corner.
+function walkOff(rect, html, { delay = 0, dx = 30, dy = -6, rot = 0 } = {}) {
+  if (instant() || rect.width < 2) return Promise.resolve();
+  const el = document.createElement('div');
+  el.className = 'fx-tile';
+  el.style.width = rect.width + 'px';
+  el.style.height = rect.height + 'px';
+  el.innerHTML = html;
+  $('#fx').appendChild(el);
+  const at = `translate(${rect.left}px, ${rect.top}px)`;
+  const anim = el.animate(
+    [
+      { transform: at, opacity: 1 },
+      { transform: `${at} translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(.9)`, opacity: 0 },
+    ],
+    { duration: T(300), delay: T(delay), easing: 'ease-in', fill: 'both' }
   );
   return anim.finished.then(() => el.remove()).catch(() => el.remove());
 }
@@ -388,6 +489,12 @@ function banner(html, cls = '') {
   void el.offsetWidth;
   el.innerHTML = html;
   el.classList.add('show');
+  if (FAIR) {
+    // Under ?fair the board waits for the placard to go: a month's opening or
+    // the displays going up should read as a beat, not happen under the words.
+    bannerTimer = setTimeout(() => el.classList.remove('show'), T(1150));
+    return sleep(T(1180));
+  }
   bannerTimer = setTimeout(() => el.classList.remove('show'), T(1600));
   return sleep(T(650));
 }
@@ -459,7 +566,7 @@ async function animatePhaseA(before, interim, move) {
   const bBoard = before.boards[mover];
   const flights = [];
   let flightNo = 0;
-  const stag = () => ({ delay: flightNo++ * 45 });
+  const stag = () => ({ delay: flightNo++ * (FAIR ? 70 : 45) });
 
   // Crew arrivals: crews gather right to left, so the new hands are the
   // leftmost of the occupied block.
@@ -496,9 +603,17 @@ async function animatePhaseA(before, interim, move) {
     if (inner.classList) inner.classList.add('pre');
     const from = a.token ? tokenRect : takenRects[takenIdx++] || takenRects[0];
     flights.push(
-      fly(from, a.el.getBoundingClientRect(), a.html, { dur: a.thud ? 480 : 420, ...stag() })
+      fly(from, a.el.getBoundingClientRect(), a.html, {
+        dur: a.thud ? 480 : 420,
+        ...stag(),
+        land: inner.classList ? inner : null,
+      })
     );
   }
+  // Under ?fair the ones passed over stay standing at the agency until the
+  // hire has gone, then make for the gate.
+  let spill = 0;
+  const spillAt = () => ({ delay: 300 + spill++ * 55, arc: 0.16, tilt: 3 });
 
   // Whoever wasn't hired spills and scatters out to the gate, where a rival
   // can take them.
@@ -508,7 +623,9 @@ async function animatePhaseA(before, interim, move) {
     const newOnes = targets.slice(targets.length - delta);
     newOnes.forEach((t, k) => {
       t.classList.add('pre');
-      flights.push(fly(rects[k] || rects[0], t.getBoundingClientRect(), tileHTML(Number(kind)), stag()));
+      flights.push(
+        fly(rects[k] || rects[0], t.getBoundingClientRect(), tileHTML(Number(kind)), FAIR ? { ...spillAt(), land: t } : stag())
+      );
     });
   }
 
@@ -553,6 +670,8 @@ async function animateResolution(interim, final) {
 
       await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.kind), {
         dur: 460,
+        arc: 0.45,
+        tilt: 0,
       });
       target.innerHTML = tileHTML(t.kind);
       target.classList.add('filled', 'landed');
@@ -570,11 +689,13 @@ async function animateResolution(interim, final) {
         const drainRect = $('#drain').getBoundingClientRect();
         cells.slice(0, -1).forEach((cell, k) => {
           if (cell.classList.contains('occ')) {
-            fly(cell.getBoundingClientRect(), drainRect, tileHTML(t.kind), {
-              dur: 380,
-              delay: k * 40,
-              lift: 10,
-            });
+            if (FAIR) walkOff(cell.getBoundingClientRect(), tileHTML(t.kind), { delay: 80 + k * 45, dx: -26 });
+            else
+              fly(cell.getBoundingClientRect(), drainRect, tileHTML(t.kind), {
+                dur: 380,
+                delay: k * 40,
+                lift: 10,
+              });
           }
         });
       }
@@ -594,16 +715,24 @@ async function animateResolution(interim, final) {
       score = Math.max(0, score - pen);
       setScore(seat, score);
       if (!instant()) {
+        if (FAIR) {
+          idleEl.animate(
+            [{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }],
+            { duration: T(260), easing: 'ease-in-out' }
+          );
+        }
         const drainRect = $('#drain').getBoundingClientRect();
         $$('.icell .islot', idleEl).forEach((slot, i) => {
           const inner = slot.firstElementChild;
           if (!inner) return;
           if (!inner.classList.contains('token')) {
-            fly(slot.getBoundingClientRect(), drainRect, tileHTML(b.floor[i]), {
-              dur: 380,
-              delay: i * 40,
-              lift: 8,
-            });
+            if (FAIR) walkOff(slot.getBoundingClientRect(), tileHTML(b.floor[i]), { delay: 120 + i * 45, dx: 0, dy: 18, rot: i % 2 ? 9 : -9 });
+            else
+              fly(slot.getBoundingClientRect(), drainRect, tileHTML(b.floor[i]), {
+                dur: 380,
+                delay: i * 40,
+                lift: 8,
+              });
           }
           slot.innerHTML = '';
         });
@@ -668,7 +797,7 @@ async function animateResolution(interim, final) {
     $('#pool-chip').classList.add('wave');
     banner('<span class="r">New arrivals</span> — more hands reach the city');
     const waves = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7 && !FAIR; i++) {
       waves.push(fly(drainRect, poolRect, tileHTML(i % 5), { dur: 420, delay: i * 55, lift: 30 }));
     }
     await Promise.all(waves);
@@ -694,6 +823,26 @@ async function dealAnimation() {
   const poolRect = $('#pool-chip').getBoundingClientRect();
   const tiles = $$('#sources .tile');
   tiles.forEach((t) => t.classList.add('pre'));
+  if (FAIR) {
+    // A month's crowd arrives an agency at a time, four to a dais.
+    let slot = 0;
+    let last = null;
+    await Promise.all(
+      tiles.map((t) => {
+        const agency = Number(t.closest('.source').dataset.source);
+        slot = agency === last ? slot + 1 : 0;
+        last = agency;
+        const to = t.getBoundingClientRect();
+        return fly(squareAt(poolRect, to), to, tileHTML(Number(t.dataset.kind)), {
+          dur: 400,
+          delay: agency * 170 + slot * 60,
+          arc: 0.18,
+          land: t,
+        });
+      })
+    );
+    return;
+  }
   await Promise.all(
     tiles.map((t, i) =>
       fly(poolRect, t.getBoundingClientRect(), tileHTML(Number(t.dataset.kind)), {
@@ -811,10 +960,22 @@ function scheduleBot() {
   const game = G; // if the game is abandoned mid-think, stay quiet
   (async () => {
     $('#turn-label').innerHTML = `<b>${esc(BOT_NAME)}</b> is weighing options…`;
-    await beat(750);
+    await beat(FAIR ? 380 : 750); // under ?fair the pick is shown as well, below
     if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
     const m = greedyMove(G.cur);
     sel = { source: m.source, kind: m.kind };
+    if (FAIR && !instant()) {
+      // Under ?fair you see the Commissioner's hand the way you see your own:
+      // its pick lifts and its legal crews light, then only the crew it chose.
+      applySelection();
+      await beat(560);
+      if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
+      $$('.can-drop').forEach((e) => e.classList.remove('can-drop'));
+      const boardEl = $(`.board[data-seat="${BOT_SEAT}"]`);
+      (m.dest.type === 'line' ? $(`.crew[data-row="${m.dest.row}"]`, boardEl) : $('.idle', boardEl))?.classList.add('aim');
+      await beat(300);
+      if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
+    }
     await submitMove(m.dest);
   })();
 }
@@ -933,6 +1094,7 @@ function startGame(cfg) {
   (async () => {
     animating = true;
     hideDealTiles();
+    await coachOn('intro');
     await banner(monthSplashHTML(1), 'splash');
     await dealAnimation();
     animating = false;
@@ -2103,6 +2265,18 @@ if (!RELAY_URL) {
 // the two Science at the middle agency, to gallery 2; LESSON.second the lone
 // Machinery at the gate, to gallery 1.
 const LESSON_LINES = {
+  // The opening, before the first month (Ryan, 3 Oct: say what the game is
+  // about and what is at stake, the way Azul's rulebook opens, then "let's
+  // play a round together").
+  kicker: 'Learn to play',
+  intro: [
+    ["Welcome to the World's Fair", 'Chicago, 1893. Nations from across the globe are racing to finish their pavilions before the Fair opens. You are building yours, and the Commissioner across the way is building theirs.'],
+    ['This is your pavilion', 'Its 25 spaces wait for displays of art, science, machinery, electricity and agriculture. Every display you put up scores points, and displays that join up score more.'],
+    ['Craftspeople come to the agencies', 'Each month they arrive looking for work. You and the Commissioner take turns hiring them, and every crew you fill puts up one display.'],
+    ['Five months at least', 'A row of your pavilion takes at least five months to fill. The month someone completes one, construction stops, the Fair opens and the judges score every pavilion. The most points wins.'],
+  ],
+  disciplines: ['Art', 'Science', 'Machinery', 'Electricity', 'Agriculture'],
+  letsPlay: "Let's play the first month together",
   hire: ['Hire these two', 'You always hire every one of a color at an agency.'],
   place: ['Put them on this crew', 'It has room for exactly two.'],
   gate: ['The rest wait at the gate', 'Anyone can hire them from here later.'],
@@ -2169,8 +2343,11 @@ function makeCoach() {
     </svg>
     <div class="coach-hand"><div class="coach-poke">${HAND_SVG}</div></div>
     <div class="coach-card" role="status" aria-live="polite">
+      <p class="coach-kicker">${esc(L.kicker)}</p>
+      <div class="coach-art"></div>
       <p class="coach-line"></p>
       <p class="coach-sub"></p>
+      <p class="coach-dots"></p>
       <div class="coach-actions">
         <button type="button" class="coach-next"></button>
         <button type="button" class="coach-skip">${esc(L.skip)}</button>
@@ -2211,11 +2388,16 @@ function makeCoach() {
 
   // spot: what to light; aim: what the hand points at and a tap may land on
   // (the spot, unless said otherwise).
-  function show(key, { spot = null, aim = null, tap = false, next = false, lines = L[key] } = {}) {
+  // dim: darken the board even with nothing lit; page: [i, n] for the opening's
+  // cards, which are larger, centred when nothing is lit, and may carry art.
+  function show(key, { spot = null, aim = null, tap = false, next = false, lines = L[key], dim = false, page = null, art = '' } = {}) {
     if (release) release();
     release = null;
-    step = { key, spot, aim: aim || spot, tap, hold: tap ? 'tap' : next ? 'next' : 'free' };
+    step = { key, spot, aim: aim || spot, tap, dim, page, hold: tap ? 'tap' : next ? 'next' : 'free' };
     say(lines);
+    card.classList.toggle('intro', !!page);
+    $('.coach-art', card).innerHTML = art;
+    $('.coach-dots', card).innerHTML = page ? [...Array(page[1])].map((_, i) => `<i class="${i === page[0] ? 'on' : ''}"></i>`).join('') : '';
     nextBtn.hidden = !next;
     if (next) nextBtn.textContent = next === true ? L.next : next;
     skipBtn.hidden = key === 'bye';
@@ -2276,7 +2458,7 @@ function makeCoach() {
       scrolled = true;
       rs[0].e.scrollIntoView({ block: 'center', behavior: instant() ? 'auto' : 'smooth' });
     }
-    root.classList.toggle('lit', !!u);
+    root.classList.toggle('lit', !!u || step.dim);
     const key = rs.map((r) => [r.l, r.t, r.r, r.b].map(Math.round).join(',')).join(';');
     if (last.get('holes') !== key) {
       last.set('holes', key);
@@ -2314,6 +2496,7 @@ function makeCoach() {
     const m = 12;
     const cx = Math.min(Math.max(u ? (u.l + u.r) / 2 - cw / 2 : (vw - cw) / 2, m), vw - cw - m);
     const tries = [
+      ...(step.page && !u ? [[(vw - cw) / 2, Math.max(top, (vh - ch) / 2)]] : []),
       [(vw - cw) / 2, vh - ch - 16],
       [cx, u ? (hb ? Math.max(u.b, hb.b) : u.b) + 12 : 0],
       [cx, u ? (hb ? Math.min(u.t, hb.t) : u.t) - 12 - ch : 0],
@@ -2435,6 +2618,26 @@ function makeCoach() {
     hide();
   }
 
+  // The opening: the story and the stakes, a card at a time, with the board
+  // behind them lighting what each one is about; the agencies are still empty,
+  // and fill in front of the player straight after.
+  async function intro() {
+    const tiles = L.disciplines.map((d, k) => `<span class="coach-disc">${tileHTML(k)}<b>${esc(d)}</b></span>`).join('');
+    const spots = [null, () => [mine('.wall')], () => [$('#sources')], () => [$$('.board[data-seat="0"] .wrow')[0]]];
+    const n = L.intro.length;
+    for (let i = 0; i < n; i++) {
+      await show('intro', {
+        lines: L.intro[i],
+        spot: spots[i] || null,
+        dim: true,
+        page: [i, n],
+        art: i === 0 ? tiles : '',
+        next: i === n - 1 ? L.letsPlay : true,
+      });
+      if (!coach) return;
+    }
+  }
+
   async function resolving() {
     if (seen.has('build')) return;
     seen.add('build');
@@ -2462,6 +2665,7 @@ function makeCoach() {
 
   return {
     on(ev, d) {
+      if (ev === 'intro') return intro();
       if (ev === 'settled') return settled(d);
       if (ev === 'select') return Promise.resolve(select());
       if (ev === 'move') return Promise.resolve(moved(d));

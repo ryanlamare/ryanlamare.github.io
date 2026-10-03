@@ -514,6 +514,7 @@
   body.prepend(host);
   body.classList.add('fair');
   titleEl.classList.remove('hidden');
+  buildTitle();
   const svg = el('svg', { focusable: 'false' }, host);
 
   let W = 0, H = 0;
@@ -1685,6 +1686,67 @@
     raf = 0;
   }
 
+  /* ------------------------------------------------------------ the title
+
+     The word from index.html, set on a gentle arch in Abril Fatface: each
+     letter turns to follow the curve and sits on it by its own width, kerning
+     and all. The widths below are Abril's own for PAVILION (measured at 1000px,
+     in ems, so the arch is right before the face has even arrived); any other
+     word is measured as it renders. In the SVG a letter is drawn five times
+     over: a solid shade in six steps down and to the right (in screen space,
+     so the light falls the same way on every letter), the navy edge, the ivory
+     face, and at dusk a glow and a row of bulbs along its outline. */
+
+  function buildTitle() {
+    const holder = titleEl.querySelector('.title-word');
+    if (!holder) return;
+    const word = (holder.dataset.word || holder.textContent).trim();
+    holder.dataset.word = word;
+    let prefix = word === 'PAVILION' ? [0, 0.634, 1.218, 1.759, 2.114, 2.71, 3.065, 3.813, 4.483] : null;
+    if (!prefix) {
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = '1000px "Abril Fatface", Didot, Georgia, serif';
+      prefix = [...Array(word.length + 1)].map((_, i) => c.measureText(word.slice(0, i)).width / 1000);
+    }
+    const F = 100, n = word.length, track = 0.03 * F, cap = 0.71 * F;
+    const total = prefix[n] * F + (n - 1) * track;
+    const R = total / 0.7;                                  // the arch spans about 40 degrees
+    const shade = [1.15, 1.45], steps = 6, pad = 13;
+    const L = [];
+    for (let i = 0; i < n; i++) {
+      const sMid = (prefix[i] + prefix[i + 1]) / 2 * F + i * track - total / 2;
+      const a = sMid / R, adv = (prefix[i + 1] - prefix[i]) * F;
+      L.push({ ch: word[i], a, adv, x: R * Math.sin(a), y: R * (1 - Math.cos(a)) });
+    }
+    // the drawing's own bounds: each letter's box turned with it, plus the shade and the bulbs' glow
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const l of L) {
+      for (const [px, py] of [[-l.adv / 2, -cap], [l.adv / 2, -cap], [-l.adv / 2, 2], [l.adv / 2, 2]]) {
+        const X = l.x + px * Math.cos(l.a) - py * Math.sin(l.a), Y = l.y + px * Math.sin(l.a) + py * Math.cos(l.a);
+        x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+      }
+    }
+    x0 -= pad; y0 -= pad; x1 += pad + shade[0] * steps; y1 += pad + shade[1] * steps;
+    const svgT = el('svg', { viewBox: `${x0.toFixed(1)} ${y0.toFixed(1)} ${(x1 - x0).toFixed(1)} ${(y1 - y0).toFixed(1)}`, focusable: 'false' });
+    const defs = el('defs', null, svgT);
+    const blur = el('filter', { id: 'title-glow', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs);
+    el('feGaussianBlur', { stdDeviation: 3.2 }, blur);
+    L.forEach((l, i) => {
+      const t = el('text', { id: 'title-l' + i, x: 0, y: 0, 'text-anchor': 'middle', transform: `translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${(l.a * 57.2958).toFixed(2)})` }, defs);
+      t.textContent = l.ch;
+    });
+    L.forEach((l, i) => {
+      const g = el('g', { class: 'tl', style: `--i:${i}` }, svgT);
+      for (let k = steps; k >= 1; k--) el('use', { href: '#title-l' + i, class: 'sh', transform: `translate(${(shade[0] * k).toFixed(2)} ${(shade[1] * k).toFixed(2)})` }, g);
+      el('use', { href: '#title-l' + i, class: 'edge' }, g);
+      el('use', { href: '#title-l' + i, class: 'face' }, g);
+      el('use', { href: '#title-l' + i, class: 'glow', filter: 'url(#title-glow)' }, g);
+      el('use', { href: '#title-l' + i, class: 'bulbs' }, g);
+    });
+    holder.textContent = '';
+    holder.appendChild(svgT);
+  }
+
   /* ------------------------------------------------- the front door's states
 
      title: the Fair, the word, the button. menu: the setup card over a dimmed
@@ -1789,10 +1851,10 @@
   function vStart() { vStop(); vBuild(); if (!STILL) vTimer = setInterval(vStep, 560); }
   function vStop() { clearInterval(vTimer); vTimer = 0; }
 
-  // the title's tiles spin when clicked, and a click on the sky sends up a firework
+  // the title's letters jig when clicked, and a click on the sky sends up a firework
   titleEl.querySelectorAll('.tl').forEach(t => {
-    t.addEventListener('click', () => { t.classList.remove('spin'); void t.offsetWidth; t.classList.add('spin'); });
-    t.addEventListener('animationend', e => { if (e.animationName === 'fair-spin') t.classList.remove('spin'); });
+    t.addEventListener('click', () => { t.classList.remove('spin'); void t.getBoundingClientRect(); t.classList.add('spin'); });
+    t.addEventListener('animationend', e => { if (e.animationName === 'fair-letter-jig') t.classList.remove('spin'); });
   });
   host.addEventListener('click', e => { if (body.dataset.front === 'title' && world && world.fireAt) world.fireAt(e.clientX, e.clientY); });
 

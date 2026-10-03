@@ -1245,15 +1245,19 @@ Isotype** (Isotype is 1920s Vienna, and this is a game anyone can play, not the
 teaching brand); the specs need not constrain it. The Midway's "villages" still
 stay out, for the reason in *The register*; the rest of the Midway is in.
 
-- **The title screen.** The Fair fills the window. PAVILION is set as eight
-  tiles in the logo's colour pairs (Machinery's black sits it out, as in the
-  logo), arched like a dome (Ryan, later on 3 Oct: larger, "dome shaped", and
-  minimal text), which land one by one like displays going up and light as they
-  land; a light runs along the word now and then, and at night the tiles glow
-  with the illumination. Under the arch's crown, one button, **PLAY**, which
-  opens the menu; Enter does the same. On a phone the button sits below the
-  arch. The tagline ribbon and the records link came off the title the same day
-  (the card carries both).
+- **The title screen.** The Fair fills the window. PAVILION is set in **Abril
+  Fatface**, an 1890s fat face, on a gentle arch (Ryan, 3 Oct: larger, "dome
+  shaped", minimal text; then letters rather than tiles, which read as Scrabble,
+  tilted their end letters 40 degrees and made a second logo beside the card's).
+  **One colour, not the logo's pairs** (his call to make, and made): ivory with
+  a navy edge and a solid navy shade by day, the White City's own palette, which
+  leaves the colour to the scene; at dusk every letter's outline lights up as a
+  row of bulbs, a letter at a time, the way the Fair outlined its buildings, and
+  a glow runs along them now and then. The letters drop in one by one when the
+  page opens and jig when clicked. Under the word, one button, **PLAY**, which
+  opens the menu; Enter does the same. The tagline ribbon and the records link
+  came off the title (the card carries both). The face was picked on a specimen
+  plate of twelve over the real scene by day, at dusk and at night.
 - **The menu.** The setup card, framed like a bill of the Fair (a double rule,
   corner ornaments, red-square headings, a start button with a shine), drops in
   over a dimmed Fair under the word when it fits, its parts arriving in turn. On
@@ -1304,8 +1308,14 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   play**.
 - **Learn to play** (Ryan: not a page of rules, but "a scripted tutorial like
   they do in video games, with highlights for 'grab these tiles' and 'put them
-  here'"; show, don't tell). It replaced a six-step text panel the same day. The
-  button starts a coached first game against the Commissioner on the real board:
+  here'"; show, don't tell). It replaced a six-step text panel the same day. It
+  opens on four cards over the empty board (Ryan, same evening: say what the
+  game is about and what is at stake, the way Azul's rulebook opens): the Fair
+  and the race to finish, with the five disciplines; your pavilion, lit; the
+  agencies, lit, which then fill in front of you; and the stakes (a row takes at
+  least five months, the month someone completes one the Fair opens, most
+  points wins), ending on **Let's play the first month together**. Then the
+  button's coached first game against the Commissioner on the real board:
   the board dims, light falls on what to tap, a Victorian printer's pointing
   hand (the manicule) taps at it, and a card at the foot of the screen says one
   line. Every move is a real move through `submitMove`/`playMove`. The deal is
@@ -1324,7 +1334,36 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   tutorial. **Every line it says is in `LESSON_LINES`: Claude's draft, for Ryan
   to change.** Practice games never record, and neither does this one.
 - **Small delights.** On the title screen a click on the sky sends up a firework
-  where you clicked, and a click on a title tile spins it.
+  where you clicked, and a click on a title letter makes it jig.
+- **The game in the Fair's dress** (Ryan, 3 Oct: the game should look as good as
+  the front door; the motion felt choppy and too quick, the graphics plain, the
+  fonts weak). Same board, same rules, same places, and every punch-list
+  decision still holds: a border means hireable, an unbuilt space is its own
+  colour faded, the crews sit level with their galleries, the token is not a
+  tile, agencies and the gate carry no names. The dress: the agencies are the
+  promenade's striped daises (round where there is room, rounded squares on a
+  phone, to keep the tiles at touch size); the gate an arched iron gateway; each
+  pavilion a stone facade of arched bays under a frieze of the five
+  disciplines; the crews stand on scaffold planks that step down like the
+  staging they are; enamel tiles; a choice and its legal crews glow gold; the
+  month on a navy plaque; names, scores (navy medallions), placards and the
+  judges' certificate in Abril Fatface; the board's words in **Libre
+  Franklin**, after Franklin Gothic; a faint White City skyline along the foot
+  of the screen (`fair-skyline.svg`). This is the period-type decision *The
+  copy-and-art pass* deferred: both faces are OFL and served from `fonts/`, so
+  no phone waits on Google (the reason that pass gave for installed faces only).
+  The motion: a tile now rides a real curve, eases out and in, lifts and tilts a
+  little with the throw and lands exactly on its cell, which settles under it.
+  The old flight went up one straight line and down another, with a corner at
+  the top, and scaled about the wrong point, so it landed a few pixels off and
+  jumped: that was the chop. A hire reads in order (the hired go first, the rest
+  wait at the agency and then make for the gate); the Commissioner shows its
+  pick and then the crew it chose before it moves; a month's crowd arrives an
+  agency at a time; placards hold the board until they have gone; at the
+  month's end the leftover crew walk off and the idle row shudders. Measured at
+  60 fps in a headless laptop browser. `--tempo` is unchanged (2).
+  `FAIR` in `ui.js` and `body.fair` in `style.css` keep all of it on `?fair`;
+  the plain URL plays exactly as before.
 - **Performance.** While the menu or lobby is open the dimmed Fair moves at half
   the frame rate, and it holds still for the 0.75 s a card takes to arrive. On a
   machine averaging under ~33 fps after five seconds it drops to every other frame.

@@ -4,6 +4,15 @@
    prefers-reduced-motion fallback lives in ui.js, which skips the flights
    entirely rather than easing them. */
 
+/* Two faces for the Fair (3 Oct 2026, the decoration pass PAVILION.md kept
+   deferring): Abril Fatface, an 1890s fat face, for the title and the big
+   moments; Libre Franklin, after Franklin Gothic, for the board's words. Both
+   OFL, both served from fonts/ beside this file and never from Google, so a
+   phone waits on nothing: the words draw in the stack below them at once and
+   change face when the file lands. Only ?fair uses them so far. */
+@font-face { font-family: "Abril Fatface"; src: url("./fonts/AbrilFatface.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Libre Franklin"; src: url("./fonts/LibreFranklin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+
 :root {
   /* Surfaces and ink are the site's own Arntz/Isotype palette, copied from
      /brand.css rather than linked: brand.css also pulls two webfonts, and a
@@ -992,56 +1001,46 @@ body.fair #setup > .setup-card, body.fair #lobby > .setup-card { position: relat
 body.fair[data-front="title"] #setup > .setup-card { visibility: hidden; }
 body.fair.fair-roomy[data-front="menu"] #setup, body.fair.fair-roomy[data-front="lobby"] #lobby { align-items: start; padding-top: var(--card-top, 18px); }
 
-/* the title: eight tiles arched like a dome, and PLAY under the crown (Ryan, 3 Oct:
-   "larger and maybe like dome shaped", no tagline, just PLAY). Each tile sits on one
-   circle: its wrapper turns 11 degrees per tile and steps out by the radius, so the
-   tile itself stays free for the landing, the glow, the hover and the spin. The
-   numbers are the circle's, in tile widths: the radius is the tile pitch (1.12)
-   over the step in radians, and the box is the arch's own bounding box. */
+/* the title: PAVILION in Abril Fatface on a gentle arch, ivory with a navy edge
+   and a solid shade by day; at dusk every letter's outline lights up as a row
+   of bulbs, the way the Fair outlined its buildings, a letter at a time, and a
+   glow runs along them now and then (Ryan, 3 Oct: letters, not tiles; one
+   colour that lights up with the scene). scene.js sets the letters on the arch
+   in an SVG; the sizes here are the SVG's own units, 100 to the em. */
 #title { position: fixed; left: 0; right: 0; top: 0; z-index: 2; display: flex; flex-direction: column; align-items: center;
   padding: var(--title-top, 5vh) 16px 0; pointer-events: none;
-  --tt: min(6.9vw, 11.5vh, 124px); }
-@media (max-aspect-ratio: 21/20) { #title { --tt: min(calc((100vw - 32px) / 8.8), 8vh, 76px); } }
+  --tw: min(66vw, 1040px, 125vh); }
+@media (max-aspect-ratio: 21/20) { #title { --tw: min(calc(100vw - 28px), 620px, 60vh); padding-top: 4vh; } }
 #title .title-arch { display: flex; flex-direction: column; align-items: center; }
-#title .title-logo { position: relative; width: calc(var(--tt) * 8.8); height: calc(var(--tt) * 2.52); margin: 0; pointer-events: none; }
-#title .tw {
-  position: absolute; left: calc(50% - var(--tt) / 2); top: calc(var(--tt) * 5.873);
-  width: var(--tt); height: var(--tt); perspective: 700px;
-  transform: rotate(calc((var(--i) - 3.5) * 11deg)) translateY(calc(var(--tt) * -5.834));
-}
-#title .tl {
-  position: relative; overflow: hidden; display: grid; place-items: center;
-  width: var(--tt); height: var(--tt); padding-top: calc(var(--tt) * .07); border-radius: calc(var(--tt) * .18);
-  font-family: var(--display); font-weight: 400; font-size: calc(var(--tt) * .66); line-height: 1; color: #F2ECDC;
-  background-color: var(--c); background-image: var(--grain); background-blend-mode: soft-light;
-  border: 2px solid var(--b);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .22), inset 0 -3px 0 rgba(0, 0, 0, .2), 0 8px 18px rgba(10, 12, 28, .32);
-  transition: box-shadow 1.6s ease;
-}
-#title .tl.k0 { --c: var(--art); --b: #6B2C1B; --g: rgba(255, 156, 118, .85); }
-#title .tl.k1 { --c: var(--sci); --b: #24486A; --g: rgba(156, 208, 247, .85); }
-#title .tl.k3 { --c: var(--ele); --b: #9E7C13; --g: rgba(255, 224, 106, .85); color: #2A2206; }
-#title .tl.k4 { --c: var(--nat); --b: #2A6A3A; --g: rgba(155, 232, 172, .85); }
-#title.nightlit .tl { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .22), inset 0 -3px 0 rgba(0, 0, 0, .2), 0 0 calc(var(--tt) * .4) calc(var(--tt) * .05) var(--g); }
-/* each tile lands like a display going up, and lights as it lands */
-#title.intro .tl { animation: fair-tile-in .75s cubic-bezier(.2, 1.35, .35, 1) both; animation-delay: calc(.25s + var(--i) * .09s); }
-@keyframes fair-tile-in { from { opacity: 0; transform: translateY(calc(var(--tt) * -.9)) rotateX(80deg) scale(.7); } to { opacity: 1; transform: none; } }
-#title .tl::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 72%); opacity: 0; pointer-events: none; }
-#title.intro .tl::after { animation: fair-tile-flash .9s ease-out both; animation-delay: calc(.55s + var(--i) * .09s); }
-@keyframes fair-tile-flash { 0% { opacity: 0; } 22% { opacity: .9; } 100% { opacity: 0; } }
-/* and now and then a light runs along the word */
-#title .tl::before { content: ''; position: absolute; top: -20%; bottom: -20%; left: -70%; width: 45%; pointer-events: none;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .42), transparent);
-  animation: fair-shimmer 7s ease-in-out infinite; animation-delay: calc(2.6s + var(--i) * .07s); }
-@keyframes fair-shimmer { 0%, 84% { transform: translateX(0); } 96%, 100% { transform: translateX(480%); } }
+#title .title-logo { margin: 0; pointer-events: none; line-height: 0; }
+#title .title-word { display: block; font: 400 100px/1 "Abril Fatface", Didot, "Bodoni 72", Georgia, serif; }
+#title .title-word svg { display: block; width: var(--tw); height: auto; overflow: visible; }
+#title .tl { pointer-events: auto; cursor: pointer; transform-box: fill-box; transform-origin: 50% 70%; transition: transform .25s ease; }
+#title .sh { fill: #1C2747; }
+#title .edge { fill: #1C2747; stroke: #1C2747; stroke-width: 7; stroke-linejoin: round; }
+#title .face { fill: #F8F2E4; }
+#title .bulbs, #title .glow { fill: none; stroke-linecap: round; stroke-dasharray: 0 10.6; opacity: 0; transition: opacity .6s ease; transition-delay: calc(var(--i) * .14s); }
+#title .bulbs { stroke: #FFF7DE; stroke-width: 4.6; }
+#title .glow { stroke: #FFB938; stroke-width: 11; }
+#title.nightlit .bulbs { opacity: 1; }
+#title.nightlit .glow { opacity: .85; animation: fair-bulb-wave 7s ease-in-out infinite; animation-delay: calc(2s + var(--i) * .16s); }
+@keyframes fair-bulb-wave { 0%, 78%, 100% { opacity: .78; } 86% { opacity: 1; stroke-width: 15; } }
+#title.nightlit .face { fill: #FFF3D2; }
+/* each letter drops into place like a sign being hung, and the shade settles under it */
+#title.intro .tl { animation: fair-letter-in .9s cubic-bezier(.2, 1.3, .35, 1) both; animation-delay: calc(.2s + var(--i) * .085s); }
+@keyframes fair-letter-in { from { opacity: 0; transform: translateY(-60px) scale(.88); } to { opacity: 1; transform: none; } }
+/* a letter can be poked: it lifts under the pointer and jigs when clicked */
+#title:not(.intro) .tl:hover { transform: translateY(-7px); }
+#title .tl.spin { animation: fair-letter-jig .7s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes fair-letter-jig { 0% { transform: translateY(-10px) rotate(-9deg); } 35% { transform: translateY(-4px) rotate(7deg); } 65% { transform: rotate(-3deg); } 100% { transform: none; } }
 
 #title .title-play {
-  position: relative; pointer-events: auto; margin-top: calc(var(--tt) * -1.06);
-  font: 800 clamp(17px, calc(var(--tt) * .25), 30px)/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  position: relative; pointer-events: auto; margin-top: clamp(10px, 2.2vh, 26px);
+  font: 800 clamp(17px, calc(var(--tw) * .024), 26px)/1 "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   letter-spacing: .2em; text-transform: uppercase; color: #FFF8EC; background: var(--red); border: 0; border-radius: 999px; padding: .78em 2em .78em 2.2em;
   box-shadow: 0 5px 0 #8E1424, 0 14px 30px rgba(10, 12, 28, .38); cursor: pointer; transition: transform .12s ease, box-shadow .12s ease;
 }
-@media (max-aspect-ratio: 21/20) { #title .title-play { margin-top: calc(var(--tt) * .55); font-size: 20px; padding: .8em 2.2em .8em 2.4em; } }
+@media (max-aspect-ratio: 21/20) { #title .title-play { margin-top: 3vh; font-size: 20px; padding: .8em 2.2em .8em 2.4em; } }
 #title .title-play::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 0 rgba(206, 30, 50, .55); animation: fair-ring 2.6s ease-out infinite 2.4s; pointer-events: none; }
 @keyframes fair-ring { 0% { box-shadow: 0 0 0 0 rgba(255, 170, 140, .45); } 70%, 100% { box-shadow: 0 0 0 16px rgba(255, 170, 140, 0); } }
 #title .title-play:hover { transform: translateY(-1px); }
@@ -1134,6 +1133,7 @@ body.fair #setup .pitch .tagline + .sub > b:first-child {
 .pitch-scene .drop { animation: fair-drop .6s cubic-bezier(.3, 1.35, .5, 1) both; }
 @keyframes fair-drop { from { transform: translateY(var(--dy, -80px)); opacity: .15; } to { transform: none; opacity: 1; } }
 .pitch-scene .flash { animation: fair-tile-flash .7s ease-out both; }
+@keyframes fair-tile-flash { 0% { opacity: 0; } 22% { opacity: .9; } 100% { opacity: 0; } }
 .pitch-scene .won .bayon { animation: fair-won 1.4s ease-in-out infinite alternate; }
 @keyframes fair-won { from { filter: brightness(1); } to { filter: brightness(1.35) drop-shadow(0 0 3px rgba(255, 240, 180, .9)); } }
 
@@ -1156,12 +1156,6 @@ body.fair .learn-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rg
   body.fair #setup > .setup-card, body.fair #lobby > .setup-card { background-attachment: local; }
 }
 
-/* the title's tiles can be played with: they lift under the pointer and spin when clicked */
-#title .tl { pointer-events: auto; cursor: pointer; transition: transform .2s ease, box-shadow 1.6s ease; }
-#title:not(.intro) .tl:hover { transform: translateY(-6px) rotate(-3deg); }
-#title:not(.intro) .tw:nth-child(even) .tl:hover { transform: translateY(-6px) rotate(3deg); }
-#title .tl.spin { animation: fair-spin .75s cubic-bezier(.3, 1.3, .5, 1); }
-@keyframes fair-spin { from { transform: rotateY(0); } to { transform: rotateY(360deg); } }
 /* and the sky takes clicks on the title screen: a firework goes up where you click */
 body.fair[data-front="title"] #fair { pointer-events: auto; }
 
@@ -1213,6 +1207,203 @@ body.fair[data-front="title"] #fair { pointer-events: auto; }
   #fair *, #title, #title *, body.fair .setup-card, body.fair .setup-card * { animation: none !important; transition: none !important; }
 }
 
+/* -------------------------------------- the game in the Fair's dress (?fair)
+   Ryan (3 Oct): the game itself should look as good as the front door: the
+   fonts, the graphics and the motion. Same board, same rules, same places for
+   everything, and every decision the punch lists made still holds (a border
+   means hireable, an unbuilt space is its own colour faded, crews sit level
+   with their galleries, the token is not a tile). What changes is the dress:
+   the agencies are the Fair's striped daises (round where there is room), the
+   gate an arched iron gateway, your pavilion a stone facade whose spaces are
+   arched bays under a frieze of the five disciplines, the crews stand on
+   scaffold planks, the tiles are enamel, a choice glows gold, and the big
+   moments are set in Abril Fatface. All of it hangs off body.fair. */
+body.fair { font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body.fair #game { position: relative; }
+body.fair #game::after {
+  content: ''; position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none;
+  height: clamp(90px, 17vh, 180px); opacity: .075;
+  background: url("./fair-skyline.svg") left bottom / auto 100% repeat-x;
+}
+body.fair #table { position: relative; z-index: 1; }
+
+/* the top bar: a programme's header, the month on a navy plaque */
+body.fair #topbar {
+  padding: 10px 20px; background: #F5EFE1; border-bottom: 0;
+  box-shadow: 0 1px 0 #CDBFA6, 0 4px 0 -1px #F5EFE1, 0 5px 0 -1px rgba(43, 38, 32, .22), 0 12px 26px -12px rgba(27, 28, 25, .25);
+}
+body.fair .wk-badge {
+  font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 21px; letter-spacing: .02em; line-height: 1;
+  background: #1C2747; color: #F8F2E4; padding: 6px 14px 7px; border-radius: 8px;
+  box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 3px rgba(232, 184, 75, .75);
+}
+body.fair #phase-label { font-size: 11.5px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; color: var(--red); }
+body.fair #turn-label { font-size: 15px; }
+body.fair .chip { font-size: 12.5px; background: #FBF7EE; }
+body.fair .ghost-btn { font-weight: 700; }
+
+/* the agencies: striped daises, as on the promenade */
+body.fair #market { gap: 26px; margin-bottom: 26px; }
+body.fair #sources { gap: 14px; }
+body.fair .source {
+  padding: 7px; border: 7px solid transparent; border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 40%, #FDFAF2, #EFE6D2 75%) padding-box,
+    repeating-conic-gradient(from -6deg, #C42B3B 0 12deg, #F6EEDD 12deg 24deg) border-box;
+  box-shadow: 0 0 0 1.5px rgba(43, 38, 32, .3), inset 0 0 0 1px rgba(43, 38, 32, .14), inset 0 3px 8px rgba(27, 28, 25, .08), 0 12px 18px -8px rgba(27, 28, 25, .4);
+  transition: opacity .5s ease, filter .5s ease;
+}
+body.fair .source.empty { opacity: .4; filter: saturate(.35); }
+@media (min-width: 941px) {
+  body.fair .source {
+    --dais: calc((var(--tile) * 2 + 6px) * 1.36);
+    width: calc(var(--dais) + 14px); height: calc(var(--dais) + 14px);
+    padding: 0; border-radius: 50%; display: grid; place-items: center;
+  }
+}
+
+/* the gate: an arched iron gateway, with no name on it */
+body.fair #pool-wrap {
+  border: 0; padding: 24px 18px 16px;
+  border-radius: 130px 130px 18px 18px / 58px 58px 18px 18px;
+  background: linear-gradient(#F0E8D6, #E6DBC3);
+  box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 5px #F0E8D6, inset 0 0 0 6px rgba(201, 162, 39, .85), 0 12px 20px -10px rgba(27, 28, 25, .35);
+}
+body.fair #pool { justify-content: center; }
+
+/* tiles: enamel, lit from above */
+body.fair .tile {
+  border-radius: 10px;
+  background-image: linear-gradient(165deg, rgba(255, 255, 255, .24), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, .1)), var(--grain);
+  background-blend-mode: normal, soft-light;
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 3px 6px rgba(27, 28, 25, .28);
+}
+body.fair button.tile:hover { transform: translateY(-4px); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 9px 14px rgba(27, 28, 25, .3); }
+body.fair .tile.sel {
+  transform: translateY(-6px) scale(1.08);
+  box-shadow: 0 0 0 3px #FBF6EA, 0 0 0 6px #E0A928, 0 0 18px 5px rgba(224, 169, 40, .5), 0 14px 20px rgba(27, 28, 25, .32);
+}
+body.fair .tile.dim { opacity: .38; }
+
+/* the boards: framed plates, the active one in red */
+body.fair #boards { gap: 22px; }
+body.fair .board {
+  background: #F7F1E4; border: 0; border-radius: 16px; padding: 14px 16px 16px;
+  box-shadow: inset 0 0 0 1px #CDBFA6, inset 0 0 0 6px #F7F1E4, inset 0 0 0 7px rgba(43, 38, 32, .16), 0 16px 32px -14px rgba(27, 28, 25, .35);
+}
+body.fair .board.active {
+  box-shadow: inset 0 0 0 2px var(--red), inset 0 0 0 6px #F7F1E4, inset 0 0 0 7px rgba(206, 30, 50, .3), 0 18px 36px -12px rgba(206, 30, 50, .35);
+}
+body.fair .board-head { align-items: center; margin-bottom: 16px; }
+body.fair .board-name { font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 23px; letter-spacing: .01em; }
+body.fair .score {
+  font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 25px; line-height: 1;
+  min-width: 48px; height: 48px; padding: 0 10px; border-radius: 999px; display: grid; place-items: center; text-align: center;
+  background: #1C2747; color: #F8F2E4; box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 3.5px rgba(232, 184, 75, .75), 0 3px 8px rgba(27, 28, 25, .25);
+}
+body.fair .score.bump { animation: fair-score-bump calc(.42s * var(--tempo, 1)) cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes fair-score-bump { 40% { transform: scale(1.28); background: var(--red); } }
+body.fair .clock { font-size: 15px; }
+
+/* your pavilion: a stone facade of arched bays under a frieze, level with the crews */
+body.fair .crews { padding-top: 8px; }
+body.fair .wall {
+  position: relative; padding: 8px 8px 9px; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, #F2EAD8, #E5D9BF);
+  box-shadow: inset 0 0 0 1.5px #D6C7A5, 0 3px 0 #D2C29F, 0 4px 0 #BFAE8A;
+}
+body.fair .wall::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -11px; height: 10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='10'%3E%3Cpath d='M0 .5H60M0 9.5H60' stroke='%23B9A985'/%3E%3Cg stroke='%232B2620' stroke-opacity='.35' stroke-width='.5'%3E%3Crect x='4' y='2' width='5' height='5' transform='rotate(45 6.5 4.5)' fill='%238E3E28'/%3E%3Crect x='16' y='2' width='5' height='5' transform='rotate(45 18.5 4.5)' fill='%2337658A'/%3E%3Crect x='28' y='2' width='5' height='5' transform='rotate(45 30.5 4.5)' fill='%231B1C19'/%3E%3Crect x='40' y='2' width='5' height='5' transform='rotate(45 42.5 4.5)' fill='%23C9A227'/%3E%3Crect x='52' y='2' width='5' height='5' transform='rotate(45 54.5 4.5)' fill='%233C8B51'/%3E%3C/g%3E%3C/svg%3E") left center / auto 10px repeat-x;
+}
+body.fair .wcell {
+  border-radius: 50% 50% 4px 4px / 46% 46% 4px 4px;
+  background: #E2D5B8; box-shadow: inset 0 2px 4px rgba(27, 28, 25, .2);
+}
+body.fair .wcell .tile { border-radius: inherit; }
+body.fair .wcell .tile.open { opacity: .3; box-shadow: none; }
+body.fair .wcell.filled .tile { box-shadow: 0 0 0 2px var(--ink), inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24); }
+body.fair .wcell.sweep { animation: fair-sweep calc(.5s * var(--tempo, 1)) ease; }
+@keyframes fair-sweep { 40% { box-shadow: 0 0 0 4px #E8B84B, 0 0 22px 8px rgba(232, 184, 75, .6); transform: scale(1.14); } }
+
+/* the crews stand on scaffold planks, which step down like the stage they are */
+body.fair .ccell { border-radius: 7px; background: #E6DAC0; box-shadow: inset 0 2px 4px rgba(27, 28, 25, .2); }
+body.fair .crew { position: relative; }
+body.fair .crew::after {
+  content: ''; position: absolute; left: 2px; right: 2px; bottom: -4px; height: 3px; border-radius: 2px;
+  background: linear-gradient(#BC9563, #8F6B45); opacity: .6; pointer-events: none;
+}
+
+/* the idle row: paving stones, the bill stamped under each */
+body.fair .islot { border-radius: 5px; background: #D8CAAB; box-shadow: inset 0 2px 3px rgba(27, 28, 25, .22); }
+body.fair .icell .pen { font-weight: 800; color: var(--red); opacity: .8; }
+
+/* where a hire can go: gold, breathing */
+body.fair .crew.can-drop, body.fair .idle.can-drop {
+  border-color: #E0A928; background: rgba(224, 169, 40, .16);
+  animation: fair-drop 1.4s ease-in-out infinite;
+}
+@keyframes fair-drop { 50% { border-color: rgba(224, 169, 40, .4); background: rgba(224, 169, 40, .05); } }
+body.fair .crew.can-drop:hover, body.fair .idle.can-drop:hover { background: rgba(224, 169, 40, .3); }
+/* the Commissioner's choice, shown before it is made */
+body.fair .crew.aim, body.fair .idle.aim { border-color: #E0A928; background: rgba(224, 169, 40, .28); animation: none; }
+
+/* a thrown tile carries its height in its shadow, and a display that lands flashes its bay */
+body.fair .fx-tile.thrown .tile, body.fair .fx-tile.thrown .token { box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 12px 18px rgba(27, 28, 25, .3); }
+body.fair .wcell.landed::after {
+  content: ''; position: absolute; inset: -3px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 3px #E8B84B, 0 0 20px 8px rgba(232, 184, 75, .65);
+  animation: fair-bay-flash calc(.55s * var(--tempo, 1)) ease-out forwards;
+}
+@keyframes fair-bay-flash { from { opacity: 1; transform: scale(.9); } to { opacity: 0; transform: scale(1.35); } }
+body.fair #banner.show { animation-duration: calc(1.15s * var(--tempo, 1)); }
+
+/* the big beats: a placard in the poster face, a navy one for the small news */
+body.fair #banner {
+  font-family: "Libre Franklin", -apple-system, sans-serif; background: #1C2747; color: #F8F2E4;
+  border-radius: 14px; box-shadow: inset 0 0 0 5px #1C2747, inset 0 0 0 6px rgba(232, 184, 75, .7), 0 26px 60px rgba(14, 16, 34, .45);
+}
+body.fair #banner.splash {
+  font-family: "Abril Fatface", var(--display); font-weight: 400; letter-spacing: .01em;
+  background: #F7F1E4; color: var(--ink); border: 0; padding: 26px 58px 30px;
+  box-shadow: inset 0 0 0 1px #CDBFA6, inset 0 0 0 9px #F7F1E4, inset 0 0 0 10px rgba(43, 38, 32, .3), 0 34px 90px rgba(14, 16, 34, .42);
+}
+body.fair #banner.splash.finale { background: #1C2747; color: #F8F2E4; box-shadow: inset 0 0 0 9px #1C2747, inset 0 0 0 10px rgba(232, 184, 75, .7), 0 34px 90px rgba(14, 16, 34, .5); }
+body.fair .popup {
+  font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 30px; letter-spacing: .01em;
+  text-shadow: 0 0 3px #FBF6EA, 0 0 3px #FBF6EA, 0 2px 0 #FBF6EA, 0 4px 12px rgba(27, 28, 25, .25);
+}
+body.fair .popup.pos { color: #2E6F3E; }
+
+/* the end: a certificate from the judges */
+body.fair #end-modal {
+  background: #F7F1E4; border-radius: 16px;
+  box-shadow: inset 0 0 0 1px #CDBFA6, inset 0 0 0 9px #F7F1E4, inset 0 0 0 10px rgba(43, 38, 32, .25), 0 40px 120px rgba(14, 16, 34, .5);
+}
+body.fair .whistle { color: var(--red); font-weight: 800; }
+body.fair .champion { font-family: "Abril Fatface", var(--display); font-weight: 400; }
+body.fair .champion.story { font-size: clamp(24px, 4.6vw, 32px); line-height: 1.18; }
+body.fair .final-table .total { font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 22px; }
+
+@media (max-width: 940px) {
+  body.fair #topbar { padding: 8px 12px; }
+  body.fair .wk-badge { font-size: 18px; padding: 5px 11px 6px; }
+  body.fair .board-name { font-size: 19px; }
+  body.fair .score { font-size: 21px; min-width: 40px; height: 40px; }
+  body.fair #market { gap: 16px; margin-bottom: 18px; }
+  body.fair #pool-wrap { border-radius: 90px 90px 16px 16px / 40px 40px 16px 16px; padding: 22px 14px 12px; }
+}
+@media (max-width: 480px) {
+  body.fair .wk-badge { font-size: 15px; padding: 4px 9px 5px; }
+  body.fair #phase-label { font-size: 12px; letter-spacing: 0; text-transform: none; }
+  body.fair .board-name { font-size: 17px; }
+  body.fair .score { font-size: 18px; min-width: 34px; height: 34px; padding: 0 7px; }
+  body.fair .source { padding: 5px; border-width: 6px; border-radius: 18px; }
+  body.fair .wall { padding: 6px 6px 7px; }
+  body.fair .crews { padding-top: 6px; }
+  body.fair .wall::before { top: -9px; height: 8px; background-size: auto 8px; }
+}
+
 /* ------------------------------------------- Learn to play (ui.js, the coach)
    A spotlight on the real board, the manicule pointing at what to tap, and a
    card with one line. The dim sits under the flights (#fx, 60) and the banner,
@@ -1247,18 +1438,33 @@ body.fair[data-front="title"] #fair { pointer-events: auto; }
 @keyframes coach-pop { from { opacity: 0; scale: .9; } to { opacity: 1; scale: 1; } }
 #coach .coach-card.nudge { animation: coach-nudge .42s ease both; }
 @keyframes coach-nudge { 20% { translate: -7px 0; } 40% { translate: 6px 0; } 60% { translate: -4px 0; } 80% { translate: 2px 0; } }
-#coach .coach-line { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; line-height: 1.1; }
-#coach .coach-sub { margin: 6px 0 0; font-size: 14.5px; line-height: 1.42; color: var(--muted); }
+#coach .coach-line { margin: 0; font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 24px; line-height: 1.1; letter-spacing: .005em; }
+#coach .coach-kicker { display: none; margin: 0 0 8px; font: 800 11px/1 "Libre Franklin", -apple-system, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--red); }
+#coach .coach-kicker::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 7px; vertical-align: 1px; background: var(--red); }
+#coach .coach-art:empty, #coach .coach-dots:empty { display: none; }
+#coach .coach-art { display: flex; justify-content: center; gap: 12px; margin: 2px 0 14px; }
+#coach .coach-disc { display: grid; justify-items: center; gap: 5px; --tile: 44px; }
+#coach .coach-disc b { font: 700 11px/1 "Libre Franklin", -apple-system, sans-serif; color: var(--muted); letter-spacing: .02em; }
+#coach .coach-dots { display: flex; gap: 6px; margin: 12px 0 0; }
+#coach .coach-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(43, 38, 32, .2); }
+#coach .coach-dots i.on { background: var(--red); }
+/* the opening's cards: larger, and the story's face */
+#coach .coach-card.intro { width: min(520px, calc(100vw - 24px)); padding: 22px 26px 18px; }
+#coach .coach-card.intro .coach-kicker { display: block; }
+#coach .coach-card.intro .coach-line { font-size: 32px; }
+#coach .coach-card.intro .coach-sub { font-size: 15.5px; line-height: 1.5; margin-top: 9px; }
+@media (max-width: 600px) { #coach .coach-card.intro .coach-line { font-size: 27px; } #coach .coach-disc { --tile: 38px; } #coach .coach-art { gap: 7px; } }
+#coach .coach-sub { margin: 6px 0 0; font-family: "Libre Franklin", -apple-system, sans-serif; font-size: 14.5px; line-height: 1.45; color: var(--muted); }
 #coach .coach-sub:empty { display: none; }
 #coach .coach-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
 #coach .coach-next {
   order: 2; margin-left: auto; padding: 10px 22px; border: 0; border-radius: 999px; cursor: pointer;
-  font: 800 15px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: .03em;
+  font: 800 15px/1 "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; letter-spacing: .03em;
   color: #FFF8EC; background: var(--red); box-shadow: 0 3px 0 #8E1424;
 }
 #coach .coach-next[hidden] { display: none; }
 #coach .coach-next:active { transform: translateY(2px); box-shadow: 0 1px 0 #8E1424; }
-#coach .coach-skip { order: 1; padding: 4px 0; border: 0; background: none; cursor: pointer; font-size: 12.5px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+#coach .coach-skip { order: 1; padding: 4px 0; border: 0; background: none; cursor: pointer; font-family: "Libre Franklin", -apple-system, sans-serif; font-size: 12.5px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 600px) {
   #coach .coach-line { font-size: 21px; }
   #coach .coach-sub { font-size: 14px; }
