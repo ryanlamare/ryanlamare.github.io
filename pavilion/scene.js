@@ -48,7 +48,9 @@
   const STILL = REDUCED || QS.has('still');
   const CYCLE = 84;                                   // seconds, midnight to midnight
   const atQ = parseFloat(QS.get('at'));
-  const START = Number.isFinite(atQ) ? ((atQ % 1) + 1) % 1 : (REDUCED ? 0.645 : 0.27);
+  // Late afternoon (Ryan, 3 Oct: most people click Play fast and would only see the day): the last
+  // hires in golden light, the lights on about 12 s in. Before ROUNDS_TO, or the daises open empty.
+  const START = Number.isFinite(atQ) ? ((atQ % 1) + 1) % 1 : (REDUCED ? 0.645 : 0.43);
 
   // The day, as fractions of the cycle.
   const SUNRISE = 0.045, SUNSET = 0.585;

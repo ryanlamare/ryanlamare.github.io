@@ -1280,7 +1280,9 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   pavilion's front, which is the board's 5×5 wall with its faint pattern, and
   the scaffolding comes down as it fills. Turns alternate between the two
   nations. A crew with nowhere to go stands idle beside its pavilion.
-- **The day.** 84 seconds, midnight to midnight. At dusk the illumination comes
+- **The day.** 84 seconds, midnight to midnight, opening in late afternoon so
+  the lights come on about 12 seconds in (Ryan, 3 Oct: most people click Play
+  quickly and would otherwise see only the day). At dusk the illumination comes
   on from the middle outward (bulbs along every cornice and dome, the Wheel's
   rims and cars, the floodlit statue, the fountain in colour, searchlights, the
   White City's lights on the water), then fireworks; at closing the lights go
