@@ -1235,20 +1235,37 @@ the design can fix it.
 ## The front door's Fair — a sample, 3 Oct 2026 (`scene.js`, only on `?fair`)
 
 Ryan asked for "a world in motion surrounding the game opening screen": the
-1893 Fair alive around the setup card, a day-to-night cycle, and the game's own
-story told in the picture. It is the decoration pass this memo deferred (*The
+1893 Fair alive, a day-to-night cycle, and the game's own story told in the
+picture. Then, the same day, for the front door to work like a video game's: the
+scene is the front page, PAVILION is the title, and a button opens the setup
+card with an animation. It is the decoration pass this memo deferred (*The
 Ferris Wheel*, last paragraph), done for the front door first. His calls on 3
 Oct: maximalism is right for a game's title screen; people in **1893 dress, not
 Isotype** (Isotype is 1920s Vienna, and this is a game anyone can play, not the
-teaching brand); and the specs need not constrain it. The Midway's "villages"
-still stay out, for the reason in *The register*; the rest of the Midway is in.
+teaching brand); the specs need not constrain it. The Midway's "villages" still
+stay out, for the reason in *The register*; the rest of the Midway is in.
 
-- **What it shows.** The White City along the top (the Administration dome,
-  the Electricity Building's spires, Diana on the Agricultural Building,
-  Machinery Hall's towers) clearing the card's top edge; the Ferris Wheel on the
-  Midway, with festoons and strollers; the Peristyle and the gilded Statue of the
-  Republic in the Grand Basin, an electric fountain, a gondola and a launch; the
-  Intramural Railway crossing behind the card; a captive balloon.
+- **The title screen.** The Fair fills the window. PAVILION is set as eight
+  tiles in the logo's colour pairs (Machinery's black sits it out, as in the
+  logo), which land one by one like displays going up and light as they land; a
+  light runs along the word now and then, and at night the tiles glow with the
+  illumination. Under it, the pitch's own line on a ribbon, and **Play a game**
+  (Ryan's phrase), which opens the menu; Enter does the same.
+- **The menu.** The setup card, framed like a bill of the Fair (a double rule,
+  corner ornaments, red-square headings, a start button with a shine), drops in
+  over a dimmed Fair under the word when it fits, its parts arriving in turn. On
+  a phone it is a sheet rising from the bottom. A ×, Esc, or a click on the Fair
+  goes back to the title. The card's own logo is hidden while the title's is on
+  screen; no words changed. The lobby floats over the Fair the same way.
+- **Who sees the title.** Arrivals only: anyone with a room to rejoin, or coming
+  back from a game, lands on the menu. A game hides the Fair and stops it.
+- **The scene.** One panorama for any window, never a frame around the card:
+  wide, it looks down the Grand Basin to the Administration Building; tall, it
+  stacks the same Fair. The White City along the horizon (the far city never
+  rises past the title's button), the Ferris Wheel on the Midway with festoons,
+  a carousel and strollers, the Peristyle and the gilded Statue of the Republic
+  (it stood in the Grand Basin), an electric fountain, a gondola and a launch,
+  the Intramural Railway on the far shore, a captive balloon, a Cracker Jack cart.
 - **The story is the game.** Craftspeople arrive in fours at striped agency
   daises, each holding up their discipline's tile on a pole, so a dais reads as
   a display; a nation hires every one of a discipline and they walk to its
@@ -1258,19 +1275,17 @@ still stay out, for the reason in *The register*; the rest of the Midway is in.
   nations. A crew with nowhere to go stands idle beside its pavilion.
 - **The day.** 84 seconds, midnight to midnight. At dusk the illumination comes
   on from the middle outward (bulbs along every cornice and dome, the Wheel's
-  rims and cars, the floodlit statue, the fountain in colour, searchlights,
-  the White City's lights on the water), then fireworks; at closing the lights
-  go out and the pavilions reset in the dark for a new month.
-- **Engineering.** One file, wordless, aria-hidden, pointer-events off; nothing
-  in the engine, the wire or the copy layer knows it exists. People walk on CSS
-  (limbs swing on their own top edge), so the loop only moves them. It draws only
-  while `#setup` is showing and the tab is visible, and stops for a game.
-  `prefers-reduced-motion` gets one still frame at dusk. On a laptop it fills the
-  window around the card (a little narrower than before, so the margins have
-  room); on a phone or tablet it is a band above the card. A short laptop window
-  keeps the frame and moves the card up, so the start button never leaves the
-  first screen. `?fair&at=0.62` opens the cycle at that point (0 midnight, 0.25
-  morning, 0.585 sunset) and `&still` holds it there.
+  rims and cars, the floodlit statue, the fountain in colour, searchlights, the
+  White City's lights on the water), then fireworks; at closing the lights go
+  out and the pavilions reset in the dark for a new month.
+- **Engineering.** `scene.js` draws and runs the title → menu → lobby states;
+  the title's words live in `index.html` with the rest of the copy; the styles
+  hang off `body.fair`, which only `scene.js` adds. Nothing in the engine, the
+  wire or `ui.js` knows any of it exists. People walk on CSS (limbs swing on
+  their own top edge), so the loop only moves them. `prefers-reduced-motion`
+  gets one still frame at dusk and no title animation. `?fair&at=0.62` opens the
+  cycle at that point (0 midnight, 0.25 morning, 0.585 sunset), `&still` holds
+  it, `&menu` opens straight on the menu.
 - **Before it goes live** it needs Ryan's look; making it the default is
   deleting the `?fair` check at the top of `scene.js`.
 

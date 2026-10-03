@@ -1,32 +1,36 @@
-/* Pavilion — the World's Fair in motion around the front door. A sample
-   (3 Oct 2026), shown only on ?fair until Ryan has seen it.
+/* Pavilion — the front door as a video game's: the 1893 World's Fair alive across
+   the whole screen, PAVILION set in tiles over the sky, and "Play a game" opening
+   the menu (the setup card) over a dimmed Fair. A sample (3 Oct 2026), shown only
+   on ?fair until Ryan has seen it.
 
    Ryan's brief: "a world in motion surrounding the game opening screen…
    placing people inside the world's fair with some cool motion and animated
    drawn images to make it look alive", a day-to-night cycle, and the game's
-   own story told in the picture. So this is the Fair as an 1893 poster would
-   have it (the White City on the horizon, the Ferris Wheel, the lagoon, the
-   gilded Statue of the Republic, crowds in boaters, bowlers and leg-of-mutton
-   sleeves) with Pavilion played out along the promenade. Craftspeople arrive
-   at the agencies in fours, each holding up their discipline's tile; a
-   nation hires every one of a discipline and they walk to its pavilion; the
-   rest wait at the gate; and each crew puts its display up on the
-   pavilion's front, which is the board's 5×5 wall, pattern and all. At dusk
-   the White City lights up (bulbs along every cornice, the searchlights, the
-   electric fountains, the Wheel), the night has fireworks, and at closing the
-   lights go out and a new month begins in the dark.
+   own story told in the picture; then (same day) treat it like a video game,
+   where the front page is the scene and the title, and a button opens the card.
+   So this is the Fair as an 1893 poster would have it: the White City along the
+   horizon at the end of the Grand Basin, the gilded Statue of the Republic, the
+   Ferris Wheel on the Midway, crowds in boaters, bowlers and leg-of-mutton
+   sleeves, with Pavilion played out along the promenade. Craftspeople arrive
+   at the agencies in fours, each holding up their discipline's tile; a nation
+   hires every one of a discipline and they walk to its pavilion; the rest wait
+   at the gate; and each crew puts its display up on the pavilion's front, which
+   is the board's 5×5 wall, pattern and all. At dusk the White City lights up
+   (bulbs along every cornice, the searchlights, the electric fountain, the
+   Wheel) and the title's tiles glow with it; the night has fireworks; at
+   closing the lights go out and a new month begins in the dark.
 
    Period dress, not Isotype, and not the teaching brand (Ryan, 3 Oct): this
    is a game anyone can play. The Midway's "villages" stay out (PAVILION.md,
    The register); the rest of the Midway is in.
 
-   Decorative only: aria-hidden, pointer-events off, no words, and nothing in
-   the engine, the wire or the copy layer knows it exists. It draws while the
-   front door is showing and the tab is visible, and prefers-reduced-motion
-   gets one still frame at dusk. On a laptop it fills the window around the
-   card; on a phone it is a band above it. ?fair&at=0.62 opens the cycle at
-   that point of the day (0 midnight, 0.25 morning, 0.58 sunset) and &still
-   holds it there. */
+   Decorative and outside the game: the engine, the wire and ui.js never see
+   it. The title's words live in index.html with the rest of the copy; this
+   file only shows them and runs the title → menu → lobby states. It draws while
+   the front door or the lobby is showing and the tab is visible, stops for a
+   game, and prefers-reduced-motion gets one still frame at dusk. ?fair&at=0.62
+   opens the cycle at that point of the day (0 midnight, 0.25 morning, 0.585
+   sunset), &still holds it there, &menu opens straight on the menu. */
 (() => {
   'use strict';
 
@@ -485,97 +489,92 @@
   }
   const builtFor = f => (f >= RESET || f < HIRES_FROM ? 0 : Math.round(clamp((f - 0.1) / 0.42, 0, 1) * 13));
 
-  /* ---------------------------------------------------------------- layout */
+  /* ---------------------------------------------------------------- layout
+
+     One panorama for whatever shape the window is, never a frame around a
+     card: the menu opens over the scene rather than living in it. A wide window
+     looks down the Grand Basin to the Administration Building with the Wheel on
+     the Midway at the left; a tall one (a phone) stacks the same Fair. The
+     title's button decides how tall the far city may stand, so the dome always
+     clears it. */
+
+  const body = document.body;
+  const lobby = document.getElementById('lobby');
+  const titleEl = document.getElementById('title');
+  const playBtn = document.getElementById('btn-play');
+  const backBtn = document.getElementById('btn-back');
+  if (!titleEl || !playBtn || !lobby) return;
 
   const host = document.createElement('div');
   host.id = 'fair';
   host.setAttribute('aria-hidden', 'true');
-  setup.prepend(host);
-  setup.classList.add('fair');
+  const scrim = document.createElement('div');
+  scrim.id = 'fair-scrim';
+  body.prepend(scrim);
+  body.prepend(host);
+  body.classList.add('fair');
+  titleEl.classList.remove('hidden');
   const svg = el('svg', { focusable: 'false' }, host);
 
-  let mode = 'frame', W = 0, H = 0, box = null;
+  let W = 0, H = 0;
   function measure() {
-    setup.classList.remove('band');
-    setup.style.alignItems = setup.style.paddingTop = '';
-    host.style.height = '';
-    const vw = document.documentElement.clientWidth, vh = innerHeight;
-    if (vw >= 940) {
-      // A laptop keeps the frame however short the window: the card never drops below the picture, because the
-      // button that starts a game must stay on the first screen. When height is short the card moves up and the
-      // spare height goes to the promenade, where the story plays.
-      const free = vh - card.getBoundingClientRect().height;
-      if (free < 240) { setup.style.alignItems = 'start'; setup.style.paddingTop = Math.round(clamp(free * 0.3, 8, 60)) + 'px'; }
-      const r = card.getBoundingClientRect();
-      mode = 'frame'; W = vw; H = vh;
-      box = { x0: r.left, y0: r.top + scrollY, x1: r.right, y1: r.bottom + scrollY };
-    } else {
-      mode = 'band'; setup.classList.add('band');
-      W = vw; H = Math.round(clamp(vh * 0.34, 230, 320));
-      host.style.height = H + 'px';
-      box = null;
-    }
+    W = document.documentElement.clientWidth; H = innerHeight;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('width', W);
     svg.setAttribute('height', H);
   }
 
+  function layout() {
+    const land = W / H >= 1.05, L = { land };
+    const pb = playBtn.getBoundingClientRect();
+    const titleBottom = pb.height ? pb.bottom : (land ? 0.34 : 0.32) * H;
+    if (land) {
+      L.hz = 0.585 * H; L.shore = 0.775 * H; L.pt = 0.79 * H;
+      L.midG = 0.712 * H; L.midX1 = 0.33 * W;
+      L.isle = 0.7 * H;
+      L.s = clamp(H / 820, 0.6, 1.2);
+      L.wX = 0.205 * W; L.wR = clamp(Math.min(0.17 * H, 0.13 * W), 40, 230);
+      L.stX = 0.665 * W; L.stH = clamp(0.25 * H, 60, 280);
+      L.fX = 0.4 * W; L.fY = 0.738 * H; L.fS = clamp(Math.min(0.12 * W, 0.19 * H), 40, 220);
+      L.pw = clamp(Math.min(0.13 * W, 0.27 * H), 70, 240);
+      L.items = [0.31, 0.405, 0.5, 0.595, 0.69].map(k => k * W); L.gateI = 2;
+      L.far = [[fineArts, 0.045], [agricultural, 0.19], [manufactures, 0.335], [admin, 0.5], [electricity, 0.655], [machinery, 0.79]];
+      L.peri = [0.835 * W, W + 6];
+      L.balloonX = 0.9 * W;
+      L.gondolaY = L.hz + 0.1 * H; L.launchY = L.shore - 0.028 * H; L.railY = L.hz + 0.045 * H;
+      L.carousel = W >= 1000;
+      L.beams = [[0.335, 48, -0.5], [0.655, 80, 0.35], [0.9, 34, 0.85]];
+    } else {
+      L.hz = 0.5 * H; L.shore = 0.685 * H; L.pt = 0.7 * H;
+      L.midG = 0.655 * H; L.midX1 = 0.44 * W;
+      L.isle = 0.632 * H;
+      L.s = clamp(Math.min(W / 440, H / 900), 0.5, 1);
+      L.wX = 0.235 * W; L.wR = clamp(Math.min(0.105 * H, 0.2 * W), 36, 160);
+      L.stX = 0.8 * W; L.stH = clamp(0.19 * H, 60, 220);
+      L.fX = 0.57 * W; L.fY = 0.662 * H; L.fS = clamp(Math.min(0.22 * W, 0.1 * H), 30, 140);
+      L.pw = clamp(Math.min(0.25 * W, 0.15 * H), 56, 160);
+      L.items = [0.34, 0.5, 0.66].map(k => k * W); L.gateI = 1;
+      L.far = [[agricultural, 0.1], [admin, 0.5], [electricity, 0.88]];
+      L.peri = null;
+      L.balloonX = 0.86 * W;
+      L.gondolaY = L.hz + 0.065 * H; L.launchY = L.shore - 0.022 * H; L.railY = L.hz + 0.03 * H;
+      L.carousel = false;
+      L.beams = [[0.3, 40, -0.4], [0.72, 52, 0.45]];
+    }
+    const P = H - L.pt;
+    L.foot = [L.pt + 0.22 * P, L.pt + 0.62 * P, L.pt + 0.92 * P];
+    L.kb = L.pt + 0.42 * P;
+    L.pb = H - 0.012 * H;
+    L.pavX = [L.pw * 0.5 + 0.014 * W, W - L.pw * 0.5 - 0.014 * W];
+    const domeTop = Math.max(titleBottom + 0.03 * H, L.hz - 0.32 * H);
+    L.u = clamp((L.hz - domeTop) / 119, 0.45, 2.6);
+    return L;
+  }
+
   /* ----------------------------------------------------------------- build */
 
   function build(f0) {
-    const fr = mode === 'frame';
-    const L = {};
-    if (fr) {
-      const { x0, y0, x1, y1 } = box, S = y1 - y0;
-      Object.assign(L, { x0, y0, x1, y1, lw: x0, rw: W - x1, top: y0, bot: H - y1 });
-      // Two horizons, which the card hides the join between: behind it the far city stands high, so its domes and
-      // spires clear the card's top edge; in the margins it stands lower, so they hold more sky.
-      L.hzC = y0 + 0.1 * S;
-      L.hz = y0 + 0.27 * S;
-      L.pt = y1 - 3;
-      L.shore = L.pt - Math.min(70, 0.12 * (L.pt - L.hz));
-      L.lagoon = L.hz + 0.17 * (L.pt - L.hz);            // the left margin's lagoon gives way to the Midway here
-      L.mid = L.lagoon + 0.3 * (L.pt - L.lagoon);         // where the Wheel stands
-      L.basin = L.hz + 0.36 * (L.shore - L.hz);          // the statue's island, in the right margin's basin
-      L.u = clamp((L.hzC - y0 + 0.62 * L.top) / 112, 0.7, 2.3);
-      L.uS = L.u * 1.25;
-      L.s = clamp(L.bot / 110, 0.6, 1.3);
-      L.story = L.bot >= 52;                              // too little room under the card: no promenade
-      L.foot = [H - 0.46 * L.bot, H - 0.16 * L.bot, H - 0.02 * L.bot];
-      L.kb = H - 0.3 * L.bot;
-      L.pb = H - 0.07 * L.bot;
-      if (!L.story) { L.kb = H + 200; L.foot = [H + 200, H + 200, H + 200]; L.pb = H - 4; }
-      L.pw = clamp(Math.min(L.lw, L.rw) * 0.8, 84, 250);
-      L.pavX = [L.lw * 0.5, W - L.rw * 0.5];
-      L.wR = clamp(Math.min(L.lw * 0.45, (L.mid - 0.1 * y0) / 2.25), 46, 210);
-      L.wX = L.lw * 0.52;
-      L.stX = W - L.rw * 0.5;
-      L.stH = clamp(L.rw * 0.78, 70, 250);
-      L.items = [0.06, 0.28, 0.5, 0.72, 0.94].map(k => x0 + k * (x1 - x0));   // agency, agency, gate, agency, agency
-      L.gateI = 2;
-    } else {
-      Object.assign(L, { x0: 0, y0: H, x1: W, y1: H, lw: W, rw: W, top: H, bot: 0 });
-      L.hz = L.hzC = 0.42 * H;
-      L.pt = 0.68 * H;
-      L.shore = 0.66 * H;
-      L.mid = L.basin = 0.6 * H;
-      L.lagoon = L.shore;
-      L.u = L.uS = clamp(H * 0.0029, 0.55, 1.1);
-      L.s = clamp(H / 400, 0.52, 0.8);
-      L.story = true;
-      L.foot = [0.765 * H, 0.885 * H, H - 19];
-      L.kb = 0.835 * H;
-      L.pb = H - 18;
-      L.pw = clamp(W * 0.17, 56, 110);
-      L.pavX = [W * 0.095, W * 0.905];
-      L.wR = 0.2 * H;
-      L.wX = W * 0.25;
-      L.stX = W * 0.79;
-      L.stH = 0.4 * H;
-      L.items = [0.31, 0.5, 0.69].map(k => k * W);
-      L.gateI = 1;
-    }
-    const u = L.u, s = L.s;
+    const L = layout(), land = L.land, u = L.u, s = L.s;
     const lightAt = x => 0.15 + 1.35 * Math.abs(x - W / 2) / (W / 2);   // the illumination spreads from the middle
 
     // ---- defs and layers
@@ -590,7 +589,7 @@
     el('stop', { offset: 0, 'stop-color': '#FFF8E0', 'stop-opacity': 0.9 }, beamG);
     el('stop', { offset: 1, 'stop-color': '#FFF8E0', 'stop-opacity': 0 }, beamG);
     const clip = el('clipPath', { id: 'fair-world' }, defs);
-    el('path', { d: `M0,${L.hz} H${L.x0} V${L.hzC} H${L.x1} V${L.hz} H${W} V${H} H0 Z` }, clip);
+    el('rect', { x: 0, y: L.hz, width: W, height: H - L.hz }, clip);
 
     const skyL = el('g', null, svg), worldL = el('g', null, svg), overL = el('g', null, svg), nearL = el('g', null, svg), lightL = el('g', null, svg);
     const lights = [];                                   // groups that switch on at dusk: {g, d}
@@ -603,105 +602,98 @@
     // ---- the sky
     el('rect', { x: 0, y: 0, width: W, height: H, fill: 'url(#fair-sky)' }, skyL);
     const starG = el('g', { opacity: 0 }, skyL);
-    const nStars = clamp(Math.round(W * L.hz / 2600), 20, 140);
-    for (let i = 0; i < nStars; i++) {
+    for (let i = 0, n = clamp(Math.round(W * L.hz / 2600), 24, 180); i < n; i++) {
       el('circle', { class: 'star', cx: rr(0, W).toFixed(1), cy: rr(0, L.hz - 8).toFixed(1), r: rr(0.5, 1.4).toFixed(2), fill: '#F7F3E6', style: `--tw:${rr(1.6, 3.8).toFixed(2)}s;animation-delay:${(-rr(0, 4)).toFixed(2)}s` }, starG);
     }
-    const moonG = el('g', null, skyL);
-    const mR = clamp(0.012 * W, 9, 20);
+    const moonG = el('g', null, skyL), mR = clamp(0.011 * Math.max(W, H), 9, 22);
     el('circle', { r: mR * 3.4, fill: 'url(#fair-moon)' }, moonG);
     el('circle', { r: mR, fill: '#F2F0E6' }, moonG);
     el('circle', { cx: -mR * 0.3, cy: -mR * 0.2, r: mR * 0.22, fill: '#DCD9CC' }, moonG);
     el('circle', { cx: mR * 0.35, cy: mR * 0.3, r: mR * 0.15, fill: '#DCD9CC' }, moonG);
-    const sunG = el('g', null, skyL);
-    const sR = clamp(0.016 * W, 11, 26);
+    const sunG = el('g', null, skyL), sR = clamp(0.015 * Math.max(W, H), 11, 28);
     el('circle', { r: sR * 3.2, fill: 'url(#fair-halo)' }, sunG);
     const sunDisc = el('circle', { r: sR, fill: '#FFF4D6' }, sunG);
-    const arc = p => {
-      const peak = fr ? 0.42 * L.y0 : 0.15 * H;
-      return [lerp(0.03 * W, 0.97 * W, p), L.hz + sR * 0.6 - (L.hz + sR * 0.6 - peak) * Math.sin(Math.PI * p)];
-    };
-    const cloudG = el('g', null, skyL), clouds = [];
-    const cloudTop = fr ? Math.min(L.y0, L.hz) : L.hz;
-    for (let i = 0, n = fr ? 6 : 3; i < n; i++) {
-      const g = el('g', null, cloudG), cs = rr(0.6, 1.2) * (fr ? clamp(L.top / 110, 0.6, 1.5) : 0.7);
+    const arc = p => [lerp(0.03 * W, 0.97 * W, p), L.hz + sR * 0.6 - (L.hz + sR * 0.6 - 0.1 * H) * Math.sin(Math.PI * p)];
+    const cloudG = el('g', null, skyL), clouds = [], cloudTop = L.hz * 0.8;
+    for (let i = 0, n = land ? 7 : 4; i < n; i++) {
+      const g = el('g', null, cloudG), cs = rr(0.6, 1.2) * clamp(H / 800, 0.6, 1.4);
       for (let j = 0; j < 5; j++) el('ellipse', { cx: (j - 2) * 15 * cs, cy: -Math.sin((j + 0.5) / 5 * Math.PI) * 9 * cs, rx: rr(11, 17) * cs, ry: rr(7, 11) * cs }, g);
       el('rect', { x: -40 * cs, y: -2 * cs, width: 80 * cs, height: 6 * cs, rx: 3 * cs }, g);
-      clouds.push({ g, x: rr(-60, W + 60), y: rr(0.18, 0.85) * cloudTop, v: rr(5, 11) });
+      clouds.push({ g, x: rr(-60, W + 60), y: rr(0.08, 0.95) * cloudTop, v: rr(5, 11) });
     }
     const gullG = el('g', null, skyL), gulls = [];
     for (let i = 0; i < 3; i++) {
       const g = el('g', null, gullG);
       el('path', { class: 'wing', d: 'M-6,0 Q-3,-3.4 0,0 Q3,-3.4 6,0', fill: 'none', stroke: '#4A4A52', 'stroke-width': 1.3, 'stroke-linecap': 'round', style: `animation-delay:${(-R()).toFixed(2)}s` }, g);
-      gulls.push({ g, x: -40 - rr(0, 900), y: rr(0.2, 0.8) * cloudTop, v: rr(26, 40) });
+      gulls.push({ g, x: -40 - rr(0, 900), y: rr(0.25, 0.9) * cloudTop, v: rr(26, 40) });
     }
 
-    // ---- the far city
+    // ---- the far city along the horizon, the Peristyle at the lake end, the trees between
     const lakeC = '#9DB9C4';
-    const far = [];
-    if (fr) {
-      const span = L.x1 - L.x0, at = k => L.x0 + k * span;
-      far.push([agricultural, at(0.13)], [manufactures, at(0.33)], [admin, at(0.53)], [electricity, at(0.73)], [machinery, at(0.9)]);
-      // the left margin: the Palace of Fine Arts and its neighbours behind the Wheel
-      far.push([fineArts, L.lw * 0.3], [(g, c, lt, sc) => block(g, c, lt, sc, 34, 22, 'tower'), L.lw * 0.88]);
-    } else {
-      far.push([agricultural, W * 0.08], [manufactures, W * 0.36], [admin, W * 0.58], [electricity, W * 0.82], [machinery, W * 1.02]);
-    }
-    for (const [fn, x] of far) {
-      const side = fr && (x < L.x0 || x > L.x1), sc = side ? L.uS : u;
-      const t = twin(x, side ? L.hz : L.hzC, sc, lightAt(x));
-      fn(t.g, t.c, t.l, sc);
-    }
-    if (fr) {                                            // the Peristyle along the lake, behind the statue's basin
-      const half = (L.rw / L.uS) / 2 + 2;
-      const t = twin(L.x1 + L.rw / 2, L.hz, L.uS, lightAt(W));
-      peristyle(t.g, t.c, t.l, L.uS, half, lakeC);
-    }
-    // the Wooded Isle and the trees along the far shore
     const treeG = el('g', null, worldL);
-    const treeRow = (x0, x1, y, n) => {
-      for (let i = 0; i < n; i++) {
-        const x = lerp(x0, x1, (i + R() * 0.6) / n), r = rr(5, 9) * L.uS;
-        ell(treeG, x, y - r * 0.6, r * 1.3, r, pick(['#5F7F4E', '#6E8B57', '#557446']), { 'stroke-width': 0.6 });
-        el('ellipse', { cx: x, cy: y - r * 0.6, rx: r * 1.3, ry: r }, clip);
-      }
-    };
-    if (fr) { treeRow(0, L.lw, L.hz + 2, Math.ceil(L.lw / 26)); treeRow(L.x1, W, L.hz + 4, Math.ceil(L.rw / 34)); }
-    else treeRow(0, W, L.hz + 2, Math.ceil(W / 30));
+    for (let i = 0, n = Math.ceil(W / 24); i < n; i++) {
+      const x = lerp(0, W, (i + R() * 0.6) / n), r = rr(5, 9) * u;
+      ell(treeG, x, L.hz + 2 - r * 0.6, r * 1.3, r, pick(['#5F7F4E', '#6E8B57', '#557446']), { 'stroke-width': 0.6 });
+      el('ellipse', { cx: x, cy: L.hz + 2 - r * 0.6, rx: r * 1.3, ry: r }, clip);
+    }
+    for (const [fn, k] of L.far) { const x = k * W, t = twin(x, L.hz, u, lightAt(x)); fn(t.g, t.c, t.l, u); }
+    if (L.peri) {
+      const half = (L.peri[1] - L.peri[0]) / u / 2, x = (L.peri[0] + L.peri[1]) / 2;
+      const t = twin(x, L.hz, u, lightAt(x));
+      peristyle(t.g, t.c, t.l, u, half, lakeC);
+    }
 
-    const railY0 = () => (fr ? L.mid + 0.34 * (L.pt - L.mid) : L.hz + 0.4 * (L.mid - L.hz));
-    let carousel = null;
-
-    // ---- the water: a lagoon in the left margin, the Grand Basin in the right, deeper towards the viewer
+    // ---- the Grand Basin, deeper towards the viewer, with the White City on it by day and its lights by night
     const wGrad = el('linearGradient', { id: 'fair-water', gradientUnits: 'userSpaceOnUse', x1: 0, y1: L.hz, x2: 0, y2: L.shore }, defs);
     const wStops = [0, 1].map(o => el('stop', { offset: o }, wGrad));
-    el('rect', { x: -2, y: L.hz, width: W + 4, height: L.lagoon - L.hz + 1, fill: 'url(#fair-water)' }, worldL);
-    if (fr) el('rect', { x: L.x0, y: L.lagoon, width: W - L.x0 + 2, height: L.shore - L.lagoon, fill: 'url(#fair-water)' }, worldL);
-    const wet = (x, y) => !(fr && x < L.x0 && y > L.lagoon - 3);
-    // the White City lies on the water by day as pale streaks, and the illumination by night in long broken ones
+    el('rect', { x: -2, y: L.hz, width: W + 4, height: L.shore - L.hz + 1, fill: 'url(#fair-water)' }, worldL);
+    const midTop = x => L.midG - 0.06 * H + 0.04 * H * smooth(clamp(x / L.midX1, 0, 1));   // the Midway's shore line
+    const wet = (x, y) => !(x < L.midX1 + 0.02 * W && y > midTop(x) - 2);
     const refl = el('g', { opacity: 0.55 }, worldL);
-    for (let i = 0, n = Math.round(W / 18); i < n; i++) {
+    for (let i = 0, n = Math.round(W / 16); i < n; i++) {
       const x = rr(0, W), w = rr(8, 26);
       el('rect', { x: x.toFixed(1), y: (L.hz + rr(1, 9)).toFixed(1), width: w.toFixed(1), height: 1.4, rx: 0.7, fill: '#F7F2E6' }, refl);
     }
     const ripples = el('g', { opacity: 0.6 }, worldL);
-    for (let i = 0, n = Math.round(W * (L.shore - L.hz) / 2000); i < n; i++) {
+    for (let i = 0, n = Math.round(W * (L.shore - L.hz) / 1900); i < n; i++) {
       const x = rr(0, W), y = rr(L.hz + 8, L.shore - 4);
       if (!wet(x, y)) continue;
       el('path', { class: 'star', d: `M${x.toFixed(1)},${y.toFixed(1)} h${rr(5, 14).toFixed(1)}`, stroke: '#E4F0EF', 'stroke-width': 1, style: `--tw:${rr(1.4, 3).toFixed(2)}s;animation-delay:${(-rr(0, 3)).toFixed(2)}s` }, ripples);
     }
     const shine = el('g', null, lit(0.9));
-    for (let i = 0, n = Math.round(W / 12); i < n; i++) {
-      const x = rr(0, W);
-      if (fr && x > L.x0 && x < L.x1) continue;
-      const y0 = L.hz + rr(2, 6), len = rr(12, 44) * (fr ? Math.min(1.4, L.lw / 180) : 0.6);
+    for (let i = 0, n = Math.round(W / 9); i < n; i++) {
+      const x = rr(0, W), y0 = L.hz + rr(2, 6), len = rr(14, 56) * clamp(H / 800, 0.6, 1.4);
       if (!wet(x, y0 + len)) continue;
       el('path', { d: `M${x.toFixed(1)},${y0.toFixed(1)} v${len.toFixed(1)}`, stroke: pick(['#FFE7A3', '#FFD27A', '#FFF1C4']), 'stroke-width': rr(1, 2.2).toFixed(1), 'stroke-dasharray': `${rr(2, 5).toFixed(1)} ${rr(2, 4).toFixed(1)}`, opacity: rr(0.35, 0.7).toFixed(2) }, shine);
     }
 
-    // ---- a gondola on the far water, behind the statue
+    // ---- the Intramural Railway along the far shore
+    const railY = L.railY;
+    {
+      const g = el('g', null, worldL);
+      // a light trestle, so it reads as a railway on the far shore rather than a fence across the water
+      for (let x = 6; x < W; x += 44 * s) {
+        line(g, x, railY + 2 * s, x - 2.5 * s, railY + 11 * s, { stroke: '#7D7468', 'stroke-width': 0.8 });
+        line(g, x, railY + 2 * s, x + 2.5 * s, railY + 11 * s, { stroke: '#7D7468', 'stroke-width': 0.8 });
+      }
+      rect(g, -2, railY, W + 4, 2.2 * s, '#857A6C', { 'stroke-width': 0.4 });
+    }
+    const ts = s * 0.85;
+    const train = { g: el('g', null, worldL), l: el('g', null, lit(0.8)), x: -200, v: 70 * ts, wait: rr(0, 4), len: 93 * ts };
+    for (let i = 0; i < 3; i++) {
+      const x = i * 31 * ts;
+      rect(train.g, x, railY - 14 * ts, 29 * ts, 12 * ts, i ? '#2F4A3A' : '#3A5946', { rx: 2 * ts });
+      rect(train.g, x - 1 * ts, railY - 15.6 * ts, 31 * ts, 2.4 * ts, '#5A3A2A', { rx: 1.2 * ts });
+      for (let j = 0; j < 4; j++) {
+        rect(train.g, x + (3 + j * 6.4) * ts, railY - 11.6 * ts, 4.2 * ts, 4.4 * ts, '#EADFC6', { 'stroke-width': 0.4 });
+        el('rect', { x: x + (3 + j * 6.4) * ts, y: railY - 11.6 * ts, width: 4.2 * ts, height: 4.4 * ts, fill: '#FFE7A0' }, train.l);
+      }
+      circ(train.g, x + 6 * ts, railY - 1.4 * ts, 1.8 * ts, '#2B2620'); circ(train.g, x + 23 * ts, railY - 1.4 * ts, 1.8 * ts, '#2B2620');
+    }
+    el('circle', { cx: 93 * ts, cy: railY - 8 * ts, r: 2.4 * ts, fill: '#FFF2C0' }, train.l);
+
+    // ---- a gondola on the far water
     const boats = [];
-    const gondolaY = fr ? L.hz + 0.55 * (L.lagoon - L.hz) : L.hz + 0.72 * (L.mid - L.hz);
     {
       const g = el('g', null, worldL), l = el('g', null, lit(0.9)), bs = s * 1.05;
       const b = el('g', { transform: `scale(${bs})` }, g);
@@ -716,31 +708,24 @@
       ell(gd, 0, -21.4, 3, 0.8, '#E2CB8C');
       el('line', { class: 'oar', x1: 1, y1: -16, x2: -5, y2: 6, stroke: '#6B5136', 'stroke-width': 1, 'stroke-linecap': 'round' }, gd);
       el('circle', { cx: 22 * bs, cy: -12 * bs, r: 1.8 * bs, fill: '#FFD27A' }, l);
-      boats.push({ g, l, x: rr(0, W), y: gondolaY, v: 13 * s, w: 30 * bs, lo: -60, hi: W + 60 });
+      boats.push({ g, l, x: rr(0, W), y: L.gondolaY, v: 13 * s, w: 30 * bs, lo: -60, hi: W + 60 });
     }
 
-    // ---- the Midway: sand under the Wheel from the lagoon's edge down to the promenade, tents and pennants
-    if (fr) {
-      rect(worldL, -2, L.lagoon, L.lw + 2, L.pt - L.lagoon + 2, '#D8CBA4', { 'stroke-width': 0.6 });
-      for (let y = L.lagoon + 10 * s; y < L.pt; y += 12 * s) el('path', { d: `M0,${y.toFixed(1)} H${L.lw}`, stroke: '#CBBD94', 'stroke-width': 0.6 }, worldL);
-    } else {
-      path(worldL, `M-4,${L.mid + 3} Q${W * 0.21},${L.mid - 6} ${W * 0.42 + 6},${L.mid + 4} L${W * 0.42 + 6},${L.mid + 14} L-4,${L.mid + 14} Z`, '#B9B484', { 'stroke-width': 0.6 });
-    }
-    for (let i = 0, n = 2; i < n; i++) {
-      const x = fr ? L.lw * [0.1, 0.93][i] : W * [0.05, 0.42][i];
-      const t = el('g', { transform: tr(x, L.mid + 4, s * 1.15) }, worldL);
-      const a = pick(['#CE1E32', '#D9AE3A', '#24356B']), b = '#F3EADA';
+    // ---- the Midway: sand under the Wheel, tents, festoons, strollers, a carousel
+    path(worldL, `M-4,${midTop(0)} ${[0.25, 0.5, 0.75, 1].map(k => `L${(k * L.midX1).toFixed(1)},${midTop(k * L.midX1).toFixed(1)}`).join(' ')} L${L.midX1 + 0.03 * W},${L.pt} L-4,${L.pt} Z`, '#D8CBA4', { 'stroke-width': 0.8 });
+    for (let y = midTop(0) + 12 * s; y < L.pt; y += 12 * s) el('path', { d: `M0,${y.toFixed(1)} H${L.midX1}`, stroke: '#CBBD94', 'stroke-width': 0.6 }, worldL);
+    {
+      const x = 0.04 * W, t = el('g', { transform: tr(x, L.midG + 2, s * 1.15) }, worldL), a = '#CE1E32', b = '#F3EADA';
       path(t, 'M-11,0 L-9.6,-9 Q0,-21 9.6,-9 L11,0 Z', a);
       for (const sx of [-5.4, 0, 5.4]) path(t, `M${sx - 1.4},0 L${sx * 0.7 - 1},-11 Q${sx * 0.2},-18 ${sx * 0.7 + 1},-11 L${sx + 1.4},0 Z`, b, NO);
       path(t, 'M-2.4,0 V-6 Q0,-8 2.4,-6 V0 Z', '#3B332B', NO);
       line(t, 0, -18.4, 0, -25, { stroke: '#4A4038', 'stroke-width': 0.8 });
-      flag(t, 0, -25, 5, 3, a);
+      flag(t, 0, -25, 5, 3, '#D9AE3A');
     }
-
-    // festoons strung across the Midway: pennants by day, bulbs by night
+    const ground = L.midG + (land ? 0.045 : 0.022) * H;
     const midStroll = [];
-    if (fr) {
-      const ground = L.mid + 0.55 * (railY0() - L.mid), poles = [L.lw * 0.02, L.lw * 0.36, L.lw * 0.68, L.lw * 0.99];
+    {
+      const poles = [0.01, 0.34, 0.67, 0.98].map(k => k * L.midX1);
       const fest = el('g', null, worldL), festL = el('g', null, lit(0.4));
       poles.forEach(x => line(fest, x, ground, x, ground - 46 * s, { stroke: '#4A3E33', 'stroke-width': 1.1 }));
       for (let i = 0; i < poles.length - 1; i++) {
@@ -754,56 +739,52 @@
         el('path', { d, fill: 'none', stroke: '#FFD27A', 'stroke-opacity': 0.35, 'stroke-width': 4 }, festL);
         el('path', { d, fill: 'none', stroke: '#FFF1C4', 'stroke-width': 2, 'stroke-dasharray': '0.01 6', 'stroke-linecap': 'round' }, festL);
       }
-      // strollers on the Midway, under the Wheel
-      const strollY = ground;
-      for (let i = 0; i < Math.max(2, Math.round(L.lw / 70)); i++) {
-        const type = pick(['man', 'woman', 'woman', 'man', 'girl']), sc = s * 0.72 * (type === 'girl' ? 0.7 : 1);
-        const a = { g: person(worldL, type), x: rr(0, L.lw), y: strollY + rr(-3, 3) * s, s: sc, face: R() < 0.5 ? 1 : -1, walking: false, v: rr(10, 18) * sc, lo: -10, hi: L.lw + 10, night: R() < 0.5 };
+      for (let i = 0; i < Math.max(2, Math.round(L.midX1 / 80)); i++) {
+        const type = pick(['man', 'woman', 'woman', 'man', 'girl']), sc = s * 0.74 * (type === 'girl' ? 0.7 : 1);
+        const a = { g: person(worldL, type), x: rr(0, L.midX1), y: ground + rr(-3, 3) * s, s: sc, face: R() < 0.5 ? 1 : -1, walking: false, v: rr(10, 18) * sc, lo: -10, hi: L.midX1 + 10, night: R() < 0.5 };
         a.g.style.setProperty('--stp', clamp(13 * a.s / a.v, 0.24, 0.6).toFixed(2) + 's');
         midStroll.push(a);
       }
-      // with room to spare, a carousel and a Cracker Jack cart
-      if (L.lw >= 300) {
-        const cx = L.lw * 0.2, cy = L.mid + 0.5 * (railY0() - L.mid) + 10 * s, cs = s * 1.1;
-        const car = el('g', { transform: tr(cx, cy, cs) }, worldL);
-        rect(car, -22, -4, 44, 4, '#8E3E28');
-        for (const x of [-18, -6, 6, 18]) line(car, x, -4, x, -26, { stroke: '#C9A227', 'stroke-width': 1 });
-        path(car, 'M-25,-26 L0,-40 L25,-26 Z', '#CE1E32');
-        for (const x of [-15, 0, 15]) path(car, `M${x - 4},-26 L0,-40 L${x + 4},-26 Z`, '#F3EADA', NO);
-        flag(car, 0, -46, 5, 3, '#D9AE3A'); line(car, 0, -40, 0, -46, { stroke: '#4A3E33', 'stroke-width': 0.8 });
-        const horses = el('g', null, car);
-        carousel = { horses, list: [] };
-        for (let i = 0; i < 4; i++) {
-          const h = el('g', null, horses);
-          path(h, 'M-4,0 Q-4,-3 0,-3 L3,-3 L5,-6 L6.5,-5 L5,-2 L5,1 L-4,1 Z', pick(['#F3EADA', '#8E3E28', '#D9AE3A', '#37658A']), { 'stroke-width': 0.5 });
-          carousel.list.push({ g: h, ph: i * Math.PI / 2 });
-        }
-        const cj = el('g', { transform: tr(L.lw * 0.78, cy, cs) }, worldL);
-        rect(cj, -10, -12, 20, 10, '#CE1E32', { rx: 1 });
-        rect(cj, -8, -10, 16, 4, '#F3D57E', NO);
-        circ(cj, -6, -1, 2.4, '#3A332B'); circ(cj, 6, -1, 2.4, '#3A332B');
-        line(cj, -10, -12, -10, -22, { stroke: '#4A3E33', 'stroke-width': 0.8 }); line(cj, 10, -12, 10, -22, { stroke: '#4A3E33', 'stroke-width': 0.8 });
-        path(cj, 'M-12,-22 H12 L10,-19 H-10 Z', '#F3EADA');
+    }
+    let carousel = null;
+    if (L.carousel) {
+      const cs = s * 1.1, cx = 0.31 * W;
+      const car = el('g', { transform: tr(cx, ground, cs) }, worldL);
+      rect(car, -22, -4, 44, 4, '#8E3E28');
+      for (const x of [-18, -6, 6, 18]) line(car, x, -4, x, -26, { stroke: '#C9A227', 'stroke-width': 1 });
+      path(car, 'M-25,-26 L0,-40 L25,-26 Z', '#CE1E32');
+      for (const x of [-15, 0, 15]) path(car, `M${x - 4},-26 L0,-40 L${x + 4},-26 Z`, '#F3EADA', NO);
+      line(car, 0, -40, 0, -46, { stroke: '#4A3E33', 'stroke-width': 0.8 });
+      flag(car, 0, -46, 5, 3, '#D9AE3A');
+      const horses = el('g', null, car);
+      carousel = { list: [] };
+      for (let i = 0; i < 4; i++) {
+        const h = el('g', null, horses);
+        path(h, 'M-4,0 Q-4,-3 0,-3 L3,-3 L5,-6 L6.5,-5 L5,-2 L5,1 L-4,1 Z', pick(['#F3EADA', '#8E3E28', '#D9AE3A', '#37658A']), { 'stroke-width': 0.5 });
+        carousel.list.push({ g: h, ph: i * Math.PI / 2 });
       }
+      const l = el('g', { transform: tr(cx, ground, cs) }, lit(0.5));
+      el('path', { d: 'M-25,-26 L0,-40 L25,-26', fill: 'none', stroke: '#FFF1C4', 'stroke-width': 1.6, 'stroke-dasharray': '0.01 4', 'stroke-linecap': 'round' }, l);
     }
 
     // ---- the Statue of the Republic on its island, and its gold on the water
-    const stS = L.stH / 104, stY = fr ? L.basin : L.mid;
+    const stS = L.stH / 104;
     {
-      path(worldL, `M${L.stX - 3},${stY + 4} l2,6 l-3,6 l3,6 l-2,6 l3,5`, 'none', { stroke: GOLD2, 'stroke-width': 3, opacity: 0.45, 'vector-effect': 'none' });
-      const t = el('g', { transform: tr(L.stX, stY, stS) }, worldL);
+      path(worldL, `M${L.stX - 3},${L.isle + 4} l2,6 l-3,6 l3,6 l-2,6 l3,5`, 'none', { stroke: GOLD2, 'stroke-width': 3, opacity: 0.45, 'vector-effect': 'none' });
+      const t = el('g', { transform: tr(L.stX, L.isle, stS) }, worldL);
       ell(t, 0, 1, 20, 3.2, '#CFC6B1');
       rect(t, -12.5, -3, 25, 3, STONE2); rect(t, -10, -30, 20, 27.4, STONE); rect(t, -12, -32.2, 24, 2.8, STONE2);
       republic(t, GOLD, GOLD2);
-      el('path', { transform: tr(L.stX, stY, stS), d: 'M-12.5,0 V-32.2 H-6.4 L-4.6,-63.4 L-8.6,-76 L-7.2,-88.4 L-8.6,-100.6 L-7.6,-105.6 L-4.4,-103.6 L-5.4,-88.2 L-2.6,-64.4 H2.6 L5.4,-88.2 L3.3,-91.4 L1.4,-97.6 L6.3,-96.8 L11.2,-97.6 L9.3,-91.4 L7.2,-88.4 L8.6,-76 L4.6,-63.4 L6.4,-32.2 H12.5 V0 Z' }, clip);
-      const l = el('g', { transform: tr(L.stX, stY, stS) }, lit(lightAt(L.stX)));
+      el('path', { transform: tr(L.stX, L.isle, stS), d: 'M-12.5,0 V-32.2 H-6.4 L-4.6,-63.4 L-8.6,-76 L-7.2,-88.4 L-8.6,-100.6 L-7.6,-105.6 L-4.4,-103.6 L-5.4,-88.2 L-2.6,-64.4 H2.6 L5.4,-88.2 L3.3,-91.4 L1.4,-97.6 L6.3,-96.8 L11.2,-97.6 L9.3,-91.4 L7.2,-88.4 L8.6,-76 L4.6,-63.4 L6.4,-32.2 H12.5 V0 Z' }, clip);
+      const l = el('g', { transform: tr(L.stX, L.isle, stS) }, lit(lightAt(L.stX)));
       el('ellipse', { cx: 0, cy: -60, rx: 26, ry: 44, fill: 'url(#fair-glow)', opacity: 0.55 }, l);
       republic(l, GOLD2, '#FFF3C4');
     }
 
-    // ---- the electric fountain: white by day, and changing colour at night
+    // ---- the electric fountain: white by day, changing colour at night
     const jets = [];
-    const fountain = (x, y, size) => {
+    {
+      const x = L.fX, y = L.fY, size = L.fS;
       ell(worldL, x, y + size * 0.02, size * 0.56, size * 0.11, '#CFC6B1');
       ell(worldL, x, y, size * 0.5, size * 0.085, '#9FC2C6', { 'stroke-width': 0.6 });
       const day = el('g', { opacity: 0.88 }, worldL), night = el('g', null, lit(lightAt(x) + 0.3));
@@ -818,11 +799,9 @@
         const core = el('path', { class: 'jet', d, fill: 'none', 'stroke-width': Math.max(1.5, size * 0.026), 'stroke-dasharray': '7 5', 'stroke-linecap': 'round' }, night);
         jets.push(glow, core);
       }
-    };
-    if (fr) fountain(L.x1 + L.rw * 0.5, L.basin + 0.45 * (L.shore - L.basin), Math.min(L.rw, 300) * 0.42);
-    else fountain(W * 0.58, L.mid + 2, W * 0.1);
+    }
 
-    // ---- an electric launch in front of the statue: it keeps to the basin
+    // ---- an electric launch near the shore: it keeps to the basin
     {
       const g = el('g', null, worldL), l = el('g', null, lit(0.9)), bs = s * 1.05;
       const b = el('g', { transform: `scale(${bs})` }, g);
@@ -835,49 +814,23 @@
       line(b, 18, -4, 18, -12, { stroke: '#4A4038', 'stroke-width': 0.7 });
       flag(b, 18, -12, 5, 3, '#24356B');
       el('circle', { cx: -20 * bs, cy: -9 * bs, r: 1.8 * bs, fill: '#FFD27A' }, l);
-      const y = fr ? L.basin + 0.2 * (L.shore - L.basin) : L.mid + 2;
-      boats.push({ g, l, x: fr ? rr(L.x1, W) : rr(0, W), y, v: -18 * s, w: 30 * bs, lo: fr ? L.x1 - 60 : -60, hi: W + 60 });
+      boats.push({ g, l, x: rr(L.midX1 + 0.1 * W, W), y: L.launchY, v: -18 * s, w: 30 * bs, lo: L.midX1 + 0.05 * W, hi: W + 60 });
     }
 
-    // ---- the near shore of the basin: a white balustrade and a lawn; the promenade below everything
-    const shoreX = fr ? L.x0 : -2;
+    // ---- the near shore: a white balustrade and a lawn of flowerbeds; the promenade below everything
+    const shoreX = L.midX1 + 0.025 * W;
     rect(worldL, shoreX, L.shore, W - shoreX + 2, L.pt - L.shore + 2, '#A7B57A', { 'stroke-width': 0.6 });
     const bal = el('g', null, worldL);
     rect(bal, shoreX, L.shore - 7 * s, W - shoreX + 2, 1.6 * s, STONE, { 'stroke-width': 0.5 });
     rect(bal, shoreX, L.shore - 1.4 * s, W - shoreX + 2, 1.6 * s, STONE2, { 'stroke-width': 0.5 });
     for (let x = shoreX; x < W; x += 5 * s) el('rect', { x: x.toFixed(1), y: L.shore - 5.6 * s, width: 1.8 * s, height: 4.4 * s, fill: '#E9E2D2' }, bal);
-    for (let x = Math.max(shoreX, 0) + 10 * s; x < W - 8 * s; x += 26 * s) {
+    for (let x = shoreX + 10 * s; x < W - 8 * s; x += 26 * s) {
       const y = L.shore + (L.pt - L.shore) * 0.5;
-      if (fr && x > L.x0 - 10 && x < L.x1 + 10) continue;
-      ell(worldL, x, y, 9 * s, 2.6 * s, '#7E9A5A', { 'stroke-width': 0.4 });
-      for (let j = 0; j < 5; j++) el('circle', { cx: (x + (j - 2) * 3.2 * s).toFixed(1), cy: (y - 0.8 * s + (j % 2) * 1.4 * s).toFixed(1), r: 1.1 * s, fill: ['#CE1E32', '#F3D57E', '#F3EADA'][j % 3] }, worldL);
+      ell(worldL, x, y, 9 * s, Math.min(2.6 * s, (L.pt - L.shore) * 0.35), '#7E9A5A', { 'stroke-width': 0.4 });
+      for (let j = 0; j < 5; j++) el('circle', { cx: (x + (j - 2) * 3.2 * s).toFixed(1), cy: (y - 0.6 * s + (j % 2) * 1.2 * s).toFixed(1), r: 1.1 * s, fill: ['#CE1E32', '#F3D57E', '#F3EADA'][j % 3] }, worldL);
     }
     rect(worldL, -2, L.pt, W + 4, H - L.pt + 2, '#DCCFAC', { 'stroke-width': 0.6 });
     for (let y = L.pt + 9 * s; y < H; y += 9 * s) el('path', { d: `M0,${y.toFixed(1)} H${W}`, stroke: '#CFC09A', 'stroke-width': 0.6 }, worldL);
-
-    // ---- the Intramural Railway on its trestle, crossing behind the card
-    const railY = railY0();
-    {
-      const g = el('g', null, worldL);
-      for (let x = 6; x < W; x += 26 * s) {
-        line(g, x, railY + 3 * s, x - 3 * s, railY + 17 * s, { stroke: '#5E5248', 'stroke-width': 1 });
-        line(g, x, railY + 3 * s, x + 3 * s, railY + 17 * s, { stroke: '#5E5248', 'stroke-width': 1 });
-      }
-      rect(g, -2, railY, W + 4, 3.2 * s, '#6B5E52', { 'stroke-width': 0.6 });
-    }
-    const train = { g: el('g', null, worldL), l: el('g', null, lit(0.8)), x: -200, v: 70 * s, wait: rr(0, 6), len: 0 };
-    for (let i = 0; i < 3; i++) {
-      const x = i * 31 * s;
-      rect(train.g, x, railY - 14 * s, 29 * s, 12 * s, i ? '#2F4A3A' : '#3A5946', { rx: 2 * s });
-      rect(train.g, x - 1 * s, railY - 15.6 * s, 31 * s, 2.4 * s, '#5A3A2A', { rx: 1.2 * s });
-      for (let j = 0; j < 4; j++) {
-        rect(train.g, x + (3 + j * 6.4) * s, railY - 11.6 * s, 4.2 * s, 4.4 * s, '#EADFC6', { 'stroke-width': 0.4 });
-        el('rect', { x: x + (3 + j * 6.4) * s, y: railY - 11.6 * s, width: 4.2 * s, height: 4.4 * s, fill: '#FFE7A0' }, train.l);
-      }
-      circ(train.g, x + 6 * s, railY - 1.4 * s, 1.8 * s, '#2B2620'); circ(train.g, x + 23 * s, railY - 1.4 * s, 1.8 * s, '#2B2620');
-    }
-    el('circle', { cx: 93 * s, cy: railY - 8 * s, r: 2.4 * s, fill: '#FFF2C0' }, train.l);
-    train.len = 93 * s;
 
     // ---- the pavilions: the board's wall, five galleries of five
     const pav = [0, 1].map(n => {
@@ -889,7 +842,6 @@
       rect(g, x0 - w * 0.04, base - plinth, w * 1.08, plinth, STONE2);
       rect(g, x0, top, w, facH, STONE);
       const nat = NATION[n];
-      // the roof: a dome for one nation, a pediment and twin towers for the other
       if (n === 0) {
         rect(g, x0 - 3, top - 4, w + 6, 4, STONE2);
         path(g, `M${cx - w * 0.3},${top - 4} C${cx - w * 0.3},${top - w * 0.42} ${cx + w * 0.3},${top - w * 0.42} ${cx + w * 0.3},${top - 4} Z`, '#EDE5D2');
@@ -905,15 +857,12 @@
           flag(g, tx, top - w * 0.5, w * 0.1, w * 0.065, nat.b);
         }
       }
-      // bunting along the cornice
       const bunt = el('g', null, g);
       for (let i = 0; i < 9; i++) {
         const bx = x0 + w * (i + 0.5) / 9, bwd = w / 9;
         path(bunt, `M${bx - bwd * 0.45},${top + 1} L${bx + bwd * 0.45},${top + 1} L${bx},${top + 1 + bwd * 0.5} Z`, i % 2 ? nat.b : nat.a, { 'stroke-width': 0.5 });
       }
-      // the bays
-      const bays = [];
-      const glows = el('g', null, gl);
+      const bays = [], glows = el('g', null, gl);
       for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
         const bx = x0 + pw + c * (bw + pw), by = top + rg + r * (bh + rg) + bw * 0.12, k = kindAt(r, c), rad = bw / 2;
         const d = `M${bx},${by + bh} V${by + rad} A${rad},${rad} 0 0 1 ${bx + bw},${by + rad} V${by + bh} Z`;
@@ -928,12 +877,10 @@
         if (bw > 9) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.2, y: by + bh * 0.3, width: bw * 0.6, height: bw * 0.6, style: `color:${k === 3 ? '#3A2E06' : '#FFFBEF'};--t-bg:transparent` }, glow);
         bays.push({ fillG, glow, on: false });
       }
-      // the door the crews go in by, and the steps
       const dw = bw * 0.9;
       path(g, `M${cx - dw / 2},${base} V${base - plinth * 0.9 + dw / 2 * 0.4} Q${cx},${base - plinth * 1.2} ${cx + dw / 2},${base - plinth * 0.9 + dw / 2 * 0.4} V${base} Z`, '#4A3E33', { 'stroke-width': 0.6 });
       el('path', { d: `M${cx - dw * 0.36},${base} V${base - plinth * 0.75} Q${cx},${base - plinth * 1.05} ${cx + dw * 0.36},${base - plinth * 0.75} V${base} Z`, fill: '#FFD98A', opacity: 0.7 }, gl);
       bulbs(gl, `M${x0},${top + 0.5} H${x0 + w} M${x0 - w * 0.04},${base - plinth} H${x0 + w * 1.04}`, 1);
-      // scaffolding and a derrick, which come down as the front fills
       const scaff = el('g', { class: 'scaff' }, g);
       for (let c = 0; c <= 5; c++) line(scaff, x0 + c * (bw + pw) + pw / 2, top - w * 0.06, x0 + c * (bw + pw) + pw / 2, base - plinth, { stroke: '#8B6B45', 'stroke-width': 1.2 });
       for (let r = 0; r <= 5; r++) line(scaff, x0 - 2, top + r * (bh + rg) + rg * 0.4, x0 + w + 2, top + r * (bh + rg) + rg * 0.4, { stroke: '#9C7A50', 'stroke-width': 1.4 });
@@ -946,10 +893,8 @@
       line(hoist, hx, top - w * 0.37, hx, top - w * 0.12, { stroke: '#4A4038', 'stroke-width': 0.6 });
       rect(hoist, hx - w * 0.04, top - w * 0.12, w * 0.08, w * 0.06, STONE2, { 'stroke-width': 0.6 });
       return {
-        bays, scaff, glows, gl,
-        door: { x: cx, y: base - 1 },
+        bays, door: { x: cx, y: base - 1 },
         idle: [1, 2, 3, 4].map(i => ({ x: cx + (n ? -1 : 1) * (w / 2 + 6 * s + i * 9 * s), y: base })),
-        count: 0,
         sync(list, pop) {
           let count = 0;
           list.forEach((k, i) => {
@@ -967,21 +912,17 @@
               setTimeout(() => { if (!b.on) b.fillG.setAttribute('display', 'none'); }, 1500);
             }
           });
-          this.count = count;
           scaff.setAttribute('opacity', clamp(1 - count / 15, 0, 1).toFixed(2));
         },
       };
     });
 
-    // ---- the promenade: lamps, the agencies and the gate, and everyone on it
-    const farLane = el('g', null, worldL);
-    const kioskL = el('g', null, worldL);
-    const craftL = el('g', null, worldL);
-    const midLane = el('g', null, worldL);
-    const nearLane = el('g', null, worldL);
+    // ---- the promenade: lamps, a Cracker Jack cart, the agencies and the gate, and everyone on it
+    const farLane = el('g', null, worldL), kioskL = el('g', null, worldL), craftL = el('g', null, worldL);
+    const midLane = el('g', null, worldL), nearLane = el('g', null, worldL);
     const lampXs = [];
     for (let i = 0; i < L.items.length - 1; i++) lampXs.push((L.items[i] + L.items[i + 1]) / 2);
-    if (fr) lampXs.push(L.x0 - 8 * s, L.x1 + 8 * s);
+    lampXs.push(L.items[0] - 0.045 * W, L.items[L.items.length - 1] + 0.045 * W);
     for (const x of lampXs) {
       const g = el('g', { transform: tr(x, L.kb - 3 * s, s) }, kioskL);
       rect(g, -1.1, -52, 2.2, 52, '#2F3B33', NO);
@@ -991,6 +932,16 @@
       const l = el('g', { transform: tr(x, L.kb - 3 * s, s) }, lit(lightAt(x) + 0.2));
       el('circle', { cx: 0, cy: -55, r: 20, fill: 'url(#fair-glow)' }, l);
       for (const lx of [-7, 0, 7]) el('circle', { cx: lx, cy: lx ? -54.5 : -56.5, r: 2.6, fill: '#FFF0BF' }, l);
+    }
+    if (land) {
+      const x = (L.pavX[0] + L.pw * 0.5 + L.items[0]) / 2 - 0.02 * W, cj = el('g', { transform: tr(x, L.foot[0], s * 1.1) }, kioskL);
+      rect(cj, -10, -12, 20, 10, '#CE1E32', { rx: 1 });
+      rect(cj, -8, -10, 16, 4, '#F3D57E', NO);
+      circ(cj, -6, -1, 2.4, '#3A332B'); circ(cj, 6, -1, 2.4, '#3A332B');
+      line(cj, -10, -12, -10, -22, { stroke: '#4A3E33', 'stroke-width': 0.8 }); line(cj, 10, -12, 10, -22, { stroke: '#4A3E33', 'stroke-width': 0.8 });
+      path(cj, 'M-12,-22 H12 L10,-19 H-10 Z', '#F3EADA');
+      const vendor = person(kioskL, 'man');
+      vendor.setAttribute('transform', tr(x + 14 * s, L.foot[0] + 1, s * 0.95, true));
     }
     const kiosks = [];
     L.items.forEach((x, i) => {
@@ -1015,7 +966,7 @@
       circ(g, 31, -38, 1.9, '#F4EDDC', { 'stroke-width': 0.6 });
       kiosks.push({ x, slots: [-17, -6, 6, 17].map((dx, j) => ({ x: x + dx * s, y: L.kb - (8.6 + (j % 2) * 1.1) * s, c: null })) });
     });
-    const gate = { x: L.items[L.gateI], people: [] };
+    const gate = { x: L.items[L.gateI], people: [], spots: [] };
     {
       const g = el('g', { transform: tr(gate.x, L.kb, s) }, kioskL);
       for (const sx of [-1, 1]) {
@@ -1029,9 +980,8 @@
       const l = el('g', { transform: tr(gate.x, L.kb, s) }, lit(0.2));
       el('circle', { cx: 0, cy: -45, r: 16, fill: 'url(#fair-glow)' }, l);
       el('circle', { cx: 0, cy: -45, r: 3, fill: '#FFF0BF' }, l);
-      gate.spots = [];
       for (let row = 0; row < 3; row++) for (let i = 0; i < 6; i++) {
-        const dx = (i % 2 ? 1 : -1) * (6 + ((i / 2) | 0) * 10) + (row % 2) * 4;
+        const dx = (i % 2 ? 1 : -1) * (7 + ((i / 2) | 0) * 11) + (row % 2) * 5;
         gate.spots.push({ x: gate.x + dx * s, y: L.kb + (3 + row * 5) * s, c: null });
       }
     }
@@ -1042,11 +992,10 @@
 
     const wheel = { g: el('g', null, nearL), cars: [], R: L.wR, x: L.wX, a: 0 };
     {
-      const Rw = wheel.R, base = L.mid + 2, hubY = base - 0.2 * Rw - Rw;
+      const Rw = wheel.R, base = L.midG + 2, hubY = base - 0.2 * Rw - Rw;
       wheel.y = hubY;
       const g = wheel.g, iron = 'var(--iron)';
       const leg = (x1, y1, x2, y2, w) => el('line', { x1, y1, x2, y2, style: `stroke:${iron}`, 'stroke-width': w, 'stroke-linecap': 'round' }, g);
-      // the back tower, the rim, then the front tower over it
       leg(wheel.x, hubY, wheel.x - Rw * 0.5, base, Rw * 0.035);
       leg(wheel.x, hubY, wheel.x + Rw * 0.5, base, Rw * 0.035);
       const rot = el('g', null, g);
@@ -1072,7 +1021,6 @@
       leg(wheel.x - Rw * 0.4, hubY + Rw * 0.75, wheel.x + Rw * 0.4, hubY + Rw * 0.75, Rw * 0.02);
       el('circle', { cx: wheel.x, cy: hubY, r: Rw * 0.08, style: `fill:${iron}` }, g);
       el('circle', { cx: wheel.x, cy: hubY, r: Rw * 0.035, fill: '#C9A227' }, g);
-      // the 36 cars, each hanging level as the wheel turns
       const cw = Rw * 0.13, ch = cw * 0.72;
       for (let i = 0; i < 36; i++) {
         const c = el('g', null, g);
@@ -1086,12 +1034,9 @@
       el('path', { d: `M${wheel.x - Rw * 0.62},${base} L${wheel.x + Rw * 0.62},${base}`, style: `stroke:${iron}`, 'stroke-width': 2 }, g);
     }
 
-    const balloon = { g: el('g', null, nearL) };
+    const balloon = { g: el('g', null, nearL), x: L.balloonX, anchor: L.hz - 4, r: clamp(0.03 * Math.max(W, H), 10, 30) };
     {
-      const br = fr ? clamp(0.15 * L.top, 9, 30) : clamp(0.06 * H, 9, 18);
-      balloon.r = br;
-      balloon.x = fr ? L.x1 - 0.16 * (L.x1 - L.x0) : W * 0.64;
-      balloon.anchor = fr ? L.y0 + 12 : L.hz - 4;
+      const br = balloon.r;
       balloon.tether = el('line', { x1: balloon.x, x2: balloon.x, y1: 0, y2: balloon.anchor, stroke: '#3A332B', 'stroke-width': 0.8 }, balloon.g);
       const b = el('g', null, balloon.g);
       balloon.body = b;
@@ -1101,17 +1046,13 @@
       el('rect', { x: -br * 0.28, y: 0, width: br * 0.56, height: br * 0.4, fill: '#7A5A3A', stroke: INK, 'stroke-width': 0.6 }, b);
     }
 
-    // ---- the lights that are not strings of bulbs: searchlights, then fireworks over everything
+    // ---- searchlights, then fireworks over everything
     const beams = [];
-    const beamSrc = fr
-      ? [[W * 0.44, L.hz - 40 * u, -0.5], [W * 0.6, L.hz - 50 * u, 0.4], [L.x1 + L.rw * 0.28, L.hz - 34 * u, 0.9]]
-      : [[W * 0.36, L.hz - 28 * u, -0.4], [W * 0.66, L.hz - 30 * u, 0.5]];
-    for (const [x, y, a0] of beamSrc) {
-      const g = el('g', { opacity: 0 }, lightL), len = H * 1.6, bw = len * 0.028;
+    for (const [k, h, a0] of L.beams) {
+      const g = el('g', { opacity: 0 }, lightL), len = Math.max(W, H) * 1.4, bw = len * 0.026;
       el('path', { d: `M0,0 L${-bw},${-len} L${bw},${-len} Z`, fill: 'url(#fair-beam)' }, g);
-      beams.push({ g, x, y, a0, ph: rr(0, 6), sp: rr(0.18, 0.3) });
+      beams.push({ g, x: k * W, y: L.hz - h * u, a0, ph: rr(0, 6), sp: rr(0.18, 0.3) });
     }
-    // Fireworks: a pool of sparks drawn as short streaks along their flight, a flash where each shell breaks.
     const fireG = el('g', { 'stroke-linecap': 'round' }, lightL), sparks = [], rockets = [], flashes = [];
     for (let i = 0; i < 320; i++) sparks.push({ e: el('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: '#FFF', 'stroke-width': 1.8, opacity: 0 }, fireG), life: 0 });
     for (let i = 0; i < 6; i++) flashes.push({ e: el('circle', { r: 1, fill: 'url(#fair-glow)', opacity: 0 }, fireG), t: 9 });
@@ -1121,7 +1062,7 @@
     const walkers = [];
     const walkerTypes = ['man', 'man', 'man', 'woman', 'woman', 'woman', 'woman', 'boy', 'girl'];
     const lanes = [[farLane, L.foot[0], 0.82], [midLane, L.foot[1], 0.95], [nearLane, L.foot[2], 1.08]];
-    const counts = !L.story ? [0, 0, 0] : fr ? [Math.round(W / 150), Math.round(W / 190), Math.round(W / 250)] : [4, 3, 2];
+    const counts = land ? [Math.round(W / 95), Math.round(W / 125), Math.round(W / 170)] : [5, 4, 4];
     lanes.forEach(([par, y, sc], li) => {
       for (let i = 0; i < counts[li]; i++) {
         const type = pick(walkerTypes), child = type === 'boy' || type === 'girl';
@@ -1154,7 +1095,6 @@
       return false;
     }
     function drop(a) { a.state = 'gone'; a.g.remove(); }
-
     // A new month's crowd: four craftspeople walk in to each agency.
     function refill(instant) {
       for (const kq of kiosks) kq.slots.forEach((sl, i) => {
@@ -1185,7 +1125,7 @@
       crew.forEach((a, i) => {
         freeSlot(a);
         if (fromGate) gate.people.splice(gate.people.indexOf(a), 1);
-        a.crew = crew; a.nation = n; a.v = 48 * s;
+        a.crew = crew; a.nation = n; a.v = 52 * s;
         if (room) { a.state = 'hired'; a.tx = pav[n].door.x + (i - (crew.length - 1) / 2) * 4 * s; a.ty = pav[n].door.y; }
         else {                                           // nowhere to put them: they stand idle by the pavilion
           const spot = pav[n].idle.find(sp => !sp.c) || pav[n].idle[3];
@@ -1217,22 +1157,19 @@
     // ---- start where the day is
     if (!story.seeded) { seedBays(builtFor(f0)); story.seeded = true; }
     pav.forEach((p, n) => p.sync(story.bays[n], false));
-    if (f0 >= HIRES_FROM && f0 < ROUNDS_TO && L.story) {
+    if (f0 >= HIRES_FROM && f0 < ROUNDS_TO) {
       refill(true);
       for (let i = 0, n = (R() * 3) | 0; i < n; i++) { const a = craft((R() * 5) | 0, gate.x, L.kb, 1, 'gate'); sendToGate(a); a.x = a.tx; a.y = a.ty; a.state = 'gate'; place(a); }
     }
     walkers.forEach(a => { place(a); walking(a, !STILL); });
     midStroll.forEach(a => { place(a); walking(a, !STILL); });
-    let hireT = 0.6, prevF = f0;
-
+    let hireT = 0.6, prevF = f0, frameN = 0, nightLit = null;
     const crossed = (a, p, f) => (p <= f ? p < a && a <= f : a > p || a <= f);
-    let frameN = 0;
 
     /* -------------------------------------------------------------- update */
     function update(dt, f) {
       frameN++;
       const nightK = keyed(NIGHT, f)[0], warmK = keyed(WARM, f)[0];
-      // the sky and the light over the world
       if (frameN % 3 === 1 || dt === 0) {
         const c = keyed(SKY, f);
         stops.forEach((st, i) => st.setAttribute('stop-color', c[i]));
@@ -1265,14 +1202,16 @@
       const day = f > 0.1 && f < 0.53;
       for (const b of gulls) {
         b.x += b.v * dt;
-        if (b.x > W + 30) { b.x = -30 - rr(200, 1400); b.y = rr(0.2, 0.8) * cloudTop; }
+        if (b.x > W + 30) { b.x = -30 - rr(200, 1400); b.y = rr(0.25, 0.9) * cloudTop; }
         b.g.setAttribute('display', day ? 'inline' : 'none');
         b.g.setAttribute('transform', `translate(${b.x.toFixed(1)} ${(b.y + Math.sin(b.x * 0.03) * 3).toFixed(1)})`);
       }
-      // the illumination
+      // the illumination, and the title's tiles glowing with it
       let litK = 0;
       for (const L0 of lights) { const v = litAt(f, L0.d).toFixed(2); if (v !== L0.v) { L0.v = v; L0.g.setAttribute('opacity', v); } litK = Math.max(litK, +v); }
-      wheel.g.style.setProperty('--lit', litAt(f, 0.5).toFixed(2));
+      const wl = litAt(f, 0.5);
+      wheel.g.style.setProperty('--lit', wl.toFixed(2));
+      if ((wl > 0.5) !== nightLit) { nightLit = wl > 0.5; titleEl.classList.toggle('nightlit', nightLit); }
       for (let i = 0; i < jets.length; i += 2) {
         if (!litK) break;
         const hue = jetColour(clockT * 0.25 + i * 0.07);
@@ -1289,11 +1228,11 @@
       // the captive balloon goes up and down by day and comes down for the night
       {
         const up = f > 0.09 && f < 0.54 ? smooth(clamp(Math.min(f - 0.09, 0.54 - f) / 0.04, 0, 1)) * (0.55 + 0.45 * Math.sin(clockT * 0.21)) : 0;
-        const topY = fr ? L.y0 - (0.25 + 0.6 * up) * L.top : L.hz - (0.25 + 0.55 * up) * L.hz;
-        const by = lerp(balloon.anchor + balloon.r * 3, topY, up > 0 ? 1 : 0) + Math.sin(clockT * 0.9) * 1.2;
-        balloon.body.setAttribute('transform', `translate(${(balloon.x + Math.sin(clockT * 0.4) * 2).toFixed(1)} ${by.toFixed(1)})`);
+        const topY = L.hz - (0.12 + 0.7 * up) * (L.hz - 0.12 * H);
+        const bx = balloon.x + Math.sin(clockT * 0.4) * 2, by = topY + Math.sin(clockT * 0.9) * 1.2;
+        balloon.body.setAttribute('transform', `translate(${bx.toFixed(1)} ${by.toFixed(1)})`);
         balloon.tether.setAttribute('y1', by.toFixed(1));
-        balloon.tether.setAttribute('x1', (balloon.x + Math.sin(clockT * 0.4) * 2).toFixed(1));
+        balloon.tether.setAttribute('x1', bx.toFixed(1));
         balloon.g.setAttribute('display', up > 0.01 ? 'inline' : 'none');
       }
       // the boats and the railway
@@ -1333,7 +1272,7 @@
         h.g.setAttribute('opacity', Math.sin(a) > 0 ? 1 : 0.55);
       });
       // the story: rounds, hires, crews putting displays up
-      if (f >= HIRES_FROM && f < HIRES_TO && L.story) {
+      if (f >= HIRES_FROM && f < HIRES_TO) {
         hireT -= dt;
         if (hireT <= 0) {
           hireT = HIRE_GAP * rr(0.8, 1.25);
@@ -1404,15 +1343,12 @@
     }
 
     function launch() {
-      const sc = fr ? clamp(Math.max(L.top, L.lw * 0.6) / 110, 0.75, 1.7) : 0.6;
-      let x, y;
-      if (fr && R() < 0.5) { x = rr(L.x0 + 20, L.x1 - 20); y = rr(0.3, 0.7) * L.top; }
-      else if (fr) { x = R() < 0.5 ? rr(0.12, 0.88) * L.lw : L.x1 + rr(0.12, 0.88) * L.rw; y = rr(0.12, 0.62) * L.hz; }
-      else { x = rr(0.12, 0.88) * W; y = rr(0.1, 0.32) * H; }
+      const sc = clamp(Math.min(W, H) / 560, 0.6, 1.6);
+      const x = rr(0.06, 0.94) * W, y = rr(0.06, 1) * (L.hz - 0.14 * H);
       const free = sparks.find(p => p.life <= 0 && !p.rocket);
       if (!free) return;
       free.rocket = true;
-      rockets.push({ e: free.e, x, y0: fr ? L.hz : L.hz, y1: y, t: 0, dur: rr(0.55, 0.85), scale: sc, done: () => { free.rocket = false; } });
+      rockets.push({ e: free.e, x, y0: L.hz, y1: y, t: 0, dur: rr(0.55, 0.85), scale: sc });
       free.e.setAttribute('stroke', '#FFE9B0'); free.e.setAttribute('stroke-width', 1.6);
       setTimeout(() => { free.rocket = false; }, 1200);
     }
@@ -1429,7 +1365,7 @@
         p.e.setAttribute('stroke-width', (rr(1.4, 2.2) * Math.max(0.85, sc)).toFixed(2));
         made++;
       }
-      const fl = flashes.find(f => f.t > 0.5);
+      const fl = flashes.find(q => q.t > 0.5);
       if (fl) { fl.t = 0; fl.r = 26 * sc; fl.e.setAttribute('cx', x.toFixed(1)); fl.e.setAttribute('cy', y.toFixed(1)); }
     }
 
@@ -1452,7 +1388,7 @@
     return mix(JET[i], JET[(i + 1) % JET.length], k);
   }
 
-  /* -------------------------------------------------------------- lifecycle */
+  /* -------------------------------------------------------------- the loop */
 
   let clockT = 0, world = null, raf = 0, last = 0, running = false;
   const fNow = () => (START + clockT / CYCLE) % 1;
@@ -1483,20 +1419,88 @@
     raf = 0;
   }
 
+  /* ------------------------------------------------- the front door's states
+
+     title: the Fair, the word, the button. menu: the setup card over a dimmed
+     Fair, the word kept above it when there is room. lobby: the same for the
+     lobby card. Empty in a game, when nothing here draws. Anyone with a room to
+     rejoin, or coming back from a game, goes straight to the menu: the title is
+     for arriving. */
+
+  const front = mode => { body.dataset.front = mode; };
+  const visible = sec => !sec.classList.contains('hidden');
+  function fit() {
+    const target = visible(lobby) ? lobby.querySelector('.setup-card') : card;
+    const lb = titleEl.querySelector('.title-logo').getBoundingClientRect();
+    const ch = target ? target.getBoundingClientRect().height : 0;
+    if (innerWidth >= 940) {
+      const room = lb.bottom + 18 + ch <= innerHeight - 12;
+      body.classList.toggle('fair-roomy', room);
+      body.style.setProperty('--card-top', room ? Math.round(lb.bottom + 18) + 'px' : '18px');
+    } else {
+      body.classList.add('fair-roomy');
+      body.style.setProperty('--sheet-top', Math.round(lb.bottom + 14) + 'px');
+    }
+  }
+  function openMenu(byKey) {
+    titleEl.classList.remove('intro');
+    fit();
+    front('menu');
+    if (byKey) (card.querySelector('.seg-btn.on') || card.querySelector('button, input, select'))?.focus({ preventScroll: true });
+  }
+  let leaving = 0;
+  function closeMenu() {
+    if (body.dataset.front !== 'menu' || leaving) return;
+    body.classList.add('fair-leaving');
+    leaving = setTimeout(() => {
+      leaving = 0;
+      body.classList.remove('fair-leaving');
+      front('title');
+      playBtn.focus({ preventScroll: true });
+    }, 240);
+  }
+  playBtn.addEventListener('click', e => openMenu(e.detail === 0));
+  if (backBtn) backBtn.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', e => {
+    if (body.dataset.front === 'title' && (e.key === 'Enter' || e.key === ' ') && (e.target === body || e.target === document.documentElement)) { e.preventDefault(); openMenu(true); }
+    else if (body.dataset.front === 'menu' && e.key === 'Escape') closeMenu();
+  });
+  // A click on the Fair itself, outside the card, closes the menu; nothing else does (the end-of-game
+  // dialog's Home button, say, lands here a moment after ui.js has opened the menu).
+  document.addEventListener('click', e => {
+    if (body.dataset.front === 'menu' && (e.target === body || e.target === document.documentElement)) closeMenu();
+  });
+
+  function sync(first) {
+    const onSetup = visible(setup), onLobby = visible(lobby), on = onSetup || onLobby;
+    host.classList.toggle('hidden', !on);
+    scrim.classList.toggle('hidden', !on);
+    titleEl.classList.toggle('hidden', !on);
+    if (!on) { front(''); stop(); return; }
+    if (onLobby) { titleEl.classList.remove('intro'); front('lobby'); }
+    else if (first) {
+      const rejoin = document.getElementById('rejoin');
+      if ((rejoin && !rejoin.classList.contains('hidden')) || QS.has('menu')) front('menu');
+      else { front('title'); titleEl.classList.add('intro'); setTimeout(() => titleEl.classList.remove('intro'), 3400); }
+    } else { titleEl.classList.remove('intro'); front('menu'); }
+    requestAnimationFrame(fit);
+    start();
+  }
+
   let pending = 0;
-  const later = () => { clearTimeout(pending); pending = setTimeout(() => { if (!setup.classList.contains('hidden')) rebuild(); }, 220); };
-  addEventListener('resize', later);
-  let seen = false;
-  new ResizeObserver(() => { if (seen) later(); seen = true; }).observe(card);
-  let hidden = setup.classList.contains('hidden');
-  new MutationObserver(() => {
-    const now = setup.classList.contains('hidden');
-    if (now === hidden) return;                       // .fair and .band come and go here too
-    hidden = now;
-    if (now) stop();
-    else { rebuild(); start(); }
-  }).observe(setup, { attributes: true, attributeFilter: ['class'] });
+  addEventListener('resize', () => {
+    clearTimeout(pending);
+    pending = setTimeout(() => { if (visible(setup) || visible(lobby)) { rebuild(); fit(); } }, 200);
+  });
+  const watch = new MutationObserver(() => {
+    const now = (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '');
+    if (now === watch.last) return;                     // only the screens changing matters here
+    watch.last = now;
+    sync(false);
+  });
+  watch.last = (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '');
+  for (const sec of [setup, lobby]) watch.observe(sec, { attributes: true, attributeFilter: ['class'] });
 
   rebuild();
-  start();
+  sync(true);
 })();
