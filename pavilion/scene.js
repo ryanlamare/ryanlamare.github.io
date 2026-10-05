@@ -324,17 +324,20 @@
   // Opening night's lettering is the title's poster face.
   const SERIF = '"Abril Fatface", Didot, "Bodoni 72", Georgia, serif';
   // A pavilion's sign on opening night: the player's name on a navy board, and the score in a medallion
-  // at its end, the way the board shows a score.
-  function sign(p, cx, y, sw, sh, name, score) {
+  // at its end, the way the board shows a score. Gilded (Ryan, 5 Oct), each sign wears its own pavilion's
+  // colours, red and white over the domed one and navy and gold over the towered one, as the boards do.
+  const SIGNS = [{ bg: '#C41E30', rule: '#F3EADA' }, { bg: '#1C2747', rule: '#D9AE3A' }];
+  function sign(p, cx, y, sw, sh, name, score, n = 1) {
+    const { bg, rule } = SIGNS[GILDED ? n % 2 : 1];
     const g = el('g', null, p), x = cx - sw / 2, mr = sh * 0.8, mx = x + sw - mr * 0.42, my = y + sh / 2;
-    rect(g, x, y, sw, sh, '#1C2747', { 'stroke-width': 0.8 });
-    rect(g, x + 2.5, y + 2.5, sw - 5, sh - 5, 'none', { stroke: '#D9AE3A', 'stroke-width': 1 });
+    rect(g, x, y, sw, sh, bg, { 'stroke-width': 0.8 });
+    rect(g, x + 2.5, y + 2.5, sw - 5, sh - 5, 'none', { stroke: rule, 'stroke-width': 1 });
     const avail = mx - mr - x - sh * 0.35, fs = sh * 0.6;
     const t = el('text', { x: (x + sh * 0.35 + avail / 2).toFixed(1), y: (my + fs * 0.36).toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': fs.toFixed(1), fill: '#F8F2E4' }, g);
     t.textContent = name;
     if (t.getComputedTextLength() > avail) { t.setAttribute('textLength', avail.toFixed(1)); t.setAttribute('lengthAdjust', 'spacingAndGlyphs'); }
-    circ(g, mx, my, mr, '#1C2747', { 'stroke-width': 1 });
-    circ(g, mx, my, mr - 2.4, 'none', { stroke: '#E8B84B', 'stroke-width': 1.4 });
+    circ(g, mx, my, mr, bg, { 'stroke-width': 1 });
+    circ(g, mx, my, mr - 2.4, 'none', { stroke: GILDED && n % 2 === 0 ? rule : '#E8B84B', 'stroke-width': 1.4 });
     const digits = String(score), sfs = mr * (digits.length > 2 ? 0.74 : 0.95);
     el('text', { x: mx.toFixed(1), y: (my + sfs * 0.36).toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': sfs.toFixed(1), fill: '#F8F2E4' }, g).textContent = digits;
   }
@@ -1113,7 +1116,7 @@
         line(hoist, hx, top - w * 0.37, hx, top - w * 0.12, { stroke: '#4A4038', 'stroke-width': 0.6 });
         rect(hoist, hx - w * 0.04, top - w * 0.12, w * 0.08, w * 0.06, STONE2, { 'stroke-width': 0.6 });
       }
-      if (FIN) signs.push(p => sign(p, cx, rt, w * 1.04, signH, pl.name, pl.score));
+      if (FIN) signs.push(p => sign(p, cx, rt, w * 1.04, signH, pl.name, pl.score, n));
       return {
         bays, door: { x: cx, y: base - 1 }, g, gl, cx, w, base, roofTop: rt - w * 0.56, crown: rt - w * 0.3,
         idle: [1, 2, 3, 4].map(i => ({ x: cx + (n ? -1 : 1) * (w / 2 + 6 * s + i * 9 * s), y: base })),

@@ -202,7 +202,8 @@ function renderBoards(st) {
   st.boards.forEach((b, seat) => {
     const active = !st.over && seat === st.seatToMove;
     const el = document.createElement('div');
-    el.className = 'board' + (active ? ' active' : '');
+    // gilded, each board wears its pavilion's colours (the same two nations as opening night)
+    el.className = 'board' + (active ? ' active' : '') + (GILDED ? ` nation-${seat % 2}` : '');
     el.dataset.seat = seat;
     if (narrow && !active) {
       el.classList.add('collapsible');
@@ -688,8 +689,10 @@ function banner(html, cls = '') {
   if (FAIR) {
     // In the Fair's dress the board waits for the placard to go: a month's opening or
     // the displays going up should read as a beat, not happen under the words. Gilded,
-    // a splash holds a little longer, so its lit letters are seen lit.
-    const hold = GILDED && cls.includes('splash') ? 1300 : 1150;
+    // a splash holds a little longer, so its lit letters are seen lit, and a month's sign
+    // and the Fair's opening longer again (Ryan, 5 Oct): they are hung a letter at a time,
+    // the way the title is, and the lights come on before they go.
+    const hold = !GILDED ? 1150 : /\b(month|finale)\b/.test(cls) ? 1800 : cls.includes('splash') ? 1300 : 1150;
     bannerTimer = setTimeout(() => el.classList.remove('show'), T(hold));
     return sleep(T(hold + 30));
   }
@@ -730,10 +733,13 @@ function lettered(lines, say) {
   const box = document.createElement('div');
   box.className = 'lettered';
   box.dataset.say = say;
+  let before = 0; // letters in the lines above, so a second line is hung after the first (--o)
   for (const { text, size = 'm', arch = 0 } of lines) {
     const svg = window.PavilionLetters.line(text.toUpperCase(), { span: arch });
     svg.classList.add('ln', 'ln-' + size);
     svg.style.setProperty('--em', (svg.dataset.w / 100).toFixed(3));
+    svg.style.setProperty('--o', before);
+    before += text.length;
     box.appendChild(svg);
   }
   requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('lit')));
@@ -1046,7 +1052,7 @@ async function animateResolution(interim, final) {
   setSky('');
   hideDealTiles();
   skyTo(final.round - 1 + HOUR.night, 500);
-  await banner(monthSplashHTML(final.round), 'splash');
+  await banner(monthSplashHTML(final.round), 'splash month');
   skyTo(final.round - 1 + HOUR.dawn, 1300);
   await dealAnimation();
 }
@@ -1333,7 +1339,7 @@ function startGame(cfg) {
     animating = true;
     hideDealTiles();
     await coachOn('intro');
-    await banner(monthSplashHTML(1), 'splash');
+    await banner(monthSplashHTML(1), 'splash month');
     skyTo(s.round - 1 + HOUR.dawn, 1300);
     await dealAnimation();
     animating = false;
