@@ -5,7 +5,8 @@
 // pool / line / floor, PAVILION-RULES.md §10) because the theme has moved
 // three times and a stored game is meant to outlive the term. So the mapping
 // from those words to Pavilion's — a kind is a discipline, a source is an
-// agency, the pool is the gate, a line is a crew, the floor is idle — is made
+// agency, the pool is the gate, a line is a scaffold (a crew until 5 Oct 2026),
+// the floor is idle, the first-player marker is First Pick — is made
 // here, once, and a fourth theme change is an edit to this file.
 //
 // Three rules from the memo govern the rest of it:
@@ -87,7 +88,7 @@ function tileHTML(kind, cls = '') {
   return `<div class="tile k${kind}${cls ? ' ' + cls : ''}"><svg class="ic" aria-hidden="true"><use href="#${ICONS[kind]}"/></svg></div>`;
 }
 function tokenHTML() {
-  return `<div class="token" title="First Call token"><svg class="ic" aria-hidden="true"><use href="#ic-first"/></svg></div>`;
+  return `<div class="token" title="First Pick token"><svg class="ic" aria-hidden="true"><use href="#ic-first"/></svg></div>`;
 }
 
 // "3 galleries", "1 aisle" — the end screen counts things and a bare plural
@@ -140,7 +141,7 @@ function renderSources(st) {
       for (let n = 0; n < counts[kind]; n++) {
         slots.push(
           `<button class="tile k${kind}" data-kind="${kind}"
-             aria-label="Engage ${counts[kind]} ${DISC[kind]} from the ${AGENCY_NAMES[i]} agency; the rest go to the gate">
+             aria-label="Hire ${counts[kind]} ${DISC[kind]} from the ${AGENCY_NAMES[i]} agency; the rest go to the gate">
              <svg class="ic" aria-hidden="true"><use href="#${ICONS[kind]}"/></svg>
            </button>`
         );
@@ -169,8 +170,8 @@ function renderPool(st) {
       b.dataset.kind = kind;
       b.setAttribute(
         'aria-label',
-        `Engage ${st.pool[kind]} ${DISC[kind]} from the gate` +
-          (st.firstTokenInPool ? ' (comes with the First Call token)' : '')
+        `Hire ${st.pool[kind]} ${DISC[kind]} from the gate` +
+          (st.firstTokenInPool ? ' (comes with the First Pick token)' : '')
       );
       b.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${ICONS[kind]}"/></svg>`;
       c.appendChild(b);
@@ -213,8 +214,8 @@ function renderBoards(st) {
         cells.push(`<span class="ccell${occ ? ' occ' : ''}">${occ ? tileHTML(t.kind) : ''}</span>`);
       }
       const label = t.count
-        ? `Gallery ${cap} crew: ${t.count} of ${cap} ${DISC[t.kind]}`
-        : `Gallery ${cap} crew: empty, room for ${cap}`;
+        ? `Row ${cap} scaffold: ${t.count} of ${cap} ${DISC[t.kind]}`
+        : `Row ${cap} scaffold: empty, room for ${cap}`;
       crews.push(
         `<button class="crew" data-row="${r}" aria-label="${label}">${cells.join('')}</button>`
       );
@@ -249,7 +250,7 @@ function renderBoards(st) {
 
     const you = G.online && seat === G.mySeat ? '<span class="you">you</span>' : '';
     const away = G.online && G.presence[seat] === false ? '<span class="away" role="status">reconnecting…</span>' : '';
-    const fm = b.firstToken ? '<svg class="board-fm" role="img" aria-label="Has First Call next month" title="First Call next month"><use href="#ic-first"/></svg>' : '';
+    const fm = b.firstToken ? '<svg class="board-fm" role="img" aria-label="Holds First Pick: starts next month" title="First Pick: starts next month"><use href="#ic-first"/></svg>' : '';
     // The board is the front of the player's pavilion: the name and the score on its sign, the roof over
     // it, and the bunting under it; the clock and the token stand over the crews.
     const head = `<div class="board-head">
@@ -386,7 +387,7 @@ function applySelection() {
 function idleBill(seat, move) {
   const before = G.cur.boards[seat];
   const after = E.applyTake(G.cur, { source: move.source, kind: move.kind, dest: move.dest }).boards[seat];
-  // the First Call token lands first and costs the same wherever the hire goes, so it is not on the bill
+  // the First Pick token lands first and costs the same wherever the hire goes, so it is not on the bill
   const token = after.floor.includes(E.FIRST_TOKEN) && !before.floor.includes(E.FIRST_TOKEN) ? 1 : 0;
   let bill = 0;
   for (let i = before.floor.length + token; i < after.floor.length; i++) bill += E.FLOOR_PENALTIES[i];
@@ -899,6 +900,8 @@ async function animateResolution(interim, final) {
           [{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }],
           { duration: T(260), easing: 'ease-in-out' }
         );
+        // the tutorial says what the bill is for while the row still holds what it charges
+        await coachOn('bill', { seat, pen, first: b.floor.includes(E.FIRST_TOKEN) });
         $$('.icell .islot', idleEl).forEach((slot, i) => {
           const inner = slot.firstElementChild;
           if (!inner) return;
@@ -968,7 +971,7 @@ async function animateResolution(interim, final) {
     setTimeout(() => $('#pool-chip').classList.remove('wave'), T(1600));
   }
 
-  // Next month's agencies fill. Who holds First Call is announced to screen
+  // Next month's agencies fill. Who holds First Pick is announced to screen
   // readers by the month-begins announce in playMove; the splash itself is
   // just the month (Ryan, playtest 2026-08-13).
   G.view = snap(final);
@@ -1141,9 +1144,9 @@ function describeMove(before, interim, move) {
       : before.pool[move.kind];
   const src =
     move.source.type === 'source' ? `the ${AGENCY_NAMES[move.source.index]} agency` : 'the gate';
-  let msg = `${name} ${verb(name, 'engages', 'engage')} ${n} ${DISC[move.kind]} from ${src}`;
+  let msg = `${name} ${verb(name, 'hires', 'hire')} ${n} ${DISC[move.kind]} from ${src}`;
   if (move.source.type === 'pool' && before.firstTokenInPool) {
-    msg += ' and takes the First Call token';
+    msg += ' and takes the First Pick token';
   }
   if (move.source.type === 'source') {
     const spilled = before.sources[move.source.index].reduce((a, b) => a + b, 0) - n;
@@ -1151,7 +1154,7 @@ function describeMove(before, interim, move) {
   }
   msg +=
     move.dest.type === 'line'
-      ? `. Put on the gallery ${move.dest.row + 1} crew.`
+      ? `. On the row ${move.dest.row + 1} scaffold.`
       : '. Left idle.';
   const idled =
     interim.boards[before.seatToMove].floor.length - before.boards[before.seatToMove].floor.length;
@@ -2071,9 +2074,9 @@ document.addEventListener('click', (e) => {
         const n =
           source.type === 'source' ? G.cur.sources[source.index][kind] : G.cur.pool[kind];
         announce(
-          `Engaging ${n} ${DISC[kind]} from ${
+          `Hiring ${n} ${DISC[kind]} from ${
             source.type === 'source' ? `the ${AGENCY_NAMES[source.index]} agency` : 'the gate'
-          }. Choose a highlighted crew, or leave them idle.`
+          }. Choose a highlighted scaffold, or leave them idle.`
         );
       }
       applySelection();
@@ -2469,7 +2472,7 @@ if (!RELAY_URL) {
 // first game is coached on the real board: a spotlight, a pointing hand and one
 // short line at a time, and every move is a real move through submitMove and
 // playMove like any other. The deal is a fixed seed with the lesson in month 1:
-// two Science at the middle agency fill the gallery 2 crew exactly, the
+// two Science at the middle agency fill the row 2 scaffold exactly, the
 // Commissioner (deterministic) answers from another agency, and the one
 // Machinery left at the gate fills gallery 1, so at the month's end the two
 // displays go up one above the other and score 1, then 2. After the first month
@@ -2484,35 +2487,81 @@ if (!RELAY_URL) {
 const LESSON_LINES = {
   // The opening, before the first month (Ryan, 3 Oct: say what the game is
   // about and what is at stake, the way Azul's rulebook opens, then "let's
-  // play a round together").
+  // play a round together"). Rewritten 5 Oct (Ryan: "this will be the key
+  // ruleset for anyone who's never played"): every rule is now said once, at
+  // the moment it is seen; the labels are the plain ones he approved that day
+  // (scaffold for crew, First Pick for First Call), and the board's own words,
+  // rows, columns and colors, wherever a rule depends on them.
   kicker: 'Learn to play',
   intro: [
     ["Welcome to the World's Fair", 'Chicago, 1893. Nations from across the globe are racing to finish their pavilions before the Fair opens. You are building yours, and the Commissioner across the way is building theirs.'],
-    ['This is your pavilion', 'Its 25 spaces wait for displays of art, science, machinery, electricity and agriculture. Every display you put up scores points, and displays that join up score more.'],
-    ['Workers come to the agencies', 'Each month they arrive looking for work. You and the Commissioner take turns hiring them, and every crew you fill puts up one display.'],
+    ['This is your pavilion', 'Its 25 spaces wait for displays of art, science, machinery, electricity and agriculture: five to a row, one space for each color. Every display scores points, and displays that join up score more.'],
+    ['Workers come to the agencies', 'Each month they arrive looking for work. You and the Commissioner take turns hiring them.'],
+    ['Workers build from scaffolds', 'Beside each row of your pavilion is a scaffold. Fill one with workers of a single color and, when the month ends, they put up a display in that row.'],
     ['Five months at least', 'A row of your pavilion takes at least five months to fill. The month someone completes one, construction stops, the Fair opens and the judges score every pavilion. The most points wins.'],
   ],
   disciplines: ['Art', 'Science', 'Machinery', 'Electricity', 'Agriculture'],
   letsPlay: "Let's play the first month together",
-  hire: ['Hire these two', 'You always hire every one of a color at an agency.'],
-  place: ['Put them on this crew', 'It has room for exactly two.'],
-  gate: ['The rest wait at the gate', 'Anyone can hire them from here later.'],
+  hire: ['Hire these two', 'You always hire every worker of one color at an agency.'],
+  place: ['Put them on this scaffold', 'It holds exactly two.'],
+  gate: ['The rest wait at the gate', 'Anyone can hire them from here later, all of one color at a time.'],
   rival: ["The Commissioner's turn", 'Your rival builds a pavilion too, from the same crowd.'],
-  hire2: ['Hire this one from the gate', 'The first to the gate each month takes the First Call token too.'],
-  place2: ['Put it on this crew', 'This one has room for one.'],
-  token: ['You hold First Call', 'You start next month. But the token stands idle, and idle costs points.'],
-  free: ['Your turn: hire any group', 'Then put them on a crew that lights up.'],
-  freePlace: ['Now pick a lit crew', "Anyone who doesn't fit stands idle."],
-  idle: ['Extras stand idle', 'Each one costs points when the month ends.'],
-  build: ['The month is over', 'Every full crew now puts up one display in your pavilion.'],
-  first: ['Your first display: +1', 'A display on its own scores 1.'],
-  joined: (d) => [`Joined up: +${d}`, 'A display that joins others scores for the whole unbroken line.'],
-  goal: ['Fill a row to open the Fair', 'The month someone fills a row, the game ends. Most points wins.'],
+  hire2: ['Hire this one from the gate', 'The first to hire from the gate each month also takes the First Pick token.'],
+  place2: ['Put it on this scaffold', 'This one holds one.'],
+  token: ['You hold First Pick', "You'll pick first next month, but the token sits on your idle row and costs a point."],
+  free: ['Your turn: hire any group', 'Then put them on a scaffold that lights up.'],
+  freePlace: ['Now pick a lit scaffold', "Anyone who doesn't fit stands idle, and the red figure shows what that would cost."],
+  idle: ['Extras stand idle', 'Each one costs points when the month ends, and the cost grows along the row.'],
+  build: ['The month is over', "The workers on every full scaffold put up their display. A scaffold that isn't full keeps its workers for next month."],
+  first: ['Your first display: +1', "It goes in its color's space in that row. A display on its own scores 1."],
+  joined: (d) => [`Joined up: +${d}`, 'A display that joins others scores for the whole unbroken line, across and down.'],
+  bill: (pen, first) => [
+    pen === 1 ? 'Idle costs you a point' : `Idle costs you ${pen} points`,
+    'Everything on your idle row costs points at the end of the month, more the further along the row it stands.' +
+      (first ? ' Holding First Pick, you start next month.' : ''),
+  ],
+  goal: ['Fill a row to open the Fair', 'The month someone fills a row, the game ends and the judges add bonuses for full rows, full columns and all five of a color. Most points wins.'],
+  bonus: ['+2', 'a full row', '+7', 'a full column', '+10', 'all five of a color'],
   bye: ['Over to you', 'The rest of the game is yours. Beat the Commissioner!'],
   next: 'Next',
   go: 'Play on',
   skip: 'Skip the tutorial',
 };
+
+// The cards' pictures. A scaffold of three Science becoming one display in its
+// row (the row is the board's third, its spaces in the board's own order), and
+// the judges' three bonuses on little pavilions, the spaces faded the way an
+// unbuilt space is and the ones that score lit.
+const kindAt = (r, c) => (c - r + 5) % 5; // the wall's pattern: inverse of E.wallColumn
+function scaffoldArt() {
+  const row = [0, 1, 2, 3, 4]
+    .map((c) => {
+      const k = kindAt(2, c);
+      return `<span class="ca-bay${k === 1 ? ' on' : ''}">${tileHTML(k, k === 1 ? '' : 'open')}</span>`;
+    })
+    .join('');
+  return (
+    `<div class="ca-build"><span class="ca-scaffold">${tileHTML(1)}${tileHTML(1)}${tileHTML(1)}</span>` +
+    `<svg class="ca-arrow" viewBox="0 0 40 16" aria-hidden="true"><path d="M2,8 H32 M26,2 L34,8 L26,14"/></svg>` +
+    `<span class="ca-row">${row}</span></div>`
+  );
+}
+function bonusArt() {
+  const b = LESSON_LINES.bonus;
+  const grid = (lit) => {
+    let cells = '';
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) cells += `<i class="k${kindAt(r, c)}${lit(r, c) ? ' on' : ''}"></i>`;
+    return `<span class="cb-grid">${cells}</span>`;
+  };
+  const one = (lit, i) => `<span class="cb-one">${grid(lit)}<b>${esc(b[i])}</b><em>${esc(b[i + 1])}</em></span>`;
+  return (
+    `<div class="cb-bonus">` +
+    one((r) => r === 0, 0) +
+    one((r, c) => c === 0, 2) +
+    one((r, c) => kindAt(r, c) === 1, 4) +
+    `</div>`
+  );
+}
 
 // A Victorian printer's pointing hand, the manicule: the bill-poster's own way
 // of saying "here". Drawn pointing right; the fingertip is at (91, 19.5).
@@ -2612,12 +2661,12 @@ function makeCoach() {
   // (the spot, unless said otherwise).
   // dim: darken the board even with nothing lit; page: [i, n] for the opening's
   // cards, which are larger, centred when nothing is lit, and may carry art.
-  function show(key, { spot = null, aim = null, tap = false, next = false, lines = L[key], dim = false, page = null, art = '' } = {}) {
+  function show(key, { spot = null, aim = null, tap = false, next = false, lines = L[key], dim = false, page = null, art = '', wide = false } = {}) {
     if (release) release();
     release = null;
     step = { key, spot, aim: aim || spot, tap, dim, page, hold: tap ? 'tap' : next ? 'next' : 'free' };
     say(lines);
-    card.classList.toggle('intro', !!page);
+    card.classList.toggle('intro', !!page || wide);
     $('.coach-art', card).innerHTML = art;
     $('.coach-dots', card).innerHTML = page ? [...Array(page[1])].map((_, i) => `<i class="${i === page[0] ? 'on' : ''}"></i>`).join('') : '';
     nextBtn.hidden = !next;
@@ -2625,6 +2674,7 @@ function makeCoach() {
     skipBtn.hidden = key === 'bye';
     root.dataset.hold = step.hold;
     root.classList.add('on');
+    document.body.classList.add('coaching');
     card.classList.remove('pop');
     void card.offsetWidth;
     card.classList.add('pop');
@@ -2638,6 +2688,7 @@ function makeCoach() {
   function hide() {
     step = null;
     root.classList.remove('on');
+    document.body.classList.remove('coaching');
   }
 
   nextBtn.addEventListener('click', () => {
@@ -2805,7 +2856,7 @@ function makeCoach() {
       let row = 0;
       for (let r = 1; r < 5; r++) if (wall[r].reduce((a, b) => a + b, 0) > wall[row].reduce((a, b) => a + b, 0)) row = r;
       openMine();
-      await show('goal', { spot: () => [$$('.board[data-seat="0"] .wrow')[row]], next: true });
+      await show('goal', { spot: () => [$$('.board[data-seat="0"] .wrow')[row]], next: true, art: bonusArt(), wide: true });
       if (!coach) return;
       await show('bye', { next: L.go });
       endCoach();
@@ -2851,7 +2902,8 @@ function makeCoach() {
   // and fill in front of the player straight after.
   async function intro() {
     const tiles = L.disciplines.map((d, k) => `<span class="coach-disc">${tileHTML(k)}<b>${esc(d)}</b></span>`).join('');
-    const spots = [null, () => [mine('.wall')], () => [$('#sources')], () => [$$('.board[data-seat="0"] .wrow')[0]]];
+    const spots = [null, () => [mine('.wall')], () => [$('#sources')], () => [mine('.crews')], () => [$$('.board[data-seat="0"] .wrow')[0]]];
+    const arts = [tiles, '', '', scaffoldArt(), ''];
     const n = L.intro.length;
     for (let i = 0; i < n; i++) {
       await show('intro', {
@@ -2859,7 +2911,7 @@ function makeCoach() {
         spot: spots[i] || null,
         dim: true,
         page: [i, n],
-        art: i === 0 ? tiles : '',
+        art: arts[i] || '',
         next: i === n - 1 ? L.letsPlay : true,
       });
       if (!coach) return;
@@ -2877,6 +2929,13 @@ function makeCoach() {
     openMine(true);
     if (!full().length) return;
     await show('build', { spot: full, next: true });
+  }
+
+  // The month's idle bill, the first time the player has one: the row lit while it still holds what it charges.
+  async function bill({ seat, pen, first }) {
+    if (seat !== 0 || seen.has('bill')) return;
+    seen.add('bill');
+    await show('bill', { spot: () => [mine('.idle')], next: true, lines: L.bill(pen, first) });
   }
 
   async function display({ seat, r, c, d }) {
@@ -2899,6 +2958,7 @@ function makeCoach() {
       if (ev === 'move') return Promise.resolve(moved(d));
       if (ev === 'resolve') return resolving();
       if (ev === 'display') return display(d);
+      if (ev === 'bill') return bill(d);
       return Promise.resolve();
     },
     end() {
@@ -2906,6 +2966,7 @@ function makeCoach() {
       raf = 0;
       window.removeEventListener('click', guard, true);
       root.remove();
+      document.body.classList.remove('coaching');
       const r = release;
       release = null;
       step = null;

@@ -928,8 +928,8 @@ Every mechanic carries meaning — this is a reskin, not a coat of paint:
 | Factory display | **An agency** | Sends over a mixed group; you get first pick of one discipline |
 | Take all of one colour | — | Engage every sculptor an agency sends. The rest weren't hired, so they're still looking — they go and wait with everyone else |
 | Centre pool | **The gate** | Whoever a rival passed over. (Not "the hall" — at a world's fair a hall is a building) |
-| First-player marker | **First Call** token | First pick at the gate next week, *at a cost*. Keeps the first-mover idea week 2 already teaches |
-| Pattern lines | **The crew for one display** | One discipline each; a half-crewed display doesn't go up and waits |
+| First-player marker | **First Pick** token (First Call until 5 Oct 2026) | The first to hire from the gate picks first next month, *at a cost*. Keeps the first-mover idea week 2 already teaches |
+| Pattern lines | **The scaffold for one display** (the crew until 5 Oct 2026; the crew is now the workers on it) | One color each; a scaffold that isn't full doesn't build, and keeps its workers |
 | Line capacity 1…5 | **Display size** | Small cases near the door take one hand; the great set pieces at the back take five — which is how exhibitions were actually laid out, so the ladder explains itself |
 | Phase B | **The displays go up** | The crew finishes, the display stands, and the rest move on to another pavilion |
 | The wall | **Your pavilion** | 25 displays. Rows are **galleries**, columns are **aisles** |
@@ -1176,7 +1176,7 @@ to hold contrast on cream, which drifts the palette off `brand.css`.
 
 Switching is four CSS lines and no new art, so it stays live.
 
-### The First Call token
+### The First Pick token (the First Call token until 5 Oct 2026)
 
 ⚖️ **A chamfered plate, a double keyline, and a Clarendon numeral 1**, ink on
 `--paper` cream. It must read as *unmistakably not a tile* — that requirement is
@@ -1336,8 +1336,10 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   play**.
 - **Learn to play** (Ryan: not a page of rules, but "a scripted tutorial like
   they do in video games, with highlights for 'grab these tiles' and 'put them
-  here'"; show, don't tell). It replaced a six-step text panel the same day. It
-  opens on four cards over the empty board (Ryan, same evening: say what the
+  here'"; show, don't tell). It replaced a six-step text panel the same day.
+  (Reworked 5 Oct so it teaches every rule, with five opening cards, a step at
+  the idle bill and the bonuses' picture: *The gilded pass*, his fourth look.) It
+  opened on four cards over the empty board (Ryan, same evening: say what the
   game is about and what is at stake, the way Azul's rulebook opens): the Fair
   and the race to finish, with the five disciplines; your pavilion, lit; the
   agencies, lit, which then fill in front of you; and the stakes (a row takes at
@@ -1718,6 +1720,51 @@ leave a tall empty gate at the start of every month, which is his call.
     Convenience · Dr. H. H. Holmes, Proprietor* (`holmesBill` in `scene.js`;
     the words are Claude's, written as the hotel's own advertisement would
     have been, and Larson's readers will hear the rest).
+- **His fourth look (5 Oct, night): the labels and the tutorial.** Ryan: the
+  tutorial is "the key ruleset for anyone who's never played", and "crews",
+  "First Call" and "gate" might not make sense unless you know Azul. Read
+  through on screen, line by line beside what each line points at. **The gate
+  stayed** (it looks like a gate, and "the rest wait at the gate" needs no
+  explaining). Two labels changed, each with the paragraph his rule asks for,
+  and he approved both:
+
+  > **Scaffold** (was crew). Beside each row of your pavilion stands a scaffold,
+  > with room for one worker at the top and five at the bottom, because the
+  > great set pieces at the back need the most hands. Its workers are building
+  > one display, so a scaffold takes one color at a time. When it's full at the
+  > month's end, they put the display up in the row beside them and move on to
+  > the next pavilion; one that isn't full keeps its workers until it is.
+
+  > **First Pick** (was First Call). Each month, the first nation to hire from
+  > the gate earns first pick of next month's crowd and takes the First Pick
+  > token to show it. The privilege isn't free: the token sits on your idle row
+  > and costs a point.
+
+  "Crew" named people while the screen showed a staircase of empty boxes, and
+  the tutorial used it on its third card before one had been shown; "First
+  Call" did not say what the token does. Screen-reader labels and move
+  announcements follow (*Row 2 scaffold: 1 of 2 Science*; *hires* for the old
+  *engages*). **The tutorial now says every rule once, where it is seen**:
+  - a fifth opening card, *Workers build from scaffolds*, on your scaffolds, with
+    a picture of three Science on a scaffold becoming one display in its row;
+  - the pavilion card says *five to a row, one space for each color*, so a row
+    taking each color once needs no rule of its own;
+  - at the gate, *all of one color at a time*; placing, *the red figure shows
+    what that would cost* (the hire preview, until then unexplained);
+  - at the month's end, *a scaffold that isn't full keeps its workers*, and the
+    first display says *it goes in its color's space in that row*;
+  - a new step at the month's idle bill (*Idle costs you a point*: the cost
+    grows along the row, and holding First Pick you start next month; the
+    `bill` hook in `animateResolution`, shown once, while the row still holds
+    what it charges);
+  - the last card, *Fill a row to open the Fair*, now names the judges' bonuses
+    and shows them: +2 a full row, +7 a full column, +10 all five of a color, on
+    three small pavilions in the board's own pattern.
+  The cards' explanations went a size up and from grey to ink, the cards a
+  little wider, and score popups pass under a card while it is up. The words
+  stay Claude's, in `LESSON_LINES`, for Ryan to change. A one-page rules sheet
+  was not added: he cut the old text panel on 3 Oct in favour of the tutorial
+  ("show, don't tell").
 - **The name stays Pavilion, without an exclamation mark** (he asked whether
   "PAVILION!" would be better, and whether Claude liked the name): it is the thing
   you build, one word the way Azul is, and the "!" belongs to the moments that
@@ -2022,7 +2069,7 @@ supposed to reach them.
 
 **2. The copy.** Every player-facing string is Pavilion's now, in one file.
 Rounds read **W1, W2…**; Phase B is **the displays go up**; the centre is **the
-gate**; the floor line is **idle**; a pattern line is **the crew for gallery N**;
+gate**; the floor line is **idle**; a pattern line is **the crew for gallery N** (the scaffold since 5 Oct 2026);
 the end screen is **opening day** and counts *galleries · aisles · disciplines*.
 The final table's columns are **Pavilion · Complete · Play · Bonus · Total**.
 

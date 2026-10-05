@@ -356,7 +356,7 @@ activity. Its specs are `pavilion/PAVILION.md` (design, why) and
 not drift.** A tile has a `kind`, it comes from a `source` or the `pool`, and it
 goes to a `line` or the `floor` — through `engine.js`, `bot.js`, `relay/`, the
 wire format and the tests. The game is *called* Pavilion and the player sees
-disciplines, agencies, the gate, crews and idle, but **every one of those words
+disciplines, agencies, the gate, scaffolds, First Pick and idle, but **every one of those words
 lives in `ui.js` and nowhere else**, so a fourth theme is an edit to one file
 rather than a migration of the archive (rules spec §10). Read *Theme* in
 `PAVILION.md` before writing any player-facing string, and don't rename an
