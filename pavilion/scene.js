@@ -200,7 +200,7 @@
   }
 
   function gent(g, type, skin, hair, o) {
-    const crafts = o.k != null, boy = type === 'boy';
+    const crafts = o.k != null, boy = type === 'boy', board = !!o.board;
     const coat = crafts ? '#EEE6D3' : (o.coat || pick(SUIT));
     const trou = crafts ? pick(['#3D3832', '#4B443B', '#33363B']) : boy ? coat : (R() < 0.55 ? coat : pick(['#3A3530', '#55504A', '#6A6358']));
     for (const side of ['b', 'a']) {
@@ -211,6 +211,7 @@
     }
     const ub = el('g', { class: 'ub' }, g);
     const sleeve = crafts ? '#E4DAC4' : shade(coat, 0.1);
+    if (board) rect(ub, -9.6, -37.2, 3.4, 26.4, '#5E1822', { rx: 0.6 });   // the back board, seen past him
     const ba = el('g', { class: 'am b' }, ub);
     rect(ba, -1.5, -36.2, 3.2, 15.2, sleeve, { rx: 1.5 });
     circ(ba, 0.1, -20.7, 1.5, skin);
@@ -231,8 +232,20 @@
     circ(ub, 0.5, -41.7, 4.3, skin);
     circ(ub, 2.9, -42.3, 0.45, INK, NO);
     path(ub, 'M-3.7,-42.4 Q-3.9,-46.6 0.5,-46.5 Q4.4,-46.3 4.7,-43.8 Q2.2,-45.3 -0.8,-44.3 Q-2.7,-43.4 -3.7,-40.8 Z', hair);
-    if (!crafts && !boy && R() < 0.45) path(ub, 'M1.6,-39.6 Q3.1,-40.5 4.7,-39.4', 'none', { stroke: hair, 'stroke-width': 1.2 });
-    hat(ub, crafts ? 'cap' : boy ? 'sailor' : pick(['bowler', 'bowler', 'boater', 'boater', 'boater', 'top']), crafts ? KC[o.k] : null);
+    if (board) path(ub, 'M0.2,-39.9 Q2.9,-41.4 5.6,-39.2 Q6.3,-38.2 5.4,-38.5 Q3,-39.6 1,-39.1 Z', hair);   // a moustache of note
+    else if (!crafts && !boy && R() < 0.45) path(ub, 'M1.6,-39.6 Q3.1,-40.5 4.7,-39.4', 'none', { stroke: hair, 'stroke-width': 1.2 });
+    hat(ub, board ? 'bowler' : crafts ? 'cap' : boy ? 'sailor' : pick(['bowler', 'bowler', 'boater', 'boater', 'boater', 'top']), crafts ? KC[o.k] : null);
+    if (board) {
+      // the front board, on straps over his shoulders: HOTEL, and the street
+      path(ub, 'M-4.6,-37.4 L-6.2,-36.4 M5,-37.4 L6.6,-36.4', 'none', { stroke: '#3A2A20', 'stroke-width': 0.8 });
+      const fb = el('g', null, ub);
+      rect(fb, -6.4, -36.6, 14.2, 25.6, '#7A1E2A', { rx: 0.6 });
+      rect(fb, -5.4, -35.6, 12.2, 23.6, 'none', { stroke: '#E8C24B', 'stroke-width': 0.5, 'vector-effect': 'none' });
+      el('text', { x: 0.7, y: -27.6, 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': 3.9, fill: '#F3EADA' }, fb).textContent = 'HOTEL';
+      el('text', { x: 0.7, y: -22.8, 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': 2.1, fill: '#E8C24B' }, fb).textContent = "WORLD'S FAIR";
+      el('text', { x: 0.7, y: -16.4, 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': 2.5, fill: '#F3EADA' }, fb).textContent = '63RD ST.';
+      return;
+    }
     if (crafts) placard(ub, o.k, sleeve, skin);
     else {
       const fa = el('g', { class: 'am a' }, ub);
@@ -306,7 +319,7 @@
 
   function person(par, type, o = {}) {
     const g = el('g', null, par);
-    const skin = pick(SKIN), hair = pick(HAIR);
+    const skin = o.board ? SKIN[0] : pick(SKIN), hair = o.board ? '#2B211A' : pick(HAIR);
     if (type === 'woman' || type === 'girl') lady(g, type, skin, hair, o);
     else gent(g, type, skin, hair, o);
     return g;
@@ -1433,9 +1446,12 @@
       balloon.tether = el('line', { x1: balloon.x, x2: balloon.x, y1: 0, y2: balloon.anchor, stroke: '#3A332B', 'stroke-width': 0.8 }, balloon.g);
       const b = el('g', null, balloon.g);
       balloon.body = b;
-      el('circle', { cx: 0, cy: -br * 1.6, r: br, style: 'fill:var(--bal)', stroke: INK, 'stroke-width': 0.8 }, b);
-      for (const k of [-0.55, 0, 0.55]) el('path', { d: `M${k * br},${-br * 2.58} Q${k * br * 1.9},${-br * 1.6} ${k * br * 0.5},${-br * 0.72}`, fill: 'none', style: 'stroke:var(--bal2)', 'stroke-width': br * 0.22 }, b);
-      el('path', { d: `M${-br * 0.7},${-br * 0.9} L${-br * 0.25},0 M${br * 0.7},${-br * 0.9} L${br * 0.25},0`, stroke: '#3A332B', 'stroke-width': 0.6 }, b);
+      // the envelope and its rigging are their own groups, so the envelope can fill and empty (update, below)
+      balloon.ropes = el('g', null, b);
+      el('path', { d: `M${-br * 0.7},${-br * 0.9} L${-br * 0.25},0 M${br * 0.7},${-br * 0.9} L${br * 0.25},0`, stroke: '#3A332B', 'stroke-width': 0.6 }, balloon.ropes);
+      balloon.env = el('g', null, b);
+      el('circle', { cx: 0, cy: -br * 1.6, r: br, style: 'fill:var(--bal)', stroke: INK, 'stroke-width': 0.8 }, balloon.env);
+      for (const k of [-0.55, 0, 0.55]) el('path', { d: `M${k * br},${-br * 2.58} Q${k * br * 1.9},${-br * 1.6} ${k * br * 0.5},${-br * 0.72}`, fill: 'none', style: 'stroke:var(--bal2)', 'stroke-width': br * 0.22 }, balloon.env);
       el('rect', { x: -br * 0.28, y: 0, width: br * 0.56, height: br * 0.4, fill: '#7A5A3A', stroke: INK, 'stroke-width': 0.6 }, b);
     }
 
@@ -1465,6 +1481,14 @@
         walkers.push(a);
       }
     });
+    // A sandwich-board man for the World's Fair Hotel on 63rd Street, the one Erik Larson wrote about in The
+    // Devil in the White City (Ryan, 5 Oct: "a hh holmes easter egg … a small funny thing"). Nothing grim is
+    // drawn or said: a man with a moustache and a board, and his handbill if you click him (holmesBill, below).
+    // He keeps to the middle lane, left to right so his board reads, by day and by night.
+    const holmes = { g: person(midLane, 'man', { board: true, coat: '#2B2A2E' }), x: rr(0.1, 0.6) * W, y: L.foot[1] + 1 * s, s: s * 0.95 * 1.04, face: 1, walking: false, night: true, holmes: true };
+    holmes.v = 17 * holmes.s;
+    holmes.g.style.setProperty('--stp', clamp(13 * holmes.s / holmes.v, 0.22, 0.6).toFixed(2) + 's');
+    walkers.push(holmes);
 
     const crafts = [];
     function place(a) { a.g.setAttribute('transform', tr(a.x, a.y, a.s, a.face < 0)); }
@@ -1625,16 +1649,27 @@
         const a = wheel.a + (i / 36) * Math.PI * 2;
         c.setAttribute('transform', `translate(${(wheel.x + Math.cos(a) * wheel.R).toFixed(1)} ${(wheel.y + Math.sin(a) * wheel.R).toFixed(1)})`);
       });
-      // the captive balloon goes up and down by day and comes down for the night
+      // the captive balloon (Ryan, 5 Oct: it used to appear and vanish): it lies empty by its basket on the far
+      // shore through the night, fills in the morning, standing up off its side as it does, rises, and goes up and
+      // down on its tether through the day; at dusk it comes down, empties and tips over again
       {
-        const up = f > 0.09 && f < 0.54 ? smooth(clamp(Math.min(f - 0.09, 0.54 - f) / 0.04, 0, 1)) * (0.55 + 0.45 * Math.sin(clockT * 0.21)) : 0;
-        let topY = L.hz - (0.12 + 0.7 * up) * (L.hz - 0.12 * H);
-        for (const [x0, x1, y1] of L.keepOut) if (balloon.x > x0 - 2 * balloon.r && balloon.x < x1 + 2 * balloon.r) topY = Math.max(topY, y1 + 2.8 * balloon.r);
-        const bx = balloon.x + Math.sin(clockT * 0.4) * 2, by = topY + Math.sin(clockT * 0.9) * 1.2;
+        const br = balloon.r;
+        const rise = f > 0.085 && f < 0.54 ? smooth(clamp(Math.min(f - 0.085, 0.54 - f) / 0.04, 0, 1)) : 0;
+        const fill = smooth(clamp(Math.min((f - 0.055) / 0.03, (0.57 - f) / 0.03), 0, 1));
+        const ground = balloon.anchor - br * 0.4;
+        let topY = lerp(ground, L.hz - (0.12 + 0.7 * (0.55 + 0.45 * Math.sin(clockT * 0.21))) * (L.hz - 0.12 * H), rise);
+        for (const [x0, x1, y1] of L.keepOut) if (balloon.x > x0 - 2 * br && balloon.x < x1 + 2 * br) topY = Math.max(topY, Math.min(ground, y1 + 2.8 * br));
+        const bx = balloon.x + Math.sin(clockT * 0.4) * 2 * rise, by = topY + Math.sin(clockT * 0.9) * 1.2 * rise;
         balloon.body.setAttribute('transform', `translate(${bx.toFixed(1)} ${by.toFixed(1)})`);
         balloon.tether.setAttribute('y1', by.toFixed(1));
         balloon.tether.setAttribute('x1', bx.toFixed(1));
-        balloon.g.setAttribute('display', up > 0.01 ? 'inline' : 'none');
+        // empty, the envelope lies along the ground from the basket, thin; filling, it fattens, lifts off its side
+        // and stands up over the basket (the morning one lies to the left, the evening one tips to the right)
+        const wob = 1 + 0.05 * Math.sin(clockT * 9) * fill * (1 - fill) * 4;
+        const tilt = Math.pow(1 - fill, 1.6) * 88 * (f < 0.3 ? -1 : 1);
+        const pivot = lerp(0.1 * br, -0.6 * br, fill);
+        balloon.env.setAttribute('transform', `translate(0 ${pivot.toFixed(1)}) rotate(${tilt.toFixed(1)}) scale(${((0.3 + 0.7 * fill) * wob).toFixed(3)} ${(0.62 + 0.38 * fill).toFixed(3)}) translate(0 ${(0.6 * br).toFixed(1)})`);
+        balloon.ropes.setAttribute('transform', `scale(${(0.6 + 0.4 * fill).toFixed(3)} ${(0.15 + 0.85 * fill).toFixed(3)})`);
       }
       // the boats and the railway
       for (const b of boats) {
@@ -1656,7 +1691,7 @@
       for (const a of walkers) {
         a.x += a.v * a.face * dt;
         if (a.x > W + 30 || a.x < -30) {
-          a.face = R() < 0.5 ? 1 : -1;
+          a.face = a.holmes ? 1 : R() < 0.5 ? 1 : -1;
           a.x = a.face > 0 ? -25 : W + 25;
           a.g.setAttribute('display', late && !a.night ? 'none' : 'inline');
         }
@@ -1888,7 +1923,42 @@
       body.style.setProperty('--fin-free', Math.max(0, Math.round(free - 0.02 * H)) + 'px');
     }
 
-    return { update, fireAt(x, y) { if (y < L.hz - 6) launch(x, y); } };
+    function onHolmes(x, y) {
+      const h = holmes.s * 52;
+      return x > holmes.x - 0.32 * h && x < holmes.x + 0.32 * h && y > holmes.y - h && y < holmes.y + 4;
+    }
+    return {
+      update,
+      fireAt(x, y) {
+        if (onHolmes(x, y)) holmesBill(holmes.x, holmes.y - holmes.s * 52);
+        else if (y < L.hz - 6) launch(x, y);
+      },
+    };
+  }
+
+  // His handbill, a card that comes up over him for a few seconds, worded as the hotel's own advertisement would
+  // have been. It is the only place he is named.
+  let billEl = null, billTimer = 0;
+  function holmesBill(x, y) {
+    if (!billEl) {
+      billEl = document.createElement('div');
+      billEl.className = 'holmes-bill';
+      billEl.setAttribute('role', 'note');
+      billEl.innerHTML = "<p class='hh-kick'>Visitors to the Exposition</p><p class='hh-name'>World's Fair Hotel</p>"
+        + "<p class='hh-addr'>63rd &amp; Wallace Streets, Englewood</p><p class='hh-rule' aria-hidden='true'></p>"
+        + "<p class='hh-body'>Rooms by the Day or the Week<br>Every Modern Convenience</p>"
+        + "<p class='hh-prop'>Dr. H. H. Holmes, Proprietor</p>";
+      billEl.addEventListener('click', () => billEl.classList.remove('up'));
+      body.appendChild(billEl);
+    }
+    const w = 236, left = clamp(x - w / 2, 10, innerWidth - w - 10), top = clamp(y - 190, 10, innerHeight - 200);
+    billEl.style.left = left + 'px';
+    billEl.style.top = top + 'px';
+    billEl.classList.remove('up');
+    void billEl.offsetWidth;
+    billEl.classList.add('up');
+    clearTimeout(billTimer);
+    billTimer = setTimeout(() => billEl && billEl.classList.remove('up'), 7000);
   }
 
   /* ------------------------------------------------------- the board's Fair (?gilded)
@@ -2296,6 +2366,7 @@
   host.addEventListener('click', e => { if (body.dataset.front === 'title' && world && world.fireAt) world.fireAt(e.clientX, e.clientY); });
 
   const front = mode => {
+    if (mode !== body.dataset.front && billEl) billEl.classList.remove('up');   // the handbill goes with its screen
     if (mode !== body.dataset.front && (mode === 'menu' || mode === 'lobby')) calmUntil = performance.now() + 750;
     body.dataset.front = mode;
     if (mode === 'menu') requestAnimationFrame(vStart); else vStop();

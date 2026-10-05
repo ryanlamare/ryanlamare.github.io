@@ -502,15 +502,17 @@ body.fair #name-field.needed #name-inputs::after { content: 'Type your name. The
 
 /* Kind 0-4, in engine order. The engine never learns which discipline is
    which — that mapping lives in ui.js and here (PAVILION-RULES.md §10). */
-.tile.k0 { --t-bg: var(--art); --t-ic: #F2ECDC; --t-bd: #6B2C1B; }  /* Art */
-.tile.k1 { --t-bg: var(--sci); --t-ic: #EFF3F7; --t-bd: #24486A; }  /* Science */
-.tile.k2 { --t-bg: var(--mac); --t-ic: #E4DDCB; --t-bd: #000000; }  /* Machinery */
+/* --t-sh is the shade each symbol casts (index.html, the sprite): darker than the tile under a light symbol,
+   lighter under Electricity's dark one, the way a stamped mark catches the light. */
+.tile.k0 { --t-bg: var(--art); --t-ic: #F2ECDC; --t-bd: #6B2C1B; --t-sh: #4E1E12; }  /* Art */
+.tile.k1 { --t-bg: var(--sci); --t-ic: #EFF3F7; --t-bd: #24486A; --t-sh: #1B3550; }  /* Science */
+.tile.k2 { --t-bg: var(--mac); --t-ic: #E4DDCB; --t-bd: #000000; --t-sh: #000000; }  /* Machinery */
 /* The two cogs sit on the viewBox diagonal, so the same 62% box gives a
    visibly smaller mark than the other four. Nudged, not redrawn — the
    double-lobe silhouette is what earns the icon its place. */
 .tile.k2 .ic { width: 72%; height: 72%; }
-.tile.k3 { --t-bg: var(--ele); --t-ic: #2A2206; --t-bd: #9E7C13; }  /* Electricity */
-.tile.k4 { --t-bg: var(--nat); --t-ic: #F0EAD9; --t-bd: #2A6A3A; }  /* Agriculture */
+.tile.k3 { --t-bg: var(--ele); --t-ic: #2A2206; --t-bd: #9E7C13; --t-sh: #F2D777; }  /* Electricity */
+.tile.k4 { --t-bg: var(--nat); --t-ic: #F0EAD9; --t-bd: #2A6A3A; --t-sh: #1F4C2C; }  /* Agriculture */
 
 /* Punch #3 — bordered means hireable. Only craftspeople still to be engaged
    are buttons, and only they carry the heavy frame; a display already raised,
@@ -1162,6 +1164,14 @@ body.fair .tile {
   background-blend-mode: normal, soft-light;
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 3px 6px rgba(27, 28, 25, .28);
 }
+/* each tile an enamel plaque (5 Oct 2026, Ryan: the tiles were the last of the old build): a cream keyline just
+   inside its edge, inside the heavy frame on a tile that can be hired; not on the faded unbuilt spaces, and not
+   on the smallest cells of a phone, where it would only crowd the symbol */
+body.fair .tile { outline: 1px solid rgba(255, 246, 222, .5); outline-offset: -3px; }
+body.fair button.tile { outline-offset: -5px; }
+body.fair .tile.open { outline: none; }
+body.fair .tile:focus-visible { outline: 3px solid var(--sci); outline-offset: 2px; }
+@media (max-width: 480px) { body.fair .ccell .tile, body.fair .icell .tile, body.fair .wcell .tile { outline: none; } }
 body.fair button.tile:hover { transform: translateY(-4px); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .3), inset 0 -3px 0 rgba(0, 0, 0, .24), 0 9px 14px rgba(27, 28, 25, .3); }
 body.fair .tile.sel {
   transform: translateY(-6px) scale(1.08);
@@ -1816,3 +1826,21 @@ body.fair .invite-btn { font-size: 17px; padding: 9px 18px 9px 10px; }
 body.fair .lobby-actions .ghost-btn { padding: 11px 16px; font-size: 16px; }
 body.fair .handbill .learn-btn:active, body.fair .invite-btn:active, body.fair .lobby-actions .ghost-btn:active { transform: translateY(2px); box-shadow: inset 0 0 0 1.5px #1C2747, inset 0 0 0 3.5px #FBF7EE, inset 0 0 0 4.5px rgba(201, 162, 39, .8), 0 1px 0 rgba(28, 39, 71, .35); }
 @media (prefers-reduced-motion: reduce) { body.fair #title .title-play::before, body.fair #title .title-play::after { animation: none; opacity: 1; } }
+
+/* the sandwich-board man's handbill (scene.js holmesBill): the World's Fair Hotel's own advertisement, printed
+   like the menu's bill, up for a few seconds over him when he is clicked */
+.holmes-bill {
+  position: fixed; z-index: 4; width: 236px; padding: 14px 16px 12px; text-align: center; pointer-events: auto; cursor: pointer;
+  background: #F6F0E2; color: var(--ink); border-radius: 3px;
+  box-shadow: inset 0 0 0 1px #9C7B2E, inset 0 0 0 4px #F6F0E2, inset 0 0 0 5px rgba(201, 162, 39, .75), 0 14px 34px rgba(8, 10, 26, .45);
+  opacity: 0; visibility: hidden; transform: translateY(10px) rotate(-2deg); transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+}
+.holmes-bill.up { opacity: 1; visibility: visible; transform: rotate(-2deg); transition: opacity .3s ease, transform .35s cubic-bezier(.2, 1.3, .4, 1), visibility 0s; }
+.holmes-bill p { margin: 0; }
+.holmes-bill .hh-kick { font: italic 400 12.5px/1.2 "Old Standard", Georgia, serif; color: #5A4F45; }
+.holmes-bill .hh-name { margin-top: 4px; font: 400 23px/1.05 "Abril Fatface", var(--display); color: #7A1E2A; letter-spacing: .01em; }
+.holmes-bill .hh-addr { margin-top: 4px; font: 400 13px/1.25 "Old Standard", Georgia, serif; }
+.holmes-bill .hh-rule { width: 120px; height: 10px; margin: 8px auto 6px; background: linear-gradient(#B8973F, #B8973F) center / 100% 1px no-repeat; }
+.holmes-bill .hh-body { font: italic 400 13.5px/1.35 "Old Standard", Georgia, serif; }
+.holmes-bill .hh-prop { margin-top: 8px; font: 800 9.5px/1 "Libre Franklin", sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #5A4F45; }
+@media (prefers-reduced-motion: reduce) { .holmes-bill, .holmes-bill.up { transition: none; transform: none; } }

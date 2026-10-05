@@ -960,7 +960,10 @@ holds all five, exactly as every row does (rules spec §2). Distinguish them
 
 ### The register
 
-**1893 Chicago, and no grimness.** The Fair's uglier history — the Midway's
+**1893 Chicago, and no grimness.** (One wink, Ryan's own ask on 5 Oct 2026: a
+sandwich-board man for H. H. Holmes's World's Fair Hotel walks the promenade, and
+clicking him brings up the hotel's handbill. Nothing grim is drawn or said, and
+Holmes is named only on the handbill; see *The gilded pass*.) The Fair's uglier history — the Midway's
 ethnographic villages, the exclusion that prompted Wells and Douglass — is real
 and explicitly **out of scope** (Ryan, 2026-08-12): this is a fun game. The
 period supplies the White City, the electricity, the craft trades and the race
@@ -1051,6 +1054,28 @@ spelling out.
 `MACHINERY-something` beside a Machinery tile is a needless collision.
 
 ### Tiles — colour plus isotype, never text
+
+**Redrawn for the Fair, 5 Oct 2026** (Ryan: "do you like the tile images, maybe
+we can make them more period specific and ornate? … i think thats the last relic
+of the old build"). Drawn on a specimen plate at true playing size, as this
+section's method says, and the method decided it: every finer 1893 drawing
+(spoked gears, a wheat sheaf for Agriculture, an engraved bolt with sparks, a
+palette with brushes and paint) went to mush at 24–34px or turned into a
+different silhouette class (the sheaf read as a hand), so **the five shapes
+stayed** and the dress changed. Each symbol is now drawn twice in the sprite, a
+shade cast down and to the right in `--t-sh` (darker than the tile, lighter under
+Electricity's dark bolt) and the face over it, the way the title's letters are
+drawn; the holes are real cuts (even-odd), so the enamel shows through them
+rather than a flat disc of `--t-bg`, which had shown as a darker patch since the
+enamel gradient arrived on 3 Oct; the flask has a lip and a cork and the cogs
+have hubs; and every tile carries a cream keyline just inside its edge, an
+enamel plaque's (inside the heavy frame on a tile that can be hired, so
+"bordered means hireable" still holds; not on unbuilt spaces, not on a phone's
+smallest cells). The tree stayed the tree. The records' emblem copies
+(`records/isotypes.js`) follow, flat. The plate's verdicts, for the next time
+someone wants to redraw them: detail inside a symbol must survive 24px or not be
+drawn; a stroke round a symbol built from overlapping shapes shows its seams.
+
 
 **No words on tiles.** Each discipline is a flat background colour carrying a
 single isotype-style pictogram: solid silhouette, no outline, no interior detail,
@@ -1671,6 +1696,28 @@ leave a tall empty gate at the start of every month, which is his call.
   cannot, for the reason in `CLAUDE.md`: this repository is public and serves his
   whole site, a purchase is a personal licence, and a takedown notice would land
   on ryanlamare.com, not on a game.
+- **His third look (5 Oct, night), four notes:**
+  - **The balloon** no longer pops in and out: it lies empty by its basket on the
+    far shore through the night, fills and stands up off its side in the
+    morning, rises, rides its tether through the day, and at dusk comes down,
+    empties and tips over (`balloon.env`/`ropes` in `scene.js`).
+  - **The tutorial no longer moves the board.** Each step scrolled the page to
+    centre its spotlight once, so the Commissioner's first turn jumped the page
+    to its board and the next step jumped it back. A step that only shows
+    something now scrolls only when most of it is off the screen, and a step
+    that needs a tap scrolls just far enough to show it (`track` in the coach).
+    On a phone, where the Commissioner's board is below yours, it still scrolls
+    once, as it must.
+  - **The tiles**: see *Tiles*, above.
+  - **The Holmes wink**: a man in a bowler with a moustache of note and a red
+    sandwich board (HOTEL, World's Fair, 63rd St.) strolls the middle lane of
+    the promenade, left to right so the board reads, by day and by night, on
+    the front door and on opening night. A click on him brings up a handbill
+    for a few seconds: *Visitors to the Exposition · World's Fair Hotel · 63rd &
+    Wallace Streets, Englewood · Rooms by the Day or the Week · Every Modern
+    Convenience · Dr. H. H. Holmes, Proprietor* (`holmesBill` in `scene.js`;
+    the words are Claude's, written as the hotel's own advertisement would
+    have been, and Larson's readers will hear the rest).
 - **The name stays Pavilion, without an exclamation mark** (he asked whether
   "PAVILION!" would be better, and whether Claude liked the name): it is the thing
   you build, one word the way Azul is, and the "!" belongs to the moments that

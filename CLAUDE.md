@@ -412,6 +412,11 @@ at the Fair under a day that keeps the month's hours, each board the front of it
 pavilion (four nations, each with its own colours and roof), the big moments and
 the winner in the title's lit letters (`letters.js`), the menu as an 1893 bill,
 period buttons, "workers", and no Rehearsal (PAVILION.md, *The gilded pass*).
+The tiles' five **shapes** are load-bearing (readable at 24px, in greyscale, to a
+colour-blind player); redraw their dress, never their silhouettes, and judge any
+change on a specimen plate at playing size (PAVILION.md, *Tiles*). The
+sandwich-board man on the promenade is Ryan's H. H. Holmes easter egg, on
+purpose: leave him be.
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)

@@ -2676,9 +2676,15 @@ function makeCoach() {
     const u = rs.length
       ? { l: Math.min(...rs.map((r) => r.l)), t: Math.min(...rs.map((r) => r.t)), r: Math.max(...rs.map((r) => r.r)), b: Math.max(...rs.map((r) => r.b)) }
       : null;
-    if (u && !scrolled && (u.t < top || u.b > vh)) {
-      scrolled = true;
-      rs[0].e.scrollIntoView({ block: 'center', behavior: instant() ? 'auto' : 'smooth' });
+    // The board stays still (Ryan, 5 Oct: the Commissioner's turn moved it). A step that only shows something
+    // scrolls the page only if most of it is off the screen; a step that needs a tap scrolls just far enough to
+    // show what to tap, and no further.
+    if (u && !scrolled) {
+      const shown = Math.max(0, Math.min(u.b, vh) - Math.max(u.t, top)) / Math.max(1, u.b - u.t);
+      if (step.tap ? u.t < top || u.b > vh : shown < 0.5) {
+        scrolled = true;
+        rs[0].e.scrollIntoView({ block: step.tap ? 'nearest' : 'center', behavior: instant() ? 'auto' : 'smooth' });
+      }
     }
     root.classList.toggle('lit', !!u || step.dim);
     const key = rs.map((r) => [r.l, r.t, r.r, r.b].map(Math.round).join(',')).join(';');

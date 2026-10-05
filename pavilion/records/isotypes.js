@@ -10,7 +10,10 @@
 // literally what the cabinet will show.
 //
 // The symbols paint with `currentColor` and knock out with `--t-bg`, so the
-// colour is set by whatever encloses them (the trophy bowl, in practice).
+// colour is set by whatever encloses them (the trophy bowl, in practice). The
+// five disciplines follow the game's sprite as it was redrawn on 5 Oct 2026
+// (the flask's cork, the cogs' hubs, holes cut rather than painted), flat,
+// without the game's cast shade.
 //
 // ---------------------------------------------------------------------------
 // **Drawing one for a champion who asks.** This is expected, not exceptional:
@@ -66,32 +69,11 @@ export const EMBLEMS = [
 ];
 
 export const SPRITE = `<svg style="display:none" aria-hidden="true">
-  <symbol id="ic-art" viewBox="0 0 24 24">
-      <ellipse cx="11.6" cy="12.6" rx="10" ry="8.8" fill="currentColor"/>
-      <circle cx="20.8" cy="5.2" r="5.6" fill="var(--t-bg, transparent)"/>
-      <circle cx="14.2" cy="15.2" r="2.5" fill="var(--t-bg, transparent)"/>
-    </symbol>
-  <symbol id="ic-sci" viewBox="0 0 24 24">
-      <path d="M9.6,2.6 H14.4 V8.7 L20.9,20.0 Q21.6,21.4 20.1,21.4 H3.9 Q2.4,21.4 3.1,20.0 L9.6,8.7 Z"
-            fill="currentColor"/>
-    </symbol>
-  <symbol id="ic-mac" viewBox="0 0 24 24">
-      <path d="M14.34,9.79 L16.06,10.86 L15.59,12.15 L13.59,11.85 L12.22,13.34 L12.68,15.30 L11.43,15.88 L10.23,14.26 L8.21,14.34 L7.14,16.06 L5.85,15.59 L6.15,13.59 L4.66,12.22 L2.70,12.68 L2.12,11.43 L3.74,10.23 L3.66,8.21 L1.94,7.14 L2.41,5.85 L4.41,6.15 L5.78,4.66 L5.32,2.70 L6.57,2.12 L7.77,3.74 L9.79,3.66 L10.86,1.94 L12.15,2.41 L11.85,4.41 L13.34,5.78 L15.30,5.32 L15.88,6.57 L14.26,7.77 Z"
-            fill="currentColor"/>
-      <path d="M20.57,18.21 L21.72,19.48 L20.99,20.46 L19.44,19.74 L17.89,20.55 L17.62,22.24 L16.39,22.29 L16.00,20.62 L14.39,19.92 L12.90,20.76 L12.10,19.83 L13.16,18.48 L12.70,16.78 L11.12,16.14 L11.35,14.94 L13.06,14.92 L14.10,13.51 L13.62,11.87 L14.70,11.30 L15.78,12.63 L17.53,12.57 L18.51,11.16 L19.63,11.65 L19.27,13.33 L20.41,14.66 L22.12,14.55 L22.43,15.73 L20.90,16.49 Z"
-            fill="currentColor"/>
-      <circle cx="9" cy="9" r="2.1" fill="var(--t-bg, transparent)"/>
-      <circle cx="16.8" cy="16.6" r="1.6" fill="var(--t-bg, transparent)"/>
-    </symbol>
-  <symbol id="ic-ele" viewBox="0 0 24 24">
-      <path d="M14.4,1.6 L4.6,13.6 H9.9 L9.0,22.4 L19.2,10.0 H13.7 Z" fill="currentColor"/>
-    </symbol>
-  <symbol id="ic-nat" viewBox="0 0 24 24">
-      <circle cx="12" cy="8.6" r="6.4" fill="currentColor"/>
-      <circle cx="7.4" cy="11.4" r="4.4" fill="currentColor"/>
-      <circle cx="16.6" cy="11.4" r="4.4" fill="currentColor"/>
-      <rect x="10.4" y="11" width="3.2" height="11.2" rx="0.6" fill="currentColor"/>
-    </symbol>
+  <symbol id="ic-art" viewBox="0 0 24 24"><g fill="currentColor"><path fill-rule="evenodd" d="M21.38,10.77 A10,8.8 0 1 1 15.26,4.41 A5.6,5.6 0 0 0 21.38,10.77 Z M11.7,15.2 a2.5,2.5 0 1 0 5,0 a2.5,2.5 0 1 0 -5,0 Z"/></g></symbol>
+  <symbol id="ic-sci" viewBox="0 0 24 24"><g fill="currentColor"><path d="M10.2,0.6 H13.8 L13.5,3.1 H10.5 Z"/><path d="M8.8,3.1 H15.2 Q15.3,4.4 14.4,4.6 V8.7 L20.9,20.0 Q21.6,21.4 20.1,21.4 H3.9 Q2.4,21.4 3.1,20.0 L9.6,8.7 V4.6 Q8.7,4.4 8.8,3.1 Z"/></g></symbol>
+  <symbol id="ic-mac" viewBox="0 0 24 24"><g fill="currentColor"><path fill-rule="evenodd" d="M14.34,9.79 L16.06,10.86 L15.59,12.15 L13.59,11.85 L12.22,13.34 L12.68,15.30 L11.43,15.88 L10.23,14.26 L8.21,14.34 L7.14,16.06 L5.85,15.59 L6.15,13.59 L4.66,12.22 L2.70,12.68 L2.12,11.43 L3.74,10.23 L3.66,8.21 L1.94,7.14 L2.41,5.85 L4.41,6.15 L5.78,4.66 L5.32,2.70 L6.57,2.12 L7.77,3.74 L9.79,3.66 L10.86,1.94 L12.15,2.41 L11.85,4.41 L13.34,5.78 L15.30,5.32 L15.88,6.57 L14.26,7.77 Z M6.4,9 a2.6,2.6 0 1 0 5.2,0 a2.6,2.6 0 1 0 -5.2,0 Z M7.7,9 a1.3,1.3 0 1 0 2.6,0 a1.3,1.3 0 1 0 -2.6,0 Z"/><path fill-rule="evenodd" d="M20.57,18.21 L21.72,19.48 L20.99,20.46 L19.44,19.74 L17.89,20.55 L17.62,22.24 L16.39,22.29 L16.00,20.62 L14.39,19.92 L12.90,20.76 L12.10,19.83 L13.16,18.48 L12.70,16.78 L11.12,16.14 L11.35,14.94 L13.06,14.92 L14.10,13.51 L13.62,11.87 L14.70,11.30 L15.78,12.63 L17.53,12.57 L18.51,11.16 L19.63,11.65 L19.27,13.33 L20.41,14.66 L22.12,14.55 L22.43,15.73 L20.90,16.49 Z M14.8,16.6 a2,2 0 1 0 4,0 a2,2 0 1 0 -4,0 Z M15.85,16.6 a0.95,0.95 0 1 0 1.9,0 a0.95,0.95 0 1 0 -1.9,0 Z"/></g></symbol>
+  <symbol id="ic-ele" viewBox="0 0 24 24"><g fill="currentColor"><path d="M14.4,1.6 L4.6,13.6 H9.9 L9.0,22.4 L19.2,10.0 H13.7 Z"/></g></symbol>
+  <symbol id="ic-nat" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="12" cy="8.6" r="6.4"/><circle cx="7.4" cy="11.4" r="4.4"/><circle cx="16.6" cy="11.4" r="4.4"/><rect x="10.4" y="11" width="3.2" height="11.2" rx="0.6"/></g></symbol>
   <symbol id="im-trophy" viewBox="0 0 64 64"><path fill="var(--red,#CE1E32)" d="M18 9 h28 v11 a14 14 0 0 1 -28 0 z"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.6" d="M18 13 h-7 a6 6 0 0 0 0 12 h4"></path><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.6" d="M46 13 h7 a6 6 0 0 1 0 12 h-4"></path><rect fill="var(--ink,#1B1C19)" x="29" y="34" width="6" height="11"></rect><rect fill="var(--ink,#1B1C19)" x="19" y="45" width="26" height="5"></rect><rect fill="var(--ink,#1B1C19)" x="23" y="50" width="18" height="7"></rect></symbol>
   <symbol id="im-podium" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="24" y="16" width="16" height="42"></rect><rect fill="var(--ink,#1B1C19)" x="4" y="30" width="16" height="28"></rect><rect fill="var(--red,#CE1E32)" x="44" y="36" width="16" height="22"></rect><rect fill="var(--ink,#1B1C19)" x="2" y="58" width="60" height="3"></rect></symbol>
   <symbol id="im-target" viewBox="0 0 64 64"><circle cx="32" cy="32" r="23" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><circle cx="32" cy="32" r="13" fill="none" stroke="var(--ink,#1B1C19)" stroke-width="3.5"></circle><circle fill="var(--red,#CE1E32)" cx="32" cy="32" r="5"></circle></symbol>
