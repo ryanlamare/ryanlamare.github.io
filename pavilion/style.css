@@ -138,11 +138,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
     gap: 46px; align-items: start;
     padding: 44px 48px 40px;
   }
-  #setup .pitch h1 { font-size: 76px; }
-  #setup .pitch .sub { font-size: 15px; }
-  /* The pitch's last paragraph carries the card's bottom padding on a phone;
-     beside a form it only needs to stop. */
-  #setup .pitch .sub:last-child { margin-bottom: 0; }
   #setup .join > form { margin-top: 4px; }
 }
 
@@ -152,52 +147,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 h1 .r, .r { color: var(--red); }
 
-/* The tile palette as type: the logo and the month splashes are set in it.
-   PAVILION splits PA·V·IL·I·ON — uneven, because that is the only way eight
-   letters carry all five disciplines (Ryan, 2026-08-13). Electricity's ochre
-   is a field colour on a tile, not ink, and lands near 2:1 on cream, so the
-   logo alone deepens it: the letter it colours is a single narrow I between
-   a black pair and a green one, and at 2:1 it read as a gap in the word. */
-.pv0 { color: var(--art); }
-.pv1 { color: var(--sci); }
-.pv2 { color: var(--mac); }
-.pv3 { color: var(--ele); }
-.pv4 { color: var(--nat); }
-
-.logo { text-transform: uppercase; }
-/* A discipline named in prose is set in its own colour and bolded. Bold as
-   well as coloured on purpose: at 14px the ochre and the sienna would be
-   carrying too much on hue alone, and the same rule the tiles follow —
-   never colour by itself — applies to the copy.
-
-   :not([class]) matters. This rule used to be a bare `.sub b`, which at
-   0-1-1 outranks a lone `.pv0` at 0-1-0 — so every coloured discipline was
-   quietly forced back to ink, and only Electricity showed, because its own
-   two-class override happened to outrank it (Ryan, 2026-08-13). Excluding
-   the classed spans leaves the palette to win by default. */
-.sub b:not([class]) { color: var(--ink); }
-/* Underlined too (Ryan, 2026-08-13). The underline takes each word's own
-   colour for free, and the offset keeps it clear of the descender in
-   "agriculture" and "machinery". It is thicker and further from the
-   baseline than a link's would be, which is the only thing separating
-   these from the one real link on the screen. */
-.sub b[class^="pv"] {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-/* Ochre is a field colour on a tile, not ink, and sits near 2:1 on cream.
-   At 54px the two letters of the logo's LI carry it; at 14px in the pitch
-   they don't, so only the prose darkens — to #977712, which the
-   inverted-tile spec (PAVILION.md) already documents for cream grounds. */
-.sub .pv3 { color: #977712; }
-.sub + .sub { margin-top: -18px; }
-
-/* Back-of-the-box copy: the hook in the house red, the pitch underneath. */
-.tagline {
-  font-size: clamp(17px, 2.4vw, 20px); font-weight: 800; letter-spacing: -.01em;
-  line-height: 1.25; margin: 10px 0 10px;
-}
 .sub { color: var(--muted); line-height: 1.45; margin-bottom: 26px; }
 .setup-card .sub { font-size: 14px; }
 
@@ -207,8 +156,6 @@ legend {
   text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
 }
 .hint { font-weight: 400; text-transform: none; letter-spacing: 0; }
-.mode-hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
-.mode-hint:empty { display: none; }
 
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
 .seg-btn {
@@ -292,9 +239,9 @@ legend {
 /* Submitting without picking is the one thing the form refuses: a game played
    anonymously would silently not record. */
 #name-field.needed .roster { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 10px; }
-/* gilded, a room game asks for a name, and says so under the blank */
-body.gilded #name-field.needed #name-inputs input { border-bottom-color: var(--red); box-shadow: 0 2px 0 -0.5px var(--red); }
-body.gilded #name-field.needed #name-inputs::after { content: 'Type your name. The others in the room will see it.'; display: block; margin-top: 6px; font: italic 400 15px/1.3 "Old Standard", Georgia, serif; color: var(--red); }
+/* a room game asks for a name, and says so under the blank */
+body.fair #name-field.needed #name-inputs input { border-bottom-color: var(--red); box-shadow: 0 2px 0 -0.5px var(--red); }
+body.fair #name-field.needed #name-inputs::after { content: 'Type your name. The others in the room will see it.'; display: block; margin-top: 6px; font: italic 400 15px/1.3 "Old Standard", Georgia, serif; color: var(--red); }
 
 /* Week two onward: "Welcome back, Sam — not Sam?" */
 .whoami { font-size: 15px; color: var(--muted); }
@@ -782,33 +729,6 @@ button.tile:hover { transform: translateY(-3px); }
   100% { opacity: 0; transform: translate(-50%, -55%); }
 }
 #banner .r { color: #E8B84B; }
-/* The big beats — "Construction Month N", "Craftspeople build the displays",
-   "The World's Fair is Open!" — mirror the logo: large type on the card
-   cream, words in the .pv0-.pv3 palette (Ryan, playtest 2026-08-13). */
-#banner.splash {
-  background: var(--card); color: var(--ink);
-  border: 1px solid var(--line);
-  font-family: var(--display);
-  font-size: clamp(30px, 6.4vw, 60px);
-  letter-spacing: .01em; text-align: center;
-  padding: 22px 44px;
-  max-width: min(92vw, 900px);
-}
-/* The month number on its own line, and bigger than the words above it. */
-.splash-num { display: block; font-size: 1.5em; line-height: 1.05; }
-
-/* The Fair opening is the end of the game, so its splash is the one on ink
-   (Ryan, playtest 2026-08-13). The palette lifts to the tints that hold
-   against black — the cream-ground colours would sink into it. */
-#banner.splash.finale {
-  background: var(--ink); color: var(--card); border-color: var(--ink);
-}
-#banner.finale .pv0 { color: #E4906B; }
-#banner.finale .pv1 { color: #7FB3E0; }
-#banner.finale .pv2 { color: var(--card); }
-#banner.finale .pv3 { color: #E8C24B; }
-#banner.finale .pv4 { color: #74C78B; }
-
 /* ------------------------------------------------------------- end modal */
 
 #end-modal {
@@ -824,43 +744,9 @@ button.tile:hover { transform: translateY(-3px); }
 #end-modal::backdrop { background: rgba(27, 28, 25, .55); backdrop-filter: blur(3px); }
 
 #end-body { padding: 34px 36px 10px; }
-.whistle {
-  font-size: 12px; font-weight: 700; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
-}
-.champion {
-  font-family: var(--display);
-  font-size: 44px; font-weight: 700; letter-spacing: 0; margin-bottom: 2px;
-}
-/* The winner's line is a whole sentence, so it steps down from the two-word
-   size — and the name is the one thing in colour. */
-.champion.story { font-size: clamp(22px, 4.5vw, 30px); line-height: 1.25; }
-.champion .champ-name { color: var(--red); }
-.champion.spot { animation: spotlight .8s cubic-bezier(.2, 1.4, .4, 1); }
-@keyframes spotlight { 0% { transform: scale(.6); opacity: 0; } }
 .end-sub { color: var(--muted); margin-bottom: 20px; }
-/* A natural win carries no sub-line; without this the empty <p> still holds
-   its bottom margin and the table drifts away from the headline. */
+/* Only a win on time carries a line under the winner. */
 .end-sub:empty { display: none; margin: 0; }
-.champion.story { margin-bottom: 18px; }
-
-.final-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-.final-table td, .final-table th {
-  text-align: left; padding: 8px 6px; border-top: 1px solid var(--line);
-  font-variant-numeric: tabular-nums;
-}
-.final-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); border-top: 0; }
-.final-table .num { text-align: right; }
-.final-table .win td { font-weight: 800; }
-.final-table .total { font-size: 18px; }
-/* On a phone the breakdown sits under the name instead of in its own column:
-   five columns at 390px pushed Total, the one number that matters, off the
-   card (found 3 Oct 2026). Same words, one place or the other. */
-.final-table .detail-under { display: none; }
-@media (max-width: 560px) {
-  .final-table .detail { display: none; }
-  .final-table .detail-under { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
-}
 
 /* ------------------------------------------ the post-game screen (step 6) */
 
@@ -999,11 +885,11 @@ button.tile:hover { transform: translateY(-3px); }
    body.fair, which only scene.js adds, so on ?plain none of it applies.
    body[data-front] is title | menu | lobby, and empty in a game. */
 #fair { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #1A2350; }
-/* the first paint (index.html's fair-boot): the Fair's late-afternoon sky until scene.js has drawn the Fair over
-   it, never the old menu card, which flashed on every load; if the script never arrives, the card shows after
-   four seconds, so the page still works */
-html.fair-boot body:not(.fair) { background: linear-gradient(#93B3CD, #E5D8BD 62%, #F3CF99) fixed; }
-html.fair-boot body:not(.fair) #setup { visibility: hidden; animation: fair-boot-show 0s linear 4s forwards; }
+/* the first paint (index.html's fair-boot, which scene.js lifts once it has drawn): the Fair's late-afternoon
+   sky, never the menu card under it, which flashed on every load; if the script never arrives, the card shows
+   after four seconds, so the page still works */
+html.fair-boot body { background: linear-gradient(#93B3CD, #E5D8BD 62%, #F3CF99) fixed; }
+html.fair-boot #setup { visibility: hidden; animation: fair-boot-show 0s linear 4s forwards; }
 @keyframes fair-boot-show { to { visibility: visible; } }
 #fair svg { display: block; }
 #fair-scrim { position: fixed; inset: 0; z-index: 1; background: rgba(8, 10, 26, .44); opacity: 0; pointer-events: none; transition: opacity .45s ease; }
@@ -1080,8 +966,6 @@ body.fair .setup-card {
   --fair-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cg transform='matrix(1 0 0 -1 0 26)'%3E%3Cpath d='M1 25V8Q1 1 8 1h17' fill='none' stroke='%232B2620' stroke-opacity='.45'/%3E%3Cpath d='M5 25V10Q5 5 10 5h15' fill='none' stroke='%232B2620' stroke-opacity='.3'/%3E%3Crect x='9' y='9' width='4' height='4' transform='rotate(45 11 11)' fill='%23CE1E32'/%3E%3C/g%3E%3C/svg%3E");
   --fair-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cg transform='matrix(-1 0 0 -1 26 26)'%3E%3Cpath d='M1 25V8Q1 1 8 1h17' fill='none' stroke='%232B2620' stroke-opacity='.45'/%3E%3Cpath d='M5 25V10Q5 5 10 5h15' fill='none' stroke='%232B2620' stroke-opacity='.3'/%3E%3Crect x='9' y='9' width='4' height='4' transform='rotate(45 11 11)' fill='%23CE1E32'/%3E%3C/g%3E%3C/svg%3E");
 }
-body.fair #setup .pitch .logo { display: none; }
-body.fair #setup .pitch .tagline { margin-top: 2px; padding-right: 40px; }
 body.fair .setup-card legend::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 9px; vertical-align: 1px; background: var(--red); }
 body.fair .setup-card .seg { box-shadow: 0 2px 0 rgba(43, 38, 32, .14); }
 body.fair .setup-card .cta { position: relative; overflow: hidden; box-shadow: 0 4px 0 #8E1424, 0 10px 22px rgba(206, 30, 50, .28); }
@@ -1119,21 +1003,11 @@ body.fair[data-front="menu"] #setup form > :nth-child(6), body.fair[data-front="
   @keyframes fair-sheet-out { to { transform: translateY(100%); } }
 }
 
-/* the menu's left half fills its column: a bigger pitch, the date set as a dateline, a rule of the
-   five disciplines, and below them a small pavilion whose front fills tile by tile (scene.js draws it) */
+/* the menu's left half fills its column, and below the bill a small pavilion whose front fills tile by tile
+   (scene.js draws it) */
 @media (min-width: 940px) {
   body.fair #setup > .setup-card { align-items: stretch; }
   body.fair #setup .pitch { display: flex; flex-direction: column; }
-  body.fair #setup .pitch .tagline { font-size: 23px; line-height: 1.22; }
-  body.fair #setup .pitch .sub { font-size: 16px; line-height: 1.52; }
-}
-body.fair #setup .pitch .tagline::after {
-  content: ''; display: block; height: 12px; margin: 16px 0 4px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='170' height='12'%3E%3Cpath d='M0 6h42M128 6h42' stroke='%232B2620' stroke-opacity='.35'/%3E%3Cg stroke='%232B2620' stroke-opacity='.4' stroke-width='.6'%3E%3Crect x='48' y='2' width='8' height='8' transform='rotate(45 52 6)' fill='%238E3E28'/%3E%3Crect x='64' y='2' width='8' height='8' transform='rotate(45 68 6)' fill='%2337658A'/%3E%3Crect x='80' y='2' width='8' height='8' transform='rotate(45 84 6)' fill='%231B1C19'/%3E%3Crect x='96' y='2' width='8' height='8' transform='rotate(45 100 6)' fill='%23C9A227'/%3E%3Crect x='112' y='2' width='8' height='8' transform='rotate(45 116 6)' fill='%233C8B51'/%3E%3C/g%3E%3C/svg%3E") left center / auto 12px no-repeat;
-}
-body.fair #setup .pitch .tagline + .sub > b:first-child {
-  display: block; margin: 2px 0 6px; font-family: var(--display); font-weight: 400;
-  font-size: 32px; line-height: 1.05; letter-spacing: .03em; color: var(--ink);
 }
 .pitch-scene { display: none; }
 @media (min-width: 940px) {
@@ -1233,26 +1107,7 @@ body.fair[data-front="title"] #fair { pointer-events: auto; }
    moments are set in Abril Fatface. All of it hangs off body.fair. */
 body.fair { font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 body.fair #game { position: relative; }
-body.fair #game::after {
-  content: ''; position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none;
-  height: clamp(90px, 17vh, 180px); opacity: .075;
-  background: url("./fair-skyline.svg") left bottom / auto 100% repeat-x;
-}
 body.fair #table { position: relative; z-index: 1; }
-/* The month's sky (ui.js setSky): while the displays go up the sun sets behind the skyline, which
-   stands dark against it; the next month opens in daylight again. Behind the boards, never over them. */
-#sky { display: none; }
-body.fair #sky { display: block; position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-body.fair #sky .sky-glow, body.fair #sky .sky-line { position: absolute; left: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 1.8s ease; }
-body.fair #sky .sky-glow { top: 0; background: linear-gradient(to top, rgba(242, 150, 88, .5) 0, rgba(219, 128, 112, .3) 14vh, rgba(128, 112, 164, .12) 32vh, rgba(128, 112, 164, 0) 50vh); }
-body.fair #sky .sky-line {
-  height: clamp(90px, 17vh, 180px); background: #2A2E4E;
-  -webkit-mask: url("./fair-skyline.svg") left bottom / auto 100% repeat-x; mask: url("./fair-skyline.svg") left bottom / auto 100% repeat-x;
-}
-body.fair[data-sky="dusk"] #sky .sky-glow { opacity: 1; }
-body.fair[data-sky="dusk"] #sky .sky-line { opacity: .4; }
-body.fair[data-sky="dusk"] #game::after { opacity: 0; }
-
 /* the top bar: a programme's header, the month on a navy plaque */
 body.fair #topbar {
   padding: 10px 20px; background: #F5EFE1; border-bottom: 0;
@@ -1431,41 +1286,12 @@ body.fair .popup {
 }
 body.fair .popup.pos { color: #2E6F3E; }
 
-/* the end: a certificate from the judges */
-body.fair #end-modal {
-  background: #F7F1E4; border-radius: 16px;
-  box-shadow: inset 0 0 0 1px #CDBFA6, inset 0 0 0 9px #F7F1E4, inset 0 0 0 10px rgba(43, 38, 32, .25), 0 40px 120px rgba(14, 16, 34, .5);
-}
-body.fair .whistle { color: var(--red); font-weight: 800; }
-body.fair .champion { font-family: "Abril Fatface", var(--display); font-weight: 400; }
-body.fair .champion.story { font-size: clamp(24px, 4.6vw, 32px); line-height: 1.18; }
-body.fair .final-table .total { font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 22px; }
-
-/* Opening night (3 Oct 2026, the default since that night): at the end of a game the board steps aside for the Fair at night
-   (scene.js, body[data-front="finale"]), and the judges' card hangs in its sky: at the top on a phone, over
-   the middle of the sky between the pavilions on a wider screen, which is the 42vw scene.js keeps clear. */
-body.fair #topbar, body.fair #table, body.fair #game::after, body.fair #sky { transition: opacity .8s ease; }
-body.fair[data-front="finale"] #topbar, body.fair[data-front="finale"] #table, body.fair[data-front="finale"] #game::after, body.fair[data-front="finale"] #sky { opacity: 0; pointer-events: none; }
+/* Opening night (3 Oct 2026): at the end of a game the board steps aside for the Fair at night (scene.js,
+   body[data-front="finale"]), and the winner's sign hangs over it (the gilded pass, below). */
+body.fair #topbar, body.fair #table { transition: opacity .8s ease; }
+body.fair[data-front="finale"] #topbar, body.fair[data-front="finale"] #table { opacity: 0; pointer-events: none; }
 body.fair[data-front="finale"] #music { visibility: hidden; }
-body.fair #end-modal.finale {
-  margin: max(14px, 4vh) auto auto; width: min(520px, 94vw); max-height: calc(100vh - 28px); overflow-y: auto;
-  animation: fair-judges-in .7s cubic-bezier(.2, .95, .3, 1.06) both;
-  box-shadow: inset 0 0 0 1px #CDBFA6, inset 0 0 0 9px #F7F1E4, inset 0 0 0 10px rgba(201, 162, 39, .75), 0 30px 90px rgba(6, 8, 24, .6);
-}
-@media (min-aspect-ratio: 21/20) { body.fair #end-modal.finale { width: min(520px, 42vw); } }
 body.fair #end-modal.finale::backdrop { background: transparent; backdrop-filter: none; }
-@keyframes fair-judges-in { 0% { opacity: 0; transform: translateY(-26px) scale(.97); } }
-body.fair #end-modal.finale #end-body { padding: 28px 30px 6px; }
-body.fair #end-modal.finale .end-actions { padding: 12px 22px 20px; }
-@media (max-width: 480px) {
-  body.fair #end-modal.finale #end-body { padding: 22px 22px 4px; }
-  body.fair #end-modal.finale .champion.story { font-size: 23px; margin-bottom: 12px; }
-}
-/* The score card's breakdown always sits under the name now, so the table has one column for each number
-   and no "Bonuses" beside "Bonus". */
-.final-table.compact .detail { display: none; }
-.final-table.compact .detail-under { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
-@media (prefers-reduced-motion: reduce) { body.fair #end-modal.finale { animation: none; } }
 
 @media (max-width: 940px) {
   body.fair #topbar { padding: 8px 12px; }
@@ -1490,7 +1316,7 @@ body.fair #end-modal.finale .end-actions { padding: 12px 22px 20px; }
    The lobby's invite link, and the family link's names as buttons. Music is
    Bandcamp's own player in a small card: in the sky's top-right corner on the
    front door, and under the top bar's note button in a game. */
-.invite-btn, .music-top { display: none; }
+.invite-btn { display: none; }
 body.fair .invite-btn {
   display: inline-flex; align-items: center; gap: 9px; margin: 2px 0 12px; padding: 9px 18px 9px 10px;
   border-radius: 999px; border: 1.5px solid var(--ink); background: #FBF7EE; color: var(--ink);
@@ -1506,31 +1332,34 @@ body.fair .invite-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 r
 .roster.family { grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr)); }
 .roster.family .roster-btn { text-align: center; font-size: 16px; font-weight: 700; }
 
-/* the player: the sky's top-right corner on the title, the bottom-right under a
-   card on a laptop; on a phone the foot of the title screen, and out of sight
-   (still playing) while the sheet is up; in a game, under the top bar's note */
+/* the music (5 Oct 2026, Ryan: one click, and no song title on it): Bandcamp's own player at the width of its
+   play button, where Bandcamp shows nothing else, in a small gold-ruled frame with our note beside it. In the
+   sky's top-right corner on the title, the bottom-right under a card on a laptop; on a phone at the foot of the
+   title screen, and out of sight (still playing) while the sheet is up; in a game at the end of the top bar,
+   over the slot kept for it (scene.js placeMusic). */
 #music { position: fixed; z-index: 2; pointer-events: none; }
 #music.hidden { display: none; }
 #music .music-panel {
-  width: min(300px, calc(100vw - 28px)); height: 42px; overflow: hidden; border-radius: 10px; pointer-events: none;
-  background: #F7F1E4; box-shadow: 0 0 0 1px rgba(43, 38, 32, .22), 0 10px 26px rgba(10, 12, 28, .3);
+  display: flex; align-items: center; gap: 5px; height: 50px; padding: 4px 4px 4px 12px; border-radius: 10px; pointer-events: none;
+  background: #F7F1E4;
+  box-shadow: inset 0 0 0 1px #9C7B2E, inset 0 0 0 4px #F7F1E4, inset 0 0 0 5px rgba(201, 162, 39, .75), 0 8px 22px rgba(10, 12, 28, .32);
   opacity: 0; transition: opacity .5s ease;
 }
-#music .music-player:not(:empty) { animation: fair-music-in .5s ease .3s both; }
 #music .music-panel:has(iframe) { opacity: 1; pointer-events: auto; }
-@keyframes fair-music-in { from { opacity: 0; } to { opacity: 1; } }
-#music .music-player iframe { display: block; width: 100%; height: 42px; border: 0; }
+#music .music-note { font: 400 22px/1 "Abril Fatface", var(--display); color: #1C2747; }
+#music .music-player { width: 42px; height: 42px; }
+#music .music-player iframe { display: block; width: 42px; height: 42px; border: 0; }
 body.fair[data-front="title"] #music { top: 14px; right: 14px; }
 body.fair[data-front="menu"] #music, body.fair[data-front="lobby"] #music { bottom: 14px; right: 14px; }
 @media (max-width: 939px) {
   body.fair[data-front="title"] #music { top: auto; right: auto; bottom: 14px; left: 50%; transform: translateX(-50%); }
   body.fair[data-front="menu"] #music, body.fair[data-front="lobby"] #music { visibility: hidden; }
 }
-/* in a game the note lives in the top bar, and the player hangs under it */
-body.fair .music-top { display: inline-block; font-size: 15px; line-height: 1; padding: 6px 10px; }
-body.fair .music-top[aria-expanded="true"] { color: #FFF8EC; background: var(--red); border-color: var(--red); }
-body.fair[data-front=""] #music { top: 62px; right: 14px; z-index: 31; visibility: hidden; }
-body.fair[data-front=""] #music.open { visibility: visible; }
+/* in a game: over its slot at the end of the top bar, at the bar's size */
+.music-slot { display: none; }
+body.fair .music-slot { display: block; flex: none; width: 56px; height: 36px; }
+body.fair[data-front=""] #music { left: var(--slot-x, auto); top: var(--slot-y, 8px); z-index: 31; transform: scale(.72); transform-origin: 0 0; }
+body.fair[data-front=""] #music .music-panel { box-shadow: inset 0 0 0 1px #9C7B2E, inset 0 0 0 4px #F7F1E4, inset 0 0 0 5px rgba(201, 162, 39, .75); }
 
 /* ------------------------------------------- Learn to play (ui.js, the coach)
    A spotlight on the real board, the manicule pointing at what to tap, and a
@@ -1599,50 +1428,49 @@ body.fair[data-front=""] #music.open { visibility: visible; }
 }
 @media (prefers-reduced-motion: reduce) { #coach, #coach * { animation: none !important; } }
 
-/* ------------------------------------------------ the gilded pass (body.gilded)
+/* ------------------------------------------------------------ the gilded pass
    Ryan (5 Oct 2026): the game should match the front door's elegance, "pure
-   19th century awesomeness and wonderment", without touching the mechanics. On
-   ?gilded until he has seen it (ui.js GILDED). The board is played at the Fair:
-   scene.js draws the sky and the White City behind it at the game's hour (one
-   day to a month), so the old cream page, its faint skyline and the month's sky
-   give way to the real thing. body.lamps is the Fair's lights being on. */
-body.gilded #sky, body.gilded #game::after { display: none; }
+   19th century awesomeness and wonderment", without touching the mechanics; the
+   only game since that night. The board is played at the Fair: scene.js draws
+   the sky and the White City behind it at the game's hour (one day to a month).
+   body.lamps is the Fair's lights being on. These rules come after the 3 Oct
+   dress above and win where the two meet. */
 
 /* the top bar: a navy valance with a gold edge, scalloped like the Fair's awnings */
-body.gilded #topbar {
+body.fair #topbar {
   background: #1C2747; color: #F8F2E4; border-bottom: 0;
   box-shadow: inset 0 -2px 0 #1C2747, inset 0 -3px 0 rgba(232, 184, 75, .85), 0 12px 24px -14px rgba(8, 10, 26, .75);
 }
-body.gilded #topbar::after {
+body.fair #topbar::after {
   content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 11px; pointer-events: none;
   background: radial-gradient(circle at 50% 0, #1C2747 0 8px, #E8B84B 8.5px 9.6px, transparent 10.1px) 0 0 / 24px 11px repeat-x;
   filter: drop-shadow(0 3px 3px rgba(8, 10, 26, .28));
 }
-body.gilded .wk-badge {
+body.fair .wk-badge {
   background: #F8F2E4; color: #1C2747; border-radius: 4px;
   box-shadow: inset 0 0 0 2px #F8F2E4, inset 0 0 0 3px #C9A227, 0 0 0 1px rgba(8, 10, 26, .4);
 }
-body.gilded #phase-label { color: #E8B84B; }
-body.gilded #turn-label { color: rgba(248, 242, 228, .78); }
-body.gilded #turn-label b { color: #F8F2E4; font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 1.12em; letter-spacing: .01em; }
+body.fair #phase-label { color: #E8B84B; }
+body.fair #turn-label { color: rgba(248, 242, 228, .78); }
+body.fair #turn-label b { color: #F8F2E4; font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 1.12em; letter-spacing: .01em; }
 /* the supply as an admission ticket, notched at both ends */
-body.gilded .chip {
+body.fair .chip {
   border: 0; border-radius: 2px; padding: 4px 14px; color: #1C2747; font-weight: 600; letter-spacing: .03em;
   background:
     radial-gradient(circle at 0 50%, transparent 4.5px, #F3E9D2 5px) left / 51% 100% no-repeat,
     radial-gradient(circle at 100% 50%, transparent 4.5px, #F3E9D2 5px) right / 51% 100% no-repeat;
   filter: drop-shadow(0 1px 0 rgba(8, 10, 26, .5));
 }
-body.gilded .chip b { color: #1C2747; font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 1.15em; }
-body.gilded #topbar .ghost-btn { color: #F8F2E4; background: transparent; border-color: rgba(248, 242, 228, .38); }
-body.gilded #topbar .ghost-btn:hover { border-color: #E8B84B; color: #FFF8EC; }
-body.gilded #table { padding-top: 30px; }
+body.fair .chip b { color: #1C2747; font-family: "Abril Fatface", var(--display); font-weight: 400; font-size: 1.15em; }
+body.fair #topbar .ghost-btn { color: #F8F2E4; background: transparent; border-color: rgba(248, 242, 228, .38); }
+body.fair #topbar .ghost-btn:hover { border-color: #E8B84B; color: #FFF8EC; }
+body.fair #table { padding-top: 30px; }
 
 /* the boards: each a framed plate, gold rules and corner ornaments on paper, and in the band round its edge a
    string of bulbs, lit for the player whose turn it is */
-body.gilded #market { margin-bottom: 58px; }
-body.gilded #boards { gap: 26px; row-gap: 64px; }
-body.gilded .board {
+body.fair #market { margin-bottom: 58px; }
+body.fair #boards { gap: 26px; row-gap: 64px; }
+body.fair .board {
   position: relative; display: grid; grid-template-columns: auto auto; column-gap: 12px; align-items: start;
   padding: 24px 27px 24px; border-radius: 7px; border: 0;
   background-color: #F7F1E4;
@@ -1660,7 +1488,7 @@ body.gilded .board {
   --gl-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cg transform='matrix(1 0 0 -1 0 26)'%3E%3Cpath d='M2 24C2 12 12 2 24 2' fill='none' stroke='%23B8973F' stroke-width='1'/%3E%3Cpath d='M2 15Q8 8 15 2' fill='none' stroke='%23C9A227' stroke-width='.8'/%3E%3Cpath d='M9 2.6Q12 6 9 9.4Q6 6 9 2.6Z M2.6 9Q6 12 9.4 9Q6 6 2.6 9Z' fill='%23C9A227'/%3E%3Ccircle cx='6.6' cy='6.6' r='2.4' fill='%23C9A227' stroke='%237A5F1C' stroke-width='.5'/%3E%3Ccircle cx='6.6' cy='6.6' r='.9' fill='%23FFF3C4'/%3E%3C/g%3E%3C/svg%3E");
   --gl-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Cg transform='matrix(-1 0 0 -1 26 26)'%3E%3Cpath d='M2 24C2 12 12 2 24 2' fill='none' stroke='%23B8973F' stroke-width='1'/%3E%3Cpath d='M2 15Q8 8 15 2' fill='none' stroke='%23C9A227' stroke-width='.8'/%3E%3Cpath d='M9 2.6Q12 6 9 9.4Q6 6 9 2.6Z M2.6 9Q6 12 9.4 9Q6 6 2.6 9Z' fill='%23C9A227'/%3E%3Ccircle cx='6.6' cy='6.6' r='2.4' fill='%23C9A227' stroke='%237A5F1C' stroke-width='.5'/%3E%3Ccircle cx='6.6' cy='6.6' r='.9' fill='%23FFF3C4'/%3E%3C/g%3E%3C/svg%3E");
 }
-body.gilded .board::after {
+body.fair .board::after {
   content: ''; position: absolute; inset: 1px; border-radius: 6px; pointer-events: none;
   --bulb: radial-gradient(circle, #F1E9D6 0 1.6px, #A8916A 1.9px 2.5px, transparent 2.9px);
   background:
@@ -1669,103 +1497,106 @@ body.gilded .board::after {
     var(--bulb) left center / 10px 17px no-repeat round,
     var(--bulb) right center / 10px 17px no-repeat round;
 }
-body.gilded .board.active {
+body.fair .board.active {
   --rule: var(--red);
   box-shadow: inset 0 0 0 1px #9C7B2E, inset 0 0 0 11px #F7F1E4, inset 0 0 0 13px var(--rule), inset 0 0 0 16px #F7F1E4, inset 0 0 0 17px rgba(201, 162, 39, .55),
     0 0 0 1px rgba(255, 220, 140, .5), 0 0 30px rgba(255, 200, 90, .32), 0 22px 44px -16px rgba(8, 10, 26, .55), 0 2px 6px rgba(8, 10, 26, .18);
 }
-body.gilded .board.active::after {
+body.fair .board.active::after {
   --bulb: radial-gradient(circle, #FFFEF6 0 1.7px, #FFE49A 2.4px, rgba(255, 196, 80, .55) 3.1px, rgba(255, 196, 80, 0) 5px);
   animation: gilded-bulbs 2.6s ease-in-out infinite alternate;
 }
 @keyframes gilded-bulbs { from { opacity: .82; } to { opacity: 1; } }
 
 /* the head: the clock and the token over the crews, the pavilion's sign over its front with its roof above */
-body.gilded .board-head { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; margin: 0 0 22px; }
-body.gilded .play-area { grid-column: 1 / -1; grid-template-columns: subgrid; }
-body.gilded .head-meta { display: flex; align-items: center; gap: 8px; min-width: 0; }
-/* each pavilion's own colours on its sign and its medallion (Ryan, 5 Oct): red and white for the domed one,
-   navy and gold for the towered one, matching their flags and bunting */
-body.gilded .board.nation-0 { --sign: #C41E30; --sign-rule: #F3EADA; }
-body.gilded .board.nation-1 { --sign: #1C2747; --sign-rule: #D9AE3A; }
-body.gilded .head-sign {
-  position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; height: 40px; padding: 0 4px 0 14px;
+body.fair .board-head { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; margin: 0 0 22px; }
+body.fair .play-area { grid-column: 1 / -1; grid-template-columns: subgrid; }
+body.fair .head-meta { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* each pavilion's own colours on its sign and its medallion (Ryan, 5 Oct), matching its flags and bunting:
+   crimson and cream (the dome), navy and gold (the towers), green and cream (the spire), mauve and gold (the
+   pediment); ui.js NATION and scene.js carry the same four */
+body.fair .board.nation-0 { --sign: #C41E30; --sign-rule: #F3EADA; }
+body.fair .board.nation-1 { --sign: #1C2747; --sign-rule: #D9AE3A; }
+body.fair .board.nation-2 { --sign: #235E3D; --sign-rule: #F3EADA; }
+body.fair .board.nation-3 { --sign: #5B2C5E; --sign-rule: #D9AE3A; }
+body.fair .head-sign {
+  position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; min-width: 0; height: 40px; padding: 0 4px 0 14px;
   background: var(--sign, #1C2747); border-radius: 3px;
   box-shadow: inset 0 0 0 2.5px var(--sign, #1C2747), inset 0 0 0 3.5px var(--sign-rule, #D9AE3A), 0 3px 0 rgba(8, 10, 26, .25);
 }
-body.gilded .head-sign .board-name {
-  flex: 1; min-width: 0; color: #F8F2E4; font-size: 21px; line-height: 1; text-align: center;
+body.fair .head-sign .board-name {
+  flex: 1; min-width: 0; color: #F8F2E4; font-size: 21px; line-height: 1.3; text-align: center;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-body.gilded .head-sign .score {
+body.fair .head-sign .score {
   flex: none; margin: -6px -14px -6px 0; background: var(--sign, #1C2747);
   box-shadow: inset 0 0 0 2px var(--sign, #1C2747), inset 0 0 0 3.5px var(--sign-rule, #E8B84B), 0 0 0 2px var(--sign, #1C2747), 0 3px 8px rgba(8, 10, 26, .3);
 }
-body.gilded .board.nation-0 .score.bump { animation-name: gilded-score-bump; }
+body.fair .board.nation-0 .score.bump { animation-name: gilded-score-bump; }
 @keyframes gilded-score-bump { 40% { transform: scale(1.28); background: #1C2747; } }
-body.gilded .head-sign .crest { position: absolute; left: 0; right: 0; bottom: calc(100% - 1px); width: 100%; height: auto; overflow: visible; pointer-events: none; }
-body.gilded .head-sign .bunting { position: absolute; left: 3%; right: 3%; top: calc(100% + 1px); width: 94%; height: 9px; pointer-events: none; }
-body.gilded .pennant { transform-box: fill-box; transform-origin: 0 50%; animation: fair-flutter 1.4s ease-in-out infinite alternate; }
-body.gilded .board.collapsed .crest, body.gilded .board.collapsed .bunting { display: none; }
+body.fair .head-sign .crest { position: absolute; left: 0; right: 0; bottom: calc(100% - 1px); width: 100%; height: auto; overflow: visible; pointer-events: none; }
+body.fair .head-sign .bunting { position: absolute; left: 3%; right: 3%; top: calc(100% + 1px); width: 94%; height: 9px; pointer-events: none; }
+body.fair .pennant { transform-box: fill-box; transform-origin: 0 50%; animation: fair-flutter 1.4s ease-in-out infinite alternate; }
+body.fair .board.collapsed .crest, body.fair .board.collapsed .bunting { display: none; }
 
 /* the pavilion's front: the frieze gives way to the bunting above it, and it stands on a plinth with its door */
-body.gilded .wall::before { content: none; }
-body.gilded .wall { margin-bottom: 14px; }
-body.gilded .wall::after {
+body.fair .wall::before { content: none; }
+body.fair .wall { margin-bottom: 14px; }
+body.fair .wall::after {
   content: ''; position: absolute; left: -6px; right: -6px; top: calc(100% + 4px); height: 12px; pointer-events: none;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='12'%3E%3Cpath d='M3 12V5Q13 -2 23 5V12Z' fill='%234A3E33' stroke='%232B2620' stroke-width='.8'/%3E%3C/svg%3E") center bottom / auto 12px no-repeat,
     linear-gradient(#E3DAC6, #D4C8AE) 0 3px / 100% 9px no-repeat;
   box-shadow: inset 0 3px 0 -2px #BFAE8A;
 }
-body.gilded.lamps .wall::after {
+body.fair.lamps .wall::after {
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='12'%3E%3Cpath d='M3 12V5Q13 -2 23 5V12Z' fill='%234A3E33' stroke='%232B2620' stroke-width='.8'/%3E%3Cpath d='M6 12V6.2Q13 1.2 20 6.2V12Z' fill='%23FFD98A'/%3E%3C/svg%3E") center bottom / auto 12px no-repeat,
     linear-gradient(#E3DAC6, #D4C8AE) 0 3px / 100% 9px no-repeat;
 }
 
 @media (max-width: 940px) {
-  body.gilded #market { margin-bottom: 46px; }
-  body.gilded #boards { row-gap: 50px; }
-  body.gilded .board { padding: 22px 20px 20px; }
-  body.gilded .head-sign { height: 34px; padding-left: 10px; }
-  body.gilded .head-sign .board-name { font-size: 17px; }
+  body.fair #market { margin-bottom: 46px; }
+  body.fair #boards { row-gap: 50px; }
+  body.fair .board { padding: 22px 20px 20px; }
+  body.fair .head-sign { height: 34px; padding-left: 10px; }
+  body.fair .head-sign .board-name { font-size: 17px; }
 }
 @media (max-width: 480px) {
-  body.gilded .board { padding: 20px 15px 18px; }
-  body.gilded .head-sign { height: 30px; gap: 6px; }
-  body.gilded .head-sign .board-name { font-size: 14px; }
-  body.gilded .head-sign .score { margin-right: -10px; }
-  body.gilded #topbar::after { height: 9px; background-size: 18px 9px; background-image: radial-gradient(circle at 50% 0, #1C2747 0 6px, #E8B84B 6.5px 7.4px, transparent 7.8px); }
+  body.fair .board { padding: 20px 15px 18px; }
+  body.fair .head-sign { height: 30px; gap: 6px; }
+  body.fair .head-sign .board-name { font-size: 14px; }
+  body.fair .head-sign .score { margin-right: -10px; }
+  body.fair #topbar::after { height: 9px; background-size: 18px 9px; background-image: radial-gradient(circle at 50% 0, #1C2747 0 6px, #E8B84B 6.5px 7.4px, transparent 7.8px); }
 }
 
 /* the gate: wrought iron over its arch, a lamp on its crown and a lamp post either side, lit at dusk */
-body.gilded #pool-wrap { position: relative; overflow: visible; }
-body.gilded #pool-wrap::before {
+body.fair #pool-wrap { position: relative; overflow: visible; }
+body.fair #pool-wrap::before {
   content: ''; position: absolute; left: 50%; bottom: calc(100% - 26px); width: 196px; height: 58px; margin-left: -98px; pointer-events: none;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='44' viewBox='0 0 150 44'%3E%3Cg fill='none' stroke='%231C2747' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M14 42H136'/%3E%3Cpath d='M75 41C61 41 47 39 39 31C33 25 35 16 42 16C47 16 49 22 44 25'/%3E%3Cpath d='M75 41C89 41 103 39 111 31C117 25 115 16 108 16C103 16 101 22 106 25'/%3E%3Cpath d='M75 34C66 34 59 30 59 24C59 19 64 17 67 20'/%3E%3Cpath d='M75 34C84 34 91 30 91 24C91 19 86 17 83 20'/%3E%3Cpath d='M75 41V17'/%3E%3Cpath d='M22 42C22 36 27 33 31 35'/%3E%3Cpath d='M128 42C128 36 123 33 119 35'/%3E%3C/g%3E%3Cg fill='%23C9A227' stroke='%237A5F1C' stroke-width='.6'%3E%3Ccircle cx='44' cy='25' r='2.4'/%3E%3Ccircle cx='106' cy='25' r='2.4'/%3E%3Ccircle cx='67' cy='20' r='2'/%3E%3Ccircle cx='83' cy='20' r='2'/%3E%3Ccircle cx='31' cy='35' r='1.8'/%3E%3Ccircle cx='119' cy='35' r='1.8'/%3E%3C/g%3E%3Cpath d='M71 17H79L77.6 9H72.4Z' fill='%231C2747'/%3E%3Ccircle cx='75' cy='9' r='5.4' fill='%23EEE8DA' stroke='%231C2747' stroke-width='1.4'/%3E%3Cpath d='M70.6 5.6Q75 0.6 79.4 5.6Z' fill='%231C2747'/%3E%3Cpath d='M75 1.4V-1' stroke='%231C2747' stroke-width='1.4'/%3E%3C/svg%3E") center / 196px 58px no-repeat;
 }
-body.gilded.lamps #pool-wrap::before {
+body.fair.lamps #pool-wrap::before {
   background: radial-gradient(circle at 98px 12px, rgba(255, 214, 120, .75), rgba(255, 214, 120, 0) 28px), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='44' viewBox='0 0 150 44'%3E%3Cg fill='none' stroke='%231C2747' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M14 42H136'/%3E%3Cpath d='M75 41C61 41 47 39 39 31C33 25 35 16 42 16C47 16 49 22 44 25'/%3E%3Cpath d='M75 41C89 41 103 39 111 31C117 25 115 16 108 16C103 16 101 22 106 25'/%3E%3Cpath d='M75 34C66 34 59 30 59 24C59 19 64 17 67 20'/%3E%3Cpath d='M75 34C84 34 91 30 91 24C91 19 86 17 83 20'/%3E%3Cpath d='M75 41V17'/%3E%3Cpath d='M22 42C22 36 27 33 31 35'/%3E%3Cpath d='M128 42C128 36 123 33 119 35'/%3E%3C/g%3E%3Cg fill='%23C9A227' stroke='%237A5F1C' stroke-width='.6'%3E%3Ccircle cx='44' cy='25' r='2.4'/%3E%3Ccircle cx='106' cy='25' r='2.4'/%3E%3Ccircle cx='67' cy='20' r='2'/%3E%3Ccircle cx='83' cy='20' r='2'/%3E%3Ccircle cx='31' cy='35' r='1.8'/%3E%3Ccircle cx='119' cy='35' r='1.8'/%3E%3C/g%3E%3Cpath d='M71 17H79L77.6 9H72.4Z' fill='%231C2747'/%3E%3Ccircle cx='75' cy='9' r='5.4' fill='%23FFE9A8' stroke='%231C2747' stroke-width='1.4'/%3E%3Cpath d='M70.6 5.6Q75 0.6 79.4 5.6Z' fill='%231C2747'/%3E%3Cpath d='M75 1.4V-1' stroke='%231C2747' stroke-width='1.4'/%3E%3C/svg%3E") center / 196px 58px no-repeat;
 }
 @media (min-width: 941px) {
-  body.gilded #pool-wrap::after {
+  body.fair #pool-wrap::after {
     content: ''; position: absolute; left: -30px; right: -30px; bottom: -2px; height: 120px; pointer-events: none;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='120' viewBox='0 0 26 120'%3E%3Cpath d='M7 120H19L17 112H9Z' fill='%231C2747'/%3E%3Cpath d='M13 112V30' stroke='%231C2747' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M13 44C9 44 7 41 8.5 38.5M13 44C17 44 19 41 17.5 38.5' fill='none' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M9.4 30H16.6L15.4 26H10.6Z' fill='%231C2747'/%3E%3Ccircle cx='13' cy='18' r='8.4' fill='%23EEE8DA' stroke='%231C2747' stroke-width='1.6'/%3E%3Cpath d='M6.6 12.4Q13 4.4 19.4 12.4Z' fill='%231C2747'/%3E%3Cpath d='M13 6V2' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 26px 120px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='120' viewBox='0 0 26 120'%3E%3Cpath d='M7 120H19L17 112H9Z' fill='%231C2747'/%3E%3Cpath d='M13 112V30' stroke='%231C2747' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M13 44C9 44 7 41 8.5 38.5M13 44C17 44 19 41 17.5 38.5' fill='none' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M9.4 30H16.6L15.4 26H10.6Z' fill='%231C2747'/%3E%3Ccircle cx='13' cy='18' r='8.4' fill='%23EEE8DA' stroke='%231C2747' stroke-width='1.6'/%3E%3Cpath d='M6.6 12.4Q13 4.4 19.4 12.4Z' fill='%231C2747'/%3E%3Cpath d='M13 6V2' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") right bottom / 26px 120px no-repeat;
   }
-  body.gilded.lamps #pool-wrap::after {
+  body.fair.lamps #pool-wrap::after {
     background:
       radial-gradient(circle at 13px 18px, rgba(255, 214, 120, .8), rgba(255, 214, 120, 0) 26px),
       radial-gradient(circle at calc(100% - 13px) 18px, rgba(255, 214, 120, .8), rgba(255, 214, 120, 0) 26px),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='120' viewBox='0 0 26 120'%3E%3Cpath d='M7 120H19L17 112H9Z' fill='%231C2747'/%3E%3Cpath d='M13 112V30' stroke='%231C2747' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M13 44C9 44 7 41 8.5 38.5M13 44C17 44 19 41 17.5 38.5' fill='none' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M9.4 30H16.6L15.4 26H10.6Z' fill='%231C2747'/%3E%3Ccircle cx='13' cy='18' r='8.4' fill='%23FFEFB8' stroke='%231C2747' stroke-width='1.6'/%3E%3Cpath d='M6.6 12.4Q13 4.4 19.4 12.4Z' fill='%231C2747'/%3E%3Cpath d='M13 6V2' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") left bottom / 26px 120px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='120' viewBox='0 0 26 120'%3E%3Cpath d='M7 120H19L17 112H9Z' fill='%231C2747'/%3E%3Cpath d='M13 112V30' stroke='%231C2747' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M13 44C9 44 7 41 8.5 38.5M13 44C17 44 19 41 17.5 38.5' fill='none' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M9.4 30H16.6L15.4 26H10.6Z' fill='%231C2747'/%3E%3Ccircle cx='13' cy='18' r='8.4' fill='%23FFEFB8' stroke='%231C2747' stroke-width='1.6'/%3E%3Cpath d='M6.6 12.4Q13 4.4 19.4 12.4Z' fill='%231C2747'/%3E%3Cpath d='M13 6V2' stroke='%231C2747' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") right bottom / 26px 120px no-repeat;
   }
-  body.gilded #market { gap: 44px; }
+  body.fair #market { gap: 44px; }
 }
 
 /* the big beats in the title's lit letters (ui.js lettered): no placard, the words themselves over a pool of
    dark, each letter dropping in like a sign being hung and its bulbs coming on after it */
-body.gilded #banner.splash, body.gilded #banner.splash.finale { background: none; box-shadow: none; border: 0; padding: 0; max-width: none; width: max-content; }
-body.gilded #banner.splash::before {
+body.fair #banner.splash, body.fair #banner.splash.finale { background: none; box-shadow: none; border: 0; padding: 0; max-width: none; width: max-content; }
+body.fair #banner.splash::before {
   content: ''; position: absolute; inset: -55% -30%; z-index: -1; pointer-events: none;
   background: radial-gradient(closest-side, rgba(10, 14, 36, .66), rgba(10, 14, 36, .38) 55%, rgba(10, 14, 36, 0));
 }
@@ -1786,13 +1617,13 @@ body.gilded #banner.splash::before {
 .lettered.lit .glow { opacity: .62; }
 .lettered.lit .face { fill: #FFF3D2; }
 .lettered .tl { transform-box: fill-box; transform-origin: 50% 70%; animation: fair-letter-in .5s cubic-bezier(.2, 1.3, .35, 1) both; animation-delay: calc((var(--o, 0) + var(--i)) * .022s); }
-body.gilded #banner.splash.show { animation-duration: calc(1.3s * var(--tempo, 1)); }
+body.fair #banner.splash.show { animation-duration: calc(1.3s * var(--tempo, 1)); }
 /* a month's sign and the Fair's opening are hung like the title (Ryan, 5 Oct: the month's sign went by too
    fast): a letter at a time, the number after the words, then the bulbs, and it holds lit before the dawn */
-body.gilded #banner.splash.month.show, body.gilded #banner.splash.finale.show { animation-duration: calc(1.8s * var(--tempo, 1)); }
-body.gilded #banner.month .lettered .tl, body.gilded #banner.finale .lettered .tl { animation-duration: .7s; animation-delay: calc((var(--o, 0) + var(--i)) * .03s); }
-body.gilded #banner.month .lettered .bulbs, body.gilded #banner.month .lettered .glow,
-body.gilded #banner.finale .lettered .bulbs, body.gilded #banner.finale .lettered .glow { transition-delay: calc(.75s + (var(--o, 0) + var(--i)) * .025s); }
+body.fair #banner.splash.month.show, body.fair #banner.splash.finale.show { animation-duration: calc(1.8s * var(--tempo, 1)); }
+body.fair #banner.month .lettered .tl, body.fair #banner.finale .lettered .tl { animation-duration: .7s; animation-delay: calc((var(--o, 0) + var(--i)) * .03s); }
+body.fair #banner.month .lettered .bulbs, body.fair #banner.month .lettered .glow,
+body.fair #banner.finale .lettered .bulbs, body.fair #banner.finale .lettered .glow { transition-delay: calc(.75s + (var(--o, 0) + var(--i)) * .025s); }
 /* the winner's letters take their time: it is the last thing on the screen */
 #end-modal.lit-end .lettered .tl { animation-duration: .9s; animation-delay: calc(.3s + (var(--o, 0) + var(--i)) * .07s); }
 #end-modal.lit-end .lettered .bulbs, #end-modal.lit-end .lettered .glow { transition-delay: calc(1s + (var(--o, 0) + var(--i)) * .1s); }
@@ -1803,36 +1634,36 @@ body.gilded #banner.finale .lettered .bulbs, body.gilded #banner.finale .lettere
 /* centred (Ryan, 5 Oct: "should it be centered rather than at the top? … a big gap in the middle"): on a wide
    screen in the middle of it, between the two pavilions, over a pool of dark so the bulbs read against the lit
    city; on a tall one in the sky above the row of pavilions (scene.js sets --fin-free). It grows with the screen. */
-body.gilded #end-modal.finale.lit-end {
+body.fair #end-modal.finale.lit-end {
   background: none; box-shadow: none; overflow: visible; animation: none; color: #F8F2E4;
   width: min(820px, 50vw); margin: auto; inset: 0 0 0 0; max-height: none;
 }
-body.gilded #end-modal.finale.lit-end::before {
+body.fair #end-modal.finale.lit-end::before {
   content: ''; position: absolute; inset: -32% -26%; z-index: -1; pointer-events: none;
   background: radial-gradient(closest-side, rgba(8, 12, 34, .72), rgba(8, 12, 34, .5) 50%, rgba(8, 12, 34, 0));
 }
 @media (max-aspect-ratio: 21/20) {
-  body.gilded #end-modal.finale.lit-end { width: min(560px, 94vw); bottom: calc(100% - var(--fin-free, 62%)); }
-  body.gilded #end-modal.finale.lit-end::before { inset: -18% -10%; }
-  body.gilded #end-modal.lit-end .ln-w { --fs: clamp(58px, 21vw, 130px); }
-  body.gilded #end-modal.lit-end .ln-l { --fs: clamp(40px, 12.5vw, 84px); }
+  body.fair #end-modal.finale.lit-end { width: min(560px, 94vw); bottom: calc(100% - var(--fin-free, 62%)); }
+  body.fair #end-modal.finale.lit-end::before { inset: -18% -10%; }
+  body.fair #end-modal.lit-end .ln-w { --fs: clamp(58px, 21vw, 130px); }
+  body.fair #end-modal.lit-end .ln-l { --fs: clamp(40px, 12.5vw, 84px); }
 }
-body.gilded #end-modal.lit-end #end-body { padding: 0; }
-body.gilded #end-modal.lit-end .lettered .ln { max-width: 100%; }
-body.gilded #end-modal.lit-end .ln-w { --fs: clamp(58px, min(9.5vw, 17vh), 190px); }
-body.gilded #end-modal.lit-end .ln-l { --fs: clamp(40px, min(6vw, 10.5vh), 120px); }
-body.gilded #end-modal.lit-end .end-sub { margin: 4px 0 0; text-align: center; color: rgba(248, 242, 228, .85); font-size: 15px; text-shadow: 0 1px 6px rgba(8, 10, 26, .8); }
-body.gilded #end-modal.lit-end .end-actions { justify-content: center; padding: 10px 0 0; gap: 12px; }
-body.gilded #end-modal.lit-end .end-actions .cta { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 10px 24px rgba(4, 6, 20, .5); }
-body.gilded #end-modal.lit-end .end-record, body.gilded #end-modal.lit-end .end-net, body.gilded #end-modal.lit-end .aftermath {
+body.fair #end-modal.lit-end #end-body { padding: 0; }
+body.fair #end-modal.lit-end .lettered .ln { max-width: 100%; }
+body.fair #end-modal.lit-end .ln-w { --fs: clamp(58px, min(9.5vw, 17vh), 190px); }
+body.fair #end-modal.lit-end .ln-l { --fs: clamp(40px, min(6vw, 10.5vh), 120px); }
+body.fair #end-modal.lit-end .end-sub { margin: 4px 0 0; text-align: center; color: rgba(248, 242, 228, .85); font-size: 15px; text-shadow: 0 1px 6px rgba(8, 10, 26, .8); }
+body.fair #end-modal.lit-end .end-actions { justify-content: center; padding: 10px 0 0; gap: 12px; }
+body.fair #end-modal.lit-end .end-actions .cta { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 10px 24px rgba(4, 6, 20, .5); }
+body.fair #end-modal.lit-end .end-record, body.fair #end-modal.lit-end .end-net, body.fair #end-modal.lit-end .aftermath {
   margin: 8px auto 0; max-width: 460px; text-align: center; color: rgba(248, 242, 228, .85); text-shadow: 0 1px 6px rgba(8, 10, 26, .8);
 }
-body.gilded #end-modal.lit-end .aftermath { background: rgba(14, 18, 44, .55); border-radius: 10px; padding: 10px 14px; }
+body.fair #end-modal.lit-end .aftermath { background: rgba(14, 18, 44, .55); border-radius: 10px; padding: 10px 14px; }
 
 /* the menu as a bill of the Fair: Ryan's pitch set the way an 1893 handbill would set it (centred, the date
    in the fat face, the hook in a book italic, the cry in red, the story in the book face), the frame in gold
    rules, and the form's controls as the bill's own plates rather than an app's switches */
-body.gilded .setup-card {
+body.fair .setup-card {
   background-color: #F6F0E2;
   box-shadow: inset 0 0 0 1px #9C7B2E, inset 0 0 0 8px #F6F0E2, inset 0 0 0 10px #C9A227, inset 0 0 0 13px #F6F0E2, inset 0 0 0 14px rgba(201, 162, 39, .55),
     0 34px 100px rgba(8, 10, 26, .5), 0 4px 14px rgba(8, 10, 26, .22);
@@ -1843,80 +1674,145 @@ body.gilded .setup-card {
   background-position: left 18px top 18px, right 18px top 18px, left 18px bottom 18px, right 18px bottom 18px, 0 0;
   border: 0;
 }
-body.gilded #setup .pitch.handbill { text-align: center; align-items: center; }
-body.gilded .handbill p { margin: 0; }
-body.gilded .hb-date {
+body.fair #setup .pitch.handbill { text-align: center; align-items: center; }
+body.fair .handbill p { margin: 0; }
+body.fair .hb-date {
   font: 400 clamp(34px, 3.4vw, 46px)/1 "Abril Fatface", var(--display); letter-spacing: .02em; color: #1C2747;
   text-shadow: 1.5px 1.8px 0 rgba(201, 162, 39, .55);
 }
-body.gilded .hb-rule {
+body.fair .hb-rule {
   width: 210px; height: 14px; margin: 12px auto 10px !important;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='14'%3E%3Cpath d='M0 7h62M148 7h62' stroke='%23B8973F'/%3E%3Cpath d='M0 9.5h50M160 9.5h50' stroke='%23B8973F' stroke-opacity='.5'/%3E%3Cg stroke='%232B2620' stroke-opacity='.45' stroke-width='.6'%3E%3Crect x='68' y='3' width='8' height='8' transform='rotate(45 72 7)' fill='%238E3E28'/%3E%3Crect x='84' y='3' width='8' height='8' transform='rotate(45 88 7)' fill='%2337658A'/%3E%3Crect x='100' y='3' width='8' height='8' transform='rotate(45 104 7)' fill='%231B1C19'/%3E%3Crect x='116' y='3' width='8' height='8' transform='rotate(45 120 7)' fill='%23C9A227'/%3E%3Crect x='132' y='3' width='8' height='8' transform='rotate(45 136 7)' fill='%233C8B51'/%3E%3C/g%3E%3C/svg%3E") center / 210px 14px no-repeat;
 }
-body.gilded .handbill p { text-wrap: balance; }
-body.gilded .hb-hook { font: italic 400 clamp(22px, 1.9vw, 26px)/1.25 "Old Standard", Georgia, serif; color: var(--ink); }
-body.gilded .hb-line { margin-top: 8px !important; max-width: 17em; font: 400 clamp(21px, 1.8vw, 24px)/1.3 "Old Standard", Georgia, serif; color: var(--ink); }
-body.gilded .hb-cry { margin-top: 12px !important; max-width: 14em; font: 400 clamp(27px, 2.5vw, 34px)/1.12 "Abril Fatface", var(--display); color: var(--red); letter-spacing: .01em; }
+body.fair .handbill p { text-wrap: balance; }
+body.fair .hb-hook { font: italic 400 clamp(22px, 1.9vw, 26px)/1.25 "Old Standard", Georgia, serif; color: var(--ink); }
+body.fair .hb-line { margin-top: 8px !important; max-width: 17em; font: 400 clamp(21px, 1.8vw, 24px)/1.3 "Old Standard", Georgia, serif; color: var(--ink); }
+body.fair .hb-cry { margin-top: 12px !important; max-width: 14em; font: 400 clamp(27px, 2.5vw, 34px)/1.12 "Abril Fatface", var(--display); color: var(--red); letter-spacing: .01em; }
 /* two to four players, on a ribbon */
-body.gilded .hb-players {
+body.fair .hb-players {
   position: relative; margin: 20px auto 0 !important; padding: 8px 28px 9px; width: max-content;
   font: 800 13px/1 "Libre Franklin", sans-serif; letter-spacing: .22em; text-transform: uppercase; color: #F8F2E4;
   background: #1C2747; box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 3px rgba(232, 184, 75, .8);
 }
-body.gilded .hb-players::before, body.gilded .hb-players::after {
+body.fair .hb-players::before, body.fair .hb-players::after {
   content: ''; position: absolute; top: 4px; width: 16px; height: 100%; background: #131C38; z-index: -1;
 }
-body.gilded .hb-players::before { left: -11px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%); }
-body.gilded .hb-players::after { right: -11px; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
-body.gilded .handbill .pitch-scene { width: 100%; border: 0; border-radius: 4px; box-shadow: 0 0 0 1px #B8973F, 0 0 0 4px #F6F0E2, 0 0 0 5px rgba(201, 162, 39, .55); margin-top: 18px; }
-body.gilded .handbill .learn-btn {
+body.fair .hb-players::before { left: -11px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%); }
+body.fair .hb-players::after { right: -11px; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
+body.fair .handbill .pitch-scene { width: 100%; border: 0; border-radius: 4px; box-shadow: 0 0 0 1px #B8973F, 0 0 0 4px #F6F0E2, 0 0 0 5px rgba(201, 162, 39, .55); margin-top: 18px; }
+body.fair .handbill .learn-btn {
   align-self: center; border-color: #1C2747; color: #1C2747; background: #FBF7EE;
   font: 400 18px/1 "Abril Fatface", var(--display); letter-spacing: .02em; padding: 8px 20px 8px 8px; margin-top: 16px;
   box-shadow: inset 0 0 0 2px #FBF7EE, inset 0 0 0 3px rgba(201, 162, 39, .7), 0 3px 0 rgba(28, 39, 71, .3);
 }
 /* the form: its labels in the book italic, its choices as plates, its lines ruled like a bill's blanks */
-body.gilded .setup-card legend { font: 400 19px/1.2 "Old Standard", Georgia, serif; letter-spacing: 0; text-transform: none; color: var(--ink); }
-body.gilded .setup-card legend::before { content: '◆'; width: auto; height: auto; background: none; color: #C9A227; font-size: 10px; vertical-align: 2px; margin-right: 8px; }
-body.gilded .setup-card .seg { border: 0; border-radius: 3px; background: none; box-shadow: none; gap: 6px; padding: 0; }
-body.gilded .setup-card .seg-btn {
+body.fair .setup-card legend { font: 400 19px/1.2 "Old Standard", Georgia, serif; letter-spacing: 0; text-transform: none; color: var(--ink); }
+body.fair .setup-card legend::before { content: '◆'; width: auto; height: auto; background: none; color: #C9A227; font-size: 10px; vertical-align: 2px; margin-right: 8px; }
+body.fair .setup-card .seg { border: 0; border-radius: 3px; background: none; box-shadow: none; gap: 6px; padding: 0; }
+body.fair .setup-card .seg-btn {
   border: 0; border-radius: 3px; background: #FBF7EE; color: #1C2747; font-family: "Libre Franklin", sans-serif; font-weight: 700;
   box-shadow: inset 0 0 0 1px rgba(28, 39, 71, .45), 0 2px 0 rgba(28, 39, 71, .18);
 }
-body.gilded .setup-card .seg-btn.on { background: #1C2747; color: #F8F2E4; box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 3px rgba(232, 184, 75, .85), 0 2px 0 rgba(8, 10, 26, .3); }
-body.gilded #name-inputs input, body.gilded #code-input, body.gilded #clock-select {
+body.fair .setup-card .seg-btn.on { background: #1C2747; color: #F8F2E4; box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 3px rgba(232, 184, 75, .85), 0 2px 0 rgba(8, 10, 26, .3); }
+body.fair #name-inputs input, body.fair #code-input, body.fair #clock-select {
   border: 0; border-bottom: 1.5px solid #8C7A5E; border-radius: 0; background: transparent; padding-left: 2px;
   font: 400 19px/1.3 "Old Standard", Georgia, serif; color: var(--ink);
 }
-body.gilded #name-inputs input:focus, body.gilded #code-input:focus, body.gilded #clock-select:focus { border-bottom-color: #1C2747; outline: none; box-shadow: 0 2px 0 -0.5px #C9A227; }
-body.gilded .setup-card .cta {
+body.fair #name-inputs input:focus, body.fair #code-input:focus, body.fair #clock-select:focus { border-bottom-color: #1C2747; outline: none; box-shadow: 0 2px 0 -0.5px #C9A227; }
+body.fair .setup-card .cta {
   border-radius: 999px; font: 400 21px/1 "Abril Fatface", var(--display); letter-spacing: .03em;
   box-shadow: inset 0 0 0 2px var(--red), inset 0 0 0 3px rgba(255, 220, 160, .55), 0 4px 0 #8E1424, 0 10px 22px rgba(206, 30, 50, .28);
 }
-body.gilded .setup-foot a { font: italic 400 17px/1.3 "Old Standard", Georgia, serif; }
+body.fair .setup-foot a { font: italic 400 17px/1.3 "Old Standard", Georgia, serif; }
 
 /* a short laptop screen (1280×720, 1366×768): the same dress, closer together, so the idle row stays in view */
 @media (min-width: 941px) and (max-height: 820px) {
-  body.gilded { --tile: 46px; --mini: 38px; }
-  body.gilded #table { padding-top: 22px; }
-  body.gilded #market { margin-bottom: 40px; }
-  body.gilded .board { padding: 18px 22px 16px; }
-  body.gilded .board-head { margin-bottom: 16px; }
-  body.gilded .head-sign { height: 36px; }
-  body.gilded .wall { margin-bottom: 12px; }
+  body.fair { --tile: 46px; --mini: 38px; }
+  body.fair #table { padding-top: 22px; }
+  body.fair #market { margin-bottom: 40px; }
+  body.fair .board { padding: 18px 22px 16px; }
+  body.fair .board-head { margin-bottom: 16px; }
+  body.fair .head-sign { height: 36px; }
+  body.fair .wall { margin-bottom: 12px; }
 }
 
 /* the lobby: the room code in the title's face, small enough that each half of it fits a line, so a long one
    breaks at its hyphen (CRACKERJACK- / CANADA) rather than inside a word */
-body.gilded .room-label { font: italic 400 17px/1.2 "Old Standard", Georgia, serif; letter-spacing: 0; text-transform: none; color: #3A332B; }
-body.gilded .room-code {
+body.fair .room-label { font: italic 400 17px/1.2 "Old Standard", Georgia, serif; letter-spacing: 0; text-transform: none; color: #3A332B; }
+body.fair .room-code {
   font: 400 clamp(30px, 4.6vw, 44px)/1.08 "Abril Fatface", var(--display); letter-spacing: .03em; word-break: normal; overflow-wrap: normal;
   color: #1C2747; text-shadow: 1.5px 1.8px 0 rgba(201, 162, 39, .55);
 }
-body.gilded .seat-list li { border: 0; border-radius: 3px; background: #FBF7EE; box-shadow: inset 0 0 0 1px rgba(28, 39, 71, .3); font-family: "Old Standard", Georgia, serif; font-size: 18px; }
-body.gilded .invite-btn, body.gilded .lobby-actions .ghost-btn { border-color: #1C2747; color: #1C2747; }
+body.fair .seat-list li { border: 0; border-radius: 3px; background: #FBF7EE; box-shadow: inset 0 0 0 1px rgba(28, 39, 71, .3); font-family: "Old Standard", Georgia, serif; font-size: 18px; }
+body.fair .invite-btn, body.fair .lobby-actions .ghost-btn { border-color: #1C2747; color: #1C2747; }
 /* the tutorial's card in the same gold rules as the boards */
-body.gilded #coach .coach-card {
+body.fair #coach .coach-card {
   border: 0; border-radius: 6px; background: #F7F1E4;
   box-shadow: inset 0 0 0 1px #9C7B2E, inset 0 0 0 5px #F7F1E4, inset 0 0 0 6.5px #C9A227, inset 0 0 0 8.5px #F7F1E4, inset 0 0 0 9.2px rgba(201, 162, 39, .55),
     0 18px 44px rgba(8, 10, 26, .45), 0 3px 10px rgba(8, 10, 26, .2);
 }
+
+
+/* --------------------------------------------------------------- the buttons (5 Oct 2026)
+   Ryan: the rounded app buttons were the last modern pieces. Now they are the Fair's enamelled plates: a keyline
+   inside the edge, lettered in the title's face, red to begin something, navy to play again and gold to leave
+   (the end-screen pair has read blue and gold since 13 Aug), cream for the quieter ones. PLAY is a marquee, its
+   border a ring of bulbs that chase; Learn to play carries the manicule, the printer's pointing hand the
+   tutorial points with. */
+body.fair #title .title-play {
+  border: 7px solid #1C2747; border-radius: 8px; padding: .62em 1.9em .66em 2.12em;
+  font: 400 clamp(22px, calc(var(--tw) * .03), 32px)/1 "Abril Fatface", var(--display); letter-spacing: .22em; text-transform: uppercase;
+  color: #FFF7E8; background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .14)) #C41E30;
+  box-shadow: inset 0 0 0 2px #C41E30, inset 0 0 0 3.2px rgba(255, 236, 205, .85), 0 0 0 1.5px #C9A227, 0 5px 0 #0B1230, 0 14px 30px rgba(10, 12, 28, .38);
+}
+body.fair #title .title-play:active { transform: translateY(4px); box-shadow: inset 0 0 0 2px #C41E30, inset 0 0 0 3.2px rgba(255, 236, 205, .85), 0 0 0 1.5px #C9A227, 0 1px 0 #0B1230, 0 6px 14px rgba(10, 12, 28, .3); }
+body.fair #title .title-play::before, body.fair #title .title-play::after {
+  content: ''; position: absolute; inset: -7px; border-radius: 8px; pointer-events: none; box-shadow: none;
+  --bulb: radial-gradient(circle, #FFFDF2 0 1.3px, #FFD978 1.9px, rgba(255, 196, 80, .45) 2.6px, rgba(255, 196, 80, 0) 3.5px);
+  background: var(--bulb) 0 0 / 14px 7px repeat-x, var(--bulb) 0 100% / 14px 7px repeat-x, var(--bulb) 0 0 / 7px 14px repeat-y, var(--bulb) 100% 0 / 7px 14px repeat-y;
+  animation: marquee-chase 1.3s steps(1, end) infinite;
+}
+body.fair #title .title-play::after { background-position: 7px 0, 7px 100%, 0 7px, 100% 7px; animation-delay: -.65s; }
+@keyframes marquee-chase { 0% { opacity: 1; } 50% { opacity: .2; } }
+@media (max-aspect-ratio: 21/20) { body.fair #title .title-play { font-size: 22px; } }
+
+/* to begin something: red */
+body.fair .setup-card .cta {
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .12)) #C41E30;
+  box-shadow: inset 0 0 0 2px #C41E30, inset 0 0 0 3.2px rgba(255, 236, 205, .85), 0 4px 0 #7E1220, 0 10px 22px rgba(196, 30, 48, .26);
+}
+body.fair .setup-card .cta:active { transform: translateY(3px); box-shadow: inset 0 0 0 2px #C41E30, inset 0 0 0 3.2px rgba(255, 236, 205, .85), 0 1px 0 #7E1220, 0 4px 10px rgba(196, 30, 48, .2); }
+body.fair .setup-card .cta:disabled { opacity: .5; transform: none; }
+body.fair #coach .coach-next {
+  border-radius: 5px; padding: 10px 20px; font: 400 17px/1 "Abril Fatface", var(--display); letter-spacing: .04em;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .12)) #C41E30;
+  box-shadow: inset 0 0 0 2px #C41E30, inset 0 0 0 3.2px rgba(255, 236, 205, .85), 0 3px 0 #7E1220;
+}
+body.fair #coach .coach-next:active { box-shadow: inset 0 0 0 2px #C41E30, inset 0 0 0 3.2px rgba(255, 236, 205, .85), 0 1px 0 #7E1220; }
+
+/* at the end: navy to play again, gold to leave */
+body.fair #end-modal.lit-end .end-actions .cta { border-radius: 5px; padding: 12px 24px; font: 400 19px/1 "Abril Fatface", var(--display); letter-spacing: .05em; }
+body.fair #end-modal.lit-end .end-actions .cta.blue {
+  color: #F8F2E4; background: linear-gradient(180deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .14)) #1C2747;
+  box-shadow: inset 0 0 0 2px #1C2747, inset 0 0 0 3.2px #D9AE3A, 0 3px 0 #0B1230, 0 10px 24px rgba(4, 6, 20, .5);
+}
+body.fair #end-modal.lit-end .end-actions .cta.gold {
+  color: #1C2747; background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .1)) #D9AE3A;
+  box-shadow: inset 0 0 0 2px #D9AE3A, inset 0 0 0 3.2px rgba(255, 250, 232, .9), 0 3px 0 #8E6E16, 0 10px 24px rgba(4, 6, 20, .5);
+}
+body.fair #end-modal.lit-end .end-actions .cta:active { transform: translateY(2px); }
+
+/* the quieter ones: cream, ruled in navy and gold */
+body.fair .handbill .learn-btn, body.fair .invite-btn, body.fair .lobby-actions .ghost-btn {
+  border: 0; border-radius: 5px; color: #1C2747;
+  font: 400 18px/1 "Abril Fatface", var(--display); letter-spacing: .03em;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, .04)) #FBF7EE;
+  box-shadow: inset 0 0 0 1.5px #1C2747, inset 0 0 0 3.5px #FBF7EE, inset 0 0 0 4.5px rgba(201, 162, 39, .8), 0 3px 0 rgba(28, 39, 71, .35), 0 8px 16px rgba(8, 10, 26, .12);
+}
+body.fair .handbill .learn-btn { gap: 10px; padding: 10px 20px 10px 14px; }
+body.fair .handbill .learn-btn::before { width: 40px; height: 22px; border-radius: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 52'%3E%3Cg fill='%23FFFCF4' stroke='%231C2747' stroke-width='2.6' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M3,8 L16,8 L16,46 L3,46 Z'/%3E%3Cpath d='M7,8 V46 M11.5,8 V46' fill='none' stroke-width='1.4'/%3E%3Cpath d='M38,27 H55 C60,27 60,35 55,35 H38 Z'/%3E%3Cpath d='M37,34 H53 C58,34 58,41.5 53,41.5 H37 Z'/%3E%3Cpath d='M35,40.5 H49 C53.5,40.5 53.5,47 49,47 H35 Z'/%3E%3Cpath d='M16,10 C24,8 32,10 40,14 L40,44 C32,48 24,48 16,46 Z'/%3E%3Cpath d='M36,14 H86 C93,14 93,25 86,25 H40 Z'/%3E%3Cpath d='M82,16.5 C85.5,17.5 85.5,21.5 82,22.5' fill='none' stroke-width='1.4'/%3E%3Cpath d='M26,24 C34,22 44,22 52,24.5 C56,25.6 55.5,30 51.5,30 C44,30 36,29.5 30,30'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; }
+body.fair .invite-btn { font-size: 17px; padding: 9px 18px 9px 10px; }
+body.fair .lobby-actions .ghost-btn { padding: 11px 16px; font-size: 16px; }
+body.fair .handbill .learn-btn:active, body.fair .invite-btn:active, body.fair .lobby-actions .ghost-btn:active { transform: translateY(2px); box-shadow: inset 0 0 0 1.5px #1C2747, inset 0 0 0 3.5px #FBF7EE, inset 0 0 0 4.5px rgba(201, 162, 39, .8), 0 1px 0 rgba(28, 39, 71, .35); }
+@media (prefers-reduced-motion: reduce) { body.fair #title .title-play::before, body.fair #title .title-play::after { animation: none; opacity: 1; } }

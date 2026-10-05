@@ -346,7 +346,7 @@ GitHub Pages is static hosting and cannot run a backend, so anything genuinely
 multiplayer-across-devices needs an external realtime service.
 
 **Pavilion** (`pavilion/`, live at `/pavilion/`) is the in-house Azul-style
-game, mid-build — two nations hiring craftspeople from one crowd to build rival
+game, mid-build — two to four nations hiring workers from one crowd to build rival
 exhibits at the 1893 Chicago World's Fair. It lives at the site root rather than
 under `teaching/ler565/` so students get a short URL — it is still an LER 565
 activity. Its specs are `pavilion/PAVILION.md` (design, why) and
@@ -385,29 +385,33 @@ relay, and refuses any term that isn't a `demo`/`test`/`trial`).
 
 `pavilion/scene.js` is the front door's animated World's Fair (PAVILION.md, *The
 front door's Fair*): decorative, wordless, outside the engine and the copy layer,
-and since 3 Oct 2026 it is the front door for everyone (`?plain` brings back the old one). Its menu's **Learn to play** is
+and since 3 Oct 2026 it is the front door for everyone. Its menu's **Learn to play** is
 `ui.js`'s coach: a guided first game on the fixed seed `lesson-7`, hooked into
 the game through `coachOn` (a no-op outside the tutorial), every line in
 `LESSON_LINES`. A change to the engine or the bot that alters that seed's first
 month breaks the script; the coach then falls back to plain hints, but re-pick
 the seed rather than live with it. The game itself wears the Fair's
-dress too (`body.fair` rules in `style.css`, the `FAIR` flag in `ui.js` for the
-motion), in Abril Fatface and Libre Franklin from `pavilion/fonts/` (OFL, never
-fetched from Google); `?plain` plays it as it was. Links can carry their own
+dress too (`body.fair`, on the page from the start, in `style.css`), in Abril
+Fatface, Libre Franklin and Old Standard from `pavilion/fonts/` (OFL, never
+fetched from Google). **There is one game**: since 5 Oct 2026 the old versions
+(`?plain`, the August game, and the 3 Oct dress) are gone from the code and run
+only at the git tag `pavilion-before-gilded-default-2026-10-05`. Links can carry their own
 names (`?names=Mary,Jim,…`, which never record), `&clock=0`, and `?join=CODE`
-(what the lobby's invite link sends). The front door's music is Bandcamp's
-embedded player for a track Ryan bought: **never commit the audio file**, a
-purchase is a personal licence and everything in this repo is public. The
+(what the lobby's invite link sends). The music is Bandcamp's embedded player
+for a track Ryan bought, set at the width of its play button so it is one
+click and shows no title: **never commit the audio file**, a purchase is a
+personal licence, everything in this repo is public, and a takedown would land
+on his whole site (he asked on 5 Oct; the answer stands). The
 3 Oct polish pass is the default since that night (PAVILION.md, *Opening
 night*): the end of the game as the Fair at night with the players' pavilions
 and the judges' medal (`pavilion:finale` from `ui.js` to `scene.js`), the
 month's sky, the hire preview, the crews carrying their displays, and the
 records site in the Fair's dress; `?finale` jumps straight to the end.
-**The gilded pass** (5 Oct 2026) rides on `?gilded` until Ryan has seen it: the
-board played at the Fair under a day that keeps the month's hours, each board the
-front of its pavilion, the big moments and the winner in the title's lit letters
-(`letters.js`), the menu as an 1893 bill, "workers", and no Rehearsal
-(PAVILION.md, *The gilded pass*, which also says how to make it the default).
+**The gilded pass** (5 Oct 2026, the game since that night): the board played
+at the Fair under a day that keeps the month's hours, each board the front of its
+pavilion (four nations, each with its own colours and roof), the big moments and
+the winner in the title's lit letters (`letters.js`), the menu as an 1893 bill,
+period buttons, "workers", and no Rehearsal (PAVILION.md, *The gilded pass*).
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)

@@ -923,7 +923,7 @@ Every mechanic carries meaning — this is a reskin, not a coat of paint:
 
 | Azul | Pavilion | Why it works |
 |---|---|---|
-| Tile | **A craftsperson** — one of five disciplines | Art, Science, Machinery, Electricity, Agriculture — see *Tiles* below |
+| Tile | **A worker** — one of five disciplines (a craftsperson until 5 Oct 2026; *The gilded pass* has the paragraph) | Art, Science, Machinery, Electricity, Agriculture — see *Tiles* below |
 | Bag | **The crowd** | Everyone who came to Chicago for the work |
 | Factory display | **An agency** | Sends over a mixed group; you get first pick of one discipline |
 | Take all of one colour | — | Engage every sculptor an agency sends. The rest weren't hired, so they're still looking — they go and wait with everyone else |
@@ -970,7 +970,8 @@ from the **national pavilions**, never the Midway villages.
 **Rounds are construction months** (Ryan, playtest 2026-08-13 — they read as
 weeks, W1/W2/W3, before that). The counter reads Month 1, Month 2…, each month
 opens with a big **Construction Month N** splash in the logo colours, and
-Phase B's splash is **Craftspeople build the displays**. A timeout still reads
+Phase B's splash was **Craftspeople build the displays** until 5 Oct 2026, and
+is **The displays go up** since (*The gilded pass*). A timeout still reads
 "out of time".
 
 **Theme the names and the art, never the rules.** Base Azul mechanics stay
@@ -1232,7 +1233,7 @@ the design can fix it.
 
 ---
 
-## The front door's Fair — 3 Oct 2026 (`scene.js`; the default since that evening, `?plain` for the old front door)
+## The front door's Fair — 3 Oct 2026 (`scene.js`; the default since that evening; `?plain`, the old front door, retired 5 Oct)
 
 Ryan asked for "a world in motion surrounding the game opening screen": the
 1893 Fair alive, a day-to-night cycle, and the game's own story told in the
@@ -1412,7 +1413,7 @@ stay out, for the reason in *The register*; the rest of the Midway is in.
   "walking into the tops of the pavilions").
 
 
-## Opening night, and the rest of the polish pass — 3 Oct 2026 (the default since that night; `?plain` plays the game as it was)
+## Opening night, and the rest of the polish pass — 3 Oct 2026 (the default since that night; `?plain` retired 5 Oct)
 
 Ryan, sending the game to his parents: the end screen "looks like it's just kinda
 tacked on from the first cut", and anything else that would improve the game or
@@ -1487,7 +1488,7 @@ carries `class="fair"` on its `<body>`. `?opening` now means nothing.
   what is left for Ryan is the admin page's jobs (delete the demo term, set the
   real one and its roster, enter the champion's emblem and line after the final).
 
-## The gilded pass — 5 Oct 2026 (on `?gilded` until Ryan has seen it)
+## The gilded pass — 5 Oct 2026 (the only game since that night)
 
 Ryan, after the opening night pass: the game itself "feels a little more
 amateurish compared to the opening sequence", bare bones next to the front
@@ -1502,10 +1503,9 @@ judged" and no scoring breakdown; and the menu's "Chicago 1893" pitch nicer, wit
 the Rehearsal dropped now that Learn to play exists ("we would need to say this
 is a game for 2–4 players ofc"). Answered in prose first; "great!".
 
-All of it rides on `GILDED` in `ui.js` (`?gilded`, inside the Fair's dress) and
-`scene.js` (`QS.has('gilded')`), and `body.gilded` in `style.css`. Without the flag
-the game is exactly as it was. **Look links:** `/pavilion/?gilded` (the front door,
-the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
+It was built behind `?gilded`, and the same night Ryan said "lets do it all and
+make it live!": it is now the only game (see *One game*, at the end of this
+section). **Look link:** `/pavilion/?finale` (the end, `&players=3` or `4`).
 
 - **The board is played at the Fair.** In a game `scene.js` keeps the Fair behind
   the board (`buildBack`, "the board's Fair"): the sky, the White City across the
@@ -1580,7 +1580,7 @@ the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
   coach stops after the first month and the game plays on), and its Rematch deals
   a fresh one with no coach, so solo play is still one click from the end of the
   tutorial. The menu's Game type is gone; a game is a room for two to four.
-  `?uitest=setup` checks the gilded menu when `?gilded` is on.
+  `?uitest=setup` checks the menu.
 - **Workers.** The paragraph the theme rule asks for (Ryan, 12 Aug: every term gets
   one, read aloud):
 
@@ -1597,7 +1597,7 @@ the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
   plain words, and the man who carries a display into its bay is already a
   worker. It does not bring back Headcount's failure (firing most of every
   finished crew): the crew-moves-on story fixed that, and the word does not undo
-  it. On `?gilded`: the turn line, the supply, the tutorial's first card, the
+  it. In the game: the turn line, the supply, the tutorial's first card, the
   setup's hint (gone with the Rehearsal) and the bill.
 - **The lobby** sets the room code in the title's face, small enough that each half
   fits a line, so a long code breaks at its hyphen (CRACKERJACK- / CANADA), not
@@ -1637,10 +1637,45 @@ on a phone with three or four seats the gate grows a row mid-game and shifts the
 boards (`?layout=1` fails the same way without the flag); reserving the rows would
 leave a tall empty gate at the start of every month, which is his call.
 
-**Making it the default** is `GILDED = FAIR` in `ui.js` and `GILDED = true` in
-`scene.js`; after that the Fair-but-not-gilded branches are dead (the old splash
-colours, the judges' card, the `#sky`, the plain pitch and the Rehearsal path)
-and can go, and *Theme* above wants *craftsperson* changed to *worker*.
+**One game (5 Oct 2026, night; Ryan: "lets do it all and make it live!").**
+- **The flags are gone.** `?plain` (the August game) and the 3 Oct dress without
+  the gilded pass no longer exist in the code: `FAIR`, `GILDED` and `body.gilded`
+  are gone, `body.fair` is on the page from the first byte, and every branch
+  that served the other versions was deleted (the rainbow splashes, the judges'
+  card and its table, the month's sky strip, the faint skyline, the August
+  flights, the long pitch and its tile-palette logo, the Rehearsal and the game
+  type it was chosen with). Both older versions run at the git tag
+  **`pavilion-before-gilded-default-2026-10-05`**. *Theme* below now says
+  *worker*.
+- **Four nations** (Ryan: "perhaps we do green for player 3 … feel free to
+  actually alternate the pavilion colors however youd like"): one to a seat, each
+  with its own colours and roof, on the boards (`NATION`/`crestSVG` in `ui.js`,
+  `.nation-N` in `style.css`) and on opening night (`NATION`, `SIGNS` and the
+  roofs in `scene.js`): **crimson and cream under a dome; navy and gold between
+  two towers; green and cream under a clock-tower spire over a mansard; mauve and
+  gold under a pediment with a gilded figure**. Mauve because the 1890s were the
+  Mauve Decade; the accents alternate cream, gold, cream, gold. A three- or
+  four-player game used to repeat the first two.
+- **The buttons are the Fair's.** PLAY is a marquee: a red enamel plate in a
+  navy rail of bulbs that chase (two rings of bulbs half a step apart, lit in
+  turn; all lit under reduced motion). The rest are enamel plates with a keyline,
+  lettered in Abril Fatface: red to begin something (Start the competition, Join
+  the room, Start the game, the tutorial's Next), navy to play again and gold to
+  leave (the end-screen pair, blue and gold since 13 Aug), cream for the quieter
+  ones; Learn to play carries the manicule.
+- **The music is one button** (Ryan: one click, and no song title on it): Bandcamp's
+  own player at the width of its play button, where Bandcamp shows only the
+  button, in a gold-ruled frame with a note beside it; in a game it stands at the
+  end of the top bar (`placeMusic` in `scene.js`), so the ♫ toggle and its panel
+  are gone. He asked whether his bought MP3 could go on the site instead. It
+  cannot, for the reason in `CLAUDE.md`: this repository is public and serves his
+  whole site, a purchase is a personal licence, and a takedown notice would land
+  on ryanlamare.com, not on a game.
+- **The name stays Pavilion, without an exclamation mark** (he asked whether
+  "PAVILION!" would be better, and whether Claude liked the name): it is the thing
+  you build, one word the way Azul is, and the "!" belongs to the moments that
+  are already lit ("The World's Fair is Open!", "Mary wins!"), which a title that
+  is always shouting would flatten.
 
 ## Two devices — built 2026-08-12 (build step 4)
 

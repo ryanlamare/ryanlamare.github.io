@@ -2,7 +2,7 @@
    the whole screen, PAVILION set in tiles over the sky, and "Play a game" opening
    the menu (the setup card) over a dimmed Fair. Built 3 Oct 2026 as a sample on
    ?fair, and the front door for everyone since that evening (Ryan: "make this
-   one go live and replace the original"). ?plain shows the old front door.
+   one go live and replace the original"); since 5 Oct it also stands behind the board in a game.
 
    Ryan's brief: "a world in motion surrounding the game opening screen…
    placing people inside the world's fair with some cool motion and animated
@@ -36,10 +36,6 @@
   'use strict';
 
   const QS = new URLSearchParams(location.search);
-  if (QS.has('plain')) return;
-  // The gilded pass (5 Oct 2026, on ?gilded until Ryan has seen it): the Fair stays behind the board in a
-  // game, its hour kept by the game itself (the board's Fair, below).
-  const GILDED = QS.has('gilded');
 
   const setup = document.getElementById('setup');
   const card = setup && setup.querySelector('.setup-card');
@@ -121,7 +117,11 @@
   const KGLOW = ['#FF9C76', '#9CD0F7', '#F6EEDC', '#FFE06A', '#9BE8AC'];
   const STONE = '#F4EFE3', STONE2 = '#E3DAC6', ARCH = '#D3C9B4', DOOR = '#C9BFA9';
   const GOLD = '#D2A535', GOLD2 = '#F3D57E', GOLDD = '#9A7518';
-  const NATION = [{ a: '#CE1E32', b: '#F3EADA' }, { a: '#24356B', b: '#D9AE3A' }];
+  // The nations, one to a seat, each a pair of colours and a roof of its own (Ryan, 5 Oct: green for the third,
+  // and the rest however looks best): crimson and cream under a dome, navy and gold between two towers, green
+  // and cream under a spire, and the 1890s' own mauve (the Mauve Decade) with gold under a pediment. ui.js and
+  // style.css carry the same four for the boards.
+  const NATION = [{ a: '#CE1E32', b: '#F3EADA' }, { a: '#24356B', b: '#D9AE3A' }, { a: '#2B6E47', b: '#F3EADA' }, { a: '#6A3470', b: '#D9AE3A' }];
   const SKIN = ['#F1D2B6', '#E3B590', '#C8946A', '#9C6A45', '#6F4831'];
   const HAIR = ['#2B211A', '#4E3322', '#7A5230', '#B88F55', '#3B3A38', '#A9A398'];
   const SUIT = ['#2F3441', '#3F342A', '#4B4F53', '#2A3A57', '#5B4A39', '#5F5B52', '#24303F', '#4A3B44'];
@@ -327,12 +327,11 @@
 
   // Opening night's lettering is the title's poster face.
   const SERIF = '"Abril Fatface", Didot, "Bodoni 72", Georgia, serif';
-  // A pavilion's sign on opening night: the player's name on a navy board, and the score in a medallion
-  // at its end, the way the board shows a score. Gilded (Ryan, 5 Oct), each sign wears its own pavilion's
-  // colours, red and white over the domed one and navy and gold over the towered one, as the boards do.
-  const SIGNS = [{ bg: '#C41E30', rule: '#F3EADA' }, { bg: '#1C2747', rule: '#D9AE3A' }];
+  // A pavilion's sign on opening night: the player's name on a board in the pavilion's own colours (Ryan,
+  // 5 Oct), and the score in a medallion at its end, the way the board shows a score.
+  const SIGNS = [{ bg: '#C41E30', rule: '#F3EADA' }, { bg: '#1C2747', rule: '#D9AE3A' }, { bg: '#235E3D', rule: '#F3EADA' }, { bg: '#5B2C5E', rule: '#D9AE3A' }];
   function sign(p, cx, y, sw, sh, name, score, n = 1) {
-    const { bg, rule } = SIGNS[GILDED ? n % 2 : 1];
+    const { bg, rule } = SIGNS[n % SIGNS.length];
     const g = el('g', null, p), x = cx - sw / 2, mr = sh * 0.8, mx = x + sw - mr * 0.42, my = y + sh / 2;
     rect(g, x, y, sw, sh, bg, { 'stroke-width': 0.8 });
     rect(g, x + 2.5, y + 2.5, sw - 5, sh - 5, 'none', { stroke: rule, 'stroke-width': 1 });
@@ -341,7 +340,7 @@
     t.textContent = name;
     if (t.getComputedTextLength() > avail) { t.setAttribute('textLength', avail.toFixed(1)); t.setAttribute('lengthAdjust', 'spacingAndGlyphs'); }
     circ(g, mx, my, mr, bg, { 'stroke-width': 1 });
-    circ(g, mx, my, mr - 2.4, 'none', { stroke: GILDED && n % 2 === 0 ? rule : '#E8B84B', 'stroke-width': 1.4 });
+    circ(g, mx, my, mr - 2.4, 'none', { stroke: rule, 'stroke-width': 1.4 });
     const digits = String(score), sfs = mr * (digits.length > 2 ? 0.74 : 0.95);
     el('text', { x: mx.toFixed(1), y: (my + sfs * 0.36).toFixed(1), 'text-anchor': 'middle', 'font-family': SERIF, 'font-size': sfs.toFixed(1), fill: '#F8F2E4' }, g).textContent = digits;
   }
@@ -1087,16 +1086,16 @@
       const signH = FIN ? w * 0.13 : 0, rt = top - signH;     // the roof stands on the sign
       rect(g, x0 - w * 0.04, base - plinth, w * 1.08, plinth, nt(STONE2));
       rect(g, x0, top, w, facH, nt(STONE));
-      const nat = NATION[n % NATION.length];
-      let roofLine;
-      if (n % 2 === 0) {
+      const nat = NATION[n % NATION.length], roof = n % 4;
+      let roofLine, roofTop = rt - w * 0.56;
+      if (roof === 0) {
         rect(g, x0 - 3, rt - 4, w + 6, 4, nt(STONE2));
         roofLine = `M${cx - w * 0.3},${rt - 4} C${cx - w * 0.3},${rt - w * 0.42} ${cx + w * 0.3},${rt - w * 0.42} ${cx + w * 0.3},${rt - 4}`;
         path(g, roofLine + ' Z', nt('#EDE5D2'));
         path(g, `M${cx},${rt - w * 0.32} C${cx + w * 0.17},${rt - w * 0.31} ${cx + w * 0.3},${rt - w * 0.2} ${cx + w * 0.3},${rt - 4} L${cx + w * 0.14},${rt - 4} C${cx + w * 0.14},${rt - w * 0.2} ${cx + w * 0.07},${rt - w * 0.29} ${cx},${rt - w * 0.32} Z`, nt('#D9CFBA'), NO);
         line(g, cx, rt - w * 0.32, cx, rt - w * 0.46, { stroke: '#4A4038', 'stroke-width': 1 });
         flag(g, cx, rt - w * 0.46, w * 0.13, w * 0.08, nat.a);
-      } else {
+      } else if (roof === 1) {
         roofLine = `M${x0 - 3},${rt} L${cx},${rt - w * 0.2} L${x0 + w + 3},${rt}`;
         path(g, roofLine + ' Z', nt(STONE2));
         for (const tx of [x0 + w * 0.1, x0 + w * 0.9]) {
@@ -1106,6 +1105,33 @@
           flag(g, tx, rt - w * 0.5, w * 0.1, w * 0.065, nat.b);
           if (FIN) roofLine += ` M${tx - w * 0.06},${rt} V${rt - w * 0.3} L${tx},${rt - w * 0.42} L${tx + w * 0.06},${rt - w * 0.3} V${rt}`;
         }
+      } else if (roof === 2) {
+        // a mansard with a pinnacle at each end, and a clock tower in the middle under a tall spire
+        const mt = rt - w * 0.12;
+        path(g, `M${x0 - 3},${rt} L${x0 + w * 0.08},${mt} H${x0 + w * 0.92} L${x0 + w + 3},${rt} Z`, nt(STONE2));
+        for (const tx of [x0 + w * 0.11, x0 + w * 0.89]) path(g, `M${tx - w * 0.032},${mt} L${tx},${mt - w * 0.1} L${tx + w * 0.032},${mt} Z`, nat.a);
+        rect(g, cx - w * 0.075, rt - w * 0.32, w * 0.15, w * 0.32, nt(STONE));
+        circ(g, cx, rt - w * 0.235, w * 0.042, nt('#FBF6EA'));
+        line(g, cx, rt - w * 0.235, cx, rt - w * 0.26, { stroke: '#4A4038', 'stroke-width': 0.8 });
+        path(g, `M${cx - w * 0.09},${rt - w * 0.32} L${cx},${rt - w * 0.62} L${cx + w * 0.09},${rt - w * 0.32} Z`, nat.a);
+        line(g, cx, rt - w * 0.62, cx, rt - w * 0.7, { stroke: '#4A4038', 'stroke-width': 1 });
+        flag(g, cx, rt - w * 0.7, w * 0.12, w * 0.07, nat.b);
+        roofLine = `M${x0 - 3},${rt} L${x0 + w * 0.08},${mt} H${x0 + w * 0.92} L${x0 + w + 3},${rt}`
+          + (FIN ? ` M${cx - w * 0.09},${rt - w * 0.32} L${cx},${rt - w * 0.62} L${cx + w * 0.09},${rt - w * 0.32}` : '');
+        roofTop = rt - w * 0.78;
+      } else {
+        // a temple front: the pediment with its tympanum in the nation's colour and a gilded medallion, an urn
+        // at each corner and a gilded figure on the apex
+        rect(g, x0 - 3, rt - 3, w + 6, 3, nt(STONE2));
+        roofLine = `M${x0 - 3},${rt - 3} L${cx},${rt - w * 0.27} L${x0 + w + 3},${rt - 3}`;
+        path(g, roofLine + ' Z', nt(STONE2));
+        path(g, `M${x0 + w * 0.12},${rt - 4.6} L${cx},${rt - w * 0.225} L${x0 + w * 0.88},${rt - 4.6} Z`, nat.a, NO);
+        circ(g, cx, rt - w * 0.1, w * 0.04, GOLD, { stroke: GOLDD });
+        for (const ux of [x0 + w * 0.02, x0 + w * 0.98]) path(g, `M${ux - w * 0.03},${rt - 3} L${ux - w * 0.024},${rt - 3 - w * 0.05} Q${ux},${rt - 3 - w * 0.09} ${ux + w * 0.024},${rt - 3 - w * 0.05} L${ux + w * 0.03},${rt - 3} Z`, nt(STONE));
+        path(g, `M${cx - w * 0.022},${rt - w * 0.27} L${cx - w * 0.012},${rt - w * 0.37} L${cx},${rt - w * 0.4} L${cx + w * 0.012},${rt - w * 0.37} L${cx + w * 0.022},${rt - w * 0.27} Z`, GOLD, { stroke: GOLDD });
+        line(g, cx, rt - w * 0.4, cx, rt - w * 0.47, { stroke: '#4A4038', 'stroke-width': 1 });
+        flag(g, cx, rt - w * 0.47, w * 0.12, w * 0.07, nat.b);
+        roofTop = rt - w * 0.56;
       }
       const bunt = el('g', null, g);
       for (let i = 0; i < 9; i++) {
@@ -1147,7 +1173,7 @@
       }
       if (FIN) signs.push(p => sign(p, cx, rt, w * 1.04, signH, pl.name, pl.score, n));
       return {
-        bays, door: { x: cx, y: base - 1 }, g, gl, cx, w, base, roofTop: rt - w * 0.56, crown: rt - w * 0.3,
+        bays, door: { x: cx, y: base - 1 }, g, gl, cx, w, base, roofTop, crown: rt - w * 0.3,
         idle: [1, 2, 3, 4].map(i => ({ x: cx + (n ? -1 : 1) * (w / 2 + 6 * s + i * 9 * s), y: base })),
         sync(list, pop) {
           let count = 0;
@@ -2227,17 +2253,16 @@
   function vStart() { vStop(); vBuild(); if (!STILL) vTimer = setInterval(vStep, 560); }
   function vStop() { clearInterval(vTimer); vTimer = 0; }
 
-  // Music: Bandcamp's own player for the artist's track. One click on its play
-  // starts the song (Ryan: one click, not a card and then play; a page cannot
-  // press another site's button, so the player is the button). It loads once the
-  // title has landed, so the page never waits on it, and stays in the page so the
-  // song plays on through the menu and into a game, where the note in the top
-  // bar shows the player again.
+  // Music: Bandcamp's own player for the artist's track, at the width of its play
+  // button, where Bandcamp shows nothing else (Ryan, 5 Oct: one click, and no song
+  // title on it; a page cannot press another site's button, so the player is the
+  // button). It loads once the title has landed, so the page never waits on it,
+  // and it is never moved in the page, so the song plays on through the menu and
+  // into a game, where it stands at the end of the top bar (placeMusic).
   const music = document.getElementById('music');
   if (music) {
     music.classList.remove('hidden');
     const holder = music.querySelector('.music-player');
-    const buttons = [document.getElementById('btn-music-top')].filter(Boolean);
     const load = () => {
       if (holder && !holder.firstElementChild) {
         const f = document.createElement('iframe');
@@ -2252,13 +2277,15 @@
       }
     };
     setTimeout(load, REDUCED ? 0 : 2400);
-    const toggle = () => {
-      load();
-      const open = !music.classList.contains('open');
-      music.classList.toggle('open', open);
-      buttons.forEach(b => b.setAttribute('aria-expanded', String(open)));
-    };
-    buttons.forEach(b => b.addEventListener('click', toggle));
+  }
+  // In a game the music button stands over the slot kept for it at the end of the top bar, which stays put
+  // at the top of the screen; style.css scales it to the bar.
+  function placeMusic() {
+    const slot = document.querySelector('#topbar .music-slot');
+    if (!music || !slot) return;
+    const r = slot.getBoundingClientRect();
+    music.style.setProperty('--slot-x', Math.round(r.left) + 'px');
+    music.style.setProperty('--slot-y', Math.round(r.top) + 'px');
   }
 
   // the title's letters jig when clicked, and a click on the sky sends up a firework
@@ -2326,12 +2353,13 @@
       return;
     }
     const onSetup = visible(setup), onLobby = visible(lobby), on = onSetup || onLobby;
-    if (GILDED && !on && gameEl && visible(gameEl)) {
+    if (!on && gameEl && visible(gameEl)) {
       // a game: the board's Fair behind it, at the game's hour
       host.classList.remove('hidden');
       scrim.classList.add('hidden');
       titleEl.classList.add('hidden');
       front('');
+      requestAnimationFrame(placeMusic);
       if (!backOn) { backOn = true; rebuild(); }
       start();
       return;
@@ -2357,6 +2385,7 @@
     pending = setTimeout(() => {
       if (visible(setup) || visible(lobby)) { rebuild(); fit(); if (body.dataset.front === 'menu') vStart(); }
       else if (backOn && !FIN) rebuild();
+      placeMusic();
     }, 200);
   });
   const gameEl = document.getElementById('game');
@@ -2373,7 +2402,7 @@
   // The game's hour (ui.js, ?gilded): eased to over ms, or set at once. Kept when the game is not showing yet,
   // and left where scene.js finds it on load too (window.__pavilionSky), for a game that began before this ran.
   function setHour(d) {
-    if (!GILDED || !d || !Number.isFinite(d.f)) return;
+    if (!d || !Number.isFinite(d.f)) return;
     const from = BRD ? brdNow() : d.f;
     BRD = { from, to: d.f, t: 0, dur: STILL || !d.ms ? 0 : d.ms / 1000 };
     if (backOn && !FIN) { if (!running) last = 0; start(); }
@@ -2414,4 +2443,5 @@
 
   rebuild();
   sync(true);
+  document.documentElement.classList.remove('fair-boot');   // the Fair is drawn: the sky that stood in for it goes
 })();

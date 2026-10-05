@@ -62,28 +62,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const TEMPO =
   parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tempo')) || 1;
 const T = (ms) => Math.round(ms * TEMPO);
-// The Fair's dress for the game (3 Oct 2026, with the front door): flights on
-// real arcs, a hire that reads in order, the Commissioner showing its pick
-// before it moves. ?plain plays the way the game did before. Since the night of
-// 3 Oct (Ryan: "lets make it the default!") the dress also ends the game at the
-// Fair it began at, lit for the night, with the players' own pavilions on its
-// promenade and the judges' medal over the winner's (scene.js draws it;
-// startFinale below sends it the players), and carries the month's sky, the hire
-// preview and the crews carrying their displays up.
-const FAIR = !new URLSearchParams(location.search).has('plain');
-// The gilded pass (5 Oct 2026, on ?gilded until Ryan has seen it; PAVILION.md, The gilded pass): the board
-// played at the Fair, under a sky that keeps the game's hour, each board the front of its pavilion, the big
-// moments and the winner in the title's lit letters, and the menu as a bill of the Fair.
-const GILDED = FAIR && new URLSearchParams(location.search).has('gilded');
-if (GILDED) document.body.classList.add('gilded');
-// Ryan (5 Oct 2026): "workers" instead of "craftspeople", on the gilded pass. The paragraph his rule asks
-// for is in PAVILION.md (The gilded pass): the crew finishes and moves on, and anyone hired and not needed
-// stands idle on the payroll, which is the lesson in plain words.
-const HANDS = GILDED ? 'workers' : 'craftspeople';
-if (GILDED) {
-  $('#pool-chip').firstChild.textContent = 'Workers ';
-  $('#pool-chip').parentElement.title = 'Workers still to reach the city';
-}
+// One game, in the Fair's dress (3 Oct 2026) with the gilded pass on it (5 Oct 2026), and since the night of
+// 5 Oct the only one (Ryan: "lets do it all and make it live!"): the board played at the Fair under a sky that
+// keeps the game's hour, each board the front of its pavilion, flights on real arcs, a hire that reads in order
+// and is priced before it is made, the Commissioner showing its pick, the big moments and the winner in the
+// title's lit letters, and the end at the Fair at night with the players' own pavilions (scene.js). The August
+// game (?plain) and the 3 Oct dress are in git history, tag pavilion-before-gilded-default-2026-10-05.
+// The hands are "workers" (Ryan, 5 Oct; the paragraph his rule asks for is in PAVILION.md, The gilded pass).
 const beat = (ms) => (instant() ? Promise.resolve() : sleep(T(ms)));
 const snap = (s) => JSON.parse(JSON.stringify(s));
 
@@ -134,7 +119,7 @@ function renderAll(st = G.view) {
     setPhase("The World's Fair is open");
   } else {
     const who = G.names[st.seatToMove];
-    turn.innerHTML = `<b>${esc(who)}</b> ${verb(who, 'is', 'are')} hiring ${HANDS}`;
+    turn.innerHTML = `<b>${esc(who)}</b> ${verb(who, 'is', 'are')} hiring workers`;
   }
   renderSources(st);
   renderPool(st);
@@ -202,8 +187,8 @@ function renderBoards(st) {
   st.boards.forEach((b, seat) => {
     const active = !st.over && seat === st.seatToMove;
     const el = document.createElement('div');
-    // gilded, each board wears its pavilion's colours (the same two nations as opening night)
-    el.className = 'board' + (active ? ' active' : '') + (GILDED ? ` nation-${seat % 2}` : '');
+    // each board wears its pavilion's colours, the same nations as opening night
+    el.className = `board nation-${seat % NATION.length}` + (active ? ' active' : '');
     el.dataset.seat = seat;
     if (narrow && !active) {
       el.classList.add('collapsible');
@@ -265,22 +250,11 @@ function renderBoards(st) {
     const you = G.online && seat === G.mySeat ? '<span class="you">you</span>' : '';
     const away = G.online && G.presence[seat] === false ? '<span class="away" role="status">reconnecting…</span>' : '';
     const fm = b.firstToken ? '<svg class="board-fm" role="img" aria-label="Has First Call next month" title="First Call next month"><use href="#ic-first"/></svg>' : '';
-    // Gilded, the board is the front of the player's pavilion: the name and the score on its sign, the
-    // roof over it, and the bunting under it; the clock and the token stand over the crews.
-    const head = GILDED
-      ? `<div class="board-head">
-          <div class="head-meta">${you}${away}${fm}<span class="expand-hint">tap to expand</span><span class="board-spacer"></span><span class="clock" data-seat="${seat}"></span></div>
-          <div class="head-sign">${crestSVG(seat)}<span class="board-name">${esc(G.names[seat])}</span><span class="score" data-seat="${seat}">${b.score}</span>${buntingSVG(seat)}</div>
-        </div>`
-      : `<div class="board-head">
-        <span class="board-name">${esc(G.names[seat])}</span>
-        ${you}
-        ${away}
-        ${fm}
-        <span class="expand-hint">tap to expand</span>
-        <span class="board-spacer"></span>
-        <span class="clock" data-seat="${seat}"></span>
-        <span class="score" data-seat="${seat}">${b.score}</span>
+    // The board is the front of the player's pavilion: the name and the score on its sign, the roof over
+    // it, and the bunting under it; the clock and the token stand over the crews.
+    const head = `<div class="board-head">
+        <div class="head-meta">${you}${away}${fm}<span class="expand-hint">tap to expand</span><span class="board-spacer"></span><span class="clock" data-seat="${seat}"></span></div>
+        <div class="head-sign">${crestSVG(seat)}<span class="board-name">${esc(G.names[seat])}</span><span class="score" data-seat="${seat}">${b.score}</span>${buntingSVG(seat)}</div>
       </div>`;
 
     el.innerHTML = `
@@ -297,38 +271,71 @@ function renderBoards(st) {
   renderClocks();
 }
 
-// A pavilion's roof and bunting (?gilded): the two the pavilions wear on opening night (scene.js), a dome under
-// the nation's flag or a gable between two pennanted towers, each nation in its own colours.
-const NATION = [{ a: '#CE1E32', b: '#F3EADA' }, { a: '#24356B', b: '#D9AE3A' }];
+// A pavilion's roof and bunting, the ones its pavilion wears on opening night (scene.js): one nation to a seat,
+// each with its own pair of colours and its own roof (Ryan, 5 Oct: green for the third, the rest however looks
+// best). A dome under a flag in crimson and cream; a gable between two pennanted towers in navy and gold; a spire
+// over a mansard in green and cream; a pediment under a gilded figure in the Mauve Decade's mauve and gold.
+const NATION = [
+  { a: '#CE1E32', b: '#F3EADA' },
+  { a: '#24356B', b: '#D9AE3A' },
+  { a: '#2B6E47', b: '#F3EADA' },
+  { a: '#6A3470', b: '#D9AE3A' },
+];
 const INKED = 'stroke="#2B2620" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linejoin="round"';
+const POLE = 'stroke="#4A4038" stroke-width="1.3" vector-effect="non-scaling-stroke"';
 function crestSVG(seat) {
-  const n = NATION[seat % 2];
-  const roof =
-    seat % 2 === 0
-      ? `<rect x="34" y="20.6" width="32" height="3.2" fill="#F4EFE3" ${INKED}/>` +
-        `<path d="M33.4,20.6 C33.4,7.6 66.6,7.6 66.6,20.6 Z" fill="#EDE5D2" ${INKED}/>` +
-        `<path d="M50,10.9 C59,11.2 66.6,13.6 66.6,20.6 L58.4,20.6 C58.4,15.6 55.6,12.2 50,10.9 Z" fill="#D9CFBA"/>` +
-        `<path d="M40.4,20.6 Q42.6,12.6 50,10.9 M59.6,20.6 Q57.4,12.6 50,10.9" fill="none" stroke="#C9A227" stroke-width="1.3" vector-effect="non-scaling-stroke"/>` +
-        `<rect x="47.5" y="7" width="5" height="4.2" fill="#F4EFE3" ${INKED}/>` +
-        `<path d="M46.9,7.2 Q50,4 53.1,7.2 Z" fill="#C9A227" ${INKED}/>` +
-        `<path d="M50,4.6 V0.6" stroke="#4A4038" stroke-width="1.3" vector-effect="non-scaling-stroke"/>` +
-        `<path class="pennant" d="M50,0.6 h8.4 l-2.1,2.2 l2.1,2.2 h-8.4 Z" fill="${n.a}" ${INKED}/>`
-      : `<path d="M3,23.8 L50,14.4 L97,23.8 Z" fill="#E3DAC6" ${INKED}/>` +
-        `<circle cx="50" cy="20" r="1.7" fill="#C9A227" ${INKED}/>` +
-        [12, 88]
-          .map(
-            (x) =>
-              `<rect x="${x - 3.9}" y="9.6" width="7.8" height="14.2" fill="#F4EFE3" ${INKED}/>` +
-              `<path d="M${x - 1.4},23.8 V17.6 Q${x},16 ${x + 1.4},17.6 V23.8 Z" fill="#D3C9B4"/>` +
-              `<path d="M${x - 4.8},9.6 L${x},3 L${x + 4.8},9.6 Z" fill="${n.a}" ${INKED}/>` +
-              `<path d="M${x},3 V0.4" stroke="#4A4038" stroke-width="1.3" vector-effect="non-scaling-stroke"/>` +
-              `<path class="pennant" d="M${x},0.4 h5.6 l-1.4,1.5 l1.4,1.5 h-5.6 Z" fill="${n.b}" ${INKED}/>`
-          )
-          .join('');
+  const nat = seat % NATION.length;
+  const n = NATION[nat];
+  const pennant = (x, y, w, fill) =>
+    `<path class="pennant" d="M${x},${y} h${w} l-${w / 4},${w / 4} l${w / 4},${w / 4} h-${w} Z" fill="${fill}" ${INKED}/>`;
+  let roof;
+  if (nat === 0) {
+    roof =
+      `<rect x="34" y="20.6" width="32" height="3.2" fill="#F4EFE3" ${INKED}/>` +
+      `<path d="M33.4,20.6 C33.4,7.6 66.6,7.6 66.6,20.6 Z" fill="#EDE5D2" ${INKED}/>` +
+      `<path d="M50,10.9 C59,11.2 66.6,13.6 66.6,20.6 L58.4,20.6 C58.4,15.6 55.6,12.2 50,10.9 Z" fill="#D9CFBA"/>` +
+      `<path d="M40.4,20.6 Q42.6,12.6 50,10.9 M59.6,20.6 Q57.4,12.6 50,10.9" fill="none" stroke="#C9A227" stroke-width="1.3" vector-effect="non-scaling-stroke"/>` +
+      `<rect x="47.5" y="7" width="5" height="4.2" fill="#F4EFE3" ${INKED}/>` +
+      `<path d="M46.9,7.2 Q50,4 53.1,7.2 Z" fill="#C9A227" ${INKED}/>` +
+      `<path d="M50,4.6 V0.6" ${POLE}/>` +
+      pennant(50, 0.6, 8.4, n.a);
+  } else if (nat === 1) {
+    roof =
+      `<path d="M3,23.8 L50,14.4 L97,23.8 Z" fill="#E3DAC6" ${INKED}/>` +
+      `<circle cx="50" cy="20" r="1.7" fill="#C9A227" ${INKED}/>` +
+      [12, 88]
+        .map(
+          (x) =>
+            `<rect x="${x - 3.9}" y="9.6" width="7.8" height="14.2" fill="#F4EFE3" ${INKED}/>` +
+            `<path d="M${x - 1.4},23.8 V17.6 Q${x},16 ${x + 1.4},17.6 V23.8 Z" fill="#D3C9B4"/>` +
+            `<path d="M${x - 4.8},9.6 L${x},3 L${x + 4.8},9.6 Z" fill="${n.a}" ${INKED}/>` +
+            `<path d="M${x},3 V0.4" ${POLE}/>` +
+            pennant(x, 0.4, 5.6, n.b)
+        )
+        .join('');
+  } else if (nat === 2) {
+    roof =
+      `<path d="M5,23.8 L13,18.6 H87 L95,23.8 Z" fill="#E3DAC6" ${INKED}/>` +
+      [17, 83].map((x) => `<path d="M${x - 2.4},18.6 L${x},13.2 L${x + 2.4},18.6 Z" fill="${n.a}" ${INKED}/>`).join('') +
+      `<rect x="45" y="13" width="10" height="10.8" fill="#F4EFE3" ${INKED}/>` +
+      `<circle cx="50" cy="17" r="2.3" fill="#FBF6EA" ${INKED}/>` +
+      `<path d="M44,13 L50,3.4 L56,13 Z" fill="${n.a}" ${INKED}/>` +
+      `<path d="M50,3.4 V0.4" ${POLE}/>` +
+      pennant(50, 0.4, 7, n.b);
+  } else {
+    roof =
+      `<path d="M3,23.8 L50,10.8 L97,23.8 Z" fill="#E3DAC6" ${INKED}/>` +
+      `<path d="M14,22.6 L50,12.8 L86,22.6 Z" fill="${n.a}"/>` +
+      `<circle cx="50" cy="18.6" r="2.3" fill="#C9A227" ${INKED}/>` +
+      [4.5, 95.5].map((x) => `<path d="M${x - 2},23.8 L${x - 1.6},21 Q${x},18.8 ${x + 1.6},21 L${x + 2},23.8 Z" fill="#F4EFE3" ${INKED}/>`).join('') +
+      `<path d="M48.8,10.8 L49.3,6.4 L50,5 L50.7,6.4 L51.2,10.8 Z" fill="#C9A227" ${INKED}/>` +
+      `<path d="M50,5 V1" ${POLE}/>` +
+      pennant(50, 0.6, 7, n.b);
+  }
   return `<svg class="crest" viewBox="0 0 100 26.4" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false">${roof}<rect x="0.5" y="23.8" width="99" height="2.6" fill="#E3DAC6" ${INKED}/></svg>`;
 }
 function buntingSVG(seat) {
-  const n = NATION[seat % 2];
+  const n = NATION[seat % NATION.length];
   let flags = '';
   for (let i = 0; i < 11; i++) flags += `<path d="M${i * 10 + 0.6},0 L${i * 10 + 9.4},0 L${i * 10 + 5},7 Z" fill="${i % 2 ? n.b : n.a}" ${INKED}/>`;
   return `<svg class="bunting" viewBox="0 0 110 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">${flags}</svg>`;
@@ -361,12 +368,10 @@ function applySelection() {
     el.classList.add('can-drop');
     if (m.dest.type === 'line') el.setAttribute('aria-label', el.getAttribute('aria-label') + ' — legal destination');
     // the bill for whoever would not fit, on the crew before it is chosen
-    if (FAIR) {
-      const { bill, idled } = idleBill(G.cur.seatToMove, m);
-      if (bill > 0) {
-        el.insertAdjacentHTML('beforeend', `<span class="bill" aria-hidden="true">−${bill}</span>`);
-        el.setAttribute('aria-label', el.getAttribute('aria-label') + ` — ${idled} would stand idle, −${bill}`);
-      }
+    const { bill, idled } = idleBill(G.cur.seatToMove, m);
+    if (bill > 0) {
+      el.insertAdjacentHTML('beforeend', `<span class="bill" aria-hidden="true">−${bill}</span>`);
+      el.setAttribute('aria-label', el.getAttribute('aria-label') + ` — ${idled} would stand idle, −${bill}`);
     }
   }
 }
@@ -393,7 +398,7 @@ function clearPreview() {
 }
 function showPreview(target) {
   clearPreview();
-  if (!FAIR || !sel || !G || G.cur.over || animating) return;
+  if (!sel || !G || G.cur.over || animating) return;
   const seat = G.cur.seatToMove;
   const boardEl = target.closest('.board');
   if (!boardEl || Number(boardEl.dataset.seat) !== seat) return;
@@ -424,7 +429,7 @@ function showPreview(target) {
     );
   }
 }
-if (FAIR) {
+{
   const over = (e) => {
     const t = e.target.closest?.('.crew.can-drop, .idle.can-drop');
     if (t) showPreview(t);
@@ -484,43 +489,14 @@ function esc(s) {
 // ---------------------------------------------------------------------------
 // Flights and theatre.
 
-function fly(fromRect, toRect, html, opts = {}) {
-  if (FAIR) return flyArc(fromRect, toRect, html, opts);
-  const { dur = 420, delay = 0, lift = 26 } = opts;
-  // A collapsed board's cells measure 0×0; flying "to" them smears a tile
-  // across the screen. Skip the flight, keep the state change.
-  if (instant() || fromRect.width < 2 || toRect.width < 2) return Promise.resolve();
-  const el = document.createElement('div');
-  el.className = 'fx-tile';
-  el.style.width = fromRect.width + 'px';
-  el.style.height = fromRect.height + 'px';
-  el.innerHTML = html;
-  $('#fx').appendChild(el);
-  const scale = toRect.width / fromRect.width;
-  const midX = (fromRect.left + toRect.left) / 2;
-  const midY = Math.min(fromRect.top, toRect.top) - lift;
-  const anim = el.animate(
-    [
-      { transform: `translate(${fromRect.left}px, ${fromRect.top}px) scale(1)` },
-      {
-        transform: `translate(${midX}px, ${midY}px) scale(${(1 + scale) / 2})`,
-        offset: 0.5,
-      },
-      { transform: `translate(${toRect.left}px, ${toRect.top}px) scale(${scale})` },
-    ],
-    { duration: T(dur), delay: T(delay), easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'both' }
-  );
-  return anim.finished.then(() => el.remove()).catch(() => el.remove());
-}
-
-// In the Fair's dress a flight is a throw (Ryan, 3 Oct: "the animations are kinda
-// choppy"). The old flight went up one straight line and down another, with a
-// corner at the top, and scaled about the wrong point, so it landed a few
-// pixels off its cell and the tile jumped into place: that was the chop. This
-// one rides a curve, eases out of its place and into the next, lifts and tilts
-// a little with the throw, and lands exactly on the cell, which shows its tile
-// at that moment and settles under it (`land`).
-function flyArc(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26, arc = 0.3, tilt = 6, land = null } = {}) {
+// A flight is a throw (Ryan, 3 Oct: "the animations are kinda choppy"). The
+// August flight went up one straight line and down another, with a corner at
+// the top, and scaled about the wrong point, so it landed a few pixels off its
+// cell and the tile jumped into place: that was the chop. This one rides a
+// curve, eases out of its place and into the next, lifts and tilts a little
+// with the throw, and lands exactly on the cell, which shows its tile at that
+// moment and settles under it (`land`).
+function fly(fromRect, toRect, html, { dur = 420, delay = 0, lift = 26, arc = 0.3, tilt = 6, land = null } = {}) {
   const reveal = () => {
     if (!land) return;
     land.classList.remove('pre');
@@ -672,7 +648,7 @@ function popup(text, rect, cls = '') {
 
 let bannerTimer = null;
 function banner(html, cls = '') {
-  // a splash in lit letters (?gilded) is an element, and says its words in data-say
+  // a splash in lit letters is an element, and says its words in data-say
   const words = typeof html === 'string' ? html.replace(/<[^>]+>/g, '') : html.dataset.say;
   announce($('#live').textContent + ' ' + words);
   if (instant()) return Promise.resolve();
@@ -686,49 +662,32 @@ function banner(html, cls = '') {
   if (typeof html === 'string') el.innerHTML = html;
   else el.replaceChildren(html);
   el.classList.add('show');
-  if (FAIR) {
-    // In the Fair's dress the board waits for the placard to go: a month's opening or
-    // the displays going up should read as a beat, not happen under the words. Gilded,
-    // a splash holds a little longer, so its lit letters are seen lit, and a month's sign
-    // and the Fair's opening longer again (Ryan, 5 Oct): they are hung a letter at a time,
-    // the way the title is, and the lights come on before they go.
-    const hold = !GILDED ? 1150 : /\b(month|finale)\b/.test(cls) ? 1800 : cls.includes('splash') ? 1300 : 1150;
-    bannerTimer = setTimeout(() => el.classList.remove('show'), T(hold));
-    return sleep(T(hold + 30));
-  }
-  bannerTimer = setTimeout(() => el.classList.remove('show'), T(1600));
-  return sleep(T(650));
+  // The board waits for the words to go: a month's opening or the displays going up
+  // should read as a beat, not happen under the words. A splash in lit letters holds a
+  // little longer, so it is seen lit, and a month's sign and the Fair's opening longer
+  // again (Ryan, 5 Oct): they are hung a letter at a time, the way the title is, and
+  // the lights come on before they go.
+  const hold = /\b(month|finale)\b/.test(cls) ? 1800 : cls.includes('splash') ? 1300 : 1150;
+  bannerTimer = setTimeout(() => el.classList.remove('show'), T(hold));
+  return sleep(T(hold + 30));
 }
 
-// The big beats — the month opening, the displays going up, the Fair opening
-// — mirror the logo (Ryan, playtest 2026-08-13): large type on the card
-// cream, words cycling the tile palette. The order puts the two weakest on
-// cream (ochre, then black) last, so a three-word beat gets the three
-// strongest.
-const PV_CYCLE = ['pv0', 'pv1', 'pv4', 'pv3', 'pv2'];
+// The big beats (the displays going up, the Fair opening) in the title's lit
+// letters (Ryan, 5 Oct: the classier lettering, not the rainbow of 13 Aug).
 function splashHTML(text) {
-  if (GILDED) return lettered(text === "The World's Fair is Open!"
+  return lettered(text === "The World's Fair is Open!"
     ? [{ text: "The World's Fair", arch: 0.42, size: 'm' }, { text: 'is Open!', size: 'l' }]
     : [{ text, arch: 0.34, size: 'm' }], text);
-  return text
-    .split(' ')
-    .map((w, i) => `<span class="${PV_CYCLE[i % PV_CYCLE.length]}">${esc(w)}</span>`)
-    .join(' ');
 }
 
-// The month splash puts the number on its own line, large (Ryan, playtest
-// 2026-08-13 — it wrapped that way by accident at some widths and he liked
-// it better). An explicit block beats letting the banner's width decide.
+// The month's sign puts the number on its own line, large (Ryan, playtest
+// 2026-08-13: it wrapped that way by accident and he liked it better).
 function monthSplashHTML(n) {
-  if (GILDED) return lettered([{ text: 'Construction Month', arch: 0.36, size: 's' }, { text: String(n), size: 'xl' }], `Construction Month ${n}`);
-  return (
-    `<span class="pv0">Construction</span> <span class="pv1">Month</span>` +
-    `<span class="splash-num pv2">${n}</span>`
-  );
+  return lettered([{ text: 'Construction Month', arch: 0.36, size: 's' }, { text: String(n), size: 'xl' }], `Construction Month ${n}`);
 }
 
-// The title's lit letters for the big moments and the winner (?gilded): each line set by letters.js, arched like
-// PAVILION when asked, ivory with the navy edge and shade, its bulbs coming on a letter at a time.
+// The title's lit letters for the big moments and the winner: each line set by letters.js, arched like PAVILION
+// when asked, ivory with the navy edge and shade, its bulbs coming on a letter at a time.
 function lettered(lines, say) {
   const box = document.createElement('div');
   box.className = 'lettered';
@@ -745,7 +704,7 @@ function lettered(lines, say) {
   requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('lit')));
   return box;
 }
-if (GILDED) document.fonts?.load('400 100px "Abril Fatface"');
+document.fonts?.load('400 100px "Abril Fatface"');
 
 // Agencies are rendered filled, so before the start-of-month banner their
 // tiles must be hidden or the player sees next month's spread and *then*
@@ -781,7 +740,7 @@ async function animatePhaseA(before, interim, move) {
   const tokenEl = move.source.type === 'pool' ? $('#fm-token') : null;
   const tokenRect = tokenEl ? tokenEl.getBoundingClientRect() : null;
 
-  // The sun moves on with every hire (?gilded).
+  // The sun moves on with every hire.
   skyTo(hiringHour(interim), 450);
 
   // Show the interim state with arrivals hidden, then fly into them.
@@ -794,7 +753,7 @@ async function animatePhaseA(before, interim, move) {
   const bBoard = before.boards[mover];
   const flights = [];
   let flightNo = 0;
-  const stag = () => ({ delay: flightNo++ * (FAIR ? 70 : 45) });
+  const stag = () => ({ delay: flightNo++ * 70 });
 
   // Crew arrivals: crews gather right to left, so the new hands are the
   // leftmost of the occupied block.
@@ -838,8 +797,8 @@ async function animatePhaseA(before, interim, move) {
       })
     );
   }
-  // In the Fair's dress the ones passed over stay standing at the agency until the
-  // hire has gone, then make for the gate.
+  // The ones passed over stay standing at the agency until the hire has gone, then
+  // make for the gate.
   let spill = 0;
   const spillAt = () => ({ delay: 300 + spill++ * 55, arc: 0.16, tilt: 3 });
 
@@ -852,7 +811,7 @@ async function animatePhaseA(before, interim, move) {
     newOnes.forEach((t, k) => {
       t.classList.add('pre');
       flights.push(
-        fly(rects[k] || rects[0], t.getBoundingClientRect(), tileHTML(Number(kind)), FAIR ? { ...spillAt(), land: t } : stag())
+        fly(rects[k] || rects[0], t.getBoundingClientRect(), tileHTML(Number(kind)), { ...spillAt(), land: t })
       );
     });
   }
@@ -875,10 +834,9 @@ async function animatePhaseA(before, interim, move) {
 async function animateResolution(interim, final) {
   await coachOn('resolve', { interim });
   setPhase('The displays go up');
-  setSky('dusk');
   skyTo(interim.round - 1 + HOUR.dusk, 1150);
-  // gilded, the words the top bar already uses: lit letters want a short line
-  await banner(splashHTML(GILDED ? 'The displays go up' : 'Craftspeople build the displays'), 'splash');
+  // the words the top bar already uses: lit letters want a short line
+  await banner(splashHTML('The displays go up'), 'splash');
 
   for (let seat = 0; seat < interim.players; seat++) {
     const boardEl = $(`.board[data-seat="${seat}"]`);
@@ -899,16 +857,10 @@ async function animateResolution(interim, final) {
       const lead = cells[cells.length - 1];
       const target = $(`.wcell[data-rc="${r}-${c}"]`, boardEl);
 
-      if (FAIR && !instant()) {
+      if (!instant()) {
         const from = lead.getBoundingClientRect();
         if (lead.firstElementChild) lead.firstElementChild.style.visibility = 'hidden'; // picked up
         await carry(from, target.getBoundingClientRect(), tileHTML(t.kind));
-      } else {
-        await fly(lead.getBoundingClientRect(), target.getBoundingClientRect(), tileHTML(t.kind), {
-          dur: 460,
-          arc: 0.45,
-          tilt: 0,
-        });
       }
       target.innerHTML = tileHTML(t.kind);
       target.classList.add('filled', 'landed');
@@ -923,17 +875,8 @@ async function animateResolution(interim, final) {
       // The display stands; the rest of the crew moves on to another
       // pavilion (engine: to the lid).
       if (r > 0 && !instant()) {
-        const drainRect = $('#drain').getBoundingClientRect();
         cells.slice(0, -1).forEach((cell, k) => {
-          if (cell.classList.contains('occ')) {
-            if (FAIR) walkOff(cell.getBoundingClientRect(), tileHTML(t.kind), { delay: 80 + k * 45, dx: -26 });
-            else
-              fly(cell.getBoundingClientRect(), drainRect, tileHTML(t.kind), {
-                dur: 380,
-                delay: k * 40,
-                lift: 10,
-              });
-          }
+          if (cell.classList.contains('occ')) walkOff(cell.getBoundingClientRect(), tileHTML(t.kind), { delay: 80 + k * 45, dx: -26 });
         });
       }
       cells.forEach((cell) => {
@@ -952,25 +895,14 @@ async function animateResolution(interim, final) {
       score = Math.max(0, score - pen);
       setScore(seat, score);
       if (!instant()) {
-        if (FAIR) {
-          idleEl.animate(
-            [{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }],
-            { duration: T(260), easing: 'ease-in-out' }
-          );
-        }
-        const drainRect = $('#drain').getBoundingClientRect();
+        idleEl.animate(
+          [{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }],
+          { duration: T(260), easing: 'ease-in-out' }
+        );
         $$('.icell .islot', idleEl).forEach((slot, i) => {
           const inner = slot.firstElementChild;
           if (!inner) return;
-          if (!inner.classList.contains('token')) {
-            if (FAIR) walkOff(slot.getBoundingClientRect(), tileHTML(b.floor[i]), { delay: 120 + i * 45, dx: 0, dy: 18, rot: i % 2 ? 9 : -9 });
-            else
-              fly(slot.getBoundingClientRect(), drainRect, tileHTML(b.floor[i]), {
-                dur: 380,
-                delay: i * 40,
-                lift: 8,
-              });
-          }
+          if (!inner.classList.contains('token')) walkOff(slot.getBoundingClientRect(), tileHTML(b.floor[i]), { delay: 120 + i * 45, dx: 0, dy: 18, rot: i % 2 ? 9 : -9 });
           slot.innerHTML = '';
         });
       }
@@ -1031,15 +963,8 @@ async function animateResolution(interim, final) {
   // New arrivals — crews who moved on, and more hands still reaching the
   // city, visibly restock the crowd (§6.1: the lid refills the bag).
   if (final.refills > interim.refills && !instant()) {
-    const drainRect = $('#drain').getBoundingClientRect();
-    const poolRect = $('#pool-chip').getBoundingClientRect();
     $('#pool-chip').classList.add('wave');
     banner('<span class="r">New arrivals</span> — more hands reach the city');
-    const waves = [];
-    for (let i = 0; i < 7 && !FAIR; i++) {
-      waves.push(fly(drainRect, poolRect, tileHTML(i % 5), { dur: 420, delay: i * 55, lift: 30 }));
-    }
-    await Promise.all(waves);
     setTimeout(() => $('#pool-chip').classList.remove('wave'), T(1600));
   }
 
@@ -1049,7 +974,6 @@ async function animateResolution(interim, final) {
   G.view = snap(final);
   renderAll();
   setPhase('');
-  setSky('');
   hideDealTiles();
   skyTo(final.round - 1 + HOUR.night, 500);
   await banner(monthSplashHTML(final.round), 'splash month');
@@ -1065,36 +989,23 @@ async function dealAnimation() {
   const poolRect = $('#pool-chip').getBoundingClientRect();
   const tiles = $$('#sources .tile');
   tiles.forEach((t) => t.classList.add('pre'));
-  if (FAIR) {
-    // A month's crowd arrives an agency at a time, four to a dais.
-    let slot = 0;
-    let last = null;
-    await Promise.all(
-      tiles.map((t) => {
-        const agency = Number(t.closest('.source').dataset.source);
-        slot = agency === last ? slot + 1 : 0;
-        last = agency;
-        const to = t.getBoundingClientRect();
-        return fly(squareAt(poolRect, to), to, tileHTML(Number(t.dataset.kind)), {
-          dur: 400,
-          delay: agency * 170 + slot * 60,
-          arc: 0.18,
-          land: t,
-        });
-      })
-    );
-    return;
-  }
+  // A month's crowd arrives an agency at a time, four to a dais.
+  let slot = 0;
+  let last = null;
   await Promise.all(
-    tiles.map((t, i) =>
-      fly(poolRect, t.getBoundingClientRect(), tileHTML(Number(t.dataset.kind)), {
-        dur: 420,
-        delay: i * 55,
-        lift: 22,
-      })
-    )
+    tiles.map((t) => {
+      const agency = Number(t.closest('.source').dataset.source);
+      slot = agency === last ? slot + 1 : 0;
+      last = agency;
+      const to = t.getBoundingClientRect();
+      return fly(squareAt(poolRect, to), to, tileHTML(Number(t.dataset.kind)), {
+        dur: 400,
+        delay: agency * 170 + slot * 60,
+        arc: 0.18,
+        land: t,
+      });
+    })
   );
-  tiles.forEach((t) => t.classList.remove('pre'));
 }
 
 // ---------------------------------------------------------------------------
@@ -1202,13 +1113,13 @@ function scheduleBot() {
   const game = G; // if the game is abandoned mid-think, stay quiet
   (async () => {
     $('#turn-label').innerHTML = `<b>${esc(BOT_NAME)}</b> is weighing options…`;
-    await beat(FAIR ? 380 : 750); // in the Fair's dress the pick is shown as well, below
+    await beat(380); // the pick is shown as well, below
     if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
     const m = greedyMove(G.cur);
     sel = { source: m.source, kind: m.kind };
-    if (FAIR && !instant()) {
-      // In the Fair's dress you see the Commissioner's hand the way you see your own:
-      // its pick lifts and its legal crews light, then only the crew it chose.
+    if (!instant()) {
+      // You see the Commissioner's hand the way you see your own: its pick lifts
+      // and its legal crews light, then only the crew it chose.
       applySelection();
       await beat(560);
       if (G !== game || G.dead || G.cur.over || G.cur.seatToMove !== BOT_SEAT || animating) return;
@@ -1322,7 +1233,6 @@ function startGame(cfg) {
   $('#lobby').classList.add('hidden');
   $('#game').classList.remove('hidden');
   $('#end-modal').close?.();
-  setSky('');
   skyTo(cfg.resume ? hiringHour(s) : s.round - 1 + HOUR.night);
   renderAll();
   // renderAll only writes the phase label when the game is over, so without
@@ -1384,83 +1294,26 @@ function endGame(ending, flaggedSeat = null) {
 
   const body = $('#end-body');
   const draw = result.winner === -1;
-  // The winner's line is a sentence with the name picked out in the house
-  // red (Ryan, playtest 2026-08-13); announce() needs the same line without
-  // the markup, so the two are built together.
   const winName = draw ? null : G.names[result.winner];
-  const titleText = draw
-    ? 'Shared victory'
-    : ending === 'timeout'
-      ? `${winName} ${verb(winName, 'wins', 'win')} on time`
-      : `${winName} ${verb(winName, 'has', 'have')} built the most prestigious pavilion in the world!`;
-  const titleHTML = draw
-    ? 'Shared victory'
-    : ending === 'timeout'
-      ? `${esc(winName)} ${verb(winName, 'wins', 'win')} on time`
-      : `<span class="champ-name">${esc(winName)}</span> ${verb(winName, 'has', 'have')} built the most prestigious pavilion in the world!`;
-  // A natural win needs no explanation under the headline (Ryan, playtest
-  // 2026-08-13); the two endings that *are* surprising still get a line.
-  const sub =
-    ending === 'timeout'
-      ? `${esc(G.names[flaggedSeat])}'s clock ran out. Scores are recorded but sit out the score-based awards.`
-      : draw
-        ? 'Level on points and on completed rows — the rulebook calls it a shared win.'
-        : '';
-
-  // The scoring breakdown deliberately says rows / columns / colors rather
-  // than galleries / aisles / disciplines (Ryan, playtest 2026-08-13): at the
-  // moment of scoring, plain board words beat the theme's.
-  const rows = G.names
-    .map((name, seat) => {
-      const b = G.cur.boards[seat];
-      const bonus = ending === 'natural' ? E.bonuses(b.wall) : 0;
-      const detail =
-        ending === 'natural'
-          ? `${count(E.completeRows(b.wall), 'row', 'rows')} · ` +
-            `${count(E.completeColumns(b.wall), 'column', 'columns')} · ` +
-            `${count(E.completeKinds(b.wall), 'color', 'colors')}`
-          : seat === flaggedSeat
-            ? 'lost on time'
-            : '—';
-      const win = draw ? result.leaders.includes(seat) : seat === result.winner;
-      return `<tr class="${win ? 'win' : ''}">
-        <td>${esc(name)}<span class="detail-under">${detail}</span></td>
-        <td class="detail">${detail}</td>
-        <td class="num">${result.scores[seat] - bonus}</td>
-        <td class="num">${bonus ? '+' + bonus : ''}</td>
-        <td class="num total">${result.scores[seat]}</td>
-      </tr>`;
-    })
-    .join('');
-
   startFinale(result);
-  $('#end-modal').classList.toggle('finale', FAIR);
-  $('#end-modal').classList.toggle('lit-end', GILDED);
-  if (GILDED) {
-    // Gilded (Ryan, 5 Oct: "a big 'x wins!' … all lit up … and that's it"): the winner's name arched in the
-    // title's lit letters over the Fair at night, and nothing else; the scores stand on the pavilions' signs.
-    // Only a win on time says why, since the winner's sign can then show the lower score.
-    const who = draw ? result.leaders.map((i) => G.names[i]).join(' & ') : winName;
-    const sign = lettered(
+  // The end (Ryan, 5 Oct: "a big 'x wins!' … all lit up … and that's it"): the winner's name arched in the
+  // title's lit letters over the Fair at night, and nothing else; the scores stand on the pavilions' signs.
+  // Only a win on time says why, since the winner's sign can then show the lower score.
+  const who = draw ? result.leaders.map((i) => G.names[i]).join(' & ') : winName;
+  const said = draw
+    ? `${who} tie`
+    : `${winName} ${verb(winName, 'wins', 'win')}` + (ending === 'timeout' ? ' on time' : '');
+  body.replaceChildren(
+    lettered(
       [
         { text: who, arch: Math.min(0.7, 0.088 * who.length), size: 'w' },
         { text: draw ? 'Tie!' : verb(winName, 'Wins!', 'Win!'), size: 'l' },
       ],
-      draw ? `${who} tie` : `${winName} ${verb(winName, 'wins', 'win')}`
-    );
-    body.replaceChildren(sign);
-    if (ending === 'timeout') body.insertAdjacentHTML('beforeend', `<p class="end-sub">${esc(G.names[flaggedSeat])}'s clock ran out.</p>`);
-  } else {
-    body.innerHTML = `
-    <p class="whistle">${ending === 'timeout' ? 'Out of time' : 'Judging the Pavilions'}</p>
-    <p class="champion spot${draw || ending === 'timeout' ? '' : ' story'}">${titleHTML}</p>
-    <p class="end-sub">${sub}</p>
-    <table class="final-table${FAIR ? ' compact' : ''}">
-      <tr><th>Player</th><th class="detail">Bonuses</th><th class="num">Score</th><th class="num">Bonus</th><th class="num">Total</th></tr>
-      ${rows}
-    </table>`;
-  }
-  announce(`${titleText}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
+      said
+    )
+  );
+  if (ending === 'timeout') body.insertAdjacentHTML('beforeend', `<p class="end-sub">${esc(G.names[flaggedSeat])}'s clock ran out.</p>`);
+  announce(`${said}. ` + G.names.map((n, i) => `${n} ${result.scores[i]}`).join(', ') + '.');
 
   // Online, only the host can call a rematch, and "Home" means leaving the
   // room rather than clearing a table.
@@ -1477,16 +1330,7 @@ function endGame(ending, flaggedSeat = null) {
   $('#end-modal').showModal?.();
 }
 
-// The month's sky: the board stands in daylight while the crews are
-// hired, and the sun goes down behind the skyline while the displays go up;
-// the next month starts in daylight again, and the last month's dusk runs on
-// into opening night.
-function setSky(v) {
-  if (FAIR) document.body.dataset.sky = v;
-}
-if (FAIR) $('#game').insertAdjacentHTML('afterbegin', '<div id="sky" aria-hidden="true"><div class="sky-glow"></div><div class="sky-line"></div></div>');
-
-// The game's hour (?gilded): scene.js keeps the Fair behind the board at it. Each month is one day: the night
+// The game's hour: scene.js keeps the Fair behind the board at it. Each month is one day: the night
 // before it under its splash, dawn as its crowd arrives, the sun climbing as the agencies empty, late afternoon
 // at the last hire, and sunset, the lights coming on, while the displays go up. Hours are fractions of a day
 // as scene.js keeps them (0 midnight, 0.585 sunset), unwrapped by the month, so a night runs on into the dawn.
@@ -1498,7 +1342,6 @@ function hiringHour(st) {
   return st.round - 1 + HOUR.dawn + (HOUR.late - HOUR.dawn) * hired;
 }
 function skyTo(f, ms = 0) {
-  if (!GILDED) return;
   const detail = { f, ms: instant() ? 0 : T(ms) };
   window.__pavilionSky = detail; // where scene.js looks on load, for a game that began before it ran
   document.dispatchEvent(new CustomEvent('pavilion:sky', { detail }));
@@ -1508,7 +1351,7 @@ function skyTo(f, ms = 0) {
 // whether they won, once per game. The board steps aside while it plays
 // (style.css, data-front="finale"); closing the result card ends it.
 function startFinale(result) {
-  if (!FAIR || !G || G.finale) return;
+  if (!G || G.finale) return;
   G.finale = true;
   const draw = result.winner === -1;
   const players = G.names.map((name, seat) => ({
@@ -1522,9 +1365,7 @@ function startFinale(result) {
   document.dispatchEvent(new CustomEvent('pavilion:finale', { detail: { players } }));
 }
 $('#end-modal').addEventListener('close', () => {
-  if (!FAIR) return;
   window.__pavilionFinale = null;
-  setSky('');
   document.dispatchEvent(new CustomEvent('pavilion:finale-end'));
 });
 
@@ -1843,7 +1684,7 @@ function movementLine(m) {
 // derives the winner itself (relay/result.js); a client's copy is a bug report,
 // which is why `term` says so rather than naming a term it cannot know.
 //
-// Rehearsals against the bot never reach a relay, so they are never archived —
+// Games against the Commissioner never reach a relay, so they are never archived,
 // consistent with counting for nothing (PAVILION.md, The Training Ground).
 function gameRecord() {
   return {
@@ -2198,9 +2039,7 @@ function renderLobby() {
   btn.disabled = seats.length < 2;
   $('#lobby-wait').textContent = host
     ? seats.length < 2
-      ? FAIR
-        ? 'Send the invite link, or read out the code, then start when everyone is in.'
-        : 'Read the code out in your breakout room, then start when everyone is in.'
+      ? 'Send the invite link, or read out the code, then start when everyone is in.'
       : 'Everyone is in — start when you are ready.'
     : `Waiting for ${seats[0]?.name || 'the host'} to start the game.`;
   renderTape();
@@ -2289,21 +2128,21 @@ let setupPlayers = 2;
 // is no pass-and-play mode to offer (Ryan, 2026-08-12). The local multi-player
 // path still exists in startGame because the smoke tests drive it; it just has
 // no way in from the interface, and would need one again for an in-person class.
-let setupMode = 'online'; // 'online' | 'practice'
-let setupJoin = false; // online: joining someone else's room rather than opening one
+// Nor is there a Rehearsal since 5 Oct 2026 (Ryan: Learn to play is already a
+// game against the Commissioner, and its Rematch another), so the menu opens
+// or joins a room for two to four.
+let setupJoin = false; // joining someone else's room rather than opening one
 let lastTypedName = '';
-// Gilded, the device remembers the name typed last time (Ryan, 5 Oct: the end should say "Ryan wins", and it
-// does whenever it has a name), so a returning player is named without typing it again.
+// The device remembers the name typed last time (Ryan, 5 Oct: the end should say "Ryan wins", and it does
+// whenever it has a name), so a returning player is named without typing it again.
 const NAME_KEY = 'pavilion.name';
-if (GILDED) {
-  try {
-    lastTypedName = localStorage.getItem(NAME_KEY) || '';
-  } catch {
-    /* private browsing: type it again next time */
-  }
+try {
+  lastTypedName = localStorage.getItem(NAME_KEY) || '';
+} catch {
+  /* private browsing: type it again next time */
 }
 function keepName(name) {
-  if (!GILDED || !name) return;
+  if (!name) return;
   try {
     localStorage.setItem(NAME_KEY, name);
   } catch {
@@ -2498,39 +2337,14 @@ $$('#players-seg .seg-btn').forEach((btn) => {
 });
 
 function applySetupMode() {
-  const online = setupMode === 'online';
-  const joining = online && setupJoin;
-  $('#online-field').classList.toggle('hidden', !online);
+  const joining = setupJoin;
   $('#code-input').classList.toggle('hidden', !joining);
   // Joining? The host already chose the table size, the clock and the seed.
-  $('#players-field').classList.toggle('hidden', !online || joining);
+  $('#players-field').classList.toggle('hidden', joining);
   $('#clock-field').classList.toggle('hidden', joining);
-  // A live game needs no explanation (Ryan, playtest 2026-08-13); the
-  // rehearsal hint is Ryan's copy verbatim. The opponent is still the
-  // Commissioner — the bot introduces itself on the board.
-  $('#mode-hint').textContent = online
-    ? ''
-    : 'A rehearsal match where you can practice your skills hiring the right ' +
-      'craftspeople to build the best mock pavilion before the Fair begins.';
-  $('#setup-submit').textContent = online
-    ? joining
-      ? 'Join the room'
-      : 'Start the competition'
-    : 'Start the rehearsal';
-  // Novices should learn the rules before they learn the clock.
-  if (!online) $('#clock-select').value = '0';
+  $('#setup-submit').textContent = joining ? 'Join the room' : 'Start the competition';
   renderNameInputs();
 }
-
-$$('#mode-seg .seg-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    if (btn.disabled) return;
-    $$('#mode-seg .seg-btn').forEach((b) => b.classList.remove('on'));
-    btn.classList.add('on');
-    setupMode = btn.dataset.mode;
-    applySetupMode();
-  });
-});
 
 $$('#online-seg .seg-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -2552,10 +2366,10 @@ $('#setup-form').addEventListener('submit', (e) => {
     $('#name-field .roster-btn')?.focus();
     return;
   }
-  // Gilded, a room game needs a name: everyone else in the room sees it, and a blank one went out as "You",
-  // so the other player's screen said "You are hiring" and "You win!" about someone else.
+  // A room game needs a name: everyone else in the room sees it, and a blank one went out as "You", so the
+  // other player's screen said "You are hiring" and "You win!" about someone else.
   const typed = $('#name-inputs input');
-  if (GILDED && setupMode === 'online' && typed && !typed.value.trim()) {
+  if (typed && !typed.value.trim()) {
     $('#name-field').classList.add('needed');
     typed.focus();
     return;
@@ -2564,24 +2378,14 @@ $('#setup-form').addEventListener('submit', (e) => {
   lastTypedName = who.name;
   if (typed && typed.value.trim()) keepName(who.name);
 
-  if (setupMode === 'online') {
-    const code = setupJoin ? $('#code-input').value.trim().toUpperCase() : null;
-    if (setupJoin && !code) return $('#code-input').focus();
-    $('#lobby-error').classList.add('hidden');
-    connectRoom({
-      code,
-      name: who.name,
-      pid: who.pid,
-      players: setupPlayers,
-      clockMs: Number($('#clock-select').value),
-    });
-    return;
-  }
-
-  startGame({
-    players: 2,
-    names: [who.name, BOT_NAME],
-    bot: true,
+  const code = setupJoin ? $('#code-input').value.trim().toUpperCase() : null;
+  if (setupJoin && !code) return $('#code-input').focus();
+  $('#lobby-error').classList.add('hidden');
+  connectRoom({
+    code,
+    name: who.name,
+    pid: who.pid,
+    players: setupPlayers,
     clockMs: Number($('#clock-select').value),
   });
 });
@@ -2634,12 +2438,12 @@ $('#btn-lobby-start').addEventListener('click', () => net?.start());
 $('#btn-lobby-leave').addEventListener('click', toSetup);
 
 // Two devices need a relay. On a laptop running serve.sh that's dev-relay.js
-// on the next port over; in production it's the Worker, which is build step 5
-// — until then, say so rather than offering a button that cannot work.
+// on the next port over; in production it's the Worker. Without one, say so
+// rather than offering a button that cannot work (Learn to play still plays).
 if (!RELAY_URL) {
-  const btn = $('#mode-seg [data-mode="online"]');
+  const btn = $('#setup-submit');
   btn.disabled = true;
-  btn.title = 'Two-device play needs the relay, which is not live yet.';
+  btn.title = 'Playing in a room needs the relay, which is not running.';
 }
 
 // A phone that locked, a tab that was closed, a browser that crashed: the seat
@@ -2658,7 +2462,7 @@ if (!RELAY_URL) {
 }
 
 // ---------------------------------------------------------------------------
-// Learn to play (3 Oct 2026; the button is the Fair's, so not on ?plain).
+// Learn to play (3 Oct 2026; since 5 Oct also the only game against the Commissioner).
 //
 // Ryan: rather than a page of rules, "a scripted tutorial like they do in video
 // games, with highlights for 'grab these tiles' and 'put them here'". So the
@@ -2669,8 +2473,9 @@ if (!RELAY_URL) {
 // Commissioner (deterministic) answers from another agency, and the one
 // Machinery left at the gate fills gallery 1, so at the month's end the two
 // displays go up one above the other and score 1, then 2. After the first month
-// the coach steps back and the game plays on as a rehearsal. Practice games
-// never record, and neither does this one.
+// the coach steps back and the game plays on against the Commissioner, and its
+// Rematch is another such game without the coach. Games against the
+// Commissioner never record.
 //
 // Everything the coach says is in LESSON_LINES: Claude's draft, Ryan's to change.
 // The deal itself (the seed and the two moves) is lesson.js: LESSON.first is
@@ -2684,7 +2489,7 @@ const LESSON_LINES = {
   intro: [
     ["Welcome to the World's Fair", 'Chicago, 1893. Nations from across the globe are racing to finish their pavilions before the Fair opens. You are building yours, and the Commissioner across the way is building theirs.'],
     ['This is your pavilion', 'Its 25 spaces wait for displays of art, science, machinery, electricity and agriculture. Every display you put up scores points, and displays that join up score more.'],
-    [GILDED ? 'Workers come to the agencies' : 'Craftspeople come to the agencies', 'Each month they arrive looking for work. You and the Commissioner take turns hiring them, and every crew you fill puts up one display.'],
+    ['Workers come to the agencies', 'Each month they arrive looking for work. You and the Commissioner take turns hiring them, and every crew you fill puts up one display.'],
     ['Five months at least', 'A row of your pavilion takes at least five months to fill. The month someone completes one, construction stops, the Fair opens and the judges score every pavilion. The most points wins.'],
   ],
   disciplines: ['Art', 'Science', 'Machinery', 'Electricity', 'Agriculture'],
@@ -3107,27 +2912,13 @@ $('#btn-learn')?.addEventListener('click', startLesson);
 // typing a name answers the room's ask for one
 $('#name-inputs').addEventListener('input', () => $('#name-field').classList.remove('needed'));
 
-// Gilded, the menu is a bill of the Fair (index.html's #handbill, Ryan's pitch set as an 1893 handbill), and the
-// Rehearsal is gone (Ryan, 5 Oct: Learn to play is already a game against the Commissioner, and its Rematch
-// another), so a game is a room for two to four.
-if (GILDED) {
-  const pitch = $('#setup .pitch');
-  const learn = $('#btn-learn');
-  pitch.replaceChildren($('#handbill').content.cloneNode(true), learn);
-  pitch.classList.add('handbill');
-  $('#mode-seg').closest('fieldset').classList.add('hidden');
-  setupMode = 'online';
-}
-
 applySetupMode();
 loadRoster();
 if (START_CLOCK !== null && $(`#clock-select option[value="${CSS.escape(START_CLOCK)}"]`)) {
   $('#clock-select').value = START_CLOCK;
 }
 if (JOIN && RELAY_URL) {
-  setupMode = 'online';
   setupJoin = true;
-  $$('#mode-seg .seg-btn').forEach((b) => b.classList.toggle('on', b.dataset.mode === 'online'));
   $$('#online-seg .seg-btn').forEach((b) => b.classList.toggle('on', b.dataset.online === 'join'));
   applySetupMode();
   $('#code-input').value = JOIN;
@@ -3139,7 +2930,7 @@ if (JOIN && RELAY_URL) {
 const INVITE_TEXT = 'Join my game of Pavilion';
 function inviteLink() {
   const p = new URLSearchParams();
-  for (const k of ['plain', 'gilded', 'names', 'clock']) if (params.has(k)) p.set(k, params.get(k));
+  for (const k of ['names', 'clock']) if (params.has(k)) p.set(k, params.get(k));
   p.set('join', net?.code || '');
   // A bare `fair`, and commas left as commas, so the link reads cleanly in a message.
   return location.origin + location.pathname + '?' + p.toString().replace(/=(?=&|$)/g, '').replace(/%2C/gi, ',');
@@ -3176,8 +2967,8 @@ if (smokeParams.get('uitest') === 'setup') {
     const fails = [];
     const expect = (cond, what) => cond || fails.push(what);
     try {
-      // A live game is the default, and hosting one is the default within it.
-      expect($('#mode-seg [data-mode="online"]').classList.contains('on'), 'live game is preselected');
+      // Opening a room is the default; there is no game type to choose.
+      expect(!$('#mode-seg'), 'no game type to choose');
       expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset shows');
       expect(!$('#players-field').classList.contains('hidden'), 'the host picks the table size');
       expect($('#setup-submit').textContent.includes('competition'), 'the host button starts the competition');
@@ -3191,34 +2982,17 @@ if (smokeParams.get('uitest') === 'setup') {
       $('#setup-form').requestSubmit();
       expect(!G, 'joining with no code starts nothing');
 
-      if (GILDED) {
-        // Gilded, there is no Rehearsal: the bill says two to four players, and the game against the
-        // Commissioner is Learn to play's.
-        expect($('#mode-seg').closest('fieldset').classList.contains('hidden'), 'no game type to choose');
-        expect(/2 to 4 players/.test($('#setup .pitch').textContent), 'the bill says two to four players');
-        expect(!!$('#setup .pitch #btn-learn'), 'Learn to play is on the bill');
-        $('#online-seg [data-online="host"]').click();
-        $('#name-inputs input').value = 'Ryan';
-        $('#btn-learn').click();
-        expect(!!G && G.cfg.bot === true && G.cfg.lesson === true, 'Learn to play starts a game against the Commissioner');
-        $('#btn-new').click();
-        expect($('#name-inputs input').value === 'Ryan', 'your name is remembered');
-      } else {
-        $('#mode-seg [data-mode="practice"]').click();
-        expect($('#online-field').classList.contains('hidden'), 'the room fieldset hides');
-        expect($('#clock-select').value === '0', 'practice drops the clock');
-        expect($('#mode-hint').textContent.includes('rehearsal'), 'hint pitches the rehearsal');
-        $('#name-inputs input').value = 'Ryan';
-        $('#setup-form').requestSubmit();
-        expect(!!G && G.cfg.bot === true, 'game starts in practice mode');
-        expect(G && G.names[0] === 'Ryan' && G.names[1] === BOT_NAME, 'seats are you vs the bot');
-
-        // And back again.
-        $('#btn-new').click();
-        $('#mode-seg [data-mode="online"]').click();
-        expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset returns');
-        expect($('#name-inputs input').value === 'Ryan', 'your name is remembered');
-      }
+      // No Rehearsal: the bill says two to four players, and the game against the Commissioner is Learn to
+      // play's.
+      expect(/2 to 4 players/.test($('#setup .pitch').textContent), 'the bill says two to four players');
+      expect(!!$('#setup .pitch #btn-learn'), 'Learn to play is on the bill');
+      $('#online-seg [data-online="host"]').click();
+      $('#name-inputs input').value = 'Ryan';
+      $('#btn-learn').click();
+      expect(!!G && G.cfg.bot === true && G.cfg.lesson === true, 'Learn to play starts a game against the Commissioner');
+      expect(G && G.names[0] === 'Ryan' && G.names[1] === BOT_NAME, 'seats are you vs the Commissioner');
+      $('#btn-new').click();
+      expect($('#name-inputs input').value === 'Ryan', 'your name is remembered');
       out.textContent = fails.length ? 'UITEST FAIL: ' + fails.join('; ') : 'UITEST OK';
     } catch (err) {
       out.textContent = 'UITEST FAIL: ' + (err && err.stack ? err.stack : err);
@@ -3303,7 +3077,6 @@ if (smokeParams.get('uitest') === 'online') {
 
     try {
       // --- host a room, through the real form -----------------------------
-      $('#mode-seg [data-mode="online"]').click();
       expect(!$('#online-field').classList.contains('hidden'), 'the room fieldset appears');
 
       // Identity (build step 5). test/online.test.js sets a term and a roster
@@ -3447,7 +3220,7 @@ if (smokeParams.get('uitest') === 'online') {
 // wins 46–43; &seed= for another), and the last move plays out at full speed,
 // so the month's close, the judges' round and opening night can be seen without
 // playing a game first. ?names= names the seats, &players=3 or 4 seats more.
-if (FAIR && smokeParams.has('finale') && !smokeParams.has('smoke')) {
+if (smokeParams.has('finale') && !smokeParams.has('smoke')) {
   (async () => {
     if (document.readyState !== 'complete') await new Promise((r) => addEventListener('load', r, { once: true }));
     window.__instant = true;
