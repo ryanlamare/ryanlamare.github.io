@@ -144,21 +144,29 @@ Dilemmas") is a good design reference — game staged first across several
 slides, theory named afterwards, business cases in the back half, 25–95
 words a slide.)
 
-**One page lives at `teaching/exec/rrpf/programme/` again, on purpose** (21 Sep
-2026): the client's front page for the training — agenda, the eight modules,
-pre-reading, practicalities. It is Ryan's own 28 July proposal page brought up
-to date, at the address RRPF already had. It sits outside `exec/gt/` so that
-trimming its URL does not land on the hub and spoil the games, so never link a
-deck from it before the training, and never give `exec/rrpf/` an index. Ryan
-edits it live with `/edit.js`, which commits straight to GitHub even from
-localhost: pull before touching it. The agenda's fixed points are the start,
-lunch and the finish; slot lengths inside them are his to bend on the day.
+**The programme page is `teaching/exec/programme/`** (5 Oct 2026): the
+client's front page for the training (agenda, the eight modules, pre-reading,
+practicalities), with no client in it. It is Ryan's own 28 July proposal page as
+RRPF had it before the training, with RRPF's name and dates taken out. For a new
+client, copy the folder to `exec/<client>/programme/` and fill in the name and
+dates; the comment at the top of the page says where. Client copies sit outside
+`exec/gt/` so that trimming the URL does not land on the gt hub and spoil the
+games, so never link a deck from one before the training. Ryan edits these pages
+live with `/edit.js`, which commits straight to GitHub even from localhost: pull
+before touching them. The agenda's fixed points are the start, lunch and the
+finish; slot lengths inside them are his to bend on the day.
+
+**`teaching/exec/rrpf/programme/` is RRPF's hub, and nothing else** (5 Oct
+2026): the masthead, then every module's slides and Extra resources, then the
+two follow-up sessions. It was RRPF's programme page until then, which is why
+it sits at that address. The module list is written into the page from the
+frozen decks, so it needs no script. Never give `exec/rrpf/` an index.
 
 **RRPF's decks are frozen under `exec/rrpf/`** (2 Oct 2026, after day two):
 `m1/`–`m8/` and `world/` are a copy of `exec/gt/` as the training ran, with the
 room's answers and first names left in (his call), so `exec/gt/` can keep
-growing for other clients without changing what RRPF were given. The programme
-page's hub links these copies. Each page loads `frozen.js` first, which answers
+growing for other clients without changing what RRPF were given. RRPF's hub
+(`exec/rrpf/programme/`) links these copies. Each page loads `frozen.js` first, which answers
 every poll-server call from `rooms.json` (every room as it stood at the end of
 day two) and drops every write, so a Poll Desk reset changes nothing here.
 Don't edit the copies or sync them with `gt/`; there is no `?edit` on them.
