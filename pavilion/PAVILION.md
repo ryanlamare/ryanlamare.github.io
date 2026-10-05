@@ -1534,7 +1534,11 @@ the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
   corner ornaments, and a string of bulbs runs round it: lit, with the rule in
   red, for the player whose turn it is; unlit glass beads otherwise. The clock and
   the First Call token stand over the crews. (`crestSVG`, `buntingSVG`; the head
-  and the play area share the plate's two columns through `subgrid`.)
+  and the play area share the plate's two columns through `subgrid`.) **Each sign
+  wears its own pavilion's colours** (Ryan, 5 Oct: a blue-and-gold sign on the
+  red-and-white pavilion did not match): red and white for the domed one, navy and
+  gold for the towered one, on the board and on opening night (`nation-0`/`nation-1`,
+  `SIGNS` in `scene.js`).
 - **The top bar** is a navy valance scalloped in gold, the month on an ivory
   plaque, the supply an admission ticket. **The gate** has iron scrollwork with a
   lamp on its crown and a lamp post either side (on a laptop), lit at dusk.
@@ -1545,19 +1549,30 @@ the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
   the displays going up says **The displays go up**, the phrase the top bar
   already used (lit letters want a short line); *The World's Fair is Open!* as
   before. No placard, only a pool of dark behind the words; a gilded splash holds
-  1.3 s × tempo (1.15 before), so the letters are seen lit.
+  1.3 s × tempo (1.15 before), so the letters are seen lit. **The month's sign and
+  the Fair's opening hold 1.8 s × tempo** (Ryan, 5 Oct: the month's sign went by
+  too fast; the scoring's timing he liked, and it is unchanged): they are hung a
+  letter at a time like the title, the number after the words, then lit, and held
+  lit about a second and a half before the dawn. About a second more per month,
+  with no clock running.
 - **The end.** The winner's name arched in lit letters over the Fair at night,
   **Wins!** under it ("You / Win!"; a draw "A & B / Tie!"), and Rematch and Home.
   The scores are already on the pavilions' signs, so there is no table. A win on
   time adds one line, whose clock ran out, because the winner's sign can then show
   the lower score; a class game keeps the recorded line and the season line under
   the name, because students need to know the game counted.
-- **The menu is a bill of the Fair.** Ryan's pitch set as an 1893 handbill
-  (`#handbill` in `index.html`, swapped in by `ui.js`): the dateline in the fat
-  face, the hook in a book italic, the cry in red, the story in the book face,
-  **For 2 to 4 players** on a navy ribbon, the little pavilion in a gold frame, and
-  Learn to play. His words, with "workers" for "craftspeople". The form's labels
-  are in the book italic, its choices navy-and-gold plates, its blanks ruled
+- **The menu is a bill of the Fair** (`#handbill` in `index.html`, swapped in by
+  `ui.js`): the dateline in the fat face, three short lines, **For 2 to 4
+  players** on a navy ribbon, the little pavilion in a gold frame, and Learn to
+  play. It first carried Ryan's whole pitch; at his look (5 Oct) it was "kinda
+  overdoing it … too much info", the type too small to read, and it put countries
+  forward when the game is not about countries, so he asked for "a very quick
+  'context here' thing". Now: *The World's Fair opens soon.* (italic) / *Hire the
+  workers you need before your rivals do.* / **Build the finest pavilion at the
+  Fair!** (red). Where and when, what you do (the competition is over the
+  workforce, which is the lesson), and what for. **Those three lines are Claude's
+  draft for Ryan to change**; his pitch stays in *The opening copy*. The form's
+  labels are in the book face, its choices navy-and-gold plates, its blanks ruled
   lines. The book face is **Old Standard** (a revival of the faces the 1890s
   printed books in; OFL, `fonts/OldStandard*.woff2`, latin only, 14 KB each), the
   game's third face.
