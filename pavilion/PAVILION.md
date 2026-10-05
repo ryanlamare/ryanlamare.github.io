@@ -1487,6 +1487,122 @@ carries `class="fair"` on its `<body>`. `?opening` now means nothing.
   what is left for Ryan is the admin page's jobs (delete the demo term, set the
   real one and its roster, enter the champion's emblem and line after the final).
 
+## The gilded pass — 5 Oct 2026 (on `?gilded` until Ryan has seen it)
+
+Ryan, after the opening night pass: the game itself "feels a little more
+amateurish compared to the opening sequence", bare bones next to the front
+door; make the board and the end "more aligned with the aesthetics and look and
+ornate classiness of the opening scenes … think pure 19th century awesomeness
+and wonderment", without adding distractions to the mechanics. Five asks inside
+it: the colourful "Craftspeople build the displays" splash in the title's
+classier lettering instead; each round a shift in the day, not only the
+scoring's sunset; "workers" instead of "craftspeople"; at the end a big "x
+wins!" in the Pavilion letters, all lit up, "and that's it", no "has been
+judged" and no scoring breakdown; and the menu's "Chicago 1893" pitch nicer, with
+the Rehearsal dropped now that Learn to play exists ("we would need to say this
+is a game for 2–4 players ofc"). Answered in prose first; "great!".
+
+All of it rides on `GILDED` in `ui.js` (`?gilded`, inside the Fair's dress) and
+`scene.js` (`QS.has('gilded')`), and `body.gilded` in `style.css`. Without the flag
+the game is exactly as it was. **Look links:** `/pavilion/?gilded` (the front door,
+the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
+
+- **The board is played at the Fair.** In a game `scene.js` keeps the Fair behind
+  the board (`buildBack`, "the board's Fair"): the sky, the White City across the
+  water along the foot of the screen, the Wheel at its end, the Statue in the
+  basin, and their lights, the front door's own buildings and sky drawn smaller.
+  Nothing walks, sails or turns; only the light moves, and the loop draws only
+  while it is moving. The old cream page, its faint skyline and the month's sky
+  (`#sky`) are hidden.
+- **A day to a month.** `ui.js` sends the hour (`pavilion:sky`, `HOUR`,
+  `hiringHour`): the night before a month under its splash, with the lights on;
+  dawn as its crowd is dealt; the sun climbing with every hire (the share of the
+  month's workers hired so far, so the sky is also a clock of the month); late
+  afternoon at the last hire; sunset and the lights coming on while the displays
+  go up. Hours are kept unwrapped by the month, so a night runs on into the next
+  dawn through the closing of the lights. The last month's dusk runs into opening
+  night (the finale starts from the board's hour). On a laptop the sun keeps to
+  the open band between the agencies and the boards. `body.lamps` is the Fair's
+  lights being on: the gate's lamps and the pavilions' doors light with it. One
+  day to a month rather than one day to a game, because nobody knows how many
+  months a game will run (five at least, six or seven happen).
+- **Each board is the front of its pavilion.** The name and the score on the
+  navy-and-gold sign the pavilion wears on opening night, its roof above (the
+  dome under a flag, or the gable between two pennanted towers, by seat, in the
+  nations' colours as on opening night), bunting under the sign, and the wall
+  standing on a plinth with its door. The plate is framed in gold rules with
+  corner ornaments, and a string of bulbs runs round it: lit, with the rule in
+  red, for the player whose turn it is; unlit glass beads otherwise. The clock and
+  the First Call token stand over the crews. (`crestSVG`, `buntingSVG`; the head
+  and the play area share the plate's two columns through `subgrid`.)
+- **The top bar** is a navy valance scalloped in gold, the month on an ivory
+  plaque, the supply an admission ticket. **The gate** has iron scrollwork with a
+  lamp on its crown and a lamp post either side (on a laptop), lit at dusk.
+- **The big moments in the title's lit letters.** `letters.js` sets any line the
+  way the front door sets PAVILION (the title now uses it too, unchanged): ivory
+  face, navy edge and shade, bulbs along every letter, arched when asked.
+  *Construction Month N* keeps the number large on its own line (Ryan, 13 Aug);
+  the displays going up says **The displays go up**, the phrase the top bar
+  already used (lit letters want a short line); *The World's Fair is Open!* as
+  before. No placard, only a pool of dark behind the words; a gilded splash holds
+  1.3 s × tempo (1.15 before), so the letters are seen lit.
+- **The end.** The winner's name arched in lit letters over the Fair at night,
+  **Wins!** under it ("You / Win!"; a draw "A & B / Tie!"), and Rematch and Home.
+  The scores are already on the pavilions' signs, so there is no table. A win on
+  time adds one line, whose clock ran out, because the winner's sign can then show
+  the lower score; a class game keeps the recorded line and the season line under
+  the name, because students need to know the game counted.
+- **The menu is a bill of the Fair.** Ryan's pitch set as an 1893 handbill
+  (`#handbill` in `index.html`, swapped in by `ui.js`): the dateline in the fat
+  face, the hook in a book italic, the cry in red, the story in the book face,
+  **For 2 to 4 players** on a navy ribbon, the little pavilion in a gold frame, and
+  Learn to play. His words, with "workers" for "craftspeople". The form's labels
+  are in the book italic, its choices navy-and-gold plates, its blanks ruled
+  lines. The book face is **Old Standard** (a revival of the faces the 1890s
+  printed books in; OFL, `fonts/OldStandard*.woff2`, latin only, 14 KB each), the
+  game's third face.
+- **No Rehearsal.** Learn to play already is a game against the Commissioner (the
+  coach stops after the first month and the game plays on), and its Rematch deals
+  a fresh one with no coach, so solo play is still one click from the end of the
+  tutorial. The menu's Game type is gone; a game is a room for two to four.
+  `?uitest=setup` checks the gilded menu when `?gilded` is on.
+- **Workers.** The paragraph the theme rule asks for (Ryan, 12 Aug: every term gets
+  one, read aloud):
+
+  > Chicago, 1893. The World's Fair is months away and your country's pavilion is
+  > empty. Workers have come from everywhere for the jobs. Hire every sculptor an
+  > agency sends, and the rest wait at the gate, where a rival nation can hire
+  > them. Each display needs a crew of one trade: a small case near the door takes
+  > one worker, the great set pieces at the back take five. Fill the crew and the
+  > display goes up, and the crew moves on to the next pavilion. Anyone you hire
+  > and can't use stands idle on your payroll.
+
+  Nothing in it needs "because the rules say so", and in two places it reads
+  better than *craftspeople*: idle workers on the payroll is labour hoarding in
+  plain words, and the man who carries a display into its bay is already a
+  worker. It does not bring back Headcount's failure (firing most of every
+  finished crew): the crew-moves-on story fixed that, and the word does not undo
+  it. On `?gilded`: the turn line, the supply, the tutorial's first card, the
+  setup's hint (gone with the Rehearsal) and the bill.
+- **The lobby** sets the room code in the title's face, small enough that each half
+  fits a line, so a long code breaks at its hyphen (CRACKERJACK- / CANADA), not
+  inside a word as it does without the flag.
+- **Short laptop screens** (`max-height: 820px`) set it all a little closer, so at
+  1280×720 the boards end 14px higher than without the flag.
+
+Checked before it was pushed: the engine, bot, stats, archive and relay suites;
+`online.test.js` with and without `?gilded`; `?smoke=1` (2, 3 and 4 seats, the
+bot), `?layout=1` at 1440×900, 1280×720 and 390×844; `?uitest=setup` both ways;
+reduced motion; whole games in real time at both sizes. **Found, not changed:**
+on a phone with three or four seats the gate grows a row mid-game and shifts the
+boards (`?layout=1` fails the same way without the flag); reserving the rows would
+leave a tall empty gate at the start of every month, which is his call.
+
+**Making it the default** is `GILDED = FAIR` in `ui.js` and `GILDED = true` in
+`scene.js`; after that the Fair-but-not-gilded branches are dead (the old splash
+colours, the judges' card, the `#sky`, the plain pitch and the Rehearsal path)
+and can go, and *Theme* above wants *craftsperson* changed to *worker*.
+
 ## Two devices — built 2026-08-12 (build step 4)
 
 Students on separate devices now play a real game against each other. The wire

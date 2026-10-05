@@ -402,6 +402,11 @@ night*): the end of the game as the Fair at night with the players' pavilions
 and the judges' medal (`pavilion:finale` from `ui.js` to `scene.js`), the
 month's sky, the hire preview, the crews carrying their displays, and the
 records site in the Fair's dress; `?finale` jumps straight to the end.
+**The gilded pass** (5 Oct 2026) rides on `?gilded` until Ryan has seen it: the
+board played at the Fair under a day that keeps the month's hours, each board the
+front of its pavilion, the big moments and the winner in the title's lit letters
+(`letters.js`), the menu as an 1893 bill, "workers", and no Rehearsal
+(PAVILION.md, *The gilded pass*, which also says how to make it the default).
 
 The engine is a pure seeded ES module; run the headless suites
 (`node pavilion/test/engine.test.js` and `test/bot.test.js`)

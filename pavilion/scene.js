@@ -37,6 +37,9 @@
 
   const QS = new URLSearchParams(location.search);
   if (QS.has('plain')) return;
+  // The gilded pass (5 Oct 2026, on ?gilded until Ryan has seen it): the Fair stays behind the board in a
+  // game, its hour kept by the game itself (the board's Fair, below).
+  const GILDED = QS.has('gilded');
 
   const setup = document.getElementById('setup');
   const card = setup && setup.querySelector('.setup-card');
@@ -551,6 +554,53 @@
     path(p, 'M-8.6,-100.6 Q-7.6,-105.6 -4.4,-103.6 Q-5,-101.6 -4.2,-100.6 Z', gold, S);
     circ(p, 6.3, -91.4, 3, gold, S);
     path(p, 'M1.4,-97.6 Q4,-95.2 6.3,-96 Q8.6,-95.2 11.2,-97.6 Q8.8,-97.8 6.3,-96.8 Q3.8,-97.8 1.4,-97.6 Z', gold, S);
+  }
+
+  // The Ferris Wheel, standing on the ground at base: two A-frames, the rim with its bulbs (lit with --lit) and
+  // thirty-six cars. The loop turns it (rot) and keeps the cars level; the board's quiet Fair leaves it still.
+  function ferris(parent, x, base, Rw) {
+    const wheel = { g: el('g', null, parent), cars: [], R: Rw, x, a: 0 };
+    const hubY = base - 0.2 * Rw - Rw;
+    wheel.y = hubY;
+    const g = wheel.g, iron = 'var(--iron)';
+    const leg = (x1, y1, x2, y2, w) => el('line', { x1, y1, x2, y2, style: `stroke:${iron}`, 'stroke-width': w, 'stroke-linecap': 'round' }, g);
+    leg(wheel.x, hubY, wheel.x - Rw * 0.5, base, Rw * 0.035);
+    leg(wheel.x, hubY, wheel.x + Rw * 0.5, base, Rw * 0.035);
+    const rot = el('g', null, g);
+    wheel.rot = rot;
+    el('circle', { cx: 0, cy: 0, r: Rw, fill: 'none', style: `stroke:${iron}`, 'stroke-width': Math.max(1.6, Rw * 0.022) }, rot);
+    el('circle', { cx: 0, cy: 0, r: Rw * 0.92, fill: 'none', style: `stroke:${iron}`, 'stroke-width': Math.max(1, Rw * 0.012) }, rot);
+    let zig = '';
+    for (let i = 0; i <= 72; i++) { const a = i / 72 * Math.PI * 2, r = i % 2 ? Rw * 0.92 : Rw; zig += (i ? 'L' : 'M') + (Math.cos(a) * r).toFixed(1) + ',' + (Math.sin(a) * r).toFixed(1); }
+    el('path', { d: zig, fill: 'none', style: `stroke:${iron}`, 'stroke-width': 0.6, opacity: 0.7 }, rot);
+    for (let i = 0; i < 36; i++) {
+      const a = i / 36 * Math.PI * 2, b = a + 0.5;
+      el('line', { x1: Math.cos(b) * Rw * 0.07, y1: Math.sin(b) * Rw * 0.07, x2: Math.cos(a) * Rw * 0.92, y2: Math.sin(a) * Rw * 0.92, style: `stroke:${iron}`, 'stroke-width': 0.5, opacity: 0.8 }, rot);
+    }
+    const bulbRing = el('g', { style: 'opacity:var(--lit)' }, rot);
+    for (const rr0 of [Rw, Rw * 0.92]) {
+      el('circle', { r: rr0, fill: 'none', stroke: '#FFD27A', 'stroke-opacity': 0.35, 'stroke-width': 4 }, bulbRing);
+      el('circle', { r: rr0, fill: 'none', stroke: '#FFF1C4', 'stroke-width': 1.8, 'stroke-dasharray': '0.01 5', 'stroke-linecap': 'round' }, bulbRing);
+    }
+    leg(wheel.x - Rw * 0.62, base, wheel.x, hubY, Rw * 0.045);
+    leg(wheel.x + Rw * 0.62, base, wheel.x, hubY, Rw * 0.045);
+    leg(wheel.x - Rw * 0.62, base, wheel.x - Rw * 0.3, hubY + Rw * 0.62, Rw * 0.02);
+    leg(wheel.x + Rw * 0.62, base, wheel.x + Rw * 0.3, hubY + Rw * 0.62, Rw * 0.02);
+    leg(wheel.x - Rw * 0.4, hubY + Rw * 0.75, wheel.x + Rw * 0.4, hubY + Rw * 0.75, Rw * 0.02);
+    el('circle', { cx: wheel.x, cy: hubY, r: Rw * 0.08, style: `fill:${iron}` }, g);
+    el('circle', { cx: wheel.x, cy: hubY, r: Rw * 0.035, fill: '#C9A227' }, g);
+    const cw = Rw * 0.13, ch = cw * 0.72;
+    for (let i = 0; i < 36; i++) {
+      const c = el('g', null, g);
+      el('line', { x1: 0, y1: 0, x2: 0, y2: ch * 0.3, style: `stroke:${iron}`, 'stroke-width': 0.8 }, c);
+      el('rect', { x: -cw / 2, y: ch * 0.3, width: cw, height: ch, rx: ch * 0.25, style: 'fill:var(--car)', stroke: INK, 'stroke-width': 0.6 }, c);
+      el('rect', { x: -cw / 2 - 0.6, y: ch * 0.18, width: cw + 1.2, height: ch * 0.24, rx: 1, style: 'fill:var(--roof)' }, c);
+      const win = el('g', { style: 'opacity:var(--lit)' }, c);
+      for (let j = 0; j < 3; j++) el('rect', { x: -cw / 2 + cw * (0.12 + j * 0.28), y: ch * 0.5, width: cw * 0.2, height: ch * 0.36, fill: '#FFE59A' }, win);
+      wheel.cars.push(c);
+    }
+    el('path', { d: `M${wheel.x - Rw * 0.62},${base} L${wheel.x + Rw * 0.62},${base}`, style: `stroke:${iron}`, 'stroke-width': 2 }, g);
+    return wheel;
   }
 
   /* ------------------------------------------------------------- the story
@@ -1317,49 +1367,7 @@
     const warm = el('rect', { x: 0, y: 0, width: W, height: H, fill: '#F49A50', opacity: 0, 'clip-path': 'url(#fair-world)' }, overL);
     const night = el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0A1232', opacity: 0, 'clip-path': 'url(#fair-world)' }, overL);
 
-    const wheel = { g: el('g', null, nearL), cars: [], R: L.wR, x: L.wX, a: 0 };
-    {
-      const Rw = wheel.R, base = L.midG + 2, hubY = base - 0.2 * Rw - Rw;
-      wheel.y = hubY;
-      const g = wheel.g, iron = 'var(--iron)';
-      const leg = (x1, y1, x2, y2, w) => el('line', { x1, y1, x2, y2, style: `stroke:${iron}`, 'stroke-width': w, 'stroke-linecap': 'round' }, g);
-      leg(wheel.x, hubY, wheel.x - Rw * 0.5, base, Rw * 0.035);
-      leg(wheel.x, hubY, wheel.x + Rw * 0.5, base, Rw * 0.035);
-      const rot = el('g', null, g);
-      wheel.rot = rot;
-      el('circle', { cx: 0, cy: 0, r: Rw, fill: 'none', style: `stroke:${iron}`, 'stroke-width': Math.max(1.6, Rw * 0.022) }, rot);
-      el('circle', { cx: 0, cy: 0, r: Rw * 0.92, fill: 'none', style: `stroke:${iron}`, 'stroke-width': Math.max(1, Rw * 0.012) }, rot);
-      let zig = '';
-      for (let i = 0; i <= 72; i++) { const a = i / 72 * Math.PI * 2, r = i % 2 ? Rw * 0.92 : Rw; zig += (i ? 'L' : 'M') + (Math.cos(a) * r).toFixed(1) + ',' + (Math.sin(a) * r).toFixed(1); }
-      el('path', { d: zig, fill: 'none', style: `stroke:${iron}`, 'stroke-width': 0.6, opacity: 0.7 }, rot);
-      for (let i = 0; i < 36; i++) {
-        const a = i / 36 * Math.PI * 2, b = a + 0.5;
-        el('line', { x1: Math.cos(b) * Rw * 0.07, y1: Math.sin(b) * Rw * 0.07, x2: Math.cos(a) * Rw * 0.92, y2: Math.sin(a) * Rw * 0.92, style: `stroke:${iron}`, 'stroke-width': 0.5, opacity: 0.8 }, rot);
-      }
-      const bulbRing = el('g', { style: 'opacity:var(--lit)' }, rot);
-      for (const rr0 of [Rw, Rw * 0.92]) {
-        el('circle', { r: rr0, fill: 'none', stroke: '#FFD27A', 'stroke-opacity': 0.35, 'stroke-width': 4 }, bulbRing);
-        el('circle', { r: rr0, fill: 'none', stroke: '#FFF1C4', 'stroke-width': 1.8, 'stroke-dasharray': '0.01 5', 'stroke-linecap': 'round' }, bulbRing);
-      }
-      leg(wheel.x - Rw * 0.62, base, wheel.x, hubY, Rw * 0.045);
-      leg(wheel.x + Rw * 0.62, base, wheel.x, hubY, Rw * 0.045);
-      leg(wheel.x - Rw * 0.62, base, wheel.x - Rw * 0.3, hubY + Rw * 0.62, Rw * 0.02);
-      leg(wheel.x + Rw * 0.62, base, wheel.x + Rw * 0.3, hubY + Rw * 0.62, Rw * 0.02);
-      leg(wheel.x - Rw * 0.4, hubY + Rw * 0.75, wheel.x + Rw * 0.4, hubY + Rw * 0.75, Rw * 0.02);
-      el('circle', { cx: wheel.x, cy: hubY, r: Rw * 0.08, style: `fill:${iron}` }, g);
-      el('circle', { cx: wheel.x, cy: hubY, r: Rw * 0.035, fill: '#C9A227' }, g);
-      const cw = Rw * 0.13, ch = cw * 0.72;
-      for (let i = 0; i < 36; i++) {
-        const c = el('g', null, g);
-        el('line', { x1: 0, y1: 0, x2: 0, y2: ch * 0.3, style: `stroke:${iron}`, 'stroke-width': 0.8 }, c);
-        el('rect', { x: -cw / 2, y: ch * 0.3, width: cw, height: ch, rx: ch * 0.25, style: 'fill:var(--car)', stroke: INK, 'stroke-width': 0.6 }, c);
-        el('rect', { x: -cw / 2 - 0.6, y: ch * 0.18, width: cw + 1.2, height: ch * 0.24, rx: 1, style: 'fill:var(--roof)' }, c);
-        const win = el('g', { style: 'opacity:var(--lit)' }, c);
-        for (let j = 0; j < 3; j++) el('rect', { x: -cw / 2 + cw * (0.12 + j * 0.28), y: ch * 0.5, width: cw * 0.2, height: ch * 0.36, fill: '#FFE59A' }, win);
-        wheel.cars.push(c);
-      }
-      el('path', { d: `M${wheel.x - Rw * 0.62},${base} L${wheel.x + Rw * 0.62},${base}`, style: `stroke:${iron}`, 'stroke-width': 2 }, g);
-    }
+    const wheel = ferris(nearL, L.wX, L.midG + 2, L.wR);
 
     const balloon = { g: el('g', null, nearL), x: L.balloonX, anchor: L.hz - 4, r: clamp(0.03 * Math.max(W, H), 10, 30) };
     {
@@ -1821,6 +1829,154 @@
     return { update, fireAt(x, y) { if (y < L.hz - 6) launch(x, y); } };
   }
 
+  /* ------------------------------------------------------- the board's Fair (?gilded)
+
+     In a game the Fair stands behind the boards, quiet: the sky, the White City across the water along the
+     foot of the screen, the Wheel at its end, the Statue in the basin, and the lights. Nothing walks, sails
+     or turns; only the light moves, and it moves with the game (BRD below). The same buildings and the same
+     sky as the front door, drawn smaller and lower, so the game is played at the Fair it opened on. */
+
+  function buildBack(f0) {
+    const land = W / H >= 1.05;
+    const water = clamp(0.06 * H, 26, 64), hz = H - water;
+    const u = clamp((land ? 0.17 : 0.12) * H / 119, 0.42, 1.6);
+    const lightAt = x => 0.15 + 1.35 * Math.abs(x - W / 2) / (W / 2);
+
+    const defs = el('defs', null, svg);
+    const sky = el('linearGradient', { id: 'fair-sky', gradientUnits: 'userSpaceOnUse', x1: 0, y1: 0, x2: 0, y2: hz }, defs);
+    const stops = [0, 0.62, 1].map(o => el('stop', { offset: o }, sky));
+    const radial = (id, color, a) => { const g = el('radialGradient', { id }, defs); el('stop', { offset: 0, 'stop-color': color, 'stop-opacity': a }, g); el('stop', { offset: 1, 'stop-color': color, 'stop-opacity': 0 }, g); };
+    radial('fair-halo', '#FFF2C8', 0.85);
+    radial('fair-glow', '#FFDF96', 0.8);
+    radial('fair-moon', '#E9ECF6', 0.45);
+    const clip = el('clipPath', { id: 'fair-world' }, defs);
+    el('rect', { x: 0, y: hz, width: W, height: H - hz }, clip);
+
+    const skyL = el('g', null, svg), worldL = el('g', null, svg), overL = el('g', null, svg), lightL = el('g', null, svg);
+    const lights = [];
+    const lit = d => { const g = el('g', { opacity: 0 }, lightL); lights.push({ g, d }); return g; };
+    const twin = (x, y, sc, d) => {
+      const t = tr(x, y, sc);
+      return { g: el('g', { transform: t }, worldL), c: { t, clip }, l: el('g', { transform: t }, lit(d)) };
+    };
+
+    // the sky, and the sun and the moon on a flat arc across it
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: 'url(#fair-sky)' }, skyL);
+    const starG = el('g', { opacity: 0, display: 'none' }, skyL);
+    for (let i = 0, n = clamp(Math.round(W * hz / 5200), 24, 110); i < n; i++) {
+      el('circle', { class: 'star', cx: rr(0, W).toFixed(1), cy: rr(0, hz - 8).toFixed(1), r: rr(0.5, 1.4).toFixed(2), fill: '#F7F3E6', style: `--tw:${rr(1.6, 3.8).toFixed(2)}s;animation-delay:${(-rr(0, 4)).toFixed(2)}s` }, starG);
+    }
+    const moonG = el('g', null, skyL), mR = clamp(0.011 * Math.max(W, H), 9, 22);
+    el('circle', { r: mR * 3.4, fill: 'url(#fair-moon)' }, moonG);
+    el('circle', { r: mR, fill: '#F2F0E6' }, moonG);
+    el('circle', { cx: -mR * 0.3, cy: -mR * 0.2, r: mR * 0.22, fill: '#DCD9CC' }, moonG);
+    el('circle', { cx: mR * 0.35, cy: mR * 0.3, r: mR * 0.15, fill: '#DCD9CC' }, moonG);
+    const sunG = el('g', null, skyL), sR = clamp(0.016 * Math.max(W, H), 12, 30);
+    el('circle', { r: sR * 3.2, fill: 'url(#fair-halo)' }, sunG);
+    const sunDisc = el('circle', { r: sR, fill: '#FFF4D6' }, sunG);
+    // on a laptop the sun keeps to the open band between the agencies and the boards, where it can be seen
+    const mk = document.getElementById('market')?.getBoundingClientRect(), bd = document.getElementById('boards')?.getBoundingClientRect();
+    const band = land && mk && bd && mk.height && bd.top > mk.bottom ? (mk.bottom + bd.top) / 2 : 0;
+    const high = band || (land ? 0.13 * H : 0.09 * H), low = band ? band + 0.07 * H : land ? 0.42 * H : 0.3 * H;
+    const arc = p => [lerp(0.02 * W, 0.98 * W, p), low - (low - high) * Math.sin(Math.PI * p)];
+    const cloudG = el('g', null, skyL);
+    for (let i = 0, n = land ? 8 : 5; i < n; i++) {
+      const g = el('g', { transform: `translate(${((i + rr(0.1, 0.9)) / n * W).toFixed(1)} ${(rr(0.1, 0.62) * hz).toFixed(1)})` }, cloudG), cs = rr(0.6, 1.2) * clamp(H / 800, 0.6, 1.4);
+      for (let j = 0; j < 5; j++) el('ellipse', { cx: (j - 2) * 15 * cs, cy: -Math.sin((j + 0.5) / 5 * Math.PI) * 9 * cs, rx: rr(11, 17) * cs, ry: rr(7, 11) * cs }, g);
+      el('rect', { x: -40 * cs, y: -2 * cs, width: 80 * cs, height: 6 * cs, rx: 3 * cs }, g);
+    }
+
+    // the far shore: trees, the White City, the Peristyle at the lake end
+    const treeG = el('g', null, worldL);
+    for (let i = 0, n = Math.ceil(W / 22); i < n; i++) {
+      const x = lerp(0, W, (i + R() * 0.6) / n), r = rr(5, 9) * u;
+      ell(treeG, x, hz + 2 - r * 0.6, r * 1.3, r, pick(['#5F7F4E', '#6E8B57', '#557446']), { 'stroke-width': 0.6 });
+      el('ellipse', { cx: x, cy: hz + 2 - r * 0.6, rx: r * 1.3, ry: r }, clip);
+    }
+    const far = land
+      ? [[fineArts, 0.16], [agricultural, 0.27], [manufactures, 0.395], [admin, 0.53], [electricity, 0.655], [machinery, 0.765]]
+      : [[agricultural, 0.2], [admin, 0.55], [electricity, 0.86]];
+    for (const [fn, k] of far) { const x = k * W, t = twin(x, hz, u, lightAt(x)); fn(t.g, t.c, t.l, u); }
+    if (land) {
+      const x0 = 0.84 * W, x1 = W + 6, half = (x1 - x0) / u / 2, x = (x0 + x1) / 2;
+      const t = twin(x, hz, u, lightAt(x));
+      peristyle(t.g, t.c, t.l, u, half, '#9DB9C4');
+    }
+
+    // the water, the White City on it by day and its lights by night
+    const wGrad = el('linearGradient', { id: 'fair-water', gradientUnits: 'userSpaceOnUse', x1: 0, y1: hz, x2: 0, y2: H }, defs);
+    const wStops = [0, 1].map(o => el('stop', { offset: o }, wGrad));
+    el('rect', { x: -2, y: hz, width: W + 4, height: H - hz + 2, fill: 'url(#fair-water)' }, worldL);
+    const refl = el('g', { opacity: 0.55 }, worldL);
+    for (let i = 0, n = Math.round(W / 16); i < n; i++) {
+      el('rect', { x: rr(0, W).toFixed(1), y: (hz + rr(2, water - 4)).toFixed(1), width: rr(8, 26).toFixed(1), height: 1.4, rx: 0.7, fill: '#F7F2E6' }, refl);
+    }
+    const shine = el('g', null, lit(0.9));
+    for (let i = 0, n = Math.round(W / 9); i < n; i++) {
+      const x = rr(0, W), y0 = hz + rr(2, 5), len = rr(0.3, 0.95) * (water - 6);
+      el('path', { d: `M${x.toFixed(1)},${y0.toFixed(1)} v${len.toFixed(1)}`, stroke: pick(['#FFE7A3', '#FFD27A', '#FFF1C4']), 'stroke-width': rr(1, 2.2).toFixed(1), 'stroke-dasharray': `${rr(2, 5).toFixed(1)} ${rr(2, 4).toFixed(1)}`, opacity: rr(0.35, 0.7).toFixed(2) }, shine);
+    }
+
+    // the Statue of the Republic in the basin, its gold on the water, out where the boards leave the view open
+    {
+      const stX = land ? 0.925 * W : 0.86 * W, stH = clamp(0.22 * H, 60, 200), stS = stH / 104, y = H - water * 0.32;
+      const t = el('g', { transform: tr(stX, y, stS) }, worldL);
+      ell(t, 0, 1, 20, 3.2, '#CFC6B1');
+      rect(t, -12.5, -3, 25, 3, STONE2); rect(t, -10, -30, 20, 27.4, STONE); rect(t, -12, -32.2, 24, 2.8, STONE2);
+      republic(t, GOLD, GOLD2);
+      el('path', { transform: tr(stX, y, stS), d: 'M-12.5,0 V-32.2 H-6.4 L-4.6,-63.4 L-8.6,-76 L-7.2,-88.4 L-8.6,-100.6 L-7.6,-105.6 L-4.4,-103.6 L-5.4,-88.2 L-2.6,-64.4 H2.6 L5.4,-88.2 L3.3,-91.4 L1.4,-97.6 L6.3,-96.8 L11.2,-97.6 L9.3,-91.4 L7.2,-88.4 L8.6,-76 L4.6,-63.4 L6.4,-32.2 H12.5 V0 Z' }, clip);
+      const l = el('g', { transform: tr(stX, y, stS) }, lit(lightAt(stX)));
+      el('ellipse', { cx: 0, cy: -60, rx: 26, ry: 44, fill: 'url(#fair-glow)', opacity: 0.55 }, l);
+      republic(l, GOLD2, '#FFF3C4');
+    }
+
+    // the dusk and the night fall over the world; the Wheel stands above them, at the end of the shore
+    const warm = el('rect', { x: 0, y: 0, width: W, height: H, fill: '#F49A50', opacity: 0, 'clip-path': 'url(#fair-world)' }, overL);
+    const night = el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0A1232', opacity: 0, 'clip-path': 'url(#fair-world)' }, overL);
+    const wR = clamp(Math.min(0.12 * H, 0.085 * W), 34, 130);
+    const wheel = ferris(overL, wR * 0.66 + 0.012 * W, hz + 2, wR);
+    wheel.rot.setAttribute('transform', `translate(${wheel.x.toFixed(1)} ${wheel.y.toFixed(1)})`);
+    wheel.cars.forEach((c, i) => {
+      const a = (i / 36) * Math.PI * 2;
+      c.setAttribute('transform', `translate(${(wheel.x + Math.cos(a) * wheel.R).toFixed(1)} ${(wheel.y + Math.sin(a) * wheel.R).toFixed(1)})`);
+    });
+
+    let lampsOn = null, starsOn = false;
+    function update(dt, f) {
+      const c = keyed(SKY, f), nightK = keyed(NIGHT, f)[0], warmK = keyed(WARM, f)[0];
+      stops.forEach((st, i) => st.setAttribute('stop-color', c[i]));
+      night.setAttribute('opacity', nightK.toFixed(3));
+      warm.setAttribute('opacity', warmK.toFixed(3));
+      // the stars twinkle only while they can be seen, so a long game's daylight costs nothing behind the board
+      const starK = clamp((nightK - 0.25) / 0.3, 0, 1);
+      if ((starK > 0) !== starsOn) { starsOn = starK > 0; starG.setAttribute('display', starsOn ? 'inline' : 'none'); }
+      starG.setAttribute('opacity', starK.toFixed(2));
+      cloudG.setAttribute('fill', keyed(CLOUD, f)[0]);
+      cloudG.setAttribute('opacity', (1 - nightK * 0.7).toFixed(2));
+      wStops[0].setAttribute('stop-color', mix(c[2], '#6E9BA4', 0.42));
+      wStops[1].setAttribute('stop-color', mix(c[1], '#3F6C78', 0.6));
+      const nk = nightK / 0.56;
+      wheel.g.style.setProperty('--iron', mix('#4A4038', '#1D1A2A', nk));
+      wheel.g.style.setProperty('--car', mix(mix('#E9DDC5', '#F2B27A', warmK * 1.4), '#363452', nk));
+      wheel.g.style.setProperty('--roof', mix('#8E3E28', '#2A2238', nk));
+      if (f > SUNRISE && f < SUNSET) {
+        const p = (f - SUNRISE) / (SUNSET - SUNRISE), [x, y] = arc(p), edge = 1 - Math.sin(Math.PI * p);
+        sunG.setAttribute('display', 'inline');
+        sunG.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+        sunDisc.setAttribute('fill', mix('#FFF6DC', '#FF8F4F', edge * edge));
+      } else sunG.setAttribute('display', 'none');
+      const q = (f - SUNSET + 1) % 1;
+      if (q < 0.47) { const [x, y] = arc(q / 0.47); moonG.setAttribute('display', 'inline'); moonG.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`); }
+      else moonG.setAttribute('display', 'none');
+      for (const L0 of lights) { const v = litAt(f, L0.d).toFixed(2); if (v !== L0.v) { L0.v = v; L0.g.setAttribute('opacity', v); } }
+      const wl = litAt(f, 0.5);
+      wheel.g.style.setProperty('--lit', wl.toFixed(2));
+      // the board's own lamps (the gate's, the bulbs round the plate in play) come on with the Fair's
+      if ((wl > 0.5) !== lampsOn) { lampsOn = wl > 0.5; body.classList.toggle('lamps', lampsOn); }
+    }
+    return { update, fireAt() {} };
+  }
+
   // How lit a group is at f, switching on (with a flicker) after its delay at dusk and off again at closing.
   function litAt(f, d) {
     if (f < LIGHTS_ON) return 0;
@@ -1840,13 +1996,22 @@
   /* -------------------------------------------------------------- the loop */
 
   let clockT = 0, world = null, raf = 0, last = 0, running = false;
-  // On opening night the hour is the finale's own: dusk, the lights coming on, then a night that holds.
-  const fNow = () => (FIN ? (STILL ? FIN_TO : FIN_FROM + (FIN_TO - FIN_FROM) * smooth(clamp(FIN.t / FIN_RAMP, 0, 1))) : (START + clockT / CYCLE) % 1);
+  // In a game (?gilded) the hour is the game's: ui.js sends it as pavilion:sky, one day to a month, and it is
+  // kept unwrapped (month 3's dawn is 2.1, not 0.1) so the night before a month runs forward into its dawn.
+  // BRD eases from the hour it was at to the one it was sent over dur seconds; backOn is the board's Fair
+  // being the picture.
+  let BRD = null, backOn = false;
+  const brdNow = () => (!BRD ? 0.3 : BRD.dur && BRD.t < BRD.dur ? lerp(BRD.from, BRD.to, smooth(clamp(BRD.t / BRD.dur, 0, 1))) : BRD.to);
+  const wrap = f => ((f % 1) + 1) % 1;
+  // On opening night the hour is the finale's own: dusk (or the hour the board had reached, if later), the
+  // lights coming on, then a night that holds.
+  const fNow = () => (FIN ? (STILL ? FIN_TO : FIN.from + (FIN_TO - FIN.from) * smooth(clamp(FIN.t / FIN_RAMP, 0, 1)))
+    : backOn ? wrap(brdNow()) : (START + clockT / CYCLE) % 1);
 
   function rebuild() {
     measure();
     while (svg.firstChild) svg.firstChild.remove();
-    world = build(fNow());
+    world = !FIN && backOn ? buildBack(fNow()) : build(fNow());
     world.update(0, fNow());
   }
   // A slow machine (an old tablet, say) draws every other frame instead of falling behind: after five
@@ -1861,6 +2026,14 @@
     last = now;
     clockT += dt; acc += dt;
     if (FIN) FIN.t += dt;
+    if (backOn && !FIN) {
+      // the board's Fair draws only while its hour is moving, and rests once it has arrived
+      if (BRD) BRD.t += dt;
+      world.update(dt, fNow());
+      if (!BRD || BRD.t >= BRD.dur) { running = false; return; }
+      raf = requestAnimationFrame(frame);
+      return;
+    }
     if (now < calmUntil) { raf = requestAnimationFrame(frame); return; }
     const show = body.dataset.front === 'title' || body.dataset.front === 'finale';   // the Fair is the picture
     if (show) ema = ema * 0.97 + dt * 0.03;
@@ -1870,7 +2043,8 @@
     raf = requestAnimationFrame(frame);
   }
   function start() {
-    if (running || STILL) return;
+    if (running) return;
+    if (STILL) { if (backOn && !FIN && world) world.update(0, fNow()); return; }
     running = true; last = 0;
     raf = requestAnimationFrame(frame);
   }
@@ -1882,61 +2056,22 @@
 
   /* ------------------------------------------------------------ the title
 
-     The word from index.html, set on a gentle arch in Abril Fatface: each
-     letter turns to follow the curve and sits on it by its own width, kerning
-     and all. The widths below are Abril's own for PAVILION (measured at 1000px,
-     in ems, so the arch is right before the face has even arrived); any other
-     word is measured as it renders. In the SVG a letter is drawn five times
-     over: a solid shade in six steps down and to the right (in screen space,
-     so the light falls the same way on every letter), the navy edge, the ivory
-     face, and at dusk a glow and a row of bulbs along its outline. */
+     The word from index.html, set on a gentle arch by letters.js (the same
+     lettering the game's big moments use): Abril Fatface, each letter turned
+     to follow the curve and sat on it by its own width, kerning and all, with
+     its shade, its navy edge, its ivory face, and at dusk a glow and a row of
+     bulbs along its outline. The widths below are Abril's own for PAVILION
+     (measured at 1000px, in ems), so the arch is right before the face has
+     even arrived; any other word is measured as it renders. */
 
   function buildTitle() {
     const holder = titleEl.querySelector('.title-word');
-    if (!holder) return;
+    if (!holder || !window.PavilionLetters) return;
     const word = (holder.dataset.word || holder.textContent).trim();
     holder.dataset.word = word;
-    let prefix = word === 'PAVILION' ? [0, 0.634, 1.218, 1.759, 2.114, 2.71, 3.065, 3.813, 4.483] : null;
-    if (!prefix) {
-      const c = document.createElement('canvas').getContext('2d');
-      c.font = '1000px "Abril Fatface", Didot, Georgia, serif';
-      prefix = [...Array(word.length + 1)].map((_, i) => c.measureText(word.slice(0, i)).width / 1000);
-    }
-    const F = 100, n = word.length, track = 0.03 * F, cap = 0.71 * F;
-    const total = prefix[n] * F + (n - 1) * track;
-    const R = total / 0.7;                                  // the arch spans about 40 degrees
-    const shade = [1.15, 1.45], steps = 6, pad = 13;
-    const L = [];
-    for (let i = 0; i < n; i++) {
-      const sMid = (prefix[i] + prefix[i + 1]) / 2 * F + i * track - total / 2;
-      const a = sMid / R, adv = (prefix[i + 1] - prefix[i]) * F;
-      L.push({ ch: word[i], a, adv, x: R * Math.sin(a), y: R * (1 - Math.cos(a)) });
-    }
-    // the drawing's own bounds: each letter's box turned with it, plus the shade and the bulbs' glow
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const l of L) {
-      for (const [px, py] of [[-l.adv / 2, -cap], [l.adv / 2, -cap], [-l.adv / 2, 2], [l.adv / 2, 2]]) {
-        const X = l.x + px * Math.cos(l.a) - py * Math.sin(l.a), Y = l.y + px * Math.sin(l.a) + py * Math.cos(l.a);
-        x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
-      }
-    }
-    x0 -= pad; y0 -= pad; x1 += pad + shade[0] * steps; y1 += pad + shade[1] * steps;
-    const svgT = el('svg', { viewBox: `${x0.toFixed(1)} ${y0.toFixed(1)} ${(x1 - x0).toFixed(1)} ${(y1 - y0).toFixed(1)}`, focusable: 'false' });
-    const defs = el('defs', null, svgT);
-    const blur = el('filter', { id: 'title-glow', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs);
-    el('feGaussianBlur', { stdDeviation: 3.2 }, blur);
-    L.forEach((l, i) => {
-      const t = el('text', { id: 'title-l' + i, x: 0, y: 0, 'text-anchor': 'middle', transform: `translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${(l.a * 57.2958).toFixed(2)})` }, defs);
-      t.textContent = l.ch;
-    });
-    L.forEach((l, i) => {
-      const g = el('g', { class: 'tl', style: `--i:${i}` }, svgT);
-      for (let k = steps; k >= 1; k--) el('use', { href: '#title-l' + i, class: 'sh', transform: `translate(${(shade[0] * k).toFixed(2)} ${(shade[1] * k).toFixed(2)})` }, g);
-      el('use', { href: '#title-l' + i, class: 'edge' }, g);
-      el('use', { href: '#title-l' + i, class: 'face' }, g);
-      el('use', { href: '#title-l' + i, class: 'glow', filter: 'url(#title-glow)' }, g);
-      el('use', { href: '#title-l' + i, class: 'bulbs' }, g);
-    });
+    const prefix = word === 'PAVILION' ? [0, 0.634, 1.218, 1.759, 2.114, 2.71, 3.065, 3.813, 4.483] : null;
+    const svgT = window.PavilionLetters.line(word, { span: 0.7, prefix });
+    svgT.removeAttribute('aria-hidden');
     holder.textContent = '';
     holder.appendChild(svgT);
   }
@@ -2144,6 +2279,17 @@
       return;
     }
     const onSetup = visible(setup), onLobby = visible(lobby), on = onSetup || onLobby;
+    if (GILDED && !on && gameEl && visible(gameEl)) {
+      // a game: the board's Fair behind it, at the game's hour
+      host.classList.remove('hidden');
+      scrim.classList.add('hidden');
+      titleEl.classList.add('hidden');
+      front('');
+      if (!backOn) { backOn = true; rebuild(); }
+      start();
+      return;
+    }
+    if (backOn) { backOn = false; body.classList.remove('lamps'); rebuild(); }
     host.classList.toggle('hidden', !on);
     scrim.classList.toggle('hidden', !on);
     titleEl.classList.toggle('hidden', !on);
@@ -2161,16 +2307,32 @@
   let pending = 0;
   addEventListener('resize', () => {
     clearTimeout(pending);
-    pending = setTimeout(() => { if (visible(setup) || visible(lobby)) { rebuild(); fit(); if (body.dataset.front === 'menu') vStart(); } }, 200);
+    pending = setTimeout(() => {
+      if (visible(setup) || visible(lobby)) { rebuild(); fit(); if (body.dataset.front === 'menu') vStart(); }
+      else if (backOn && !FIN) rebuild();
+    }, 200);
   });
+  const gameEl = document.getElementById('game');
+  const screens = () => (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '') + (gameEl && visible(gameEl) ? 'g' : '');
   const watch = new MutationObserver(() => {
-    const now = (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '');
+    const now = screens();
     if (now === watch.last) return;                     // only the screens changing matters here
     watch.last = now;
     sync(false);
   });
-  watch.last = (visible(setup) ? 's' : '') + (visible(lobby) ? 'l' : '');
-  for (const sec of [setup, lobby]) watch.observe(sec, { attributes: true, attributeFilter: ['class'] });
+  watch.last = screens();
+  for (const sec of [setup, lobby, gameEl]) if (sec) watch.observe(sec, { attributes: true, attributeFilter: ['class'] });
+
+  // The game's hour (ui.js, ?gilded): eased to over ms, or set at once. Kept when the game is not showing yet,
+  // and left where scene.js finds it on load too (window.__pavilionSky), for a game that began before this ran.
+  function setHour(d) {
+    if (!GILDED || !d || !Number.isFinite(d.f)) return;
+    const from = BRD ? brdNow() : d.f;
+    BRD = { from, to: d.f, t: 0, dur: STILL || !d.ms ? 0 : d.ms / 1000 };
+    if (backOn && !FIN) { if (!running) last = 0; start(); }
+  }
+  document.addEventListener('pavilion:sky', e => setHour(e.detail));
+  setHour(window.__pavilionSky);
 
   // Opening night (ui.js sends these; see FIN above). When it ends, by a rematch, Home or Escape, the front
   // door takes the night up where the finale left it, and with two players it keeps their pavilions on its
@@ -2178,7 +2340,7 @@
   document.addEventListener('pavilion:finale', e => {
     const players = (e.detail && e.detail.players) || [];
     if (!players.length) return;
-    FIN = { players, t: 0 };
+    FIN = { players, t: 0, from: backOn && BRD ? clamp(wrap(brdNow()), FIN_FROM, FIN_TO) : FIN_FROM };
     rebuild();
     sync(false);
   });
@@ -2201,7 +2363,7 @@
 
   // a game that ended before this script ran (ui.js leaves the players where this looks)
   const early = window.__pavilionFinale, endModal = document.getElementById('end-modal');
-  if (early && early.players && early.players.length && endModal && endModal.open) FIN = { players: early.players, t: 0 };
+  if (early && early.players && early.players.length && endModal && endModal.open) FIN = { players: early.players, t: 0, from: FIN_FROM };
 
   rebuild();
   sync(true);
