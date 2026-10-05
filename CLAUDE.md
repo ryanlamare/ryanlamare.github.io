@@ -372,7 +372,8 @@ couldn't explain are recorded in `PAVILION.md`; don't reopen them.
 
 The **records site** (`pavilion/records/`, live at `/pavilion/records/`) is the
 public half: a hand-written hub, and one stub file per league that loads
-`records.js`. Every table, record and honour is a pure query in
+`records.js`. Each page's header carries `data-masthead` and the page loads
+`scene.js`, which draws the masthead's one panorama of the Fair at night. Every table, record and honour is a pure query in
 `relay/stats.js` — if you find yourself computing a standing in a page, it
 belongs there instead. Two rules that look like details and are not: the hub's
 hand-written list **is** the listed/unlisted flag, and the top-five-never-a-full-

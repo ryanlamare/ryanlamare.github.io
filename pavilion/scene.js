@@ -43,7 +43,11 @@
 
   const setup = document.getElementById('setup');
   const card = setup && setup.querySelector('.setup-card');
-  if (!card) return;
+  // The records pages borrow the Fair for their mastheads (5 Oct 2026, Ryan: one shot of the fairgrounds, not
+  // the skyline strip repeating): the board's Fair at night, lit, in any header marked data-masthead (masthead
+  // below). Nothing else here runs on those pages.
+  const MAST = card ? null : document.querySelector('[data-masthead]');
+  if (!card && !MAST) return;
 
   /* ------------------------------------------------------------------ time */
 
@@ -635,6 +639,31 @@
 
   let FIN = null;
   const baysOf = wall => wall.flatMap((row, r) => row.map((v, c) => (v ? kindAt(r, c) : -1)));
+
+  /* ------------------------------------------------------ the records' masthead
+
+     The board's Fair at night with its lights on, drawn once into the header and again when the window
+     changes size: one panorama of the White City, the Statue in the basin, and the Wheel at the far end. */
+
+  function masthead(header) {
+    const box = document.createElement('div');
+    box.className = 'fair-mast';
+    box.setAttribute('aria-hidden', 'true');
+    header.prepend(box);
+    header.classList.add('mast-drawn');
+    let root = null;
+    const draw = () => {
+      const w = box.clientWidth, h = box.clientHeight;
+      if (!w || !h) return;
+      if (root) root.remove();
+      root = el('svg', { viewBox: `0 0 ${w} ${h}`, width: w, height: h, focusable: 'false' }, box);
+      buildBack(0.72, root, w, h, { mast: true }).update(0, 0.72);
+    };
+    draw();
+    let pending = 0;
+    addEventListener('resize', () => { clearTimeout(pending); pending = setTimeout(draw, 200); });
+  }
+  if (MAST) { masthead(MAST); return; }
 
   /* ---------------------------------------------------------------- layout
 
@@ -1827,6 +1856,10 @@
         const m = medal(ML, r, pl.name, n);
         medals.push(Object.assign(m, { x: p.cx, y: p.crown, r, spot, at: MEDAL_AT + medals.length * 0.4, landed: false }));
       });
+      // where the sky ends above the pavilions and their medals, for the winner's sign on a tall screen, which
+      // centres itself in the sky above them (style.css, the end)
+      const free = Math.min(...pav.map(p => p.roofTop), ...medals.map(m => m.y - m.r * 1.2));
+      body.style.setProperty('--fin-free', Math.max(0, Math.round(free - 0.02 * H)) + 'px');
     }
 
     return { update, fireAt(x, y) { if (y < L.hz - 6) launch(x, y); } };
@@ -1839,10 +1872,13 @@
      or turns; only the light moves, and it moves with the game (BRD below). The same buildings and the same
      sky as the front door, drawn smaller and lower, so the game is played at the Fair it opened on. */
 
-  function buildBack(f0) {
+  // root, Wd and Hd are the box it draws into (the game's full-screen svg unless given), and opt.mast draws the
+  // records' masthead instead: a short wide panorama at night, the Wheel at the far end from the title.
+  function buildBack(f0, root = svg, Wd = W, Hd = H, opt = {}) {
+    const svg = root, W = Wd, H = Hd, mast = !!opt.mast;
     const land = W / H >= 1.05;
-    const water = clamp(0.06 * H, 26, 64), hz = H - water;
-    const u = clamp((land ? 0.17 : 0.12) * H / 119, 0.42, 1.6);
+    const water = mast ? clamp(0.16 * H, 18, 40) : clamp(0.06 * H, 26, 64), hz = H - water;
+    const u = mast ? clamp(0.4 * H / 119, 0.32, 0.9) : clamp((land ? 0.17 : 0.12) * H / 119, 0.42, 1.6);
     const lightAt = x => 0.15 + 1.35 * Math.abs(x - W / 2) / (W / 2);
 
     const defs = el('defs', null, svg);
@@ -1896,12 +1932,16 @@
       ell(treeG, x, hz + 2 - r * 0.6, r * 1.3, r, pick(['#5F7F4E', '#6E8B57', '#557446']), { 'stroke-width': 0.6 });
       el('ellipse', { cx: x, cy: hz + 2 - r * 0.6, rx: r * 1.3, ry: r }, clip);
     }
-    const far = land
-      ? [[fineArts, 0.16], [agricultural, 0.27], [manufactures, 0.395], [admin, 0.53], [electricity, 0.655], [machinery, 0.765]]
-      : [[agricultural, 0.2], [admin, 0.55], [electricity, 0.86]];
+    const far = mast
+      ? (W >= 640
+        ? [[fineArts, 0.2], [agricultural, 0.31], [manufactures, 0.435], [admin, 0.57], [electricity, 0.7], [machinery, 0.8]]
+        : [[agricultural, 0.24], [admin, 0.53], [electricity, 0.76]])
+      : land
+        ? [[fineArts, 0.16], [agricultural, 0.27], [manufactures, 0.395], [admin, 0.53], [electricity, 0.655], [machinery, 0.765]]
+        : [[agricultural, 0.2], [admin, 0.55], [electricity, 0.86]];
     for (const [fn, k] of far) { const x = k * W, t = twin(x, hz, u, lightAt(x)); fn(t.g, t.c, t.l, u); }
-    if (land) {
-      const x0 = 0.84 * W, x1 = W + 6, half = (x1 - x0) / u / 2, x = (x0 + x1) / 2;
+    if (land && (!mast || W >= 640)) {
+      const [x0, x1] = mast ? [-6, 0.13 * W] : [0.84 * W, W + 6], half = (x1 - x0) / u / 2, x = (x0 + x1) / 2;
       const t = twin(x, hz, u, lightAt(x));
       peristyle(t.g, t.c, t.l, u, half, '#9DB9C4');
     }
@@ -1922,7 +1962,8 @@
 
     // the Statue of the Republic in the basin, its gold on the water, out where the boards leave the view open
     {
-      const stX = land ? 0.925 * W : 0.86 * W, stH = clamp(0.22 * H, 60, 200), stS = stH / 104, y = H - water * 0.32;
+      const stX = mast ? 0.645 * W : land ? 0.925 * W : 0.86 * W, stH = mast ? clamp(0.5 * H, 40, 110) : clamp(0.22 * H, 60, 200);
+      const stS = stH / 104, y = H - water * 0.32;
       const t = el('g', { transform: tr(stX, y, stS) }, worldL);
       ell(t, 0, 1, 20, 3.2, '#CFC6B1');
       rect(t, -12.5, -3, 25, 3, STONE2); rect(t, -10, -30, 20, 27.4, STONE); rect(t, -12, -32.2, 24, 2.8, STONE2);
@@ -1936,8 +1977,8 @@
     // the dusk and the night fall over the world; the Wheel stands above them, at the end of the shore
     const warm = el('rect', { x: 0, y: 0, width: W, height: H, fill: '#F49A50', opacity: 0, 'clip-path': 'url(#fair-world)' }, overL);
     const night = el('rect', { x: 0, y: 0, width: W, height: H, fill: '#0A1232', opacity: 0, 'clip-path': 'url(#fair-world)' }, overL);
-    const wR = clamp(Math.min(0.12 * H, 0.085 * W), 34, 130);
-    const wheel = ferris(overL, wR * 0.66 + 0.012 * W, hz + 2, wR);
+    const wR = mast ? clamp(Math.min(0.3 * H, 0.1 * W), 24, 90) : clamp(Math.min(0.12 * H, 0.085 * W), 34, 130);
+    const wheel = ferris(overL, mast ? W - wR * 1.08 - 0.02 * W : wR * 0.66 + 0.012 * W, hz + 2, wR);
     wheel.rot.setAttribute('transform', `translate(${wheel.x.toFixed(1)} ${wheel.y.toFixed(1)})`);
     wheel.cars.forEach((c, i) => {
       const a = (i / 36) * Math.PI * 2;
@@ -1969,13 +2010,16 @@
         sunDisc.setAttribute('fill', mix('#FFF6DC', '#FF8F4F', edge * edge));
       } else sunG.setAttribute('display', 'none');
       const q = (f - SUNSET + 1) % 1;
-      if (q < 0.47) { const [x, y] = arc(q / 0.47); moonG.setAttribute('display', 'inline'); moonG.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`); }
+      if (q < 0.47) {
+        const [x, y] = mast ? [0.74 * W, 0.22 * H] : arc(q / 0.47);   // the masthead's moon keeps clear of its title
+        moonG.setAttribute('display', 'inline'); moonG.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+      }
       else moonG.setAttribute('display', 'none');
       for (const L0 of lights) { const v = litAt(f, L0.d).toFixed(2); if (v !== L0.v) { L0.v = v; L0.g.setAttribute('opacity', v); } }
       const wl = litAt(f, 0.5);
       wheel.g.style.setProperty('--lit', wl.toFixed(2));
       // the board's own lamps (the gate's, the bulbs round the plate in play) come on with the Fair's
-      if ((wl > 0.5) !== lampsOn) { lampsOn = wl > 0.5; body.classList.toggle('lamps', lampsOn); }
+      if (!mast && (wl > 0.5) !== lampsOn) { lampsOn = wl > 0.5; body.classList.toggle('lamps', lampsOn); }
     }
     return { update, fireAt() {} };
   }

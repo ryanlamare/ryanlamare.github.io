@@ -292,6 +292,9 @@ legend {
 /* Submitting without picking is the one thing the form refuses: a game played
    anonymously would silently not record. */
 #name-field.needed .roster { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 10px; }
+/* gilded, a room game asks for a name, and says so under the blank */
+body.gilded #name-field.needed #name-inputs input { border-bottom-color: var(--red); box-shadow: 0 2px 0 -0.5px var(--red); }
+body.gilded #name-field.needed #name-inputs::after { content: 'Type your name. The others in the room will see it.'; display: block; margin-top: 6px; font: italic 400 15px/1.3 "Old Standard", Georgia, serif; color: var(--red); }
 
 /* Week two onward: "Welcome back, Sam — not Sam?" */
 .whoami { font-size: 15px; color: var(--muted); }
@@ -996,6 +999,12 @@ button.tile:hover { transform: translateY(-3px); }
    body.fair, which only scene.js adds, so on ?plain none of it applies.
    body[data-front] is title | menu | lobby, and empty in a game. */
 #fair { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #1A2350; }
+/* the first paint (index.html's fair-boot): the Fair's late-afternoon sky until scene.js has drawn the Fair over
+   it, never the old menu card, which flashed on every load; if the script never arrives, the card shows after
+   four seconds, so the page still works */
+html.fair-boot body:not(.fair) { background: linear-gradient(#93B3CD, #E5D8BD 62%, #F3CF99) fixed; }
+html.fair-boot body:not(.fair) #setup { visibility: hidden; animation: fair-boot-show 0s linear 4s forwards; }
+@keyframes fair-boot-show { to { visibility: visible; } }
 #fair svg { display: block; }
 #fair-scrim { position: fixed; inset: 0; z-index: 1; background: rgba(8, 10, 26, .44); opacity: 0; pointer-events: none; transition: opacity .45s ease; }
 body.fair[data-front="menu"] #fair-scrim, body.fair[data-front="lobby"] #fair-scrim { opacity: 1; }
@@ -1791,15 +1800,27 @@ body.gilded #banner.finale .lettered .bulbs, body.gilded #banner.finale .lettere
 
 /* the end (Ryan, 5 Oct: a big "x wins!" in the title's letters, all lit up, and that's it): no card, the
    winner's name arched over the Fair at night, and under it the two ways on. The scores are on the signs. */
+/* centred (Ryan, 5 Oct: "should it be centered rather than at the top? … a big gap in the middle"): on a wide
+   screen in the middle of it, between the two pavilions, over a pool of dark so the bulbs read against the lit
+   city; on a tall one in the sky above the row of pavilions (scene.js sets --fin-free). It grows with the screen. */
 body.gilded #end-modal.finale.lit-end {
   background: none; box-shadow: none; overflow: visible; animation: none; color: #F8F2E4;
-  width: min(620px, 46vw); margin-top: max(10px, 3vh);
+  width: min(820px, 50vw); margin: auto; inset: 0 0 0 0; max-height: none;
 }
-@media (max-aspect-ratio: 21/20) { body.gilded #end-modal.finale.lit-end { width: min(560px, 96vw); } }
+body.gilded #end-modal.finale.lit-end::before {
+  content: ''; position: absolute; inset: -32% -26%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(8, 12, 34, .72), rgba(8, 12, 34, .5) 50%, rgba(8, 12, 34, 0));
+}
+@media (max-aspect-ratio: 21/20) {
+  body.gilded #end-modal.finale.lit-end { width: min(560px, 94vw); bottom: calc(100% - var(--fin-free, 62%)); }
+  body.gilded #end-modal.finale.lit-end::before { inset: -18% -10%; }
+  body.gilded #end-modal.lit-end .ln-w { --fs: clamp(58px, 21vw, 130px); }
+  body.gilded #end-modal.lit-end .ln-l { --fs: clamp(40px, 12.5vw, 84px); }
+}
 body.gilded #end-modal.lit-end #end-body { padding: 0; }
 body.gilded #end-modal.lit-end .lettered .ln { max-width: 100%; }
-body.gilded #end-modal.lit-end .ln-w { --fs: clamp(58px, 9vw, 132px); }
-body.gilded #end-modal.lit-end .ln-l { --fs: clamp(40px, 5.6vw, 84px); }
+body.gilded #end-modal.lit-end .ln-w { --fs: clamp(58px, min(9.5vw, 17vh), 190px); }
+body.gilded #end-modal.lit-end .ln-l { --fs: clamp(40px, min(6vw, 10.5vh), 120px); }
 body.gilded #end-modal.lit-end .end-sub { margin: 4px 0 0; text-align: center; color: rgba(248, 242, 228, .85); font-size: 15px; text-shadow: 0 1px 6px rgba(8, 10, 26, .8); }
 body.gilded #end-modal.lit-end .end-actions { justify-content: center; padding: 10px 0 0; gap: 12px; }
 body.gilded #end-modal.lit-end .end-actions .cta { box-shadow: 0 4px 0 rgba(0, 0, 0, .35), 0 10px 24px rgba(4, 6, 20, .5); }

@@ -1605,6 +1605,30 @@ the menu, a game), `/pavilion/?gilded&finale` (the end, as `?finale`).
 - **Short laptop screens** (`max-height: 820px`) set it all a little closer, so at
   1280×720 the boards end 14px higher than without the flag.
 
+- **His second look (5 Oct), and what changed:**
+  - **The winner, centred.** On a wide screen the sign stands in the middle,
+    between the two pavilions, over a pool of dark so its bulbs read against the
+    lit city; on a tall one it centres in the sky above the row of pavilions
+    (`scene.js` sets `--fin-free` above their roofs and the medal). It grows with
+    the screen, so a large monitor no longer leaves a gap under it.
+  - **The name.** "YOU WIN!" was the look link, which plays as "You"; a typed name
+    always showed. Now the device remembers the name typed last time
+    (`pavilion.name`), and **a room game asks for a name** ("Type your name. The
+    others in the room will see it."): a blank one went out to the room as "You",
+    so the other player's screen said "You are hiring" and "YOU WIN!" about someone
+    else. Learn to play still plays as "You" when the box is empty.
+  - **The first paint** (for everyone, not only `?gilded`): the old menu card
+    flashed on every load before `scene.js` arrived. An inline line in
+    `index.html` marks the page (`fair-boot`, not on `?plain`), and until the Fair
+    has drawn the page shows the Fair's late-afternoon sky. If `scene.js` never
+    arrives the card shows after four seconds, so the page still works.
+  - **The records' masthead** (for everyone: the records have no flag) is one
+    panorama of the Fair instead of the skyline strip repeating (two Wheels, two
+    domes): `scene.js` draws the board's Fair at night, lit, into any header
+    marked `data-masthead` (`masthead`, `buildBack(…, { mast: true })`), the
+    Peristyle at the title's end and the one Wheel at the other, the Statue in the
+    basin. A new league's stub keeps both lines when it is copied.
+
 Checked before it was pushed: the engine, bot, stats, archive and relay suites;
 `online.test.js` with and without `?gilded`; `?smoke=1` (2, 3 and 4 seats, the
 bot), `?layout=1` at 1440×900, 1280×720 and 390×844; `?uitest=setup` both ways;

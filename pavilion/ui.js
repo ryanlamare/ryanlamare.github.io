@@ -2292,6 +2292,24 @@ let setupPlayers = 2;
 let setupMode = 'online'; // 'online' | 'practice'
 let setupJoin = false; // online: joining someone else's room rather than opening one
 let lastTypedName = '';
+// Gilded, the device remembers the name typed last time (Ryan, 5 Oct: the end should say "Ryan wins", and it
+// does whenever it has a name), so a returning player is named without typing it again.
+const NAME_KEY = 'pavilion.name';
+if (GILDED) {
+  try {
+    lastTypedName = localStorage.getItem(NAME_KEY) || '';
+  } catch {
+    /* private browsing: type it again next time */
+  }
+}
+function keepName(name) {
+  if (!GILDED || !name) return;
+  try {
+    localStorage.setItem(NAME_KEY, name);
+  } catch {
+    /* as above */
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Identity (build step 5, PAVILION.md — Identity, results, data).
@@ -2534,8 +2552,17 @@ $('#setup-form').addEventListener('submit', (e) => {
     $('#name-field .roster-btn')?.focus();
     return;
   }
+  // Gilded, a room game needs a name: everyone else in the room sees it, and a blank one went out as "You",
+  // so the other player's screen said "You are hiring" and "You win!" about someone else.
+  const typed = $('#name-inputs input');
+  if (GILDED && setupMode === 'online' && typed && !typed.value.trim()) {
+    $('#name-field').classList.add('needed');
+    typed.focus();
+    return;
+  }
   const who = whoAmI();
   lastTypedName = who.name;
+  if (typed && typed.value.trim()) keepName(who.name);
 
   if (setupMode === 'online') {
     const code = setupJoin ? $('#code-input').value.trim().toUpperCase() : null;
@@ -2694,6 +2721,11 @@ const HAND_SVG = `<svg viewBox="0 0 96 52" aria-hidden="true"><g fill="#FFFCF4" 
 
 function startLesson() {
   endCoach();
+  const typed = $('#name-inputs input')?.value.trim();
+  if (typed) {
+    lastTypedName = typed;
+    keepName(typed);
+  }
   coach = makeCoach();
   startGame({
     players: 2,
@@ -3072,6 +3104,8 @@ function makeCoach() {
 }
 
 $('#btn-learn')?.addEventListener('click', startLesson);
+// typing a name answers the room's ask for one
+$('#name-inputs').addEventListener('input', () => $('#name-field').classList.remove('needed'));
 
 // Gilded, the menu is a bill of the Fair (index.html's #handbill, Ryan's pitch set as an 1893 handbill), and the
 // Rehearsal is gone (Ryan, 5 Oct: Learn to play is already a game against the Commissioner, and its Rematch
