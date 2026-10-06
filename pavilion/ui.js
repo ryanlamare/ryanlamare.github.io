@@ -343,7 +343,7 @@ function buntingSVG(seat) {
 }
 
 function applySelection() {
-  $$('.tile.sel, .tile.dim').forEach((t) => t.classList.remove('sel', 'dim'));
+  $$('.tile.sel, .tile.dim, .token.sel').forEach((t) => t.classList.remove('sel', 'dim'));
   $$('.crew.can-drop, .idle.can-drop').forEach((t) => t.classList.remove('can-drop'));
   $$('.bill').forEach((b) => b.remove());
   clearPreview();
@@ -354,9 +354,11 @@ function applySelection() {
       ? $(`.source[data-source="${sel.source.index}"]`)
       : $('#pool');
   if (srcEl) {
+    // every worker the pick takes lights, and at the gate the First Pick token with them while it is there
     $$('.tile', srcEl).forEach((t) => {
       t.classList.add(Number(t.dataset.kind) === sel.kind ? 'sel' : 'dim');
     });
+    if (sel.source.type === 'pool') $('#fm-token')?.classList.add('sel');
   }
 
   const dests = E.legalMoves(G.cur).filter(

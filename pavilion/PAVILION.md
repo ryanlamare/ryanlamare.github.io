@@ -1765,6 +1765,14 @@ leave a tall empty gate at the start of every month, which is his call.
   stay Claude's, in `LESSON_LINES`, for Ryan to change. A one-page rules sheet
   was not added: he cut the old text panel on 3 Oct in favour of the tutorial
   ("show, don't tell").
+- **A picked group lights together (6 Oct).** Ryan: picking at the gate lit some
+  of a color and not the others. Every worker the pick takes always had the
+  `sel` class; the tile under the pointer lost its gold ring to the hover style,
+  and on a phone the tapped tile keeps its hover, so the one you touched looked
+  unpicked (agencies too; the gate, with more of a color, showed it most). The
+  hover lift is now only for a pointer that hovers (`@media (hover: hover)`), a
+  picked tile keeps its ring under the pointer, and a gate pick lights the First
+  Pick token with it while it is there, since it comes along.
 - **The name stays Pavilion, without an exclamation mark** (he asked whether
   "PAVILION!" would be better, and whether Claude liked the name): it is the thing
   you build, one word the way Azul is, and the "!" belongs to the moments that
