@@ -115,6 +115,7 @@
   const KIC = ['#F2ECDC', '#EFF3F7', '#E4DDCB', '#2A2206', '#F0EAD9'];
   const KBD = ['#6B2C1B', '#24486A', '#000000', '#9E7C13', '#2A6A3A'];
   const KGLOW = ['#FF9C76', '#9CD0F7', '#F6EEDC', '#FFE06A', '#9BE8AC'];
+  const KSH = ['#4E1E12', '#1B3550', '#000000', '#F2D777', '#1F4C2C'];   // the shade each symbol casts (style.css --t-sh)
   const STONE = '#F4EFE3', STONE2 = '#E3DAC6', ARCH = '#D3C9B4', DOOR = '#C9BFA9';
   const GOLD = '#D2A535', GOLD2 = '#F3D57E', GOLDD = '#9A7518';
   // The nations, one to a seat, each a pair of colours and a roof of its own (Ryan, 5 Oct: green for the third,
@@ -1155,15 +1156,24 @@
       for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
         const bx = x0 + pw + c * (bw + pw), by = top + rg + r * (bh + rg) + bw * 0.12, k = kindAt(r, c), rad = bw / 2;
         const d = `M${bx},${by + bh} V${by + rad} A${rad},${rad} 0 0 1 ${bx + bw},${by + rad} V${by + bh} Z`;
-        path(g, d, nt(mix(KC[k], '#E8DEC9', 0.8)), { 'stroke-width': 0.6 });
-        if (bw > 12) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.22, y: by + bh * 0.3, width: bw * 0.56, height: bw * 0.56, opacity: 0.32, style: `color:${KC[k]};--t-bg:transparent` }, g);
+        // On opening night a pavilion is the player's own wall, so it is drawn the way their board drew it
+        // (Ryan, 6 Oct: the night's pastel glow made them look like anyone's): a built display in its full
+        // enamel colour with the board's ink ring, its symbol shaded the way the tiles' are, lit from within;
+        // a space never built plain stone with its symbol faint. The front door's pavilions keep their glow.
+        path(g, d, nt(mix(KC[k], '#E8DEC9', FIN ? 0.9 : 0.8)), { 'stroke-width': 0.6 });
+        if (bw > 12) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.22, y: by + bh * 0.3, width: bw * 0.56, height: bw * 0.56, opacity: FIN ? 0.22 : 0.32, style: `color:${KC[k]};--t-bg:transparent` }, g);
         const fillG = el('g', { class: 'bayfill', opacity: 0, display: 'none' }, g);
         path(fillG, d, KC[k], { stroke: KBD[k], 'stroke-width': 0.9 });
         if (bw > 9) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.2, y: by + bh * 0.3, width: bw * 0.6, height: bw * 0.6, style: `color:${KIC[k]};--t-bg:${KC[k]}` }, fillG);
         const glow = el('g', { display: 'none' }, glows);
-        el('ellipse', { cx: bx + bw / 2, cy: by + bh / 2, rx: bw * 0.72, ry: bh * 0.68, fill: KGLOW[k], opacity: 0.2 }, glow);
-        el('path', { d, fill: mix(KGLOW[k], KC[k], 0.25) }, glow);
-        if (bw > 9) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.2, y: by + bh * 0.3, width: bw * 0.6, height: bw * 0.6, style: `color:${k === 3 ? '#3A2E06' : '#FFFBEF'};--t-bg:transparent` }, glow);
+        el('ellipse', { cx: bx + bw / 2, cy: by + bh / 2, rx: bw * 0.72, ry: bh * 0.68, fill: KGLOW[k], opacity: FIN ? 0.28 : 0.2 }, glow);
+        if (FIN) {
+          el('path', { d, fill: mix(KC[k], '#FFF2CC', 0.14), stroke: '#1B1C19', 'stroke-width': Math.max(1, bw * 0.06), 'vector-effect': 'non-scaling-stroke' }, glow);
+          if (bw > 9) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.2, y: by + bh * 0.3, width: bw * 0.6, height: bw * 0.6, style: `color:${KIC[k]};--t-sh:${KSH[k]}` }, glow);
+        } else {
+          el('path', { d, fill: mix(KGLOW[k], KC[k], 0.25) }, glow);
+          if (bw > 9) el('use', { href: '#ic-' + KIND[k], x: bx + bw * 0.2, y: by + bh * 0.3, width: bw * 0.6, height: bw * 0.6, style: `color:${k === 3 ? '#3A2E06' : '#FFFBEF'};--t-bg:transparent` }, glow);
+        }
         bays.push({ fillG, glow, on: false });
       }
       const dw = bw * 0.9;

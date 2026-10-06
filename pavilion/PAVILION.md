@@ -1773,6 +1773,21 @@ leave a tall empty gate at the start of every month, which is his call.
   hover lift is now only for a pointer that hovers (`@media (hover: hover)`), a
   picked tile keeps its ring under the pointer, and a gate pick lights the First
   Pick token with it while it is there, since it comes along.
+- **Sending a pick straight to idle took several tries (6 Oct, fixed).** Pointing
+  at the idle row makes the hire preview draw faint workers into its spaces; on
+  a scaffold those never take the pointer, but on the idle row they did, so the
+  space under the pointer was redrawn on every move and the click was lost.
+  Tiles on the idle row, and every preview tile, now let the pointer through to
+  the row itself (style.css, `.icell .tile` and `.ghost-tile`). It showed most
+  when idle was the only place a color could go (all five of it built), but it
+  was general.
+- **Opening night's pavilions look like the boards (6 Oct).** Ryan asked whether
+  the end could show the players' actual pavilions; it always had (each is
+  `baysOf` the player's final wall), but at night every display glowed pastel and
+  every unbuilt space kept a tint, so they read as anyone's. On opening night a
+  built display is now drawn as the board draws it, in its full enamel color with
+  the ink ring and the symbol's shade, lit from within, and a space never built is
+  plain stone with its symbol faint. The front door's pavilions keep their glow.
 - **The name stays Pavilion, without an exclamation mark** (he asked whether
   "PAVILION!" would be better, and whether Claude liked the name): it is the thing
   you build, one word the way Azul is, and the "!" belongs to the moments that
