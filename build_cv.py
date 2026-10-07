@@ -34,9 +34,13 @@ HOME_GROUPS = {
 
 
 # --------------------------------------------------------------------- authors
+def bold_me(s):
+    return s.replace(D.ME, f'<span class="me">{D.ME}</span>')
+
+
 def authors_cv(rec):
-    """'A, B, and C' — the CV's house style."""
-    names = list(rec["authors"])
+    """'A, B, and C' — the CV's house style, with ME bolded."""
+    names = [bold_me(n) for n in rec["authors"]]
     if rec.get("etal"):
         s = ", ".join(names) + ", et al"
     elif len(names) == 1:
@@ -128,8 +132,13 @@ def cv_pub_it(rec):
         title = f'<span class="lt"><i>{rec["t"]}</i></span>.'
     else:
         title = f'“<span class="lt">{rec["t"]}</span>.”'
-    v = f' {rec["venue_cv"]}' if rec["venue_cv"] else ""
+    v = f' {nobreak_ranges(rec["venue_cv"])}' if rec["venue_cv"] else ""
     return f"{a}. {title}{v}"
+
+
+def nobreak_ranges(venue):
+    """Keep '456–478.' on one line instead of breaking after the dash."""
+    return re.sub(r"[\w()]+–[\w.]+", lambda m: f'<span class="nb">{m.group()}</span>', venue)
 
 
 def render_cv_body():
@@ -155,7 +164,7 @@ def render_cv_body():
             for gtitle, items in D.PUB_GROUPS:
                 out.append(f"<h3>{gtitle}</h3>")
                 for rec in items:
-                    it = rec["raw"] if "raw" in rec else cv_pub_it(rec)
+                    it = bold_me(rec["raw"]) if "raw" in rec else cv_pub_it(rec)
                     out.append(cv_row(rec["y"], it, rec["u"]))
         else:
             raise ValueError(f"unknown block: {kind}")
