@@ -18,7 +18,13 @@
      "d|7|r|x"         pair 7's recruiter recorded no deal
      "s|7|a|00101000"  which issues this person believed both sides wanted
                        the same option on (one 0/1 per issue)
-   The latest line of each kind from each phone counts. */
+     "c|7|a|text"      anything else the pair agreed, in their own words
+     "r|7|15600|16800|32400|32400"  the deck, once the room has seen its deals:
+                       pair 7's applicant and recruiter points, together, and
+                       the most possible ("r|7|x|32400" for no deal), so each
+                       phone can show its own pair's result
+   The latest line of each kind from each phone counts. The opening quiz is a
+   plain vote in room neg3-impress (with the same suffix). */
 (function(){
 const NEG = window.NEG = {};
 
@@ -58,7 +64,21 @@ try { const s = localStorage.getItem('neg3-scoring'); if (s) NEG.useScoring(JSON
 /* the room: ?room=<x> for a rehearsal; ?demo=1 never touches the network */
 const Q = new URLSearchParams(location.search);
 NEG.demo = Q.has('demo');
-NEG.room = 'neg3-deals' + (Q.get('room') ? '-' + Q.get('room').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30) : '');
+const SUFFIX = Q.get('room') ? '-' + Q.get('room').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30) : '';
+NEG.room = 'neg3-deals' + SUFFIX;
+NEG.quizRoom = 'neg3-impress' + SUFFIX;
+NEG.suffix = Q.get('room') || '';
+
+/* the opening quiz, Ryan's BADM 590 question (answer: the second) */
+NEG.quiz = {
+  q: 'Which applicant makes the best impression?',
+  o: ['The applicant who accepts the offer made',
+      'The applicant who negotiates the offer in a professional, problem-solving manner',
+      'The applicant who negotiates the offer in an unprofessional manner'],
+  answer: 1,
+  demo: [7, 23, 1],
+};
+NEG.clean = t => String(t || '').replace(/[|\x00-\x1f\x7f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 140);
 
 NEG.score = function(d){            // d: array of 8 option positions
   let a = 0, r = 0;
@@ -104,11 +124,13 @@ NEG.frontier = function(){
 };
 
 NEG.parse = function(entries){
-  const dl = {}, sl = {};
+  const dl = {}, sl = {}, cl = {}, res = {};
   (entries || []).forEach(e => {
     const p = String(e.t || '').split('|');
     if (p[0] === 'd' && /^\d{1,2}$/.test(p[1]) && (p[2] === 'a' || p[2] === 'r') && /^([0-4]{8}|x)$/.test(p[3])) dl[e.v] = {pair:+p[1], role:p[2], d:p[3]};
     if (p[0] === 's' && /^\d{1,2}$/.test(p[1]) && (p[2] === 'a' || p[2] === 'r') && /^[01]{8}$/.test(p[3])) sl[e.v] = {pair:+p[1], role:p[2], m:p[3]};
+    if (p[0] === 'c' && /^\d{1,2}$/.test(p[1]) && (p[2] === 'a' || p[2] === 'r') && p.slice(3).join(' ').trim()) cl[e.v] = {pair:+p[1], role:p[2], t:NEG.clean(p.slice(3).join(' '))};
+    if (p[0] === 'r' && /^\d{1,2}$/.test(p[1])) res[+p[1]] = p[2] === 'x' ? {nodeal:true, m:+p[3]} : {a:+p[2], r:+p[3], j:+p[4], m:+p[5]};
   });
   const by = {};
   Object.values(dl).forEach(x => { (by[x.pair] = by[x.pair] || {})[x.role] = x.d; });
@@ -122,7 +144,12 @@ NEG.parse = function(entries){
     return out;
   });
   const beliefs = Object.values(sl).map(x => x.m.split('').map(Number));
-  return {pairs, beliefs};
+  /* the extra terms, one card per pair even when both phones wrote the same thing */
+  const terms = [];
+  Object.values(cl).sort((x, y) => x.pair - y.pair).forEach(x => {
+    if (!terms.some(t => t.pair === x.pair && t.t.toLowerCase() === x.t.toLowerCase())) terms.push(x);
+  });
+  return {pairs, beliefs, terms, results:res};
 };
 
 /* the sample's room: sixteen pairs as a real room tends to come out (one
@@ -133,6 +160,9 @@ NEG.demoEntries = function(){
   const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const K = NEG.kinds(), out = [];
   const skills = [.92,.18,.66,.41,.83,.27,.55,.74,.12,.61,.48,.88,.35,.7,.5,.3];
+  const TERMS = {1:'Salary review after six months', 3:'Half the bonus now, half after the first year', 5:'The company pays for a month of temporary housing',
+    7:'A training course paid for in the first year', 8:'Start in June working remotely, move in August', 10:'One extra week of vacation from the second year',
+    12:'Bonus doubles if the first-year targets are met', 14:'A mentor from the compensation team', 13:'Moving costs paid up front, not reimbursed'};
   skills.forEach((sk, idx) => {
     const n = idx + 1, lean = (rnd() - .5) * 2.4;
     const d = K.map((k, i) => {
@@ -149,6 +179,7 @@ NEG.demoEntries = function(){
         out.push({v:'demo-r' + n, t:'d|' + n + '|r|' + dr});
       }
     }
+    if (TERMS[n]) out.push({v:'demo-a' + n, t:'c|' + n + '|a|' + TERMS[n]});
     ['a', 'r'].forEach(role => {
       if (n === 15 && role === 'r') return;
       const m = K.map(k => rnd() < (k.kind === 'congruent' ? .24 + .5 * sk : .07) ? 1 : 0).join('');
@@ -158,6 +189,13 @@ NEG.demoEntries = function(){
   return out;
 };
 
+NEG.fetchCounts = function(room){
+  return fetch(NEG.API + '/p/' + room, {cache:'no-store'}).then(r => r.json()).then(d => d.counts || []);
+};
+NEG.vote = function(room, v, o){
+  return fetch(NEG.API + '/p/' + room + '/vote', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({o, v})})
+    .then(r => { if (!r.ok) throw new Error('vote ' + r.status); return r.json(); });
+};
 NEG.fetchEntries = function(){
   return fetch(NEG.API + '/p/' + NEG.room + '/entries', {cache:'no-store'}).then(r => r.json()).then(d => d.entries || []);
 };
