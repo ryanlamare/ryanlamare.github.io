@@ -199,7 +199,7 @@ BLOCKS = [
   ["row", "", "Human Resource Management · International Human Resource Management · Strategic Human Resource Management", None],
   ["h3", "Teaching Awards", None],
   ["row", "2018–2022", "LER Faculty Teaching Excellence Award (three times), University of Illinois", None],
-  ["row", "2015–2024", "List of Teachers Rated as Excellent, University of Illinois", None],
+  ["row", "2015–2024", "List of Teachers Ranked as Excellent by Their Students, University of Illinois", None],
   ["h2", "Non-Academic Positions", ""],
   ["row", "2010–2012", "Research Analyst, American Rights at Work", None],
   ["h2", "Service &amp; Professional Activities", ""],
