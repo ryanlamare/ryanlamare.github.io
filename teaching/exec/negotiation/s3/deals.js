@@ -19,6 +19,8 @@
      "s|7|a|00101000"  which issues this person believed both sides wanted
                        the same option on (one 0/1 per issue)
      "c|7|a|text"      anything else the pair agreed, in their own words
+     "t|y|text"        the second exercise (Thai Solar Park): did this person's
+                       deal depend on what happens later (y/n), and how
      "r|7|15600|16800|32400|32400"  the deck, once the room has seen its deals:
                        pair 7's applicant and recruiter points, together, and
                        the most possible ("r|7|x|32400" for no deal), so each
@@ -124,13 +126,14 @@ NEG.frontier = function(){
 };
 
 NEG.parse = function(entries){
-  const dl = {}, sl = {}, cl = {}, res = {};
+  const dl = {}, sl = {}, cl = {}, res = {}, tl = {};
   (entries || []).forEach(e => {
     const p = String(e.t || '').split('|');
     if (p[0] === 'd' && /^\d{1,2}$/.test(p[1]) && (p[2] === 'a' || p[2] === 'r') && /^([0-4]{8}|x)$/.test(p[3])) dl[e.v] = {pair:+p[1], role:p[2], d:p[3]};
     if (p[0] === 's' && /^\d{1,2}$/.test(p[1]) && (p[2] === 'a' || p[2] === 'r') && /^[01]{8}$/.test(p[3])) sl[e.v] = {pair:+p[1], role:p[2], m:p[3]};
     if (p[0] === 'c' && /^\d{1,2}$/.test(p[1]) && (p[2] === 'a' || p[2] === 'r') && p.slice(3).join(' ').trim()) cl[e.v] = {pair:+p[1], role:p[2], t:NEG.clean(p.slice(3).join(' '))};
     if (p[0] === 'r' && /^\d{1,2}$/.test(p[1])) res[+p[1]] = p[2] === 'x' ? {nodeal:true, m:+p[3]} : {a:+p[2], r:+p[3], j:+p[4], m:+p[5]};
+    if (p[0] === 't' && (p[1] === 'y' || p[1] === 'n')) tl[e.v] = {yes:p[1] === 'y', t:NEG.clean(p.slice(2).join(' '))};
   });
   const by = {};
   Object.values(dl).forEach(x => { (by[x.pair] = by[x.pair] || {})[x.role] = x.d; });
@@ -149,7 +152,9 @@ NEG.parse = function(entries){
   Object.values(cl).sort((x, y) => x.pair - y.pair).forEach(x => {
     if (!terms.some(t => t.pair === x.pair && t.t.toLowerCase() === x.t.toLowerCase())) terms.push(x);
   });
-  return {pairs, beliefs, terms, results:res};
+  const t2 = Object.values(tl), ex2 = {yes:t2.filter(x => x.yes).length, no:t2.filter(x => !x.yes).length, terms:[]};
+  t2.forEach(x => { if (x.yes && x.t && !ex2.terms.some(y => y.toLowerCase() === x.t.toLowerCase())) ex2.terms.push(x.t); });
+  return {pairs, beliefs, terms, results:res, ex2};
 };
 
 /* the sample's room: sixteen pairs as a real room tends to come out (one
@@ -186,6 +191,14 @@ NEG.demoEntries = function(){
       out.push({v:'demo-' + role + n, t:'s|' + n + '|' + role + '|' + m});
     });
   });
+  /* the second exercise: most deals tied to what the plant produces */
+  const EX2 = ['The price moves with the plant’s output in its first year', 'Part of the price is refunded if output falls short of the forecast',
+    'A bonus to the seller if output beats the forecast', 'Half paid now, half after a year of measured output', 'An independent engineer checks the output after six months',
+    'The seller guarantees a minimum output for three years'];
+  for (let k = 0, said = 0; k < 31; k++) {
+    const yes = k % 3 !== 2, how = yes && said < EX2.length && k % 2 === 0 ? EX2[said++] : '';
+    out.push({v:'demo-t' + k, t:'t|' + (yes ? 'y' : 'n') + '|' + how});
+  }
   return out;
 };
 

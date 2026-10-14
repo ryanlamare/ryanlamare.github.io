@@ -95,11 +95,13 @@ const KEY = 'neg3-phone-' + N.room + (N.demo ? '-demo' : '');
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(_) { return {}; } };
 let st = N.demo ? {} : load();
 /* the deck's phone frame opens part-way through (?pair=7&role=a&pick=413-----) */
+if (N.demo && Q.has('ex2') && !Q.get('pair')) st.ex2 = true;
 if (N.demo && Q.get('pair')) {
   st.quiz = 1; st.pair = +Q.get('pair') || 1;
   if (Q.get('role') === 'a' || Q.get('role') === 'r') st.role = Q.get('role');
   if (Q.get('pick')) st.pick = Q.get('pick').slice(0, 8).padEnd(8, '-').split('').map(c => /[0-4]/.test(c) ? +c : -1);
   if (Q.has('done') && st.role && st.pick && st.pick.every(x => x >= 0)) { st.sentD = st.sentS = 'demo'; }   /* straight to the pair's result */
+  if (Q.has('ex2')) st.ex2 = true;   /* straight to the second exercise */
 }
 const save = () => { if (!N.demo) try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(_){} };
 let voter; try { voter = localStorage.getItem('neg3-voter'); } catch(_){}
@@ -107,14 +109,42 @@ if (!voter) { voter = 'neg3-' + Math.random().toString(36).slice(2, 12) + Math.r
 const fmt = n => Math.round(n).toLocaleString('en-GB');
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
-function head(){
-  document.body.classList.toggle('role-a', st.role === 'a');
-  document.body.classList.toggle('role-r', st.role === 'r');
+function head(name){
+  document.body.classList.toggle('role-a', st.role === 'a' && !name);
+  document.body.classList.toggle('role-r', st.role === 'r' && !name);
   const t = el('div', 'tag');
-  const l = el('span'); l.appendChild(el('i')); l.appendChild(document.createTextNode(st.pair ? 'The Job Offer' : 'Creating Value'));
+  const l = el('span'); l.appendChild(el('i')); l.appendChild(document.createTextNode(name || (st.pair ? 'The Job Offer' : 'Creating Value')));
   t.appendChild(l);
-  if (st.pair) t.appendChild(el('b', st.role || '', 'Pair ' + st.pair + (st.role ? ' · ' + N.roles[st.role] : '')));
+  if (st.pair && !name) t.appendChild(el('b', st.role || '', 'Pair ' + st.pair + (st.role ? ' · ' + N.roles[st.role] : '')));
   return t;
+}
+/* the second exercise: one question, asked of each person */
+function nextButton(){
+  const b = el('button', 'opt', 'Record the second exercise'); b.type = 'button'; b.style.textAlign = 'center';
+  b.onclick = () => { st.ex2 = true; save(); draw(); };
+  return b;
+}
+function ex2Screen(){
+  app.replaceChildren(head('Thai Solar Park'), el('h2', null, 'Did your deal depend on what happens later?'));
+  const two = el('div', 'two'), opts = [];
+  [['y', 'Yes'], ['n', 'No']].forEach(([k, w]) => { const b = el('button', 'opt' + (st.ex2a === k ? ' on' : ''), w); b.type = 'button'; b.style.textAlign = 'center';
+    b.onclick = () => { st.ex2a = k; save(); paint(); }; opts.push([k, b]); two.appendChild(b); });
+  const ex = el('div', 'extra'), lab = el('label', null, 'How?'), ta = el('textarea');
+  ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = st.ex2t || ''; ta.oninput = () => { st.ex2t = ta.value; save(); };
+  lab.htmlFor = ta.id = 'ex2how'; ex.appendChild(lab); ex.appendChild(ta);
+  const err = el('div', 'err');
+  const go = holdButton('Hold to send', () => {
+    send('t|' + st.ex2a + '|' + (st.ex2a === 'y' ? N.clean(ta.value) : '')).then(() => { st.sentT = true; save(); draw(); })
+      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  function paint(){ opts.forEach(([k, b]) => b.classList.toggle('on', st.ex2a === k)); ex.style.display = st.ex2a === 'y' ? '' : 'none'; go.disabled = !st.ex2a; }
+  paint();
+  app.append(two, ex, go, err);
+}
+function ex2Done(){
+  const d = el('div', 'done'); d.append(el('div', 'big', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
+  app.replaceChildren(head('Thai Solar Park'), d);
+  if (N.demo) { const again = el('button', 'back', 'Start again'); again.type = 'button'; again.style.alignSelf = 'center'; again.onclick = () => { st = {quiz:1}; draw(); }; app.appendChild(again); }
 }
 function send(t){ return N.demo ? Promise.resolve({ok:true}) : N.say(voter, t); }
 function holdButton(label, onDone){
@@ -147,7 +177,8 @@ function pairScreen(){
   app.replaceChildren(head(), el('h2', null, 'Your pair number'));
   const g = el('div', 'nums');
   for (let n = 1; n <= 24; n++) { const b = el('button', null, String(n)); b.type = 'button'; b.onclick = () => { st.pair = n; save(); draw(); }; g.appendChild(b); }
-  app.appendChild(g);
+  const skip = el('button', 'back', 'Skip to the second exercise'); skip.type = 'button'; skip.onclick = () => { st.ex2 = true; save(); draw(); };
+  app.appendChild(g); app.appendChild(skip);
 }
 function roleScreen(){
   app.replaceChildren(head(), el('h2', null, 'Your role'));
@@ -225,6 +256,7 @@ function doneScreen(){
   d.appendChild(el('div', 'big', 'Thank you'));
   d.appendChild(el('div', 'sm', 'Eyes on the screen'));
   app.appendChild(d);
+  app.appendChild(nextButton());
   if (N.demo) {
     /* the sample scores the pair's own taps with its invented points */
     setTimeout(() => {
@@ -250,7 +282,7 @@ function showResult(r){
     box.appendChild(sp);
   }
   box.appendChild(el('div', 'rl', 'Eyes on the screen'));
-  app.replaceChildren(head(), box);
+  app.replaceChildren(head(), box, nextButton());
   if (N.demo) { const again = el('button', 'back', 'Start again'); again.type = 'button'; again.style.alignSelf = 'center'; again.onclick = () => { st = {quiz:1}; draw(); }; app.appendChild(again); }
 }
 function splash(line, then){
@@ -261,6 +293,8 @@ function splash(line, then){
 }
 function draw(){
   clearInterval(resTimer);
+  if (st.sentT) return ex2Done();
+  if (st.ex2) return ex2Screen();
   if (!st.quiz) return quizScreen();
   if (!st.pair) return pairScreen();
   if (!st.role) return roleScreen();
@@ -269,7 +303,7 @@ function draw(){
   doneScreen();
 }
 /* a reset of the rooms on the Poll Desk brings this phone back to where it started */
-if (!N.demo && st.sentD) N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {quiz:st.quiz}; save(); draw(); } }).catch(() => {});
+if (!N.demo && (st.sentD || st.sentT)) N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {quiz:st.quiz}; save(); draw(); } }).catch(() => {});
 if (!N.demo && st.quiz > 0) fetch(N.API + '/p/' + N.quizRoom + '/votes', {cache:'no-store'}).then(r => r.json()).then(d => { if (d.votes && !(voter in d.votes)) { delete st.quiz; save(); draw(); } }).catch(() => {});
 draw();
 })();
