@@ -10,7 +10,11 @@
    shared agreement form, but the real payoff schedules belong to a licensed
    exercise and never go in this public repo. In a live session the deck
    swaps in the real schedules from a private file (see NEG.useScoring);
-   this sample runs on these demo points and on demo deals.
+   this sample runs on these demo points and on demo deals. The private file
+   is {"a":[[5]x8], "r":[[5]x8], "batna":{"a":n,"r":n}, "issues":[8 names]}:
+   batna is each side's score with no deal (optional), and issues, when
+   given, must match the issue names below, so a file meant for another
+   version of the exercise is refused.
 
    Wire (room neg3-deals, or neg3-deals-<x> with ?room=<x>):
      "d|7|a|20342031"  pair 7's applicant recorded the deal: one digit per
@@ -53,13 +57,18 @@ const DEMO = {
 };
 NEG.pts = DEMO;
 NEG.demoScoring = true;
+/* each side's score with no deal (its BATNA), invented like the points */
+NEG.batna = {a:10400, r:9600};
 
 /* a live session: the deck reads the real schedules from a private file once
    ({"a":[[..5]x8],"r":[[..5]x8]}), and keeps them in this browser only */
 NEG.useScoring = function(p){
   const ok = x => Array.isArray(x) && x.length === 8 && x.every(r => Array.isArray(r) && r.length === 5 && r.every(Number.isFinite));
   if (!p || !ok(p.a) || !ok(p.r)) return false;
-  NEG.pts = {a:p.a, r:p.r}; NEG.demoScoring = false; return true;
+  if (p.issues && (!Array.isArray(p.issues) || p.issues.join('|') !== NEG.issues.map(is => is.n).join('|'))) return false;
+  NEG.pts = {a:p.a, r:p.r}; NEG.demoScoring = false;
+  NEG.batna = p.batna && Number.isFinite(p.batna.a) && Number.isFinite(p.batna.r) ? {a:p.batna.a, r:p.batna.r} : null;
+  return true;
 };
 try { const s = localStorage.getItem('neg3-scoring'); if (s) NEG.useScoring(JSON.parse(s)); } catch(_){}
 
