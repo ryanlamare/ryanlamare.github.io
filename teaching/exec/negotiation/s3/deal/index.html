@@ -1,0 +1,203 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>The Job Offer · Record your deal</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* The participant's page for the Job Offer (Session 3 sample, 14 Oct 2026).
+   Each person records the deal their pair agreed: pair number, role, then
+   one tap per issue on a five-step bar, in the order of the paper form, and
+   a hold to send. Then one question before any debrief: on which issues did
+   both sides want the same thing? Nothing is scored here; the screen at the
+   front does that. ?demo=1 runs it with no network (the deck shows it in a
+   phone frame); ?room=<x> writes to a rehearsal room. All wording is
+   Claude's, for Ryan to change. */
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:18px 18px 36px}
+body.frame{padding:14px 14px 28px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+.tag b{font-weight:700;letter-spacing:.12em}
+.tag b.a{color:var(--teal)} .tag b.r{color:var(--terracotta)}
+h2{font-weight:700;font-size:22px;line-height:1.25}
+.nums{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.nums button{font-family:var(--display);font-weight:900;font-size:22px;padding:12px 0 9px;background:var(--card);border:2px solid var(--ink);color:var(--ink);cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.role{font-family:var(--sans);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);border:none;padding:30px 8px;cursor:pointer}
+.role.a{background:var(--teal)} .role.r{background:var(--terracotta)}
+.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+/* one row per issue: its name and the agreed option over a five-step bar */
+.iss{display:flex;flex-direction:column;gap:6px}
+.iss .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.iss .nm{font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.iss .val{font-weight:700;font-size:16px;color:var(--ink);white-space:nowrap}
+.iss .val.none{font-weight:500;color:var(--grey)}
+.bar{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.bar button{height:30px;background:var(--paper-soft);border:2px solid var(--ink);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.bar button.on{background:var(--ink)}
+.ends{display:flex;justify-content:space-between;font-weight:500;font-size:11px;color:var(--muted);margin-top:-2px}
+.nodeal{font-family:var(--sans);font-weight:600;font-size:13px;letter-spacing:.04em;background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;align-self:center;padding:4px}
+/* hold to send: the button fills while held */
+.hold{position:relative;overflow:hidden;font-family:var(--sans);font-weight:700;font-size:17px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:17px 18px;cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.hold:disabled{opacity:.35;cursor:default}
+.hold .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ink)}
+.hold.holding .fill{width:100%;transition:width 650ms linear}
+.hold span{position:relative}
+/* the question: issues as chips, any number of them */
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.chip{font-family:var(--sans);font-weight:600;font-size:15px;color:var(--ink);background:var(--card);border:2px solid var(--ink);padding:13px 8px;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--paper)}
+.chip.none{grid-column:1 / span 2}
+.splash{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper);padding:24px;text-align:center;animation:cin .35s ease-out}
+.splash.a{background:var(--teal)} .splash.r{background:var(--terracotta)}
+.splash .ck{font-weight:700;font-size:15px;letter-spacing:.3em;text-transform:uppercase}
+.splash .cp{font-family:var(--display);font-weight:900;font-size:40px;line-height:1.05;text-transform:uppercase}
+@keyframes cin{from{transform:scale(1.1);opacity:0}to{transform:scale(1);opacity:1}}
+.done{text-align:center;padding:60px 0 20px;display:flex;flex-direction:column;gap:14px;align-items:center}
+.done .big{font-family:var(--display);font-weight:900;font-size:34px;line-height:1.05;text-transform:uppercase}
+.done .sm{font-weight:600;font-size:16px;color:var(--muted)}
+.err{font-weight:600;font-size:14px;color:var(--red);min-height:1.2em;text-align:center}
+</style></head><body>
+<div class="wrap" id="app"></div>
+<script src="/teaching/exec/negotiation/s3/deals.js"></script>
+<script>
+(function(){
+const N = window.NEG, Q = new URLSearchParams(location.search);
+if (Q.has('frame')) document.body.classList.add('frame');
+const app = document.getElementById('app');
+const KEY = 'neg3-phone-' + N.room + (N.demo ? '-demo' : '');
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(_) { return {}; } };
+let st = N.demo ? {} : load();
+/* the deck's phone frame opens part-way through (?pair=7&role=a&pick=413-----) */
+if (N.demo && Q.get('pair')) {
+  st.pair = +Q.get('pair') || 1;
+  if (Q.get('role') === 'a' || Q.get('role') === 'r') st.role = Q.get('role');
+  if (Q.get('pick')) st.pick = Q.get('pick').slice(0, 8).padEnd(8, '-').split('').map(c => /[0-4]/.test(c) ? +c : -1);
+}
+const save = () => { if (!N.demo) try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(_){} };
+let voter; try { voter = localStorage.getItem('neg3-voter'); } catch(_){}
+if (!voter) { voter = 'neg3-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 6); try { localStorage.setItem('neg3-voter', voter); } catch(_){} }
+
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+function head(){
+  const t = el('div', 'tag');
+  const l = el('span'); l.appendChild(el('i')); l.appendChild(document.createTextNode('The Job Offer'));
+  t.appendChild(l);
+  if (st.pair) { const r = el('b', st.role || '', 'Pair ' + st.pair + (st.role ? ' · ' + N.roles[st.role] : '')); t.appendChild(r); }
+  return t;
+}
+function send(t){ return N.demo ? Promise.resolve({ok:true}) : N.say(voter, t); }
+function holdButton(label, onDone){
+  const b = el('button', 'hold'); b.type = 'button';
+  const f = el('div', 'fill'); const s = el('span', null, label);
+  b.appendChild(f); b.appendChild(s);
+  let timer = null;
+  const start = e => { if (b.disabled) return; e.preventDefault(); b.classList.add('holding'); timer = setTimeout(() => { timer = null; b.classList.remove('holding'); onDone(); }, 650); };
+  const stop = () => { if (timer) { clearTimeout(timer); timer = null; } b.classList.remove('holding'); };
+  b.addEventListener('pointerdown', start); b.addEventListener('pointerup', stop); b.addEventListener('pointerleave', stop); b.addEventListener('pointercancel', stop);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+  b.setLabel = x => { s.textContent = x; };
+  return b;
+}
+
+function pairScreen(){
+  app.replaceChildren(head(), el('h2', null, 'Your pair number'));
+  const g = el('div', 'nums');
+  for (let n = 1; n <= 24; n++) { const b = el('button', null, String(n)); b.type = 'button'; b.onclick = () => { st.pair = n; save(); draw(); }; g.appendChild(b); }
+  app.appendChild(g);
+}
+function roleScreen(){
+  app.replaceChildren(head(), el('h2', null, 'Your role'));
+  const two = el('div', 'two');
+  ['a', 'r'].forEach(k => { const b = el('button', 'role ' + k, N.roles[k]); b.type = 'button'; b.onclick = () => { st.role = k; save(); draw(); }; two.appendChild(b); });
+  const back = el('button', 'back', 'Change pair number'); back.type = 'button'; back.onclick = () => { delete st.pair; save(); draw(); };
+  app.appendChild(two); app.appendChild(back);
+}
+function dealScreen(){
+  const pick = st.pick || (st.pick = Array(8).fill(-1));
+  app.replaceChildren(head(), el('h2', null, 'The deal you agreed'));
+  N.issues.forEach((is, i) => {
+    const row = el('div', 'iss'), hd = el('div', 'hd');
+    const val = el('span', 'val' + (pick[i] < 0 ? ' none' : ''), pick[i] < 0 ? 'Tap one' : is.o[pick[i]]);
+    hd.appendChild(el('span', 'nm', is.n)); hd.appendChild(val);
+    const bar = el('div', 'bar');
+    is.o.forEach((o, k) => {
+      const b = el('button', pick[i] === k ? 'on' : ''); b.type = 'button'; b.setAttribute('aria-label', is.n + ': ' + o);
+      b.onclick = () => { pick[i] = k; st.nodeal = false; save(); bar.querySelectorAll('button').forEach((x, j) => x.classList.toggle('on', j === k)); val.textContent = o; val.className = 'val'; ready(); };
+      bar.appendChild(b);
+    });
+    const ends = el('div', 'ends'); ends.appendChild(el('span', null, is.o[0])); ends.appendChild(el('span', null, is.o[4]));
+    row.appendChild(hd); row.appendChild(bar); row.appendChild(ends);
+    app.appendChild(row);
+  });
+  const err = el('div', 'err');
+  const go = holdButton('Hold to send', () => {
+    const t = 'd|' + st.pair + '|' + st.role + '|' + (st.nodeal ? 'x' : pick.join(''));
+    send(t).then(() => { st.sentD = t; save(); splash(st.nodeal ? 'No deal' : 'Deal recorded', () => draw()); })
+           .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  const nd = el('button', 'nodeal', 'We did not reach a deal'); nd.type = 'button';
+  nd.onclick = () => { st.nodeal = !st.nodeal; save(); ready(); };
+  function ready(){
+    const all = pick.every(x => x >= 0);
+    go.disabled = !(all || st.nodeal);
+    go.setLabel(st.nodeal ? 'Hold to send: no deal' : 'Hold to send');
+    nd.textContent = st.nodeal ? 'We did reach a deal' : 'We did not reach a deal';
+  }
+  ready();
+  const back = el('button', 'back', 'Change pair or role'); back.type = 'button'; back.onclick = () => { delete st.pair; delete st.role; save(); draw(); };
+  app.appendChild(go); app.appendChild(err); app.appendChild(nd); app.appendChild(back);
+}
+function beliefScreen(){
+  const on = st.bel || (st.bel = Array(8).fill(0));
+  app.replaceChildren(head(), el('h2', null, 'Which issues did you and the other side both want the same option on?'));
+  const g = el('div', 'chips'), chips = [];
+  N.issues.forEach((is, i) => {
+    const c = el('button', 'chip' + (on[i] ? ' on' : ''), is.n); c.type = 'button';
+    c.onclick = () => { on[i] = on[i] ? 0 : 1; st.belNone = false; save(); paint(); };
+    chips.push(c); g.appendChild(c);
+  });
+  const none = el('button', 'chip none' + (st.belNone ? ' on' : ''), 'None of them'); none.type = 'button';
+  none.onclick = () => { st.belNone = !st.belNone; if (st.belNone) on.fill(0); save(); paint(); };
+  g.appendChild(none);
+  const err = el('div', 'err');
+  const go = holdButton('Hold to send', () => {
+    const t = 's|' + st.pair + '|' + st.role + '|' + on.join('');
+    send(t).then(() => { st.sentS = t; save(); draw(); }).catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  function paint(){ chips.forEach((c, i) => c.classList.toggle('on', !!on[i])); none.classList.toggle('on', !!st.belNone); go.disabled = !(st.belNone || on.some(Boolean)); }
+  paint();
+  app.appendChild(g); app.appendChild(go); app.appendChild(err);
+}
+function doneScreen(){
+  app.replaceChildren(head());
+  const d = el('div', 'done');
+  d.appendChild(el('div', 'big', 'Thank you'));
+  d.appendChild(el('div', 'sm', 'Eyes on the screen'));
+  app.appendChild(d);
+  if (N.demo) { const again = el('button', 'back', 'Start again'); again.type = 'button'; again.style.alignSelf = 'center'; again.onclick = () => { st = {}; draw(); }; app.appendChild(again); }
+}
+function splash(line, then){
+  const s = el('div', 'splash ' + st.role);
+  s.appendChild(el('div', 'ck', 'Pair ' + st.pair)); s.appendChild(el('div', 'cp', line));
+  document.body.appendChild(s);
+  setTimeout(() => { s.remove(); then(); }, 1300);
+}
+function draw(){
+  if (!st.pair) return pairScreen();
+  if (!st.role) return roleScreen();
+  if (!st.sentD) return dealScreen();
+  if (!st.sentS) return beliefScreen();
+  doneScreen();
+}
+/* a reset of the room on the Poll Desk brings this phone back to the start */
+if (!N.demo && (st.sentD || st.sentS)) {
+  N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {}; save(); draw(); } }).catch(() => {});
+}
+draw();
+})();
+</script>
+</body></html>
