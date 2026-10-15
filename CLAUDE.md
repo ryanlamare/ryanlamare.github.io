@@ -248,8 +248,8 @@ Session 3's Job Offer is our own exercise, played entirely on phones. **Its real
 BATNAs never go in the repo in the clear.** Phones open them from `s3/numbers.enc` (AES-GCM)
 with the key in the session link's `#k=…`, and the deck takes the points, the BATNAs and the
 key from a private scoring file dropped on it. The source tables, the key and the script that
-rebuilds both live outside the repo, in `~/Documents/Oman negotiation proposal/Draft - our Job
-Offer (15 Oct)/source/`. `deals.js` carries only invented demo numbers. Never commit the key, a
+rebuilds both live outside the repo, in `~/Documents/Job Offer exercise - PRIVATE, never send/`
+(kept apart from the proposal folder that goes to LSE). `deals.js` carries only invented demo numbers. Never commit the key, a
 link containing it, or a plaintext table. Licensed exercises' briefs and tables never go in at all.
 
 ### Preview while editing
