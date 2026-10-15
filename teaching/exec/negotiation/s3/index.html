@@ -4,11 +4,13 @@
      each recorded on phones and debriefed from the room's own results, with the ideas from his BADM 590
      "Creating and Claiming Value" deck in short bursts, and pop-culture examples instead of long cases
      (Michael Scott's buyout in The Office, Jack Nicholson's Batman deal). The opening quiz comes first, before the recruiter numbers that answer it.
+     The Job Offer is our own version (15 Oct), played entirely on phones (s3/deal/): each person's brief
+     and numbers are on their phone, which adds up whatever is on the table, and the deal goes to the room.
      Opened plain it runs on DEMO DATA with invented points; ?live (rooms neg3-deals, neg3-impress)
-     or ?room=<x> (the same rooms with -<x>) reads real phones. The real point schedules are licensed
-     and never live in this repo: in a live session, drop the private scoring file onto the deck once
-     and this browser keeps it. The file can carry each side's BATNA (the score with no deal), which the
-     "How did you prepare?" slide draws against the room's deals (15 Oct). -->
+     or ?room=<x> (the same rooms with -<x>) reads real phones. The real points never live in this repo
+     in the clear: in a live session, drop the private scoring file onto the deck once and this browser
+     keeps it. The file carries both sides' points, each side's BATNA (drawn on the "How did you prepare?"
+     slide) and the key that opens the phones' numbers, which the deck then adds to the phone link. -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -360,10 +362,10 @@
   <h2>Exercise: the Job Offer</h2>
   <div class="jobfig">
     <ul class="bullets">
-      <li>Read your role and figure out how you want to negotiate (15&ndash;20 minutes)</li>
+      <li>Read your role on your phone and figure out how you want to negotiate (15&ndash;20 minutes)</li>
       <li data-step="1">Find your partner: an applicant or recruiter with the same number as you</li>
-      <li data-step="2">Come to an agreement on all eight issues. If you cannot agree, the job is lost</li>
-      <li data-step="3"><b>Do not let your partner see your payoff schedule</b></li>
+      <li data-step="2">Come to an agreement on all eight issues. If you cannot agree, each of you takes your alternative</li>
+      <li data-step="3"><b>Do not let your partner see your numbers</b></li>
       <li data-step="4">Record your deal on your phone</li>
     </ul>
     <div>
@@ -388,7 +390,7 @@
       <div class="pkey"><span><i class="a"></i>Applicant</span><span><i class="r"></i>Recruiter</span></div>
       <div class="qrrow" id="qrRow">
         <div class="qrph sm">QR CODE<br>IN THE<br>SESSION</div>
-        <div class="qrtx">Each person records the eight terms their pair agreed, on a phone or a laptop.</div>
+        <div class="qrtx">Each person records the deal their pair agreed, on a phone or a laptop.</div>
       </div>
       <div class="scorenote" id="scoreNote"></div>
     </div>
@@ -640,13 +642,16 @@ const fmt = n => Math.round(n).toLocaleString('en-GB');
 const txt = (parent, at, s) => { const t = sv('text', at, parent); t.textContent = s; return t; };
 
 document.querySelectorAll('.demotag').forEach(t => t.style.display = LIVE ? 'none' : '');
-E('phoneFrame').src = '/teaching/exec/negotiation/s3/deal/?demo=1&frame=1&pair=7&role=a&pick=413-----';
+E('phoneFrame').src = '/teaching/exec/negotiation/s3/deal/?demo=1&frame=1&pair=7&role=a&step=table&tab=413-----';
 const phoneURL = location.host + '/teaching/exec/negotiation/s3/deal/' + (N.suffix ? '?room=' + N.suffix : '');
-if (LIVE) {
-  /* a live room: the phone in the frame belongs to the sample; the room needs the address (a QR in the real session) */
+/* a live room: the phone in the frame belongs to the sample; the room needs the address (a QR in the real session),
+   which carries the key to the phones' numbers once the private file has been dropped on the deck */
+function liveLink(){
+  if (!LIVE) return;
   E('phoneWrap').style.display = 'none';
-  E('qrRow').querySelector('.qrtx').replaceChildren(el('div', 'livelink', phoneURL));
+  E('qrRow').querySelector('.qrtx').replaceChildren(el('div', 'livelink', phoneURL + (N.phoneKey ? '#k=' + N.phoneKey : '')));
 }
+liveLink();
 E('iChips').replaceChildren(...N.issues.map(is => el('span', null, is.n)));
 
 let entries = LIVE ? [] : N.demoEntries();
@@ -656,7 +661,7 @@ function rebuild(){
   const kinds = N.kinds();
   const trade = kinds.map(k => k.eff >= 0 ? k.eff : 2);
   model = {kinds, max: N.max(), front: N.frontier(), mid: N.score(Array(8).fill(2)), trade: N.score(trade)};
-  E('scoreNote').textContent = LIVE && N.demoScoring ? 'Demo scoring: drop the scoring file on this page' : '';
+  E('scoreNote').textContent = LIVE && N.demoScoring ? 'Demo scoring: drop the scoring file on this page' : LIVE && !N.phoneKey ? 'The scoring file has no phone key' : '';
 }
 rebuild();
 const room = () => frozen || N.parse(entries);
@@ -730,20 +735,21 @@ function drawScatter(){
   const deals = P.pairs.filter(p => p.d);
   /* the axes close in on where the room's deals are, so their spread shows; the frontier runs off the edges */
   const rs = deals.map(p => p.r).concat(mid.r), as = deals.map(p => p.a).concat(mid.a);
-  const fit = v => { let lo = Math.floor((Math.min(...v) - 1500) / 2000) * 2000, hi = Math.ceil((Math.max(...v) + 2500) / 2000) * 2000;
-    lo = Math.max(0, lo); if (hi - lo < 8000) hi = lo + 8000; return [lo, hi]; };
-  const [x0, x1] = deals.length ? fit(rs) : [0, Math.ceil(model.max.r / 4000) * 4000];
-  const [y0, y1] = deals.length ? fit(as) : [0, Math.ceil(model.max.a / 4000) * 4000];
+  const U = model.max.j > 30000 ? 2000 : 1000;      /* the grid's step: 2,000 on a scale of about 20,000 a side, 1,000 on 10,000 */
+  const fit = v => { let lo = Math.floor((Math.min(...v) - .75 * U) / U) * U, hi = Math.ceil((Math.max(...v) + 1.25 * U) / U) * U;
+    lo = Math.max(0, lo); if (hi - lo < 4 * U) hi = lo + 4 * U; return [lo, hi]; };
+  const [x0, x1] = deals.length ? fit(rs) : [0, Math.ceil(model.max.r / (2 * U)) * 2 * U];
+  const [y0, y1] = deals.length ? fit(as) : [0, Math.ceil(model.max.a / (2 * U)) * 2 * U];
   const x = v => SC.L + (v - x0) / (x1 - x0) * SC.W, y = v => SC.T + SC.H - (v - y0) / (y1 - y0) * SC.H;
-  const every = span => span > 16000 ? 8000 : 4000;
+  const every = span => span > 8 * U ? 4 * U : 2 * U;
   svg.replaceChildren();
   const defs = sv('defs', {}, svg), cp = sv('clipPath', {id:'scClip'}, defs);
   sv('rect', {x:SC.L, y:SC.T, width:SC.W, height:SC.H}, cp);
-  for (let v = x0; v <= x1; v += 2000) {
+  for (let v = x0; v <= x1; v += U) {
     sv('line', {x1:x(v), y1:SC.T, x2:x(v), y2:SC.T + SC.H, stroke:'var(--rule)', 'stroke-width':v === x0 ? 2 : 1}, svg);
     if (v % every(x1 - x0) === 0) txt(svg, {x:x(v), y:SC.T + SC.H + 24, 'text-anchor':'middle', 'font-size':15, 'font-weight':600, fill:'var(--muted)'}, fmt(v));
   }
-  for (let v = y0; v <= y1; v += 2000) {
+  for (let v = y0; v <= y1; v += U) {
     sv('line', {x1:SC.L, y1:y(v), x2:SC.L + SC.W, y2:y(v), stroke:'var(--rule)', 'stroke-width':v === y0 ? 2 : 1}, svg);
     if (v % every(y1 - y0) === 0) txt(svg, {x:SC.L - 10, y:y(v) + 5, 'text-anchor':'end', 'font-size':15, 'font-weight':600, fill:'var(--muted)'}, fmt(v));
   }
@@ -1024,8 +1030,8 @@ if (LIVE) {
     f.text().then(t => {
       const p = JSON.parse(t);
       if (!N.useScoring(p)) { E('scoreNote').textContent = 'That scoring file does not match these eight issues'; return; }
-      try { localStorage.setItem('neg3-scoring', JSON.stringify({a:p.a, r:p.r, batna:N.batna, issues:p.issues})); } catch(_){}
-      rebuild(); drawAll();
+      try { localStorage.setItem('neg3-scoring2', JSON.stringify({a:p.a, r:p.r, batna:N.batna, issues:p.issues, key:N.phoneKey})); } catch(_){}
+      rebuild(); drawAll(); liveLink();
     }).catch(() => {});
   });
 }

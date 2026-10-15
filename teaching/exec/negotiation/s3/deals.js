@@ -1,20 +1,19 @@
-/* The Job Offer, recorded on phones (Session 3 sample, 14 Oct 2026).
+/* The Job Offer, played on phones (Session 3 sample; our own version, 15 Oct 2026).
    Shared by the deck (s3/index.html) and the phone page (s3/deal/).
 
-   Each phone sends its pair's agreement to the gt-poll write-in lane, and
-   the deck scores every deal and draws the debrief from the room's own
-   results. Phones never see a point: they send which option was agreed on
-   each issue, and the scoring lives only with the deck.
+   The exercise is ours, not a licensed case: Harbourline Logistics hiring an
+   operations manager, eight issues with five options each. Each phone shows
+   its person the brief and their own numbers, adds up whatever is on the table
+   while the pair negotiates, and sends the deal; the deck scores every deal and
+   draws the debrief from the room's own results.
 
-   THE POINTS BELOW ARE INVENTED. The issues and options are the ones on the
-   shared agreement form, but the real payoff schedules belong to a licensed
-   exercise and never go in this public repo. In a live session the deck
-   swaps in the real schedules from a private file (see NEG.useScoring);
-   this sample runs on these demo points and on demo deals. The private file
-   is {"a":[[5]x8], "r":[[5]x8], "batna":{"a":n,"r":n}, "issues":[8 names]}:
-   batna is each side's score with no deal (optional), and issues, when
-   given, must match the issue names below, so a file meant for another
-   version of the exercise is refused.
+   THE POINTS BELOW ARE INVENTED, with a different structure from the real ones,
+   so this public file gives nothing away. The real points and BATNAs live in a
+   private folder; phones open them from numbers.enc (encrypted) with the key in
+   the session's link (#k=...), and the deck takes them, with the key, from the
+   private scoring file dropped on it once (see NEG.useScoring). That file is
+   {"a":[[5]x8], "r":[[5]x8], "batna":{"a":n,"r":n}, "issues":[8 names], "key":"..."};
+   a file whose issue names differ from these is refused.
 
    Wire (room neg3-deals, or neg3-deals-<x> with ?room=<x>):
      "d|7|a|20342031"  pair 7's applicant recorded the deal: one digit per
@@ -25,9 +24,9 @@
      "c|7|a|text"      anything else the pair agreed, in their own words
      "t|y|text"        the second exercise (Thai Solar Park): did this person's
                        deal depend on what happens later (y/n), and how
-     "r|7|15600|16800|32400|32400"  the deck, once the room has seen its deals:
+     "r|7|5400|5800|11200|14000"  the deck, once the room has seen its deals:
                        pair 7's applicant and recruiter points, together, and
-                       the most possible ("r|7|x|32400" for no deal), so each
+                       the most possible ("r|7|x|14000" for no deal), so each
                        phone can show its own pair's result
    The latest line of each kind from each phone counts. The opening quiz is a
    plain vote in room neg3-impress (with the same suffix). */
@@ -36,41 +35,47 @@ const NEG = window.NEG = {};
 
 NEG.API = 'https://gt-poll.rlamare.workers.dev';
 
+/* the eight issues in the order of the agreement; s is the short form the phone's numbers use */
 NEG.issues = [
-  {k:'bonus',    n:'Signing bonus',    o:['$10,000','$9,000','$8,000','$7,000','$6,000']},
-  {k:'moving',   n:'Moving expenses',  o:['100%','90%','80%','70%','60%']},
-  {k:'location', n:'Location',         o:['Baltimore','Philadelphia','New York','Washington','Boston']},
-  {k:'vacation', n:'Vacation',         o:['25 days','20 days','15 days','10 days','5 days']},
-  {k:'job',      n:'Job assignment',   o:['Benefits','Admin Services','Community Relations','Risk Management','Compensation']},
-  {k:'retire',   n:'Retirement match', o:['4%','5%','6%','7%','8%']},
-  {k:'salary',   n:'Salary',           o:['$66,000','$68,000','$70,000','$72,000','$74,000']},
-  {k:'start',    n:'Starting date',    o:['June 1','June 15','July 1','July 15','August 1']},
+  {k:'salary',   n:'Salary',           o:['£54,000','£56,000','£58,000','£60,000','£62,000'], s:['£54k','£56k','£58k','£60k','£62k']},
+  {k:'bonus',    n:'Joining bonus',    o:['£2,000','£3,000','£4,000','£5,000','£6,000'], s:['£2k','£3k','£4k','£5k','£6k']},
+  {k:'office',   n:'Base office',      o:['London','Reading','Bristol','Leeds','Glasgow']},
+  {k:'leave',    n:'Annual leave',     o:['22 days','24 days','26 days','28 days','30 days']},
+  {k:'assign',   n:'First assignment', o:['Ports','Depots','Accounts','Fleet','Sales']},
+  {k:'training', n:'Training budget',  o:['£1,000','£1,500','£2,000','£2,500','£3,000'], s:['£1k','£1.5k','£2k','£2.5k','£3k']},
+  {k:'start',    n:'Start date',       o:['4 weeks','6 weeks','8 weeks','10 weeks','12 weeks'], s:['4 wks','6 wks','8 wks','10 wks','12 wks']},
+  {k:'stay',     n:'Minimum stay',     o:['12 months','18 months','24 months','30 months','36 months'], s:['12 mo','18 mo','24 mo','30 mo','36 mo']},
 ];
 NEG.roles = {a:'Applicant', r:'Recruiter'};
 
-/* DEMO points, invented (see above), one row per issue in form order */
-const DEMO = {
-  a: [[1000,750,500,250,0],[2400,1800,1200,600,0],[0,600,1200,2400,1800],[4000,3000,2000,1000,0],
-      [0,600,1200,2400,1800],[0,800,1600,2400,3200],[0,1500,3000,4500,6000],[0,200,400,600,800]],
-  r: [[0,800,1600,2400,3200],[0,600,1200,1800,2400],[0,1200,600,2400,1800],[0,200,400,600,800],
-      [600,0,1200,2400,1800],[800,600,400,200,0],[6000,4500,3000,1500,0],[4000,3000,2000,1000,0]],
+/* DEMO points and BATNAs, invented (see above), one row per issue in the agreement's order;
+   the phones use them too when they have no key, so the sample's phone and deck agree */
+const DEMO = NEG.DEMO = {
+  a: [[0,500,1000,1500,2000],[0,200,400,600,800],[600,1200,900,300,0],[0,400,800,1200,1600],
+      [1600,1200,800,400,0],[0,200,400,800,600],[1600,1200,800,400,0],[400,300,200,100,0]],
+  r: [[2000,1500,1000,500,0],[1600,1200,800,400,0],[600,1200,900,300,0],[1600,1200,800,400,0],
+      [0,100,200,300,400],[0,200,400,800,600],[0,100,200,300,400],[0,500,1000,1500,2000]],
+  batna: {a:4600, r:4400},
 };
-NEG.pts = DEMO;
+NEG.pts = {a:DEMO.a, r:DEMO.r};
 NEG.demoScoring = true;
-/* each side's score with no deal (its BATNA), invented like the points */
-NEG.batna = {a:10400, r:9600};
+/* each side's score with no deal (its BATNA) */
+NEG.batna = DEMO.batna;
+/* the key that opens the real numbers on phones; only a live deck has it, from the private file */
+NEG.phoneKey = '';
 
 /* a live session: the deck reads the real schedules from a private file once
    ({"a":[[..5]x8],"r":[[..5]x8]}), and keeps them in this browser only */
 NEG.useScoring = function(p){
   const ok = x => Array.isArray(x) && x.length === 8 && x.every(r => Array.isArray(r) && r.length === 5 && r.every(Number.isFinite));
   if (!p || !ok(p.a) || !ok(p.r)) return false;
-  if (p.issues && (!Array.isArray(p.issues) || p.issues.join('|') !== NEG.issues.map(is => is.n).join('|'))) return false;
+  if (!Array.isArray(p.issues) || p.issues.join('|') !== NEG.issues.map(is => is.n).join('|')) return false;   /* a file must name its issues, and they must be these */
   NEG.pts = {a:p.a, r:p.r}; NEG.demoScoring = false;
   NEG.batna = p.batna && Number.isFinite(p.batna.a) && Number.isFinite(p.batna.r) ? {a:p.batna.a, r:p.batna.r} : null;
+  NEG.phoneKey = typeof p.key === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(p.key) ? p.key : '';
   return true;
 };
-try { const s = localStorage.getItem('neg3-scoring'); if (s) NEG.useScoring(JSON.parse(s)); } catch(_){}
+try { const s = localStorage.getItem('neg3-scoring2'); if (s) NEG.useScoring(JSON.parse(s)); } catch(_){}   /* scoring2: our own exercise; a stored file for the old one is ignored */
 
 /* the room: ?room=<x> for a rehearsal; ?demo=1 never touches the network */
 const Q = new URLSearchParams(location.search);
@@ -168,15 +173,16 @@ NEG.parse = function(entries){
 
 /* the sample's room: sixteen pairs as a real room tends to come out (one
    impasse, one pair that remembers two different salaries, one side that
-   never recorded), drawn from a fixed seed so every viewing matches */
+   never recorded, one pair where the recruiter took the whole fixed pie),
+   drawn from a fixed seed so every viewing matches */
 NEG.demoEntries = function(){
   let s = 20261014;
   const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const K = NEG.kinds(), out = [];
   const skills = [.92,.18,.66,.41,.83,.27,.55,.74,.12,.61,.48,.88,.35,.7,.5,.3];
-  const TERMS = {1:'Salary review after six months', 3:'Half the bonus now, half after the first year', 5:'The company pays for a month of temporary housing',
-    7:'A training course paid for in the first year', 8:'Start in June working remotely, move in August', 10:'One extra week of vacation from the second year',
-    12:'Bonus doubles if the first-year targets are met', 14:'A mentor from the compensation team', 13:'Moving costs paid up front, not reimbursed'};
+  const TERMS = {1:'Salary review after six months', 3:'Half the bonus now, half after the first year', 5:'Harbourline pays for a month of temporary housing',
+    7:'A company car for the first year', 8:'Two weeks working from home before the move', 10:'Two extra days of leave from the second year',
+    12:'Bonus doubles if the first-year targets are met', 14:'A mentor from the management board', 13:'Relocation costs paid up front'};
   skills.forEach((sk, idx) => {
     const n = idx + 1, lean = (rnd() - .5) * 2.4;
     const d = K.map((k, i) => {
@@ -184,12 +190,13 @@ NEG.demoEntries = function(){
       if (k.kind === 'integrative') return rnd() < .1 + .66 * sk ? k.eff : (rnd() < .75 ? 2 : (k.eff === 0 ? 1 : 3));
       return Math.max(0, Math.min(4, Math.round(2 + lean + (rnd() - .5) * 1.2)));
     });
+    if (n === 7) K.forEach((k, i) => { if (k.kind === 'distributive') d[i] = NEG.pts.r[i].indexOf(Math.max(...NEG.pts.r[i])); });
     const ds = d.join('');
     if (n === 16) { out.push({v:'demo-a' + n, t:'d|' + n + '|a|x'}); out.push({v:'demo-r' + n, t:'d|' + n + '|r|x'}); }
     else {
       out.push({v:'demo-a' + n, t:'d|' + n + '|a|' + ds});
       if (n !== 15) {
-        const dr = n === 11 ? d.map((o, i) => i === 6 ? Math.min(4, o + 1) : o).join('') : ds;
+        const dr = n === 11 ? d.map((o, i) => i === 0 ? (o < 4 ? o + 1 : o - 1) : o).join('') : ds;
         out.push({v:'demo-r' + n, t:'d|' + n + '|r|' + dr});
       }
     }

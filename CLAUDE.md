@@ -237,6 +237,21 @@ Write-in polls stay open on purpose. The exception is a game on a clock
 the commitment device and a confirm step under a countdown would be cruel. The `/reset` admin secret is a
 Wrangler secret, deliberately not in this repo.
 
+### The negotiation programme
+
+`teaching/exec/negotiation/` is the Strategic Negotiation programme (Oct 2026), unlisted like
+everything under `exec/`: `programme/` is the client-free programme page, `s3/` the sample
+session (the deck, `deals.js`, and `deal/`, the participants' phone page), `sample/` an older,
+unlinked sample.
+
+Session 3's Job Offer is our own exercise, played entirely on phones. **Its real points and
+BATNAs never go in the repo in the clear.** Phones open them from `s3/numbers.enc` (AES-GCM)
+with the key in the session link's `#k=…`, and the deck takes the points, the BATNAs and the
+key from a private scoring file dropped on it. The source tables, the key and the script that
+rebuilds both live outside the repo, in `~/Documents/Oman negotiation proposal/Draft - our Job
+Offer (15 Oct)/source/`. `deals.js` carries only invented demo numbers. Never commit the key, a
+link containing it, or a plaintext table. Licensed exercises' briefs and tables never go in at all.
+
 ### Preview while editing
 
 ```bash

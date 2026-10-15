@@ -1,51 +1,100 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>Creating Value · Your phone</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* The participant's page for Session 3 (sample, 14 Oct 2026): one page for
-   the whole session. The opening quiz; then, after the Job Offer, the deal
-   the pair agreed (pair number, role, one tap per issue on a five-step bar
-   in the order of the paper form, anything else agreed in their own words,
-   a hold to send); one question before any debrief (on which issues did
-   both sides want the same thing?); and, once the screen at the front has
-   shown the room's deals, the pair's own result. Nothing is scored here in
-   a live session: the deck holds the points and posts each pair's result.
-   ?demo=1 runs it with no network and scores with the sample's invented
-   points; ?room=<x> writes to rehearsal rooms. All wording is Claude's, for
-   Ryan to change. */
+/* The participant's page for Session 3 (sample; rebuilt 15 Oct 2026 so the Job Offer is played
+   entirely on phones): one page for the whole session.
+     the opening quiz → pair number → role (locked once the brief is open, in a live room) →
+     the brief (one page, the rules first) → the numbers, which add up whatever is on the table
+     while the pair negotiates, against the person's BATNA → the deal, anything else agreed, a hold
+     to send → one question (on which issues did both sides want the same thing?) → their own score,
+     then the pair's result once the screen at the front has shown the room → the second exercise.
+   The Job Offer is our own version, not a licensed case. The words and options are public; the real
+   points and BATNAs open only with the key in the session's link (#k=...), which the browser never
+   sends to a server. Opened with ?demo=1 the page sends nothing, and without the key it runs on the
+   sample's invented numbers (deals.js), the same ones the deck's sample uses. In a live room a phone
+   without the key stops at the brief and asks for the link from the screen.
+   Deep links (demo only): ?demo=1&pair=7&role=a&step=brief|table|record&tab=41303210 (&done for the
+   pair's result; pick= is an old name for tab=), ?demo=1&ex2.
+   All wording is Claude's draft, for Ryan to change. */
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:18px 18px 36px;--sel:var(--ink)}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);--sel:var(--ink);--pad:14px}
 body.role-a{--sel:var(--teal)} body.role-r{--sel:var(--terracotta)}
-body.frame{padding:14px 14px 28px}
-.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-.tag{font-weight:500;text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
-.tag b{font-weight:700;letter-spacing:.12em}
-.tag b.a{color:var(--teal)} .tag b.r{color:var(--terracotta)}
+.wrap{max-width:520px;margin:0 auto;padding:18px var(--pad) 36px;display:flex;flex-direction:column;gap:16px}
+body.frame .wrap{padding:14px 14px 28px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:9px;vertical-align:middle}
+.tag b{font-weight:700;letter-spacing:.1em;color:var(--sel)}
+.tag .demo{background:var(--ochre);color:var(--ink);font-weight:700;letter-spacing:.12em;padding:2px 7px;font-size:10px}
 h2{font-weight:700;font-size:22px;line-height:1.25}
+.hint{font-weight:500;font-size:14px;line-height:1.4;color:var(--muted)}
 .nums{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
 .nums button{font-family:var(--display);font-weight:900;font-size:22px;padding:12px 0 9px;background:var(--card);border:2px solid var(--ink);color:var(--ink);cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .role{font-family:var(--sans);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);border:none;padding:30px 8px;cursor:pointer}
 .role.a{background:var(--teal)} .role.r{background:var(--terracotta)}
-.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start}
+.back{font-family:var(--sans);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;text-decoration:underline;align-self:flex-start;padding:2px 0}
+.go{font-family:var(--sans);font-weight:700;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);background:var(--sel);border:none;padding:16px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.go.ghost{background:none;color:var(--ink);border:2px solid var(--ink)}
 /* the quiz: three answers, one held */
 .opts{display:flex;flex-direction:column;gap:10px}
 .opt{font-family:var(--sans);font-weight:600;font-size:16px;line-height:1.3;text-align:left;color:var(--ink);background:var(--card);border:2px solid var(--ink);padding:14px 16px;cursor:pointer}
 .opt.on{background:var(--red);border-color:var(--red);color:var(--paper)}
-/* one row per issue: its name and the agreed option over a five-step bar */
-.iss{display:flex;flex-direction:column;gap:6px}
-.iss .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.iss .nm{font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.iss .val{font-weight:700;font-size:16px;color:var(--sel);white-space:nowrap}
-.iss .val.none{font-weight:500;color:var(--grey)}
-.bar{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
-.bar button{height:30px;background:var(--paper-soft);border:2px solid var(--rule);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:background .15s,border-color .15s}
-.bar button.on{background:var(--sel);border-color:var(--sel)}
-.ends{display:flex;justify-content:space-between;font-weight:500;font-size:11px;color:var(--muted);margin-top:-2px}
+
+/* the brief: one page */
+.brief{display:flex;flex-direction:column;gap:14px}
+.brief p{font-weight:400;font-size:17px;line-height:1.5}
+.brief h3{font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.rules{border-left:5px solid var(--red);background:var(--paper-soft);padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+.rules h3{margin:0;color:var(--red)}
+.rules ol{list-style:none;counter-reset:r;display:flex;flex-direction:column;gap:8px}
+.rules li{counter-increment:r;position:relative;padding-left:26px;font-weight:500;font-size:16px;line-height:1.4}
+.rules li::before{content:counter(r);position:absolute;left:0;top:0;font-family:var(--display);font-weight:900;color:var(--red)}
+.rules li b{font-weight:700}
+.terms{list-style:none;display:flex;flex-direction:column;gap:6px}
+.terms li{font-size:16px;line-height:1.4} .terms b{font-weight:700}
+
+/* the numbers: one screen, no scrolling on a phone */
+.board{height:100vh;height:100dvh;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:8px;padding:10px var(--pad) calc(10px + env(safe-area-inset-bottom))}
+.sum{display:flex;flex-direction:column;gap:5px}
+.sum .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sum .k{font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sum .v{font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:var(--ink)}
+.sum .v small{font-family:var(--sans);font-weight:600;font-size:13px;color:var(--muted);margin-left:4px}
+.sum .v.part{color:var(--grey)}
+.sum .of{font-weight:600;font-size:13px;color:var(--muted);text-align:right}
+.track{position:relative;height:10px;background:var(--rule)}
+.track .fill{position:absolute;left:0;top:0;bottom:0;background:var(--sel);transition:width .25s}
+.track.part .fill{opacity:.45}
+.track .tk{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;background:var(--red)}
+.marks{position:relative;height:14px;font-weight:700;font-size:10.5px;letter-spacing:.04em;white-space:nowrap;color:var(--red)}
+.marks span{position:absolute;top:0;transform:translateX(-50%)}
+.board .hint{font-size:13px;line-height:1.35}
+.grid{flex:1;min-height:0;display:grid;grid-template-rows:repeat(8,minmax(36px,1fr));gap:5px;max-height:560px}
+@media (max-height:600px){.board .hint{display:none}.sum .v{font-size:28px}.board{gap:6px}}
+.trm{display:grid;grid-template-columns:76px 1fr;gap:6px;align-items:stretch;min-height:0}
+.tn{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0}
+.tn b{font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;line-height:1.15;color:var(--ink)}
+.tn i{display:block;height:4px;background:var(--sel);opacity:.8}
+.ch{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;min-width:0}
+.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:0;background:var(--paper-soft);border:1.5px solid var(--rule);cursor:pointer;padding:2px 1px;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;color:var(--ink);font-family:var(--sans)}
+.cell .o{font-weight:500;font-size:10.5px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;max-width:100%}
+.cell .p{font-family:var(--display);font-weight:900;font-size:16px;line-height:1.05}
+.cell.on{background:var(--sel);border-color:var(--sel)} .cell.on .o,.cell.on .p{color:var(--paper)}
+.foot{display:grid;grid-template-columns:1fr 1.6fr;gap:8px}
+.foot .go{padding:14px 8px;font-size:14px}
+
+/* the record */
+.deal{list-style:none;display:flex;flex-direction:column}
+.deal li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--rule);font-size:16px}
+.deal li span{font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.deal li b{font-weight:700;color:var(--sel)}
+.score{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.score b{font-family:var(--display);font-weight:900;font-size:28px;color:var(--ink);letter-spacing:0}
 .extra{display:flex;flex-direction:column;gap:6px}
 .extra label{font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .extra textarea{font-family:var(--sans);font-weight:500;font-size:16px;color:var(--ink);background:var(--paper-soft);border:2px solid var(--rule);padding:10px 12px;resize:none;height:64px}
@@ -68,9 +117,11 @@ h2{font-weight:700;font-size:22px;line-height:1.25}
 .splash .ck{font-weight:700;font-size:15px;letter-spacing:.3em;text-transform:uppercase}
 .splash .cp{font-family:var(--display);font-weight:900;font-size:40px;line-height:1.05;text-transform:uppercase}
 @keyframes cin{from{transform:scale(1.1);opacity:0}to{transform:scale(1);opacity:1}}
-.done{text-align:center;padding:60px 0 20px;display:flex;flex-direction:column;gap:14px;align-items:center}
-.done .big{font-family:var(--display);font-weight:900;font-size:34px;line-height:1.05;text-transform:uppercase}
-.done .sm{font-weight:600;font-size:16px;color:var(--muted)}
+.done{text-align:center;padding:44px 0 10px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.done .k{font-weight:700;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.done .big{font-family:var(--display);font-weight:900;font-size:64px;line-height:1;text-transform:uppercase}
+.done .big.txt{font-size:34px;line-height:1.05}
+.done .sm{font-weight:600;font-size:16px;color:var(--muted);line-height:1.5}
 /* the pair's own result, once the screen has shown the room */
 .res{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:34px 0 10px;animation:cin .4s ease-out}
 .res .rk{font-weight:700;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
@@ -84,69 +135,99 @@ h2{font-weight:700;font-size:22px;line-height:1.25}
 .res .split b{font-family:var(--display);font-weight:900;font-size:26px;line-height:1.1}
 .err{font-weight:600;font-size:14px;color:var(--red);min-height:1.2em;text-align:center}
 </style></head><body>
-<div class="wrap" id="app"></div>
+<div id="app"></div>
 <script src="/teaching/exec/negotiation/s3/deals.js"></script>
 <script>
 (function(){
-const N = window.NEG, Q = new URLSearchParams(location.search);
+const N = window.NEG, Q = new URLSearchParams(location.search), H = new URLSearchParams(location.hash.slice(1));
 if (Q.has('frame')) document.body.classList.add('frame');
 const app = document.getElementById('app');
-const KEY = 'neg3-phone-' + N.room + (N.demo ? '-demo' : '');
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(_) { return {}; } };
-let st = N.demo ? {} : load();
-/* the deck's phone frame opens part-way through (?pair=7&role=a&pick=413-----) */
-if (N.demo && Q.has('ex2') && !Q.get('pair')) st.ex2 = true;
-if (N.demo && Q.get('pair')) {
-  st.quiz = 1; st.pair = +Q.get('pair') || 1;
-  if (Q.get('role') === 'a' || Q.get('role') === 'r') st.role = Q.get('role');
-  if (Q.get('pick')) st.pick = Q.get('pick').slice(0, 8).padEnd(8, '-').split('').map(c => /[0-4]/.test(c) ? +c : -1);
-  if (Q.has('done') && st.role && st.pick && st.pick.every(x => x >= 0)) { st.sentD = st.sentS = 'demo'; }   /* straight to the pair's result */
-  if (Q.has('ex2')) st.ex2 = true;   /* straight to the second exercise */
-}
-const save = () => { if (!N.demo) try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(_){} };
-let voter; try { voter = localStorage.getItem('neg3-voter'); } catch(_){}
-if (!voter) { voter = 'neg3-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 6); try { localStorage.setItem('neg3-voter', voter); } catch(_){} }
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const fmt = n => Math.round(n).toLocaleString('en-GB');
 
-const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+/* ---------- the brief's words (each side's points are not here: see deals.js) ---------- */
+const DEF = {
+  a: ['Salary: what you are paid a year', 'Joining bonus: a one-off payment when you join', 'Base office: where you work from',
+      'Annual leave: days a year, plus bank holidays', 'First assignment: the part of the business you run first',
+      'Training budget: what Harbourline spends on your training each year', 'Start date: how many weeks after signing you start',
+      'Minimum stay: if you leave sooner, you repay the joining bonus'],
+  r: ['Salary: what the applicant is paid a year', 'Joining bonus: a one-off payment when the applicant joins', 'Base office: where the applicant works from',
+      'Annual leave: days a year, plus bank holidays', 'First assignment: the part of the business the applicant runs first',
+      'Training budget: what Harbourline spends on the applicant’s training each year', 'Start date: how many weeks after signing the applicant starts',
+      'Minimum stay: if the applicant leaves sooner, they repay the joining bonus'],
+};
+const OTHER = {a:'recruiter', r:'applicant'};
+const BRIEF = {
+  a: {who:'You are the applicant', worth:'to you',
+      story:['You are an operations manager with eight years’ experience in freight and logistics, and you live in London. Harbourline Logistics, a growing company with sites around the UK, is hiring a manager for its operations team.',
+             'After two rounds of interviews, Harbourline has told you that you are its first choice. You like the company and you want the job. It is yours if you and Harbourline’s recruiter can agree the terms of your contract.'],
+      alt: b => 'You also have a written offer from a smaller logistics company outside London, open until the end of this week. The pay is lower, the job is smaller, and you would have to move. You have worked out that it is worth ' + fmt(b) + ' points to you, on the same scale as your numbers. If you and the recruiter do not reach a deal, you take that job and score ' + fmt(b) + ' points.'},
+  r: {who:'You are the recruiter', worth:'to Harbourline',
+      story:['You are on the recruiting committee of Harbourline Logistics, a growing company with sites around the UK. Harbourline is hiring a manager for its operations team.',
+             'After two rounds of interviews, the committee agreed that its first choice is an operations manager with eight years’ experience in freight and logistics, who lives in London. The applicant wants the job, and you can hire them if the two of you can agree the terms of the contract.'],
+      alt: b => 'If you do not reach a deal, the committee will offer the job to its second choice, who has less experience and would need more support in the first year. You have worked out that hiring the second choice is worth ' + fmt(b) + ' points to Harbourline, on the same scale as your numbers. If you and the applicant do not reach a deal, you hire the second choice and score ' + fmt(b) + ' points.'},
+};
+
+/* ---------- state ---------- */
+const DEEP = N.demo && (Q.get('pair') || Q.has('ex2'));
+const KEY = 'neg3-phone2-' + N.room + (N.demo ? '-demo' : '');   /* phone2: the phone-played Job Offer (15 Oct); older saved states are ignored */
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(_) { return {}; } };
+let st = DEEP || Q.has('fresh') ? {} : load();
+const save = () => { if (!DEEP) try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(_){} };
+const digits = s => s.slice(0, 8).padEnd(8, '-').split('').map(c => /[0-4]/.test(c) ? +c : -1);
+/* the deck's phone frame and the screenshots open part-way through */
+if (DEEP && Q.has('ex2') && !Q.get('pair')) st.ex2 = true;
+if (DEEP && Q.get('pair')) {
+  st.quiz = 1; st.pair = +Q.get('pair') || 1;
+  if (Q.get('role') === 'a' || Q.get('role') === 'r') { st.role = Q.get('role'); st.locked = true; }
+  const tab = Q.get('tab') || Q.get('pick'); if (tab) st.tab = digits(tab);
+  st.step = Q.get('step') || (tab ? 'table' : 'brief');
+  if (Q.has('done') && st.role && st.tab && st.tab.every(x => x >= 0)) { st.sentD = st.tab.join(''); st.sentS = 'demo'; }
+  if (Q.has('ex2')) st.ex2 = true;
+}
+let voter; try { voter = localStorage.getItem('neg3-voter'); } catch(_){}
+if (!voter) { voter = 'neg3-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 6); try { localStorage.setItem('neg3-voter', voter); } catch(_){} }
+function send(t){ return N.demo ? Promise.resolve({ok:true}) : N.say(voter, t); }
+
+/* ---------- the numbers: the real ones with the session's key; the sample's invented ones without, in a demo ---------- */
+let PTS = null, demoPts = false, numErr = '';
+const KKEY = 'neg3-key-' + N.room;
+async function openNumbers(){
+  let k = H.get('k');
+  try { if (k) localStorage.setItem(KKEY, k); else k = localStorage.getItem(KKEY); } catch(_){}
+  if (!k) {
+    if (N.demo) { PTS = N.DEMO; demoPts = true; }
+    else numErr = 'Your brief opens from the link on the screen at the front. Scan the code again.';
+    return;
+  }
+  try {
+    const b64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').replace(/\s+/g, '')), c => c.charCodeAt(0));
+    const blob = b64(await (await fetch('/teaching/exec/negotiation/s3/numbers.enc', {cache:'no-store'})).text());
+    const key = await crypto.subtle.importKey('raw', b64(k), 'AES-GCM', false, ['decrypt']);
+    const p = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM', iv:blob.slice(0, 12)}, key, blob.slice(12))));
+    if (p.issues.join('|') !== N.issues.map(is => is.n).join('|')) throw new Error('issues');
+    PTS = p;
+  } catch(_) { numErr = 'Your numbers could not be opened. Scan the code on the screen again, and open the whole link.'; }
+}
+const mine = () => PTS[st.role];
+const MAX = () => mine().reduce((t, r) => t + Math.max(...r), 0);
+const total = arr => arr.reduce((t, o, i) => t + (o >= 0 ? mine()[i][o] : 0), 0);
+const count = arr => arr.filter(o => o >= 0).length;
+
+/* ---------- pieces ---------- */
 function head(name){
   document.body.classList.toggle('role-a', st.role === 'a' && !name);
   document.body.classList.toggle('role-r', st.role === 'r' && !name);
-  const t = el('div', 'tag');
-  const l = el('span'); l.appendChild(el('i')); l.appendChild(document.createTextNode(name || (st.pair ? 'The Job Offer' : 'Creating Value')));
+  const t = el('div', 'tag'), l = el('span');
+  /* with the sample's invented numbers on screen, the tag says so in place of the exercise's name */
+  if (!name && demoPts && st.pair && st.role) l.append(el('i'), el('span', 'demo', 'Demo numbers'));
+  else l.append(el('i'), document.createTextNode(name || (st.pair ? 'The Job Offer' : 'Creating Value')));
   t.appendChild(l);
-  if (st.pair && !name) t.appendChild(el('b', st.role || '', 'Pair ' + st.pair + (st.role ? ' · ' + N.roles[st.role] : '')));
+  if (st.pair && !name) t.appendChild(el('b', null, 'Pair ' + st.pair + (st.role ? ' · ' + N.roles[st.role] : '')));
   return t;
 }
-/* the second exercise: one question, asked of each person */
-function nextButton(){
-  const b = el('button', 'opt', 'Record the second exercise'); b.type = 'button'; b.style.textAlign = 'center';
-  b.onclick = () => { st.ex2 = true; save(); draw(); };
-  return b;
-}
-function ex2Screen(){
-  app.replaceChildren(head('Thai Solar Park'), el('h2', null, 'Did your deal depend on what happens later?'));
-  const two = el('div', 'two'), opts = [];
-  [['y', 'Yes'], ['n', 'No']].forEach(([k, w]) => { const b = el('button', 'opt' + (st.ex2a === k ? ' on' : ''), w); b.type = 'button'; b.style.textAlign = 'center';
-    b.onclick = () => { st.ex2a = k; save(); paint(); }; opts.push([k, b]); two.appendChild(b); });
-  const ex = el('div', 'extra'), lab = el('label', null, 'How?'), ta = el('textarea');
-  ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = st.ex2t || ''; ta.oninput = () => { st.ex2t = ta.value; save(); };
-  lab.htmlFor = ta.id = 'ex2how'; ex.appendChild(lab); ex.appendChild(ta);
-  const err = el('div', 'err');
-  const go = holdButton('Hold to send', () => {
-    send('t|' + st.ex2a + '|' + (st.ex2a === 'y' ? N.clean(ta.value) : '')).then(() => { st.sentT = true; save(); draw(); })
-      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
-  });
-  function paint(){ opts.forEach(([k, b]) => b.classList.toggle('on', st.ex2a === k)); ex.style.display = st.ex2a === 'y' ? '' : 'none'; go.disabled = !st.ex2a; }
-  paint();
-  app.append(two, ex, go, err);
-}
-function ex2Done(){
-  const d = el('div', 'done'); d.append(el('div', 'big', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
-  app.replaceChildren(head('Thai Solar Park'), d);
-  if (N.demo) { const again = el('button', 'back', 'Start again'); again.type = 'button'; again.style.alignSelf = 'center'; again.onclick = () => { st = {quiz:1}; draw(); }; app.appendChild(again); }
-}
-function send(t){ return N.demo ? Promise.resolve({ok:true}) : N.say(voter, t); }
+function button(cls, label, fn){ const b = el('button', cls, label); b.type = 'button'; b.onclick = fn; return b; }
+function shell(){ const w = el('div', 'wrap'); app.replaceChildren(w); return w; }
 function holdButton(label, onDone){
   const b = el('button', 'hold'); b.type = 'button';
   const f = el('div', 'fill'); const s = el('span', null, label);
@@ -159,9 +240,23 @@ function holdButton(label, onDone){
   b.setLabel = x => { s.textContent = x; };
   return b;
 }
+function splash(line, then){
+  const s = el('div', 'splash ' + (st.role || ''));
+  s.appendChild(el('div', 'ck', st.pair ? 'Pair ' + st.pair : 'Creating Value')); s.appendChild(el('div', 'cp', line));
+  document.body.appendChild(s);
+  setTimeout(() => { s.remove(); then(); }, 1300);
+}
+/* keep the screen awake while the numbers are up */
+let lock = null;
+const wake = on => {
+  if (on && !lock && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { lock = l; l.addEventListener('release', () => { lock = null; }); }).catch(() => {});
+  if (!on && lock) { lock.release().catch(() => {}); lock = null; }
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && st.step === 'table' && !st.sentD) wake(true); });
 
+/* ---------- the opening quiz ---------- */
 function quizScreen(){
-  app.replaceChildren(head(), el('h2', null, N.quiz.q));
+  const w = shell(); w.append(head(), el('h2', null, N.quiz.q));
   const box = el('div', 'opts'); let pick = -1;
   const opts = N.quiz.o.map((o, k) => { const b = el('button', 'opt', o); b.type = 'button'; b.onclick = () => { pick = k; opts.forEach((x, j) => x.classList.toggle('on', j === k)); go.disabled = false; }; box.appendChild(b); return b; });
   const err = el('div', 'err');
@@ -170,66 +265,135 @@ function quizScreen(){
       .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
   });
   go.disabled = true;
-  const skip = el('button', 'back', 'Skip to the Job Offer'); skip.type = 'button'; skip.onclick = () => { st.quiz = -1; save(); draw(); };
-  app.appendChild(box); app.appendChild(go); app.appendChild(err); app.appendChild(skip);
+  w.append(box, go, err, button('back', 'Skip to the Job Offer', () => { st.quiz = -1; save(); draw(); }));
 }
+
+/* ---------- the Job Offer ---------- */
 function pairScreen(){
-  app.replaceChildren(head(), el('h2', null, 'Your pair number'));
+  const w = shell(); w.append(head(), el('h2', null, 'Your pair number'));
   const g = el('div', 'nums');
-  for (let n = 1; n <= 24; n++) { const b = el('button', null, String(n)); b.type = 'button'; b.onclick = () => { st.pair = n; save(); draw(); }; g.appendChild(b); }
-  const skip = el('button', 'back', 'Skip to the second exercise'); skip.type = 'button'; skip.onclick = () => { st.ex2 = true; save(); draw(); };
-  app.appendChild(g); app.appendChild(skip);
+  for (let n = 1; n <= 24; n++) g.appendChild(button(null, String(n), () => { st.pair = n; save(); draw(); }));
+  w.append(g, button('back', 'Skip to the second exercise', () => { st.ex2 = true; save(); draw(); }));
 }
 function roleScreen(){
-  app.replaceChildren(head(), el('h2', null, 'Your role'));
+  const w = shell(); w.append(head(), el('h2', null, 'Your role'));
   const two = el('div', 'two');
-  ['a', 'r'].forEach(k => { const b = el('button', 'role ' + k, N.roles[k]); b.type = 'button'; b.onclick = () => { st.role = k; save(); draw(); }; two.appendChild(b); });
-  const back = el('button', 'back', 'Change pair number'); back.type = 'button'; back.onclick = () => { delete st.pair; save(); draw(); };
-  app.appendChild(two); app.appendChild(back);
+  ['a', 'r'].forEach(k => two.appendChild(button('role ' + k, N.roles[k], () => { st.role = k; st.step = 'brief'; if (N.demo) st.locked = true; save(); draw(); })));
+  w.append(two, button('back', 'Change pair number', () => { delete st.pair; save(); draw(); }));
 }
-function dealScreen(){
-  const pick = st.pick || (st.pick = Array(8).fill(-1));
-  app.replaceChildren(head(), el('h2', null, 'The deal you agreed'));
+/* in a live room the role is fixed once the brief is open, so nobody can look at the other side's numbers */
+function confirmScreen(){
+  const w = shell();
+  w.append(head(), el('h2', null, 'You are the ' + N.roles[st.role].toLowerCase() + ' in pair ' + st.pair),
+    el('p', 'hint', 'Your brief and your numbers are for you only. Once you open them, you cannot change roles.'),
+    button('go', 'Open my brief', () => { st.locked = true; save(); draw(); }),
+    button('back', 'Change pair or role', () => { delete st.pair; delete st.role; save(); draw(); }));
+}
+function needNumbers(){
+  const w = shell();
+  w.append(head(), el('h2', null, 'Your brief is not open yet'), el('p', 'hint', numErr));
+  if (N.demo) w.appendChild(button('back', 'Change pair or role', () => { delete st.pair; delete st.role; save(); draw(); }));
+}
+function briefScreen(){
+  if (!PTS) return needNumbers();
+  const B = BRIEF[st.role], w = shell(), b = el('div', 'brief');
+  b.appendChild(el('h2', null, B.who));
+  B.story.forEach(p => b.appendChild(el('p', null, p)));
+  const rules = el('div', 'rules'), ol = el('ol');
+  rules.append(el('h3', null, 'The rules'), ol);
+  [['Your goal is to score as many points as you can.', true],
+   ['Your numbers show what each option is worth ' + B.worth + '. The most you can score is ' + fmt(MAX()) + ' points.'],
+   ['You have a deal only when you agree on all eight issues, and you can mix options across the issues however you like.'],
+   ['Never show your numbers to the ' + OTHER[st.role] + ', and never tell them how many points anything is worth ' + B.worth + '.'],
+   ['If you do not reach a deal, you score ' + fmt(PTS.batna[st.role]) + ' points.']]
+    .forEach(([t, bold]) => { const li = el('li'); li.appendChild(bold ? el('b', null, t) : document.createTextNode(t)); ol.appendChild(li); });
+  b.appendChild(rules);
+  b.appendChild(el('h3', null, 'The eight issues'));
+  const ul = el('ul', 'terms');
+  DEF[st.role].forEach(s => { const li = el('li'), k = s.indexOf(':'); li.append(el('b', null, s.slice(0, k)), document.createTextNode(s.slice(k))); ul.appendChild(li); });
+  b.appendChild(ul);
+  b.append(el('h3', null, 'Your alternative'), el('p', null, B.alt(PTS.batna[st.role])));
+  w.append(head(), b, button('go', st.seen ? 'Back to your numbers' : 'See your numbers', () => { st.step = 'table'; save(); draw(); }));
+  if (N.demo) w.appendChild(button('back', 'Change pair or role', () => { delete st.pair; delete st.role; delete st.tab; delete st.seen; save(); draw(); }));
+  scrollTo(0, 0); wake(false);
+}
+/* the numbers: tap what is on the table, and the total adds it up against the person's BATNA */
+function board(){
+  if (!PTS) return needNumbers();
+  const sel = st.tab || (st.tab = Array(8).fill(-1));
+  st.seen = true; save();
+  const bd = el('div', 'board'); app.replaceChildren(bd);
+  const sum = el('div', 'sum'), r1 = el('div', 'row'), v = el('div', 'v'), of = el('div', 'of'), left = el('div');
+  left.append(el('div', 'k', 'On the table'), v); r1.append(left, of);
+  const mx = MAX(), bt = PTS.batna[st.role], top = Math.max(...mine().map(r => Math.max(...r)));
+  const pos = n => Math.max(0, Math.min(100, n / mx * 100)) + '%';
+  const track = el('div', 'track'), fill = el('div', 'fill'), tk = el('i', 'tk');
+  tk.style.left = pos(bt); track.append(fill, tk);
+  const marks = el('div', 'marks'), m = el('span', null, 'BATNA ' + fmt(bt));
+  m.style.left = pos(bt); marks.appendChild(m);
+  sum.append(r1, track, marks);
+  const hint = el('div', 'hint', 'Tap the options on the table, and the total adds them up. The bar under each issue shows how much it can be worth.');
+  const grid = el('div', 'grid'), cells = [];
   N.issues.forEach((is, i) => {
-    const row = el('div', 'iss'), hd = el('div', 'hd');
-    const val = el('span', 'val' + (pick[i] < 0 ? ' none' : ''), pick[i] < 0 ? 'Tap one' : is.o[pick[i]]);
-    hd.appendChild(el('span', 'nm', is.n)); hd.appendChild(val);
-    const bar = el('div', 'bar');
-    is.o.forEach((o, k) => {
-      const b = el('button', pick[i] === k ? 'on' : ''); b.type = 'button'; b.setAttribute('aria-label', is.n + ': ' + o);
-      b.onclick = () => { pick[i] = k; st.nodeal = false; save(); bar.querySelectorAll('button').forEach((x, j) => x.classList.toggle('on', j === k)); val.textContent = o; val.className = 'val'; ready(); };
-      bar.appendChild(b);
+    const row = el('div', 'trm'), tn = el('div', 'tn'), w = el('i');
+    w.style.width = (Math.max(...mine()[i]) / top * 100) + '%';
+    tn.append(el('b', null, is.n), w);
+    const ch = el('div', 'ch');
+    cells[i] = is.o.map((o, j) => {
+      const c = el('button', 'cell'); c.type = 'button';
+      c.setAttribute('aria-label', is.n + ', ' + o + ', ' + mine()[i][j] + ' points');
+      c.append(el('span', 'o', (is.s || is.o)[j]), el('span', 'p', fmt(mine()[i][j])));
+      c.onclick = () => { sel[i] = sel[i] === j ? -1 : j; save(); paint(); };
+      ch.appendChild(c); return c;
     });
-    const ends = el('div', 'ends'); ends.appendChild(el('span', null, is.o[0])); ends.appendChild(el('span', null, is.o[4]));
-    row.appendChild(hd); row.appendChild(bar); row.appendChild(ends);
-    app.appendChild(row);
+    row.append(tn, ch); grid.appendChild(row);
   });
-  const ex = el('div', 'extra'), lab = el('label', null, 'Anything else you agreed?'), ta = el('textarea');
-  ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = st.extra || ''; ta.oninput = () => { st.extra = ta.value; save(); };
-  lab.htmlFor = ta.id = 'extra'; ex.appendChild(lab); ex.appendChild(ta);
-  const err = el('div', 'err');
-  const go = holdButton('Hold to send', () => {
-    const t = 'd|' + st.pair + '|' + st.role + '|' + (st.nodeal ? 'x' : pick.join(''));
-    const c = N.clean(ta.value);
-    send(t).then(() => c ? send('c|' + st.pair + '|' + st.role + '|' + c) : null)
-      .then(() => { st.sentD = t; save(); splash(st.nodeal ? 'No deal' : 'Deal recorded', draw); })
-      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
-  });
-  const nd = el('button', 'nodeal', 'We did not reach a deal'); nd.type = 'button';
-  nd.onclick = () => { st.nodeal = !st.nodeal; save(); ready(); };
-  function ready(){
-    const all = pick.every(x => x >= 0);
-    go.disabled = !(all || st.nodeal);
-    go.setLabel(st.nodeal ? 'Hold to send: no deal' : 'Hold to send');
-    nd.textContent = st.nodeal ? 'We did reach a deal' : 'We did not reach a deal';
+  const foot = el('div', 'foot');
+  foot.append(button('go ghost', 'Brief', () => { st.step = 'brief'; save(); draw(); }),
+              button('go', 'Record our deal', () => { st.step = 'record'; save(); draw(); }));
+  bd.append(head(), sum, hint, grid, foot);
+  function paint(){
+    const n = count(sel), tot = total(sel);
+    v.replaceChildren(document.createTextNode(fmt(tot)), el('small', null, '/ ' + fmt(mx)));
+    v.classList.toggle('part', n < 8);
+    of.textContent = n < 8 ? n + ' of 8 issues' : 'All eight issues';
+    fill.style.width = pos(tot); track.classList.toggle('part', n < 8);
+    cells.forEach((row, i) => row.forEach((c, j) => c.classList.toggle('on', sel[i] === j)));
   }
-  ready();
-  const back = el('button', 'back', 'Change pair or role'); back.type = 'button'; back.onclick = () => { delete st.pair; delete st.role; save(); draw(); };
-  app.appendChild(ex); app.appendChild(go); app.appendChild(err); app.appendChild(nd); app.appendChild(back);
+  paint(); wake(true);
+}
+function recordScreen(){
+  if (!PTS) return needNumbers();
+  const w = shell(), tab = st.tab || [], all = count(tab) === 8;
+  w.append(head(), el('h2', null, st.nodeal ? 'No deal' : 'The deal you agreed'));
+  const err = el('div', 'err');
+  if (st.nodeal) {
+    w.append(el('p', 'hint', 'With no deal, you score your BATNA: ' + fmt(PTS.batna[st.role]) + ' points.'),
+             holdButton('Hold to send: no deal', () => record('x')), err);
+  } else if (!all) {
+    w.appendChild(el('p', 'hint', 'Set all eight issues on your numbers first, or tell us there was no deal.'));
+  } else {
+    const ul = el('ul', 'deal');
+    N.issues.forEach((is, i) => { const li = el('li'); li.append(el('span', null, is.n), el('b', null, is.o[tab[i]])); ul.appendChild(li); });
+    const sc = el('div', 'score'); sc.append('Your score', el('b', null, fmt(total(tab))));
+    const ex = el('div', 'extra'), lab = el('label', null, 'Anything else you agreed?'), ta = el('textarea');
+    ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = st.extra || ''; ta.oninput = () => { st.extra = ta.value; save(); };
+    lab.htmlFor = ta.id = 'extra'; ex.append(lab, ta);
+    w.append(ul, sc, ex, holdButton('Hold to send', () => record(tab.join(''), N.clean(ta.value))), err);
+  }
+  function record(d, c){
+    const t = 'd|' + st.pair + '|' + st.role + '|' + d;
+    send(t).then(() => c ? send('c|' + st.pair + '|' + st.role + '|' + c) : null)
+      .then(() => { st.sentD = d; save(); splash(d === 'x' ? 'No deal' : 'Deal recorded', draw); })
+      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  }
+  w.append(button('nodeal', st.nodeal ? 'We did reach a deal' : 'We did not reach a deal', () => { st.nodeal = !st.nodeal; save(); draw(); }),
+           button('back', 'Back to your numbers', () => { st.step = 'table'; save(); draw(); }));
+  wake(false);
 }
 function beliefScreen(){
   const on = st.bel || (st.bel = Array(8).fill(0));
-  app.replaceChildren(head(), el('h2', null, 'On which issues did you and the other side want the same thing?'));
+  const w = shell(); w.append(head(), el('h2', null, 'On which issues did you and the other side want the same thing?'));
   const g = el('div', 'chips'), chips = [];
   N.issues.forEach((is, i) => {
     const c = el('button', 'chip' + (on[i] ? ' on' : ''), is.n); c.type = 'button';
@@ -246,23 +410,26 @@ function beliefScreen(){
   });
   function paint(){ chips.forEach((c, i) => c.classList.toggle('on', !!on[i])); none.classList.toggle('on', !!st.belNone); go.disabled = !(st.belNone || on.some(Boolean)); }
   paint();
-  app.appendChild(g); app.appendChild(go); app.appendChild(err);
+  w.append(g, go, err);
 }
-/* the end of the phone's part: thanks, then the pair's own result once the deck has posted it */
+/* the end of the phone's part: their own score at once, then the pair's result once the deck has posted it */
 let resTimer = null;
 function doneScreen(){
-  app.replaceChildren(head());
-  const d = el('div', 'done');
-  d.appendChild(el('div', 'big', 'Thank you'));
-  d.appendChild(el('div', 'sm', 'Eyes on the screen'));
-  app.appendChild(d);
-  app.appendChild(nextButton());
+  const w = shell(), d = el('div', 'done'), nd = st.sentD === 'x';
+  if (PTS && st.role) {
+    const me = nd ? PTS.batna[st.role] : total(st.tab || digits(st.sentD));
+    d.append(el('div', 'k', nd ? 'No deal: your BATNA' : 'Your score'), el('div', 'big', fmt(me)));
+    const sm = el('div', 'sm'); if (!nd) sm.append('Your BATNA was ' + fmt(PTS.batna[st.role]), el('br')); sm.append('Eyes on the screen');
+    d.appendChild(sm);
+  } else d.append(el('div', 'big txt', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
+  w.append(head(), d, nextButton());
   if (N.demo) {
-    /* the sample scores the pair's own taps with its invented points */
+    /* the sample works out the pair's result itself, with whichever numbers it has */
     setTimeout(() => {
-      const mx = N.max().j;
-      if (st.nodeal || !st.pick || st.pick.some(x => x < 0)) showResult({nodeal:true, m:mx});
-      else { const s = N.score(st.pick); showResult({a:s.a, r:s.r, j:s.j, m:mx}); }
+      const P = PTS || N.DEMO, mx = N.issues.reduce((t, _, i) => t + Math.max(...P.a[i].map((x, o) => x + P.r[i][o])), 0);
+      const dd = st.sentD && st.sentD !== 'x' ? digits(st.sentD) : null;
+      if (!dd || dd.some(x => x < 0)) showResult({nodeal:true, m:mx});
+      else { const a = dd.reduce((t, o, i) => t + P.a[i][o], 0), r = dd.reduce((t, o, i) => t + P.r[i][o], 0); showResult({a, r, j:a + r, m:mx}); }
     }, 1400);
     return;
   }
@@ -270,6 +437,7 @@ function doneScreen(){
   look(); clearInterval(resTimer); resTimer = setInterval(look, 3000);
 }
 function showResult(r){
+  clearInterval(resTimer);
   const box = el('div', 'res');
   box.appendChild(el('div', 'rk', 'Your pair'));
   if (r.nodeal) { box.appendChild(el('div', 'rj', 'No deal')); box.appendChild(el('div', 'rm', 'Out of a possible ' + fmt(r.m))); }
@@ -282,15 +450,39 @@ function showResult(r){
     box.appendChild(sp);
   }
   box.appendChild(el('div', 'rl', 'Eyes on the screen'));
-  app.replaceChildren(head(), box, nextButton());
-  if (N.demo) { const again = el('button', 'back', 'Start again'); again.type = 'button'; again.style.alignSelf = 'center'; again.onclick = () => { st = {quiz:1}; draw(); }; app.appendChild(again); }
+  const w = shell(); w.append(head(), box, nextButton());
+  if (N.demo) w.appendChild(button('back', 'Start again', () => { st = {quiz:1}; save(); draw(); }));
 }
-function splash(line, then){
-  const s = el('div', 'splash ' + (st.role || ''));
-  s.appendChild(el('div', 'ck', st.pair ? 'Pair ' + st.pair : 'Creating Value')); s.appendChild(el('div', 'cp', line));
-  document.body.appendChild(s);
-  setTimeout(() => { s.remove(); then(); }, 1300);
+
+/* ---------- the second exercise: one question, asked of each person ---------- */
+function nextButton(){
+  const b = el('button', 'opt', 'Record the second exercise'); b.type = 'button'; b.style.textAlign = 'center';
+  b.onclick = () => { st.ex2 = true; save(); draw(); };
+  return b;
 }
+function ex2Screen(){
+  const w = shell(); w.append(head('Thai Solar Park'), el('h2', null, 'Did your deal depend on what happens later?'));
+  const two = el('div', 'two'), opts = [];
+  [['y', 'Yes'], ['n', 'No']].forEach(([k, l]) => { const b = el('button', 'opt' + (st.ex2a === k ? ' on' : ''), l); b.type = 'button'; b.style.textAlign = 'center';
+    b.onclick = () => { st.ex2a = k; save(); paint(); }; opts.push([k, b]); two.appendChild(b); });
+  const ex = el('div', 'extra'), lab = el('label', null, 'How?'), ta = el('textarea');
+  ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = st.ex2t || ''; ta.oninput = () => { st.ex2t = ta.value; save(); };
+  lab.htmlFor = ta.id = 'ex2how'; ex.appendChild(lab); ex.appendChild(ta);
+  const err = el('div', 'err');
+  const go = holdButton('Hold to send', () => {
+    send('t|' + st.ex2a + '|' + (st.ex2a === 'y' ? N.clean(ta.value) : '')).then(() => { st.sentT = true; save(); draw(); })
+      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  function paint(){ opts.forEach(([k, b]) => b.classList.toggle('on', st.ex2a === k)); ex.style.display = st.ex2a === 'y' ? '' : 'none'; go.disabled = !st.ex2a; }
+  paint();
+  w.append(two, ex, go, err);
+}
+function ex2Done(){
+  const d = el('div', 'done'); d.append(el('div', 'big txt', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
+  const w = shell(); w.append(head('Thai Solar Park'), d);
+  if (N.demo) w.appendChild(button('back', 'Start again', () => { st = {quiz:1}; save(); draw(); }));
+}
+
 function draw(){
   clearInterval(resTimer);
   if (st.sentT) return ex2Done();
@@ -298,14 +490,16 @@ function draw(){
   if (!st.quiz) return quizScreen();
   if (!st.pair) return pairScreen();
   if (!st.role) return roleScreen();
-  if (!st.sentD) return dealScreen();
+  if (!st.locked) return confirmScreen();
+  if (st.sentD == null) return st.step === 'table' ? board() : st.step === 'record' ? recordScreen() : briefScreen();
+  wake(false);
   if (!st.sentS) return beliefScreen();
   doneScreen();
 }
 /* a reset of the rooms on the Poll Desk brings this phone back to where it started */
-if (!N.demo && (st.sentD || st.sentT)) N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {quiz:st.quiz}; save(); draw(); } }).catch(() => {});
+if (!N.demo && (st.sentD != null || st.sentT)) N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {quiz:st.quiz}; save(); draw(); } }).catch(() => {});
 if (!N.demo && st.quiz > 0) fetch(N.API + '/p/' + N.quizRoom + '/votes', {cache:'no-store'}).then(r => r.json()).then(d => { if (d.votes && !(voter in d.votes)) { delete st.quiz; save(); draw(); } }).catch(() => {});
-draw();
+openNumbers().then(draw);
 })();
 </script>
 </body></html>
