@@ -5,16 +5,18 @@
 <link rel="stylesheet" href="/brand.css">
 <style>
 /* The Job Offer played on phones (a sample block for Ryan, 15 Oct 2026; unlinked). Our own version
-   of the exercise, so nothing here is licensed: the brief, a plan, the numbers and the record are
-   all on the phone, and nothing is printed.
-     pair → role → the brief (one page) → plan: a target on each term and the lowest score you would
-     accept → the numbers, which add up whatever is on the table while the pair negotiates → record.
+   of the exercise, so nothing here is licensed: the brief, the numbers and the record are all on the
+   phone, and nothing is printed.
+     pair → role → the brief (one page, the rules first) → the numbers, which add up whatever is on the
+     table while the pair negotiates, against the person's BATNA → record → their own score.
+   No planning step: before they talk nobody can know what the other side wants, so a target would only
+   ever be the maximum, and with the BATNA given in points the resistance point is the BATNA (Ryan, 15 Oct).
    The words and option labels are public; each side's POINTS and BATNA are not. They sit next to this
    page encrypted (numbers.enc) and open only with the key in the session's link (#k=...), which the
    browser never sends to a server. Without the key the page runs on invented demo numbers.
-   Nothing is sent anywhere unless the link names a rehearsal room (?room=<x>): then the plan goes to
-   neg3-deals-<x> as "p|pair|role|8 target digits|lowest" and the deal as the deck's usual "d|..." line.
-   Deep links for screenshots: ?fresh&pair=7&role=a&step=brief|plan|low|table|record|done&tgt=…&low=…&tab=…
+   Nothing is sent anywhere unless the link names a rehearsal room (?room=<x>): then the deal goes to
+   neg3-deals-<x> as the deck's usual "d|..." line.
+   Deep links for screenshots: ?fresh&pair=7&role=a&step=brief|table|record|done&tab=…
    All wording is Claude's draft, for Ryan to change. */
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -63,10 +65,10 @@ h2{font-weight:700;font-size:22px;line-height:1.25}
 .track .fill{position:absolute;left:0;top:0;bottom:0;background:var(--sel);transition:width .25s}
 .track.part .fill{opacity:.45}
 .track .tk{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px}
-.track .tk.lo{background:var(--red)} .track .tk.tg{background:var(--ink)}
+.track .tk.bt{background:var(--red)}
 .marks{position:relative;height:14px;font-weight:700;font-size:10.5px;letter-spacing:.04em;white-space:nowrap}
 .marks span{position:absolute;top:0;transform:translateX(-50%)}
-.marks .lo{color:var(--red)} .marks .tg{color:var(--ink)}
+.marks .bt{color:var(--red)}
 .hint{font-weight:500;font-size:13px;line-height:1.35;color:var(--muted)}
 .grid{flex:1;min-height:0;display:grid;grid-template-rows:repeat(8,minmax(36px,1fr));gap:5px;max-height:560px}
 @media (max-height:600px){.board .hint{display:none}.sum .v{font-size:28px}.board{gap:6px}}
@@ -79,18 +81,9 @@ h2{font-weight:700;font-size:22px;line-height:1.25}
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;color:var(--ink);font-family:var(--sans)}
 .chip .o{font-weight:500;font-size:10.5px;line-height:1.1;color:var(--muted);white-space:nowrap;overflow:hidden;max-width:100%}
 .chip .p{font-family:var(--display);font-weight:900;font-size:16px;line-height:1.05}
-.chip.tg{box-shadow:inset 0 0 0 2.5px var(--ink);border-color:var(--ink)}
 .chip.on{background:var(--sel);border-color:var(--sel)} .chip.on .o,.chip.on .p{color:var(--paper)}
-.chip.on.tg{box-shadow:inset 0 0 0 2.5px var(--ink)}
 .foot{display:grid;grid-template-columns:1fr 1.6fr;gap:8px}
 .foot .go{padding:14px 8px;font-size:14px}
-
-/* the lowest score you would accept */
-.low{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:10px;text-align:center}
-.low .stepper{display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:10px;width:100%}
-.low .stepper button{font-family:var(--display);font-weight:900;font-size:30px;height:64px;background:var(--card);border:2px solid var(--ink);color:var(--ink);cursor:pointer;touch-action:manipulation}
-.low .big{font-family:var(--display);font-weight:900;font-size:52px;line-height:1}
-.low .ref{font-weight:600;font-size:15px;color:var(--muted);line-height:1.6}
 
 /* the record */
 .deal{list-style:none;display:flex;flex-direction:column}
@@ -155,7 +148,7 @@ const BRIEF = {
       story:['You are an operations manager with eight years’ experience in freight and logistics, and you live in London. Harbourline Logistics, a growing company with sites around the UK, is hiring a manager for its operations team.',
              'After two rounds of interviews, Harbourline has told you that you are its first choice. You like the company and you want the job. It is yours if you and Harbourline’s recruiter can agree the terms of your contract.'],
       worth:'to you',
-      alt: b => 'You also have a written offer from a smaller logistics company in London, open until the end of this week. The pay is lower and the job is smaller. You have worked out that it is worth ' + fmt(b) + ' points to you, on the same scale as your numbers. If you and the recruiter do not reach a deal, you take that job and score ' + fmt(b) + ' points.'},
+      alt: b => 'You also have a written offer from a smaller logistics company outside London, open until the end of this week. The pay is lower, the job is smaller, and you would have to move. You have worked out that it is worth ' + fmt(b) + ' points to you, on the same scale as your numbers. If you and the recruiter do not reach a deal, you take that job and score ' + fmt(b) + ' points.'},
   r: {who:'You are the recruiter',
       story:['You are on the recruiting committee of Harbourline Logistics, a growing company with sites around the UK. Harbourline is hiring a manager for its operations team.',
              'After two rounds of interviews, the committee agreed that its first choice is an operations manager with eight years’ experience in freight and logistics, who lives in London. The applicant wants the job, and you can hire them if the two of you can agree the terms of the contract.'],
@@ -181,8 +174,6 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catc
 if (Q.get('pair')) st.pair = +Q.get('pair') || 1;
 if (Q.get('role') === 'a' || Q.get('role') === 'r') st.role = Q.get('role');
 const digits = (s, fill) => s.slice(0, 8).padEnd(8, '-').split('').map(c => /[0-4]/.test(c) ? +c : fill);
-if (Q.get('tgt')) st.tgt = digits(Q.get('tgt'), -1);
-if (Q.get('low')) st.low = +Q.get('low');
 if (Q.get('tab')) st.tab = digits(Q.get('tab'), -1);
 if (Q.get('step')) st.step = Q.get('step');
 let voter; try { voter = localStorage.getItem('neg3-voter'); } catch(_){}
@@ -230,7 +221,7 @@ const wake = on => {
   if (on && !lock && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { lock = l; l.addEventListener('release', () => { lock = null; }); }).catch(() => {});
   if (!on && lock) { lock.release().catch(() => {}); lock = null; }
 };
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (st.step === 'table' || st.step === 'plan')) wake(true); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && st.step === 'table') wake(true); });
 
 /* ---------- screens ---------- */
 function shell(){ const w = el('div', 'wrap'); app.replaceChildren(w); return w; }
@@ -265,39 +256,27 @@ function briefScreen(){
     if (k < 0) li.appendChild(el('b', null, s)); else li.append(el('b', null, s.slice(0, k)), document.createTextNode(s.slice(k))); ul.appendChild(li); });
   b.appendChild(ul);
   b.append(el('h3', null, 'Your alternative'), el('p', null, B.alt(PTS.batna[st.role])));
-  if (!st.planned) {
-    b.append(el('h3', null, 'Before you meet the ' + OTHER[st.role]),
-      el('p', null, 'Plan on your numbers: tap the option you will aim for on each term, then set your resistance point, the lowest score you would accept.'));
-  }
   w.append(head(), b);
-  w.appendChild(st.planned ? button('go', 'Back to your numbers', () => { st.step = 'table'; save(); draw(); })
-                            : button('go', 'Plan with your numbers', () => { st.step = 'plan'; save(); draw(); }));
+  w.appendChild(button('go', st.seen ? 'Back to your numbers' : 'See your numbers', () => { st.step = 'table'; save(); draw(); }));
   w.appendChild(button('back', 'Change pair or role', () => { st = {}; save(); draw(); }));
   scrollTo(0, 0);
 }
-/* the numbers: in the plan, taps set targets; in the negotiation, taps set what is on the table */
-function board(mode){
-  const isPlan = mode === 'plan';
-  const sel = isPlan ? (st.tgt || (st.tgt = Array(8).fill(-1))) : (st.tab || (st.tab = Array(8).fill(-1)));
+/* the numbers: tap what is on the table, and the total adds it up against the person's BATNA */
+function board(){
+  const sel = st.tab || (st.tab = Array(8).fill(-1));
+  st.seen = true; save();
   const bd = el('div', 'board'); app.replaceChildren(bd);
   const sum = el('div', 'sum'), r1 = el('div', 'row');
-  const k = el('div', 'k', isPlan ? 'Your target' : 'On the table'), v = el('div', 'v'), of = el('div', 'of');
-  const left = el('div'); left.append(k, v); r1.append(left, of);
-  const track = el('div', 'track'), fill = el('div', 'fill'); track.appendChild(fill);
-  const marks = el('div', 'marks');
-  sum.append(r1, track);
-  const mx = MAX();
+  const v = el('div', 'v'), of = el('div', 'of'), left = el('div');
+  left.append(el('div', 'k', 'On the table'), v); r1.append(left, of);
+  const mx = MAX(), bt = PTS.batna[st.role];
   const pos = n => Math.max(0, Math.min(100, n / mx * 100)) + '%';
-  if (!isPlan && st.tgt) {
-    const tg = total(st.tgt), lo = st.low == null ? PTS.batna[st.role] : st.low;
-    const t1 = el('i', 'tk tg'); t1.style.left = pos(tg); const t2 = el('i', 'tk lo'); t2.style.left = pos(lo); track.append(t2, t1);
-    /* the resistance label reads leftwards from its tick and the target rightwards, so close values never collide */
-    const m1 = el('span', 'tg', 'Target ' + fmt(tg)); m1.style.left = pos(tg); m1.style.transform = tg / mx > .72 ? 'translateX(-100%)' : 'translateX(-2px)';
-    const m2 = el('span', 'lo', 'Resistance point ' + fmt(lo)); m2.style.left = pos(lo); m2.style.transform = lo / mx < .3 ? 'translateX(-2px)' : 'translateX(calc(-100% + 2px))';
-    marks.append(m2, m1); sum.appendChild(marks);
-  }
-  const hint = el('div', 'hint', isPlan ? 'Tap the option you will aim for on each term. The bar under a term shows how much it can be worth.'
-                                        : 'Tap the options on the table; your targets are outlined.');
+  const track = el('div', 'track'), fill = el('div', 'fill'), tk = el('i', 'tk bt');
+  tk.style.left = pos(bt); track.append(fill, tk);
+  const marks = el('div', 'marks'), m = el('span', 'bt', 'BATNA ' + fmt(bt));
+  m.style.left = pos(bt); marks.appendChild(m);
+  sum.append(r1, track, marks);
+  const hint = el('div', 'hint', 'Tap the options on the table, and the total adds them up. The bar under each term shows how much it can be worth.');
   const grid = el('div', 'grid'), chips = [];
   TERMS.forEach((t, i) => {
     const row = el('div', 'trm'), tn = el('div', 'tn'), w = el('i');
@@ -314,10 +293,8 @@ function board(mode){
     row.append(tn, ch); grid.appendChild(row);
   });
   const foot = el('div', 'foot');
-  const left2 = button('go ghost', 'Brief', () => { st.step = isPlan ? 'brief' : 'peek'; save(); draw(); });
-  const right = isPlan ? button('go', 'Next', () => { if (st.low == null) st.low = PTS.batna[st.role]; st.step = 'low'; save(); draw(); })
-                       : button('go', 'Record our deal', () => { st.step = 'record'; save(); draw(); });
-  foot.append(left2, right);
+  foot.append(button('go ghost', 'Brief', () => { st.step = 'brief'; save(); draw(); }),
+              button('go', 'Record our deal', () => { st.step = 'record'; save(); draw(); }));
   bd.append(head(), sum, hint, grid, foot);
   function paint(){
     const n = count(sel), tot = total(sel);
@@ -325,32 +302,9 @@ function board(mode){
     v.classList.toggle('part', n < 8);
     of.textContent = n < 8 ? n + ' of 8 terms' : 'All eight terms';
     fill.style.width = pos(tot); track.classList.toggle('part', n < 8);
-    chips.forEach((row, i) => row.forEach((c, j) => {
-      c.classList.toggle('on', sel[i] === j);
-      c.classList.toggle('tg', !isPlan && st.tgt && st.tgt[i] === j);
-    }));
-    if (isPlan) right.disabled = n < 8;
+    chips.forEach((row, i) => row.forEach((c, j) => c.classList.toggle('on', sel[i] === j)));
   }
   paint(); wake(true);
-}
-function lowScreen(){
-  const w = shell(), box = el('div', 'low');
-  const tg = total(st.tgt), b = PTS.batna[st.role];
-  const big = el('div', 'big');
-  const set = v => { st.low = Math.max(0, Math.min(MAX(), v)); save(); big.textContent = fmt(st.low); };
-  const sp = el('div', 'stepper');
-  sp.append(button(null, '−', () => set(st.low - 100)), big, button(null, '+', () => set(st.low + 100)));
-  const ref = el('div', 'ref'); ref.append('Your target: ' + fmt(tg) + ' points', el('br'), 'Your BATNA: ' + fmt(b) + ' points');
-  box.append(el('h2', null, 'Your resistance point'), el('div', 'ref', 'The lowest score you would accept'), sp, ref);
-  set(st.low == null ? b : st.low);
-  const err = el('div', 'err');
-  const go = button('go', 'Start negotiating', () => {
-    send('p|' + st.pair + '|' + st.role + '|' + st.tgt.join('') + '|' + st.low)
-      .then(() => { st.planned = true; st.step = 'table'; save(); splash('Plan ready', draw); })
-      .catch(() => { err.textContent = 'That did not go through. Tap again.'; });
-  });
-  w.append(head(), box, go, err, button('back', 'Back to your targets', () => { st.step = 'plan'; save(); draw(); }));
-  wake(false);
 }
 function recordScreen(){
   const w = shell(), tab = st.tab || [], all = count(tab) === 8;
@@ -387,7 +341,6 @@ function doneScreen(){
   const mine2 = nd ? PTS.batna[st.role] : total(st.tab);
   d.append(el('div', 'k', 'Your score'), el('div', 'big', fmt(mine2)));
   const sm = el('div', 'sm');
-  if (st.tgt) sm.append('Your target was ' + fmt(total(st.tgt)), el('br'));
   sm.append('Your BATNA was ' + fmt(PTS.batna[st.role]), el('br'), 'Eyes on the screen');
   d.appendChild(sm);
   w.append(head(), d);
@@ -399,10 +352,7 @@ function draw(){
   if (!st.role) return roleScreen();
   if (st.sent != null && st.step !== 'done') st.step = 'done';
   switch (st.step) {
-    case 'plan': return board('plan');
-    case 'low': return st.tgt && count(st.tgt) === 8 ? lowScreen() : board('plan');
-    case 'table': return st.planned || st.tgt ? board('table') : briefScreen();
-    case 'peek': return briefScreen();
+    case 'table': return board();
     case 'record': return recordScreen();
     case 'done': return doneScreen();
     default: return briefScreen();
@@ -422,7 +372,7 @@ async function open(){
   if (p.issues.join('|') !== TERMS.map(t => t.n).join('|')) throw new Error('terms');
   PTS = p;
 }
-open().then(() => { if (Q.get('step')) st.planned = st.planned || ['table', 'peek', 'record', 'done'].includes(st.step); draw(); })
+open().then(draw)
   .catch(() => failed('Check that you opened the link from the session, all of it, and try again.'));
 })();
 </script>
