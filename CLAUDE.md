@@ -252,6 +252,9 @@ rebuilds both live outside the repo, in `~/Documents/Job Offer exercise - PRIVAT
 (kept apart from the proposal folder that goes to LSE). `deals.js` carries only invented demo numbers. Never commit the key, a
 link containing it, or a plaintext table. Licensed exercises' briefs and tables never go in at all.
 
+`s3/deck.js` is a copy of the gt engine plus one addition: a click or tap advances, for people
+browsing the sample on their own. Don't sync it with `gt/deck.js` in either direction.
+
 ### Preview while editing
 
 ```bash

@@ -1,4 +1,4 @@
-/* Shared deck engine for the /teaching/exec/gt/ modules.
+/* Shared deck engine for the /teaching/exec/gt/ modules (this is the negotiation sample's copy; it adds click to advance, below).
    Same contract as the LSE decks: .slide[data-i] in document order, one
    .tick per slide, [data-step] progressive reveal. Additions here:
    keys are ignored while a form control inside a .widget has focus,
@@ -123,6 +123,16 @@ let tx=null,ty=null;
 addEventListener('touchstart',e=>{if(e.target.closest('.widget'))return;tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
 addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
   if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){dx<0?next():prev();}tx=ty=null;},{passive:true});
+/* this copy only (the negotiation sample, 15 Oct 2026): a click or a tap on the slide moves on, like a clicker,
+   for people browsing the deck on their own. Not on links, buttons, form controls, video tiles or the phone
+   in its frame, not while a video plays, not while text is selected, and not with ?edit. */
+addEventListener('click',e=>{
+  if(e.button!==0||new URLSearchParams(location.search).has('edit'))return;
+  if(document.documentElement.classList.contains('rplaying'))return;
+  if(e.target.closest&&e.target.closest('a,button,input,textarea,select,label,iframe,[contenteditable],.widget,.ytplay,.rcard,.rplayer'))return;
+  if(String(getSelection&&getSelection()||'').length)return;
+  next();
+});
 render();
 window.deckGoto=function(i){if(i>=0&&i<built){cur=i;step=0;render();}};
 /* #N in the URL opens slide N (zero-based); #N.S also applies S reveal steps */
