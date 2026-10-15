@@ -1,7 +1,7 @@
 // Exact screenshots through Chrome's DevTools protocol (headless Chrome will not go below 500px wide, so
 // phone shots need this): PROFILE=/tmp/x node shot.mjs out.png <url> <width> <height> [scale]
-//   deck slide at full HD: node shot.mjs s.png "http://127.0.0.1:8765/teaching/exec/negotiation/s3/#8.3" 1280 720 1.5
-//   phone:                 node shot.mjs p.png "http://127.0.0.1:8765/teaching/exec/negotiation/s3/deal/?demo=1&pair=7&role=a&pick=41303210&done" 390 844
+//   deck slide at full HD: node shot.mjs s.png "http://127.0.0.1:8765/teaching/exec/negotiation/s2/#8.3" 1280 720 1.5
+//   phone:                 node shot.mjs p.png "http://127.0.0.1:8765/teaching/exec/negotiation/s2/deal/?demo=1&pair=7&role=a&pick=41303210&done" 390 844
 // WAIT=<ms> (default 3500) lets reveals and the phone's result finish first.
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdtempSync } from 'node:fs';

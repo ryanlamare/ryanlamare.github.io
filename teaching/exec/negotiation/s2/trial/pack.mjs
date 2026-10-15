@@ -5,7 +5,7 @@
    served locally with the poll server swapped for an empty stand-in, so nothing reaches a real room, and the deck
    and phones run on the sample's demo numbers. Links point at the live site.
 
-     node teaching/exec/negotiation/s3/trial/pack.mjs "<output.pdf>"
+     node teaching/exec/negotiation/s2/trial/pack.mjs "<output.pdf>"
 
    Needs Google Chrome, and Python's pypdf to join the two printed parts. V=1 prints progress. */
 import { createServer } from 'node:http';
@@ -18,7 +18,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..
 const OUT = process.argv[2];
 if (!OUT) { console.log('usage: node pack.mjs "<output.pdf>"'); process.exit(1); }
 const SPORT = 8521, DPORT = 9522, LIVE = 'https://ryanlamare.com';
-const DECK = '/teaching/exec/negotiation/s3/', PROGRAMME = '/teaching/exec/negotiation/programme/';
+const DECK = '/teaching/exec/negotiation/s2/', PROGRAMME = '/teaching/exec/negotiation/programme/';
 const PHONES = ['?demo=1&pair=7&role=a&step=brief', '?demo=1&pair=7&role=a&step=table&tab=31120213', '?demo=1&pair=7&role=a&tab=31120213&done'];
 const PER_PAGE = 8;
 const T = { '.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.woff2':'font/woff2','.enc':'text/plain' };
@@ -68,10 +68,10 @@ figure{margin:0;break-inside:avoid}
 .try a{color:var(--red);font-weight:600}
 </style></head><body>
 ${pages.map((idx, p) => '<section class="page">' + (p === 0 ? head('Sample session') +
-  '<p class="lead">Session 2, Creating and Claiming Value: every slide of the deck, shown with demonstration data. The live version is at <a href="' + LIVE + DECK + '">ryanlamare.com/teaching/exec/negotiation/s3</a>.</p>' : '') + thumbs(idx) + '</section>').join('')}
+  '<p class="lead">Session 2, Creating and Claiming Value: every slide of the deck, shown with demonstration data. The live version is at <a href="' + LIVE + DECK + '">ryanlamare.com/teaching/exec/negotiation/s2</a>.</p>' : '') + thumbs(idx) + '</section>').join('')}
 <section class="page">${head('What participants see on their phones')}
 <div class="phones">${ph(0, 1, 'Their brief')}${ph(1, 2, 'Their numbers, adding up the deal on the table')}${ph(2, 3, 'Their pair’s result')}</div>
-<p class="try">Try it: <a href="${LIVE + DECK}deal/?demo=1">ryanlamare.com/teaching/exec/negotiation/s3/deal/?demo=1</a></p>
+<p class="try">Try it: <a href="${LIVE + DECK}deal/?demo=1">ryanlamare.com/teaching/exec/negotiation/s2/deal/?demo=1</a></p>
 </section>
 </body></html>`;
 }

@@ -240,25 +240,28 @@ Wrangler secret, deliberately not in this repo.
 ### The negotiation programme
 
 `teaching/exec/negotiation/` is the Strategic Negotiation programme (Oct 2026), unlisted like
-everything under `exec/`: `programme/` is the client-free programme page, `s3/` the sample
+everything under `exec/`: `programme/` is the client-free programme page, `s2/` the sample
 session (the deck, `deals.js`, and `deal/`, the participants' phone page), `sample/` an older,
 unlinked sample.
 
 The programme is BADM 590 Negotiations as Ryan taught it (15 Oct 2026): every session is a 590
 session, except day four, which is his exec game-theory material and is what the four-day version
 leaves out. Don't add sessions, topics or examples his course never had; to shorten, cut. The
-sample is Session 2, Creating and Claiming Value; it was Session 3 under an earlier plan and keeps
-the `s3/` address, which is in links already sent.
+sample is Session 2, Creating and Claiming Value, at `s2/`. It was Session 3 under an earlier plan,
+and `s3/` now holds only forwarders to the same pages under `s2/` (query and key kept), because
+the old address is in links already sent.
 
 The sample's Job Offer is our own exercise, played entirely on phones. **Its real points and
-BATNAs never go in the repo in the clear.** Phones open them from `s3/numbers.enc` (AES-GCM)
+BATNAs never go in the repo in the clear.** Phones open them from `s2/numbers.enc` (AES-GCM)
 with the key in the session link's `#k=…`, and the deck takes the points, the BATNAs and the
 key from a private scoring file dropped on it. The source tables, the key and the script that
 rebuilds both live outside the repo, in `~/Documents/Job Offer exercise - PRIVATE, never send/`
-(kept apart from the proposal folder that goes to LSE). `deals.js` carries only invented demo numbers. Never commit the key, a
+(kept apart from the proposal folder that goes to LSE). Its `source/encrypt.mjs` and its links file
+still name `s3/`: change them to `s2/` before rebuilding `numbers.enc`, or the new file lands in the
+forwarder folder and the phones keep the old one. `deals.js` carries only invented demo numbers. Never commit the key, a
 link containing it, or a plaintext table. Licensed exercises' briefs and tables never go in at all.
 
-`s3/deck.js` is a copy of the gt engine plus one addition: a click or tap advances, for people
+`s2/deck.js` is a copy of the gt engine plus one addition: a click or tap advances, for people
 browsing the sample on their own. Don't sync it with `gt/deck.js` in either direction.
 
 ### Preview while editing

@@ -1,5 +1,6 @@
-/* The Job Offer, played on phones (the Session 2 sample, at s3/; our own version, 15 Oct 2026).
-   Shared by the deck (s3/index.html) and the phone page (s3/deal/).
+/* The Job Offer, played on phones (the Session 2 sample; our own version, 15 Oct 2026).
+   The rooms and storage keys keep their neg3- names from when this was Session 3.
+   Shared by the deck (s2/index.html) and the phone page (s2/deal/).
 
    The exercise is ours, not a licensed case: Harbourline Logistics hiring an
    operations manager, eight issues with five options each. Each phone shows
