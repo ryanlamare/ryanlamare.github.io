@@ -1,23 +1,24 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>Creating Value · Your phone</title>
+<title>Creating and Claiming Value · Your phone</title>
 <link rel="stylesheet" href="/brand.css">
 <style>
-/* The participant's page for Session 3 (sample; rebuilt 15 Oct 2026 so the Job Offer is played
-   entirely on phones): one page for the whole session.
+/* The participant's page for Session 2, the sample (rebuilt 15 Oct 2026 so the Job Offer is played
+   entirely on phones; the session was Session 3 until the programme became BADM 590 as taught, and
+   it keeps the s3/ address): one page for the whole session.
      the opening quiz → pair number → role (locked once the brief is open, in a live room) →
      the brief (one page, the rules first) → the numbers, which add up whatever is on the table
      while the pair negotiates, against the person's BATNA → the deal, anything else agreed, a hold
      to send → one question (on which issues did both sides want the same thing?) → their own score,
-     then the pair's result once the screen at the front has shown the room → the second exercise.
+     then the pair's result once the screen at the front has shown the room.
    The Job Offer is our own version, not a licensed case. The words and options are public; the real
    points and BATNAs open only with the key in the session's link (#k=...), which the browser never
    sends to a server. Opened with ?demo=1 the page sends nothing, and without the key it runs on the
    sample's invented numbers (deals.js), the same ones the deck's sample uses. In a live room a phone
    without the key stops at the brief and asks for the link from the screen.
    Deep links (demo only): ?demo=1&pair=7&role=a&step=brief|table|record&tab=41303210 (&done for the
-   pair's result; pick= is an old name for tab=), ?demo=1&ex2.
+   pair's result; pick= is an old name for tab=).
    All wording is Claude's draft, for Ryan to change. */
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -169,21 +170,19 @@ const BRIEF = {
 };
 
 /* ---------- state ---------- */
-const DEEP = N.demo && (Q.get('pair') || Q.has('ex2'));
+const DEEP = N.demo && !!Q.get('pair');
 const KEY = 'neg3-phone2-' + N.room + (N.demo ? '-demo' : '');   /* phone2: the phone-played Job Offer (15 Oct); older saved states are ignored */
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(_) { return {}; } };
 let st = DEEP || Q.has('fresh') ? {} : load();
 const save = () => { if (!DEEP) try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(_){} };
 const digits = s => s.slice(0, 8).padEnd(8, '-').split('').map(c => /[0-4]/.test(c) ? +c : -1);
 /* the deck's phone frame and the screenshots open part-way through */
-if (DEEP && Q.has('ex2') && !Q.get('pair')) st.ex2 = true;
 if (DEEP && Q.get('pair')) {
   st.quiz = 1; st.pair = +Q.get('pair') || 1;
   if (Q.get('role') === 'a' || Q.get('role') === 'r') { st.role = Q.get('role'); st.locked = true; }
   const tab = Q.get('tab') || Q.get('pick'); if (tab) st.tab = digits(tab);
   st.step = Q.get('step') || (tab ? 'table' : 'brief');
   if (Q.has('done') && st.role && st.tab && st.tab.every(x => x >= 0)) { st.sentD = st.tab.join(''); st.sentS = 'demo'; }
-  if (Q.has('ex2')) st.ex2 = true;
 }
 let voter; try { voter = localStorage.getItem('neg3-voter'); } catch(_){}
 if (!voter) { voter = 'neg3-' + Math.random().toString(36).slice(2, 12) + Math.random().toString(36).slice(2, 6); try { localStorage.setItem('neg3-voter', voter); } catch(_){} }
@@ -221,7 +220,7 @@ function head(name){
   const t = el('div', 'tag'), l = el('span');
   /* with the sample's invented numbers on screen, the tag says so in place of the exercise's name */
   if (!name && demoPts && st.pair && st.role) l.append(el('i'), el('span', 'demo', 'Demo numbers'));
-  else l.append(el('i'), document.createTextNode(name || (st.pair ? 'The Job Offer' : 'Creating Value')));
+  else l.append(el('i'), document.createTextNode(name || (st.pair ? 'The Job Offer' : 'Creating and Claiming Value')));
   t.appendChild(l);
   if (st.pair && !name) t.appendChild(el('b', null, 'Pair ' + st.pair + (st.role ? ' · ' + N.roles[st.role] : '')));
   return t;
@@ -242,7 +241,7 @@ function holdButton(label, onDone){
 }
 function splash(line, then){
   const s = el('div', 'splash ' + (st.role || ''));
-  s.appendChild(el('div', 'ck', st.pair ? 'Pair ' + st.pair : 'Creating Value')); s.appendChild(el('div', 'cp', line));
+  s.appendChild(el('div', 'ck', st.pair ? 'Pair ' + st.pair : 'Creating and Claiming Value')); s.appendChild(el('div', 'cp', line));
   document.body.appendChild(s);
   setTimeout(() => { s.remove(); then(); }, 1300);
 }
@@ -273,7 +272,7 @@ function pairScreen(){
   const w = shell(); w.append(head(), el('h2', null, 'Your pair number'));
   const g = el('div', 'nums');
   for (let n = 1; n <= 24; n++) g.appendChild(button(null, String(n), () => { st.pair = n; save(); draw(); }));
-  w.append(g, button('back', 'Skip to the second exercise', () => { st.ex2 = true; save(); draw(); }));
+  w.appendChild(g);
 }
 function roleScreen(){
   const w = shell(); w.append(head(), el('h2', null, 'Your role'));
@@ -422,7 +421,7 @@ function doneScreen(){
     const sm = el('div', 'sm'); if (!nd) sm.append('Your BATNA was ' + fmt(PTS.batna[st.role]), el('br')); sm.append('Eyes on the screen');
     d.appendChild(sm);
   } else d.append(el('div', 'big txt', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
-  w.append(head(), d, nextButton());
+  w.append(head(), d);
   if (N.demo) {
     /* the sample works out the pair's result itself, with whichever numbers it has */
     setTimeout(() => {
@@ -450,43 +449,12 @@ function showResult(r){
     box.appendChild(sp);
   }
   box.appendChild(el('div', 'rl', 'Eyes on the screen'));
-  const w = shell(); w.append(head(), box, nextButton());
+  const w = shell(); w.append(head(), box);
   if (N.demo && !DEEP) w.appendChild(button('back', 'Start again', () => { st = {quiz:1}; save(); draw(); }));
-}
-
-/* ---------- the second exercise: one question, asked of each person ---------- */
-function nextButton(){
-  const b = el('button', 'opt', 'Record the second exercise'); b.type = 'button'; b.style.textAlign = 'center';
-  b.onclick = () => { st.ex2 = true; save(); draw(); };
-  return b;
-}
-function ex2Screen(){
-  const w = shell(); w.append(head('Thai Solar Park'), el('h2', null, 'Did your deal depend on what happens later?'));
-  const two = el('div', 'two'), opts = [];
-  [['y', 'Yes'], ['n', 'No']].forEach(([k, l]) => { const b = el('button', 'opt' + (st.ex2a === k ? ' on' : ''), l); b.type = 'button'; b.style.textAlign = 'center';
-    b.onclick = () => { st.ex2a = k; save(); paint(); }; opts.push([k, b]); two.appendChild(b); });
-  const ex = el('div', 'extra'), lab = el('label', null, 'How?'), ta = el('textarea');
-  ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = st.ex2t || ''; ta.oninput = () => { st.ex2t = ta.value; save(); };
-  lab.htmlFor = ta.id = 'ex2how'; ex.appendChild(lab); ex.appendChild(ta);
-  const err = el('div', 'err');
-  const go = holdButton('Hold to send', () => {
-    send('t|' + st.ex2a + '|' + (st.ex2a === 'y' ? N.clean(ta.value) : '')).then(() => { st.sentT = true; save(); draw(); })
-      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
-  });
-  function paint(){ opts.forEach(([k, b]) => b.classList.toggle('on', st.ex2a === k)); ex.style.display = st.ex2a === 'y' ? '' : 'none'; go.disabled = !st.ex2a; }
-  paint();
-  w.append(two, ex, go, err);
-}
-function ex2Done(){
-  const d = el('div', 'done'); d.append(el('div', 'big txt', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
-  const w = shell(); w.append(head('Thai Solar Park'), d);
-  if (N.demo) w.appendChild(button('back', 'Start again', () => { st = {quiz:1}; save(); draw(); }));
 }
 
 function draw(){
   clearInterval(resTimer);
-  if (st.sentT) return ex2Done();
-  if (st.ex2) return ex2Screen();
   if (!st.quiz) return quizScreen();
   if (!st.pair) return pairScreen();
   if (!st.role) return roleScreen();
@@ -497,7 +465,7 @@ function draw(){
   doneScreen();
 }
 /* a reset of the rooms on the Poll Desk brings this phone back to where it started */
-if (!N.demo && (st.sentD != null || st.sentT)) N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {quiz:st.quiz}; save(); draw(); } }).catch(() => {});
+if (!N.demo && st.sentD != null) N.fetchEntries().then(es => { if (!es.some(e => e.v === voter)) { st = {quiz:st.quiz}; save(); draw(); } }).catch(() => {});
 if (!N.demo && st.quiz > 0) fetch(N.API + '/p/' + N.quizRoom + '/votes', {cache:'no-store'}).then(r => r.json()).then(d => { if (d.votes && !(voter in d.votes)) { delete st.quiz; save(); draw(); } }).catch(() => {});
 openNumbers().then(draw);
 })();

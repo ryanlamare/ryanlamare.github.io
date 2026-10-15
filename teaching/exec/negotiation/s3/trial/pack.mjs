@@ -1,6 +1,6 @@
 /* The negotiation proposal in one PDF, laid out as a pitch book (15 Oct 2026; Ryan: "shouldn't we just give them a
    single pdf", then "just like reels of what the presentation slides would be"). All A4 portrait: the programme
-   page printed as a plain document, then Session 3's sample deck as a reel (every slide fully revealed, eight to a
+   page printed as a plain document, then the sample session's deck (Session 2) as a reel (every slide fully revealed, eight to a
    page in two columns), then a page of what participants see on their phones, framed as phones. Everything is
    served locally with the poll server swapped for an empty stand-in, so nothing reaches a real room, and the deck
    and phones run on the sample's demo numbers. Links point at the live site.
@@ -68,7 +68,7 @@ figure{margin:0;break-inside:avoid}
 .try a{color:var(--red);font-weight:600}
 </style></head><body>
 ${pages.map((idx, p) => '<section class="page">' + (p === 0 ? head('Sample session') +
-  '<p class="lead">Session 3, Creating Value: every slide of the deck, shown with demonstration data. The live version is at <a href="' + LIVE + DECK + '">ryanlamare.com/teaching/exec/negotiation/s3</a>.</p>' : '') + thumbs(idx) + '</section>').join('')}
+  '<p class="lead">Session 2, Creating and Claiming Value: every slide of the deck, shown with demonstration data. The live version is at <a href="' + LIVE + DECK + '">ryanlamare.com/teaching/exec/negotiation/s3</a>.</p>' : '') + thumbs(idx) + '</section>').join('')}
 <section class="page">${head('What participants see on their phones')}
 <div class="phones">${ph(0, 1, 'Their brief')}${ph(1, 2, 'Their numbers, adding up the deal on the table')}${ph(2, 3, 'Their pair’s result')}</div>
 <p class="try">Try it: <a href="${LIVE + DECK}deal/?demo=1">ryanlamare.com/teaching/exec/negotiation/s3/deal/?demo=1</a></p>

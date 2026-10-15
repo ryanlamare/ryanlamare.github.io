@@ -244,7 +244,13 @@ everything under `exec/`: `programme/` is the client-free programme page, `s3/` 
 session (the deck, `deals.js`, and `deal/`, the participants' phone page), `sample/` an older,
 unlinked sample.
 
-Session 3's Job Offer is our own exercise, played entirely on phones. **Its real points and
+The programme is BADM 590 Negotiations as Ryan taught it (15 Oct 2026): every session is a 590
+session, except day four, which is his exec game-theory material and is what the four-day version
+leaves out. Don't add sessions, topics or examples his course never had; to shorten, cut. The
+sample is Session 2, Creating and Claiming Value; it was Session 3 under an earlier plan and keeps
+the `s3/` address, which is in links already sent.
+
+The sample's Job Offer is our own exercise, played entirely on phones. **Its real points and
 BATNAs never go in the repo in the clear.** Phones open them from `s3/numbers.enc` (AES-GCM)
 with the key in the session link's `#k=…`, and the deck takes the points, the BATNAs and the
 key from a private scoring file dropped on it. The source tables, the key and the script that
