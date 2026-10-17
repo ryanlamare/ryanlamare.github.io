@@ -21,7 +21,7 @@ B.onData = fn => redraws.push(fn);
 B.start = function(ids){
   ids.forEach(id => {
     const s = N.step(id);
-    D[id] = {s, entries: s.type === 'deal' ? (B.live ? [] : N.demoEntries(s)) : null,
+    D[id] = {s, entries: s.type !== 'poll' ? (B.live ? [] : N.demoEntries(s)) : null,
              counts: s.type === 'poll' ? (B.live ? s.o.map(() => 0) : (s.demo || s.o.map(() => 0)).slice()) : null, frozen:null, seen:false};
   });
   document.querySelectorAll('.demotag').forEach(t => t.style.display = B.live ? 'none' : '');
@@ -44,6 +44,8 @@ B.reveal = function(id, on){
 B.counts = id => { const d = D[id]; return d.frozen || d.counts; };
 B.parsed = id => { const d = D[id]; return N.parse(d.s, d.frozen || d.entries); };
 B.current = id => N.parse(D[id].s, D[id].entries);         /* the record slide counts phones as they arrive */
+B.people = id => { const d = D[id]; return N.parseSurvey(d.s, d.frozen || d.entries); };   /* a survey's answers */
+B.peopleNow = id => N.parseSurvey(D[id].s, D[id].entries);
 
 /* the private file: dropped on the deck once, kept in this browser */
 function dropPrivate(){
@@ -184,15 +186,16 @@ B.strip = function(svg, o){
 B.popDots = svg => requestAnimationFrame(() => requestAnimationFrame(() => svg.querySelectorAll('g').forEach(g => { if (g.querySelector(':scope > .st-dot')) g.classList.add('st-on'); })));
 
 /* ---------- bars: how many gave each answer ---------- */
+/* opts: {max (the full width; default the largest count), fmt (how a number shows), hot (index to ring), colors} */
 B.bars = function(box, labels, counts, state, opts){
   opts = opts || {};
-  const mx = Math.max(1, ...counts), top = counts.indexOf(Math.max(...counts));
+  const mx = opts.max || Math.max(1, ...counts), top = counts.indexOf(Math.max(...counts)), show = opts.fmt || String;
   box.replaceChildren(...labels.map((l, k) => {
     const r = el('div', 'brow' + (state.mark && (opts.hot != null ? opts.hot === k : k === top) && counts[k] ? ' hot' : ''));
     const t = el('div', 'bt'), f = el('div', 'bf'); t.appendChild(f);
     f.dataset.w = (counts[k] / mx * 100) + '%'; f.style.width = state.bars ? f.dataset.w : '0';
     if (opts.colors && opts.colors[k]) f.style.background = opts.colors[k];
-    const c = el('div', 'bc', state.bars ? String(counts[k]) : ''); c.dataset.t = String(counts[k]);
+    const c = el('div', 'bc', state.bars ? show(counts[k]) : ''); c.dataset.t = show(counts[k]);
     r.append(el('div', 'bl', l), t, c); return r;
   }));
 };

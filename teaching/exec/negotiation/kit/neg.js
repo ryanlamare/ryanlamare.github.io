@@ -6,6 +6,9 @@
      {id, type:'poll', q, o:[answers], demo:[counts]}            a question on phones, one answer each
      {id, type:'deal', name, group:'pair'|'group', max, roles:[{k, n}], fields:[...], extra, nodeal, demo}
                                                                   an exercise whose result each phone records
+     {id, type:'survey', name, qs:[...], demo}                    several questions, one screen each, sent together;
+                                                                  a question with versions:[...] shows each phone one
+                                                                  version, so the room can be split (framing effects)
    Fields of a deal step (each may carry roles:[...] to ask only those roles, and always:true to be
    asked even when there was no deal, and own:true when each person answers for themselves rather than for
    the agreement):
@@ -19,7 +22,8 @@
      "d|7|a|x"                   ... recorded no deal (plus any always-asked fields: "x;proc=4")
      "c|7|a|text"                ... anything else they agreed, in their own words
    The latest line of each kind from each phone counts, so a phone can record again.
-   Polls are plain votes in their own room.
+   Polls are plain votes in their own room. A survey sends one line a phone:
+     "a|bday=3;risk=1|bday=3;risk=0;born=314"   the versions it was shown, then its answers
 
    Licensed exercises: nothing confidential lives in this public repo. A deck's overlays (bargaining
    zones, scores) come from the session's private file, dropped on the deck once and kept in that
@@ -134,6 +138,30 @@ NK.answers = function(st, parsed, k){
   return out;
 };
 
+/* ---------- surveys ---------- */
+/* which version of a question a phone sees: fixed for that phone, spread evenly across the room */
+NK.version = function(voter, k, n){
+  let h = 2166136261;
+  for (const c of String(voter) + '|' + k) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return (h >>> 0) % n;
+};
+/* a survey's room, read: one entry per phone (its latest), with the versions it saw and its answers */
+NK.parseSurvey = function(st, entries){
+  const by = {};
+  (entries || []).forEach(e => {
+    const p = String(e.t || '').split('|');
+    if (p[0] === 'a' && p.length >= 3) by[e.v] = {v:e.v, ver:NK.dec(p[1]), a:NK.dec(p.slice(2).join('|'))};
+  });
+  return Object.values(by);
+};
+/* the answers to one question, split by the version each person saw */
+NK.byVersion = function(people, k){
+  const out = {};
+  people.forEach(x => { if (x.a[k] == null) return; const v = x.ver[k] || 0; (out[v] = out[v] || []).push(x.a[k]); });
+  return out;
+};
+NK.median = a => { if (!a || !a.length) return null; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
 /* ---------- demo rooms ---------- */
 /* a deal step's demo(rnd, n) returns group n's room as phones would send it:
    {vals:{...}} for a deal, {x:true} for none, plus optional per:{role:{...}} (each role's own answers),
@@ -141,6 +169,15 @@ NK.answers = function(st, parsed, k){
 NK.demoEntries = function(st){
   if (!st.demo) return [];
   const rnd = NK.rng(st.demo.seed || 20261017), out = [];
+  if (st.type === 'survey') {
+    for (let i = 1; i <= (st.demo.people || 30); i++) {
+      const v = 'demo-p' + i, ver = {};
+      st.qs.forEach(q => { if (q.versions) ver[q.k] = NK.version(v, q.k, q.versions.length); });
+      const a = st.demo.gen(rnd, i, ver) || {};
+      out.push({v, t:'a|' + NK.enc(ver) + '|' + NK.enc(a)});
+    }
+    return out;
+  }
   for (let n = 1; n <= (st.demo.groups || 14); n++) {
     const d = st.demo.gen(rnd, n) || {};
     st.roles.forEach((r, ri) => {

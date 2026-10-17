@@ -7,6 +7,7 @@
    ?step=<id> opens that step (each exercise's QR carries one). ?demo=1 never touches the network.
    Deep links for the deck's phone frame and for screenshots (demo only):
      ?demo=1&frame=1&step=<id>&g=7&role=<k>&at=group|role|form|done&v=fee.45000,first.0&x=1&t=<text>
+     ?demo=1&frame=1&step=<survey id>&at=q&qi=2   (a survey, at its third question)
    All wording is Claude's draft, for Ryan to change. */
 (function(){
 const N = window.NK, S = N.S, Q = N.Q;
@@ -31,6 +32,7 @@ if (DEEP) {
   const s = N.step(Q.get('step'));
   if (s) {
     S.steps.forEach(x => { if (x.i < s.i) { if (x.type === 'poll') st.p[x.id] = {skip:true}; else st.d[x.id] = {sent:true, ack:true}; } });
+    if (s.type === 'survey') st.p[s.id] = {a:{}, i:+Q.get('qi') || 0};
     if (s.type === 'deal') {
       const d = st.d[s.id] = {vals:{}};
       const at = Q.get('at');
@@ -84,7 +86,7 @@ function splash(cls, top, line, then){
 
 /* ---------- which step this phone is on ---------- */
 function finished(s){
-  if (s.type === 'poll') { const p = st.p[s.id]; return !!(p && (p.sent || p.skip)); }
+  if (s.type === 'poll' || s.type === 'survey') { const p = st.p[s.id]; return !!(p && (p.sent || p.skip)); }
   const d = st.d[s.id]; return !!(d && d.sent && d.ack);
 }
 function current(){
@@ -98,6 +100,7 @@ function draw(){
   const s = current();
   if (!s) return allDone();
   if (s.type === 'poll') return pollScreen(s);
+  if (s.type === 'survey') return surveyScreen(s);
   const d = st.d[s.id] || (st.d[s.id] = {vals:{}});
   d.vals = d.vals || {};
   if (s.forms && !forms && !N.demo) return needForms(s, d);
@@ -120,6 +123,51 @@ function pollScreen(s){
   });
   go.disabled = true;
   w.append(box, go, err, button('back', 'Skip this question', () => { st.p[s.id] = {skip:true}; save(); draw(); }));
+}
+
+/* ---------- a survey: one question a screen, sent together at the end ---------- */
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function surveyScreen(s){
+  const p = st.p[s.id] || (st.p[s.id] = {a:{}, i:0});
+  p.a = p.a || {};
+  const ver = {}; s.qs.forEach(q => { if (q.versions) ver[q.k] = NK_ver(q); });
+  if (p.i >= s.qs.length) return surveySend(s, p, ver);
+  const q = s.qs[p.i], vq = q.versions ? Object.assign({}, q, q.versions[ver[q.k]]) : q;
+  const w = shell(); w.append(head(s), el('div', 'hint', 'Question ' + (p.i + 1) + ' of ' + s.qs.length), el('h2', vq.q.length > 110 ? 'long' : null, vq.q));
+  const next = button('go', p.i + 1 < s.qs.length ? 'Next question' : 'Done', () => { p.i++; save(); draw(); });
+  const ready = () => { next.disabled = p.a[q.k] == null; };
+  if (q.type === 'money') {
+    const m = el('div', 'money'), inp = el('input'); inp.inputMode = 'numeric'; inp.autocomplete = 'off';
+    if (p.a[q.k] != null) inp.value = Math.round(p.a[q.k]).toLocaleString('en-GB');
+    inp.oninput = () => { const d = inp.value.replace(/[^0-9]/g, '').slice(0, 10); inp.value = d ? (+d).toLocaleString('en-GB') : ''; if (d) p.a[q.k] = +d; else delete p.a[q.k]; save(); ready(); };
+    m.append(el('span', null, q.cur || ''), inp); w.appendChild(m);
+  } else if (q.type === 'date') {
+    const row = el('div', 'ch'), ms = el('select'), ds = el('select');
+    [ms, ds].forEach(x => { x.style.cssText = 'font:600 17px var(--sans);padding:12px;border:2.5px solid var(--ink);background:var(--paper-soft);color:var(--ink)'; });
+    ms.appendChild(new Option('Month', '')); MONTHS.forEach((m, k) => ms.appendChild(new Option(m, k + 1)));
+    ds.appendChild(new Option('Day', '')); for (let d = 1; d <= 31; d++) ds.appendChild(new Option(String(d), d));
+    if (p.a[q.k] != null) { ms.value = Math.floor(p.a[q.k] / 100); ds.value = p.a[q.k] % 100; }
+    const set = () => { if (ms.value && ds.value) p.a[q.k] = (+ms.value) * 100 + (+ds.value); else delete p.a[q.k]; save(); ready(); };
+    ms.onchange = set; ds.onchange = set; row.append(ms, ds); w.appendChild(row);
+  } else {
+    const box = el('div', 'opts');
+    const bs = vq.o.map((o, k) => { const b = button('opt' + (p.a[q.k] === k ? ' on' : ''), o, () => { p.a[q.k] = k; save(); bs.forEach((x, j) => x.classList.toggle('on', j === k)); ready(); }); box.appendChild(b); return b; });
+    w.appendChild(box);
+  }
+  ready();
+  w.appendChild(next);
+  if (p.i > 0) w.appendChild(button('back', 'Back', () => { p.i--; save(); draw(); }));
+  w.appendChild(button('back', 'Skip this question', () => { delete p.a[q.k]; p.i++; save(); draw(); }));
+}
+function NK_ver(q){ return N.version(voter, q.k, q.versions.length); }
+function surveySend(s, p, ver){
+  const w = shell(); w.append(head(s), el('h2', null, s.sendQ || 'Send your answers'), el('p', 'hint', 'Your answers are anonymous. Nobody sees who said what.'));
+  const err = el('div', 'err');
+  const go = holdButton('Hold to send', () => {
+    send(s.room, 'a|' + N.enc(ver) + '|' + N.enc(p.a)).then(() => { p.sent = true; save(); splash('', S.title, 'Answers sent', draw); })
+      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  w.append(go, err, button('back', 'Back to the questions', () => { p.i = 0; save(); draw(); }));
 }
 
 /* ---------- an exercise ---------- */
@@ -240,6 +288,7 @@ function checkResets(){
   if (N.demo) return Promise.resolve();
   const jobs = S.steps.map(s => {
     if (s.type === 'poll' && st.p[s.id] && st.p[s.id].sent) return N.votes(s.room).then(v => { if (!(voter in v)) delete st.p[s.id]; }).catch(() => {});
+    if (s.type === 'survey' && st.p[s.id] && st.p[s.id].sent) return N.entries(s.room).then(es => { if (!es.some(e => e.v === voter)) delete st.p[s.id]; }).catch(() => {});
     if (s.type === 'deal' && st.d[s.id] && st.d[s.id].sent) return N.entries(s.room).then(es => { if (!es.some(e => e.v === voter)) st.d[s.id] = {vals:{}}; }).catch(() => {});
     return null;
   });
