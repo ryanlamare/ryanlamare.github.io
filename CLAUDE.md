@@ -264,6 +264,33 @@ link containing it, or a plaintext table. Licensed exercises' briefs and tables 
 `s2/deck.js` is a copy of the gt engine plus one addition: a click or tap advances, for people
 browsing the sample on their own. Don't sync it with `gt/deck.js` in either direction.
 
+**The other nine sessions** (first designs, 17 Oct 2026, for Ryan to change; on branch
+`negotiation-sessions`, not yet merged): `s1/`, `s3-draft/` (Session 3: it becomes `s3/` only once the
+forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on a shared kit, `kit/`:
+- `deck.css` is an exact copy of the gt suite's, and `kit.css` holds the kit's own components (only kit
+  decks load it: several of its names mean something else in the gt modules).
+- `deck.js` is `s2/deck.js`; `neg.js` holds a session's steps, the poll-server wire and the demo data;
+  `boards.js` draws the deck's live boards; `phone.js` is one phone page for every session (`<session>/deal/`).
+- Each session's steps are in its own `session.js`. A step can read another session's room (`prefix`), and
+  `phone:false` keeps it off the phones: that is how Session 10 debriefs Session 9's Harborco.
+
+Sessions 6 to 8 (the game-theory day) are copies of gt Modules 2, 4/7 and 5/7 behind `kit/gtrooms.js`,
+which moves every poll-server room to `<room>-neg`, so they never touch the rooms `exec/gt/` runs; they
+have their own `/teaching/exec/negotiation/go/`.
+
+Opened plain, a deck runs on invented DEMO DATA; `?live` reads real phones, and `?room=<x>` a rehearsal
+room (`node teaching/exec/negotiation/kit/trial/bots.js s5 <x>` fills one). The same rule as the Job
+Offer holds for every licensed case: each session's private file (zones, marks, Harborco's scoring, the
+key to Harborco's wording) lives in `~/Documents/Negotiation sessions - PRIVATE, never send/` and is
+dropped on the deck. Harborco's issue wording reaches the phones only from `s9/forms.enc`, rebuilt by
+`encrypt-forms.mjs` in that folder. Demo numbers are invented, and no deck states a case's twist in its
+own text (whether the Blue Buggy has a bargaining zone comes from the private file).
+
+Decks shown to the client never name BADM 590 or MBA students (his edits to the programme page): his
+class's results are "professionals I have taught in the United States". Every clip is checked against
+a room in Muscat (no alcohol, strong language, sexual content or Gulf politics); where a clip has a bad
+stretch, it plays only the clean part (`data-start`/`data-end`), and the cut is noted beside it.
+
 ### Preview while editing
 
 ```bash
