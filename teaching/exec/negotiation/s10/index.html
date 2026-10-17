@@ -46,10 +46,11 @@
 .trw .val .bar{height:18px;background:var(--ink);width:0;transition:width .7s cubic-bezier(.2,.9,.3,1)}
 .trw .val b{font-family:var(--display);font-weight:900;font-size:22px}
 .tov.best .trw.top{border-color:var(--red)} .tov.best .trw.top .val .bar{background:var(--red)}
+.trw.fail .val .bar{background:var(--rule)} .trw.fail .val b{color:var(--muted)}   /* a package that did not pass created nothing */
 .tkey{position:absolute;left:96px;right:96px;bottom:70px;display:flex;flex-wrap:wrap;gap:6px 18px;font-weight:600;font-size:14px;color:var(--muted)}
 .tkey span{display:flex;align-items:center;gap:6px}
 /* one table, as his slides set it out */
-.tdet{position:absolute;left:96px;right:96px;top:188px}
+.tdet{position:absolute;left:96px;right:96px;top:212px}
 .tdet .tt2{font-family:var(--display);font-weight:900;font-size:26px;margin-bottom:8px}
 .tdet .tt2 span{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;margin-left:14px}
 .tdet .tt2 span.yes{color:var(--green)} .tdet .tt2 span.no{color:var(--red)}
@@ -132,7 +133,7 @@
 
 <section class="slide content" data-i="4">
   <div class="kicker"><i></i>SESSION 10 &middot; HARBORCO DEBRIEF</div>
-  <h2>Table by table</h2>
+  <h2>How each party did, table by table</h2>
   <div class="tdet" id="tdet"></div>
   <div id="tHooks"></div>
   <div class="demotag">DEMO DATA</div>
@@ -254,7 +255,7 @@
   </ul>
 </section>
 
-<!-- Friends, "The One with the Cop" (season 5): a fan upload, from 3:40 (scenes before it have jokes the room doesn't need), described
+<!-- Friends, "The One with the Cop" (season 5): a fan upload, from 3:36 (scenes before it have jokes the room doesn't need), described
      from its captions -->
 <section class="slide content" data-i="13">
   <div class="kicker"><i></i>SESSION 10 &middot; ON SCREEN</div>
@@ -265,7 +266,7 @@
       <li data-step="2">&ldquo;I&rsquo;m a reasonable man. I will accept store credit.&rdquo; The store offers four dollars, and he takes it</li>
       <li data-step="3"><b>Know your BATNA: four dollars beats a couch cut in half</b></li>
     </ul>
-    <div class="clipcard ytplay" data-step="1" data-yt="UJHa8Bjjy1k" data-start="220" data-title="Friends: the couch">
+    <div class="clipcard ytplay" data-step="1" data-yt="UJHa8Bjjy1k" data-start="216" data-title="Friends: the couch">
       <span class="play"><svg viewBox="0 0 24 24"><use href="#im-play"/></svg></span>
       <span class="ct">The couch goes back to the store</span>
       <span class="cm"><i>Friends</i></span>
@@ -282,10 +283,6 @@
       <a class="rcard" href="https://www.youtube.com/watch?v=8oKSS-HDDT8" target="_blank" rel="noopener" data-yt="8oKSS-HDDT8">
         <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5l8 4.5-8 4.5z" fill="var(--paper)"/></svg></span>
         <span><div class="rtt">Buffett Takes His Own Advice, Walks Away from Unilever</div><div class="rmeta">Bloomberg &middot; 2 minutes</div><div class="rwhy">A strong first offer, and no second one</div></span>
-      </a>
-      <a class="rcard" href="https://www.youtube.com/watch?v=-WsTMlSi_b4" target="_blank" rel="noopener" data-yt="-WsTMlSi_b4">
-        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5l8 4.5-8 4.5z" fill="var(--paper)"/></svg></span>
-        <span><div class="rtt">Blockbuster Laughed Netflix Out of the Room</div><div class="rmeta">Marc Randolph &middot; 3 minutes</div><div class="rwhy">The $50 million deal Blockbuster turned down in 2000</div></span>
       </a>
       <a class="rcard" href="https://www.youtube.com/watch?v=EqCGH-LL-p8" target="_blank" rel="noopener" data-yt="EqCGH-LL-p8">
         <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5l8 4.5-8 4.5z" fill="var(--paper)"/></svg></span>
@@ -393,7 +390,7 @@ function drawOverview(){
   const passed = T.filter(t => !t.none && t.passed && t.value != null), top = passed.length ? Math.max(...passed.map(t => t.value)) : null;
   const mx = Math.max(1, ...T.filter(t => t.value != null).map(t => t.value));
   T.forEach(t => {
-    const r = el('div', 'trw' + (t.value != null && t.value === top && t.passed ? ' top' : ''));
+    const r = el('div', 'trw' + (t.value != null && t.value === top && t.passed ? ' top' : '') + (!t.none && !t.passed ? ' fail' : ''));
     const pk = el('div', 'pk' + (t.none ? ' none' : ''));
     if (t.none) pk.textContent = 'No package'; else ISS.forEach(i => pk.appendChild(el('span', null, code(i, t.pkg[i]))));
     const ok = el('div', 'ok ' + (t.none ? 'no' : t.passed ? 'yes' : 'no'), t.none ? '' : t.passed ? 'Passed' : 'Did not pass');
