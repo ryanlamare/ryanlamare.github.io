@@ -267,6 +267,7 @@ browsing the sample on their own. Don't sync it with `gt/deck.js` in either dire
 **The other nine sessions** (first designs, 17 Oct 2026, for Ryan to change; on branch
 `negotiation-sessions`, not yet merged): `s1/`, `s3-draft/` (Session 3: it becomes `s3/` only once the
 forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on a shared kit, `kit/`:
+
 - `deck.css` is an exact copy of the gt suite's, and `kit.css` holds the kit's own components (only kit
   decks load it: several of its names mean something else in the gt modules).
 - `deck.js` is `s2/deck.js`; `neg.js` holds a session's steps, the poll-server wire and the demo data;
