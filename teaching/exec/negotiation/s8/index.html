@@ -1,0 +1,1428 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/negotiation/kit/gtrooms.js"></script>
+<!-- Session 8 of the Strategic Negotiation programme: Using Coordination and Strategic Moves to Shape Negotiations (first
+     design, 17 Oct 2026, for Ryan to change). Built from exec/gt/m5 (the common knowledge quiz, focal points, battle
+     of the sexes, the hub lease and chicken) and exec/gt/m7
+     (strategic moves, credibility, split or steal), with his BADM 590 slides on the first rule of game theory and on
+     negotiation as a coordination game. kit/gtrooms.js moves every poll-server call to the -neg rooms (and -neg-<x>
+     with ?room=<x>), so the quiz, the hub lease and split or steal never touch the rooms exec/gt runs. The phones are
+     the negotiation /go/ (?p=m5-k1, the quiz), hub/ (m5/tapas/, the hub lease only) and game/ (m7/game/). -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Strategic Negotiation · Session 8 — Using Coordination and Strategic Moves to Shape Negotiations</title>
+<link rel="stylesheet" href="/brand.css">
+<link rel="stylesheet" href="/teaching/exec/negotiation/kit/deck.css">
+<script>/* a deck opened at #N (a reload, or back from the m3 calendar or the Gazette) shows slide N from the first paint instead of the cover fading out first (25 Sep 2026); deck.js removes this once it has read the address */(function(){var m=/^#(\d+)/.exec(location.hash);if(!m||m[1]==="0")return;var s=document.createElement("style");s.id="deckjump";s.textContent=".slide.active{opacity:0!important;visibility:hidden!important}.slide[data-i=\""+m[1]+"\"]{opacity:1!important;visibility:visible!important;transition:none!important}";document.head.appendChild(s);})();</script>
+<style>
+/* Session 8's widgets (shared components live in deck.css), lifted from exec/gt/m5 (the quiz board and its
+   timer, the focal-point figure, the hub lease's rules and board, the closing
+   tiles) and exec/gt/m7 (what a strategic move is, the irreversibility tiles, brinkmanship, Sun Tzu, the split or
+   steal board), with Session 7's dated cards for Pittsburgh. The live spine runs through gt-poll behind
+   kit/gtrooms.js: the common knowledge quiz runs self-paced on phones (sixteen chained polls, m5-k1..k16) against
+   a ten-minute timer, the hub lease is voted from hub/ in two rounds with one volunteer's pitch in between, and
+   split or steal is played in pairs from game/. Every live slide falls back to marked DEMO DATA when the Worker is
+   unreachable. */
+
+/* clip beside text, click-to-load (keeps YouTube's title off screen) */
+.rowfig{position:absolute;left:96px;right:96px;top:212px;display:flex;gap:44px;align-items:flex-start}
+.rowfig ul.bullets{flex:1;margin-top:6px;max-width:none}
+.clipframe{flex:none;border:3px solid var(--ink);background:var(--ink);line-height:0}
+.clipframe iframe{width:640px;height:360px;border:0;display:block}
+.clipframe.sm iframe{width:560px;height:315px}
+.clipcover{width:640px;height:360px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:var(--sans)}
+.clipframe.sm .clipcover{width:560px;height:315px}
+/* a clip beside three long bullets (Challenger): the text needs the width */
+.clipframe.xs iframe,.clipframe.xs .clipcover{width:480px;height:270px}
+.clipcover .bigplay{width:64px;height:64px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.clipcover .bigplay svg{width:24px;height:24px;display:block}
+.clipcover .ct{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:15px}
+.clipcover:hover .bigplay{background:var(--paper)}
+.clipcover:hover .bigplay path{fill:var(--red)}
+.rowfig ul.bullets{min-width:0}   /* m7's rule: long bullets beside a figure wrap instead of pushing it */
+/* quiz progress: phones that have answered the first question, and the last */
+.quizprog{display:flex;gap:26px;justify-content:center;margin-top:14px;font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.quizprog b{font-family:var(--display);font-weight:900;font-size:28px;line-height:1;color:var(--red);margin-right:8px;vertical-align:-2px}
+/* quiz countdown: sits under the QR code in the right column */
+.timerbox{position:static;right:auto;top:auto;width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  border:2.5px solid var(--ink);background:var(--paper-soft);padding:16px 20px 18px}
+.timerbox .t{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--ink)}
+.timerbox .t.low{color:var(--red)}
+.timerbox button{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.08em;background:var(--red);color:var(--paper);border:none;padding:10px 18px;cursor:pointer}
+.timerbox button:hover{background:var(--ink)}
+/* quiz score board: one row per question, revealed one keypress at a time */
+.krows{width:100%;max-width:1060px;display:flex;flex-direction:column;gap:11px}
+.krow{display:grid;grid-template-columns:220px 1fr 260px 74px 44px;align-items:center;gap:16px;
+  border:2px solid var(--ink);background:var(--card);padding:8px 16px;position:relative}
+.krow .ql{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--ink)}
+.krow .qa{font-weight:600;font-size:17px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.krow .qbar{height:20px;background:var(--paper);position:relative}
+.krow .qbar i{position:absolute;left:0;top:0;bottom:0;background:var(--teal);transition:width .8s ease}
+.krow.pt .qbar i{background:var(--red)}
+.krow .qp{font-family:var(--display);font-weight:900;font-size:22px;color:var(--ink);text-align:right}
+.krow .qm{font-weight:900;font-size:20px;text-align:center;color:var(--muted)}
+.krow.pt .qm{color:var(--red)}
+.qrpanel{position:absolute;right:96px;top:246px;width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .5s}
+.quizpanel .joinchip .qr{width:196px;height:196px}   /* the quiz panel carries the timer and the counters too: a smaller code keeps them off the progress bar */
+/* focal-point convergence figure + closing staircase (both lifted from the
+   LER 565 week-4 lecture; geometry unchanged, type set in the suite's sizes) */
+.conv{display:flex;flex-direction:column;align-items:center;gap:26px}
+.stopnote{font-weight:500;font-size:22px;color:var(--muted);display:flex;align-items:center;gap:14px}
+.stopnote i{width:13px;height:13px;background:var(--red);display:inline-block;flex:none}
+.stopnote b{color:var(--red);font-weight:700}
+/* the closing tiles, as m2 and m3 close (lifted from the m3 deck) */
+.learn .tiles{top:246px;gap:22px;left:64px;right:64px}
+.learn .tile{width:206px;gap:14px}
+.learn .tile .pgwrap{height:96px}
+.learn .tile .pgwrap .pg{height:92px}
+.learn .tile .lbl{white-space:normal;font-size:15.5px}
+.learn .tile .sent{font-size:15.5px;max-width:none}
+/* before/after stations (the LER 565 week-4 "this week" figure) */
+.ba{display:flex;align-items:center;justify-content:center;gap:30px;flex:none;align-self:center}
+.ba .station{display:flex;flex-direction:column;align-items:center;gap:18px;width:190px;text-align:center}
+.ba .station .pg{height:130px;width:auto}
+.ba .station.then{opacity:.45}
+.ba .station .slbl{font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:18px;color:var(--ink);line-height:1.2}
+.ba .station.now .slbl{color:var(--red)}
+.ba .arrow{font-size:72px;color:var(--red);line-height:1}
+.ba .station .ssub{font-weight:600;font-size:15px;color:var(--muted);margin-top:-12px}
+ul.bullets.tight li{font-size:21px;margin-top:12px}
+ul.bullets.tight li.sub{font-size:18px;margin-top:8px}
+/* the vote games: rules slide (bullets left, QR + matrix right) and
+   the two-round board (a crowd per side per option, round 1 beside round 2) */
+.tpside{flex:none;display:flex;flex-direction:column;align-items:center;gap:20px;align-self:center}
+.tpqr{width:160px;height:160px;flex:none;border:2.5px solid var(--ink);background:#fff;padding:6px} /* was 110px, the smallest code in the suite (25 Sep 2026) */
+.tpjoin{display:flex;flex-direction:column;align-items:center;gap:8px}
+.tpjoin .ju{font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.tpqr img{width:100%;height:100%;display:block}
+.tboard{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:16px}
+.tbar{display:flex;align-items:center;gap:26px;justify-content:center}
+.tpbtn{font-family:var(--sans);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--red);color:var(--paper);border:2.5px solid var(--red);padding:9px 18px;cursor:pointer}
+.tpbtn:disabled{background:var(--card);border-color:var(--rule);color:var(--muted);cursor:default}
+.tstate{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:13px;color:var(--muted)}
+.tpanels{flex:1;display:flex;gap:28px;align-items:stretch}
+.tpanel{flex:1;border:2.5px solid var(--ink);background:var(--paper-soft);padding:14px 18px 12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tpanel .tph{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--red);text-align:center}
+.tgrid{display:grid;grid-template-columns:104px 1fr 1fr;grid-template-rows:auto 1fr 1fr;gap:8px;flex:1}
+.tgrid.one{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+.tgrid .tcol{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:12.5px;color:var(--ink);text-align:center;line-height:1.2;align-self:end;padding-bottom:2px}
+.tgrid .trow{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:13px;line-height:1.15;color:var(--ink);align-self:center;text-align:right;padding-right:6px;overflow-wrap:anywhere}
+.tgrid .trow:nth-of-type(1){color:var(--teal)}
+.tcell{position:relative;background:var(--card);border:1.5px solid var(--ink);min-height:104px;padding:8px 10px 6px;display:flex;flex-direction:column;gap:4px}
+.tcell .tcount{font-family:var(--display);font-weight:900;font-size:30px;line-height:.9;color:var(--ink);opacity:0;transition:opacity .5s .2s}
+.tpanel.revealed .tcell .tcount{opacity:1}
+.tcell .tlane{display:flex;flex-wrap:wrap;gap:3px 2px;align-content:flex-start;flex:1}
+.tcell .u{width:18px;display:block}
+.tcell .u svg{width:100%;height:auto;display:block;opacity:0;transform:scale(.6);transition:opacity .3s,transform .3s}
+.tpanel.revealed .u svg{opacity:1;transform:scale(1)}
+.tcell.opt-a .u{color:var(--teal)} .tcell.opt-b .u{color:var(--terracotta)}
+/* the vote boards (whose system, the hub lease): a column per option, a
+   person per vote coloured by SIDE, so a round reads as who stands where
+   and the shift between rounds is one glance (Ryan, 17 Sep) */
+.tcell .u.r{color:var(--teal)} .tcell .u.t{color:var(--terracotta)}
+.tcell .tsplit{font-weight:700;letter-spacing:.06em;font-size:12px;color:var(--muted);min-height:15px;opacity:0;transition:opacity .5s .3s}
+.tcell .tsplit b.r{color:var(--teal)} .tcell .tsplit b.t{color:var(--terracotta)}
+.tpanel.revealed .tcell .tsplit{opacity:1}
+.tlegend{display:flex;gap:18px;align-items:center}
+.tlegend .lg{display:flex;align-items:center;gap:7px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:12px}
+.tlegend .lg i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.tlegend .lg.r{color:var(--teal)} .tlegend .lg.r i{background:var(--teal)}
+.tlegend .lg.t{color:var(--terracotta)} .tlegend .lg.t i{background:var(--terracotta)}
+.tpanel .tverdict{font-weight:600;font-size:17px;line-height:1.3;color:var(--ink);text-align:center;min-height:2.6em;opacity:0;transition:opacity .5s .4s}
+.tpanel.revealed .tverdict{opacity:1}
+.tpanel .tverdict b{color:var(--red)}
+.tpanel.waiting{opacity:.45}
+/* Who gave ground? as the game's own matrix (30 Sep 2026): the counts come up with the reveal, the landed cell is boxed */
+.cmx{align-self:center;margin-top:4px}
+.cmx .cl{flex-direction:column;align-items:center;justify-content:flex-end}
+.cmx .rl{flex-direction:column;align-items:flex-end;justify-content:center}
+.cmx .cmn{display:block;font-family:var(--display);font-weight:900;font-size:22px;line-height:1;margin-top:4px;min-height:22px;opacity:0;transition:opacity .4s}
+.cmx .cl .cmn{color:var(--terracotta)} .cmx .rl .cmn{color:var(--teal)}
+.tpanel.revealed .cmx .cmn{opacity:1}
+.cmx .cell.words{flex-direction:column;gap:3px;line-height:1.2}   /* each side's outcome on its own line: USA Air above, Vicksburg below */
+.cmx .cell .pc{display:none}
+.cmx .cell.landed::after{content:"";position:absolute;inset:3px;border:5px solid var(--red);pointer-events:none}
+.clipcover .todo{font-weight:600;font-size:13px;letter-spacing:.08em;color:var(--paper);opacity:.75}
+.cardlab{font-family:var(--sans);font-weight:700;font-size:15px;letter-spacing:.1em;fill:var(--muted)} /* every figure's labels, the bidding war and the debate stage too */
+.mcard{display:flex;align-items:center;gap:20px;border:2.5px solid var(--ink);background:var(--card);padding:14px 20px}
+.mcard .pg{height:58px;width:58px;flex:none;display:block}
+.mcard .mt{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:19px;color:var(--ink)}
+.mcard .ms{font-weight:500;font-size:15px;color:var(--muted);line-height:1.35;margin-top:3px}
+.mcard .mc{font-weight:700;font-size:14.5px;color:var(--red);line-height:1.35;margin-top:6px}   /* the cost of each move (29 Sep 2026, his LER 550 slides 303-304 without the grid) */
+.mcard.red{border-color:var(--red)}
+.mcard.red .mt{color:var(--red)}
+/* what a strategic move is: two conditions above, three moves below */
+.smgrid{position:absolute;left:96px;right:96px;top:250px;display:flex;flex-direction:column;align-items:center;gap:30px}
+.smrow{display:flex;gap:26px;justify-content:center}
+.smrow .mcard{width:330px}
+.smrow.cond .mcard{width:400px}
+.smlab{font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:14px;color:var(--muted)}
+/* brinkmanship: the quote and the bidding war */
+.brink{flex:none;width:470px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.bquote{font-family:var(--display);font-weight:900;font-size:30px;line-height:1.1;color:var(--red);text-align:center}
+.bidwar{width:460px;height:auto;display:block}
+.bidwar .rev{opacity:0;transition:opacity .35s}
+.bidwar #bwStack.on .rev{opacity:1}
+.bidwar #bwStack.on rect:nth-child(2){transition-delay:.1s} .bidwar #bwStack.on rect:nth-child(3){transition-delay:.35s} .bidwar #bwStack.on rect:nth-child(4){transition-delay:.6s} .bidwar #bwStack.on rect:nth-child(5){transition-delay:.85s} .bidwar #bwStack.on rect:nth-child(6){transition-delay:1.1s}
+.bcap{font-weight:600;font-size:16px;color:var(--muted);text-align:center;line-height:1.3}
+.stquote{position:absolute;left:120px;right:120px;bottom:52px;font-size:20px;text-align:center;font-weight:500;font-style:italic;font-size:21px;line-height:1.35;color:var(--ink)}
+/* Module 4's marking scheme on the shirt matrix */
+.mx .cell.pareto::after{content:"";position:absolute;inset:3px;border:5px solid var(--green);pointer-events:none}
+.mx .cell.pareto .pa,.mx .cell.pareto .pb,.mx .cell.pareto .pc{color:var(--green)}
+/* live boards: a bar of counters, then rows of stat tiles with a row label */
+.board{position:absolute;left:96px;right:96px;top:176px;bottom:56px;display:flex;flex-direction:column;gap:18px}
+.bbar{display:flex;align-items:center;gap:30px;justify-content:center}
+.stats{flex:1;display:grid;grid-template-columns:170px 1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:16px}
+.stats.four{grid-template-columns:150px repeat(12,1fr);gap:12px}
+/* round one has four numbers and round two three: twelve columns under them, so each row fills (24 Sep 2026) */
+.stats.four .stat{grid-column:span 3} .stats.four .rowlab~.rowlab~.stat{grid-column:span 4}
+.stat{border:2.5px solid var(--ink);background:var(--paper-soft);padding:14px 18px;display:flex;flex-direction:column;justify-content:center;gap:6px;position:relative;min-width:0}
+.stat .sl{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px;color:var(--red);line-height:1.25}
+.stat .sv{font-family:var(--display);font-weight:900;font-size:60px;line-height:.9;color:var(--ink)}
+.stat .sv small{font-size:28px;color:var(--muted);margin-left:5px}
+.stat .sb{font-weight:600;font-size:15px;line-height:1.3;color:var(--ink)}
+.stat .sb b{color:var(--red)}
+.rowlab{display:flex;flex-direction:column;justify-content:center;gap:6px;border-left:6px solid var(--red);padding-left:14px;min-width:0}
+.rowlab .rn{font-family:var(--display);font-weight:900;font-size:28px;line-height:1;color:var(--ink)}
+.rowlab .rt{font-weight:600;font-size:14px;line-height:1.3;color:var(--muted)}
+.rowlab .rt b{color:var(--red)}
+/* golden balls beside the rules */
+.balls{display:flex;gap:18px;justify-content:center}
+.gball{width:110px;height:110px;border-radius:50%;background:var(--ochre);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  box-shadow:inset -8px -8px 0 rgba(27,28,25,.14),inset 0 0 0 7px var(--paper-soft);
+  font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:.06em;color:var(--ink)}
+/* the big figures beside Reagan's ultimatum (m7's pot beside the auction rules) */
+.aubig{border:2.5px solid var(--ink);background:var(--paper-soft);padding:14px 18px;display:flex;flex-direction:column;gap:4px}
+.aubig .l{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:13px;color:var(--red)}
+.aubig .v{font-family:var(--display);font-weight:900;font-size:64px;line-height:.9;color:var(--ink)}
+.aubig.hi .v{font-size:88px;color:var(--red)}
+.aubig .s,.aubig .who{font-weight:600;font-size:15px;color:var(--muted)}
+/* a tile that plays its clip over the slide (deck.js .ytplay, 23 Sep 2026): the Dr. Strangelove tile */
+/* a real case links to its source (Ryan, 25 Sep 2026), as the tiles on Strategic moves are everywhere do */
+a.tile{text-decoration:none;color:inherit}
+a.tile:hover .lbl{color:var(--red)}
+.tile .tsrc{font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-top:-8px}
+.figlink{display:block;line-height:0}
+.tile.ytplay{cursor:pointer}
+.tile.ytplay .pgwrap{position:relative}
+.ytbadge{position:absolute;right:-18px;top:-6px;width:40px;height:40px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center}
+.ytbadge svg{width:15px;height:15px;display:block;margin-left:2px}
+.tile.ytplay:hover .ytbadge{background:var(--ink)}
+/* How Pittsburgh lost its hub: Session 7's four dated cards in a row (its 1992 airline fare war) */
+.fwrow{position:absolute;left:64px;right:64px;top:230px;display:flex;align-items:stretch;gap:10px}
+.fwcard{flex:1;background:var(--card);border:2.5px solid var(--ink);padding:18px 18px 20px;display:flex;flex-direction:column;gap:8px}
+.fwcard.red{border-color:var(--red)}
+.fwcard .fwd{font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--red)}
+.fwcard .fwwho{font-family:var(--display);font-weight:900;font-size:22px;line-height:1.1;color:var(--ink)}
+.fwcard .fwwhat{font-weight:500;font-size:19px;line-height:1.35;color:var(--ink)}
+.fwcard .fwwhat b{color:var(--red)}
+.fwarrow{flex:none;align-self:center;font-family:var(--display);font-weight:900;font-size:30px;color:var(--red)}
+.fwq{position:absolute;left:96px;right:96px;top:500px;text-align:center;font-weight:700;font-size:26px;color:var(--red)}
+/* the first rule of game theory: the two players and the arrows between them */
+.ckfig{flex:none;height:250px;width:auto;align-self:center}
+/* Nosedive: one linked tile beside the 590 bullets */
+.rowfig a.tile{flex:none;width:340px;gap:18px}
+.rowfig a.tile .pgwrap{height:186px}
+.rowfig a.tile .pgwrap .pg{height:184px}
+.rowfig a.tile .lbl{font-size:20px}
+.rowfig a.tile .sent{font-size:18px}
+.rowfig a.tile .tsrc{font-size:12px;margin-top:-6px}
+/* Reagan's ultimatum: two big figures beside the bullets */
+.ultim{flex:none;width:300px;display:flex;flex-direction:column;gap:18px;margin-top:4px}
+.ultim .aubig .v.red{color:var(--red)}
+/* Credibility and reputation: his two lines under the clip */
+.repchips{position:absolute;left:96px;right:96px;bottom:60px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.repchips .chip{font-size:17px;padding:8px 18px;text-align:center;max-width:1060px}
+/* Extra resources: six reads, one of them a two-line title, so the columns sit a little higher and closer */
+.resrc.dense.tight{top:162px}
+.resrc.dense.tight .rcol{gap:5px}
+</style>
+</head><body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="im-two-players" viewBox="0 0 170 132"><g fill="var(--ink)"><circle cx="40" cy="20" r="14"/><path d="M17 46 Q40 36 63 46 L55 92 L25 92 Z"/><rect x="26" y="92" width="12" height="36"/><rect x="42" y="92" width="12" height="36"/></g><g fill="var(--red)"><circle cx="130" cy="20" r="14"/><path d="M107 46 Q130 36 153 46 L145 92 L115 92 Z"/><rect x="116" y="92" width="12" height="36"/><rect x="132" y="92" width="12" height="36"/></g></symbol>
+  <symbol id="im-mx2" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink)" x="54" y="54" width="40" height="40"/><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/></symbol>
+  <symbol id="im-tower" viewBox="0 0 64 64"><rect fill="var(--ink)" x="19" y="46" width="26" height="12"/><rect fill="var(--ink)" x="23" y="33" width="18" height="13"/><rect fill="var(--ink)" x="27" y="13" width="10" height="20"/><rect fill="var(--ink)" x="31" y="8" width="2" height="6"/><circle fill="var(--red)" cx="32" cy="7" r="2.6"/><rect fill="var(--paper)" x="28.5" y="18" width="7" height="1.6"/><rect fill="var(--paper)" x="28.5" y="23" width="7" height="1.6"/><rect fill="var(--paper)" x="28.5" y="28" width="7" height="1.6"/><rect fill="var(--paper)" x="25" y="38" width="14" height="1.8"/><rect fill="var(--paper)" x="21.5" y="51" width="21" height="1.8"/></symbol>
+  <symbol id="im-reverse-arrows" viewBox="0 0 64 64"><line x1="10" y1="42" x2="50" y2="42" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/><path d="M50,42 l-9,-6 m9,6 l-9,6" stroke="var(--ink)" stroke-width="3.5" fill="none" stroke-linecap="round"/><line x1="54" y1="24" x2="14" y2="24" stroke="var(--red)" stroke-width="3.5" stroke-linecap="round"/><path d="M14,24 l9,-6 m-9,6 l9,6" stroke="var(--red)" stroke-width="3.5" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="im-mx1" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"/><rect fill="var(--ink)" x="54" y="6" width="40" height="40"/><rect fill="var(--ink)" x="6" y="54" width="40" height="40"/><rect fill="var(--ink)" x="54" y="54" width="40" height="40"/><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="2.8"/></symbol>
+  <symbol id="im-mx3" viewBox="0 0 100 100"><g fill="var(--ink)"><rect x="4" y="4" width="27" height="27"/><rect x="36.5" y="4" width="27" height="27"/><rect x="69" y="4" width="27" height="27"/><rect x="4" y="36.5" width="27" height="27"/><rect x="36.5" y="36.5" width="27" height="27"/><rect x="69" y="36.5" width="27" height="27"/><rect x="4" y="69" width="27" height="27"/><rect x="36.5" y="69" width="27" height="27"/><rect x="69" y="69" width="27" height="27"/></g><g fill="none" stroke="var(--red)" stroke-width="2.8"><rect x="6.5" y="6.5" width="22" height="22"/><rect x="39" y="39" width="22" height="22"/><rect x="71.5" y="71.5" width="22" height="22"/></g></symbol>
+  <symbol id="im-lock" viewBox="0 0 64 64"><rect fill="var(--ink,#1B1C19)" x="15" y="29" width="34" height="27" rx="4"></rect><path fill="none" stroke="var(--ink,#1B1C19)" stroke-width="5" d="M22 29 v-6 a10 10 0 0 1 20 0 v6"></path><circle fill="var(--red,#CE1E32)" cx="32" cy="40" r="4.2"></circle><path fill="var(--red,#CE1E32)" d="M30.4 41 h3.2 l-1 9 h-1.2 z"></path></symbol>
+  <symbol id="im-fist" viewBox="0 0 64 64"><rect fill="var(--red,#CE1E32)" x="25" y="34" width="13" height="25" rx="2"></rect><rect fill="var(--red,#CE1E32)" x="21" y="19" width="21" height="18" rx="4"></rect><rect fill="var(--red,#CE1E32)" x="17" y="25" width="6" height="9" rx="3"></rect><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="26" y1="21" x2="26" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="31" y1="20" x2="31" y2="30"></line><line fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="2" stroke-linecap="round" x1="37" y1="21" x2="37" y2="30"></line></symbol>
+  <symbol id="im-shield" viewBox="0 0 64 64"><path fill="var(--ink,#1B1C19)" d="M32 6 L54 14 V32 Q54 50 32 60 Q10 50 10 32 V14 Z"></path><path fill="none" stroke="var(--paper,#E9E2D2)" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" d="M22 31 l7 7 l13 -15"></path></symbol>
+</svg>
+
+<div class="viewport"><div class="stage">
+
+<section class="slide cover active" data-i="0">
+  <div class="ghost">8</div>
+  <div class="tag"><i></i>SESSION 8 · STRATEGIC NEGOTIATION · <span class="swapchip">CLIENT</span></div>
+  <h1>STRATEGIC<br><span class="r">MOVES</span></h1>
+  <div class="sub">Coordination, commitment and credibility in negotiations</div>
+  <div class="strip">
+    <span class="cchip"><svg class="pg" viewBox="0 0 170 132"><use href="#im-two-players"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx2"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-tower"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-lock"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-fist"/></svg></span>
+    <span class="cchip"><svg class="pg" viewBox="0 0 64 64"><use href="#im-shield"/></svg></span>
+  </div>
+  <div class="byline">RYAN LAMARE</div>
+</section>
+
+<!-- 17 Oct 2026: the objectives of Modules 5 and 7 rewritten for this session (Claude's first wording, for Ryan to change):
+     1 is m5's, 3 is m7's first and third together in the programme page's words -->
+<section class="slide content" data-i="1">
+  <div class="kicker"><i></i>SESSION 8</div>
+  <h2>Learning objectives</h2>
+  <div class="rail" style="min-width:980px">
+    <div class="ritem" data-step="1"><div class="rn">1</div><div class="rt">A test of your common knowledge skills</div></div>
+    <div class="ritem" data-step="2"><div class="rn">2</div><div class="rt">Recognize when a negotiation is a coordination game, and why common knowledge matters</div></div>
+    <div class="ritem" data-step="3"><div class="rn">3</div><div class="rt">See how commitments, threats and promises change a negotiation, as long as they are credible</div></div>
+    <div class="ritem" data-step="4"><div class="rn">4</div><div class="rt">Reshape one of your own negotiations with a strategic move</div></div>
+  </div>
+</section>
+
+<section class="slide content" data-i="2">
+  <div class="kicker"><i></i>SESSION 8</div>
+  <h2>Games with multiple equilibria</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:40px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>So far, we have considered only games where <b>one unique solution</b> is present</li>
+      <li data-step="1">But there are often instances where individuals can conceive of many strategies capable of generating similar outcomes</li>
+      <li data-step="2">Games with multiple equilibria often require some sort of <b>coordination</b> by the players in order to reach a useful resolution</li>
+    </ul>
+    <!-- the shift, lifted from the LER 565 week-4 lecture: one red box becomes several -->
+    <div class="ba">
+      <div class="station then"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx1"/></svg><div class="slbl">One equilibrium</div></div>
+      <div class="arrow" data-step="1">&rarr;</div>
+      <div class="station now" data-step="1"><svg class="pg" viewBox="0 0 100 100"><use href="#im-mx3"/></svg><div class="slbl">MANY equilibria</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 Oct 2026: his BADM 590 slide (Backward reasoning in negotiations, slide 15), word for word; in 590 it led
+     straight into the common knowledge quiz, as it does here. The figure is the two players from the cover -->
+<section class="slide content" data-i="3">
+  <div class="kicker"><i></i>SESSION 8 · COMMON KNOWLEDGE</div>
+  <h2>The first rule of game theory: it&rsquo;s not (just) about you!</h2>
+  <div class="rowfig" style="align-items:center;gap:44px">
+    <ul class="bullets" style="margin-top:0">
+      <li>At its core, the game theoretic way of thinking strategically requires that whatever action one entity does must affect the other side and vice versa</li>
+      <li data-step="1">This means that you cannot think one-dimensionally if you want to think strategically</li>
+      <li data-step="2">Everything you do has consequences for both you and your opponent</li>
+      <li data-step="3">Equally, everything your opponent does has consequences for both you and your opponent</li>
+      <li data-step="4"><b>AND&hellip;you both know this to be true!</b> This can be thought of as the requirement for <b>common knowledge</b></li>
+    </ul>
+    <svg class="pg ckfig" viewBox="0 0 340 280" aria-hidden="true"><use href="#im-two-players" x="0" y="16" width="340" height="264"/><use href="#im-reverse-arrows" x="130" y="44" width="80" height="80"/></svg>
+  </div>
+</section>
+
+<section class="slide content" data-i="4">
+  <div class="kicker"><i></i>SESSION 8 · THE COMMON KNOWLEDGE QUIZ</div>
+  <h2>Let&rsquo;s have a pop quiz!</h2>
+  <div class="fig" style="top:172px;bottom:56px">
+    <img class="figimg" src="pop-quiz.jpg" alt="The two-buttons meme: a sweating man must choose between a button labelled 'the answer I think is correct' and one labelled 'the answer I think everyone else thinks is correct'" style="max-height:100%">
+  </div>
+</section>
+
+<section class="slide content" data-i="5">
+  <div class="kicker"><i></i>SESSION 8 · THE COMMON KNOWLEDGE QUIZ</div>
+  <h2>HOW GOOD IS YOUR COORDINATION?</h2>
+  <div class="rowfig" style="top:200px">
+    <ul class="bullets" style="max-width:640px">
+      <li>The goal is to get as many answers correct as you possibly can within a ten-minute time window</li>
+      <li data-step="1">But here&rsquo;s the thing: <b>the right answer is the answer the room provides</b>. You score a point only when at least 80% of the room answers the way you did</li>
+      <li data-step="2">No conferring: you are coordinating on your <b>instinct</b>!</li>
+      <li data-step="3">Answer all the questions on your phones. Then we&rsquo;ll go through the scores together</li>
+    </ul>
+  </div>
+  <div class="qrpanel quizpanel" style="top:188px">
+    <div class="joinchip">
+      <div class="qr"><img src="qr-quiz.svg" alt="QR code for the common knowledge quiz"></div>
+      <div class="ju">On your phones</div>
+    </div>
+    <div class="timerbox">
+      <div class="t" id="timerT">10:00</div>
+      <button id="timerBtn" type="button">START 10 MINUTES</button>
+    </div>
+    <div class="quizprog"><span><b id="qzStart">&ndash;</b>STARTED</span><span><b id="qzDone">&ndash;</b>FINISHED</span></div>
+  </div>
+  <div class="talk" data-step="4" style="right:480px">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> Compare your answers. Where did you match without talking, and why?</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="6">
+  <div class="kicker"><i></i>SESSION 8 · THE COMMON KNOWLEDGE QUIZ</div>
+  <h2>Where the room converged</h2>
+  <div class="fig" style="top:180px;bottom:50px;justify-content:flex-start;gap:0">
+    <div class="krows">
+      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k1"><div class="demotag" style="top:-13px" id="krD">DEMO DATA</div><span class="ql">coin flip</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k2"><span class="ql">positive number</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k3"><span class="ql">boxes</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="4" data-stepcall="krRow" data-k="k4"><span class="ql">13 &middot; 261 &middot; 100 &middot; 99 &middot; 555</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="5" data-stepcall="krRow" data-k="k5"><span class="ql">Meet in Paris</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="6" data-stepcall="krRow" data-k="k6"><span class="ql">Meet in New York</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="7" data-stepcall="krRow" data-k="k7"><span class="ql">Meet in London</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="8" data-stepcall="krRow" data-k="k8"><span class="ql">american football player</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="7">
+  <div class="kicker"><i></i>SESSION 8 · THE COMMON KNOWLEDGE QUIZ</div>
+  <h2>Where the room converged</h2>
+  <div class="fig" style="top:180px;bottom:50px;justify-content:flex-start;gap:0">
+    <div class="krows">
+      <div class="krow" data-step="1" data-stepcall="krRow" data-k="k9"><div class="demotag" style="top:-13px" id="krD2">DEMO DATA</div><span class="ql">pop singer</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="2" data-stepcall="krRow" data-k="k10"><span class="ql">election</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="3" data-stepcall="krRow" data-k="k11"><span class="ql">&pound;100, two piles</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="4" data-stepcall="krRow" data-k="k12"><span class="ql">favourite football club</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="5" data-stepcall="krRow" data-k="k13"><span class="ql">favourite national team</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="6" data-stepcall="krRow" data-k="k14"><span class="ql">First thing tomorrow</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="7" data-stepcall="krRow" data-k="k15"><span class="ql">dropped call</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+      <div class="krow" data-step="8" data-stepcall="krRow" data-k="k16"><span class="ql">Pick a colour</span><span class="qa"></span><div class="qbar"><i></i></div><span class="qp"></span><span class="qm"></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="8">
+  <div class="kicker"><i></i>SESSION 8 · FOCAL POINTS</div>
+  <h2>COORDINATION, Focal points, and common knowledge</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:50px">
+    <ul class="bullets" style="max-width:640px;margin-top:0">
+      <li>The right answer was wherever you thought the room would agree together. We need to identify a <b>focal point</b> where our expectations can converge</li>
+      <li data-step="1">How might we find one? We have to recall what we know about <b>common knowledge</b></li>
+      <li class="sub" data-step="2">Do you know what everyone else in the room will answer?</li>
+      <li class="sub" data-step="3">Does everyone else know that you know?</li>
+      <li class="sub" data-step="4">Are you all 100 percent sure?</li>
+    </ul>
+    <div class="conv" style="flex:none;width:400px;align-self:center">
+      <svg class="pg" viewBox="0 0 300 200" style="height:290px" role="img" aria-label="People all around the room, every line of sight meeting at one tower: the focal point"><!-- 25 Sep 2026 redraw: the room converging on one spot (was two arrows) --><g fill="var(--ink)"><circle cx="26" cy="112" r="5.5"/><path d="M18 121 Q26 118 34 121 L32 136 L20 136 Z"/></g><g fill="var(--ink)"><circle cx="58" cy="176" r="5.5"/><path d="M50 185 Q58 182 66 185 L64 200 L52 200 Z"/></g><g fill="var(--ink)"><circle cx="242" cy="176" r="5.5"/><path d="M234 185 Q242 182 250 185 L248 200 L236 200 Z"/></g><g fill="var(--ink)"><circle cx="274" cy="112" r="5.5"/><path d="M266 121 Q274 118 282 121 L280 136 L268 136 Z"/></g><g fill="var(--ink)"><circle cx="66" cy="44" r="5.5"/><path d="M58 53 Q66 50 74 53 L72 68 L60 68 Z"/></g><g fill="var(--ink)"><circle cx="234" cy="44" r="5.5"/><path d="M226 53 Q234 50 242 53 L240 68 L228 68 Z"/></g><g stroke="var(--red)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="7 6"><line x1="41.7" y1="118.7" x2="120.6" y2="102.2"/><line x1="69.4" y1="174.8" x2="128.6" y2="117.0"/><line x1="230.6" y1="174.8" x2="171.4" y2="117.0"/><line x1="258.3" y1="118.7" x2="179.4" y2="102.2"/><line x1="80.3" y1="61.2" x2="123.2" y2="82.6"/><line x1="219.7" y1="61.2" x2="176.8" y2="82.6"/></g><g data-step="1" transform="translate(30 22)"><rect fill="var(--ink)" x="100" y="108" width="40" height="22"></rect><rect fill="var(--ink)" x="105" y="86" width="30" height="22"></rect><rect fill="var(--ink)" x="111" y="42" width="18" height="44"></rect><rect fill="var(--ink)" x="114" y="34" width="12" height="8"></rect><rect fill="var(--ink)" x="119" y="16" width="2" height="18"></rect><circle fill="var(--ink)" cx="120" cy="16" r="3"></circle><rect fill="var(--paper)" x="113" y="50" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="58" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="66" width="14" height="2"></rect><rect fill="var(--paper)" x="113" y="74" width="14" height="2"></rect><rect fill="var(--paper)" x="108" y="94" width="24" height="2"></rect><rect fill="var(--paper)" x="104" y="116" width="32" height="2"></rect></g></svg>
+      <div class="cap" style="text-align:center;max-width:32ch">The spot everyone guesses is the <b>focal point</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 Oct 2026: his BADM 590 slides 2 and 3 (Negotiations beyond the PD: Black Mirror, and Negotiation as a
+     coordination game in Black Mirror), his words. His 590 slide played a clip that is not in the source deck, so the
+     tile opens Nosedive on Netflix, the link the programme page gives; the phone is Claude's drawing -->
+<section class="slide content" data-i="9">
+  <div class="kicker"><i></i>SESSION 8 · COORDINATION</div>
+  <h2>Negotiation as a coordination game in Black Mirror</h2>
+  <div class="rowfig" style="align-items:flex-start;top:222px;gap:56px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Negotiations are often thought of as a &ldquo;coordination game&rdquo; between parties with asymmetric preferences</li>
+      <li data-step="1">Both sides value agreeing over not agreeing, but <b>each wants the other to agree on their terms</b></li>
+      <li data-step="2">Think about a situation where a husband and wife want to go see a movie but have different preferences for the movie option</li>
+    </ul>
+    <a class="tile" href="https://www.netflix.com/title/70264888" target="_blank" rel="noopener" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="30 0 60 120" aria-hidden="true"><rect x="34" y="4" width="52" height="112" rx="8" fill="var(--ink)"/><rect x="39" y="14" width="42" height="88" rx="2" fill="var(--paper)"/><circle cx="60" cy="40" r="9" fill="var(--ink)"/><path d="M45 66 Q60 54 75 66 L73 73 L47 73 Z" fill="var(--ink)"/><path d="M44.0 81.2 L45.2 84.4 L48.6 84.5 L45.9 86.6 L46.8 89.9 L44.0 88.0 L41.2 89.9 L42.1 86.6 L39.4 84.5 L42.8 84.4 Z" fill="var(--red)"/><path d="M52.0 81.2 L53.2 84.4 L56.6 84.5 L53.9 86.6 L54.8 89.9 L52.0 88.0 L49.2 89.9 L50.1 86.6 L47.4 84.5 L50.8 84.4 Z" fill="var(--red)"/><path d="M60.0 81.2 L61.2 84.4 L64.6 84.5 L61.9 86.6 L62.8 89.9 L60.0 88.0 L57.2 89.9 L58.1 86.6 L55.4 84.5 L58.8 84.4 Z" fill="var(--red)"/><path d="M68.0 81.2 L69.2 84.4 L72.6 84.5 L69.9 86.6 L70.8 89.9 L68.0 88.0 L65.2 89.9 L66.1 86.6 L63.4 84.5 L66.8 84.4 Z" fill="var(--red)"/><path d="M76.0 81.2 L77.2 84.4 L80.6 84.5 L77.9 86.6 L78.8 89.9 L76.0 88.0 L73.2 89.9 L74.1 86.6 L71.4 84.5 L74.8 84.4 Z" fill="var(--rule)"/><circle cx="60" cy="109" r="3" fill="var(--paper)"/></svg></div>
+      <div class="lbl">Black Mirror: Nosedive</div>
+      <div class="sent">A society in which success is defined by your ability to tacitly negotiate to coordinate with everyone around you</div>
+      <div class="tsrc">Netflix &#8599;</div>
+    </a>
+  </div>
+</section>
+
+<section class="slide content" data-i="10">
+  <div class="kicker"><i></i>SESSION 8 · BATTLE OF THE SEXES</div>
+  <h2>Battle of the sexes</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:44px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>Here, unlike in the quiz, you have a problem</li>   <!-- m5 says "unlike in stag hunt", which is not taught in this session; in the quiz too everyone wanted only to match -->
+      <li data-step="1">There are two equilibria, but the players have <b>different preferences</b> for each equilibrium point</li>
+      <li data-step="2">You&rsquo;d both rather end up together than apart &ndash; and that makes coordination more difficult, and communication trickier as well</li>
+      <li data-step="3"><b>Commonly known as the &ldquo;Battle of the Sexes&rdquo;</b></li>
+    </ul>
+    <div style="flex:none;align-self:center">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
+        <div class="chead">PARTNER B</div>
+        <div class="rhead">PARTNER A</div>
+        <div class="cl" style="grid-column:3">Plan A</div>
+        <div class="cl" style="grid-column:4">Plan B</div>
+        <div class="rl" style="grid-row:3">Plan A</div>
+        <div class="rl" style="grid-row:4">Plan B</div>
+        <div class="cell" id="bs11" style="grid-row:3;grid-column:3"><span class="pa">2</span><span class="pc">,</span><span class="pb">1</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" id="bs22" style="grid-row:4;grid-column:4"><span class="pa">1</span><span class="pc">,</span><span class="pb">2</span></div>
+      </div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="bs11,bs22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="11">
+  <div class="kicker"><i></i>SESSION 8 · LET&rsquo;S PLAY</div>
+  <h2>The hub lease</h2>
+  <div class="rowfig tprules" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets tight" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li>USA Air runs its hub out of Vicksburg Airport. The lease is up, and the airline wants <b>a big cut in its gate and landing fees</b>, or it moves the hub</li>
+      <li data-step="1">Vicksburg has said it can&rsquo;t afford the cut. Each side can <b>hold firm</b> or <b>give ground</b></li>
+      <li data-step="2">If one side gives ground, the other gets its way. If both give, you split the difference</li>
+      <li data-step="3">If both hold firm, <b>the hub is moved elsewhere</b>: USA Air loses its network, and Vicksburg loses its biggest tenant and the jobs that come with it</li>
+      <li data-step="4">Vote. Then <b>one volunteer should try to convince the other side to switch</b> &ndash; and we vote again</li>   <!-- his wording, 30 Sep 2026: in chicken the volunteer's talk is a threat, not a bridge -->
+    </ul>
+    <div class="tpside">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="tpjoin"><div class="tpqr"><img src="qr-hub.svg" alt="QR code for the hub lease vote"></div><div class="ju">On your phones</div></div>
+        <div class="livecount"><span class="n" id="chkN">0</span><span class="l" id="chkL">IN ROUND 1</span></div>
+      </div>
+      <div class="mx" style="--cols:2;--rows:2;--cw:186px;--rh:72px"> <!-- 186px: "Hub moves, Hub moves" on one line (25 Sep 2026) -->
+        <div class="chead" style="white-space:nowrap">VICKSBURG</div>
+        <div class="rhead" style="white-space:nowrap">USA AIR</div>
+        <div class="cl" style="grid-column:3">Give ground</div>
+        <div class="cl" style="grid-column:4">Hold firm</div>
+        <div class="rl" style="grid-row:3;max-width:none">Give ground</div>
+        <div class="rl" style="grid-row:4;max-width:none">Hold firm</div>
+        <div class="cell words" style="grid-row:3;grid-column:3;font-size:15px"><span class="pa">Split</span><span class="pc">,</span><span class="pb">Split</span></div>
+        <div class="cell words" style="grid-row:3;grid-column:4;font-size:15px"><span class="pa">Gives in</span><span class="pc">,</span><span class="pb">Gets its way</span></div>
+        <div class="cell words" style="grid-row:4;grid-column:3;font-size:15px"><span class="pa">Gets its way</span><span class="pc">,</span><span class="pb">Gives in</span></div>
+        <div class="cell words" style="grid-row:4;grid-column:4;font-size:15px"><span class="pa">Hub moves</span><span class="pc">,</span><span class="pb">Hub moves</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="12">
+  <div class="kicker"><i></i>SESSION 8 · LET&rsquo;S PLAY</div>
+  <h2>Who gave ground?</h2>
+  <div class="tboard" id="chkBoard">
+    <div class="tbar">
+      <div class="livecount"><span class="n" id="chkN2">0</span><span class="l" id="chkL2">IN ROUND 1</span></div>
+      <div class="tlegend"><span class="lg r"><i></i>USA Air</span><span class="lg t"><i></i>Vicksburg</span></div>
+      <span class="tstate" id="chkState">ROUND 1 OPEN</span>
+      <div class="demotag" id="chkD" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="tpanels">
+      <!-- 30 Sep 2026, his ask: chicken is won by a split, so each round is the game's own matrix (the rules slide's), each side's votes beside its
+           moves and the cell the two majorities land in boxed in red; no equilibrium is marked, since the next slide names them -->
+      <div class="tpanel" id="chkP1">
+        <div class="tph">Round 1</div>
+        <div class="mx cmx" style="--cols:2;--rows:2;--cw:156px;--rh:82px">
+        <div class="chead" style="white-space:nowrap">VICKSBURG</div>
+        <div class="rhead" style="white-space:nowrap">USA AIR</div>
+        <div class="cl" style="grid-column:3">Give ground<b class="cmn" id="chk-1-ta"></b></div>
+        <div class="cl" style="grid-column:4">Hold firm<b class="cmn" id="chk-1-tb"></b></div>
+        <div class="rl" style="grid-row:3;max-width:none">Give ground<b class="cmn" id="chk-1-ra"></b></div>
+        <div class="rl" style="grid-row:4;max-width:none">Hold firm<b class="cmn" id="chk-1-rb"></b></div>
+        <div class="cell words" id="chk-1-aa" style="grid-row:3;grid-column:3;font-size:15px"><span class="pa">Split</span><span class="pc">,</span><span class="pb">Split</span></div>
+        <div class="cell words" id="chk-1-ab" style="grid-row:3;grid-column:4;font-size:15px"><span class="pa">Gives in</span><span class="pc">,</span><span class="pb">Gets its way</span></div>
+        <div class="cell words" id="chk-1-ba" style="grid-row:4;grid-column:3;font-size:15px"><span class="pa">Gets its way</span><span class="pc">,</span><span class="pb">Gives in</span></div>
+        <div class="cell words" id="chk-1-bb" style="grid-row:4;grid-column:4;font-size:15px"><span class="pa">Hub moves</span><span class="pc">,</span><span class="pb">Hub moves</span></div>
+        </div>
+        <div class="tverdict" id="chk-1-v"></div>
+      </div>
+      <div class="tpanel" id="chkP2">
+        <div class="tph">Round 2</div>
+        <div class="mx cmx" style="--cols:2;--rows:2;--cw:156px;--rh:82px">
+        <div class="chead" style="white-space:nowrap">VICKSBURG</div>
+        <div class="rhead" style="white-space:nowrap">USA AIR</div>
+        <div class="cl" style="grid-column:3">Give ground<b class="cmn" id="chk-2-ta"></b></div>
+        <div class="cl" style="grid-column:4">Hold firm<b class="cmn" id="chk-2-tb"></b></div>
+        <div class="rl" style="grid-row:3;max-width:none">Give ground<b class="cmn" id="chk-2-ra"></b></div>
+        <div class="rl" style="grid-row:4;max-width:none">Hold firm<b class="cmn" id="chk-2-rb"></b></div>
+        <div class="cell words" id="chk-2-aa" style="grid-row:3;grid-column:3;font-size:15px"><span class="pa">Split</span><span class="pc">,</span><span class="pb">Split</span></div>
+        <div class="cell words" id="chk-2-ab" style="grid-row:3;grid-column:4;font-size:15px"><span class="pa">Gives in</span><span class="pc">,</span><span class="pb">Gets its way</span></div>
+        <div class="cell words" id="chk-2-ba" style="grid-row:4;grid-column:3;font-size:15px"><span class="pa">Gets its way</span><span class="pc">,</span><span class="pb">Gives in</span></div>
+        <div class="cell words" id="chk-2-bb" style="grid-row:4;grid-column:4;font-size:15px"><span class="pa">Hub moves</span><span class="pc">,</span><span class="pb">Hub moves</span></div>
+        </div>
+        <div class="tverdict" id="chk-2-v"></div>
+      </div>
+    </div>
+  </div>
+  <span data-step="1" data-stepcall="tbReveal" data-g="chk" data-r="1" style="position:absolute;width:0;height:0"></span>
+  <span data-step="2" data-stepcall="tbOpen" data-g="chk" style="position:absolute;width:0;height:0"></span>
+  <span data-step="3" data-stepcall="tbReveal" data-g="chk" data-r="2" style="position:absolute;width:0;height:0"></span>
+</section>
+
+<section class="slide content" data-i="13">
+  <div class="kicker"><i></i>SESSION 8 · CHICKEN</div>
+  <h2>Chicken</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:44px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>Two drivers head straight at each other. Whoever swerves first loses face, and whoever holds the line wins</li>
+      <li data-step="1">If both swerve, nobody wins and nobody loses</li>
+      <li data-step="2">If neither swerves, both crash &ndash; the worst outcome for both of them</li>
+      <li data-step="3">Two equilibria again &ndash; one swerves, one goes straight &ndash; <b>but each of you wants to be the one who goes straight</b></li>
+    </ul>
+    <div style="flex:none;align-self:flex-start;margin-top:14px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
+        <div class="chead">DRIVER 2</div>
+        <div class="rhead">DRIVER 1</div>
+        <div class="cl" style="grid-column:3">Swerve</div>
+        <div class="cl" style="grid-column:4">Straight</div>
+        <div class="rl" style="grid-row:3">Swerve</div>
+        <div class="rl" style="grid-row:4">Straight</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell" id="k12" style="grid-row:3;grid-column:4"><span class="pa">&minus;10</span><span class="pc">,</span><span class="pb">+10</span></div>
+        <div class="cell" id="k21" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">&minus;10</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">&minus;100</span><span class="pc">,</span><span class="pb">&minus;100</span></div>
+      </div>
+    </div>
+    <span data-step="3" data-stepcall="mxMark" data-cells="k12,k21" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="14">
+  <div class="kicker"><i></i>SESSION 8 · CHICKEN</div>
+  <h2>Solving games of chicken</h2>
+  <div class="rowfig" style="align-items:flex-start;gap:44px">
+    <ul class="bullets" style="margin-top:0;flex:1">
+      <li>There are two equilibria here but the incentive to go straight results in a catastrophic outcome if you can't coordinate</li>
+      <li data-step="1"><b>So how do you win?</b></li>
+      <li data-step="2">One way is to convince the other side that under no circumstances will you swerve &ndash; we&rsquo;ll return to commitment and credibility later when we talk about strategic moves</li>
+      <li data-step="3">Another way is to alternate swerve/straight strategies if you play a repeated game (knowing if a game repeats is crucial)</li>
+    </ul>
+    <div style="flex:none;align-self:flex-start;margin-top:14px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:76px">
+        <div class="chead">DRIVER 2</div>
+        <div class="rhead">DRIVER 1</div>
+        <div class="cl" style="grid-column:3">Swerve</div>
+        <div class="cl" style="grid-column:4">Straight</div>
+        <div class="rl" style="grid-row:3">Swerve</div>
+        <div class="rl" style="grid-row:4">Straight</div>
+        <div class="cell" style="grid-row:3;grid-column:3"><span class="pa">0</span><span class="pc">,</span><span class="pb">0</span></div>
+        <div class="cell eq" style="grid-row:3;grid-column:4"><span class="pa">&minus;10</span><span class="pc">,</span><span class="pb">+10</span></div>
+        <div class="cell eq" style="grid-row:4;grid-column:3"><span class="pa">+10</span><span class="pc">,</span><span class="pb">&minus;10</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4"><span class="pa">&minus;100</span><span class="pc">,</span><span class="pb">&minus;100</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 17 Oct 2026, for Ryan to change: a real hub lease. Every fact is from the Pittsburgh Post-Gazette's The Long
+     Decline (Mark Belko, 30 Aug 2021, syndicated by Aviation Pros, on Extra resources), kept on the deal and off 9/11.
+     The cards are Session 7's airline price war cards -->
+<section class="slide content" data-i="15">
+  <div class="kicker"><i></i>SESSION 8 &middot; EXAMPLES</div>
+  <h2>How Pittsburgh lost its US Airways hub</h2>
+  <div class="fwrow">
+    <div class="fwcard">
+      <div class="fwd">August 2001</div>
+      <div class="fwwho">Pittsburgh</div>
+      <div class="fwwhat">633 flights a day, from a terminal <b>built to the airline&rsquo;s specifications</b></div>
+    </div>
+    <div class="fwarrow" data-step="1">&rarr;</div>
+    <div class="fwcard" data-step="1">
+      <div class="fwd">2003</div>
+      <div class="fwwho">US Airways</div>
+      <div class="fwwhat">Cancels its leases at the airport <b>without any notice</b>, just before it leaves bankruptcy</div>
+    </div>
+    <div class="fwarrow" data-step="2">&rarr;</div>
+    <div class="fwcard" data-step="2">
+      <div class="fwd">September 2004</div>
+      <div class="fwwho">US Airways</div>
+      <div class="fwwhat">About <b>300 daily flights</b> already cut</div>
+    </div>
+    <div class="fwarrow" data-step="3">&rarr;</div>
+    <div class="fwcard red" data-step="3">
+      <div class="fwd">Two months later</div>
+      <div class="fwwho">The hub</div>
+      <div class="fwwhat"><b>Shut down</b></div>
+    </div>
+  </div>
+  <div class="fwq" data-step="4">US Airways&rsquo; chief executive &ldquo;felt negotiations would lead to nothing, and the clock was ticking&rdquo;, and the airport built for the airline lost its hub</div>
+</section>
+
+<section class="slide content" data-i="16">
+  <div class="kicker"><i></i>SESSION 8 · STRATEGIC MOVES</div>
+  <h2>What is a strategic move?</h2>
+  <div class="leadline" style="margin-top:20px">A strategic move <b>changes the game</b> to your advantage</div>
+  <div class="leadline" data-step="1" style="margin-top:8px;font-size:18px;color:var(--muted)">By acting before the game begins, and specifically by moving in a way the other side can see, you can change what they will rationally do</div>   <!-- 29 Sep 2026: his own sentence, from the client page (rrpf/programme, Module 7) -->
+  <div class="smgrid">
+    <div class="smrow cond">
+      <div class="mcard red" data-step="2">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="none" stroke="var(--ink)" stroke-width="5" d="M4 32 Q32 6 60 32 Q32 58 4 32 Z"/><circle fill="var(--ink)" cx="32" cy="32" r="11"/><circle fill="var(--paper)" cx="32" cy="32" r="4"/></svg>
+        <div><div class="mt">Observable</div><div class="ms">Otherwise they won&rsquo;t know what changed</div></div>
+      </div>
+      <div class="mcard red" data-step="2">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="none" stroke="var(--ink)" stroke-width="6" d="M20 30 v-10 a12 12 0 0 1 24 0 v10"/><rect fill="var(--ink)" x="12" y="30" width="40" height="30" rx="4"/><circle fill="var(--paper)" cx="32" cy="44" r="4"/></svg>
+        <div><div class="mt">Irreversible</div><div class="ms">Or at least it has to look that way</div></div>
+      </div>
+    </div>
+    <div class="smlab" data-step="3">THREE KINDS</div>
+    <div class="smrow">
+      <div class="mcard" data-step="3">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><circle fill="var(--ink)" cx="32" cy="10" r="6"/><circle fill="var(--paper)" cx="32" cy="10" r="2.5"/><rect fill="var(--ink)" x="29.5" y="14" width="5" height="38"/><rect fill="var(--ink)" x="20" y="22" width="24" height="5"/><path fill="var(--ink)" d="M12 40 Q12 56 32 58 Q52 56 52 40 L46 43 Q43 50 32 50 Q21 50 18 43 Z"/></svg>
+        <div><div class="mt">Commitment</div><div class="ms">&ldquo;I'll do X, whatever you do&rdquo;</div><div class="mc" data-step="5">The catch: you can&rsquo;t back out, even when you&rsquo;d like to</div></div>
+      </div>
+      <div class="mcard" data-step="4">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="var(--red)" d="M36 4 L14 36 L30 36 L26 60 L50 26 L34 26 Z"/></svg>
+        <div><div class="mt">Threat</div><div class="ms">&ldquo;Unless you do X, I'll hurt you&rdquo;</div><div class="mc" data-step="5">The catch: if it fails, you have to carry it out</div></div>
+      </div>
+      <div class="mcard" data-step="4">
+        <svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><g fill="var(--ink)"><rect x="19" y="10" width="6.5" height="26" rx="3.2"/><rect x="27.5" y="4" width="6.5" height="32" rx="3.2"/><rect x="36" y="8" width="6.5" height="28" rx="3.2"/><rect x="44.5" y="14" width="6.5" height="22" rx="3.2"/><path d="M19 30 H51 V44 Q51 58 37 60 H31 Q19 58 19 44 Z"/><path d="M19 38 L8 28 Q5 25 8 22 Q11 20 14 23 L22 31 Z"/></g></svg>
+        <div><div class="mt">Promise</div><div class="ms">&ldquo;If you do X, I'll help you&rdquo;</div><div class="mc" data-step="5">The catch: if it works, you have to pay up</div></div>
+      </div>
+    </div>
+    <div class="smlab" data-step="4" style="color:var(--red)">A COMMITMENT IS UNCONDITIONAL. A THREAT OR A PROMISE IS &ldquo;IF THIS, THEN THAT&rdquo;</div>
+  </div>
+</section>
+
+<!-- 17 Oct 2026: m7's Credibility, whose example (the alarm, and Clocky) went with commitment and sleep. Reagan's
+     ultimatum, the programme page's example, takes its place, with only m7's own facts (its Strategic moves are
+     everywhere tile, from the Miller Center) and his catch for a threat from What is a strategic move? -->
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>SESSION 8 · CREDIBILITY</div>
+  <h2>Credibility</h2>
+  <div class="rowfig" style="align-items:flex-start;top:212px;gap:44px">
+    <ul class="bullets" style="margin-top:0">
+      <li><b>Strategic moves are only as valuable as they are credible</b></li>
+      <li data-step="1">Commitment devices don&rsquo;t work unless the other side actually believes them to be authentic</li>
+      <li data-step="2">In August 1981, President Reagan gave the striking air traffic controllers 48&nbsp;hours to return to work</li>
+      <li data-step="3">Then he fired more than 11,000 of them</li>
+      <li data-step="4"><b>The catch with a threat: if it fails, you have to carry it out</b></li>
+    </ul>
+    <div class="ultim">
+      <div class="aubig" data-step="2"><div class="l">The ultimatum</div><div class="v">48 hours</div></div>
+      <div class="aubig" data-step="3"><div class="l">Then fired</div><div class="v red">11,000+</div><div class="s">air traffic controllers</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="18">
+  <div class="kicker"><i></i>SESSION 8 · CREDIBILITY</div>
+  <h2>Credibility and irreversibility</h2>
+  <div class="leadline" style="margin-top:20px">Forcing yourself into a strategic move that you cannot undo is an <b>extreme form of credibility</b></div>
+  <div class="tiles" style="top:260px;gap:50px">
+    <a class="tile" href="https://www.nationalgeographic.com/culture/article/exclusive-clue-underwater-hunt-conquistador-lost-ships-archaeology" target="_blank" rel="noopener" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 120" aria-hidden="true"><g class="ink"><path d="M20 78 L150 78 L136 104 L34 104 Z"/><rect x="82" y="14" width="6" height="64"/><path d="M88 18 L136 48 L88 52 Z"/></g><g class="red"><path d="M8 104 Q30 90 52 104 Q74 118 96 104 Q118 90 140 104 Q152 112 164 104 L164 118 L8 118 Z"/></g></svg></div>
+      <div class="lbl">CORT&Eacute;S, 1519</div>
+      <div class="sent">Lands in Mexico and scuttles his own ships. With no way home, his men have one option left</div>
+      <div class="tsrc">National Geographic &#8599;</div>
+    </a>
+    <a class="tile" href="https://tuck.dartmouth.edu/news/articles/the-business-case-for-an-open-mind" target="_blank" rel="noopener" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 170 120" aria-hidden="true"><g class="ink"><rect x="22" y="30" width="126" height="72" rx="8"/><rect x="60" y="18" width="40" height="16" rx="3"/></g><g class="knock"><circle cx="85" cy="64" r="22"/><rect x="34" y="88" width="102" height="8"/></g><g class="red"><circle cx="85" cy="64" r="12"/><rect x="128" y="40" width="10" height="10"/></g></svg></div>
+      <div class="lbl">POLAROID</div>
+      <div class="sent">Committed to making its money on instant film. When digital arrived there was no way back</div>
+      <div class="tsrc">Tuck School of Business &#8599;</div>
+    </a>
+    <div class="tile ytplay" data-step="3" data-yt="SpBAFOmdNgU" data-title="Dr. Strangelove: the doomsday machine" role="button" tabindex="0">
+      <div class="pgwrap"><span class="ytbadge" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span><svg class="pg" viewBox="0 0 170 120" aria-hidden="true"><g class="ink"><rect x="30" y="50" width="110" height="60" rx="6"/></g><g class="knock"><rect x="44" y="64" width="82" height="10"/><rect x="44" y="82" width="50" height="10"/></g><g class="red"><circle cx="85" cy="30" r="20"/></g><path d="M85 20 v10 l7 7" fill="none" stroke="var(--paper)" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="lbl">DR. STRANGELOVE</div>
+      <div class="sent">A doomsday device that fires on its own if attacked, and cannot be switched off</div>
+    </div>
+  </div>
+  <div class="chiprow" style="bottom:56px">
+    <div class="chips" data-step="4"><div class="chip" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Of course, the consequences of all of these actions are, deliberately, severe</b></div></div>
+  </div>
+</section>
+
+<!-- 17 Oct 2026, for Ryan to change: the Financial Times clip (the Takeover Panel's "when you say it's final it's
+     supposed to be final"), Channel 4 News (AstraZeneca's ten per cent over £53.50, which is £58.85) and AFP (the
+     26 May deadline, and six months before Pfizer could come back). The clip stops at 1:47, before its talk of tax -->
+<section class="slide content" data-i="19">
+  <div class="kicker"><i></i>SESSION 8 &middot; EXAMPLES</div>
+  <h2>Pfizer&rsquo;s final offer for AstraZeneca</h2>
+  <div class="rowfig" style="align-items:center;gap:40px">
+    <ul class="bullets">
+      <li>In 2014, Pfizer offered &pound;55 a share for AstraZeneca, about &pound;69 billion, and called it <b>final</b></li>
+      <li data-step="2">To the UK&rsquo;s Takeover Panel, &ldquo;when you say it&rsquo;s final it&rsquo;s supposed to be final&rdquo;, so Pfizer could not raise it</li>
+      <li data-step="3">AstraZeneca held out for at least &pound;58.85 a share, so Pfizer had to drop its bid, and wait six months before it could try again</li>
+      <li data-step="4"><b>The rules made Pfizer&rsquo;s commitment impossible to undo: it was credible, and when it failed there was no deal</b></li>
+    </ul>
+    <div class="clipframe xs" id="pzwrap" data-step="1">
+      <button class="clipcover" id="pzload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Pfizer and AstraZeneca, 2014</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="20">
+  <div class="kicker"><i></i>SESSION 8 · ESCALATION OF COMMITMENT</div>
+  <h2>Commitment and brinkmanship</h2>
+  <div class="rowfig" style="align-items:center;top:200px;bottom:70px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>If neither side is able to back down, we run into the problem of <b>escalation of commitment</b></li>
+      <li data-step="1">Parties may remain committed to their positions even though it&rsquo;s no longer in their self-interest to do so</li>
+    </ul>
+    <div class="brink">
+      <div class="bquote" data-step="1">&ldquo;Throwing good money after bad&rdquo;</div>
+      <a class="figlink" href="https://archive.seattletimes.com/archive/19900114/1050590/buyout-began-campeau-doom----extra-500-million-for-federated-was-start-of-fall" target="_blank" rel="noopener">
+      <svg class="bidwar" viewBox="0 0 460 250" role="img" aria-label="Two bidders either side of a stack of bids for Bloomingdale's that climbs on each step">
+        <g fill="var(--teal)" transform="translate(30,110)"><circle cx="34" cy="14" r="13"/><path d="M12 40 Q34 30 56 40 L50 88 L18 88 Z"/><rect x="20" y="88" width="11" height="32"/><rect x="37" y="88" width="11" height="32"/></g>
+        <g fill="var(--terracotta)" transform="translate(362,110)"><circle cx="34" cy="14" r="13"/><path d="M12 40 Q34 30 56 40 L50 88 L18 88 Z"/><rect x="20" y="88" width="11" height="32"/><rect x="37" y="88" width="11" height="32"/></g>
+        <text x="64" y="245" text-anchor="middle" class="cardlab" style="fill:var(--teal)">CAMPEAU</text>
+        <text x="396" y="245" text-anchor="middle" class="cardlab" style="fill:var(--terracotta)">MACY&rsquo;S</text>
+        <g id="bwStack">
+          <rect x="150" y="200" width="160" height="28" fill="var(--teal)"/>
+          <rect x="150" y="168" width="160" height="28" fill="var(--terracotta)" class="rev"/>
+          <rect x="150" y="136" width="160" height="28" fill="var(--teal)" class="rev"/>
+          <rect x="150" y="104" width="160" height="28" fill="var(--terracotta)" class="rev"/>
+          <rect x="150" y="72" width="160" height="28" fill="var(--teal)" class="rev"/>
+          <rect x="150" y="40" width="160" height="28" fill="var(--red)" class="rev"/>
+        </g>
+        <text x="230" y="26" text-anchor="middle" class="cardlab" style="fill:var(--ink)">BLOOMINGDALE&rsquo;S, 1988</text>
+      </svg>
+      </a>
+      <div class="bcap" data-step="2">Robert Campeau versus Macy&rsquo;s for the purchase of Bloomingdale&rsquo;s</div>
+    </div>
+    <span data-step="2" data-stepcall="mxMark" data-cells="bwStack" data-cls="on" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<section class="slide content" data-i="21">
+  <div class="kicker"><i></i>SESSION 8 &middot; SUN TZU</div>
+  <h2>Leave an outlet free</h2>
+  <!-- 30 Sep 2026, his call: the Sun Tzu vote and the two toy battles came out (outtakes, with the slides as they stood); the quote and his line stay -->
+  <div class="stquote" style="top:236px;bottom:auto;left:150px;right:150px;font-size:31px;line-height:1.4">&ldquo;When you surround an army, leave an outlet free. Do not press a desperate foe too hard&rdquo;<br><span style="font-style:normal;font-weight:700;font-size:21px;color:var(--red)">&ndash; Sun Tzu, The Art of War</span></div>
+  <div class="leadline" data-step="1" style="position:absolute;left:96px;right:96px;top:470px;margin:0;font-size:23px"><b style="color:var(--red)">It often pays to give the other side an escape route</b> in order to avoid escalation of commitment</div>
+</section>
+
+<section class="slide content" data-i="22">
+  <div class="kicker"><i></i>SESSION 8 · SPLIT OR STEAL</div>
+  <h2>Let&rsquo;s play split or steal</h2>
+  <div class="rowfig" style="top:180px;gap:36px;align-items:flex-start">
+    <ul class="bullets" style="margin-top:0;max-width:none;flex:1;min-width:0">
+      <li><b>Pair up.</b> A &pound;1,000 pot, and each of you holds two golden balls: <b>split</b>, or <b>steal</b></li>
+      <li data-step="1">Talk it over first. Say whatever you like. Then choose, at the same time, on your phones</li>
+      <li data-step="2">Both split: &pound;500 each. One steals: they take the lot. Both steal: nothing</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="display:flex;align-items:center;gap:24px">
+        <div class="joinchip"><div class="qr"><img src="qr-gb.svg" alt="QR code for split or steal"></div><div class="ju">On your phones</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <div class="balls"><div class="gball" style="width:80px;height:80px;font-size:13px">SPLIT</div><div class="gball" style="width:80px;height:80px;font-size:13px">STEAL</div></div>
+          <div class="livecount"><span class="n" id="gbPairs0">0</span><span class="l">PAIRS<br>IN</span></div>
+        </div>
+      </div>
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:58px">
+        <div class="chead">YOUR PARTNER</div>
+        <div class="rhead">YOU</div>
+        <div class="cl" style="grid-column:3">Split</div>
+        <div class="cl" style="grid-column:4">Steal</div>
+        <div class="rl" style="grid-row:3">Split</div>
+        <div class="rl" style="grid-row:4">Steal</div>
+        <div class="cell" style="grid-row:3;grid-column:3;font-size:20px"><span class="pa">&pound;500</span><span class="pc">,</span><span class="pb">&pound;500</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4;font-size:20px"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">&pound;1,000</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3;font-size:20px"><span class="pa">&pound;1,000</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
+        <div class="cell" style="grid-row:4;grid-column:4;font-size:20px"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="23">
+  <div class="kicker"><i></i>SESSION 8 · SPLIT OR STEAL</div>
+  <h2>Split or steal?</h2>
+  <div class="board">
+    <div class="bbar">
+      <div class="livecount"><span class="n" id="gbPairs">0</span><span class="l">PAIRS<br>IN</span></div>
+      <div class="demotag" id="gbDemo" style="position:static">DEMO DATA</div>
+    </div>
+    <div class="stats four">
+      <div class="rowlab" data-step="1"><div class="rn">1</div><div class="rt">Round one. Talk, then choose</div></div>
+      <div class="stat" data-step="1" data-stepcall="gbTile" data-t="sp1"><div class="sl">Chose split</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of players</div></div>
+      <div class="stat" data-step="1" data-stepcall="gbTile" data-t="bs1"><div class="sl">Both split</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of pairs shared the pot</div></div>
+      <div class="stat" data-step="1" data-stepcall="gbTile" data-t="st1"><div class="sl">Pots stolen</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of pairs: split + steal</div></div>
+      <div class="stat" data-step="1" data-stepcall="gbTile" data-t="bt1"><div class="sl">Both stole</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of pairs got nothing</div></div>
+      <div class="rowlab" data-step="2"><div class="rn">2</div><div class="rt">Round two. <b>One of you had a new move</b></div></div>
+      <div class="stat" data-step="3" data-stepcall="gbTile" data-t="fs2"><div class="sl">FacED the move AND split</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of partners who were told</div></div>
+      <div class="stat" data-step="4" data-stepcall="gbTile" data-t="ns2"><div class="sl">MADE THE MOVE, split anyway</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of those who made the move</div></div>
+      <div class="stat" data-step="4" data-stepcall="gbTile" data-t="hd2"><div class="sl">Stole, then handed over half</div><div class="sv"><span class="v">&ndash;</span><small>%</small></div><div class="sb">of the stealers who could</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="24">
+  <div class="kicker"><i></i>SESSION 8 · SPLIT OR STEAL</div>
+  <h2>Nick and Ibrahim</h2>
+  <div class="rowfig" style="align-items:center;top:210px;bottom:80px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li><b>Golden Balls</b> on ITV. Nick and Ibrahim, and a pot of &pound;13,600</li>
+      <li data-step="1">Nick tells Ibrahim he is going to <b>steal, no matter what</b> &ndash; and promises to split the money with him after the show</li>
+      <li data-step="2">Nick grabs first-mover advantage and declares an <b>unconditional strategic move</b></li>
+      <li data-step="3"><b>Do you think Ibrahim would have split without Nick&rsquo;s strategic move?</b></li>
+    </ul>
+    <div class="clipframe xs" id="gbwrap">
+      <button class="clipcover" id="gbload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Split or steal, the move that broke the game</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="slide content" data-i="25">
+  <div class="kicker"><i></i>SESSION 8 · SPLIT OR STEAL</div>
+  <h2>A way out of the prisoner&rsquo;s dilemma</h2>
+  <div class="rowfig" style="top:236px;gap:56px;align-items:center">
+    <div class="mxwrap" style="flex:none">
+      <div class="mx" style="--cols:2;--rows:2;--cw:190px;--rh:84px">
+        <div class="chead">IBRAHIM</div>
+        <div class="rhead">NICK</div>
+        <div class="cl" style="grid-column:3">Split</div>
+        <div class="cl" style="grid-column:4">Steal</div>
+        <div class="rl" id="nbR1" style="grid-row:3">Split</div>
+        <div class="rl" style="grid-row:4">Steal</div>
+        <div class="cell" id="nb11" style="grid-row:3;grid-column:3;font-size:22px"><span class="pa">&pound;6,800</span><span class="pc">,</span><span class="pb">&pound;6,800</span></div>
+        <div class="cell" id="nb12" style="grid-row:3;grid-column:4;font-size:22px"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">&pound;13,600</span></div>
+        <div class="cell" id="nb21" style="grid-row:4;grid-column:3;font-size:22px"><span class="pa">&pound;13,600</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
+        <div class="cell" id="nb22" style="grid-row:4;grid-column:4;font-size:22px"><span class="pa">&pound;0</span><span class="pc">,</span><span class="pb">&pound;0</span></div>
+      </div>
+      <div class="cap" data-step="3" style="margin-top:0;font-size:18px;text-align:center"><b>Nick&rsquo;s promise:</b> half after the show</div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="nb22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <span data-step="2" data-stepcall="mxMark" data-cells="nbR1,nb11,nb12" data-cls="dead" style="position:absolute;width:0;height:0"></span>
+    <span data-step="3" data-stepcall="mxMark" data-cells="nb21" data-cls="hot" style="position:absolute;width:0;height:0"></span>
+    <ul class="bullets">
+      <li data-step="1">Golden Balls puts its players in a <b>prisoner&rsquo;s dilemma</b>: stealing is dominant for both of them</li>
+      <li data-step="2">Nick commits to steal, no matter what, so his split row is gone</li>
+      <li data-step="3">Against a certain steal, stealing wins Ibrahim nothing. Splitting is his only way to any money</li>
+      <li data-step="4">Nick <b>removed Ibrahim&rsquo;s dominant strategy</b> to steal, and broke the game</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide content" data-i="26">
+  <div class="kicker"><i></i>SESSION 8 · CREDIBILITY · IN BUSINESS</div>
+  <h2>Conditional moves and the prisoner&rsquo;s dilemma</h2>
+  <div class="rowfig" style="align-items:center;top:196px;bottom:70px;gap:34px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Let&rsquo;s return to Price Wars, and Aura and Buco&rsquo;s at the junction</li>
+      <li data-step="1">How can we overcome the PD in this situation, ignoring repetition or regulation?</li>
+      <li data-step="2">One solution is to post a <b>&ldquo;match or beat the competition&rdquo;</b> sign in the station's window</li>
+      <li data-step="3">These clauses actually hurt customers because they are an implicit conditional move made by one company to another</li>
+      <li data-step="4">And therefore, prices remain high and the incentive to defect is removed</li>
+    </ul>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:20px">
+      <div class="mx" style="--cols:2;--rows:2;--cw:150px;--rh:80px">
+        <div class="chead">BUCO&rsquo;S</div>
+        <div class="rhead">AURA</div>
+        <div class="cl" style="grid-column:3">&pound;1.50</div>
+        <div class="cl" style="grid-column:4">&pound;1.40</div>
+        <div class="rl" style="grid-row:3">&pound;1.50</div>
+        <div class="rl" style="grid-row:4">&pound;1.40</div>
+        <div class="cell" id="s11" style="grid-row:3;grid-column:3"><span class="pa">12</span><span class="pc">,</span><span class="pb">12</span></div>
+        <div class="cell" style="grid-row:3;grid-column:4"><span class="pa">2</span><span class="pc">,</span><span class="pb">18</span></div>
+        <div class="cell" style="grid-row:4;grid-column:3"><span class="pa">18</span><span class="pc">,</span><span class="pb">2</span></div>
+        <div class="cell" id="s22" style="grid-row:4;grid-column:4"><span class="pa">9</span><span class="pc">,</span><span class="pb">9</span></div>
+      </div>
+      <div class="bubble red" data-step="3" style="max-width:330px">IF YOU LOWER YOUR PRICES, I&rsquo;LL MATCH WHATEVER PRICE YOU SET</div>
+    </div>
+    <span data-step="1" data-stepcall="mxMark" data-cells="s22" data-cls="eq" style="position:absolute;width:0;height:0"></span>
+    <span data-step="4" data-stepcall="mxMark" data-cells="s11" data-cls="pareto" style="position:absolute;width:0;height:0"></span>
+  </div>
+</section>
+
+<!-- 17 Oct 2026, for Ryan to change: m7's Credibility and reputation, his lead line and his two lines, without its
+     1988 and 1992 campaign clips (no politics beyond what the programme page names). Baseball's lockout is the example
+     instead: AP for the 1 March "best and final offer", opening day cancelled for the first time in 27 years, and the
+     players' yes to a later offer on 10 March; the clip is Bloomberg's, the commissioner's announcement, to 1:02 -->
+<section class="slide content" data-i="27">
+  <div class="kicker"><i></i>SESSION 8 · CREDIBILITY</div>
+  <h2>Credibility and reputation</h2>
+  <div class="leadline" style="margin-top:14px">Strategic moves are only as good as they are credible!</div>
+  <div class="rowfig" style="align-items:center;top:232px;gap:40px">
+    <ul class="bullets" style="margin-top:0">
+      <li>Baseball&rsquo;s owners locked out the players, and on 1&nbsp;March 2022 the players rejected the owners&rsquo; &ldquo;best and final offer&rdquo;</li>
+      <li data-step="2">Opening day was cancelled, for the first time in 27&nbsp;years</li>
+      <li data-step="3">Nine days later, the players accepted a later offer, so the &ldquo;best and final offer&rdquo; was not final after all</li>
+    </ul>
+    <div class="clipframe xs" id="mlbwrap" data-step="1">
+      <button class="clipcover" id="mlbload" type="button">
+        <span class="bigplay"><svg viewBox="0 0 12 12"><path d="M2 1l9 5-9 5z" fill="var(--paper)"/></svg></span>
+        <span class="ct">Major League Baseball, 1 March 2022</span>
+      </button>
+    </div>
+  </div>
+  <div class="repchips">
+    <div class="chip" data-step="4" style="background:var(--red);border-color:var(--red);color:var(--paper)"><b>Can be strategically advantageous to develop a certain reputation. But you can also get a reputation for <em>not</em> being credible!</b></div>
+    <div class="chip" data-step="5">Contracts are designed to ensure credibility, but reputation can work both ways</div>
+  </div>
+</section>
+
+<section class="slide content" data-i="28">
+  <div class="kicker"><i></i>SESSION 8 · YOUR NEGOTIATIONS</div>
+  <h2>Strategic moves in your negotiations</h2>
+  <div class="rail" style="min-width:1040px;max-width:1040px;top:232px;gap:24px">
+    <div class="ritem"><div class="rn">1</div><div class="rt">Think about a strategic game you&rsquo;ve already identified from your own negotiations &ndash; a sequential game, a prisoner&rsquo;s dilemma, a coordination game, etc.</div></div>
+    <div class="ritem"><div class="rn">2</div><div class="rt">Change that game in your favor by making a strategic move<div class="rchips"><span class="rchip ghosted">Commitment</span><span class="rchip ghosted">Threat</span><span class="rchip ghosted">Promise</span></div></div></div>
+    <div class="ritem"><div class="rn">3</div><div class="rt">What would give the move credibility?</div></div>
+    <div class="ritem"><div class="rn">4</div><div class="rt">Are there potential downsides to making the move?</div></div>
+  </div>
+  <div class="talk" data-step="1">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    <div class="tt"><span class="tk">AT YOUR TABLES:</span> (a)&nbsp;Think of one of your negotiations on your own; (b)&nbsp;talk it out at your table; (c)&nbsp;one person shares with the whole group.</div>
+  </div>
+</section>
+
+<!-- 17 Oct 2026: five of the closing tiles of Modules 5 and 7, word for word (focal points, battle of the sexes and
+     chicken from m5; strategic moves and credibility from m7), and m7's Sun Tzu line as the last word -->
+<section class="slide content learn" data-i="29">
+  <div class="kicker"><i></i>SESSION 8 · TAKEAWAYS</div>
+  <h2>a few key takeaways...</h2>
+  <div class="tiles">
+    <div class="tile">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><use href="#im-tower"/></svg></div>
+      <div class="lbl">Focal points</div>
+      <div class="sent">The right answer is wherever the room lands together</div>
+    </div>
+    <div class="tile" data-step="1">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="54" width="40" height="40"></rect><rect x="9" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><rect x="57" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><circle cx="26" cy="26" r="7" fill="var(--teal)"></circle><circle cx="74" cy="74" r="7" fill="var(--terracotta)"></circle></svg></div>
+      <div class="lbl">Battle of the sexes</div>
+      <div class="sent">Asymmetric preferences: coordination becomes harder, as in most negotiations</div>
+    </div>
+    <div class="tile" data-step="2">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 100 100"><rect fill="var(--ink)" x="6" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="54" y="6" width="40" height="40"></rect><rect fill="var(--ink)" x="6" y="54" width="40" height="40"></rect><rect fill="var(--red)" x="54" y="54" width="40" height="40"></rect><rect x="57" y="9" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><rect x="9" y="57" width="34" height="34" fill="none" stroke="var(--red)" stroke-width="4"></rect><circle cx="74" cy="26" r="7" fill="var(--terracotta)"></circle><circle cx="26" cy="74" r="7" fill="var(--teal)"></circle></svg></div>
+      <div class="lbl">Chicken</div>
+      <div class="sent">Opposed preferences: miscoordination is disaster</div>
+    </div>
+    <div class="tile" data-step="3">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><circle fill="var(--ink)" cx="32" cy="10" r="6"/><circle fill="var(--paper)" cx="32" cy="10" r="2.5"/><rect fill="var(--ink)" x="29.5" y="14" width="5" height="38"/><rect fill="var(--ink)" x="20" y="22" width="24" height="5"/><path fill="var(--ink)" d="M12 40 Q12 56 32 58 Q52 56 52 40 L46 43 Q43 50 32 50 Q21 50 18 43 Z"/></svg></div>
+      <div class="lbl">Strategic moves</div>
+      <div class="sent">A strategic move changes the game to your advantage</div>
+    </div>
+    <div class="tile" data-step="4">
+      <div class="pgwrap"><svg class="pg" viewBox="0 0 64 64" aria-hidden="true"><path fill="none" stroke="var(--ink)" stroke-width="5" d="M4 32 Q32 6 60 32 Q32 58 4 32 Z"/><circle fill="var(--ink)" cx="32" cy="32" r="11"/><circle fill="var(--paper)" cx="32" cy="32" r="4"/></svg></div>
+      <div class="lbl">Credibility</div>
+      <div class="sent">Strategic moves are only as valuable as they are credible</div>
+    </div>
+  </div>
+  <div class="stopnote" data-step="5" style="position:absolute;left:0;right:0;bottom:84px;justify-content:center"><i></i><span><b>It often pays to give the other side an escape route</b> in order to avoid escalation of commitment</span></div>
+</section>
+
+<!-- 17 Oct 2026: the programme page's resources (The Art of Strategy, chapters 4, 6 and 7; the Wired piece; Nosedive)
+     and Claude's picks for Ryan to change: the source of the Pittsburgh slide, PON on deadlines and on credible
+     threats, and the m5 and m7 cards that fit this session (Schelling, the chickie run, In Our Time on Sun Tzu) -->
+<section class="slide content" data-i="30">
+  <div class="kicker"><i></i>SESSION 8 · RESOURCES</div>
+  <h2>Extra resources</h2>
+  <div class="resrc dense tight">
+    <div class="rcol">
+      <div class="rhead">Watch and listen</div>
+      <a class="rcard" href="https://www.netflix.com/title/70264888" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Black Mirror: Nosedive</div><div class="rmeta">Netflix &middot; 63 minutes</div><div class="rwhy">Tacitly negotiating to coordinate with everyone</div></span>
+      </a>
+      <a class="rcard" href="https://www.youtube.com/watch?v=cyXaW9Jucmc" target="_blank" rel="noopener" data-yt="cyXaW9Jucmc">
+        <span class="ri"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1l8.5 5-8.5 5z" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Rebel Without a Cause, the chickie run</div><div class="rmeta">Movie Classics &middot; 3 minutes</div><div class="rwhy">Is getting stuck the same as committing?</div></span>
+      </a>
+      <a class="rcard" href="https://www.bbc.co.uk/programmes/b09smh59" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">Sun Tzu and The Art of War</div><div class="rmeta">BBC Radio 4 &middot; In Our Time</div><div class="rwhy">The book behind Leave an outlet free</div></span>
+      </a>
+      <a class="rcard" href="https://radiolab.org/podcast/golden-rule" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 10V8a5.5 5.5 0 0 1 11 0v2" fill="none" stroke="var(--paper)" stroke-width="1.8"/><rect x="1.6" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/><rect x="11" y="9" width="3.4" height="5" rx="1" fill="var(--paper)"/></svg></span>
+        <span><div class="rtt">The Golden Rule</div><div class="rmeta">Radiolab &middot; podcast</div><div class="rwhy">Split or steal, on a British game show</div></span>
+      </a>
+    </div>
+    <div class="rcol">
+      <div class="rhead">Read</div>
+      <a class="rcard" href="https://wwnorton.com/books/9780393337174" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Art of Strategy, chapters 4, 6 and 7</div><div class="rmeta">Dixit and Nalebuff</div><div class="rwhy">Coordination, strategic moves and credibility</div></span>
+      </a>
+      <a class="rcard" href="https://www.wired.com/story/boris-johnson-brexit-game-theory/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Boris Johnson&rsquo;s Brexit Strategy Is Straight Out of Nixon&rsquo;s Cold War Playbook</div><div class="rmeta">Wired &middot; 2019</div><div class="rwhy">The madman theory, and why threats must be credible</div></span>
+      </a>
+      <a class="rcard" href="https://www.pon.harvard.edu/daily/negotiation-skills-daily/negotiation-skills-and-dealmaking-committing-to-an-arbitrary-deadline/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Committing to an Arbitrary Deadline</div><div class="rmeta">Program on Negotiation, Harvard</div><div class="rwhy">An arbitrary deadline, and a deal the day before</div></span>
+      </a>
+      <a class="rcard" href="https://www.pon.harvard.edu/daily/negotiation-skills-daily/make-your-threat-more-credible/" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">Make Your Threat More Credible</div><div class="rmeta">Program on Negotiation, Harvard</div><div class="rwhy">Raise your own cost of not following through</div></span>
+      </a>
+      <a class="rcard" href="https://www.aviationpros.com/airport-business/airport-infrastructure-operations/news/21236220/the-long-decline-pittsburgh-international-airport-still-trying-to-rebound-from-the-effects-of-9-11" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Long Decline</div><div class="rmeta">Pittsburgh Post-Gazette &middot; 2021</div><div class="rwhy">The whole story of the hub Pittsburgh lost</div></span>
+      </a>
+      <a class="rcard" href="https://www.hup.harvard.edu/books/9780674840317" target="_blank" rel="noopener">
+        <span class="ri"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="var(--paper)" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 7.2h4.8M5.6 9.6h4.8M5.6 12h3.2" stroke="var(--paper)" stroke-width="1.3"/></svg></span>
+        <span><div class="rtt">The Strategy of Conflict</div><div class="rmeta">Thomas Schelling &middot; 1960</div><div class="rwhy">Where focal points, commitment and brinkmanship began</div></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+</div></div>
+<div class="ticks"><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span></div>
+<a class="homelink" href="/teaching/exec/negotiation/programme/">THE PROGRAMME</a>
+
+<script src="/teaching/exec/negotiation/s8/game/moves.js"></script>
+<script>
+const POLL_API='https://gt-poll.rlamare.workers.dev';
+const QS=new URLSearchParams(location.search);
+/* ?room=<x> suffixes the hub lease's room (m5-chicken-<x>) for a rehearsal, as in m5; kit/gtrooms.js then
+   moves every room this page calls, the quiz's included, to -neg-<x>. A chip on the screen says so, because a QR
+   scanned off this deck still opens the real rooms. */
+const M5SUF=(()=>{const m=location.search.match(/[?&]room=([a-z0-9-]{1,20})/);return m?'-'+m[1]:'';})();
+if(M5SUF)addEventListener('DOMContentLoaded',()=>{const c=document.createElement('div');c.textContent='REHEARSAL ROOM '+M5SUF.slice(1).toUpperCase();
+  c.style.cssText='position:absolute;left:14px;top:12px;z-index:9;background:var(--ochre);color:var(--ink);font-weight:700;font-size:11px;letter-spacing:.14em;padding:3px 10px';
+  document.querySelector('.stage').appendChild(c);});
+
+/* a verdict, fill or score row (or a split or steal tile) that is already on screen recomputes as
+   answers arrive, the same way the bars do */
+function refreshShownCalls(){
+  document.querySelectorAll('[data-stepcall]').forEach(el=>{
+    const n=el.dataset.stepcall;
+    if(el.dataset.stepon==='1'&&(/Verdict$/.test(n)||n==='krRow'||n==='gbTile')){
+      try{window[n](el,true);}catch(_){}
+    }
+  });
+}
+
+/* ---- common knowledge quiz score rows: choice rooms read counts, write-in
+   rooms group identical answers (case-insensitive); the top answer's share
+   is the room's convergence, and 80% scores the point ---- */
+const KROWS={
+  k1:{id:'m5-k1',type:'c',opts:['Heads','Tails'],demo:[17,4]},
+  k2:{id:'m5-k2',type:'t',demo:['7','7','3','7','1','12','7','3','7','100','7','7','42','7','3','7','1','7','7','2','7']},
+  k3:{id:'m5-k3',type:'c',opts:['Box 1','Box 2','Box 3','Box 4 (the red one)','Box 5'],demo:[3,1,1,15,1]},
+  k4:{id:'m5-k4',type:'c',opts:['13','261','100','99','555'],demo:[1,0,19,1,0]},
+  k5:{id:'m5-k5',type:'t',demo:['The Eiffel Tower','Eiffel Tower','eiffel tower','The Louvre','Eiffel Tower','Eiffel Tower','the eiffel tower','Notre Dame','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Arc de Triomphe','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower','Eiffel Tower']},
+  k6:{id:'m5-k6',type:'t',demo:['Times Square','Times Square','times square','Empire State Building','Times Square','Times Square','Grand Central','Times Square','Times Square','Central Park','Times Square','Times Square','Empire State Building','Times Square','Times Square','Statue of Liberty','Times Square','Times Square','Grand Central','Times Square','Times Square']},
+  k7:{id:'m5-k7',type:'t',demo:['Big Ben','Big Ben','big ben','Trafalgar Square','Big Ben','Big Ben','Big Ben','Piccadilly Circus','Big Ben','Big Ben','London Eye','Big Ben','Big Ben','Big Ben','Trafalgar Square','Big Ben','Big Ben','Big Ben','King’s Cross','Big Ben','Big Ben']},
+  k8:{id:'m5-k8',type:'t',demo:['Travis Kelce','Travis Kelce','travis kelce','Patrick Mahomes','Travis Kelce','Travis Kelce','Tom Brady','Travis Kelce','Travis Kelce','Kelce','Travis Kelce','Travis Kelce','Travis Kelce','Mahomes','Travis Kelce','Travis Kelce','Travis Kelce','Travis Kelce','Travis Kelce','Travis Kelce','Travis Kelce']},
+  k9:{id:'m5-k9',type:'t',demo:['Taylor Swift','Taylor Swift','taylor swift','Beyoncé','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift','Taylor Swift']},
+  k10:{id:'m5-k10',type:'c',opts:['Brown','Jones','Robinson','Smith','White'],demo:[0,4,1,16,0]},
+  k11:{id:'m5-k11',type:'t',demo:['50 - 50','50-50','50/50','60 - 40','50 - 50','50 - 50','50 - 50','70 - 30','50 - 50','50 - 50','50 - 50','50 - 50','99 - 1','50 - 50','50 - 50','50 - 50','50 - 50','50 - 50','80 - 20','50 - 50','50 - 50']},
+  k12:{id:'m5-k12',type:'c',opts:['Barcelona','Liverpool','Real Madrid','Paris Saint-Germain','Arsenal'],demo:[2,1,2,1,15]},
+  k13:{id:'m5-k13',type:'c',opts:['Argentina','Brazil','England','Italy','Mexico','Spain'],demo:[2,3,12,1,2,1]},
+  k14:{id:'m5-k14',type:'c',opts:['8:00','8:30','9:00','9:30'],demo:[2,3,14,2]},
+  k15:{id:'m5-k15',type:'c',opts:['The one who made the call','The one who received it'],demo:[16,5]},
+  k16:{id:'m5-k16',type:'c',opts:['Blue','Green','Red','Yellow'],demo:[3,1,15,2]}
+};
+Object.values(KROWS).forEach(k=>{k.live=false;k.counts=null;k.answers=null;});
+function krTop(k){
+  if(k.type==='c'){
+    const counts=k.live&&k.counts?k.counts:k.demo;
+    const total=counts.reduce((a,b)=>a+b,0);
+    if(!total)return null;
+    let top=0;counts.forEach((c,i)=>{if(c>counts[top])top=i;});
+    return {name:k.opts[top],n:counts[top],total};
+  }
+  const answers=k.live&&k.answers?k.answers:k.demo;
+  if(!answers.length)return null;
+  const counts=new Map(), raw=new Map();
+  answers.forEach(t=>{
+    const key=fuzzyKey(t,k.id);
+    if(!key)return;
+    counts.set(key,(counts.get(key)||0)+1);
+    const r=String(t).trim(); if(!raw.has(key))raw.set(key,new Map());
+    raw.get(key).set(r,(raw.get(key).get(r)||0)+1);
+  });
+  const groupOf=fuzzyGroups(counts);
+  const groups=new Map();
+  counts.forEach((n,key)=>{const g=groupOf.get(key);groups.set(g,(groups.get(g)||0)+n);});
+  let top=null;groups.forEach((n,g)=>{if(!top||n>groups.get(top))top=g;});
+  if(!top)return null;
+  /* the label is the most common spelling inside the winning group */
+  let best=null,bn=0;
+  counts.forEach((n,key)=>{if(groupOf.get(key)!==top)return;raw.get(key).forEach((c,r)=>{if(c>bn){bn=c;best=r;}});});
+  const total=[...groups.values()].reduce((a,n)=>a+n,0);
+  return {name:best,n:groups.get(top),total};
+}
+/* answers that mean the same thing count together: accents and punctuation
+   dropped, a leading "the" ignored, digit-only answers compared without
+   spaces ("50 - 50" is "50/50"), and a shorter answer joins a longer one
+   that contains it as whole words ("Kelce" joins "Travis Kelce") */
+function fuzzyKey(t,id){
+  /* the two piles: only the numbers count, larger first, and one number
+     alone is a pile and what it leaves ("50 and 50", "£50 each", "60" all land) */
+  if(id==='m5-k11'){
+    const n=(String(t).match(/\d+(\.\d+)?/g)||[]).map(Number);
+    if(n.length===1&&n[0]<=100)n.push(100-n[0]);
+    if(n.length===2)return n.sort((a,b)=>b-a).join('-');
+  }
+  let s=String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  s=s.replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  s=s.replace(/^(the|a|an) /,'');
+  if(/^[\d\s]+$/.test(s))s=s.replace(/\s/g,'');
+  return s;
+}
+function fuzzyGroups(counts){
+  const keys=[...counts.keys()].sort((a,b)=>counts.get(b)-counts.get(a)||a.length-b.length);
+  const groupOf=new Map(), reps=[];
+  const contains=(a,b)=>a===b||(' '+a+' ').includes(' '+b+' ');
+  keys.forEach(k=>{
+    const rep=reps.find(r=>contains(r,k)||contains(k,r));
+    if(rep)groupOf.set(k,rep);else{reps.push(k);groupOf.set(k,k);}
+  });
+  return groupOf;
+}
+
+window.krRow=function(el,on){
+  const k=KROWS[el.dataset.k];
+  /* the reveal is a snapshot: the row stops taking new answers from the room. A row that has not
+     yet heard from the room is fetched at once and freezes when its answers arrive: until 25 Sep 2026
+     a reload on this slide could freeze a row on its demo numbers, with no DEMO DATA tag */
+  if(k){k.frozen=on&&!!k.live;if(on&&!k.live&&window.krFetch)window.krFetch(k);}
+  const qa=el.querySelector('.qa'), bar=el.querySelector('.qbar i'),
+        qp=el.querySelector('.qp'), qm=el.querySelector('.qm');
+  if(!on||!k){qa.textContent='';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  if(!k.live&&Object.values(KROWS).some(x=>x.live)){qa.textContent='\u2026';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  const t=krTop(k);
+  if(!t){qa.textContent='no answers yet';bar.style.width='0';qp.textContent='';qm.textContent='';el.classList.remove('pt');return;}
+  const pct=Math.round(t.n/t.total*100);
+  qa.textContent=t.name;
+  bar.style.width=Math.min(100,pct)+'%';
+  qp.textContent=pct+'%';
+  const pt=pct>=80;
+  el.classList.toggle('pt',pt);
+  qm.textContent=pt?'✓':'✗';
+};
+(function(){
+  let i=0;
+  const keys=Object.keys(KROWS);
+  function fetchOne(){
+    const k=KROWS[keys[i%keys.length]];i++;
+    if(k.frozen)return;
+    fetchRow(k);
+  }
+  function fetchRow(k){
+    const url=POLL_API+'/p/'+k.id+(k.type==='t'?'/answers':'');
+    fetch(url).then(r=>r.json()).then(d=>{
+      k.live=true;
+      if(k.type==='t')k.answers=d.answers||[];
+      else k.counts=k.opts.map((_,j)=>d.counts[j]||0);
+      const anyLive=Object.values(KROWS).some(x=>x.live);
+      ['krD','krD2'].forEach(id=>{const e=document.getElementById(id);if(e&&anyLive)e.style.display='none';});
+      refreshShownCalls();
+    }).catch(()=>{});
+  }
+  window.krFetch=fetchRow;
+  setInterval(fetchOne,700);fetchOne();
+})();
+
+/* ---- quiz progress: started = answered question 1, finished = answered the last ---- */
+(function(){
+  const a=document.getElementById('qzStart'), b=document.getElementById('qzDone');
+  function tick(){
+    Promise.all([fetch(POLL_API+'/p/m5-k1/votes').then(r=>r.json()),fetch(POLL_API+'/p/m5-k16/votes').then(r=>r.json())])
+      .then(([s,d])=>{a.textContent=s.total||0;b.textContent=d.total||0;}).catch(()=>{});
+  }
+  setInterval(tick,3000);tick();
+})();
+/* ---- quiz countdown ---- */
+(function(){
+  const disp=document.getElementById('timerT'), btn=document.getElementById('timerBtn');
+  let t=600,iv=null;
+  const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  btn.addEventListener('click',()=>{
+    if(iv){clearInterval(iv);iv=null;t=600;disp.textContent='10:00';disp.style.fontSize='';disp.classList.remove('low');btn.textContent='START 10 MINUTES';return;}
+    btn.textContent='RESET';
+    iv=setInterval(()=>{
+      t--;disp.textContent=t>0?fmt(t):'TIME!';
+      disp.style.fontSize=t>0?'':'40px';
+      if(t<=60)disp.classList.add('low');
+      if(t<=0){clearInterval(iv);iv=null;}
+    },1000);
+  });
+})();
+
+/* ---- the vote game: the hub lease (chicken; m5's whose system, a battle of the sexes, is not played in this
+   session). Each phone is put on one side (r or t, by its own voter id) and votes once per round. The shape of the
+   deal is ONE round, voted after the volunteer has spoken; the final
+   meeting is two rounds, and the deck posts a "::open|2" marker to start
+   round 2 after its volunteer has spoken.
+   Wire (rooms m5-bos / m5-chicken): "v|<voter>|<r-or-t>|<round>|<a-or-b>",
+   latest line per voter and round wins. Nothing is adjudicated here beyond
+   which option each side's majority backed; the verdict is a matrix
+   lookup. Falls back to marked demo data when the Worker is unreachable. */
+const PERSON='<svg viewBox="0 0 34 46"><circle cx="17" cy="7" r="6" fill="currentColor"/><path d="M6 18 Q17 13 28 18 L24.5 34 L9.5 34 Z" fill="currentColor"/><rect x="11" y="34" width="5" height="12" fill="currentColor"/><rect x="18" y="34" width="5" height="12" fill="currentColor"/></svg>';
+const TB={};
+function makeTapasBoard(cfg){
+  const st={live:false,votes:{1:{},2:{}},open2:false,opened:false,revealed:{1:false,2:false},frozen:{1:null,2:null},demo:null};
+  let deckN=0; const dvBase='m5deck-'+Math.random().toString(36).slice(2,8);
+  function post(line){deckN++;return fetch(POLL_API+'/p/'+cfg.room+'/say',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({t:line,v:dvBase+'-'+(deckN%9)})});}
+  function parse(lines){
+    const votes={1:{},2:{}}; let open2=false;
+    lines.forEach(t=>{
+      const p=String(t).split('|').map(s=>s.trim());
+      if(p[0]==='::open'&&p[1]==='2'){if(Object.keys(votes[1]).length)open2=true;} /* only once round 1 has votes before it (25 Sep 2026) */
+      else if(p[0]==='v'&&p.length===5&&/^[A-Za-z0-9-]{8,64}$/.test(p[1])&&/^[rt]$/.test(p[2])&&/^[12]$/.test(p[3])&&/^[ab]$/.test(p[4]))
+        votes[+p[3]][p[1]]={side:p[2],opt:p[4]};
+    });
+    return {votes,open2};
+  }
+  function demoWorld(){
+    const votes={1:{},2:{}};
+    for(let i=0;i<20;i++){const side=i%2?'t':'r';
+      votes[1]['demo-voter-'+i]={side,opt:cfg.demo[1][side][i>>1]};
+      votes[2]['demo-voter-'+i]={side,opt:cfg.demo[2][side][i>>1]};}
+    return {votes,open2:true};
+  }
+  /* a revealed round is a snapshot, as on the investment board: nothing a phone sends afterwards moves the crowd */
+  function world(){if(st.live)return {votes:{1:st.frozen[1]||st.votes[1],2:st.frozen[2]||st.votes[2]},open2:st.open2};if(!st.demo)st.demo=demoWorld();return st.demo;}
+  function counts(w,r){
+    const c={r:{a:0,b:0},t:{a:0,b:0}};
+    Object.values(w.votes[r]).forEach(v=>{c[v.side][v.opt]++;});
+    return c;
+  }
+  const maj=o=>o.a===o.b?null:(o.a>o.b?'a':'b');
+  function render(){
+    const w=world();
+    /* the count is the round in play, not both rounds added up (Ryan, 17 Sep) */
+    const cur=(w.open2||st.opened)?2:1, inRound=Object.keys((st.live?st.votes:w.votes)[cur]).length;
+    [cfg.n,cfg.n2].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=st.live?inRound:'–';});
+    [cfg.gid+'L',cfg.gid+'L2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='IN ROUND '+cur;});
+    document.getElementById(cfg.gid+'D').style.display=st.live?'none':'';
+    const stateEl=document.getElementById(cfg.gid+'State');
+    if(stateEl)stateEl.textContent=(w.open2||st.opened)?'ROUND 2 OPEN':'ROUND 1 OPEN';
+    for(let r=1;r<=(cfg.rounds||2);r++){
+      const panel=document.getElementById(cfg.gid+'P'+r);
+      const c=counts(w,r);
+      panel.classList.toggle('waiting',r===2&&!(w.open2||st.opened));
+      panel.classList.toggle('revealed',st.revealed[r]);
+      /* the chicken board is the game's matrix: each side's count beside its moves, and the cell the
+         two majorities land in boxed (30 Sep 2026); the other boards keep their columns */
+      if(cfg.matrix){
+        const rev=st.revealed[r], mr=maj(c.r), mt=maj(c.t);
+        ['a','b'].forEach(o=>{
+          const er=document.getElementById(cfg.gid+'-'+r+'-r'+o), et=document.getElementById(cfg.gid+'-'+r+'-t'+o);
+          if(er)er.textContent=rev?c.r[o]:''; if(et)et.textContent=rev?c.t[o]:'';
+        });
+        ['aa','ab','ba','bb'].forEach(k=>{const e=document.getElementById(cfg.gid+'-'+r+'-'+k);if(e)e.classList.toggle('landed',!!(rev&&mr&&mt&&k===mr+mt));});
+      }
+      /* a column per option; inside it one person per vote, the first side's
+         people first, each in their side's colour */
+      if(!cfg.matrix)['a','b'].forEach(opt=>{
+        const cell=document.getElementById(cfg.gid+'-'+r+'-'+opt);
+        const nr=st.revealed[r]?c.r[opt]:0, nt=st.revealed[r]?c.t[opt]:0;
+        cell.querySelector('.tcount').textContent=st.revealed[r]?(nr+nt):'';
+        cell.querySelector('.tsplit').innerHTML=st.revealed[r]?'<b class="r">'+nr+'</b> · <b class="t">'+nt+'</b>':'';
+        const lane=cell.querySelector('.tlane'), sig=nr+':'+nt;
+        if(lane.dataset.sig!==sig){lane.dataset.sig=sig;let h='',k=0;
+          const room=Math.max(1,40/Math.max(1,nr+nt)); /* a big room thins evenly rather than dropping one side */
+          [['r',nr],['t',nt]].forEach(([side,n])=>{const show=Math.min(n,Math.round(n*Math.min(1,room)));
+            for(let i=0;i<show;i++)h+='<span class="u '+side+'">'+PERSON.replace('<svg','<svg style="transition-delay:'+((k++)*40)+'ms"')+'</span>';});
+          lane.innerHTML=h;}
+      });
+      const v=document.getElementById(cfg.gid+'-'+r+'-v');
+      const anyVotes=c.r.a+c.r.b+c.t.a+c.t.b>0; /* an empty round has no verdict */
+      if(v)v.innerHTML=st.revealed[r]&&cfg.verdict&&anyVotes?cfg.verdict(maj(c.r),maj(c.t),c,r):'';
+    }
+  }
+  window[cfg.gid+'Reveal']=function(r,on){st.revealed[r]=on;st.frozen[r]=on&&st.live?Object.assign({},st.votes[r]):null;render();};
+  /* step 2 on the board slide: round 2 opens on every phone (the marker is posted once) */
+  window[cfg.gid+'OpenRound']=function(on,genuine){
+    st.opened=on;
+    if(on&&genuine&&st.live&&!st.open2)post('::open|2').then(()=>fetchIt()).catch(()=>{});
+    render();
+  };
+  function fetchIt(){
+    return fetch(POLL_API+'/p/'+cfg.room+'/answers').then(r=>r.json()).then(d=>{
+      st.live=true; const p=parse(d.answers||[]); st.votes=p.votes; st.open2=p.open2; render();
+    }).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();
+  render();
+  TB[cfg.gid]=st;
+}
+window.tbReveal=function(el,on){const f=window[el.dataset.g+'Reveal'];if(f)f(+el.dataset.r,on);};
+/* The round-two marker goes into the room only on a forward press made ON the
+   board. Arriving on a slide backwards (or by #N.S in the address) turns every
+   step on at once, which used to open round 2 on every phone unasked (Ryan's
+   rehearsal, 17 Sep). These listeners are registered before deck.js's, so the
+   press is noted before the engine advances the step. */
+let fwdPress={t:0,slide:-1};
+function noteFwd(){const a=document.querySelector('.slide.active');fwdPress={t:Date.now(),slide:a?+a.dataset.i:-1};}
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown','ArrowDown',' ','Spacebar'].includes(e.key))noteFwd();},true);
+/* the kit's deck.js also moves on with a click on the slide, so a click counts as a forward press too, on deck.js's own terms
+   (17 Oct 2026: a mouse click used to move the step on without opening round 2 on the phones) */
+addEventListener('click',e=>{if(e.button!==0||new URLSearchParams(location.search).has('edit')||document.documentElement.classList.contains('rplaying'))return;
+  if(e.target.closest&&e.target.closest('a,button,input,textarea,select,label,iframe,[contenteditable],.widget,.ytplay,.rcard,.rplayer'))return;
+  if(String(getSelection&&getSelection()||'').length)return;noteFwd();},true);
+(function(){let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true,capture:true});
+  addEventListener('touchend',e=>{if(tx!==null&&e.changedTouches[0].clientX-tx<-60)noteFwd();tx=null;},{passive:true,capture:true});})();
+window.tbOpen=function(el,on){const f=window[el.dataset.g+'OpenRound'];if(!f)return;
+  const sl=el.closest('.slide');
+  const genuine=on&&sl&&fwdPress.slide===+sl.dataset.i&&Date.now()-fwdPress.t<800;
+  f(on,genuine);};
+makeTapasBoard({gid:'chk',room:'m5-chicken'+M5SUF,n:'chkN',n2:'chkN2',matrix:true,
+  demo:{1:{r:['b','b','b','b','b','b','b','a','b','b'],t:['b','b','b','b','b','b','a','b','b','b']},
+        2:{r:['b','b','b','b','b','b','b','b','b','a'],t:['a','a','a','a','a','a','a','b','a','a']}},
+  verdict:(mr,mt,c)=>{
+    const nr=c.r.a+c.r.b, nt=c.t.a+c.t.b;   /* 29 Sep 2026: an empty side and an evenly split side say so plainly */
+    if(!nr||!nt)return 'Waiting for '+(!nr?'USA Air':'Vicksburg')+'&rsquo;s votes';
+    if(!mr||!mt)return (!mr?'USA Air':'Vicksburg')+' is split evenly, so it has no move yet';
+    if(mr==='b'&&mt==='b')return 'Both sides held firm &ndash; <b>the hub is moved elsewhere</b>';
+    if(mr==='a'&&mt==='a')return 'Both sides gave ground &ndash; you split the difference';
+    return (mr==='b'?'USA Air':'Vicksburg')+' held firm and '+(mr==='b'?'Vicksburg':'USA Air')+' gave ground &ndash; <b>'+(mr==='b'?'USA Air':'Vicksburg')+' gets its way</b>';
+  }});
+
+/* ---- embedded clips: load YouTube only on click (the title spoils the punchline) ---- */
+function clipOnClick(btnId,wrapId,videoId,title,start,end){
+  /* 29 Sep 2026, his ask (every video as big as the room needs): the cover opens deck.js's player over the
+     whole slide instead of a frame the size of the cover; Close or Esc comes back to the slide */
+  const btn=document.getElementById(btnId);
+  if(!videoId){btn.insertAdjacentHTML('beforeend','<span class="todo">CLIP LINK TO ADD</span>');btn.style.cursor='default';return;}
+  btn.classList.add('ytplay');btn.dataset.yt=videoId;btn.dataset.title=title;
+  if(start)btn.dataset.start=start;if(end)btn.dataset.end=end;
+}
+clipOnClick('pzload','pzwrap','SgXv4OdsjDc','Financial Times: No deal means both AstraZeneca and Pfizer will lose',0,107);   /* to 1:47, before the talk of tax */
+clipOnClick('gbload','gbwrap','S0qjK3TWZE8','Golden Balls: Nick and Ibrahim',157);   /* from 2:37, his call (30 Sep 2026) */
+clipOnClick('mlbload','mlbwrap','jGTQp5zT64U','Bloomberg: MLB cancels opening day',0,62);   /* the commissioner, to 1:02 */
+
+function h01(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;}
+const DEMO_NAMES=['Demo Alex','Demo Bea','Demo Chris','Demo Dana','Demo Eli','Demo Fay','Demo Gus','Demo Hana','Demo Ivo','Demo Jo','Demo Kim','Demo Lou','Demo Max','Demo Nia','Demo Oli','Demo Pat','Demo Quin','Demo Rae','Demo Sol','Demo Tam'];
+const pct=(a,b)=>b?Math.round(a/b*100):null;
+/* demo rooms only: h01 with a final mix, so neighbouring seeds spread out (m7's) */
+function h01m(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}h^=h>>>16;h=Math.imul(h,0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;return (h>>>0)/4294967296;}
+/* ---- split or steal board: room m7-gb (?gbroom= or ?room= for rehearsals; the wire and the rules are in
+   game/moves.js, shared with the phones) ---- */
+(function(){
+  const ROOM=QS.get('gbroom')||QS.get('room')||'m7-gb', GB=MOVES.GB;   /* ?room=<x>: the room the phones' ?room=<x> plays in (game/ takes it whole) */
+  const st={live:false,lines:[]};
+  function demoLines(){
+    const out=[];
+    for(let p=0;p<10;p++){
+      const A=DEMO_NAMES[2*p],B=DEMO_NAMES[2*p+1]; out.push(A+'|'+B+'|0|a|j');
+      const r1a=h01('g1a'+p)<0.6?'s':'t', r1b=h01('g1b'+p)<0.6?'s':'t';
+      out.push(A+'|'+B+'|1|a|'+r1a);out.push(A+'|'+B+'|1|b|'+r1b);
+      /* s8, round two: the phones have sent the move every time since 23 Sep 2026 (moves.js), and the mixed hash spreads
+         the choices; m7's seed sent no move at all, so its demo row read only dashes */
+      const said='n';
+      out.push(A+'|'+B+'|2|b|'+said);
+      const a2=h01m('g2a'+p)<0.8?'s':'t';
+      const b2=h01m('g2b'+p)<0.4?'s':'t';
+      out.push(A+'|'+B+'|2|a|'+a2);out.push(A+'|'+B+'|2|b|'+b2);
+      if(a2==='s'&&b2==='t')out.push(A+'|'+B+'|2|b|'+(h01m('g2h'+p)<0.5?'h':'k'));
+    }
+    return out;
+  }
+  function stats(){
+    const lines=st.live?st.lines:demoLines();
+    const {joins,pairs}=GB.parse(lines);
+    let r1=0,sp1=0,bs1=0,st1=0,bt1=0, r2=0,us2=0,face=0,fs2=0,ns2=0,could=0,hd2=0;
+    pairs.forEach(pr=>{
+      const a=GB.round(pr,1);
+      if(a.done){r1++;if(a.a==='s')sp1++;if(a.b==='s')sp1++;
+        if(a.a==='s'&&a.b==='s')bs1++;else if(a.a==='t'&&a.b==='t')bt1++;else st1++;}
+      const b=GB.round(pr,2);
+      if(b.done){r2++;
+        if(b.said==='n'){us2++;face++;if(b.a==='s')fs2++;if(b.b==='s')ns2++;}
+        if(b.b==='t'&&b.a==='s'){could++;if(b.hand==='h')hd2++;}}
+    });
+    return {pairs:joins.size,rounds:r1+r2,sp1:pct(sp1,2*r1),bs1:pct(bs1,r1),st1:pct(st1,r1),bt1:pct(bt1,r1),us2:pct(us2,r2),fs2:pct(fs2,face),ns2:pct(ns2,us2),hd2:pct(hd2,could)};
+  }
+  function render(){
+    const s=stats();
+    ['gbPairs0','gbPairs'].forEach(id=>{document.getElementById(id).textContent=st.live?s.pairs:0;});
+    document.getElementById('gbDemo').style.display=st.live?'none':'';
+    refreshShownCalls();
+  }
+  window.gbTile=function(el,on){
+    const v=el.querySelector('.v');
+    if(!on){v.textContent='–';return;}
+    const x=stats()[el.dataset.t];
+    v.textContent=x===null?'–':x;
+  };
+  function fetchIt(){
+    fetch(POLL_API+'/p/'+ROOM+'/answers').then(r=>r.json()).then(d=>{st.live=true;st.lines=d.answers||[];render();}).catch(()=>{render();});
+  }
+  setInterval(fetchIt,2500);fetchIt();render();
+})();
+</script>
+<script src="/teaching/exec/negotiation/kit/deck.js"></script>
+<script defer src="/teaching/exec/gt/edit.js"></script>
+</body></html>
