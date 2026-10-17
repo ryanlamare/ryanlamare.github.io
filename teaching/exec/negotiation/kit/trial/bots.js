@@ -7,10 +7,13 @@ const [dir, room] = process.argv.slice(2);
 if (!dir || !room) { console.log('usage: node bots.js <session folder, e.g. s1> <rehearsal room>'); process.exit(1); }
 global.window = global; global.location = {search: '?room=' + room, hash: ''}; global.localStorage = {getItem: () => null, setItem() {}};
 require(path.join(__dirname, '..', 'neg.js'));
-require(path.join(__dirname, '..', '..', dir, 'session.js'));
+/* the session's scripts, as its phone page loads them (harborco.js before session.js, say), minus the kit's own */
+const fs = require('fs'), deal = path.join(__dirname, '..', '..', dir, 'deal');
+const srcs = [...fs.readFileSync(path.join(deal, 'index.html'), 'utf8').matchAll(/<script src="([^"]+)"/g)].map(m => m[1]).filter(u => !u.includes('/kit/'));
+srcs.forEach(u => require(u.startsWith('/') ? path.join(__dirname, '..', '..', '..', '..', '..', u) : path.join(deal, u)));
 const N = window.NK;
 (async () => {
-  for (const s of N.S.steps) {
+  for (const s of N.S.steps.filter(s => s.phone !== false)) {   /* never another session's room */
     let ok = 0, n = 0;
     if (s.type === 'poll') {
       const counts = s.demo || [];

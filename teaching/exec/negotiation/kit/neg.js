@@ -40,7 +40,7 @@ NK.session = function(cfg){
   NK.S = cfg;
   cfg.steps.forEach((st, i) => {
     st.i = i;
-    st.room = cfg.prefix + '-' + st.id + (NK.suffix ? '-' + NK.suffix : '');
+    st.room = (st.prefix || cfg.prefix) + '-' + st.id + (NK.suffix ? '-' + NK.suffix : '');   /* a step may read another session's room (prefix) */
     if (st.type === 'deal') st.fields = st.fields || [];
   });
   return cfg;

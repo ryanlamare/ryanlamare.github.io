@@ -11,6 +11,8 @@
    All wording is Claude's draft, for Ryan to change. */
 (function(){
 const N = window.NK, S = N.S, Q = N.Q;
+/* the steps this phone asks; phone:false marks a step only the deck reads (another session's room, say) */
+const STEPS = S.steps.filter(s => s.phone !== false);
 if (Q.has('frame')) document.body.classList.add('frame');
 const app = document.getElementById('app');
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
@@ -31,7 +33,7 @@ const vote = (room, o) => N.demo ? Promise.resolve() : N.vote(room, voter, o);
 if (DEEP) {
   const s = N.step(Q.get('step'));
   if (s) {
-    S.steps.forEach(x => { if (x.i < s.i) { if (x.type === 'poll') st.p[x.id] = {skip:true}; else st.d[x.id] = {sent:true, ack:true}; } });
+    STEPS.forEach(x => { if (x.i < s.i) { if (x.type === 'poll') st.p[x.id] = {skip:true}; else st.d[x.id] = {sent:true, ack:true}; } });
     if (s.type === 'survey') st.p[s.id] = {a:{}, i:+Q.get('qi') || 0};
     if (s.type === 'deal') {
       const d = st.d[s.id] = {vals:{}};
@@ -48,7 +50,7 @@ if (DEEP) {
 
 /* licensed forms' wording, for the steps that need it */
 let forms = null, formsErr = false;
-const needsForms = S.steps.some(s => s.forms);
+const needsForms = STEPS.some(s => s.forms);
 
 /* ---------- pieces ---------- */
 const colour = (s, d) => d && d.role != null ? 'c' + Math.max(0, N.roleIndex(s, d.role)) : '';
@@ -91,10 +93,10 @@ function finished(s){
 }
 function current(){
   const want = N.step(Q.get('step') || '');
-  if (want && (want.type === 'deal' || !finished(want))) return want;
-  return S.steps.find(s => !finished(s)) || null;
+  if (want && want.phone !== false && (want.type === 'deal' || !finished(want))) return want;
+  return STEPS.find(s => !finished(s)) || null;
 }
-function nextAfter(s){ return S.steps.find(x => x.i > s.i && !finished(x)) || null; }
+function nextAfter(s){ return STEPS.find(x => x.i > s.i && !finished(x)) || null; }
 
 function draw(){
   const s = current();
@@ -184,6 +186,7 @@ function roleScreen(s, d){
   s.roles.forEach((r, i) => box.appendChild(button('role c' + i, r.n, () => { d.role = r.k; save(); draw(); })));
   w.append(box, button('back', s.group === 'group' ? 'Change group number' : 'Change pair number', () => { delete d.g; save(); draw(); }));
 }
+const fq = (s, f) => { const t = forms && forms.steps && forms.steps[s.id] && forms.steps[s.id][f.k + ':q']; return t || f.q; };
 const label = (s, f, j) => {
   const fl = forms && forms.steps && forms.steps[s.id] && forms.steps[s.id][f.k];
   if (fl && fl[j]) return fl[j];
@@ -211,7 +214,7 @@ function formScreen(s, d){
       };
       m.append(el('span', null, f.cur || ''), inp); box.append(lab, m);
     } else {
-      box.appendChild(el('div', 'q', f.q));
+      box.appendChild(el('div', 'q', fq(s, f)));
       const n = f.type === 'scale' ? 5 : f.type === 'option' ? f.n : f.o.length;
       const texts = Array.from({length:n}, (_, j) => f.type === 'scale' ? String(j + 1) : label(s, f, j));
       const long = texts.some(t => t.length > (n > 3 ? 6 : 14));
@@ -254,7 +257,7 @@ function summary(s, d){
   N.fieldsFor(s, d.role).forEach(f => {
     const v = d.vals[f.k]; if (v == null || (d.x && !f.always)) return;
     const shown = f.type === 'money' ? N.fmt(v, f.cur) : f.type === 'scale' ? v + ' of 5' : label(s, f, v);
-    const li = el('li'); li.append(el('span', null, f.short || f.q), el('b', null, shown)); ul.appendChild(li);
+    const li = el('li'); li.append(el('span', null, f.short || fq(s, f)), el('b', null, shown)); ul.appendChild(li);
   });
   return ul;
 }
@@ -278,7 +281,7 @@ function allDone(){
   const w = shell(), box = el('div', 'done');
   box.append(el('div', 'k', S.title), el('div', 'big', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
   w.append(head(null), box);
-  const last = [...S.steps].reverse().find(s => s.type === 'deal' && st.d[s.id] && st.d[s.id].sent);
+  const last = [...STEPS].reverse().find(s => s.type === 'deal' && st.d[s.id] && st.d[s.id].sent);
   if (last) w.appendChild(button('back', 'Change what we recorded for ' + last.name, () => { st.d[last.id].sent = false; st.d[last.id].ack = false; save(); draw(); }));
 }
 
@@ -286,7 +289,7 @@ function allDone(){
 /* a reset of a room on the Poll Desk brings this phone back to the start of that step */
 function checkResets(){
   if (N.demo) return Promise.resolve();
-  const jobs = S.steps.map(s => {
+  const jobs = STEPS.map(s => {
     if (s.type === 'poll' && st.p[s.id] && st.p[s.id].sent) return N.votes(s.room).then(v => { if (!(voter in v)) delete st.p[s.id]; }).catch(() => {});
     if (s.type === 'survey' && st.p[s.id] && st.p[s.id].sent) return N.entries(s.room).then(es => { if (!es.some(e => e.v === voter)) delete st.p[s.id]; }).catch(() => {});
     if (s.type === 'deal' && st.d[s.id] && st.d[s.id].sent) return N.entries(s.room).then(es => { if (!es.some(e => e.v === voter)) st.d[s.id] = {vals:{}}; }).catch(() => {});
