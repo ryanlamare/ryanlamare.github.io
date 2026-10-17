@@ -599,9 +599,10 @@ function drawPrice(){
   const st = E('pStat'); st.replaceChildren();
   if (vals.length > 1) { const lo = Math.min(...vals.map(v => v.v)), hi = Math.max(...vals.map(v => v.v));
     st.append('Prices ran from ', B.el('b', null, N.fmt(lo, '$')), ' to ', B.el('b', null, N.fmt(hi, '$')), ' for the same plot of land' + (P.nodeals.length ? ', and ' + (P.nodeals.length === 1 ? 'one pair' : P.nodeals.length + ' pairs') + ' reached no deal.' : '.')); }
+  st.style.visibility = pst.dots ? '' : 'hidden';   /* the summary arrives with the dots, never before them */
   E('wNote').textContent = note('walter');
 }
-window.pDots = (e, on) => { B.reveal('walter', on); pst.dots = false; drawPrice(); if (on) { pst.dots = true; B.popDots(E('pSvg')); } };
+window.pDots = (e, on) => { B.reveal('walter', on); pst.dots = false; drawPrice(); if (on) { pst.dots = true; B.popDots(E('pSvg')); E('pStat').style.visibility = ''; } };
 window.pZone = (e, on) => { pst.zone = on; pst.dots = true; drawPrice(); };
 window.pMarks = (e, on) => { pst.marks = on; pst.dots = true; drawPrice(); };
 
@@ -633,9 +634,10 @@ function drawSettle(){
   B.strip(E('sSvg'), {values:vals, cur:'$', marks:o.marks, nodeal:P.nodeals.map(g => g.n), state:sst, axis:'WHAT THE PET PALACE PAID FOR THE REPAIR', lo:0});
   const st = E('sStat'); st.replaceChildren();
   if (P.groups.length) st.append(B.el('b', null, P.deals.length + ' of ' + P.groups.length), ' pairs settled' + (vals.length ? ', on payments from ' + N.fmt(Math.min(...vals.map(v => v.v)), '$') + ' to ' + N.fmt(Math.max(...vals.map(v => v.v)), '$') + '.' : '.'));
+  st.style.visibility = sst.dots ? '' : 'hidden';
   E('bNote').textContent = note('bizhub');
 }
-window.sDots = (e, on) => { B.reveal('bizhub', on); sst.dots = false; drawSettle(); if (on) { sst.dots = true; B.popDots(E('sSvg')); } };
+window.sDots = (e, on) => { B.reveal('bizhub', on); sst.dots = false; drawSettle(); if (on) { sst.dots = true; B.popDots(E('sSvg')); E('sStat').style.visibility = ''; } };
 window.sMarks = (e, on) => { sst.marks = on; sst.dots = true; drawSettle(); };
 
 /* ---------- what else the room agreed ---------- */
