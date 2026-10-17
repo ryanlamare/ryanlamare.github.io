@@ -382,6 +382,11 @@ Phrasings that read as AI-written are banned everywhere, titles included:
 Agendas are running orders, not schedules — no clock times. The test for every
 line, titles included: can Ryan say it verbatim and sound like himself?
 
+Before drafting any deck line, read `~/Papers/SLIDE-VOICE.md`: his slide voice, learned from his own live
+edits of Claude's drafts (what he cuts, what he adds, by slide element, with before/after pairs). It is for
+the lines Claude has to write, never for "improving" his. `~/Papers/slide-voice/mine.py` re-mines his newer
+edits.
+
 ### Known wrinkle: the CSS is duplicated
 
 Each **LSE/Illinois** deck inlines its own ~20 KB of CSS, and the decks have
