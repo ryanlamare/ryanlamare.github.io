@@ -107,7 +107,7 @@ B.recordGrid = function(grid, count, step, parsed, opts){
     const t = el('div', 'gt' + (all ? ' both' : g ? ' some' : ''));
     t.appendChild(el('b', null, String(n)));
     const dd = el('div', 'dd');
-    step.roles.forEach((r, i) => dd.appendChild(el('i', 'c' + i + (g && g.roles[r.k] ? ' on' : ''))));
+    step.roles.forEach((r, i) => dd.appendChild(el('i', 'rc' + i + (g && g.roles[r.k] ? ' on' : ''))));
     t.appendChild(dd); return t;
   }));
 };

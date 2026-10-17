@@ -7,7 +7,8 @@
      {id, type:'deal', name, group:'pair'|'group', max, roles:[{k, n}], fields:[...], extra, nodeal, demo}
                                                                   an exercise whose result each phone records
    Fields of a deal step (each may carry roles:[...] to ask only those roles, and always:true to be
-   asked even when there was no deal):
+   asked even when there was no deal, and own:true when each person answers for themselves rather than for
+   the agreement):
      {k, type:'money', q, cur:'$', min, max}      a number, typed
      {k, type:'choice', q, o:[...]}               one of a few answers
      {k, type:'scale', q, lo, hi}                 1 to 5
@@ -100,7 +101,7 @@ NK.parse = function(st, entries){
   });
   const by = {};
   Object.values(dl).forEach(r => { (by[r.g] = by[r.g] || {})[r.role] = r; });
-  const shared = st.fields.filter(f => !f.roles || f.roles.length > 1);
+  const shared = st.fields.filter(f => !f.own && (!f.roles || f.roles.length > 1));   /* the agreement; own:true fields are each person's own answer */
   const groups = Object.keys(by).map(Number).sort((a, b) => a - b).map(g => {
     const recs = by[g], order = keys.filter(k => recs[k]);
     const out = {n:g, roles:recs, sides:order.length};
