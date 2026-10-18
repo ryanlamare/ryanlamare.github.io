@@ -32,5 +32,34 @@ NK.session({
        if (n === 14) d.skip = ['m'];
        return d;
      }}},
+    /* his LER 543 week 1 exercise, at the back of the session (18 Oct 2026), recorded as his outcomes sheet had it: what
+       the pair plans to do, the price they will offer him as Mr. Cardoza, and any special conditions. Nothing here, the demo
+       included, gives the case away: what each doctor needs comes only from the private file. */
+    {id:'ugli', type:'deal', name:'Ugli Orange', group:'pair', max:24,
+     roles:[{k:'j', n:'Dr. Jones'}, {k:'r', n:'Dr. Roland'}],
+     fields:[{k:'who', type:'choice', q:'Who will buy the oranges?', short:'Buying', o:['Dr. Jones', 'Dr. Roland', 'Both of us, together']},
+             {k:'price', type:'money', cur:'$', q:'The price you will offer Mr. Cardoza', short:'Price', min:0, max:9999999, optional:true}],
+     recordQ:'Record your plan', sentWord:'Plan recorded', nodealButton:'We did not reach an agreement', nodealTitle:'No agreement',
+     dealAfterAll:'We did reach an agreement',
+     extras:[{k:'plan', q:'What do you plan to do?', short:'Plan'},
+             {k:'cond', q:'Any special conditions, on delivery or anything else?', short:'Conditions'}],
+     demo:{seed:20261018, groups:14, gen:(r, n) => {
+       if (n === 4 || n === 10 || n === 13) return {x:true};
+       const P = {1:[2, 'We pool our money and buy all the oranges together', 140000],
+                  2:[0, 'Dr. Jones buys them all and gives Dr. Roland first refusal next season', 185000],
+                  3:[2, 'We split the oranges half and half, and share the cost', 160000],
+                  5:[1, 'Dr. Roland buys them, because his deadline comes first', 205000],
+                  6:[2, 'We buy together, and one lab collects them and shares out what each of us needs', 120000],
+                  7:[0, 'Dr. Jones buys them all', 230000],
+                  8:[2, 'We split the oranges half and half', 175000],
+                  9:[2, 'We make one joint offer and share the oranges between our labs', 110000],
+                  11:[1, 'Dr. Roland buys them and pays Dr. Jones to stay out of the bidding', 195000],
+                  12:[2, 'We buy together and work out who gets what afterwards', 150000],
+                  14:[0, 'Dr. Jones buys them; Dr. Roland gets any left over', 210000]};
+       const C = {1:'Delivery to one lab within the week', 6:'Mr. Cardoza keeps the sale confidential', 9:'Half paid now, half on delivery'};
+       const p = P[n], d = {vals:{who:p[0], price:p[2]}, texts:{plan:p[1]}};
+       if (C[n]) d.texts.cond = C[n];
+       return d;
+     }}},
   ],
 });

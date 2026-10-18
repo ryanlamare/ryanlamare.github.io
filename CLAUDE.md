@@ -246,7 +246,9 @@ unlinked sample.
 
 The programme is BADM 590 Negotiations as Ryan taught it (15 Oct 2026): every session is a 590
 session, except day four, which is his exec game-theory material and is what the four-day version
-leaves out. Don't add sessions, topics or examples his course never had; to shorten, cut. The
+leaves out. Don't add sessions, topics or examples his course never had; to shorten, cut. His LER 543
+(workplace dispute resolution) is in the pool too, at his call: Session 1 carries its two conflict slides and Ugli
+Orange (18 Oct 2026). The
 sample is Session 2, Creating and Claiming Value, at `s2/`. It was Session 3 under an earlier plan,
 and `s3/` now holds only forwarders to the same pages under `s2/` (query and key kept), because
 the old address is in links already sent.
