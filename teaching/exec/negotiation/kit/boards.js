@@ -118,12 +118,18 @@ B.roleKey = function(box, step){
 };
 
 /* ---------- a number line: every group's deal ---------- */
-/* opts: {values:[{n, v, mismatch}], cur, lo, hi, zone:{lo, hi, label}, marks:[{v, label, color}], nodeal:[n], state:{dots, zone, marks}, axis} */
+/* opts: {values:[{n, v, mismatch, ring}], cur, lo, hi, zone:{lo, hi, label}, marks:[{v, label, color}], nodeal:[n], state:{dots, zone, marks}, axis,
+   ax (the axis's height in the picture, default 262; a deck with ranges gives the dots more room),
+   ranges:[{side:'max'|'min', v, label, color}]}: each side's range of settlement, a bar in a band above the dots that runs
+   from the side's limit (v) to the end of the line it would rather reach (a payer's 'max' runs left, a seller's 'min' right);
+   state['range' + i] shows bar i, and a 'min' bar lights its limit on the axis when it is a tick (Sally's $0) */
 const nice = span => { const raw = span / 6, p = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map(m => m * p).find(s => span / s <= 7.5) || 10 * p; };
 B.strip = function(svg, o){
-  const W = 1088, L = 30, R = o.nodeal && o.nodeal.length ? 150 : 30, AX = 262, MID = 150, RAD = 15;
+  const W = 1088, L = 30, R = o.nodeal && o.nodeal.length ? 150 : 30, AX = o.ax || 262, RAD = 15;
+  const RG = o.ranges || [], BH = 22, BS = 26;   /* the ranges' bars, in a band at the top */
+  const TOP = RG.length ? 22 + RG.length * BS : 44, FOOT = RG.length ? 32 : 24, MID = RG.length ? Math.round((TOP + RAD + AX - RAD - FOOT) / 2) : 150;   /* FOOT keeps the dots clear of the zone's label */
   svg.replaceChildren();
-  const vals = o.values.map(x => x.v).concat(o.zone ? [o.zone.lo, o.zone.hi] : [], (o.marks || []).map(m => m.v));
+  const vals = o.values.map(x => x.v).concat(o.zone ? [o.zone.lo, o.zone.hi] : [], (o.marks || []).map(m => m.v), RG.map(r => r.v));
   let lo = o.lo != null ? o.lo : Math.min(...vals), hi = o.hi != null ? o.hi : Math.max(...vals);
   if (!(hi > lo)) { lo = lo - 1; hi = hi + 1; }
   const step = nice(hi - lo);
@@ -133,15 +139,30 @@ B.strip = function(svg, o){
   const x = v => L + (v - lo) / (hi - lo) * (W - L - R);
   /* the zone, under everything */
   if (o.zone) {
+    /* with ranges, the zone reaches up round both bars: it is where they overlap */
+    const zt = RG.length ? 4 : 40;
     const z = sv('g', {class:'st-late' + (o.state.zone ? ' on' : '')}, svg);
-    sv('rect', {x:x(o.zone.lo), y:40, width:Math.max(2, x(o.zone.hi) - x(o.zone.lo)), height:AX - 40, fill:'color-mix(in srgb, var(--green) 16%, transparent)', stroke:'var(--green)', 'stroke-width':2, 'stroke-dasharray':'6 5'}, z);
+    sv('rect', {x:x(o.zone.lo), y:zt, width:Math.max(2, x(o.zone.hi) - x(o.zone.lo)), height:AX - zt, fill:'color-mix(in srgb, var(--green) 16%, transparent)', stroke:'var(--green)', 'stroke-width':2, 'stroke-dasharray':'6 5'}, z);
     txt(z, {x:x(o.zone.lo) + 10, y:AX - 12, 'text-anchor':'start', 'font-size':14, 'font-weight':800, 'letter-spacing':'.08em', fill:'var(--green)'}, o.zone.label || 'THE BARGAINING ZONE');
   }
+  /* the ranges: one bar a side, its label and limit inside the bar at the limit's end */
+  const hot = [];
+  RG.forEach((r, i) => {
+    const on = !!o.state['range' + i], y = 8 + i * BS, H = BH, max = r.side === 'max';
+    const x0 = max ? L : x(r.v), x1 = max ? x(r.v) : W - R;
+    const g = sv('g', {class:'st-range r' + i + ' ' + (max ? 'max' : 'min') + (on ? ' on' : '')}, svg);
+    sv('rect', {class:'rg-bar', x:x0, y, width:Math.max(2, x1 - x0), height:H, fill:r.color || 'var(--ink)'}, g);
+    const t = txt(g, {class:'rg-t', x:max ? x1 - 10 : x0 + 10, y:y + 16, 'text-anchor':max ? 'end' : 'start', 'font-size':14, 'font-weight':800, 'letter-spacing':'.07em', fill:'var(--paper)'}, '');
+    const amt = N.fmt(r.v, o.cur);
+    t.textContent = max ? r.label + '  ' + amt : amt + '  ' + r.label;
+    if (on && !max) hot.push(r.v);
+  });
   /* the axis */
   sv('line', {x1:L, y1:AX, x2:W - R, y2:AX, stroke:'var(--ink)', 'stroke-width':2.5}, svg);
   for (let v = lo; v <= hi + step / 1e6; v += step) {
     sv('line', {x1:x(v), y1:AX, x2:x(v), y2:AX + 8, stroke:'var(--ink)', 'stroke-width':2}, svg);
-    txt(svg, {x:x(v), y:AX + 30, 'text-anchor':'middle', 'font-size':15, 'font-weight':600, fill:'var(--muted)'}, o.fmt ? o.fmt(v) : N.short(v, o.cur));
+    const lit = hot.some(h => Math.abs(h - v) < step / 1e6);
+    txt(svg, lit ? {class:'tick-hot', x:x(v), y:AX + 38, 'text-anchor':'middle', 'font-size':30, 'font-weight':900, fill:'var(--red)'} : {x:x(v), y:AX + 30, 'text-anchor':'middle', 'font-size':15, 'font-weight':600, fill:'var(--muted)'}, o.fmt ? o.fmt(v) : N.short(v, o.cur));
   }
   if (o.axis) txt(svg, {x:(L + W - R) / 2, y:AX + 58, 'text-anchor':'middle', 'font-size':14, 'font-weight':700, 'letter-spacing':'.14em', fill:'var(--muted)'}, o.axis);
   /* the marks: lines with their labels at the top */
@@ -161,7 +182,7 @@ B.strip = function(svg, o){
     for (let k = 0; k < 40; k++) {
       const off = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (RAD * 2 + 3);
       const y = MID + off;
-      if (y < 44 + RAD || y > AX - RAD - 24) continue;
+      if (y < TOP + RAD || y > AX - RAD - FOOT) continue;
       if (!placed.some(p => Math.hypot(p[0] - cx, p[1] - y) < RAD * 2 + 2)) { cy = y; break; }
     }
     placed.push([cx, cy]);
@@ -205,6 +226,24 @@ B.wall = function(box, terms, show, empty){
   if (!show) { box.replaceChildren(); return; }
   if (!terms.length) { box.replaceChildren(el('div', 'wallempty', empty || 'Nothing else this time')); return; }
   box.replaceChildren(...terms.slice(0, 15).map(t => { const c = el('div', 'wcard'); c.append(el('div', 'wn', String(t.g)), el('div', 'wt', t.t)); return c; }));
+};
+/* the same, one column a box of a step's extras: cols [{label, terms}], shown column by column (show = how many);
+   opts {most (cards a column), unit:['pair', 'pairs'], empty} */
+B.wallCols = function(box, cols, show, opts){
+  opts = opts || {};
+  const most = opts.most || 6, unit = opts.unit || ['pair', 'pairs'];
+  box.replaceChildren(...cols.map((c, i) => {
+    const col = el('div', 'wcol' + (i < show ? ' on' : ''));
+    const n = new Set(c.terms.map(t => t.g)).size;
+    const h = el('div', 'wch'), cnt = el('div', 'wcn');
+    cnt.append(el('b', null, String(n)), el('i', null, n === 1 ? unit[0] : unit[1]));
+    h.append(el('span', null, c.label), cnt);
+    col.appendChild(h);
+    if (!c.terms.length) col.appendChild(el('div', 'wallempty', opts.empty || 'Nothing this time'));
+    c.terms.slice(0, most).forEach(t => { const w = el('div', 'wcard'); w.append(el('div', 'wn', String(t.g)), el('div', 'wt', t.t)); col.appendChild(w); });
+    if (c.terms.length > most) col.appendChild(el('div', 'wmore', 'and ' + (c.terms.length - most) + ' more'));
+    return col;
+  }));
 };
 
 /* ---------- the record slide's phone, and the link a live room types ---------- */

@@ -5,7 +5,10 @@
    A session is a list of steps, in the order the room meets them:
      {id, type:'poll', q, o:[answers], demo:[counts]}            a question on phones, one answer each
      {id, type:'deal', name, group:'pair'|'group', max, roles:[{k, n}], fields:[...], extra, nodeal, demo}
-                                                                  an exercise whose result each phone records
+                                                                  an exercise whose result each phone records;
+                                                                  extras:[{k, q, short}] in place of extra asks for
+                                                                  the other terms in several boxes (Sally's other money,
+                                                                  then anything non-financial)
      {id, type:'survey', name, qs:[...], demo}                    several questions, one screen each, sent together;
                                                                   a question with versions:[...] shows each phone one
                                                                   version, so the room can be split (framing effects)
@@ -21,6 +24,7 @@
      "d|7|a|fee=45000;first=0"   group 7's role a recorded a deal (values by field key)
      "d|7|a|x"                   ... recorded no deal (plus any always-asked fields: "x;proc=4")
      "c|7|a|text"                ... anything else they agreed, in their own words
+     "c|7|a|money|text"          ... the same, in one of the step's extras boxes (by its key)
    The latest line of each kind from each phone counts, so a phone can record again.
    Polls are plain votes in their own room. A survey sends one line a phone:
      "a|bday=3;risk=1|bday=3;risk=0;born=314"   the versions it was shown, then its answers
@@ -101,7 +105,12 @@ NK.parse = function(st, entries){
       const x = rest === 'x' || rest.startsWith('x;');
       dl[e.v] = {g, role, x, vals: NK.dec(x ? rest.slice(2) : rest), v:e.v};   /* a phone's latest record counts, even if it changed group */
     }
-    if (p[0] === 'c' && rest.trim()) cl[e.v] = {g, role, t:NK.clean(rest)};
+    if (p[0] === 'c') {
+      /* a keyed line belongs to one of the step's extras boxes; each box keeps its own latest line a phone */
+      const keyed = st.extras && p.length >= 5 && st.extras.some(x => x.k === p[3]);
+      const k = keyed ? p[3] : null, t = keyed ? p.slice(4).join('|') : rest;
+      if (t.trim()) cl[e.v + (k ? '|' + k : '')] = {g, role, k, t:NK.clean(t)};
+    }
   });
   const by = {};
   Object.values(dl).forEach(r => { (by[r.g] = by[r.g] || {})[r.role] = r; });
@@ -124,10 +133,10 @@ NK.parse = function(st, entries){
     });
     return out;
   });
-  /* what else they agreed: one card per group, even when two phones wrote the same thing */
+  /* what else they agreed: one card per group (and box), even when two phones wrote the same thing */
   const terms = [];
   Object.values(cl).sort((a, b) => a.g - b.g).forEach(x => {
-    if (!terms.some(t => t.g === x.g && t.t.toLowerCase() === x.t.toLowerCase())) terms.push(x);
+    if (!terms.some(t => t.g === x.g && t.k === x.k && t.t.toLowerCase() === x.t.toLowerCase())) terms.push(x);
   });
   return {groups, terms, deals:groups.filter(g => !g.nodeal), nodeals:groups.filter(g => g.nodeal)};
 };
@@ -165,7 +174,8 @@ NK.median = a => { if (!a || !a.length) return null; const s = a.slice().sort((x
 /* ---------- demo rooms ---------- */
 /* a deal step's demo(rnd, n) returns group n's room as phones would send it:
    {vals:{...}} for a deal, {x:true} for none, plus optional per:{role:{...}} (each role's own answers),
-   skip:[roles that never recorded], diff:{role:{field:value}} (a phone that remembers differently), text */
+   skip:[roles that never recorded], diff:{role:{field:value}} (a phone that remembers differently), text,
+   texts:{key:text} (a step with extras) */
 NK.demoEntries = function(st){
   if (!st.demo) return [];
   const rnd = NK.rng(st.demo.seed || 20261017), out = [];
@@ -188,6 +198,7 @@ NK.demoEntries = function(st){
       const body = (d.x ? 'x' : '') + (Object.keys(keep).length ? (d.x ? ';' : '') + NK.enc(keep) : '');
       out.push({v:'demo-' + r.k + n, t:'d|' + n + '|' + r.k + '|' + (body || 'x')});
       if (d.text && ri === 0) out.push({v:'demo-' + r.k + n, t:'c|' + n + '|' + r.k + '|' + d.text});
+      if (d.texts && ri === 0) Object.keys(d.texts).forEach(k => out.push({v:'demo-' + r.k + n, t:'c|' + n + '|' + r.k + '|' + k + '|' + d.texts[k]}));
     });
   }
   return out;

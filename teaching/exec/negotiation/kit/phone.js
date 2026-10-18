@@ -43,6 +43,7 @@ if (DEEP) {
       (Q.get('v') || '').split(',').forEach(p => { const [k, v] = p.split('.'); if (k && v != null && v !== '') d.vals[k] = +v; });
       if (Q.has('x')) d.x = true;
       if (Q.get('t')) d.text = Q.get('t');
+      (s.extras || []).forEach(x => { if (Q.get('t.' + x.k)) (d.texts = d.texts || {})[x.k] = Q.get('t.' + x.k); });
       if (at === 'done') d.sent = true;
     }
   }
@@ -235,6 +236,17 @@ function formScreen(s, d){
     ta.maxLength = 140; ta.placeholder = 'Optional'; ta.value = d.text || ''; ta.oninput = () => { d.text = ta.value; save(); };
     lab.htmlFor = ta.id = 'extra'; ex.append(lab, ta); w.appendChild(ex);
   }
+  /* several boxes for the other terms, each sent as its own line */
+  const tas = [];
+  if (s.extras && !d.x) {
+    d.texts = d.texts || {};
+    s.extras.forEach(x => {
+      const ex = el('div', 'extra'), lab = el('label', null, x.q), t = el('textarea');
+      t.maxLength = 140; t.placeholder = 'Optional'; t.value = d.texts[x.k] || '';
+      t.oninput = () => { d.texts[x.k] = t.value; save(); };
+      lab.htmlFor = t.id = 'extra-' + x.k; ex.append(lab, t); w.appendChild(ex); tas.push({k:x.k, t});
+    });
+  }
   const go = holdButton('Hold to send', () => {
     const vals = {};
     fields.forEach(f => { if (ask(f) && d.vals[f.k] != null) vals[f.k] = d.vals[f.k]; });
@@ -242,8 +254,10 @@ function formScreen(s, d){
     if (bad) { err.textContent = 'Check the number for ' + bad.q.toLowerCase() + '.'; return; }
     const body = d.x ? 'x' + (Object.keys(vals).length ? ';' + N.enc(vals) : '') : (N.enc(vals) || 'ok=1');
     const text = ta ? N.clean(ta.value) : '';
+    const keyed = tas.map(x => ({k:x.k, t:N.clean(x.t.value)})).filter(x => x.t);
     send(s.room, 'd|' + d.g + '|' + d.role + '|' + body)
       .then(() => text ? send(s.room, 'c|' + d.g + '|' + d.role + '|' + text) : null)
+      .then(() => keyed.reduce((p, x) => p.then(() => send(s.room, 'c|' + d.g + '|' + d.role + '|' + x.k + '|' + x.t)), Promise.resolve()))
       .then(() => { d.sent = true; save(); splash(colour(s, d), s.name, d.x ? (s.nodealTitle || 'No deal') : (s.sentWord || 'Deal recorded'), draw); })
       .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
   });
@@ -258,6 +272,10 @@ function summary(s, d){
     const v = d.vals[f.k]; if (v == null || (d.x && !f.always)) return;
     const shown = f.type === 'money' ? N.fmt(v, f.cur) : f.type === 'scale' ? v + ' of 5' : label(s, f, v);
     const li = el('li'); li.append(el('span', null, f.short || fq(s, f)), el('b', null, shown)); ul.appendChild(li);
+  });
+  if (!d.x) (s.extras || []).forEach(x => {
+    const t = d.texts && N.clean(d.texts[x.k]); if (!t) return;
+    const li = el('li'); li.append(el('span', null, x.short || x.q), el('b', null, t)); ul.appendChild(li);
   });
   return ul;
 }

@@ -274,6 +274,9 @@ forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on 
   `boards.js` draws the deck's live boards; `phone.js` is one phone page for every session (`<session>/deal/`).
 - Each session's steps are in its own `session.js`. A step can read another session's room (`prefix`), and
   `phone:false` keeps it off the phones: that is how Session 10 debriefs Session 9's Harborco.
+- A deal step can ask for the other terms in several boxes (`extras`: Session 1 asks for any other money, then
+  anything non-financial), and the number line can draw each side's range of settlement (`ranges`), its limits
+  from the private file.
 
 Sessions 6 to 8 (the game-theory day) are copies of gt Modules 2, 4/7 and 5/7 behind `kit/gtrooms.js`,
 which moves every poll-server room to `<room>-neg`, so they never touch the rooms `exec/gt/` runs; they
