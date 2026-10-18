@@ -270,7 +270,7 @@ function summary(s, d){
   const ul = el('ul', 'deal');
   N.fieldsFor(s, d.role).forEach(f => {
     const v = d.vals[f.k]; if (v == null || (d.x && !f.always)) return;
-    const shown = f.type === 'money' ? N.fmt(v, f.cur) : f.type === 'scale' ? v + ' of 5' : label(s, f, v);
+    const shown = f.type === 'money' ? N.fmt(v, f.cur) + (f.suffix || '') : f.type === 'scale' ? v + ' of 5' : label(s, f, v);
     const li = el('li'); li.append(el('span', null, f.short || fq(s, f)), el('b', null, shown)); ul.appendChild(li);
   });
   if (!d.x) (s.extras || []).forEach(x => {
@@ -283,7 +283,7 @@ function doneScreen(s, d){
   const w = shell(), box = el('div', 'done');
   box.append(el('div', 'k', d.x ? (s.nodealTitle || 'No deal') : (s.sentWord || 'Deal recorded')));
   const main = N.fieldsFor(s, d.role).find(f => f.type === 'money' && d.vals[f.k] != null && !d.x);
-  box.appendChild(el('div', 'big', main ? N.fmt(d.vals[main.k], main.cur) : 'Thank you'));
+  box.appendChild(el('div', 'big', main ? N.fmt(d.vals[main.k], main.cur) + (main.suffix || '') : 'Thank you'));
   box.appendChild(el('div', 'sm', 'Eyes on the screen'));
   w.append(head(s, d), box, summary(s, d));
   const nx = nextAfter(s);

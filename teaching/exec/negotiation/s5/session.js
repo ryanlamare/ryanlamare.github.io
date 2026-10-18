@@ -24,22 +24,25 @@ NK.session({
        const T = {1:'A written apology from the cleaners', 4:'Free cleaning for the rest of the year', 7:'The cleaners replace one shirt with the same brand'};
        return {vals:{paid:Math.round((110 + r() * 160) / 5) * 5}, per:{m:{style}, p:{sat:sat()}, d:{sat:sat()}}, text:T[n]};
      }}},
-    {id:'telepro', type:'deal', name:'Telepro', group:'group', max:12, nodeal:false,
-     roles:[{k:'k', n:'Kris, the employee'}, {k:'j', n:'Jeff, the supervisor'}, {k:'d', n:'Dave, the office manager'}],
+    /* Lovely Braids (Kellogg DRRC, bought; his LER 543), in place of Telepro (Ryan, 18 Oct 2026): a director of operations
+       mediating between a salon manager and the salon's star stylist. Recorded as Telepro was, so the debrief compares the
+       groups where Mackenzie decided with the groups where Zeke and Jordan found their own solution. The demo is invented. */
+    {id:'braids', type:'deal', name:'Lovely Braids', group:'group', max:12, nodeal:false,
+     roles:[{k:'j', n:'Jordan, the stylist'}, {k:'z', n:'Zeke, the salon manager'}, {k:'m', n:'Mackenzie, the director of operations'}],
      fields:[
       {k:'who', type:'choice', own:true, always:true, q:'How was it resolved?', short:'Resolved',
-       o:['Dave decided', 'Kris and Jeff found a solution, with Dave’s help', 'It was not resolved']},
-      {k:'proc', type:'scale', own:true, always:true, roles:['k', 'j'], q:'How fair was the process?', lo:'Not at all fair', hi:'Completely fair', short:'Process'},
-      {k:'out', type:'scale', own:true, always:true, roles:['k', 'j'], q:'How fair is the outcome?', lo:'Not at all fair', hi:'Completely fair', short:'Outcome'},
+       o:['Mackenzie decided', 'Zeke and Jordan found a solution, with Mackenzie’s help', 'It was not resolved']},
+      {k:'proc', type:'scale', own:true, always:true, roles:['j', 'z'], q:'How fair was the process?', lo:'Not at all fair', hi:'Completely fair', short:'Process'},
+      {k:'out', type:'scale', own:true, always:true, roles:['j', 'z'], q:'How fair is the outcome?', lo:'Not at all fair', hi:'Completely fair', short:'Outcome'},
      ],
      recordQ:'After your meeting', extra:'What did you agree?', sentWord:'Answers sent',
-     demo:{seed:20261052, groups:9, gen:(r, n) => {
+     demo:{seed:20261053, groups:9, gen:(r, n) => {
        const mode = n % 3 === 1 ? 0 : n === 8 ? 2 : 1;
        const sc = (lo, hi) => Math.max(1, Math.min(5, Math.round(lo + r() * (hi - lo))));
-       const kj = () => mode === 1 ? {proc:sc(3.5, 5), out:sc(3, 5)} : mode === 0 ? {proc:sc(1.5, 3.5), out:sc(1.5, 4)} : {proc:sc(1, 2.5), out:sc(1, 2.5)};
-       const seen = k => (mode === 1 && k === 'd' && r() < .3) ? 0 : mode;
-       const T = {2:'Kris can swap shifts with 48 hours’ notice', 5:'The suspension day is paid back; the policy is reviewed next quarter', 9:'Jeff and Kris meet every Monday for a month'};
-       return {vals:{}, per:{k:Object.assign({who:seen('k')}, kj()), j:Object.assign({who:seen('j')}, kj()), d:{who:seen('d')}}, text:T[n]};
+       const jz = () => mode === 1 ? {proc:sc(3.5, 5), out:sc(3, 5)} : mode === 0 ? {proc:sc(1.5, 3.5), out:sc(1.5, 4)} : {proc:sc(1, 2.5), out:sc(1, 2.5)};
+       const seen = k => (mode === 1 && k === 'm' && r() < .3) ? 0 : mode;
+       const T = {2:'Zeke and Jordan meet every week for a month', 5:'Nothing is enforced until the policy is in writing', 9:'Jordan trains the newer stylists on two afternoons a month'};
+       return {vals:{}, per:{j:Object.assign({who:seen('j')}, jz()), z:Object.assign({who:seen('z')}, jz()), m:{who:seen('m')}}, text:T[n]};
      }}},
   ],
 });

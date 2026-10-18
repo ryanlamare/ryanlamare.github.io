@@ -15,7 +15,7 @@
    Fields of a deal step (each may carry roles:[...] to ask only those roles, and always:true to be
    asked even when there was no deal, and own:true when each person answers for themselves rather than for
    the agreement):
-     {k, type:'money', q, cur:'$', min, max}      a number, typed
+     {k, type:'money', q, cur:'$', min, max}      a number, typed (suffix:'%' shows after it, for a percentage)
      {k, type:'choice', q, o:[...]}               one of a few answers
      {k, type:'scale', q, lo, hi}                 1 to 5
      {k, type:'option', q, n}                     one of n options on the paper agreement form (A1, A2...)
