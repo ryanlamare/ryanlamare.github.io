@@ -724,16 +724,26 @@ function drawMvm(){
   const P = B.parsed('braids');
   const how = g => { for (const k of ['m', 'j', 'z']) { const r = g.roles[k]; if (r && r.vals.who != null) return r.vals.who; } return null; };   /* Mackenzie's account first */
   const fair = (gs, k) => avg(gs.flatMap(g => ['j', 'z'].map(r => g.roles[r] && g.roles[r].vals[k]).filter(x => x != null)));
-  const braids = (id, mode, where, ended) => {
-    const el = E(id), gs = P.groups.filter(g => how(g) === mode); el.replaceChildren();
+  const show = (id, gs, where, empty) => {
+    const el = E(id); el.replaceChildren();
     const p = fair(gs, 'proc'), o = fair(gs, 'out');
-    if (!gs.length || p == null) { el.textContent = 'In Lovely Braids, no group ended with ' + ended; return; }
+    if (!gs.length || p == null) { el.textContent = empty; return; }
     el.append(B.el('b', null, p.toFixed(1)), B.el('em', null, 'process'));
     if (o != null) el.append(B.el('b', null, o.toFixed(1)), B.el('em', null, 'outcome'));
     el.append(B.el('div', null, 'How fair Zeke and Jordan found it, out of 5, in the ' + (gs.length === 1 ? 'group' : gs.length + ' groups') + ' where ' + where));
   };
-  braids('mvA2', 0, 'Mackenzie decided', 'Mackenzie deciding');
-  braids('mvB2', 1, 'Zeke and Jordan found a solution', 'Zeke and Jordan finding a solution');
+  /* Mackenzie's two briefs: when the private file says which groups had which (odd or even numbers), the comparison is by
+     brief; without it, by how each meeting ended */
+  const V = (N.pv('braids') || {}).versions;
+  if (V && (V.charge === 'odd' || V.charge === 'even') && V.a && V.b) {
+    const charge = g => (g.n % 2 === 1) === (V.charge === 'odd');
+    show('mvA2', P.groups.filter(charge), V.a, 'No group had that brief');
+    show('mvB2', P.groups.filter(g => !charge(g)), V.b, 'No group had that brief');
+  } else {
+    const ended = (mode, where, how2) => show(mode === 0 ? 'mvA2' : 'mvB2', P.groups.filter(g => how(g) === mode), where, 'In Lovely Braids, no group ended with ' + how2);
+    ended(0, 'Mackenzie decided', 'Mackenzie deciding');
+    ended(1, 'Zeke and Jordan found a solution', 'Zeke and Jordan finding a solution');
+  }
   E('mvm').classList.toggle('poll', mvP);
   E('mvm').classList.toggle('tele', mvT);
 }

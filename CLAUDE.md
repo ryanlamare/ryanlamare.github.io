@@ -263,6 +263,12 @@ still name `s3/`: change them to `s2/` before rebuilding `numbers.enc`, or the n
 forwarder folder and the phones keep the old one. `deals.js` carries only invented demo numbers. Never commit the key, a
 link containing it, or a plaintext table. Licensed exercises' briefs and tables never go in at all.
 
+`s2-draft/` is Session 2 as delivered (18 Oct 2026, Ryan's call): New Recruit, bought, read on paper in the session,
+with the deal recorded on phones and the sample's debrief. It replaces `s2/` once the Academy decides (its paths name
+`s2-draft/` until then). Its phones take the case's wording from `s2-draft/forms.enc` (built with `encrypt-forms.mjs`
+in the private folder) and its deck the issues, points and key from the private scoring file; both have templates
+there. Opened plain it shows the sample's invented issues.
+
 `s2/deck.js` is a copy of the gt engine plus one addition: a click or tap advances, for people
 browsing the sample on their own. Don't sync it with `gt/deck.js` in either direction.
 
