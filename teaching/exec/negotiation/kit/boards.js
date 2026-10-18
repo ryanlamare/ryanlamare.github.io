@@ -122,7 +122,8 @@ B.roleKey = function(box, step){
    ax (the axis's height in the picture, default 262; a deck with ranges gives the dots more room),
    ranges:[{side:'max'|'min', v, label, color}]}: each side's range of settlement, a bar in a band above the dots that runs
    from the side's limit (v) to the end of the line it would rather reach (a payer's 'max' runs left, a seller's 'min' right);
-   state['range' + i] shows bar i, and a 'min' bar lights its limit on the axis when it is a tick (Sally's $0) */
+   state['range' + i] shows bar i, and a 'min' bar lights its limit on the axis when it is a tick (Sally's $0);
+   gap:{lo, hi} shades the space between two ranges that never meet (the Blue Buggy), shown with state.zone */
 const nice = span => { const raw = span / 6, p = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map(m => m * p).find(s => span / s <= 7.5) || 10 * p; };
 B.strip = function(svg, o){
   const W = 1088, L = 30, R = o.nodeal && o.nodeal.length ? 150 : 30, AX = o.ax || 262, RAD = 15;
@@ -145,6 +146,12 @@ B.strip = function(svg, o){
     sv('rect', {x:x(o.zone.lo), y:zt, width:Math.max(2, x(o.zone.hi) - x(o.zone.lo)), height:AX - zt, fill:'color-mix(in srgb, var(--green) 16%, transparent)', stroke:'var(--green)', 'stroke-width':2, 'stroke-dasharray':'6 5'}, z);
     txt(z, {x:x(o.zone.lo) + 10, y:AX - 12, 'text-anchor':'start', 'font-size':14, 'font-weight':800, 'letter-spacing':'.08em', fill:'var(--green)'}, o.zone.label || 'THE BARGAINING ZONE');
   }
+  /* no zone at all: the space between the two limits, in red */
+  if (o.gap) {
+    const zt = RG.length ? 4 : 40;
+    const z = sv('g', {class:'st-late' + (o.state.zone ? ' on' : '')}, svg);
+    sv('rect', {x:x(o.gap.lo), y:zt, width:Math.max(2, x(o.gap.hi) - x(o.gap.lo)), height:AX - zt, fill:'color-mix(in srgb, var(--red) 14%, transparent)', stroke:'var(--red)', 'stroke-width':2, 'stroke-dasharray':'6 5'}, z);
+  }
   /* the ranges: one bar a side, its label and limit inside the bar at the limit's end */
   const hot = [];
   RG.forEach((r, i) => {
@@ -152,9 +159,11 @@ B.strip = function(svg, o){
     const x0 = max ? L : x(r.v), x1 = max ? x(r.v) : W - R;
     const g = sv('g', {class:'st-range r' + i + ' ' + (max ? 'max' : 'min') + (on ? ' on' : '')}, svg);
     sv('rect', {class:'rg-bar', x:x0, y, width:Math.max(2, x1 - x0), height:H, fill:r.color || 'var(--ink)'}, g);
-    const t = txt(g, {class:'rg-t', x:max ? x1 - 10 : x0 + 10, y:y + 16, 'text-anchor':max ? 'end' : 'start', 'font-size':14, 'font-weight':800, 'letter-spacing':'.07em', fill:'var(--paper)'}, '');
-    const amt = N.fmt(r.v, o.cur);
-    t.textContent = max ? r.label + '  ' + amt : amt + '  ' + r.label;
+    const amt = N.fmt(r.v, o.cur), label = max ? r.label + '  ' + amt : amt + '  ' + r.label;
+    /* inside the bar at the limit's end when it fits; otherwise just outside it, beside the limit, in the side's colour */
+    const fits = label.length * 9 + 20 <= x1 - x0;
+    const at = fits ? {x:max ? x1 - 10 : x0 + 10, anchor:max ? 'end' : 'start', fill:'var(--paper)'} : {x:max ? x1 + 10 : x0 - 10, anchor:max ? 'start' : 'end', fill:r.color || 'var(--ink)'};
+    txt(g, {class:'rg-t', x:at.x, y:y + 16, 'text-anchor':at.anchor, 'font-size':14, 'font-weight':800, 'letter-spacing':'.07em', fill:at.fill}, label);
     if (on && !max) hot.push(r.v);
   });
   /* the axis */
@@ -205,6 +214,8 @@ B.strip = function(svg, o){
   return {x, lo, hi};
 };
 B.popDots = svg => requestAnimationFrame(() => requestAnimationFrame(() => svg.querySelectorAll('g').forEach(g => { if (g.querySelector(':scope > .st-dot')) g.classList.add('st-on'); })));
+/* a range, the zone or the gap, drawn hidden and then shown on the next frame, so it grows or fades in rather than appears */
+B.growIn = (svg, sel) => requestAnimationFrame(() => requestAnimationFrame(() => { const g = svg.querySelector(sel); if (g) g.classList.add('on'); }));
 
 /* ---------- bars: how many gave each answer ---------- */
 /* opts: {max (the full width; default the largest count), fmt (how a number shows), hot (index to ring), colors} */

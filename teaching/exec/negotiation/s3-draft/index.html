@@ -169,12 +169,13 @@
 <section class="slide content" data-i="5">
   <div class="kicker"><i></i>SESSION 3 &middot; DEBRIEF</div>
   <h2>Every pair&rsquo;s price</h2>
-  <div class="stripfig"><svg id="pSvg" viewBox="0 0 1088 330" aria-label="Each pair's agreed price on a line"></svg></div>
-  <div class="stripstat" id="pStat"></div>
+  <div class="stripfig tall"><svg id="pSvg" viewBox="0 0 1088 340" aria-label="Each pair's agreed price on a line, with each side's limit"></svg></div>
+  <div class="stripstat tall" id="pStat"></div>
   <span class="hook" data-step="1" data-stepcall="pDots"></span>
-  <span class="hook" data-step="2" data-stepcall="pZone"></span>
-  <span class="hook" data-step="3" data-stepcall="pMarks"></span>
-  <div class="talk" data-step="4">
+  <span class="hook" data-step="3" data-stepcall="pWalter"></span>
+  <span class="hook" data-step="4" data-stepcall="pGG"></span>
+  <span class="hook" data-step="5" data-stepcall="pZone"></span>
+  <div class="talk" data-step="2">
     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
     <div class="tt">What type of negotiation is this? What strategies did the pairs with the highest price use? The lowest?</div>
   </div>
@@ -352,6 +353,14 @@
 
 <section class="slide content" data-i="16">
   <div class="kicker"><i></i>SESSION 3 &middot; DEBRIEF</div>
+  <h2>DID YOU AGREE ANYTHING ELSE?</h2>
+  <div class="wall" id="wall"></div>
+  <span class="hook" data-step="1" data-stepcall="wallShow"></span>
+  <div class="demotag">DEMO DATA</div>
+</section>
+
+<section class="slide content" data-i="17">
+  <div class="kicker"><i></i>SESSION 3 &middot; DEBRIEF</div>
   <h2>Positions and interests</h2>
   <div class="berg">
     <svg viewBox="0 0 420 330" aria-label="An iceberg: positions above the water, interests far larger beneath it">
@@ -375,14 +384,6 @@
     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
     <div class="tt">Which settlements will be the most long-lasting? Why? And why not just compromise?</div>
   </div>
-</section>
-
-<section class="slide content" data-i="17">
-  <div class="kicker"><i></i>SESSION 3 &middot; DEBRIEF</div>
-  <h2>DID YOU AGREE ANYTHING ELSE?</h2>
-  <div class="wall" id="wall"></div>
-  <span class="hook" data-step="1" data-stepcall="wallShow"></span>
-  <div class="demotag">DEMO DATA</div>
 </section>
 
 <section class="slide content" data-i="18">
@@ -584,19 +585,22 @@ B.recordSlide({step:'bizhub', frame:'bPhone', wrap:'bPhoneWrap', qr:'bQr', grid:
 
 /* the zone, the alternatives and the bills: the private file's, or invented ones marked DEMO */
 const DEMO = {
-  walter:{zone:{lo:14000, hi:44000, label:'THE BARGAINING ZONE (DEMO)'}, marks:[{v:14000, label:'GG’S ALTERNATIVE (DEMO)', color:'var(--terracotta)'}, {v:44000, label:'WALTER’S LIMIT (DEMO)', color:'var(--teal)'}]},
+  walter:{zone:{lo:14000, hi:44000, label:'THE BARGAINING ZONE (DEMO)'}, ranges:[{side:'max', v:44000, label:'WALTER’S LIMIT (DEMO)'}, {side:'min', v:14000, label:'GG’S OTHER BUYER (DEMO)'}]},
   bizhub:{marks:[{v:500, label:'ESTIMATE (DEMO)'}, {v:620, label:'FIRST BILL (DEMO)'}, {v:760, label:'SECOND BILL (DEMO)'}]},
 };
 const over = id => N.pv(id) || (B.live ? null : DEMO[id]);
 const note = id => B.live && !N.pv(id) ? 'Drop the private file on this page for the zone and the alternatives' : '';
+/* each side's range, Walter's above GG's in their roles' colours; a private file with only a zone still draws both */
+const ranges = o => (o.ranges || (o.zone ? [{side:'max', v:o.zone.hi, label:'WALTER’S LIMIT'}, {side:'min', v:o.zone.lo, label:'GG’S OTHER BUYER'}] : []))
+  .map(r => Object.assign({color:r.side === 'max' ? B.ROLE[0] : B.ROLE[1]}, r));
 const mean = a => a.reduce((x, y) => x + y, 0) / (a.length || 1);
 
 /* ---------- every pair's price ---------- */
-const pst = {dots:false, zone:false, marks:false};
+const pst = {dots:false, range0:false, range1:false, zone:false};
 function drawPrice(){
   const P = B.parsed('walter'), o = over('walter') || {};
   const vals = P.deals.map(g => ({n:g.n, v:g.vals.price, mismatch:g.mismatch}));
-  B.strip(E('pSvg'), {values:vals, cur:'$', zone:o.zone, marks:o.marks, nodeal:P.nodeals.map(g => g.n), state:pst, axis:'THE PRICE FOR THE HALF-LOT'});
+  B.strip(E('pSvg'), {values:vals, cur:'$', zone:o.zone, ranges:ranges(o), nodeal:P.nodeals.map(g => g.n), state:pst, ax:300});
   const st = E('pStat'); st.replaceChildren();
   if (vals.length > 1) { const lo = Math.min(...vals.map(v => v.v)), hi = Math.max(...vals.map(v => v.v));
     st.append('Prices ran from ', B.el('b', null, N.fmt(lo, '$')), ' to ', B.el('b', null, N.fmt(hi, '$')), ' for the same plot of land' + (P.nodeals.length ? ', and ' + (P.nodeals.length === 1 ? 'one pair' : P.nodeals.length + ' pairs') + ' reached no deal.' : '.')); }
@@ -604,8 +608,10 @@ function drawPrice(){
   E('wNote').textContent = note('walter');
 }
 window.pDots = (e, on) => { B.reveal('walter', on); pst.dots = false; drawPrice(); if (on) { pst.dots = true; B.popDots(E('pSvg')); E('pStat').style.visibility = ''; } };
-window.pZone = (e, on) => { pst.zone = on; pst.dots = true; drawPrice(); };
-window.pMarks = (e, on) => { pst.marks = on; pst.dots = true; drawPrice(); };
+window.pWalter = (e, on) => { pst.range0 = false; pst.dots = true; drawPrice(); if (on) { pst.range0 = true; B.growIn(E('pSvg'), '.st-range.r0'); } };
+/* GG's bar takes its time getting down to its other buyer; then that limit lights up on the axis */
+window.pGG = (e, on) => { pst.range1 = false; pst.dots = true; drawPrice(); if (on) { pst.range1 = true; B.growIn(E('pSvg'), '.st-range.r1'); setTimeout(() => { if (pst.range1) drawPrice(); }, 1700); } };
+window.pZone = (e, on) => { pst.zone = false; drawPrice(); if (on) { pst.zone = true; B.growIn(E('pSvg'), '.st-late'); } };
 
 /* ---------- did the first offer matter? ---------- */
 const ost = {dots:false, marks:false};

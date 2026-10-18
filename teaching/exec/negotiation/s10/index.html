@@ -203,12 +203,14 @@
 <section class="slide content" data-i="9">
   <div class="kicker"><i></i>SESSION 10 &middot; DEBRIEF</div>
   <h2>Every pair&rsquo;s deal</h2>
-  <div class="stripfig"><svg id="bSvg" viewBox="0 0 1088 330" aria-label="The price of the car in each pair's deal, on a line"></svg></div>
-  <div class="stripstat" id="bStat"></div>
+  <div class="stripfig tall"><svg id="bSvg" viewBox="0 0 1088 340" aria-label="The price of the car in each pair's deal, on a line, with each side's limit"></svg></div>
+  <div class="stripstat tall" id="bStat"></div>
   <span class="hook" data-step="1" data-stepcall="bDots"></span>
-  <span class="hook" data-step="2" data-stepcall="bMarks"></span>
-  <div class="redline" id="bZone" data-step="3" style="bottom:122px"></div>
-  <div class="talk" data-step="4">
+  <span class="hook" data-step="3" data-stepcall="bBuyer"></span>
+  <span class="hook" data-step="4" data-stepcall="bSeller"></span>
+  <span class="hook" data-step="5" data-stepcall="bZoneOn"></span>
+  <div class="redline" id="bZone" data-step="5" style="bottom:118px"></div>
+  <div class="talk" data-step="2">
     <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 6 H30 A4 4 0 0 1 34 10 V24 A4 4 0 0 1 30 28 H16 L9 35 V28 H6 A4 4 0 0 1 2 24 V10 A4 4 0 0 1 6 6 Z" fill="var(--red)"/><path d="M38 17 H42 A4 4 0 0 1 46 21 V33 A4 4 0 0 1 42 37 H41 V43 L34 37 H22 A4 4 0 0 1 18 33 V32" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg>
     <div class="tt">Pairs who reached a deal, and pairs who didn&rsquo;t: how did you decide?</div>
   </div>
@@ -470,21 +472,27 @@ B.recordSlide({step:'buggy', frame:'bPhone', wrap:'bPhoneWrap', qr:'bQr', grid:'
 /* invented, like every demo number: the case's own limits come only from the private file */
 const DEMOBUG = {buyer:3500, seller:3150};
 const bug = () => N.pv('buggy') || (B.live ? null : DEMOBUG);
-const bst = {dots:false, marks:false, zone:false};
+const bst = {dots:false, range0:false, range1:false, zone:false};
 function drawBuggy(){
   const P = B.parsed('buggy'), lim = bug();
   const vals = P.deals.filter(g => g.vals.price != null).map(g => ({n:g.n, v:g.vals.price, mismatch:g.mismatch}));
-  let marks, zone;
+  /* each side's range: the buyer's above the seller's; where they overlap is the zone, and where they never meet, a gap */
+  let ranges = [], zone, gap;
   if (lim) {
-    marks = [{v:lim.buyer, label:'THE BUYER’S LIMIT' + (lim === DEMOBUG ? ' (DEMO)' : ''), color:'var(--teal)'}, {v:lim.seller, label:'THE SELLER’S ALTERNATIVE' + (lim === DEMOBUG ? ' (DEMO)' : ''), color:'var(--terracotta)'}];
+    const d = lim === DEMOBUG ? ' (DEMO)' : '';
+    ranges = [{side:'max', v:lim.buyer, label:'THE BUYER’S LIMIT' + d, color:B.ROLE[0]}, {side:'min', v:lim.seller, label:'THE SELLER’S ALTERNATIVE' + d, color:B.ROLE[1]}];
     if (lim.buyer >= lim.seller) zone = {lo:lim.seller, hi:lim.buyer, label:'THE BARGAINING ZONE'};
+    else gap = {lo:lim.buyer, hi:lim.seller};
   }
   const all = vals.map(v => v.v).concat(lim ? [lim.buyer, lim.seller] : []);
-  B.strip(E('bSvg'), {values:vals, cur:'$', marks, zone, nodeal:P.nodeals.map(g => g.n), state:{dots:bst.dots, marks:bst.marks, zone:bst.marks}, lo:all.length ? Math.floor((Math.min(...all) - 150) / 100) * 100 : 0, axis:'THE PRICE OF THE CAR'});
+  B.strip(E('bSvg'), {values:vals, cur:'$', ranges, zone, gap, nodeal:P.nodeals.map(g => g.n), state:bst, ax:300, lo:all.length ? Math.floor((Math.min(...all) - 150) / 100) * 100 : 0});
   const st = E('bStat'); st.replaceChildren();
   if (P.groups.length) {
     st.append(B.el('b', null, P.deals.length + ' of ' + P.groups.length), ' pairs reached a deal');
-    if (lim && bst.marks && vals.length) {
+    if (lim && bst.zone && vals.length && lim.buyer < lim.seller) {
+      /* with no zone, any price is beyond one side's limit: every deal left someone worse off than walking away */
+      st.append(', and ', B.el('b', null, vals.length === 1 ? 'that deal' : 'every one of them'), ' left one side worse off than walking away.');
+    } else if (lim && bst.zone && vals.length) {
       const under = vals.filter(v => v.v < lim.seller).length;
       st.append(under ? ', ' : '.'); if (under) st.append(B.el('b', null, under === vals.length ? 'all of them' : String(under)), ' below the seller’s alternative.');
     } else st.append('.');
@@ -494,7 +502,9 @@ function drawBuggy(){
   E('bNote').textContent = B.live && !N.pv('buggy') ? 'Drop the private file on this page for the two limits' : '';
 }
 window.bDots = (e, on) => { B.reveal('buggy', on); bst.dots = false; drawBuggy(); if (on) { bst.dots = true; B.popDots(E('bSvg')); E('bStat').style.visibility = ''; } };
-window.bMarks = (e, on) => { bst.marks = on; bst.dots = true; drawBuggy(); };
+window.bBuyer = (e, on) => { bst.range0 = false; bst.dots = true; drawBuggy(); if (on) { bst.range0 = true; B.growIn(E('bSvg'), '.st-range.r0'); } };
+window.bSeller = (e, on) => { bst.range1 = false; bst.dots = true; drawBuggy(); if (on) { bst.range1 = true; B.growIn(E('bSvg'), '.st-range.r1'); } };
+window.bZoneOn = (e, on) => { bst.zone = false; drawBuggy(); if (on) { bst.zone = true; B.growIn(E('bSvg'), '.st-late'); setTimeout(() => { if (bst.zone) drawBuggy(); }, 600); } };
 
 drawIssues(); drawOverview(); buildHooks(); drawDetail(); drawHard(); drawBuggy();
 B.onData(id => {
