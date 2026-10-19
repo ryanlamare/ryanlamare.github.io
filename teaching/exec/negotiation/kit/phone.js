@@ -286,9 +286,32 @@ function doneScreen(s, d){
   box.appendChild(el('div', 'big', main ? N.fmt(d.vals[main.k], main.cur) + (main.suffix || '') : 'Thank you'));
   box.appendChild(el('div', 'sm', 'Eyes on the screen'));
   w.append(head(s, d), box, summary(s, d));
+  if (s.wait) w.appendChild(waitBlock(s, d));
   const nx = nextAfter(s);
   if (nx) w.appendChild(button('go ghost', 'Next: ' + (nx.type === 'deal' ? nx.name : 'a question'), () => { d.ack = true; save(); draw(); }));
   w.appendChild(button('back', 'Change what we recorded', () => { d.sent = false; d.ack = false; save(); draw(); }));
+}
+/* for pairs that finish early (19 Oct 2026, from Ryan's LER 543 outcome sheets): a few questions, each answer sent as its own line */
+function waitBlock(s, d){
+  d.waits = d.waits || {};
+  const box = el('div', 'wait'), err = el('div', 'err');
+  box.appendChild(el('div', 'wh', s.waitTitle || 'If you have time, try to answer the following questions'));
+  const tas = s.wait.map(q => {
+    const ex = el('div', 'extra'), lab = el('label', null, q.q), t = el('textarea');
+    t.maxLength = 140; t.placeholder = 'Optional'; t.value = d.waits[q.k] || '';
+    t.oninput = () => { d.waits[q.k] = t.value; d.waitSent = false; save(); note.textContent = ''; };
+    lab.htmlFor = t.id = 'wait-' + q.k; ex.append(lab, t); box.appendChild(ex); return {k:q.k, t};
+  });
+  const note = el('div', 'sent', d.waitSent ? 'Answers sent: thank you!' : '');
+  const go = holdButton('Hold to send your answers', () => {
+    const lines = tas.map(x => ({k:x.k, t:N.clean(x.t.value)})).filter(x => x.t);
+    if (!lines.length) { err.textContent = 'Write an answer first.'; return; }
+    lines.reduce((p, x) => p.then(() => send(s.room, 'w|' + d.g + '|' + d.role + '|' + x.k + '|' + x.t)), Promise.resolve())
+      .then(() => { d.waitSent = true; save(); err.textContent = ''; note.textContent = 'Answers sent: thank you!'; })
+      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  box.append(go, err, note);
+  return box;
 }
 function needForms(s, d){
   const w = shell();

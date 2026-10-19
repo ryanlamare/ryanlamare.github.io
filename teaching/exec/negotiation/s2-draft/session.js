@@ -4,11 +4,19 @@
 NK.session({
   n: 2, prefix: 'neg2', title: 'Creating and Claiming Value',
   steps: [
+    /* New Recruit's room as the kit reads it, for its early finishers' answers only (19 Oct 2026): the deal itself is the
+       sample's system (deals.js, phones at deal/), so phone:false keeps it off the Chiptech phones and out of the bots */
+    {id:'deals', type:'deal', name:'New Recruit', group:'pair', max:24, phone:false,
+     roles:[{k:'a', n:'Candidate'}, {k:'r', n:'Recruiter'}],
+     wait:[{k:'a', q:'What are the candidate’s interests?', short:'The candidate'}, {k:'r', q:'What are the recruiter’s interests?', short:'The recruiter'}],
+     demo:{seed:20261019, groups:15, gen:() => ({x:true})}},
     /* Chiptech (PON, bought; his LER 543): a CFO and the head of HR over next year's HR budget. Phones record the increase
        agreed, as a percentage of this year's budget, and anything else; the two positions and what each side really needed
        come only from the private file. The demo is invented. */
     {id:'chiptech', type:'deal', name:'Chiptech', group:'pair', max:24,
      roles:[{k:'c', n:'Chris Brown, CFO'}, {k:'t', n:'Terry Austin, head of HR'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'c', q:'What are Chris’s interests?', short:'Chris, the CFO'}, {k:'t', q:'What are Terry’s interests?', short:'Terry, head of HR'}],
      fields:[{k:'pct', type:'money', cur:'', suffix:'%', q:'The increase in HR’s budget (%)', short:'Increase', min:0, max:100}],
      recordQ:'Record your agreement', extra:'Anything else you agreed?',
      nodealButton:'We could not set the budget', nodealTitle:'No budget', dealAfterAll:'We did set the budget', sentWord:'Agreement recorded',

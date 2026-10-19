@@ -10,6 +10,8 @@ NK.session({
     {id:'hardest', type:'poll', q:'Looking back, what was the hardest part of Harborco for you?', o:window.HARBORCO_HARD, demo:[13, 10, 5, 4]},
     {id:'buggy', type:'deal', name:'The Blue Buggy', group:'pair', max:24,
      roles:[{k:'b', n:'Buyer'}, {k:'s', n:'Seller'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'b', q:'What are the buyer’s interests?', short:'The buyer'}, {k:'s', q:'What are the seller’s interests?', short:'The seller'}],
      fields:[{k:'price', type:'money', cur:'$', q:'The price of the car', short:'Price', min:0, max:99999}],
      recordQ:'Record your deal', extra:'Anything else you agreed?',
      /* invented */

@@ -10,6 +10,8 @@ NK.session({
      demo:[12, 9, 5, 6]},
     {id:'laundry', type:'deal', name:'Dirty Laundry', group:'group', max:12,
      roles:[{k:'p', n:'Plaintiff, the customer'}, {k:'d', n:'Defendant, the dry cleaner'}, {k:'m', n:'Mediator'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'d', q:'What are the defendant’s interests?', short:'The defendant'}, {k:'p', q:'What are the plaintiff’s interests?', short:'The plaintiff'}, {k:'m', q:'What are the mediator’s interests?', short:'The mediator'}],
      fields:[
       {k:'paid', type:'money', cur:'$', q:'What the dry cleaner pays the customer', short:'Paid', min:0, max:99999},
       {k:'style', type:'choice', own:true, always:true, roles:['m'], q:'Which style did you mostly use?', short:'Style',
@@ -26,12 +28,14 @@ NK.session({
      }}},
     /* Lovely Braids (Kellogg DRRC, bought; his LER 543), in place of Telepro (Ryan, 18 Oct 2026): a director of operations
        mediating between a salon manager and the salon's star stylist. Recorded as Telepro was, so the debrief compares the
-       groups where Mackenzie decided with the groups where Zeke and Jordan found their own solution. The demo is invented. */
+       groups where Sidney decided with the groups where Zeke and Jordan found their own solution. The demo is invented. */
     {id:'braids', type:'deal', name:'Lovely Braids', group:'group', max:12, nodeal:false,
-     roles:[{k:'j', n:'Jordan, the stylist'}, {k:'z', n:'Zeke, the salon manager'}, {k:'m', n:'Mackenzie, the director of operations'}],
+     roles:[{k:'j', n:'Jordan, the stylist'}, {k:'z', n:'Zeke, the salon manager'}, {k:'m', n:'Sidney, the director of operations'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'j', q:'What are Jordan’s interests?', short:'Jordan'}, {k:'m', q:'What are Sidney’s interests?', short:'Sidney'}, {k:'z', q:'What are Zeke’s interests?', short:'Zeke'}],
      fields:[
       {k:'who', type:'choice', own:true, always:true, q:'How was it resolved?', short:'Resolved',
-       o:['Mackenzie decided', 'Zeke and Jordan found a solution, with Mackenzie’s help', 'It was not resolved']},
+       o:['Sidney decided', 'Zeke and Jordan found a solution, with Sidney’s help', 'It was not resolved']},
       {k:'proc', type:'scale', own:true, always:true, roles:['j', 'z'], q:'How fair was the process?', lo:'Not at all fair', hi:'Completely fair', short:'Process'},
       {k:'out', type:'scale', own:true, always:true, roles:['j', 'z'], q:'How fair is the outcome?', lo:'Not at all fair', hi:'Completely fair', short:'Outcome'},
      ],

@@ -12,6 +12,8 @@
      {id, type:'survey', name, qs:[...], demo}                    several questions, one screen each, sent together;
                                                                   a question with versions:[...] shows each phone one
                                                                   version, so the room can be split (framing effects)
+   A deal step can carry wait:[{k, q, short}]: questions for pairs that finish early (Ryan's LER 543 sheets: "After the
+   mediation ends, if you have time try to answer the following questions"), shown on the phone once the deal is recorded.
    Fields of a deal step (each may carry roles:[...] to ask only those roles, and always:true to be
    asked even when there was no deal, and own:true when each person answers for themselves rather than for
    the agreement):
@@ -25,6 +27,7 @@
      "d|7|a|x"                   ... recorded no deal (plus any always-asked fields: "x;proc=4")
      "c|7|a|text"                ... anything else they agreed, in their own words
      "c|7|a|money|text"          ... the same, in one of the step's extras boxes (by its key)
+     "w|7|a|j|text"              ... an early finisher's answer to the step's wait question j
    The latest line of each kind from each phone counts, so a phone can record again.
    Polls are plain votes in their own room. A survey sends one line a phone:
      "a|bday=3;risk=1|bday=3;risk=0;born=314"   the versions it was shown, then its answers
@@ -96,7 +99,7 @@ NK.dec = s => {
 };
 /* a deal step's room, read: one entry per group, its agreement and what each role said */
 NK.parse = function(st, entries){
-  const keys = st.roles.map(r => r.k), dl = {}, cl = {};
+  const keys = st.roles.map(r => r.k), dl = {}, cl = {}, wl = {};
   (entries || []).forEach(e => {
     const p = String(e.t || '').split('|');
     if (!/^\d{1,2}$/.test(p[1]) || !keys.includes(p[2])) return;
@@ -104,6 +107,10 @@ NK.parse = function(st, entries){
     if (p[0] === 'd') {
       const x = rest === 'x' || rest.startsWith('x;');
       dl[e.v] = {g, role, x, vals: NK.dec(x ? rest.slice(2) : rest), v:e.v};   /* a phone's latest record counts, even if it changed group */
+    }
+    if (p[0] === 'w' && p.length >= 5 && (st.wait || []).some(q => q.k === p[3])) {
+      const t = p.slice(4).join('|');
+      if (t.trim()) wl[e.v + '|' + p[3]] = {g, role, k:p[3], t:NK.clean(t)};   /* each phone's latest answer to each question */
     }
     if (p[0] === 'c') {
       /* a keyed line belongs to one of the step's extras boxes; each box keeps its own latest line a phone */
@@ -138,7 +145,12 @@ NK.parse = function(st, entries){
   Object.values(cl).sort((a, b) => a.g - b.g).forEach(x => {
     if (!terms.some(t => t.g === x.g && t.k === x.k && t.t.toLowerCase() === x.t.toLowerCase())) terms.push(x);
   });
-  return {groups, terms, deals:groups.filter(g => !g.nodeal), nodeals:groups.filter(g => g.nodeal)};
+  /* what the early finishers said, one card per group and question */
+  const waits = [];
+  Object.values(wl).sort((a, b) => a.g - b.g).forEach(x => {
+    if (!waits.some(t => t.g === x.g && t.k === x.k && t.t.toLowerCase() === x.t.toLowerCase())) waits.push(x);
+  });
+  return {groups, terms, waits, deals:groups.filter(g => !g.nodeal), nodeals:groups.filter(g => g.nodeal)};
 };
 /* every role's answers to one field, across the room (for questions each person answers for themselves) */
 NK.answers = function(st, parsed, k){
@@ -172,6 +184,9 @@ NK.byVersion = function(people, k){
 NK.median = a => { if (!a || !a.length) return null; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 /* ---------- demo rooms ---------- */
+NK.DEMO_WAITS = ['To be treated fairly', 'A deal they can defend to their own side', 'Certainty about what happens next',
+  'To keep the relationship going', 'Not to lose face', 'Recognition for what they bring', 'Less risk, even at a lower price',
+  'Time to check with their boss', 'A precedent they can live with', 'To get it settled quickly'];
 /* a deal step's demo(rnd, n) returns group n's room as phones would send it:
    {vals:{...}} for a deal, {x:true} for none, plus optional per:{role:{...}} (each role's own answers),
    skip:[roles that never recorded], diff:{role:{field:value}} (a phone that remembers differently), text,
@@ -200,6 +215,8 @@ NK.demoEntries = function(st){
       if (d.text && ri === 0) out.push({v:'demo-' + r.k + n, t:'c|' + n + '|' + r.k + '|' + d.text});
       if (d.texts && ri === 0) Object.keys(d.texts).forEach(k => out.push({v:'demo-' + r.k + n, t:'c|' + n + '|' + r.k + '|' + k + '|' + d.texts[k]}));
     });
+    /* a few early finishers, answering in generic words: a demo never says what a case's sides really want */
+    (st.wait || []).forEach((q, qi) => { if ((n + qi) % 3 === 0) out.push({v:'demo-w' + n, t:'w|' + n + '|' + st.roles[0].k + '|' + q.k + '|' + NK.DEMO_WAITS[(n * 3 + qi) % NK.DEMO_WAITS.length]}); });
   }
   return out;
 };

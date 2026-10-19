@@ -70,6 +70,10 @@ h2{font-weight:700;font-size:22px;line-height:1.25}
 .splash .cp{font-family:var(--display);font-weight:900;font-size:40px;line-height:1.05;text-transform:uppercase}
 @keyframes cin{from{transform:scale(1.1);opacity:0}to{transform:scale(1);opacity:1}}
 .done{text-align:center;padding:44px 0 10px;display:flex;flex-direction:column;gap:12px;align-items:center}
+/* early finishers' questions under a recorded deal (19 Oct 2026), as the kit's phones have them */
+.wait{display:flex;flex-direction:column;gap:12px;margin-top:22px;padding-top:16px;border-top:3px solid var(--ink)}
+.wait .wh{font-weight:800;font-size:15px;line-height:1.35;color:var(--ink)}
+.wait .sent{font-weight:700;font-size:14px;color:var(--green)}
 .done .k{font-weight:700;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .done .big{font-family:var(--display);font-weight:900;font-size:34px;line-height:1.05;text-transform:uppercase}
 .done .sm{font-weight:600;font-size:16px;color:var(--muted);line-height:1.5}
@@ -260,12 +264,35 @@ function beliefScreen(){
   paint();
   w.append(g, go, err);
 }
+/* for pairs that finish early (19 Oct 2026, his LER 543 outcome sheets): each side's interests, one line an answer
+   ("w|7|a|r|text"), read by the deck through the kit (s2-draft/session.js, step 'deals') */
+const WAIT = [{k:'a', q:'What are the candidate’s interests?'}, {k:'r', q:'What are the recruiter’s interests?'}];
+function waitBlock(){
+  st.waits = st.waits || {};
+  const box = el('div', 'wait'), err = el('div', 'err'), note = el('div', 'sent', st.waitSent ? 'Answers sent: thank you!' : '');
+  box.appendChild(el('div', 'wh', 'If you have time, try to answer the following questions'));
+  const tas = WAIT.map(q => {
+    const ex = el('div', 'extra'), lb = el('label', null, q.q), t = el('textarea');
+    t.maxLength = 140; t.placeholder = 'Optional'; t.value = st.waits[q.k] || '';
+    t.oninput = () => { st.waits[q.k] = t.value; st.waitSent = false; save(); note.textContent = ''; };
+    lb.htmlFor = t.id = 'wait-' + q.k; ex.append(lb, t); box.appendChild(ex); return {k:q.k, t};
+  });
+  const go = holdButton('Hold to send your answers', () => {
+    const lines = tas.map(x => ({k:x.k, t:N.clean(x.t.value)})).filter(x => x.t);
+    if (!lines.length) { err.textContent = 'Write an answer first.'; return; }
+    lines.reduce((p, x) => p.then(() => send('w|' + st.pair + '|' + st.role + '|' + x.k + '|' + x.t)), Promise.resolve())
+      .then(() => { st.waitSent = true; save(); err.textContent = ''; note.textContent = 'Answers sent: thank you!'; })
+      .catch(() => { err.textContent = 'That did not go through. Hold again.'; });
+  });
+  box.append(go, err, note);
+  return box;
+}
 /* the end of the phone's part: the pair's result, once the deck has posted it */
 let resTimer = null;
 function doneScreen(){
   const w = shell(), d = el('div', 'done');
   d.append(el('div', 'k', st.sentD === 'x' ? 'No deal' : 'Deal recorded'), el('div', 'big', 'Thank you'), el('div', 'sm', 'Eyes on the screen'));
-  w.append(head(), d);
+  w.append(head(), d, waitBlock());
   if (N.demo) {
     /* the sample works out the pair's result itself, with its invented points */
     setTimeout(() => {
@@ -294,6 +321,7 @@ function showResult(r){
   }
   box.appendChild(el('div', 'rl', 'Eyes on the screen'));
   const w = shell(); w.append(head(), box);
+  if (!st.waitSent) w.appendChild(waitBlock());   /* someone still writing when the result arrives keeps the questions */
   if (N.demo && !DEEP) w.appendChild(button('back', 'Start again', () => { st = {quiz:1}; save(); draw(); }));
 }
 

@@ -5,6 +5,8 @@
    Each person records the final package and how their own party voted on it; the deck works out whether it passed. */
 window.HARBORCO = {
   type:'deal', name:'Harborco', group:'group', max:8, forms:true,
+  /* for tables that finish early (19 Oct 2026) */
+  wait:[{k:'hard', q:'What made agreement hardest at your table?', short:'What made it hard'}, {k:'help', q:'What helped your table move forward?', short:'What helped'}],
   roles:[{k:'h', n:'Harborco'}, {k:'e', n:'Environmental League'}, {k:'p', n:'Other Ports'},
          {k:'g', n:'Governor'}, {k:'d', n:'Federal DCR'}, {k:'u', n:'The Unions'}],
   fields:[

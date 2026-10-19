@@ -16,6 +16,8 @@ NK.session({
     /* the fee, then the other terms in two boxes, as his LER 543 outcomes sheet had them (18 Oct 2026) */
     {id:'sally', type:'deal', name:'Sally Soprano', group:'pair', max:24,
      roles:[{k:'a', n:'Sally’s agent'}, {k:'m', n:'Lyric Opera’s business manager'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'s', q:'What are Sally’s interests?', short:'Sally'}, {k:'l', q:'What are Lyric Opera’s interests?', short:'Lyric Opera'}],
      fields:[{k:'fee', type:'money', cur:'$', q:'Sally’s fee for the run', short:'Fee', min:0, max:999999}],
      recordQ:'Record your agreement',
      extras:[{k:'money', q:'Any other money you agreed?', short:'Other money'},
@@ -37,6 +39,8 @@ NK.session({
        included, gives the case away: what each doctor needs comes only from the private file. */
     {id:'ugli', type:'deal', name:'Ugli Orange', group:'pair', max:24,
      roles:[{k:'j', n:'Dr. Jones'}, {k:'r', n:'Dr. Roland'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'j', q:'What are Dr. Jones’s interests?', short:'Dr. Jones'}, {k:'r', q:'What are Dr. Roland’s interests?', short:'Dr. Roland'}],
      fields:[{k:'who', type:'choice', q:'Who will buy the oranges?', short:'Buying', o:['Dr. Jones', 'Dr. Roland', 'Both of us, together']},
              {k:'price', type:'money', cur:'$', q:'The price you will offer Mr. Cardoza', short:'Price', min:0, max:9999999, optional:true}],
      recordQ:'Record your plan', sentWord:'Plan recorded', nodealButton:'We did not reach an agreement', nodealTitle:'No agreement',

@@ -34,7 +34,26 @@ B.start = function(ids, opts){
     tick(); setInterval(tick, 2500);
   }
   if (!opts || opts.drop !== false) dropPrivate();   /* a deck with its own drop handler (Session 2) passes {drop:false} and calls B.loadPrivate */
+  waitWalls();
 };
+
+/* ---------- early finishers' answers (19 Oct 2026) ----------
+   A slide with <div class="waitwall" data-waits="<step id>"> and one hook a question
+   (<span class="hook" data-step="N" data-stepcall="waitStep">) shows a column a press, one per wait question,
+   with the room's answers as they arrive (not frozen: early finishers write while others still negotiate). */
+function waitWalls(){
+  const walls = [...document.querySelectorAll('[data-waits]')].filter(w => D[w.dataset.waits]);
+  if (!walls.length) return;
+  const draw = w => {
+    const id = w.dataset.waits, st = D[id].s, P = B.current(id);
+    const shown = [...w.closest('.slide').querySelectorAll('[data-stepcall="waitStep"]')].filter(h => h.dataset.stepon === '1').length;
+    const cols = st.wait.map(q => ({label:q.short || q.q, terms:P.waits.filter(t => t.k === q.k)}));
+    B.wallCols(w, cols, shown, {unit:st.group === 'group' ? ['group', 'groups'] : ['pair', 'pairs'], empty:'No answers this time', most:5});
+  };
+  window.waitStep = e => draw(e.closest('.slide').querySelector('[data-waits]'));
+  walls.forEach(draw);
+  B.onData(id => walls.forEach(w => { if (id === '*' || id === w.dataset.waits) draw(w); }));
+}
 /* a step's data as the room should see it: frozen once revealed */
 B.reveal = function(id, on){
   const d = D[id]; d.seen = on;

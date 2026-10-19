@@ -9,6 +9,8 @@ NK.session({
      o:['Yes', 'No, let the other side go first', 'It depends'], demo:[9, 13, 10]},
     {id:'walter', type:'deal', name:'Walter and GG', group:'pair', max:24,
      roles:[{k:'w', n:'Walter Manufacturing'}, {k:'g', n:'GG Engineering'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'w', q:'What are Walter Manufacturing’s interests?', short:'Walter'}, {k:'g', q:'What are GG Engineering’s interests?', short:'GG Engineering'}],
      fields:[
        {k:'price', type:'money', cur:'$', q:'The price for the half-lot', short:'Price', min:0, max:9999999},
        {k:'first', type:'choice', q:'Who made the first offer?', o:['Walter Manufacturing', 'GG Engineering'], short:'Opened', always:true},
@@ -26,6 +28,8 @@ NK.session({
      }}},
     {id:'bizhub', type:'deal', name:'The Broken Bizhub', group:'pair', max:24,
      roles:[{k:'p', n:'Pat Pufahl, The Pet Palace'}, {k:'r', n:'Robin Adler, Adler Office Machines'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'p', q:'What are Pat’s interests?', short:'Pat, The Pet Palace'}, {k:'r', q:'What are Robin’s interests?', short:'Robin, Adler Office Machines'}],
      groupHint:'A different partner from Walter and GG, with the same number as you',
      fields:[
        {k:'pay', type:'money', cur:'$', q:'What the Pet Palace pays Adler for the repair', short:'Paid', min:0, max:99999},

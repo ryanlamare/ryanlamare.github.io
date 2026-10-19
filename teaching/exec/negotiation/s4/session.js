@@ -41,6 +41,8 @@ NK.session({
      }}},
     {id:'perf', type:'deal', name:'The Performance Interview', group:'pair', max:24, nodeal:false,
      roles:[{k:'c', n:'Chris Amon, brand manager'}, {k:'l', n:'Lee Petty, product manager'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'c', q:'What are Chris’s interests?', short:'Chris'}, {k:'l', q:'What are Lee’s interests?', short:'Lee'}],
      fields:[
       {k:'raised', type:'choice', own:true, q:'Did the sensitive matter in your brief come up?', o:['Yes, I raised it', 'Yes, the other person raised it', 'No, it never came up'], short:'Came up'},
       {k:'comfort', type:'scale', own:true, q:'How comfortable did you feel at the end?', lo:'Very uncomfortable', hi:'Very comfortable', short:'Comfort'},
@@ -57,6 +59,8 @@ NK.session({
      }}},
     {id:'newt', type:'deal', name:'Hiring a Newtonian', group:'pair', max:24,
      roles:[{k:'h', n:'Human resources director'}, {k:'e', n:'Prospective employee'}],
+     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
+     wait:[{k:'h', q:'What are the HR director’s interests?', short:'The HR director'}, {k:'e', q:'What are the prospective employee’s interests?', short:'The prospective employee'}],
      fields:[
       {k:'salary', type:'money', cur:'$', q:'The salary you agreed', short:'Salary', min:0, max:999999},
       {k:'start', type:'choice', q:'The day of the week the employee starts', o:['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], short:'Starts on'},
