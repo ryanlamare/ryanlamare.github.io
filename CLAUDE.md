@@ -288,6 +288,12 @@ forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on 
 - A deal step can ask for the other terms in several boxes (`extras`: Session 1 asks for any other money, then
   anything non-financial), and the number line can draw each side's range of settlement (`ranges`), its limits
   from the private file.
+- Early finishers (19 Oct 2026, his LER 543 outcome sheets): a deal step's `wait` questions (each side's interests;
+  Harborco's are what made agreement hard and what helped) show on the phone once the deal is recorded, and come
+  back as `w` lines. A slide with `<div class="waitwall" data-waits="<step>">` and one `waitStep` hook a question
+  shows the room's answers a column a press; those slides carry `data-short="out"`. Demo answers are generic, never
+  a case's own. Every debrief board also opens with an AT YOUR TABLES step (`.talk.tables`) that goes when the
+  board fills.
 
 Sessions 6 to 8 (the game-theory day) are copies of gt Modules 2, 4/7 and 5/7 behind `kit/gtrooms.js`,
 which moves every poll-server room to `<room>-neg`, so they never touch the rooms `exec/gt/` runs; they
