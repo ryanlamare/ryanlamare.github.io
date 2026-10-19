@@ -75,6 +75,10 @@
 .who2 .bx{display:flex;flex-direction:column;gap:8px}
 .who2 .brow{grid-template-columns:220px 1fr 54px;padding:5px 8px}
 .who2 .brow .bl{font-size:15.5px}
+/* the phones' QR stands where "What you found" will show, until it shows (19 Oct 2026): the room answers before the reveal */
+.who2 .hdq,.who2 .hdf{grid-column:2;grid-row:1}
+.who2 .hdq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .32s ease}
+.who2:has(.hdf.shown) .hdq{opacity:0}
 /* the email to yourself, as RRPF's close (gt m8) */
 .commit{position:absolute;left:110px;right:110px;top:232px;display:flex;gap:64px;align-items:center}
 .commit .cl{flex:1;display:flex;flex-direction:column;gap:38px}
@@ -151,7 +155,8 @@
   <h2>What was the hardest part?</h2>
   <div class="who2">
     <div><div class="wh">What you expected</div><div class="bx" id="hdE"></div></div>
-    <div data-step="1"><div class="wh" style="color:var(--red)">What you found</div><div class="bx" id="hdF"></div></div>
+    <div class="hdq"><div class="qrph">QR CODE<br>IN THE<br>SESSION</div><div class="reccount" style="justify-content:center"><span class="n" id="hdN">0</span><span class="l">answers<br>in</span></div></div>
+    <div class="hdf" data-step="1"><div class="wh" style="color:var(--red)">What you found</div><div class="bx" id="hdF"></div></div>
   </div>
   <span class="hook" data-step="1" data-stepcall="hdShow"></span>
   <div class="demotag">DEMO DATA</div>
@@ -573,6 +578,7 @@ function drawHard(){
   const pct = c => { const s = c.reduce((a, b) => a + b, 0); return c.map(x => s ? Math.round(x / s * 100) : 0); };
   B.bars(E('hdE'), HARD.o, pct(ce), {bars:true, mark:false}, {max:100, fmt:v => v + '%', colors:HARD.o.map(() => 'var(--muted)')});
   B.bars(E('hdF'), HARD.o, pct(cf), {bars:hdOn, mark:hdOn}, {max:100, fmt:v => v + '%'});
+  E('hdN').textContent = cf.reduce((a, b) => a + b, 0);
 }
 window.hdShow = (e, on) => { B.reveal('hardest', on); B.reveal('expect', on); hdOn = on; drawHard(); if (on) B.grow(E('hdF')); };
 
