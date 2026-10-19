@@ -18,7 +18,9 @@ NK.session({
      roles:[{k:'a', n:'Sally’s agent'}, {k:'m', n:'Lyric Opera’s business manager'}],
      /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
      wait:[{k:'s', q:'What are Sally’s interests?', short:'Sally'}, {k:'l', q:'What are Lyric Opera’s interests?', short:'Lyric Opera'}],
-     fields:[{k:'fee', type:'money', cur:'$', q:'Sally’s fee for the run', short:'Fee', min:0, max:999999}],
+     fields:[{k:'fee', type:'money', cur:'$', q:'Sally’s fee for the run', short:'Fee', min:0, max:999999},
+             /* each person's own answer, set against the fee in the debrief (19 Oct 2026, his yes to the idea) */
+             {k:'sat', type:'scale', own:true, q:'How satisfied are you with this deal?', lo:'Not at all', hi:'Completely', short:'Satisfied'}],
      recordQ:'Record your agreement',
      extras:[{k:'money', q:'Any other money you agreed?', short:'Other money'},
              {k:'terms', q:'Anything non-financial you agreed?', short:'Non-financial'}],
@@ -29,6 +31,9 @@ NK.session({
        const T = {2:'A joint press release on her return', 5:'Her name first on the poster and the programme',
                   7:'First refusal on next season’s lead role', 13:'Two extra rehearsals with the conductor'};
        const d = {vals:{fee}};
+       /* invented satisfaction, only loosely tied to the fee, as the research usually finds */
+       const sat = up => Math.max(1, Math.min(5, Math.round(3.2 + (r() - .5) * 3 + (up ? 1 : -1) * (fee - 28000) / 26000)));
+       d.per = {a:{sat:sat(true)}, m:{sat:sat(false)}};
        if (M[n] || T[n]) { d.texts = {}; if (M[n]) d.texts.money = M[n]; if (T[n]) d.texts.terms = T[n]; }
        if (n === 12) d.diff = {m:{fee:fee + 2000}};
        if (n === 14) d.skip = ['m'];
