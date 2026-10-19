@@ -292,8 +292,9 @@ forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on 
   Harborco's are what made agreement hard and what helped) show on the phone once the deal is recorded, and come
   back as `w` lines. A slide with `<div class="waitwall" data-waits="<step>">` and one `waitStep` hook a question
   shows the room's answers a column a press; those slides carry `data-short="out"`. Demo answers are generic, never
-  a case's own. Every debrief board also opens with an AT YOUR TABLES step (`.talk.tables`) that goes when the
-  board fills.
+  a case's own. Every debrief board also opens with a WITH YOUR NEIGHBORS step (`.talk.tables`; his label, 19 Oct: "at
+  your tables" only works if several pairs share a table) that goes when the board fills; AT YOUR TABLES stays for
+  real table work, the closers.
 
 Sessions 6 to 8 (the game-theory day) are copies of gt Modules 2, 4/7 and 5/7 behind `kit/gtrooms.js`,
 which moves every poll-server room to `<room>-neg`, so they never touch the rooms `exec/gt/` runs; they
