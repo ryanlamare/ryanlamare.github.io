@@ -267,13 +267,16 @@ link containing it, or a plaintext table. Licensed exercises' briefs and tables 
 with the deal recorded on phones and the sample's debrief. It replaces `s2/` once the Academy decides (its paths name
 `s2-draft/` until then). Its phones take the case's wording from `s2-draft/forms.enc` (built with `encrypt-forms.mjs`
 in the private folder) and its deck the issues, points and key from the private scoring file; both have templates
-there. Opened plain it shows the sample's invented issues.
+there. Opened plain it shows the sample's invented issues. Its second exercise, Chiptech (moved from Session 10,
+19 Oct 2026), runs on the kit beside it: `s2-draft/session.js`, phones at `s2-draft/chiptech/`, room
+`neg2-chiptech`. The deck has one drop handler for both: Chiptech's part of the private file (under `steps`) loads
+whenever it is dropped, New Recruit's only in a live room and only once its points are filled in.
 
 `s2/deck.js` is a copy of the gt engine plus one addition: a click or tap advances, for people
 browsing the sample on their own. Don't sync it with `gt/deck.js` in either direction.
 
-**The other nine sessions** (first designs, 17 Oct 2026, for Ryan to change; on branch
-`negotiation-sessions`, not yet merged): `s1/`, `s3-draft/` (Session 3: it becomes `s3/` only once the
+**The other nine sessions** (first designs, 17 Oct 2026, for Ryan to change; merged to main on 18 Oct and
+live but unlinked, for him to review with `?edit`, so pull before touching them): `s1/`, `s3-draft/` (Session 3: it becomes `s3/` only once the
 forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on a shared kit, `kit/`:
 
 - `deck.css` is an exact copy of the gt suite's, and `kit.css` holds the kit's own components (only kit
@@ -291,7 +294,8 @@ which moves every poll-server room to `<room>-neg`, so they never touch the room
 have their own `/teaching/exec/negotiation/go/`.
 
 Opened plain, a deck runs on invented DEMO DATA; `?live` reads real phones, and `?room=<x>` a rehearsal
-room (`node teaching/exec/negotiation/kit/trial/bots.js s5 <x>` fills one). The same rule as the Job
+room (`node teaching/exec/negotiation/kit/trial/bots.js s5 <x>` fills one; `bots.js s2-draft <x> chiptech`
+for a phone page that is not `deal/`). The same rule as the Job
 Offer holds for every licensed case: each session's private file (zones, marks, Harborco's scoring, the
 key to Harborco's wording) lives in `~/Documents/Negotiation sessions - PRIVATE, never send/` and is
 dropped on the deck. Harborco's issue wording reaches the phones only from `s9/forms.enc`, rebuilt by

@@ -18,7 +18,7 @@ const D = B.data = {};
 const sum = a => a.reduce((x, y) => x + y, 0);
 const redraws = [];
 B.onData = fn => redraws.push(fn);
-B.start = function(ids){
+B.start = function(ids, opts){
   ids.forEach(id => {
     const s = N.step(id);
     D[id] = {s, entries: s.type !== 'poll' ? (B.live ? [] : N.demoEntries(s)) : null,
@@ -33,7 +33,7 @@ B.start = function(ids){
     });
     tick(); setInterval(tick, 2500);
   }
-  dropPrivate();
+  if (!opts || opts.drop !== false) dropPrivate();   /* a deck with its own drop handler (Session 2) passes {drop:false} and calls B.loadPrivate */
 };
 /* a step's data as the room should see it: frozen once revealed */
 B.reveal = function(id, on){
@@ -48,13 +48,14 @@ B.people = id => { const d = D[id]; return N.parseSurvey(d.s, d.frozen || d.entr
 B.peopleNow = id => N.parseSurvey(D[id].s, D[id].entries);
 
 /* the private file: dropped on the deck once, kept in this browser */
+B.loadPrivate = p => { if (!N.usePriv(p)) return false; redraws.forEach(fn => fn('*')); return true; };
 function dropPrivate(){
   addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dropping'); });
   addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dropping'); });
   addEventListener('drop', e => {
     e.preventDefault(); document.body.classList.remove('dropping');
     const f = e.dataTransfer.files[0]; if (!f) return;
-    f.text().then(t => { const p = JSON.parse(t); if (N.usePriv(p)) { B.note('Private file loaded'); redraws.forEach(fn => fn('*')); } else B.note('That file is not this session’s'); }).catch(() => B.note('That file could not be read'));
+    f.text().then(t => { const p = JSON.parse(t); if (B.loadPrivate(p)) B.note('Private file loaded'); else B.note('That file is not this session’s'); }).catch(() => B.note('That file could not be read'));
   });
 }
 B.note = function(msg){
