@@ -8,6 +8,9 @@ NK.session({
     {id:'expect', prefix:'neg9', phone:false, type:'poll', q:'What do you expect to be the hardest part of a six-party negotiation?',
      o:window.HARBORCO_HARD, demo:[9, 6, 12, 5]},
     {id:'hardest', type:'poll', q:'Looking back, what was the hardest part of Harborco for you?', o:window.HARBORCO_HARD, demo:[13, 10, 5, 4]},
+    /* Pink Towels (Ivey, bought; 20 Oct 2026): each person's own read of the case, sent before the tables talk */
+    {id:'towels', type:'poll', q:'What is the Pink Towels case really about?',
+     o:['A gender issue', 'A cultural issue', 'Both', 'Neither: it’s just a gift'], demo:[9, 7, 12, 4]},
     {id:'buggy', type:'deal', name:'The Blue Buggy', group:'pair', max:24,
      roles:[{k:'b', n:'Buyer'}, {k:'s', n:'Seller'}],
      /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */

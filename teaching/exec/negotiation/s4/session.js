@@ -76,8 +76,5 @@ NK.session({
        if (T[n]) d.text = T[n];
        return d;
      }}},
-    /* Pink Towels (Ivey, bought; 20 Oct 2026): each person's own read of the case, sent before the tables talk */
-    {id:'towels', type:'poll', q:'What is the Pink Towels case really about?',
-     o:['A gender issue', 'A cultural issue', 'Both', 'Neither: it’s just a gift'], demo:[9, 7, 12, 4]},
   ],
 });
