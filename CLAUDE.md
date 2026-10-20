@@ -298,7 +298,8 @@ forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on 
 
 Sessions 6 to 8 (the game-theory day) are copies of gt Modules 2, 4/7 and 5/7 behind `kit/gtrooms.js`,
 which moves every poll-server room to `<room>-neg`, so they never touch the rooms `exec/gt/` runs; they
-have their own `/teaching/exec/negotiation/go/`.
+have their own `/teaching/exec/negotiation/go/`. Session 6 opens with Module 1's introduction and added-value
+game (20 Oct 2026, his call), its offers on phones at `s6/offers/` (a copy of `gt/m1/game/`).
 
 Opened plain, a deck runs on invented DEMO DATA; `?live` reads real phones, and `?room=<x>` a rehearsal
 room (`node teaching/exec/negotiation/kit/trial/bots.js s5 <x>` fills one; `bots.js s2-draft <x> chiptech`
