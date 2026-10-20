@@ -283,6 +283,9 @@ forwarders can go), `s4/` to `s10/`. Sessions 1, 3, 4, 5, 9 and 10 are built on 
   decks load it: several of its names mean something else in the gt modules).
 - `deck.js` is `s2/deck.js`; `neg.js` holds a session's steps, the poll-server wire and the demo data;
   `boards.js` draws the deck's live boards; `phone.js` is one phone page for every session (`<session>/deal/`).
+- Every session has two ten-minute breaks (20 Oct 2026, his call: his LER 543 habit, so he can pace the session), each a
+  break slide whose clock starts on the first press; `break.js` draws it, and all ten decks load it, the game-theory
+  copies and `s2-draft/` included.
 - Each session's steps are in its own `session.js`. A step can read another session's room (`prefix`), and
   `phone:false` keeps it off the phones: that is how Session 10 debriefs Session 9's Harborco.
 - A deal step can ask for the other terms in several boxes (`extras`: Session 1 asks for any other money, then
