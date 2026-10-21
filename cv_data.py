@@ -7,7 +7,7 @@ Never edit those generated regions by hand — they will be overwritten.
 """
 
 ME = "J. Ryan Lamare"
-UPDATED = "September 2026"
+UPDATED = "October 2026"
 
 PROFILE = dict(
   name="J. Ryan Lamare",
@@ -76,11 +76,11 @@ PUB_GROUPS = [
     dict(y="2010", authors=["Anthony McDonnell", "J. Ryan Lamare", "Patrick Gunnigle", "Jonathan Lavelle"], t="Developing Tomorrow’s Leaders — Evidence of Global Talent Management in Multinational Enterprises", u="https://doi.org/10.1016/j.jwb.2009.09.015", venue_cv="<i>Journal of World Business</i> 45(2): 150–160.", venue_home="Journal of World Business, 45(2), 150–160.", icon="ic-briefcase"),
   ]),
   ("Articles Under Review", [
+    dict(raw="Cherise Regier, J. Ryan Lamare, and Faraz Shahidi. “Worker Voice and Strategic Choice as Governance of Generative AI at Work: Cross-National Evidence on Wellbeing.” Under review, <i>ILR Review</i>.", y="", u=None),
     dict(raw="Cherise Regier and J. Ryan Lamare. “Recognition without Power? Decomposing the Union–Job Satisfaction Puzzle in Post-Thatcher Britain.” R&R, <i>ILR Review</i>.", y="", u=None),
     dict(raw="J. Ryan Lamare and John W. Budd. “The Role of Political Parties in Shaping Women’s Labor Market Policies and Outcomes: A Longitudinal Analysis of Party Characteristics, Positions, and Effects.” R&R, <i>Industrial Relations</i>.", y="", u=None),
   ]),
   ("Working Papers", [
-    dict(raw="Cherise Regier, J. Ryan Lamare, and Faraz Shahidi. “Employee Voice and Workplace Wellbeing in the Age of AI: Cross-National Empirical Evidence.”", y="", u=None),
     dict(raw="Giorgos Galanis, J. Ryan Lamare, and Christian R. Proaño. “Multiplicity, Distance and Unionisation.”", y="", u=None),
   ]),
   ("Book Chapters", [
@@ -172,6 +172,7 @@ BLOCKS = [
   ["row", "2010", "ACAS Research Partnership — diffusion of HR practices across supply chains (with Grimshaw, Holman, Marchington, and Rubery)", None],
   ["row", "2008", "Seed Funding Research Grant — governance structures and multinational companies (with Jonathan Lavelle)", None],
   ["h2", "Keynote &amp; Invited Talks", ""],
+  ["row", "2026", "Meet-the-editors session on the <i>British Journal of Industrial Relations</i>. British Sociological Association early-career day on the sociology of work and wellbeing, Harris Manchester College, Oxford", None],
   ["row", "2024", "“Industrial Relations Research in the Era of Crises: Rethinking How Unions and Politics Interact.” Keynote address, BUIRA", None],
   ["row", "2022", "“An Empirical Analysis of Race and Political Partisanship Effects on Workplace Mobility Outcomes during COVID-19.” IRRU, Warwick Business School", None],
   ["row", "2021", "“Leveraging ADR to Deliver on Strategic Goals in Organizations: Evidence and Applications from the U.S.” PrOPEL Hub masterclass (Strathclyde, Sheffield, and CIPD)", None],
@@ -197,6 +198,8 @@ BLOCKS = [
   ["row", "", "Introduction to Employment Relations · Seminar in Employment Relations · Workplace Dispute Resolution", None],
   ["h3", "University of Manchester", None],
   ["row", "", "Human Resource Management · International Human Resource Management · Strategic Human Resource Management", None],
+  ["h3", "Executive Education", None],
+  ["row", "2026", "Applied Game Theory, two-day programme for a corporate client, London", None],
   ["h3", "Teaching Awards", None],
   ["row", "2018–2022", "LER Faculty Teaching Excellence Award (three times), University of Illinois", None],
   ["row", "2015–2024", "List of Teachers Ranked as Excellent by Their Students, University of Illinois", None],
