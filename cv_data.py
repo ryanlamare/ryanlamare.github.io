@@ -76,7 +76,7 @@ PUB_GROUPS = [
     dict(y="2010", authors=["Anthony McDonnell", "J. Ryan Lamare", "Patrick Gunnigle", "Jonathan Lavelle"], t="Developing Tomorrow’s Leaders — Evidence of Global Talent Management in Multinational Enterprises", u="https://doi.org/10.1016/j.jwb.2009.09.015", venue_cv="<i>Journal of World Business</i> 45(2): 150–160.", venue_home="Journal of World Business, 45(2), 150–160.", icon="ic-briefcase"),
   ]),
   ("Articles Under Review", [
-    dict(raw="J. Ryan Lamare and John W. Budd. “The Role of Political Parties in Shaping Women’s Labor Market Policies and Outcomes: A Longitudinal Analysis of Party Characteristics, Positions, and Effects.” Minor revisions, <i>Industrial Relations</i>.", y="", u=None),
+    dict(raw="J. Ryan Lamare and John W. Budd. “Can Political Parties Shape Women’s Labor Market Outcomes? A Longitudinal Analysis of Party Characteristics and Support for Equality.” Minor revisions, <i>Industrial Relations</i>.", y="", u=None),
     dict(raw="Cherise Regier, J. Ryan Lamare, and Faraz Shahidi. “Worker Voice and Strategic Choice as Governance of Generative AI at Work: Cross-National Evidence on Wellbeing.” Under review, <i>ILR Review</i>.", y="", u=None),
     dict(raw="Cherise Regier and J. Ryan Lamare. “Recognition without Power? Decomposing the Union–Job Satisfaction Puzzle in Post-Thatcher Britain.” R&R, <i>ILR Review</i>.", y="", u=None),
   ]),
