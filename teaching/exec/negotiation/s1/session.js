@@ -19,6 +19,9 @@ NK.session({
      /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
      wait:[{k:'s', q:'What are Sally’s interests?', short:'Sally'}, {k:'l', q:'What are Lyric Opera’s interests?', short:'Lyric Opera'}],
      fields:[{k:'fee', type:'money', cur:'$', q:'Sally’s fee for the run', short:'Fee', min:0, max:999999},
+             /* one tap, each person's own answer (9 Nov 2026, his yes): with Session 3 out of the programme, first offers are
+                taught from Sally's fees. Own, so two partners who remember it differently are not marked as a mismatch */
+             {k:'first', type:'choice', own:true, q:'Who made the first offer?', o:['Sally’s agent', 'Lyric Opera’s business manager'], short:'Opened'},
              /* each person's own answer, set against the fee in the debrief (19 Oct 2026, his yes to the idea) */
              {k:'sat', type:'scale', own:true, q:'How satisfied are you with this deal?', lo:'Not at all', hi:'Completely', short:'Satisfied'}],
      recordQ:'Record your agreement',
@@ -33,7 +36,10 @@ NK.session({
        const d = {vals:{fee}};
        /* invented satisfaction, only loosely tied to the fee, as the research usually finds */
        const sat = up => Math.max(1, Math.min(5, Math.round(3.2 + (r() - .5) * 3 + (up ? 1 : -1) * (fee - 28000) / 26000)));
-       d.per = {a:{sat:sat(true)}, m:{sat:sat(false)}};
+       /* invented: who opened, leaning towards the agent in the higher fees, with a few the other way; one pair remembers
+          it differently. Worked out from the fee and the pair's number, so the invented fees stay as they were */
+       const opened = (fee >= 31000) !== (n % 6 === 2) ? 0 : 1;
+       d.per = {a:{sat:sat(true), first:opened}, m:{sat:sat(false), first:n === 4 ? 1 - opened : opened}};
        if (M[n] || T[n]) { d.texts = {}; if (M[n]) d.texts.money = M[n]; if (T[n]) d.texts.terms = T[n]; }
        if (n === 12) d.diff = {m:{fee:fee + 2000}};
        if (n === 14) d.skip = ['m'];
