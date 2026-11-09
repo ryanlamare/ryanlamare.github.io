@@ -304,6 +304,29 @@ which moves every poll-server room to `<room>-neg`, so they never touch the room
 have their own `/teaching/exec/negotiation/go/`. Session 6 opens with Module 1's introduction and added-value
 game (20 Oct 2026, his call), its offers on phones at `s6/offers/` (a copy of `gt/m1/game/`).
 
+**Session 7 plays PON's Oil Pricing Exercise** (9 Nov 2026, his call, "keeping it tethered to PON"), in place of
+Price Wars, which was his re-creation of it and still runs in `exec/gt/m4`. `s7/oil.js` holds the rules and the room's
+log (room `neg7-oil`): eight months, $30/$20/$10, his two BADM 590 memos word for word (month 4 pays double; in months
+7 and 8 the more profitable country's profit is quadrupled; a meeting before months 4 and 7 if both boards ask). A
+board sets its price on one phone at `s7/oil/` and keeps its profits on PON's paper record; he moves the game on from
+`s7/desk/`, never the phones; the memos are at `s7/memo/`, off the deck on purpose. **PON's profit schedule is never
+in the repo**: the deck takes it from "Session 7 - Oil Pricing (private).json", dropped on it, and draws an invented
+one marked DEMO until then. `node teaching/exec/negotiation/s7/trial/bots.js <x> [stage]` plays a rehearsal room.
+
+The running order changed on 22 Oct 2026: the structure he locked, with the five-day and four-day versions, is in
+`~/Documents/Negotiation programme - working files (PRIVATE)/Oman programme options - locked 22 Oct 2026.md`
+(Session 3 out of both, game theory in both, folders and rooms keep their names when the decks are renumbered).
+He amended it on 9 Nov 2026: four days is the five-day version without day four (`s8/` and `info/`), so mediation
+(`s5/`) is in both lengths. The same day `s4/` became Hiring a Newtonian, Pink Towels and the biases (The Performance
+Interview is out, and Pink Towels left `s10/`), and `s1/` teaches first offers from Sally Soprano's fees.
+**`info/` is the five-day version's new session** (29 Oct 2026), Information Asymmetries in Negotiations: gt
+Module 8's lecture slides around two role plays, Ugli Orange (a copy of Session 1's, in its own rooms `neginfo-*`)
+and the PON's DS-30 (his pick, in place of the Zalada Crisis). DS-30's private facts and inspection wording reach the
+phones only from `info/forms.enc` (`encrypt-forms.mjs … info`); the deck takes them, the case's standards, the reveal,
+the preparation memo's questions, Ugli's reveal and the key from the private file
+"Information - Ugli Orange, DS-30 (private).json". A phone field can carry `head`, a heading above
+a group of fields, which a forms file can override with `<k>:head`.
+
 Opened plain, a deck runs on invented DEMO DATA; `?live` reads real phones, and `?room=<x>` a rehearsal
 room (`node teaching/exec/negotiation/kit/trial/bots.js s5 <x>` fills one; `bots.js s2-draft <x> chiptech`
 for a phone page that is not `deal/`). The same rule as the Job

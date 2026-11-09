@@ -1,0 +1,187 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="/teaching/exec/negotiation/kit/gtrooms.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Session 7 · Oil Pricing</title>
+<link rel="stylesheet" href="/brand.css">
+<style>
+/* A board's phone for the Oil Pricing Exercise (9 Nov 2026; the log it reads and writes is described in ../oil.js).
+   One phone a board is enough, and any number can follow. The phone does three things only: it sets the board's price
+   for the month the desk has opened (pick, then LOCK IT IN, once: the first price a board locks is its price), it
+   answers each memo's question, and it shows both countries' prices once the desk has shown them. It never moves the
+   game on, and it carries nothing of PON's profit schedule: boards keep their profits on the paper record.
+   A Poll Desk reset of the room sends the phone back to the board picker. ?room=x joins a rehearsal. */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;padding:22px 16px 40px}
+.wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.tag{font-weight:500;text-transform:uppercase;letter-spacing:.22em;font-size:12px;color:var(--muted)}
+.tag i{display:inline-block;width:10px;height:10px;background:var(--red);margin-right:10px;vertical-align:middle}
+.who{font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px}
+.who.a{color:var(--teal)} .who.b{color:var(--terracotta)}
+h1{font-weight:700;font-size:24px;line-height:1.25;color:var(--red)}
+.lbl{font-weight:600;font-size:15px;line-height:1.4;color:var(--muted)}
+button{font-family:var(--sans);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+button.opt{display:block;width:100%;text-align:center;font-weight:700;font-size:17px;line-height:1.3;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:15px 8px}
+button.opt.sel{background:var(--ink);color:var(--paper)}
+button.opt.a.sel{background:var(--teal);border-color:var(--teal)} button.opt.b.sel{background:var(--terracotta);border-color:var(--terracotta)}
+button.num{font-family:var(--display);font-weight:900;font-size:30px;padding:20px 0}
+button.go{width:100%;font-weight:700;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--red);border:2.5px solid var(--red);padding:16px}
+button.go:disabled{opacity:.3;cursor:default}
+input.name{width:100%;font-family:var(--sans);font-weight:600;font-size:18px;color:var(--ink);background:var(--card);border:2.5px solid var(--ink);padding:13px 14px;border-radius:0}
+.card{border:2.5px solid var(--ink);background:var(--card);padding:18px;text-align:center}
+.card .big{font-family:var(--display);font-weight:900;font-size:54px;line-height:1.05;color:var(--ink)}
+.card .sub{font-weight:600;font-size:15px;line-height:1.4;color:var(--muted);margin-top:6px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip{border:2.5px solid var(--ink);padding:10px 12px;text-align:center;background:var(--card)}
+.chip .ck{font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.chip .cv{font-family:var(--display);font-weight:900;font-size:36px;line-height:1.1}
+.chip.a .ck,.chip.a .cv{color:var(--teal)} .chip.b .ck,.chip.b .cv{color:var(--terracotta)}
+/* his memo, as he wrote it */
+.memo{border:2.5px solid var(--ink);background:var(--card);padding:18px 16px;display:flex;flex-direction:column;gap:10px}
+.memo .mh{font-family:var(--display);font-weight:900;font-size:24px;color:var(--red);letter-spacing:.04em}
+.memo .mm{font-weight:600;font-size:13px;line-height:1.5;color:var(--muted)}
+.memo p{font-weight:500;font-size:15.5px;line-height:1.5}
+/* the record: the months shown so far, Alba's price beside Batia's */
+table.rec{width:100%;border-collapse:collapse}
+table.rec th{font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);padding:6px 4px;text-align:center}
+table.rec th.a{color:var(--teal)} table.rec th.b{color:var(--terracotta)}
+table.rec td{border-top:1.5px solid var(--rule);padding:8px 4px;text-align:center;font-weight:700;font-size:18px}
+table.rec td.m{font-size:13px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+table.rec td.me{font-family:var(--display);font-weight:900}
+.foot{margin-top:6px;text-align:center}
+.foot button{background:none;border:0;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-decoration:underline;padding:8px}
+.err{font-weight:600;font-size:14px;color:var(--red);text-align:center;min-height:1.2em}
+</style></head><body>
+<div class="wrap" id="app"></div>
+<script src="../oil.js?v=1109"></script>   <!-- bump v with every change to oil.js: Pages lets a browser keep a file 10 minutes -->
+<script>
+(function(){
+const O = window.OIL, me = O.voter();
+const RM = (new URLSearchParams(location.search).get('room') || '').replace(/[^a-z0-9-]/g, '');
+const KEY = 'neg7-oil-board' + (RM ? '-' + RM : '');
+let board = null; try { board = localStorage.getItem(KEY); } catch(_) {}
+/* ?board=a3 puts this phone on a board without the picker: for a rehearsal, never given to the room */
+const QB = new URLSearchParams(location.search).get('board'); if (/^[ab][1-6]$/.test(QB || '')) board = QB;
+if (!/^[ab][1-6]$/.test(board || '')) board = null;
+let G = O.parse([]), loaded = false, err = '';
+const ui = {side:null, group:null, price:null, meet:null, name:'', busy:false, sent:{}};   /* what is picked on this phone and not yet in the room */
+
+const app = document.getElementById('app');
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const btn = (cls, text, on) => { const b = h('button', cls, text); b.type = 'button'; b.onclick = on; return b; };
+const money = p => '$' + p;
+function send(kind, line, key){
+  ui.busy = true; err = ''; render();
+  O.say(me + '-' + kind, line).then(() => { if (key) ui.sent[key] = true; ui.busy = false; render(); pull(); })
+    .catch(() => { ui.busy = false; err = 'That did not send. Check your connection and try again.'; render(); });
+}
+
+function head(){
+  const t = h('div', 'tag'); t.append(h('i'), 'Oil Pricing'); app.append(t);
+  if (board) app.append(h('div', 'who ' + board[0], O.NAME[board[0]] + '’s Oil Pricing Board · Group ' + board[1]));
+}
+function record(){
+  const k = O.shown(G); if (!k || !board) return;
+  const j = board[1], t = h('table', 'rec'), hr = h('tr');
+  hr.append(h('th', null, 'Month'), h('th', 'a', 'Alba'), h('th', 'b', 'Batia')); t.append(hr);
+  for (let m = 1; m <= k; m++) {
+    const r = h('tr'); r.append(h('td', 'm', String(m)));
+    ['a', 'b'].forEach(s => { const p = O.p(G, s + j, m); r.append(h('td', s === board[0] ? 'me' : null, p ? money(p) : '–')); });
+    t.append(r);
+  }
+  app.append(t);
+}
+function foot(){
+  const f = h('div', 'foot'); f.append(btn(null, 'Change board', () => { board = null; ui.side = ui.group = null; try { localStorage.removeItem(KEY); } catch(_) {} render(); }));
+  app.append(f);
+}
+
+function render(){
+  app.replaceChildren(); head();
+  if (!loaded) { app.append(h('div', 'lbl', 'Connecting…')); return; }
+  if (!G.n) { const c = h('div', 'card'); c.append(h('div', 'sub', 'The game has not started yet. This page moves on by itself.')); app.append(c); return; }
+  if (!board) {                                             /* which board is this phone on? */
+    app.append(h('h1', null, 'Which board are you on?'));
+    const r = h('div', 'row2');
+    ['a', 'b'].forEach(s => r.append(btn('opt ' + s + (ui.side === s ? ' sel' : ''), O.NAME[s], () => { ui.side = s; render(); })));
+    app.append(r, h('div', 'lbl', 'Your group'));
+    const g = h('div', 'grid6');
+    for (let j = 1; j <= G.n; j++) g.append(btn('opt' + (ui.group === j ? ' sel' : ''), String(j), () => { ui.group = j; render(); }));
+    const go = btn('go', 'Join', () => { board = ui.side + ui.group; try { localStorage.setItem(KEY, board); } catch(_) {} send('j', 'o|j|' + board + '|' + me); });
+    go.disabled = !ui.side || !ui.group || ui.busy;
+    app.append(g, go, h('div', 'err', err)); return;
+  }
+  const s = G.stage, n = +s.slice(-1), mine = board[0], j = board[1];
+  if (/^m\d$/.test(s)) {                                    /* a month is open */
+    const p = O.p(G, board, n);
+    if (p) {
+      const c = h('div', 'card'); c.append(h('div', 'big', money(p)), h('div', 'sub', 'Your board’s price for month ' + n + ' is locked in. Both prices come up together.'));
+      app.append(h('h1', null, 'Month ' + n), c);
+    } else {
+      app.append(h('h1', null, 'Month ' + n + ': set your price'), h('div', 'lbl', 'Agree it as a board. Once it is locked in, it cannot be changed.'));
+      const r = h('div', 'row3');
+      O.PRICES.forEach(x => r.append(btn('opt num' + (ui.price === x ? ' sel' : ''), money(x), () => { ui.price = x; render(); })));
+      const go = btn('go', ui.busy ? 'Sending…' : 'Lock it in', () => send('p', 'o|p|' + board + '|' + n + '|' + ui.price));
+      go.disabled = !ui.price || ui.busy;
+      app.append(r, go, h('div', 'err', err));
+    }
+  } else if (/^r\d$/.test(s)) {                              /* the month's prices are out */
+    app.append(h('h1', null, s === 'r8' ? 'The eight months are over' : 'Month ' + n + ': the prices'));
+    const pr = h('div', 'pair');
+    ['a', 'b'].forEach(c => { const x = h('div', 'chip ' + c), p = O.p(G, c + j, n); x.append(h('div', 'ck', O.NAME[c]), h('div', 'cv', p ? money(p) : '–')); pr.append(x); });
+    app.append(pr, h('div', 'lbl', 'Fill in your profit record for month ' + n + '.'));
+    ui.price = null;
+  } else if (s[0] === 'q') {                                 /* his memo, and its question */
+    const M = O.MEMO[n], m = h('div', 'memo');
+    m.append(h('div', 'mh', M.head), h('div', 'mm', 'To: ' + M.to), h('div', 'mm', 'From: ' + M.from), h('p', null, M.open));
+    M.p.forEach(t => m.append(h('p', null, t)));
+    m.append(h('p', null, M.close), h('p', null, M.sign)); app.append(m);
+    const a = O.ans(G, board, n);
+    if (a) {
+      const c = h('div', 'card');
+      c.append(h('div', 'sub', a === 'y' ? 'Your board asked to meet' + (O.rep(G, board, n) ? ', and sends ' + O.rep(G, board, n) + '.' : '.') : 'Your board said no to a meeting.'));
+      app.append(c);
+    } else {
+      app.append(h('h1', null, 'Does your board want to meet?'));
+      const r = h('div', 'row2');
+      r.append(btn('opt' + (ui.meet === 'y' ? ' sel' : ''), 'Yes', () => { ui.meet = 'y'; render(); }), btn('opt' + (ui.meet === 'n' ? ' sel' : ''), 'No', () => { ui.meet = 'n'; render(); }));
+      app.append(r);
+      if (ui.meet === 'y') {
+        const i = h('input', 'name'); i.placeholder = 'Who will go?'; i.maxLength = 30; i.value = ui.name; i.autocomplete = 'off';
+        i.oninput = () => { ui.name = i.value; go.disabled = !O.clean(ui.name) || ui.busy; };
+        app.append(i);
+      }
+      const go = btn('go', ui.busy ? 'Sending…' : 'Lock it in', () => send('q', 'o|q|' + board + '|' + n + '|' + ui.meet + (ui.meet === 'y' ? '|' + O.clean(ui.name) : '')));
+      go.disabled = !ui.meet || (ui.meet === 'y' && !O.clean(ui.name)) || ui.busy;
+      app.append(go, h('div', 'err', err));
+    }
+  } else if (s.slice(0, 2) === 'mm') {                       /* the representatives are out of the room, or nobody is */
+    const c = h('div', 'card'), met = O.meets(G, n, +j);
+    if (met) c.append(h('div', 'sub', (O.rep(G, board, n) || 'Your representative') + ' is meeting ' + O.NAME[O.rival(board)[0]] + '’s representative' + (O.rep(G, O.rival(board), n) ? ', ' + O.rep(G, O.rival(board), n) : '') + '.'));
+    else c.append(h('div', 'sub', 'There is no meeting for your group: a meeting happens only if both boards ask for one.'));
+    app.append(h('h1', null, met ? 'The representatives are meeting' : 'No meeting'), c);
+    ui.meet = null; ui.name = '';
+  }
+  record(); foot();
+}
+
+/* what the screen depends on: the page is redrawn only when this changes, so a name being typed is never wiped */
+let last = '';
+const sig = () => { const m = O.month(G), j = board ? +board[1] : 0;
+  return [loaded, G.n, G.stage, board, board ? O.p(G, board, m) : '', board ? O.ans(G, board, m) : '', j ? O.meets(G, m, j) : '', O.shown(G)].join('|'); };
+function pull(){
+  O.entries().then(lines => {
+    G = O.parse(lines); loaded = true;
+    /* a reset room, or a game with fewer groups than this phone's: back to the picker */
+    if (board && (!G.n || +board[1] > G.n)) { board = null; ui.side = ui.group = null; try { localStorage.removeItem(KEY); } catch(_) {} }
+    const s = sig(); if (s !== last && !ui.busy) { last = s; render(); }
+  }).catch(() => {});
+}
+render(); pull(); setInterval(pull, 2500);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+})();
+</script>
+</body></html>
