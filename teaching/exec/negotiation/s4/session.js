@@ -39,24 +39,6 @@ NK.session({
        if (i === 5) delete a.pay;
        return a;
      }}},
-    {id:'perf', type:'deal', name:'The Performance Interview', group:'pair', max:24, nodeal:false,
-     roles:[{k:'c', n:'Chris Amon, brand manager'}, {k:'l', n:'Lee Petty, product manager'}],
-     /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
-     wait:[{k:'c', q:'What are Chris’s interests?', short:'Chris'}, {k:'l', q:'What are Lee’s interests?', short:'Lee'}],
-     fields:[
-      {k:'raised', type:'choice', own:true, q:'Did the sensitive matter in your brief come up?', o:['Yes, I raised it', 'Yes, the other person raised it', 'No, it never came up'], short:'Came up'},
-      {k:'comfort', type:'scale', own:true, q:'How comfortable did you feel at the end?', lo:'Very uncomfortable', hi:'Very comfortable', short:'Comfort'},
-      {k:'trust', type:'scale', own:true, q:'How much do you trust the other person now?', lo:'Not at all', hi:'Completely', short:'Trust'},
-     ],
-     recordQ:'After your interview', sentWord:'Answers sent',
-     demo:{seed:20261042, groups:14, gen:(r, n) => {
-       const came = r() < .55, who = r() < .5 ? 'c' : 'l';
-       const sc = (lo, hi) => Math.max(1, Math.min(5, Math.round(lo + r() * (hi - lo))));
-       const one = k => ({raised:came ? (k === who ? 0 : 1) : 2, comfort:came ? sc(3, 5) : sc(1, 3.4), trust:came ? sc(3, 5) : sc(1, 3.6)});
-       const d = {vals:{}, per:{c:one('c'), l:one('l')}};
-       if (n === 13) d.skip = ['l'];
-       return d;
-     }}},
     {id:'newt', type:'deal', name:'Hiring a Newtonian', group:'pair', max:24,
      roles:[{k:'h', n:'Human resources director'}, {k:'e', n:'Prospective employee'}],
      /* for pairs that finish early, his LER 543 outcome sheets' questions (19 Oct 2026) */
@@ -76,5 +58,8 @@ NK.session({
        if (T[n]) d.text = T[n];
        return d;
      }}},
+    /* Pink Towels (Ivey; back from Session 10 on 9 Nov 2026): each person's own read of the case, sent before the tables talk */
+    {id:'towels', type:'poll', q:'What is the Pink Towels case really about?',
+     o:['A gender issue', 'A cultural issue', 'Both', 'Neither: it’s just a gift'], demo:[9, 7, 12, 4]},
   ],
 });
