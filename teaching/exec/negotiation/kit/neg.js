@@ -12,6 +12,7 @@
      {id, type:'survey', name, qs:[...], demo}                    several questions, one screen each, sent together;
                                                                   a question with versions:[...] shows each phone one
                                                                   version, so the room can be split (framing effects)
+   A deal step with same:'<step id>' is a second round of that step: the phone keeps the pair number and role it gave there.
    A deal step can carry wait:[{k, q, short}]: questions for pairs that finish early (Ryan's LER 543 sheets: "After the
    mediation ends, if you have time try to answer the following questions"), shown on the phone once the deal is recorded.
    Fields of a deal step (each may carry roles:[...] to ask only those roles, and always:true to be

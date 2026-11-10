@@ -325,11 +325,15 @@ numbers** (a private file is matched to its deck by that `n`); `s8/` and `info/`
 SESSION 7 and 8 (10 Nov); `s9/`, `s10/` and Session 1's week slide wait for the length. `s9/` is Harborco and nothing
 else (10 Nov, his go-ahead: Claude's three clip slides went to Extra resources, so the tables get nearer PON's two hours).
 **`info/` is the five-day version's new session** (29 Oct 2026), Information Asymmetries in Negotiations: gt
-Module 8's lecture slides around two role plays, Ugli Orange (a copy of Session 1's, in its own rooms `neginfo-*`)
-and the PON's DS-30 (his pick, in place of the Zalada Crisis). DS-30's private facts and inspection wording reach the
+Module 8's lecture slides around two role plays, the PON's Appleton v. Baker and the PON's DS-30 (his pick, in place of
+the Zalada Crisis), in its own rooms `neginfo-*`. Appleton v. Baker replaced Ugli Orange on 10 Nov 2026 (his call: the
+same case never runs twice, and Session 1 keeps Ugli). It is the half-lot case his BADM 590 Walter and GG was adapted
+from, so its exercise slide and debrief questions are his 590 ones; the pairs record a price and what each told the
+other side, see each side's limit, then negotiate again (step `ab2`, which has `same:'ab'` so a phone keeps its pair
+and role). DS-30's private facts and inspection wording reach the
 phones only from `info/forms.enc` (`encrypt-forms.mjs … info`); the deck takes them, the case's standards, the reveal,
-the preparation memo's questions, Ugli's reveal and the key from the private file
-"Information - Ugli Orange, DS-30 (private).json". A phone field can carry `head`, a heading above
+the preparation memo's questions, Appleton v. Baker's limits and the key from the private file
+"Information - Appleton v. Baker, DS-30 (private).json". A phone field can carry `head`, a heading above
 a group of fields, which a forms file can override with `<k>:head`.
 
 Opened plain, a deck runs on invented DEMO DATA; `?live` reads real phones, and `?room=<x>` a rehearsal

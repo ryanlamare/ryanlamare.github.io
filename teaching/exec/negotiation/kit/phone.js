@@ -106,6 +106,8 @@ function draw(){
   if (s.type === 'survey') return surveyScreen(s);
   const d = st.d[s.id] || (st.d[s.id] = {vals:{}});
   d.vals = d.vals || {};
+  /* a second round of the same exercise (same:'<step>') keeps the pair number and role this phone gave for the first */
+  if (s.same && d.g == null && st.d[s.same] && st.d[s.same].g != null) { d.g = st.d[s.same].g; d.role = st.d[s.same].role; save(); }
   if (s.forms && !forms && !N.demo) return needForms(s, d);
   if (d.sent) return doneScreen(s, d);
   if (d.g == null) return groupScreen(s, d);
@@ -290,7 +292,12 @@ function doneScreen(s, d){
   w.append(head(s, d), box, summary(s, d));
   if (s.wait) w.appendChild(waitBlock(s, d));
   const nx = nextAfter(s);
-  if (nx) w.appendChild(button('go ghost', 'Next: ' + (nx.type === 'deal' ? nx.name : 'a question'), () => { d.ack = true; save(); draw(); }));
+  /* Next also lets go of the link's ?step=, which would otherwise hold the phone on this step */
+  if (nx) w.appendChild(button('go ghost', 'Next: ' + (nx.type === 'deal' ? nx.name : 'a question'), () => {
+    d.ack = true; save();
+    if (Q.has('step')) { Q.delete('step'); try { history.replaceState(null, '', location.pathname + (Q.toString() ? '?' + Q : '') + location.hash); } catch(_){} }
+    draw();
+  }));
   w.appendChild(button('back', 'Change what we recorded', () => { d.sent = false; d.ack = false; save(); draw(); }));
 }
 /* for pairs that finish early (19 Oct 2026, from Ryan's LER 543 outcome sheets): a few questions, each answer sent as its own line */
