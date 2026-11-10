@@ -188,6 +188,7 @@ function roleScreen(s, d){
   w.append(box, button('back', s.group === 'group' ? 'Change group number' : 'Change pair number', () => { delete d.g; save(); draw(); }));
 }
 const fq = (s, f) => { const t = forms && forms.steps && forms.steps[s.id] && forms.steps[s.id][f.k + ':q']; return t || f.q; };
+const fh = (s, f) => { const t = forms && forms.steps && forms.steps[s.id] && forms.steps[s.id][f.k + ':head']; return t || f.head; };
 const label = (s, f, j) => {
   const fl = forms && forms.steps && forms.steps[s.id] && forms.steps[s.id][f.k];
   if (fl && fl[j]) return fl[j];
@@ -201,6 +202,7 @@ function formScreen(s, d){
   const ready = () => fields.every(f => !ask(f) || f.optional || d.vals[f.k] != null);
   if (d.x && s.nodealNote) w.appendChild(el('p', 'nodealnote', s.nodealNote));
   fields.filter(ask).forEach(f => {
+    if (f.head) w.appendChild(el('div', 'fhead', fh(s, f)));   /* a heading above a group of fields (DS-30's "what did you learn") */
     const box = el('div', 'field');
     if (f.type === 'money') {
       const lab = el('label', null, f.q), m = el('div', 'money'), inp = el('input');

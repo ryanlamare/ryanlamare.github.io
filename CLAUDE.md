@@ -321,8 +321,9 @@ He amended it on 9 Nov 2026: four days is the five-day version without day four 
 Interview is out, and Pink Towels left `s10/`), and `s1/` teaches first offers from Sally Soprano's fees.
 The first six sessions carry the same number at both lengths, so since 10 Nov the decks in `s4/`, `s5/`, `s6/` and `s7/`
 print SESSION 3, 4, 5 and 6. **Folders, poll rooms, `n` in each `session.js` and the private files keep their old
-numbers** (a private file is matched to its deck by that `n`); `s8/`, `info/`, `s9/`, `s10/` and Session 1's week slide
-wait for the length.
+numbers** (a private file is matched to its deck by that `n`); `s8/` and `info/` run only at five days, so they print
+SESSION 7 and 8 (10 Nov); `s9/`, `s10/` and Session 1's week slide wait for the length. `s9/` is Harborco and nothing
+else (10 Nov, his go-ahead: Claude's three clip slides went to Extra resources, so the tables get nearer PON's two hours).
 **`info/` is the five-day version's new session** (29 Oct 2026), Information Asymmetries in Negotiations: gt
 Module 8's lecture slides around two role plays, Ugli Orange (a copy of Session 1's, in its own rooms `neginfo-*`)
 and the PON's DS-30 (his pick, in place of the Zalada Crisis). DS-30's private facts and inspection wording reach the
