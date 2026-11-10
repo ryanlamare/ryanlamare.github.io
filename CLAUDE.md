@@ -341,9 +341,13 @@ dropped on the deck. Harborco's issue wording reaches the phones only from `s9/f
 own text (whether the Blue Buggy has a bargaining zone comes from the private file).
 
 Decks shown to the client never name BADM 590 or MBA students (his edits to the programme page): his
-class's results are "professionals I have taught in the United States". Every clip is checked against
-a room in Muscat (no alcohol, strong language, sexual content or Gulf politics); where a clip has a bad
-stretch, it plays only the clean part (`data-start`/`data-end`), and the cut is noted beside it.
+class's results are "professionals I have taught in the United States". The programme is off the
+shelf (Ryan, 29 Oct 2026): nothing is screened or adapted for the client's setting, and a case or clip is
+judged on its teaching merit and his own concerns. The Muscat filter Claude had applied in
+October was undone on 10 Nov 2026 at his yes: Session 5's deck (`s6/`) has Levitt's audio, the Cartman slide and the
+whole Pay It Forward clip again, and Session 3's survey (`s4/`) is his 590 survey again (the rich uncle, the beer, the
+homicides question, the "Asian disease"). The clips that still play only a stretch (`data-start`/`data-end`) are ones
+Claude picked, cut to the part the slide is about.
 
 ### Preview while editing
 
