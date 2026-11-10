@@ -1,9 +1,9 @@
 /* Session 4, Perception, Persuasion and Communication (17 Oct 2026): what the room does on its phones.
    Shared by the deck (s4/) and the phone page (s4/deal/). The survey is his BADM 590 survey, which
    came in six versions so that the room was split for the framing questions; here each phone is shown
-   one version of each question. Adapted for the room: a group instead of a class; a soft drink instead
-   of a beer; the rich uncle's coin flip is a choice between two projects; the question on homicides
-   and suicides is left out. The demo room below is invented. */
+   one version of each question. His questions as he asked them (10 Nov 2026, his yes: the changes Claude
+   had made for the room are undone: the rich uncle, the beer and the homicides question are back); a
+   group stands for his class. The demo room below is invented. */
 NK.session({
   n: 4, prefix: 'neg4', title: 'Perception, Persuasion and Communication',
   steps: [
@@ -11,9 +11,11 @@ NK.session({
      qs:[
       {k:'bday', type:'choice', q:'A group has 25 people in it. What is the chance that two of them share a birthday?',
        o:['Less than one percent', 'Approximately 10 percent', 'Approximately 25 percent', 'Better than 50 percent']},
-      {k:'risk', type:'choice', o:['The certain return', 'The equal chance of three times as much, or nothing'], versions:[
-       {q:'Your organisation can take one of two projects. One is certain to bring in $10 million. The other has an equal chance of bringing in $30 million or nothing. Which would you take?'},
-       {q:'Your organisation can take one of two projects. One is certain to bring in $1,000. The other has an equal chance of bringing in $3,000 or nothing. Which would you take?'}]},
+      {k:'risk', type:'choice', o:['I’d take the sure money', 'I’d gamble on the coin flip'], versions:[
+       {q:'A rich uncle gives you a choice. He’ll give you $1 million, no strings attached, or alternatively he’ll allow you to flip a coin. If it comes up heads, he’ll give you $3 million. If it comes up tails, he’ll give you nothing. Which option would you take?',
+        o:['I’d take the sure $1 million', 'I’d gamble on the chance of winning $3 million']},
+       {q:'A rich uncle gives you a choice. He’ll give you $10, no strings attached, or alternatively he’ll allow you to flip a coin. If it comes up heads, he’ll give you $30. If it comes up tails, he’ll give you nothing. Which option would you take?',
+        o:['I’d take the sure $10', 'I’d gamble on the chance of winning $30']}]},
       {k:'pay', type:'money', cur:'$', versions:[
        {q:'While at the cinema last week you may have been exposed to a rare, fatal disease. The chance that you have caught it is exactly .001, one chance in 1,000. There is no cure, but an inoculation taken now will prevent it. Supplies are limited, and they will go to the highest bidders. What is the most you would be willing to pay for the inoculation?'},
        {q:'While at the cinema last week you may have been exposed to a rare, fatal disease. The chance that you have caught it is exactly .004, four chances in 1,000. There is no cure, but an inoculation taken now will reduce the risk to .003, three chances in 1,000. Supplies are limited, and they will go to the highest bidders. What is the most you would be willing to pay for the inoculation?'},
@@ -22,10 +24,12 @@ NK.session({
        {q:'A company is making a small profit. It is located in a community experiencing a recession with substantial unemployment but no inflation. The company decides to decrease wages and salaries 7 percent this year.'},
        {q:'A small company employs several people. The workers’ incomes have been about average for the community. In recent months business for the company has not increased as it had before. The owners reduce the workers’ wages by 10 percent for the next year.'},
        {q:'A company is making a small profit. It is located in a community experiencing a recession with substantial unemployment and inflation of 12 percent. The company decides to increase salaries only 5 percent this year.'}]},
+      {k:'hs', type:'choice', q:'What is the relative frequency of homicides and suicides in the United States?',
+       o:['There are more homicides than suicides', 'There are more suicides than homicides']},
       {k:'born', type:'date', q:'When is your birthday? The month and the day only.'},
       {k:'drink', type:'money', cur:'$', versions:[
-       {q:'You are lying on the beach on a hot day, and all you have to drink is iced water. For the last hour you have been thinking about a cold bottle of your favourite soft drink. A companion offers to bring one back from the only place nearby that sells it: a fancy resort hotel. It might be expensive, so they ask how much you are willing to pay. They will buy it if it costs that much or less, and there is no bargaining with the seller. What price are you willing to pay?'},
-       {q:'You are lying on the beach on a hot day, and all you have to drink is iced water. For the last hour you have been thinking about a cold bottle of your favourite soft drink. A companion offers to bring one back from the only place nearby that sells it: a small, run-down grocery shop. It might be expensive, so they ask how much you are willing to pay. They will buy it if it costs that much or less, and there is no bargaining with the seller. What price are you willing to pay?'}]},
+       {q:'You are lying on the beach on a hot day. All you have to drink is ice water. For the last hour you’ve been thinking about how much you would enjoy a nice cold bottle of your favorite brand of beer. A companion gets up to make a phone call and offers to bring back a beer from the only place nearby where beer is sold: a fancy resort hotel. She says the beer might be expensive and asks how much you’re willing to pay. She will buy the beer if it costs as much as or less than the price you say. But if it costs more, she won’t buy it. You trust your friend and there is no possibility of bargaining with the bartender. What price are you willing to pay?'},
+       {q:'You are lying on the beach on a hot day. All you have to drink is ice water. For the last hour you’ve been thinking about how much you would enjoy a nice cold bottle of your favorite brand of beer. A companion gets up to make a phone call and offers to bring back a beer from the only place nearby where beer is sold: a small, run-down grocery store. She says the beer might be expensive and asks how much you’re willing to pay. She will buy the beer if it costs as much as or less than the price you say. But if it costs more, she won’t buy it. You trust your friend and there is no possibility of bargaining with the bartender. What price are you willing to pay?'}]},
      ],
      demo:{seed:20261041, people:32, gen:(r, i, ver) => {
        const pick = w => { let x = r() * w.reduce((a, b) => a + b, 0); for (let k = 0; k < w.length; k++) { x -= w[k]; if (x < 0) return k; } return w.length - 1; };
@@ -36,6 +40,7 @@ NK.session({
        a.fair = r() < [.45, .2, .62][ver.fair || 0] ? 0 : 1;
        a.born = i === 7 || i === 23 ? 314 : (1 + Math.floor(r() * 12)) * 100 + 1 + Math.floor(r() * 28);
        a.drink = Math.round((ver.drink === 0 ? 3 + r() * 6 : 1.5 + r() * 3) * 2) / 2 | 0 || 1;
+       a.hs = r() < .62 ? 0 : 1;
        if (i === 5) delete a.pay;
        return a;
      }}},
