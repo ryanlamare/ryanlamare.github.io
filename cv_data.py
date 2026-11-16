@@ -7,7 +7,7 @@ Never edit those generated regions by hand — they will be overwritten.
 """
 
 ME = "J. Ryan Lamare"
-UPDATED = "October 2026"
+UPDATED = "November 2026"
 
 PROFILE = dict(
   name="J. Ryan Lamare",
@@ -37,6 +37,7 @@ PUB_GROUPS = [
     dict(y="2023", authors=["Ariel C. Avgar", "Deborah Hann", "J. Ryan Lamare", "David Nash"], t="The Evolution of Workplace Dispute Resolution: International Perspectives", u="https://www.cornellpress.cornell.edu/book/9780913447277/the-evolution-of-workplace-dispute-resolution/", venue_cv="LERA Annual Research Volume.", venue_home="LERA Annual Research Volume.", icon="ic-scales", eds=True, book=True),
   ]),
   ("Journal Articles", [
+    dict(y="2026", authors=["J. Ryan Lamare", "John W. Budd"], t="Can Political Parties Shape Women’s Labor Market Outcomes? A Longitudinal Analysis of Party Characteristics and Support for Equality", u=None, venue_cv="<i>Industrial Relations</i> (forthcoming).", venue_home=None, icon="ic-ballot"),
     dict(y="2026", authors=["J. Ryan Lamare", "Margaret M. Huizinga", "Jeffrey P. Thomas"], t="Punching Upward and Outward: The Mitigating Effects of Employment Conditions on Democratic Discontent", u=None, venue_cv="<i>ILR Review</i> (forthcoming).", venue_home=None, icon="ic-ballot", featured=True, replication="https://doi.org/10.5281/zenodo.22049135"),
     dict(y="2026", authors=["Kwon Hee Han", "Tingting Zhang", "J. Ryan Lamare"], t="Methods for Studying Union Effects: A Review and Comparative Analysis of Empirical Industrial Relations Literature", u="https://doi.org/10.1111/irj.70028", venue_cv="<i>Industrial Relations Journal</i> 57(3): 205–231.", venue_home="Industrial Relations Journal, 57(3), 205–231.", icon="ic-chart"),
     dict(y="2025", authors=["John W. Budd", "J. Ryan Lamare"], t="Organizational Governance and Trade-Offs Between Pay and Subjective Employee Well-Being: A Comparative Analysis", u="https://doi.org/10.1111/bjir.12860", venue_cv="<i>British Journal of Industrial Relations</i> 63(2): 305–322.", venue_home="British Journal of Industrial Relations, 63(2), 305–322.", icon="ic-factory", featured=True),
@@ -76,7 +77,6 @@ PUB_GROUPS = [
     dict(y="2010", authors=["Anthony McDonnell", "J. Ryan Lamare", "Patrick Gunnigle", "Jonathan Lavelle"], t="Developing Tomorrow’s Leaders — Evidence of Global Talent Management in Multinational Enterprises", u="https://doi.org/10.1016/j.jwb.2009.09.015", venue_cv="<i>Journal of World Business</i> 45(2): 150–160.", venue_home="Journal of World Business, 45(2), 150–160.", icon="ic-briefcase"),
   ]),
   ("Articles Under Review", [
-    dict(raw="J. Ryan Lamare and John W. Budd. “Can Political Parties Shape Women’s Labor Market Outcomes? A Longitudinal Analysis of Party Characteristics and Support for Equality.” Minor revisions, <i>Industrial Relations</i>.", y="", u=None),
     dict(raw="Cherise Regier, J. Ryan Lamare, and Faraz Shahidi. “Worker Voice and Strategic Choice as Governance of Generative AI at Work: Cross-National Evidence on Wellbeing.” Under review, <i>ILR Review</i>.", y="", u=None),
     dict(raw="Cherise Regier and J. Ryan Lamare. “Recognition without Power? Decomposing the Union–Job Satisfaction Puzzle in Post-Thatcher Britain.” R&R, <i>ILR Review</i>.", y="", u=None),
   ]),
